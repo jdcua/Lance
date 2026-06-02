@@ -1,0 +1,142 @@
+import Database from '@tauri-apps/plugin-sql';
+
+let db: Database | null = null;
+
+export async function getDb(): Promise<Database> {
+  if (db) return db;
+  db = await Database.load('sqlite:lance.db');
+  await runMigrations(db);
+  return db;
+}
+
+async function runMigrations(database: Database): Promise<void> {
+  await database.execute('PRAGMA journal_mode=WAL');
+  await database.execute('PRAGMA foreign_keys=ON');
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS clients (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT,
+      phone TEXT,
+      company TEXT,
+      notes TEXT,
+      created_at TEXT NOT NULL
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS projects (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active',
+      start_date TEXT,
+      end_date TEXT,
+      budget REAL,
+      notes TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (client_id) REFERENCES clients(id)
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS milestones (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      due_date TEXT,
+      completed INTEGER NOT NULL DEFAULT 0,
+      invoice_on_completion INTEGER NOT NULL DEFAULT 0,
+      FOREIGN KEY (project_id) REFERENCES projects(id)
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS proposals (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      project_id TEXT,
+      title TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'draft',
+      scope TEXT,
+      timeline TEXT,
+      rate REAL,
+      rate_type TEXT NOT NULL DEFAULT 'flat',
+      body TEXT,
+      sent_at TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (client_id) REFERENCES clients(id)
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS contracts (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      project_id TEXT,
+      proposal_id TEXT,
+      title TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'draft',
+      body TEXT,
+      signed_at TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (client_id) REFERENCES clients(id)
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS time_entries (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      client_id TEXT NOT NULL,
+      description TEXT,
+      start_time TEXT NOT NULL,
+      end_time TEXT,
+      duration_minutes INTEGER,
+      billable INTEGER NOT NULL DEFAULT 1,
+      invoiced INTEGER NOT NULL DEFAULT 0,
+      FOREIGN KEY (project_id) REFERENCES projects(id)
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS invoices (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      project_id TEXT,
+      invoice_number TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'draft',
+      line_items TEXT NOT NULL DEFAULT '[]',
+      subtotal REAL NOT NULL DEFAULT 0,
+      tax_rate REAL,
+      total REAL NOT NULL DEFAULT 0,
+      due_date TEXT,
+      paid_at TEXT,
+      notes TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (client_id) REFERENCES clients(id)
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS expenses (
+      id TEXT PRIMARY KEY,
+      category TEXT NOT NULL,
+      description TEXT NOT NULL,
+      amount REAL NOT NULL,
+      date TEXT NOT NULL
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS user_profile (
+      id INTEGER PRIMARY KEY DEFAULT 1,
+      name TEXT,
+      email TEXT,
+      hourly_rate REAL,
+      currency TEXT DEFAULT 'CAD',
+      writing_voice TEXT
+    )
+  `);
+}

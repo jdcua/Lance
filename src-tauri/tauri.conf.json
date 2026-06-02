@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicegui/tauri-apps/main/schemas/config.schema.json",
+  "productName": "Lance",
+  "version": "1.0.0",
+  "identifier": "com.lance.app",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Lance",
+        "width": 1280,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false,
+        "minWidth": 960,
+        "minHeight": 600
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "icon": ["icons/icon.png"]
+  },
+  "plugins": {
+    "sql": {
+      "preload": ["sqlite:lance.db"]
+    }
+  }
+}
