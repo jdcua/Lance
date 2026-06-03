@@ -6,7 +6,9 @@ import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
 import ProgressBar from '../components/ui/ProgressBar';
-import { Plus, Pencil, Trash2, CheckCircle2, Circle, Calendar, DollarSign, ChevronRight } from 'lucide-react';
+import { useToasts } from '../store/toastStore';
+import { generateInvoiceNumber } from '../utils/invoiceNumber';
+import { Plus, Pencil, Trash2, CheckCircle2, Circle, Calendar, DollarSign, ChevronRight, FolderKanban } from 'lucide-react';
 
 const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
   active: 'success',
@@ -16,7 +18,8 @@ const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
 };
 
 export default function Projects() {
-  const { projects, loadProjects, addProject, updateProject, removeProject, clients, loadClients, milestones, loadMilestones, addMilestone, updateMilestone, removeMilestone } = useStore();
+  const { projects, loadProjects, addProject, updateProject, removeProject, clients, loadClients, milestones, loadMilestones, addMilestone, updateMilestone, removeMilestone, invoices, loadInvoices, addInvoice, profile, loadProfile } = useStore();
+  const addToast = useToasts((s) => s.add);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
@@ -24,6 +27,7 @@ export default function Projects() {
   const [saving, setSaving] = useState(false);
   const [pform, setPForm] = useState({ client_id: '', title: '', status: 'active', start_date: '', end_date: '', budget: '', notes: '' });
   const [mform, setMForm] = useState({ title: '', due_date: '', invoice_on_completion: false });
+  const [invoicePrompt, setInvoicePrompt] = useState<{ milestone: Milestone; project: Project } | null>(null);
 
   useEffect(() => {
     loadProjects();
@@ -105,8 +109,61 @@ export default function Projects() {
     }
   };
 
-  const handleToggleMilestone = async (m: Milestone) => {
+  const handleToggleMilestone = async (m: Milestone, project: Project) => {
+    if (!m.completed && m.invoice_on_completion) {
+      setInvoicePrompt({ milestone: m, project });
+      return;
+    }
     await updateMilestone({ ...m, completed: !m.completed });
+  };
+
+  const handleInvoicePromptYes = async () => {
+    if (!invoicePrompt) return;
+    const { milestone, project } = invoicePrompt;
+    setInvoicePrompt(null);
+
+    const projectMilestones = milestones[project.id] || [];
+    const totalMs = projectMilestones.length || 1;
+    const unitPrice = (project.budget || 0) / totalMs;
+
+    await loadInvoices();
+    const currentInvoices = useStore.getState().invoices;
+    const invNumber = generateInvoiceNumber(currentInvoices);
+
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 14);
+
+    const lineItem = {
+      id: crypto.randomUUID(),
+      description: milestone.title,
+      quantity: 1,
+      unit_price: Math.round(unitPrice * 100) / 100,
+      total: Math.round(unitPrice * 100) / 100,
+    };
+
+    await addInvoice({
+      client_id: project.client_id,
+      project_id: project.id,
+      invoice_number: invNumber,
+      status: 'draft',
+      line_items: [lineItem],
+      subtotal: lineItem.total,
+      tax_rate: undefined,
+      total: lineItem.total,
+      due_date: dueDate.toISOString().split('T')[0],
+      notes: `Generated from milestone: ${milestone.title}`,
+    });
+
+    await updateMilestone({ ...milestone, completed: true });
+
+    addToast(`Invoice ${invNumber} created \u2014 review in Invoices`, 'success');
+  };
+
+  const handleInvoicePromptNo = async () => {
+    if (!invoicePrompt) return;
+    const { milestone } = invoicePrompt;
+    setInvoicePrompt(null);
+    await updateMilestone({ ...milestone, completed: true });
   };
 
   const handleDeleteMilestone = async (id: string) => {
@@ -139,13 +196,11 @@ export default function Projects() {
       )}
 
       {projects.length === 0 ? (
-        <Card className="text-center py-12">
-          <h3 className="text-sm font-medium text-[#6B6B67] mb-1">No projects yet</h3>
-          <p className="text-xs text-[#A3A39E] mb-4">Create your first project to start tracking work.</p>
-          <Button onClick={openNewProject} size="sm" variant="secondary" disabled={clients.length === 0}>
-            <Plus size={14} />
-            New Project
-          </Button>
+        <Card className="text-center py-16 flex flex-col items-center">
+          <FolderKanban size={40} className="text-[#A3A39E] mb-4" />
+          <h3 className="text-[15px] font-medium text-[#6B6B67] mb-1.5">No projects yet</h3>
+          <p className="text-[13px] text-[#A3A39E] max-w-xs mb-5">Create your first project to start tracking work.</p>
+          <Button onClick={openNewProject} size="sm" variant="secondary">New Project</Button>
         </Card>
       ) : (
         <div className="space-y-3">
@@ -221,7 +276,7 @@ export default function Projects() {
                     ) : (
                       projectMilestones.map((m) => (
                         <div key={m.id} className="flex items-center gap-2 pl-2">
-                          <button onClick={() => handleToggleMilestone(m)} className="flex-shrink-0">
+                          <button onClick={() => handleToggleMilestone(m, project)} className="flex-shrink-0">
                             {m.completed ? (
                               <CheckCircle2 size={16} className="text-[#1D9E75]" />
                             ) : (
@@ -237,6 +292,22 @@ export default function Projects() {
                           {m.due_date && (
                             <span className="text-[10px] text-[#A3A39E]">{new Date(m.due_date).toLocaleDateString()}</span>
                           )}
+                          {invoicePrompt?.milestone.id === m.id && (
+                            <div className="flex items-center gap-1 ml-1">
+                              <button
+                                onClick={handleInvoicePromptYes}
+                                className="text-[10px] px-1.5 py-0.5 rounded-[6px] bg-[#1D9E75] text-white font-medium"
+                              >
+                                Yes
+                              </button>
+                              <button
+                                onClick={handleInvoicePromptNo}
+                                className="text-[10px] px-1.5 py-0.5 rounded-[6px] bg-[#F2F2F0] text-[#6B6B67] font-medium"
+                              >
+                                Skip
+                              </button>
+                            </div>
+                          )}
                           <button
                             onClick={() => handleDeleteMilestone(m.id)}
                             className="text-[#A3A39E] hover:text-[#A32D2D]"
@@ -245,6 +316,14 @@ export default function Projects() {
                           </button>
                         </div>
                       ))
+                    )}
+                    {/* Invoice prompt text */}
+                    {invoicePrompt && (
+                      <div className="pl-2">
+                        <p className="text-xs text-[#854F0B]">
+                          Generate invoice for this milestone?
+                        </p>
+                      </div>
                     )}
                   </div>
                 )}

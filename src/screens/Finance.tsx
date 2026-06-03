@@ -6,7 +6,7 @@ import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import Modal from '../components/ui/Modal';
 import { formatCurrency, formatDate } from '../utils/format';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, BarChart3 } from 'lucide-react';
 
 const categories = ['Software', 'Equipment', 'Office', 'Travel', 'Marketing', 'Taxes', 'Other'];
 
@@ -156,13 +156,11 @@ export default function Finance() {
       </div>
 
       {expenses.length === 0 ? (
-        <Card className="text-center py-12">
-          <h3 className="text-sm font-medium text-[#6B6B67] mb-1">No expenses yet</h3>
-          <p className="text-xs text-[#A3A39E] mb-4">Track your business expenses here.</p>
-          <Button onClick={openNew} size="sm" variant="secondary">
-            <Plus size={14} />
-            Add Expense
-          </Button>
+        <Card className="text-center py-16 flex flex-col items-center">
+          <BarChart3 size={40} className="text-[#A3A39E] mb-4" />
+          <h3 className="text-[15px] font-medium text-[#6B6B67] mb-1.5">No expenses yet</h3>
+          <p className="text-[13px] text-[#A3A39E] max-w-xs mb-5">Add an expense or mark an invoice paid to see your numbers.</p>
+          <Button onClick={openNew} size="sm" variant="secondary">Add Expense</Button>
         </Card>
       ) : (
         <div className="space-y-2">

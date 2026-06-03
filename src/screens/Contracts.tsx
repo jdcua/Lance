@@ -5,7 +5,10 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
-import { Plus, Pencil, Trash2, Eye } from 'lucide-react';
+import RichEditor from '../components/ui/RichEditor';
+import { htmlToPlainText } from '../utils/htmlToText';
+import { ensureHtml } from '../utils/textToHtml';
+import { Plus, Pencil, Trash2, Eye, PenLine } from 'lucide-react';
 
 const statusBadge: Record<string, 'success' | 'warning' | 'info' | 'danger'> = {
   draft: 'warning',
@@ -35,7 +38,7 @@ export default function Contracts() {
 
   const openEdit = (c: Contract) => {
     setEditing(c);
-    setForm({ client_id: c.client_id, title: c.title, body: c.body || '' });
+    setForm({ client_id: c.client_id, title: c.title, body: ensureHtml(c.body || '') });
     setShowModal(true);
   };
 
@@ -92,13 +95,10 @@ export default function Contracts() {
           </p>
         </Card>
       ) : contracts.length === 0 ? (
-        <Card className="text-center py-12">
-          <h3 className="text-sm font-medium text-[#6B6B67] mb-1">No contracts yet</h3>
-          <p className="text-xs text-[#A3A39E] mb-4">Create your first contract.</p>
-          <Button onClick={openNew} size="sm" variant="secondary">
-            <Plus size={14} />
-            New Contract
-          </Button>
+        <Card className="text-center py-16 flex flex-col items-center">
+          <PenLine size={40} className="text-[#A3A39E] mb-4" />
+          <h3 className="text-[15px] font-medium text-[#6B6B67] mb-1.5">No contracts yet</h3>
+          <p className="text-[13px] text-[#A3A39E] max-w-xs mb-5">Convert a proposal to get started.</p>
         </Card>
       ) : (
         <div className="space-y-3">
@@ -156,7 +156,7 @@ export default function Contracts() {
               </div>
               {expanded === c.id && c.body && (
                 <div className="mt-3 pt-3 border-t border-[#E5E5E3]">
-                  <p className="text-xs text-[#1C1C1A] whitespace-pre-wrap leading-relaxed">{c.body}</p>
+                  <p className="text-xs text-[#1C1C1A] whitespace-pre-wrap leading-relaxed">{htmlToPlainText(c.body)}</p>
                 </div>
               )}
             </Card>
@@ -190,14 +190,13 @@ export default function Contracts() {
               autoFocus
             />
           </div>
-          <div>
+           <div>
             <label className="block text-xs font-medium text-[#6B6B67] mb-1">Contract Body</label>
-            <textarea
-              value={form.body}
-              onChange={(e) => setForm({ ...form, body: e.target.value })}
+            <RichEditor
+              content={form.body}
+              onChange={(html) => setForm({ ...form, body: html })}
               placeholder="Write the contract terms..."
-              rows={8}
-              className="w-full px-3 py-2 text-sm border border-[#E5E5E3] rounded-[8px] placeholder:text-[#A3A39E] focus:outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[#1D9E75]/20 resize-none font-mono"
+              minHeight={240}
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">

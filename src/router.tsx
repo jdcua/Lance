@@ -9,6 +9,7 @@ import Invoices from './screens/Invoices';
 import Clients from './screens/Clients';
 import Finance from './screens/Finance';
 import Insights from './screens/Insights';
+import SettingsView from './screens/Settings';
 
 export const router = createBrowserRouter([
   {
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
       { path: 'clients', element: <Clients /> },
       { path: 'finance', element: <Finance /> },
       { path: 'insights', element: <Insights /> },
+      { path: 'settings', element: <SettingsView /> },
     ],
   },
 ]);

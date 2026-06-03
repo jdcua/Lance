@@ -31,7 +31,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative bg-white rounded-[12px] shadow-xl w-full ${sizeClasses[size]} mx-4 max-h-[85vh] flex flex-col`}>
+      <div className={`relative bg-white rounded-[12px] shadow-xl w-full ${sizeClasses[size]} mx-4 max-h-[85vh] flex flex-col animate-fade-scale-in`}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E5E3]">
           <h2 className="text-base font-semibold text-[#1C1C1A]">{title}</h2>
           <button

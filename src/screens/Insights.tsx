@@ -3,7 +3,7 @@ import { useStore } from '../store';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import ProgressBar from '../components/ui/ProgressBar';
-import { TrendingUp, TrendingDown, DollarSign, Clock, FileText, Users } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Clock, FileText, Users, Lightbulb } from 'lucide-react';
 
 export default function Insights() {
   const { projects, loadProjects, invoices, loadInvoices, timeEntries, loadTimeEntries, clients, loadClients, proposals, loadProposals, expenses, loadExpenses } = useStore();
@@ -69,10 +69,17 @@ export default function Insights() {
   });
   const topProjectsByTime = Object.values(projectTime).sort((a, b) => b.minutes - a.minutes).slice(0, 5);
 
-  if (!loaded) {
+  if (!loaded) return null;
+
+  if (invoices.length < 3 || projects.length < 2) {
     return (
       <div className="p-6">
-        <p className="text-sm text-[#A3A39E]">Loading insights...</p>
+        <h2 className="text-lg font-semibold text-[#1C1C1A] mb-6">Business Insights</h2>
+        <Card className="text-center py-16 flex flex-col items-center">
+          <Lightbulb size={40} className="text-[#A3A39E] mb-4" />
+          <h3 className="text-[15px] font-medium text-[#6B6B67] mb-1.5">Not enough data yet</h3>
+          <p className="text-[13px] text-[#A3A39E] max-w-xs mb-5">Insights appear after you have at least 3 invoices and 2 projects.</p>
+        </Card>
       </div>
     );
   }
@@ -100,12 +107,12 @@ export default function Insights() {
                 <span className="text-[#6B6B67]">Active</span>
                 <span className="font-medium text-[#1C1C1A]">{activeProjects}</span>
               </div>
-              <ProgressBar value={activeProjects} max={totalProjects || 1} label="Active" />
+              <ProgressBar value={activeProjects} max={totalProjects || 1} label="Active" className="insight-bar-animate insight-bar-0" />
               <div className="flex justify-between text-xs">
                 <span className="text-[#6B6B67]">Completed</span>
                 <span className="font-medium text-[#1C1C1A]">{completedProjects}</span>
               </div>
-              <ProgressBar value={completedProjects} max={totalProjects || 1} label="Completed" />
+              <ProgressBar value={completedProjects} max={totalProjects || 1} label="Completed" className="insight-bar-animate insight-bar-1" />
               <div className="flex justify-between text-xs mt-4 pt-3 border-t border-[#E5E5E3]">
                 <span className="text-[#6B6B67]">Total Tracked</span>
                 <span className="font-medium text-[#1C1C1A]">{Math.round(totalHoursTracked / 60)} hours</span>
@@ -134,7 +141,7 @@ export default function Insights() {
               <span className="text-[#6B6B67]">Profit Margin</span>
               <span className={`font-medium ${profitMargin >= 0 ? 'text-[#1D9E75]' : 'text-[#A32D2D]'}`}>{profitMargin}%</span>
             </div>
-            <ProgressBar value={Math.max(profitMargin, 0)} max={100} label="Margin %" />
+            <ProgressBar value={Math.max(profitMargin, 0)} max={100} label="Margin %" className="insight-bar-animate insight-bar-2" />
             <div className="flex justify-between text-xs pt-3 border-t border-[#E5E5E3]">
               <span className="text-[#6B6B67]">Outstanding</span>
               <span className="font-medium text-[#854F0B]">${totalOutstanding.toLocaleString()}</span>
@@ -192,6 +199,7 @@ export default function Insights() {
                     max={topProjectsByTime[0]?.minutes || 1}
                     size="sm"
                     showPercent={false}
+                    className="insight-bar-animate insight-bar-3"
                   />
                 </div>
               ))}

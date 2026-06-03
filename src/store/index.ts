@@ -10,6 +10,8 @@ import type {
   LineItem,
   Expense,
   UserProfile,
+  Communication,
+  RecurringInvoice,
 } from '../types';
 
 interface ClientSlice {
@@ -83,7 +85,22 @@ interface ProfileSlice {
   saveProfile: (data: UserProfile) => Promise<void>;
 }
 
-export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & ExpenseSlice & ProfileSlice;
+interface CommunicationSlice {
+  communications: Record<string, Communication[]>;
+  loadCommunications: (clientId: string) => Promise<void>;
+  addCommunication: (data: Communication) => Promise<Communication>;
+  removeCommunication: (id: string, clientId: string) => Promise<void>;
+}
+
+interface RecurringInvoiceSlice {
+  recurringInvoices: RecurringInvoice[];
+  loadRecurringInvoices: () => Promise<void>;
+  addRecurringInvoice: (data: Omit<RecurringInvoice, 'id' | 'created_at' | 'last_generated'>) => Promise<RecurringInvoice>;
+  updateRecurringInvoice: (data: RecurringInvoice) => Promise<void>;
+  removeRecurringInvoice: (id: string) => Promise<void>;
+}
+
+export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & ExpenseSlice & ProfileSlice & CommunicationSlice & RecurringInvoiceSlice;
 
 const invoke = async <T>(cmd: string, args?: Record<string, unknown>): Promise<T> => {
   const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
@@ -277,5 +294,51 @@ export const useStore = create<AppStore>((set, get) => ({
   saveProfile: async (data) => {
     await invoke('upsert_user_profile', { payload: data });
     set({ profile: data });
+  },
+
+  // Communications
+  communications: {},
+  loadCommunications: async (clientId) => {
+    const comms = await invoke<Communication[]>('get_communications', { clientId });
+    set({ communications: { ...get().communications, [clientId]: comms } });
+  },
+  addCommunication: async (data) => {
+    const comm = await invoke<Communication>('create_communication', { payload: data });
+    const existing = get().communications[data.client_id] || [];
+    const updated = [comm, ...existing].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    set({ communications: { ...get().communications, [data.client_id]: updated } });
+    return comm;
+  },
+  removeCommunication: async (id, clientId) => {
+    await invoke('delete_communication', { id });
+    const existing = get().communications[clientId] || [];
+    set({ communications: { ...get().communications, [clientId]: existing.filter((c) => c.id !== id) } });
+  },
+
+  // Recurring Invoices
+  recurringInvoices: [],
+  loadRecurringInvoices: async () => {
+    const raw = await invoke<RecurringInvoice[]>('get_recurring_invoices');
+    const items = raw.map((ri: RecurringInvoice) => ({
+      ...ri,
+      line_items: typeof ri.line_items === 'string' ? JSON.parse(ri.line_items as string) : ri.line_items,
+    }));
+    set({ recurringInvoices: items });
+  },
+  addRecurringInvoice: async (data) => {
+    const payload = { ...data, line_items: JSON.stringify(data.line_items) };
+    const ri = await invoke<RecurringInvoice>('create_recurring_invoice', { payload });
+    const parsed = { ...ri, line_items: typeof ri.line_items === 'string' ? JSON.parse(ri.line_items as string) : ri.line_items };
+    set({ recurringInvoices: [...get().recurringInvoices, parsed] });
+    return parsed;
+  },
+  updateRecurringInvoice: async (data) => {
+    const payload = { ...data, line_items: JSON.stringify(data.line_items) };
+    await invoke('update_recurring_invoice', { payload });
+    set({ recurringInvoices: get().recurringInvoices.map((r) => (r.id === data.id ? data : r)) });
+  },
+  removeRecurringInvoice: async (id) => {
+    await invoke('delete_recurring_invoice', { id });
+    set({ recurringInvoices: get().recurringInvoices.filter((r) => r.id !== id) });
   },
 }));

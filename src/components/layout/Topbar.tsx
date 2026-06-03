@@ -10,6 +10,7 @@ const pageTitles: Record<string, string> = {
   '/clients': 'Clients',
   '/finance': 'Finance',
   '/insights': 'Insights',
+  '/settings': 'Settings',
 };
 
 export default function Topbar() {

@@ -107,4 +107,36 @@ export type UserProfile = {
   hourly_rate?: number;
   currency: string;
   writing_voice?: string;
+  tax_rate?: number;
+  payment_terms?: number;
+  tagline?: string;
+  always_include?: string;
+  writing_style?: string;
+  theme?: string;
+};
+
+export type Communication = {
+  id: string;
+  client_id: string;
+  type: 'note' | 'call' | 'email' | 'meeting';
+  summary: string;
+  date: string;
+  created_at: string;
+};
+
+export type RecurringInvoice = {
+  id: string;
+  client_id: string;
+  project_id?: string;
+  title: string;
+  frequency: 'weekly' | 'biweekly' | 'monthly' | 'quarterly';
+  line_items: LineItem[];
+  subtotal: number;
+  tax_rate?: number;
+  total: number;
+  notes?: string;
+  active: boolean;
+  next_due: string;
+  last_generated?: string;
+  created_at: string;
 };

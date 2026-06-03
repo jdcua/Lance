@@ -35,3 +35,103 @@ html, body, #root {
 ::-webkit-scrollbar-thumb:hover {
   background: #BCBCB8;
 }
+
+/* ── Micro-animations ── */
+
+@keyframes slide-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.2s ease-out;
+}
+
+@keyframes fade-scale-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-scale-in {
+  animation: fade-scale-in 0.18s ease-out forwards;
+}
+
+@keyframes pulse-scale {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.animate-pulse-scale {
+  animation: pulse-scale 0.2s ease-out;
+}
+
+@keyframes progress-fill {
+  from { width: 0%; }
+}
+
+.progress-animate {
+  animation: progress-fill 0.4s ease-out;
+}
+
+@keyframes insight-bar-in {
+  from { width: 0 !important; }
+}
+
+.insight-bar-animate {
+  animation: insight-bar-in 0.6s ease-out forwards;
+}
+
+/* Staggered insight bar delays */
+.insight-bar-0 { animation-delay: 0ms; }
+.insight-bar-1 { animation-delay: 100ms; }
+.insight-bar-2 { animation-delay: 200ms; }
+.insight-bar-3 { animation-delay: 300ms; }
+.insight-bar-4 { animation-delay: 400ms; }
+
+/* ── Interactive base transition ── */
+button, a, input, textarea, select, .transition-base {
+  transition: all 150ms ease;
+}
+
+/* ── Nav active border animation ── */
+.nav-active-line {
+  transform-origin: top;
+  animation: scaleY-in 0.15s ease-out;
+}
+
+@keyframes scaleY-in {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+/* ── Loading dots animation ── */
+@keyframes loading-dot {
+  0%, 80%, 100% { opacity: 0; }
+  40% { opacity: 1; }
+}
+
+.loading-dot {
+  display: inline-block;
+  animation: loading-dot 1.4s infinite;
+  font-size: 20px;
+  color: #A3A39E;
+}
+
+.loading-dot:nth-child(2) { animation-delay: 0.2s; }
+.loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* ── Dark mode ── */
+.dark body,
+.dark #root {
+  background-color: #141412;
+  color: #F0EFE9;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #3C3C3A;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4C4C4A;
+}

@@ -263,10 +263,10 @@ export default function TimeScreen() {
       )}
 
       {timeEntries.length === 0 ? (
-        <Card className="text-center py-12">
-          <Clock size={32} className="text-[#D4D4D2] mx-auto mb-3" />
-          <h3 className="text-sm font-medium text-[#6B6B67] mb-1">No time entries yet</h3>
-          <p className="text-xs text-[#A3A39E]">Start the timer or add entries manually.</p>
+        <Card className="text-center py-16 flex flex-col items-center">
+          <Clock size={40} className="text-[#A3A39E] mb-4" />
+          <h3 className="text-[15px] font-medium text-[#6B6B67] mb-1.5">No time entries yet</h3>
+          <p className="text-[13px] text-[#A3A39E] max-w-xs mb-5">Start a timer or add entries manually.</p>
         </Card>
       ) : (
         <div className="space-y-2">

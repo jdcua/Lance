@@ -136,7 +136,58 @@ async function runMigrations(database: Database): Promise<void> {
       email TEXT,
       hourly_rate REAL,
       currency TEXT DEFAULT 'CAD',
-      writing_voice TEXT
+      writing_voice TEXT,
+      tax_rate REAL DEFAULT 0,
+      payment_terms INTEGER DEFAULT 14,
+      tagline TEXT,
+      always_include TEXT,
+      writing_style TEXT DEFAULT 'professional',
+      theme TEXT DEFAULT 'light'
+    )
+  `);
+
+  // Add new columns (SQLite does not support IF NOT EXISTS on ALTER TABLE)
+  const newColumns = [
+    'ALTER TABLE user_profile ADD COLUMN tax_rate REAL DEFAULT 0',
+    'ALTER TABLE user_profile ADD COLUMN payment_terms INTEGER DEFAULT 14',
+    'ALTER TABLE user_profile ADD COLUMN tagline TEXT',
+    'ALTER TABLE user_profile ADD COLUMN always_include TEXT',
+    'ALTER TABLE user_profile ADD COLUMN writing_style TEXT DEFAULT \'professional\'',
+    'ALTER TABLE user_profile ADD COLUMN theme TEXT DEFAULT \'light\'',
+  ];
+  for (const sql of newColumns) {
+    try { await database.execute(sql); } catch { /* column already exists */ }
+  }
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS communications (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      date TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (client_id) REFERENCES clients(id)
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS recurring_invoices (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      project_id TEXT,
+      title TEXT NOT NULL,
+      frequency TEXT NOT NULL,
+      line_items TEXT NOT NULL DEFAULT '[]',
+      subtotal REAL NOT NULL DEFAULT 0,
+      tax_rate REAL,
+      total REAL NOT NULL DEFAULT 0,
+      notes TEXT,
+      active INTEGER NOT NULL DEFAULT 1,
+      next_due TEXT NOT NULL,
+      last_generated TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (client_id) REFERENCES clients(id)
     )
   `);
 }

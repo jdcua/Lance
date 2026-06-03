@@ -13,6 +13,7 @@ import {
 } from 'docx';
 import type { Proposal, Invoice, Client, UserProfile } from '../types';
 import { formatCurrency, formatDate } from '../utils/format';
+import { htmlToPlainText } from '../utils/htmlToText';
 import { saveFile, getProfileName } from './common';
 
 export async function exportProposalDOCX(
@@ -20,7 +21,7 @@ export async function exportProposalDOCX(
   client: Client,
   profile: UserProfile
 ): Promise<void> {
-  const bodyText = proposal.body || proposal.scope || '';
+  const bodyText = htmlToPlainText(proposal.body || proposal.scope || '');
   const profileName = getProfileName(profile);
   const statusDate = proposal.sent_at || new Date().toISOString();
 

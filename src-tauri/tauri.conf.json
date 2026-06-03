@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/nicegui/tauri-apps/main/schemas/config.schema.json",
   "productName": "Lance",
   "version": "1.0.0",
-  "identifier": "com.lance.app",
+  "identifier": "com.decentra.lance",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -13,12 +13,13 @@
     "windows": [
       {
         "title": "Lance",
-        "width": 1280,
-        "height": 800,
+        "width": 1100,
+        "height": 680,
         "resizable": true,
         "fullscreen": false,
-        "minWidth": 960,
-        "minHeight": 600
+        "minWidth": 900,
+        "minHeight": 580,
+        "center": true
       }
     ],
     "security": {

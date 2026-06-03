@@ -1,4 +1,5 @@
 pub mod clients;
+pub mod communications;
 pub mod contracts;
 pub mod finance;
 pub mod invoices;

@@ -20,6 +20,12 @@ pub struct UserProfile {
     pub hourly_rate: Option<f64>,
     pub currency: String,
     pub writing_voice: Option<String>,
+    pub tax_rate: Option<f64>,
+    pub payment_terms: Option<i64>,
+    pub tagline: Option<String>,
+    pub always_include: Option<String>,
+    pub writing_style: Option<String>,
+    pub theme: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -46,13 +52,21 @@ pub struct UpsertProfilePayload {
     pub hourly_rate: Option<f64>,
     pub currency: String,
     pub writing_voice: Option<String>,
+    pub tax_rate: Option<f64>,
+    pub payment_terms: Option<i64>,
+    pub tagline: Option<String>,
+    pub always_include: Option<String>,
+    pub writing_style: Option<String>,
+    pub theme: Option<String>,
 }
 
 #[tauri::command]
 pub fn get_expenses(app: AppHandle) -> Result<Vec<Expense>, String> {
     let conn = db::get_connection(&app)?;
     let mut stmt = conn
-        .prepare("SELECT id, category, description, amount, date FROM expenses ORDER BY date DESC")
+        .prepare(
+            "SELECT id, category, description, amount, date FROM expenses ORDER BY date DESC",
+        )
         .map_err(|e| e.to_string())?;
     let expenses = stmt
         .query_map([], |row| {
@@ -77,7 +91,8 @@ pub fn create_expense(app: AppHandle, payload: CreateExpensePayload) -> Result<E
     conn.execute(
         "INSERT INTO expenses (id, category, description, amount, date) VALUES (?1, ?2, ?3, ?4, ?5)",
         rusqlite::params![id, payload.category, payload.description, payload.amount, payload.date],
-    ).map_err(|e| e.to_string())?;
+    )
+    .map_err(|e| e.to_string())?;
     Ok(Expense {
         id,
         category: payload.category,
@@ -92,13 +107,7 @@ pub fn update_expense(app: AppHandle, payload: UpdateExpensePayload) -> Result<(
     let conn = db::get_connection(&app)?;
     conn.execute(
         "UPDATE expenses SET category = ?1, description = ?2, amount = ?3, date = ?4 WHERE id = ?5",
-        rusqlite::params![
-            payload.category,
-            payload.description,
-            payload.amount,
-            payload.date,
-            payload.id
-        ],
+        rusqlite::params![payload.category, payload.description, payload.amount, payload.date, payload.id],
     )
     .map_err(|e| e.to_string())?;
     Ok(())
@@ -115,7 +124,7 @@ pub fn delete_expense(app: AppHandle, id: String) -> Result<(), String> {
 #[tauri::command]
 pub fn get_user_profile(app: AppHandle) -> Result<Option<UserProfile>, String> {
     let conn = db::get_connection(&app)?;
-    let mut stmt = conn.prepare("SELECT id, name, email, hourly_rate, currency, writing_voice FROM user_profile WHERE id = 1")
+    let mut stmt = conn.prepare("SELECT id, name, email, hourly_rate, currency, writing_voice, tax_rate, payment_terms, tagline, always_include, writing_style, theme FROM user_profile WHERE id = 1")
         .map_err(|e| e.to_string())?;
     Ok(stmt
         .query_row([], |row| {
@@ -126,6 +135,12 @@ pub fn get_user_profile(app: AppHandle) -> Result<Option<UserProfile>, String> {
                 hourly_rate: row.get(3)?,
                 currency: row.get::<_, String>(4).unwrap_or("CAD".to_string()),
                 writing_voice: row.get(5)?,
+                tax_rate: row.get(6)?,
+                payment_terms: row.get(7)?,
+                tagline: row.get(8)?,
+                always_include: row.get(9)?,
+                writing_style: row.get(10)?,
+                theme: row.get(11)?,
             })
         })
         .ok())
@@ -135,8 +150,8 @@ pub fn get_user_profile(app: AppHandle) -> Result<Option<UserProfile>, String> {
 pub fn upsert_user_profile(app: AppHandle, payload: UpsertProfilePayload) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
     conn.execute(
-        "INSERT INTO user_profile (id, name, email, hourly_rate, currency, writing_voice) VALUES (1, ?1, ?2, ?3, ?4, ?5) ON CONFLICT(id) DO UPDATE SET name = ?1, email = ?2, hourly_rate = ?3, currency = ?4, writing_voice = ?5",
-        rusqlite::params![payload.name, payload.email, payload.hourly_rate, payload.currency, payload.writing_voice],
+        "INSERT INTO user_profile (id, name, email, hourly_rate, currency, writing_voice, tax_rate, payment_terms, tagline, always_include, writing_style, theme) VALUES (1, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11) ON CONFLICT(id) DO UPDATE SET name = ?1, email = ?2, hourly_rate = ?3, currency = ?4, writing_voice = ?5, tax_rate = ?6, payment_terms = ?7, tagline = ?8, always_include = ?9, writing_style = ?10, theme = ?11",
+        rusqlite::params![payload.name, payload.email, payload.hourly_rate, payload.currency, payload.writing_voice, payload.tax_rate, payload.payment_terms, payload.tagline, payload.always_include, payload.writing_style, payload.theme],
     ).map_err(|e| e.to_string())?;
     Ok(())
 }

@@ -148,3 +148,99 @@ pub fn delete_invoice(app: AppHandle, id: String) -> Result<(), String> {
         .map_err(|e| e.to_string())?;
     Ok(())
 }
+
+// ── Recurring Invoices ──
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RecurringInvoice {
+    pub id: String,
+    pub client_id: String,
+    pub project_id: Option<String>,
+    pub title: String,
+    pub frequency: String,
+    pub line_items: String,
+    pub subtotal: f64,
+    pub tax_rate: Option<f64>,
+    pub total: f64,
+    pub notes: Option<String>,
+    pub active: bool,
+    pub next_due: String,
+    pub last_generated: Option<String>,
+    pub created_at: String,
+}
+
+#[tauri::command]
+pub fn get_recurring_invoices(app: AppHandle) -> Result<Vec<RecurringInvoice>, String> {
+    let conn = db::get_connection(&app)?;
+    let mut stmt = conn
+        .prepare("SELECT id, client_id, project_id, title, frequency, line_items, subtotal, tax_rate, total, notes, active, next_due, last_generated, created_at FROM recurring_invoices ORDER BY next_due ASC")
+        .map_err(|e| e.to_string())?;
+    let items = stmt
+        .query_map([], |row| {
+            Ok(RecurringInvoice {
+                id: row.get(0)?,
+                client_id: row.get(1)?,
+                project_id: row.get(2)?,
+                title: row.get(3)?,
+                frequency: row.get(4)?,
+                line_items: row.get(5)?,
+                subtotal: row.get(6)?,
+                tax_rate: row.get(7)?,
+                total: row.get(8)?,
+                notes: row.get(9)?,
+                active: row.get::<_, i32>(10)? != 0,
+                next_due: row.get(11)?,
+                last_generated: row.get(12)?,
+                created_at: row.get(13)?,
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .filter_map(|r| r.ok())
+        .collect();
+    Ok(items)
+}
+
+#[tauri::command]
+pub fn create_recurring_invoice(app: AppHandle, payload: RecurringInvoice) -> Result<RecurringInvoice, String> {
+    let conn = db::get_connection(&app)?;
+    let id = uuid::Uuid::new_v4().to_string();
+    let created_at = super::clients::chrono_now();
+    conn.execute(
+        "INSERT INTO recurring_invoices (id, client_id, project_id, title, frequency, line_items, subtotal, tax_rate, total, notes, active, next_due, last_generated, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+        rusqlite::params![id, payload.client_id, payload.project_id, payload.title, payload.frequency, payload.line_items, payload.subtotal, payload.tax_rate, payload.total, payload.notes, payload.active as i32, payload.next_due, payload.last_generated, created_at],
+    ).map_err(|e| e.to_string())?;
+    Ok(RecurringInvoice {
+        id,
+        client_id: payload.client_id,
+        project_id: payload.project_id,
+        title: payload.title,
+        frequency: payload.frequency,
+        line_items: payload.line_items,
+        subtotal: payload.subtotal,
+        tax_rate: payload.tax_rate,
+        total: payload.total,
+        notes: payload.notes,
+        active: payload.active,
+        next_due: payload.next_due,
+        last_generated: payload.last_generated,
+        created_at,
+    })
+}
+
+#[tauri::command]
+pub fn update_recurring_invoice(app: AppHandle, payload: RecurringInvoice) -> Result<(), String> {
+    let conn = db::get_connection(&app)?;
+    conn.execute(
+        "UPDATE recurring_invoices SET client_id = ?1, project_id = ?2, title = ?3, frequency = ?4, line_items = ?5, subtotal = ?6, tax_rate = ?7, total = ?8, notes = ?9, active = ?10, next_due = ?11, last_generated = ?12 WHERE id = ?13",
+        rusqlite::params![payload.client_id, payload.project_id, payload.title, payload.frequency, payload.line_items, payload.subtotal, payload.tax_rate, payload.total, payload.notes, payload.active as i32, payload.next_due, payload.last_generated, payload.id],
+    ).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn delete_recurring_invoice(app: AppHandle, id: String) -> Result<(), String> {
+    let conn = db::get_connection(&app)?;
+    conn.execute("DELETE FROM recurring_invoices WHERE id = ?", [&id])
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}

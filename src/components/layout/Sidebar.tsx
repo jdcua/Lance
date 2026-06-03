@@ -9,6 +9,7 @@ import {
   Users,
   BarChart3,
   Lightbulb,
+  Settings,
 } from 'lucide-react';
 
 const navGroups = [
@@ -75,6 +76,27 @@ export default function Sidebar() {
           </div>
         ))}
       </nav>
+
+      <div className="border-t border-[#E5E5E3]">
+        <NavLink
+          to="/settings"
+          className={({ isActive }) =>
+            `flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors ${
+              isActive
+                ? 'bg-white border-l-2 border-[#1D9E75] text-[#1D9E75] font-medium pl-[14px]'
+                : 'text-[#6B6B67] hover:text-[#1C1C1A] hover:bg-[#F2F2F0] border-l-2 border-transparent'
+            }`
+          }
+        >
+          <Settings size={16} />
+          Settings
+        </NavLink>
+        <div className="px-4 py-2">
+          <p className="text-[10px] text-[#A3A39E] leading-relaxed">
+            <span className="font-medium">⌘1</span>-8 navigate &middot; <span className="font-medium">⌘N</span> new
+          </p>
+        </div>
+      </div>
     </aside>
   );
 }

@@ -3,12 +3,29 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
-import { ArrowLeft } from 'lucide-react';
+import RichEditor from '../components/ui/RichEditor';
+import { textToHtml } from '../utils/textToHtml';
+import { ArrowLeft, Sparkles, X, AlertTriangle } from 'lucide-react';
+import { generateProposalBody, checkScopeWarnings, type ScopeWarning } from '../ai/proposalGenerator';
+
+const projectTypes = [
+  'Brand identity',
+  'Web design',
+  'Development',
+  'Consulting',
+  'Content writing',
+  'Photography',
+  'Marketing',
+  'Other',
+];
 
 export default function NewProposal() {
-  const { clients, loadClients, addProposal } = useStore();
+  const { clients, loadClients, addProposal, profile, loadProfile } = useStore();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [warnings, setWarnings] = useState<ScopeWarning[]>([]);
+  const [dismissedWarnings, setDismissedWarnings] = useState<Set<string>>(new Set());
   const [form, setForm] = useState({
     client_id: '',
     title: '',
@@ -16,12 +33,50 @@ export default function NewProposal() {
     timeline: '',
     rate: '',
     rate_type: 'flat' as 'flat' | 'hourly',
+    project_type: 'Web design',
     body: '',
   });
 
   useEffect(() => {
     loadClients();
-  }, [loadClients]);
+    loadProfile();
+  }, [loadClients, loadProfile]);
+
+  const handleGenerate = () => {
+    if (!form.scope.trim()) return;
+    setGenerating(true);
+    setTimeout(() => {
+      const client = clients.find((c) => c.id === form.client_id);
+      const plainText = generateProposalBody({
+        clientName: client?.name || 'the client',
+        projectType: form.project_type,
+        scope: form.scope,
+        timeline: form.timeline,
+        rate: form.rate ? parseFloat(form.rate) : 0,
+        rateType: form.rate_type,
+        freelancerName: profile?.name || 'Freelancer',
+        writingVoice: profile?.writing_style || profile?.writing_voice || 'professional',
+        tagline: profile?.tagline,
+        alwaysInclude: profile?.always_include,
+      });
+      const body = textToHtml(plainText);
+      const scopeWarnings = checkScopeWarnings(form.scope);
+      setForm({ ...form, body });
+      setWarnings(scopeWarnings);
+      setDismissedWarnings(new Set());
+      setGenerating(false);
+    }, 600);
+  };
+
+  const handleRegenerate = () => {
+    setForm({ ...form, body: '' });
+    setWarnings([]);
+    setDismissedWarnings(new Set());
+  };
+
+  const dismissWarning = (pattern: string) => {
+    setDismissedWarnings((prev) => new Set([...prev, pattern]));
+  };
 
   const handleSave = async (status: 'draft' | 'sent') => {
     if (!form.title.trim() || !form.client_id) return;
@@ -42,6 +97,8 @@ export default function NewProposal() {
       setSaving(false);
     }
   };
+
+  const activeWarnings = warnings.filter((w) => !dismissedWarnings.has(w.pattern));
 
   return (
     <div className="p-6 max-w-2xl">
@@ -84,10 +141,23 @@ export default function NewProposal() {
           </div>
 
           <div>
+            <label className="block text-xs font-medium text-[#6B6B67] mb-1">Project Type</label>
+            <select
+              value={form.project_type}
+              onChange={(e) => setForm({ ...form, project_type: e.target.value })}
+              className="w-full px-3 py-2 text-sm border border-[#E5E5E3] rounded-[8px] focus:outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[#1D9E75]/20"
+            >
+              {projectTypes.map((pt) => (
+                <option key={pt} value={pt}>{pt}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
             <label className="block text-xs font-medium text-[#6B6B67] mb-1">Scope of Work</label>
             <textarea
               value={form.scope}
-              onChange={(e) => setForm({ ...form, scope: e.target.value })}
+              onChange={(e) => { setForm({ ...form, scope: e.target.value }); setWarnings([]); setDismissedWarnings(new Set()); }}
               placeholder="Describe the scope of work..."
               rows={3}
               className="w-full px-3 py-2 text-sm border border-[#E5E5E3] rounded-[8px] placeholder:text-[#A3A39E] focus:outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[#1D9E75]/20 resize-none"
@@ -128,23 +198,66 @@ export default function NewProposal() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-[#6B6B67] mb-1">Proposal Body</label>
-            <textarea
-              value={form.body}
-              onChange={(e) => setForm({ ...form, body: e.target.value })}
-              placeholder="Write the full proposal text here. You can generate this with Lance AI later."
-              rows={10}
-              className="w-full px-3 py-2 text-sm border border-[#E5E5E3] rounded-[8px] placeholder:text-[#A3A39E] focus:outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[#1D9E75]/20 resize-none font-mono"
-            />
+          <div className="flex items-center justify-center pt-2">
+            <Button
+              onClick={handleGenerate}
+              loading={generating}
+              disabled={!form.scope.trim()}
+              size="md"
+            >
+              {generating ? (
+                'Writing...'
+              ) : (
+                <>
+                  <Sparkles size={16} />
+                  Generate proposal
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </Card>
+
+      {activeWarnings.length > 0 && (
+        <div className="mb-4 space-y-1.5">
+          {activeWarnings.map((w) => (
+            <div
+              key={w.pattern}
+              className="flex items-start gap-2 px-3 py-2 rounded-[8px] bg-[#FAEEDA] text-[#854F0B] text-xs"
+            >
+              <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
+              <span className="flex-1">{w.warning}</span>
+              <button
+                onClick={() => dismissWarning(w.pattern)}
+                className="text-[#854F0B]/60 hover:text-[#854F0B] flex-shrink-0"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {form.body && (
+        <Card className="mb-6">
+          <RichEditor
+            content={form.body}
+            onChange={(html) => setForm({ ...form, body: html })}
+            placeholder="Your proposal will appear here after generation..."
+            minHeight={280}
+          />
+        </Card>
+      )}
 
       <div className="flex justify-end gap-2">
         <Button variant="ghost" onClick={() => navigate('/proposals')} size="md">
           Cancel
         </Button>
+        {form.body && (
+          <Button variant="secondary" onClick={handleRegenerate} disabled={generating} size="md">
+            Regenerate
+          </Button>
+        )}
         <Button variant="secondary" onClick={() => handleSave('draft')} loading={saving} disabled={!form.title.trim() || !form.client_id} size="md">
           Save Draft
         </Button>

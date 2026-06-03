@@ -1,6 +1,7 @@
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import type { Proposal, Invoice, Client, UserProfile } from '../types';
 import { formatCurrency, formatDate } from '../utils/format';
+import { htmlToPlainText } from '../utils/htmlToText';
 import { getProfileName } from './common';
 
 const pdfStyles = StyleSheet.create({
@@ -35,7 +36,7 @@ const pdfStyles = StyleSheet.create({
 });
 
 export function ProposalPDF({ proposal, client, profile }: { proposal: Proposal; client: Client; profile: UserProfile }) {
-  const body = proposal.body || proposal.scope || '';
+  const body = htmlToPlainText(proposal.body || proposal.scope || '');
   const statusDate = proposal.sent_at || new Date().toISOString();
 
   return (
@@ -186,7 +187,7 @@ export function InvoicePDF({ invoice, client, profile }: { invoice: Invoice; cli
         {invoice.notes && (
           <>
             <View style={pdfStyles.divider} />
-            <Text style={pdfStyles.notes}>{invoice.notes}</Text>
+            <Text style={pdfStyles.notes}>{htmlToPlainText(invoice.notes)}</Text>
           </>
         )}
 

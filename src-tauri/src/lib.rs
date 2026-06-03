@@ -47,12 +47,19 @@ pub fn run() {
             commands::invoices::create_invoice,
             commands::invoices::update_invoice,
             commands::invoices::delete_invoice,
+            commands::invoices::get_recurring_invoices,
+            commands::invoices::create_recurring_invoice,
+            commands::invoices::update_recurring_invoice,
+            commands::invoices::delete_recurring_invoice,
             commands::finance::get_expenses,
             commands::finance::create_expense,
             commands::finance::update_expense,
             commands::finance::delete_expense,
             commands::finance::get_user_profile,
             commands::finance::upsert_user_profile,
+            commands::communications::get_communications,
+            commands::communications::create_communication,
+            commands::communications::delete_communication,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
