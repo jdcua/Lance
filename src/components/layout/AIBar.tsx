@@ -34,9 +34,11 @@ export default function AIBar() {
   if (!insight) return null;
 
   return (
-    <div className="border-b border-[#E5E5E3] bg-gradient-to-r from-[#E6F1FB] to-[#EEF8F3]">
+    <div className="border-b border-[#E5E5E3] bg-[#F0FAF6] border-l-[3px] border-l-[#1D9E75]">
       <div className="flex items-start gap-2 px-6 py-2.5">
-        <Sparkles size={14} className="text-[#1D9E75] mt-0.5 flex-shrink-0" />
+        <div className="w-5 h-5 rounded-full bg-[#1D9E75] flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Sparkles size={11} className="text-white" />
+        </div>
         <div className="flex-1 min-w-0">
           <button
             onClick={() => setExpanded(!expanded)}

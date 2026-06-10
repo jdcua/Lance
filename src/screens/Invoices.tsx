@@ -11,6 +11,7 @@ import { formatCurrency } from '../utils/format';
 import { generateInvoiceNumber } from '../utils/invoiceNumber';
 import { useToasts } from '../store/toastStore';
 import { Plus, Pencil, Trash2, Download, Clock, RotateCw, Receipt } from 'lucide-react';
+import { checkAndNotify, tryUnlock } from '../achievements/notify';
 
 const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
   draft: 'warning',
@@ -174,6 +175,7 @@ export default function Invoices() {
         }
       }
       setShowModal(false);
+      checkAndNotify(useStore.getState(), addToast);
     } finally {
       setSaving(false);
     }
@@ -187,6 +189,7 @@ export default function Invoices() {
 
   const handleMarkPaid = async (inv: Invoice) => {
     await updateInvoice({ ...inv, status: 'paid' as const });
+    checkAndNotify(useStore.getState(), addToast);
   };
 
   const handleMarkSent = async (inv: Invoice) => {
@@ -309,6 +312,7 @@ export default function Invoices() {
         await addRecurringInvoice(data);
       }
       setShowRecurringModal(false);
+      checkAndNotify(useStore.getState(), addToast);
     } finally {
       setSaving(false);
     }
@@ -328,6 +332,7 @@ export default function Invoices() {
     const client = getClient(inv.client_id);
     if (client && profile) {
       exportInvoicePDF(inv, client, profile);
+      tryUnlock('first_export', addToast);
     }
     setExportDropdown(null);
   };
@@ -336,6 +341,7 @@ export default function Invoices() {
     const client = getClient(inv.client_id);
     if (client && profile) {
       exportInvoiceDOCX(inv, client, profile);
+      tryUnlock('first_export', addToast);
     }
     setExportDropdown(null);
   };
@@ -350,10 +356,10 @@ export default function Invoices() {
 
   return (
     <div className="p-6">
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <MetricCard label="Outstanding" value={formatCurrency(totalOutstanding)} subtext={`${invoices.filter((i) => i.status === 'sent' || i.status === 'overdue').length} invoices`} />
-        <MetricCard label="Paid" value={formatCurrency(totalPaid)} subtext={`${invoices.filter((i) => i.status === 'paid').length} invoices`} trend="up" />
-        <MetricCard label="Overdue" value={formatCurrency(invoices.filter((i) => i.status === 'overdue').reduce((s, i) => s + i.total, 0))} subtext="needs attention" trend={invoices.filter((i) => i.status === 'overdue').length > 0 ? 'down' : 'neutral'} />
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <MetricCard label="Outstanding" value={formatCurrency(totalOutstanding)} subtext={`${invoices.filter((i) => i.status === 'sent' || i.status === 'overdue').length} invoices`} color="amber" />
+        <MetricCard label="Paid" value={formatCurrency(totalPaid)} subtext={`${invoices.filter((i) => i.status === 'paid').length} invoices`} trend="up" color="green" />
+        <MetricCard label="Overdue" value={formatCurrency(invoices.filter((i) => i.status === 'overdue').reduce((s, i) => s + i.total, 0))} subtext="needs attention" trend={invoices.filter((i) => i.status === 'overdue').length > 0 ? 'down' : 'neutral'} color={invoices.filter((i) => i.status === 'overdue').length > 0 ? 'red' : 'gray'} />
       </div>
 
       <div className="flex items-center gap-2 mb-6 border-b border-[#E5E5E3]">

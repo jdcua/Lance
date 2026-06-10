@@ -25,7 +25,10 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["-apple-system", "BlinkMacSystemFont", "'Segoe UI'", "sans-serif"],
+        display: ["'DM Sans'", "sans-serif"],
+        body: ["'Inter'", "sans-serif"],
+        mono: ["'JetBrains Mono'", "monospace"],
+        sans: ["'Inter'", "sans-serif"],
       },
       borderRadius: {
         card: "12px",

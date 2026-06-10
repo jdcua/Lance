@@ -8,6 +8,8 @@ import Badge from '../components/ui/Badge';
 import RichEditor from '../components/ui/RichEditor';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { ensureHtml } from '../utils/textToHtml';
+import { useToasts } from '../store/toastStore';
+import { checkAndNotify } from '../achievements/notify';
 import { Plus, Pencil, Trash2, Eye, PenLine } from 'lucide-react';
 
 const statusBadge: Record<string, 'success' | 'warning' | 'info' | 'danger'> = {
@@ -19,6 +21,7 @@ const statusBadge: Record<string, 'success' | 'warning' | 'info' | 'danger'> = {
 
 export default function Contracts() {
   const { contracts, loadContracts, clients, loadClients, addContract, updateContract, removeContract } = useStore();
+  const addToast = useToasts((s) => s.add);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Contract | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -52,6 +55,7 @@ export default function Contracts() {
         await addContract({ ...form, body: form.body || '', status: 'draft' });
       }
       setShowModal(false);
+      checkAndNotify(useStore.getState(), addToast);
     } finally {
       setSaving(false);
     }

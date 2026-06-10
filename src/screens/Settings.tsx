@@ -9,7 +9,11 @@ import { formatCurrency } from '../utils/format';
 import { save } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeFile } from '@tauri-apps/plugin-fs';
 import { open } from '@tauri-apps/plugin-dialog';
-import { Check, Upload, Download, AlertTriangle, Trash2 } from 'lucide-react';
+import { Check, Upload, Download, AlertTriangle, Trash2, Lock, Sparkles, ExternalLink } from 'lucide-react';
+import { THEMES, applyTheme, getTheme } from '../themes/themes';
+import { getUnlockedThemes } from '../achievements/checker';
+import type { ThemeId } from '../themes';
+import { validateLicenseKey } from '../license';
 
 const currencies = ['CAD', 'USD', 'GBP', 'EUR', 'AUD'];
 const writingStyles = ['professional', 'warm', 'direct', 'bold'];
@@ -25,10 +29,16 @@ function labelForStyle(s: string): string {
 }
 
 export default function Settings() {
-  const { profile, loadProfile, saveProfile } = useStore();
+  const { profile, loadProfile, saveProfile, isLicensed, activateLicense, removeLicense } = useStore();
   const addToast = useToasts((s) => s.add);
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [showResetModal, setShowResetModal] = useState(false);
+  const [showLicenseModal, setShowLicenseModal] = useState(false);
+  const [licenseKey, setLicenseKey] = useState('');
+  const [licenseError, setLicenseError] = useState('');
+  const [licenseActivating, setLicenseActivating] = useState(false);
+  const [activeTheme, setActiveTheme] = useState<ThemeId>('default');
+  const [unlockedThemes, setUnlockedThemes] = useState<Set<string>>(new Set(['default']));
   const [form, setForm] = useState<UserProfile>({
     name: '',
     email: '',
@@ -62,9 +72,23 @@ export default function Settings() {
         tagline: profile.tagline || '',
         always_include: profile.always_include || '',
         theme: profile.theme || 'light',
+        license_key: profile.license_key,
+        licensed_at: profile.licensed_at,
       });
     }
   }, [profile]);
+
+  useEffect(() => {
+    const stored = (localStorage.getItem('lance:theme') || 'default') as ThemeId;
+    setActiveTheme(stored);
+    if (isLicensed) {
+      setUnlockedThemes(new Set(['default', 'studio', 'terminal', 'craft']));
+    } else {
+      getUnlockedThemes().then((unlocked) => {
+        setUnlockedThemes(new Set(['default', ...unlocked]));
+      });
+    }
+  }, [isLicensed]);
 
   useEffect(() => {
     if (form.theme === 'dark') {
@@ -202,6 +226,38 @@ export default function Settings() {
     }
   };
 
+  const handleActivateLicense = async () => {
+    const key = licenseKey.trim().toUpperCase();
+    if (!key) {
+      setLicenseError('Enter a license key.');
+      return;
+    }
+    setLicenseActivating(true);
+    setLicenseError('');
+    try {
+      const success = await activateLicense(key);
+      if (success) {
+        setShowLicenseModal(false);
+        setLicenseKey('');
+        addToast('Lance is now licensed. Thank you.', 'success');
+        setUnlockedThemes(new Set(['default', 'studio', 'terminal', 'craft']));
+      } else {
+        setLicenseError('Invalid license key — check for typos and try again.');
+      }
+    } finally {
+      setLicenseActivating(false);
+    }
+  };
+
+  const handleRemoveLicense = async () => {
+    if (!window.confirm('Remove your license? The splash screen will return.')) return;
+    await removeLicense();
+    addToast('License removed.', 'info');
+    getUnlockedThemes().then((unlocked) => {
+      setUnlockedThemes(new Set(['default', ...unlocked]));
+    });
+  };
+
   const SectionHead = ({ title }: { title: string }) => (
     <div className="flex items-center gap-2 mb-4">
       <h3 className="text-sm font-semibold text-[#1C1C1A] dark:text-[#F0EFE9]">{title}</h3>
@@ -219,6 +275,53 @@ export default function Settings() {
   return (
     <div className="p-6 max-w-2xl">
       <h2 className="text-lg font-semibold text-[#1C1C1A] dark:text-[#F0EFE9] mb-6">Settings</h2>
+
+      {/* Section 0: License */}
+      <Card className="mb-6 dark:bg-[#1C1C1A] dark:border-[#2C2C2A]">
+        <SectionHead title="License" />
+        {isLicensed ? (
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles size={14} className="text-[#1D9E75]" />
+              <span className="text-sm font-medium text-[#1D9E75]">Licensed</span>
+            </div>
+            <p className="text-sm text-[#6B6B67] dark:text-[#A3A39E] mb-2">
+              Thank you for supporting Lance.
+            </p>
+            {form.licensed_at && (
+              <p className="text-xs text-[#A3A39E] mb-4">
+                Licensed on {new Date(form.licensed_at).toLocaleDateString()}.
+              </p>
+            )}
+            <button
+              onClick={handleRemoveLicense}
+              className="text-xs text-[#A3A39E] hover:text-[#A32D2D] underline transition-colors"
+            >
+              Remove license
+            </button>
+          </div>
+        ) : (
+          <div>
+            <p className="text-sm text-[#6B6B67] dark:text-[#A3A39E] mb-4">
+              Lance is free to use. A license removes the launch screen and unlocks all themes immediately.
+            </p>
+            <div className="flex items-center gap-3">
+              <Button variant="primary" onClick={() => { setLicenseKey(''); setLicenseError(''); setShowLicenseModal(true); }} size="sm">
+                Enter license key
+              </Button>
+              <a
+                href="https://lance.decentra.co/license"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm text-[#1D9E75] hover:underline"
+              >
+                Get a license &mdash; $59
+                <ExternalLink size={12} />
+              </a>
+            </div>
+          </div>
+        )}
+      </Card>
 
       {/* Section 1: Profile */}
       <Card className="mb-6 dark:bg-[#1C1C1A] dark:border-[#2C2C2A]">
@@ -371,6 +474,59 @@ export default function Settings() {
         </div>
       </Card>
 
+      {/* Section 4.5: Themes */}
+      <Card className="mb-6 dark:bg-[#1C1C1A] dark:border-[#2C2C2A]">
+        <SectionHead title="Themes" />
+        <div className="space-y-2">
+          {THEMES.map((theme) => {
+            const isUnlocked = unlockedThemes.has(theme.id);
+            const isActive = activeTheme === theme.id;
+            return (
+              <button
+                key={theme.id}
+                onClick={() => {
+                  if (!isUnlocked) return;
+                  setActiveTheme(theme.id);
+                  localStorage.setItem('lance:theme', theme.id);
+                  applyTheme(theme);
+                  addToast(`Switched to ${theme.name}`, 'info');
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-[8px] text-left text-sm transition-colors ${
+                  isActive
+                    ? 'bg-[rgba(29,158,117,0.06)] border border-[#1D9E75]/30'
+                    : isUnlocked
+                    ? 'hover:bg-[#F2F2F0] dark:hover:bg-[#2C2C2A] border border-transparent'
+                    : 'opacity-60 cursor-not-allowed border border-transparent'
+                }`}
+                disabled={!isUnlocked}
+              >
+                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                  isActive ? 'border-[#1D9E75]' : 'border-[#D4D4D2]'
+                }`}>
+                  {isActive && <div className="w-2 h-2 rounded-full bg-[#1D9E75]" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`font-medium ${isUnlocked ? 'text-[#1C1C1A] dark:text-[#F0EFE9]' : 'text-[#A3A39E]'}`}>
+                    {theme.name}
+                  </p>
+                  <p className="text-xs text-[#A3A39E] mt-0.5">
+                    {theme.description}
+                  </p>
+                </div>
+                {isUnlocked ? (
+                  <span className="text-[10px] text-[#A3A39E]">{theme.name}</span>
+                ) : (
+                  <span className="flex items-center gap-1 text-[10px] text-[#A3A39E]">
+                    <Lock size={10} />
+                    {theme.unlockedBy.replace(/^Always available$/, '') || 'Locked'}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+
       {/* Section 5: Data */}
       <Card className="mb-6 dark:bg-[#1C1C1A] dark:border-[#2C2C2A]">
         <SectionHead title="Data" />
@@ -422,6 +578,31 @@ export default function Settings() {
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setShowResetModal(false)} size="sm">Cancel</Button>
             <Button variant="danger" onClick={handleResetData} size="sm">Delete everything</Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={showLicenseModal} onClose={() => setShowLicenseModal(false)} title="Enter your license key" size="sm">
+        <div className="space-y-4">
+          <div>
+            <input
+              type="text"
+              value={licenseKey}
+              onChange={(e) => { setLicenseKey(e.target.value.toUpperCase()); setLicenseError(''); }}
+              placeholder="LANCE-XXXX-XXXX-XXXX-XXXX"
+              className="w-full px-3 py-2 text-sm border border-[#E5E5E3] rounded-[8px] placeholder:text-[#A3A39E] focus:outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[#1D9E75]/20 bg-white dark:bg-[#1C1C1A] dark:text-[#F0EFE9] dark:border-[#2C2C2A] uppercase"
+              style={{ fontFamily: "'JetBrains Mono', monospace" }}
+              autoFocus
+            />
+            {licenseError && (
+              <p className="text-xs text-[#A32D2D] mt-2">{licenseError}</p>
+            )}
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setShowLicenseModal(false)} size="sm">Cancel</Button>
+            <Button variant="primary" onClick={handleActivateLicense} loading={licenseActivating} disabled={!licenseKey.trim()} size="sm">
+              Activate
+            </Button>
           </div>
         </div>
       </Modal>

@@ -7,6 +7,7 @@ pub fn run() {
         .plugin(tauri_plugin_sql::Builder::default().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             let conn = db::get_connection(app.handle())?;
             db::run_migrations(&conn).expect("Failed to run migrations");

@@ -87,16 +87,17 @@ export default function Finance() {
 
   return (
     <div className="p-6">
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <MetricCard label="Revenue (Paid)" value={formatCurrency(totalPaid)} />
-        <MetricCard label="Expenses" value={formatCurrency(totalExpenses)} />
+      <div className="grid grid-cols-4 gap-3 mb-6">
+        <MetricCard label="Revenue (Paid)" value={formatCurrency(totalPaid)} color="green" />
+        <MetricCard label="Expenses" value={formatCurrency(totalExpenses)} color="red" />
         <MetricCard
           label="Profit"
           value={formatCurrency(profit)}
           trend={profit >= 0 ? 'up' : 'down'}
           subtext={profit >= 0 ? 'positive' : 'negative'}
+          color={profit >= 0 ? 'green' : 'red'}
         />
-        <MetricCard label="Outstanding" value={formatCurrency(totalOutstanding)} subtext="unpaid invoices" />
+        <MetricCard label="Outstanding" value={formatCurrency(totalOutstanding)} subtext="unpaid invoices" color="amber" />
       </div>
 
       <div className="grid grid-cols-2 gap-6 mb-6">

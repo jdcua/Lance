@@ -113,6 +113,8 @@ export type UserProfile = {
   always_include?: string;
   writing_style?: string;
   theme?: string;
+  license_key?: string;
+  licensed_at?: string;
 };
 
 export type Communication = {

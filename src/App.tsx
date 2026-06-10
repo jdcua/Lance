@@ -1,3 +1,11 @@
+/**
+ * Lance — Freelancer OS
+ * Built by Decentra (decentra.co)
+ *
+ * Privacy: Lance collects no telemetry. See PRIVACY.md.
+ * License: Proprietary. See LICENSE.md.
+ */
+
 import { useEffect, useState, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/layout/Sidebar';
@@ -7,14 +15,18 @@ import Modal from './components/ui/Modal';
 import Button from './components/ui/Button';
 import ToastContainer from './components/ui/Toast';
 import CommandPalette from './components/ui/CommandPalette';
+import SplashScreen from './components/ui/SplashScreen';
 import { useStore } from './store';
 import { useToasts } from './store/toastStore';
 import { shouldGenerate, getNextDueDate } from './utils/recurringEngine';
 import { generateInvoiceNumber } from './utils/invoiceNumber';
+import { applyTheme, getTheme, THEMES } from './themes/themes';
+import { checkAchievements } from './achievements/checker';
+import { ACHIEVEMENTS } from './achievements';
 
 export default function App() {
   const {
-    profile, profileLoaded, loadProfile, saveProfile,
+    profile, profileLoaded, loadProfile, saveProfile, isLicensed,
     recurringInvoices, loadRecurringInvoices, updateRecurringInvoice,
     invoices, loadInvoices, addInvoice,
     clients, loadClients,
@@ -30,6 +42,7 @@ export default function App() {
   const [saving, setSaving] = useState(false);
   const [ranAutoGen, setRanAutoGen] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     loadProfile();
@@ -42,6 +55,26 @@ export default function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [profile?.theme]);
+
+  // Apply color theme on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('lance:theme') || 'default';
+    const theme = getTheme(stored);
+    applyTheme(theme);
+  }, []);
+
+  // Licensed users: preload all theme fonts on mount
+  useEffect(() => {
+    if (isLicensed) {
+      THEMES.forEach((t) => {
+        // applyTheme triggers font loading internally
+        const current = getTheme(localStorage.getItem('lance:theme') || 'default');
+        applyTheme(t);
+        applyTheme(current);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLicensed]);
 
   useEffect(() => {
     if (profileLoaded && !profile) {
@@ -58,6 +91,17 @@ export default function App() {
       await loadRecurringInvoices();
       await loadInvoices();
       await loadClients();
+      // Check achievements after initial data load
+      try {
+        const state = useStore.getState();
+        const newAchievements = await checkAchievements(state);
+        for (const key of newAchievements) {
+          const ach = ACHIEVEMENTS.find((a) => a.key === key);
+          if (ach) {
+            addToast(`${ach.title} — ${ach.reward}`, 'unlock');
+          }
+        }
+      } catch { /* achievement check is non-critical */ }
     };
     run();
   }, [profileLoaded, ranAutoGen, loadRecurringInvoices, loadInvoices, loadClients]);
@@ -96,6 +140,25 @@ export default function App() {
     };
     generate();
   }, [ranAutoGen]);
+
+  // Auto-updater: check silently after 3s delay
+  useEffect(() => {
+    const checkUpdate = async () => {
+      try {
+        const { check } = await import('@tauri-apps/plugin-updater');
+        const update = await check();
+        if (update?.available) {
+          addToast(`Lance ${update.version} is available — updating in background`, 'info');
+          await update.downloadAndInstall();
+          addToast('Update installed — restart Lance to apply', 'success');
+        }
+      } catch {
+        // Silent fail — updates are best-effort
+      }
+    };
+    const timer = setTimeout(checkUpdate, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Keyboard shortcuts
   const isEditing = useCallback((): boolean => {
@@ -178,6 +241,11 @@ export default function App() {
           <Outlet />
         </main>
       </div>
+
+      {/* Splash screen — shown on launch when unlicensed */}
+      {showSplash && !isLicensed && (
+        <SplashScreen onDismiss={() => setShowSplash(false)} />
+      )}
 
       {/* 3-step Onboarding */}
       <Modal open={showOnboarding} onClose={() => {}} title="" size="sm">

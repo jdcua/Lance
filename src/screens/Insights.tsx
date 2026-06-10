@@ -88,11 +88,11 @@ export default function Insights() {
     <div className="p-6">
       <h2 className="text-lg font-semibold text-[#1C1C1A] mb-6">Business Insights</h2>
 
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <MetricCard label="Active Projects" value={activeProjects} subtext={`${completedProjects} completed`} />
-        <MetricCard label="Total Revenue" value={`$${totalPaid.toLocaleString()}`} subtext={`${invoices.filter((i) => i.status === 'paid').length} paid invoices`} trend="up" />
-        <MetricCard label="Outstanding" value={`$${totalOutstanding.toLocaleString()}`} subtext={overdueInvoices > 0 ? `${overdueInvoices} overdue` : 'all current'} trend={overdueInvoices > 0 ? 'down' : 'neutral'} />
-        <MetricCard label="Win Rate" value={`${winRate}%`} subtext={`${proposalsAccepted}/${totalProposals} proposals`} trend={winRate >= 50 ? 'up' : 'down'} />
+      <div className="grid grid-cols-4 gap-3 mb-6">
+        <MetricCard label="Active Projects" value={activeProjects} subtext={`${completedProjects} completed`} color="gray" />
+        <MetricCard label="Total Revenue" value={`$${totalPaid.toLocaleString()}`} subtext={`${invoices.filter((i) => i.status === 'paid').length} paid invoices`} trend="up" color="green" />
+        <MetricCard label="Outstanding" value={`$${totalOutstanding.toLocaleString()}`} subtext={overdueInvoices > 0 ? `${overdueInvoices} overdue` : 'all current'} trend={overdueInvoices > 0 ? 'down' : 'neutral'} color={overdueInvoices > 0 ? 'red' : 'amber'} />
+        <MetricCard label="Win Rate" value={`${winRate}%`} subtext={`${proposalsAccepted}/${totalProposals} proposals`} trend={winRate >= 50 ? 'up' : 'down'} color={winRate >= 50 ? 'green' : 'gray'} />
       </div>
 
       <div className="grid grid-cols-2 gap-6 mb-6">

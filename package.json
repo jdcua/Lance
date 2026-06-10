@@ -7,7 +7,13 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "build:win": "tauri build --target x86_64-pc-windows-msvc",
+    "build:mac": "tauri build --target universal-apple-darwin",
+    "build:linux": "tauri build --target x86_64-unknown-linux-gnu",
+    "build:all": "npm run build:win && npm run build:mac && npm run build:linux",
+    "release": "npm run build:all",
+    "gen-license": "node scripts/generate-license.cjs"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.5.1",
@@ -15,6 +21,7 @@
     "@tauri-apps/plugin-dialog": "^2.7.1",
     "@tauri-apps/plugin-fs": "^2.5.1",
     "@tauri-apps/plugin-sql": "^2.0.0",
+    "@tauri-apps/plugin-updater": "^2.0.0",
     "@tiptap/extension-placeholder": "^3.25.0",
     "@tiptap/extension-typography": "^3.25.0",
     "@tiptap/pm": "^3.25.0",
@@ -35,6 +42,7 @@
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",
+    "terser": "^5.48.0",
     "typescript": "^5.4.5",
     "vite": "^5.2.12"
   }

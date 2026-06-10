@@ -6,9 +6,12 @@ import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import MetricCard from '../components/ui/MetricCard';
 import { Play, Square, Plus, Trash2, Clock } from 'lucide-react';
+import { useToasts } from '../store/toastStore';
+import { checkAndNotify } from '../achievements/notify';
 
 export default function TimeScreen() {
   const { timeEntries, loadTimeEntries, addTimeEntry, updateTimeEntry, removeTimeEntry, projects, loadProjects, clients, loadClients } = useStore();
+  const addToast = useToasts((s) => s.add);
   const [activeTimer, setActiveTimer] = useState<{ entry: TimeEntry; elapsed: number } | null>(null);
   const [intervalId, setIntervalId] = useState<ReturnType<typeof setInterval> | null>(null);
   const [showNewEntry, setShowNewEntry] = useState(false);
@@ -82,6 +85,7 @@ export default function TimeScreen() {
     });
     setActiveTimer(null);
     await loadTimeEntries();
+    checkAndNotify(useStore.getState(), addToast);
   };
 
   const addManualEntry = async () => {
@@ -105,6 +109,7 @@ export default function TimeScreen() {
       setShowNewEntry(false);
       setEntryForm({ project_id: '', client_id: '', description: '', start_time: '', end_time: '', billable: true });
       setDurationMinutes(0);
+      checkAndNotify(useStore.getState(), addToast);
     } finally {
       setSaving(false);
     }
@@ -138,15 +143,16 @@ export default function TimeScreen() {
 
   return (
     <div className="p-6">
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <MetricCard label="Today" value={formatDuration(todaysMinutes)} />
-        <MetricCard label="This Week" value={formatDuration(weekMinutes)} />
-        <MetricCard label="Unbilled" value={formatDuration(unbilledMinutes)} subtext="billable hours" />
+      <div className="grid grid-cols-4 gap-3 mb-6">
+        <MetricCard label="Today" value={formatDuration(todaysMinutes)} color="gray" />
+        <MetricCard label="This Week" value={formatDuration(weekMinutes)} color="gray" />
+        <MetricCard label="Unbilled" value={formatDuration(unbilledMinutes)} subtext="billable hours" color={unbilledMinutes > 0 ? 'amber' : 'gray'} />
         <MetricCard
           label={activeTimer ? 'Timer Running' : 'Timer'}
           value={activeTimer ? formatDuration(activeTimer.elapsed) : 'Stopped'}
           subtext={activeTimer ? getProjectName(activeTimer.entry.project_id) : 'No active timer'}
           trend={activeTimer ? 'up' : 'neutral'}
+          color={activeTimer ? 'green' : 'gray'}
         />
       </div>
 

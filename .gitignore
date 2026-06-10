@@ -4,3 +4,7 @@ src-tauri/target/
 .env
 .env.*
 .DS_Store
+scripts/generate-license.cjs
+src-tauri/signing/*
+!src-tauri/signing/.gitkeep
+!src-tauri/signing/README.md

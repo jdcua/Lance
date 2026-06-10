@@ -7,6 +7,8 @@ import RichEditor from '../components/ui/RichEditor';
 import { textToHtml } from '../utils/textToHtml';
 import { ArrowLeft, Sparkles, X, AlertTriangle } from 'lucide-react';
 import { generateProposalBody, checkScopeWarnings, type ScopeWarning } from '../ai/proposalGenerator';
+import { useToasts } from '../store/toastStore';
+import { checkAndNotify } from '../achievements/notify';
 
 const projectTypes = [
   'Brand identity',
@@ -21,6 +23,7 @@ const projectTypes = [
 
 export default function NewProposal() {
   const { clients, loadClients, addProposal, profile, loadProfile } = useStore();
+  const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -93,6 +96,7 @@ export default function NewProposal() {
         body: form.body,
       });
       navigate('/proposals');
+      checkAndNotify(useStore.getState(), addToast);
     } finally {
       setSaving(false);
     }

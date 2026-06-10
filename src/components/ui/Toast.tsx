@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useToasts } from '../../store/toastStore';
-import { X, CheckCircle, AlertCircle, Info } from 'lucide-react';
+import { X, CheckCircle, AlertCircle, Info, Sparkles } from 'lucide-react';
 
 const icons = {
   success: CheckCircle,
   error: AlertCircle,
   info: Info,
+  unlock: Sparkles,
 };
 
 const colors = {
   success: 'bg-[#E6F5EE] text-[#1D9E75] border-[#1D9E75]/20',
   error: 'bg-[#FCEBEB] text-[#A32D2D] border-[#A32D2D]/20',
   info: 'bg-[#E6F1FB] text-[#185FA5] border-[#185FA5]/20',
+  unlock: 'bg-[#1D9E75] text-white border-[#1D9E75]',
 };
 
 export default function ToastContainer() {

@@ -10,7 +10,9 @@ import {
   BarChart3,
   Lightbulb,
   Settings,
+  Sparkles,
 } from 'lucide-react';
+import { useStore } from '../../store';
 
 const navGroups = [
   {
@@ -44,17 +46,18 @@ const navGroups = [
 ];
 
 export default function Sidebar() {
+  const isLicensed = useStore((s) => s.isLicensed);
   return (
-    <aside className="w-[200px] h-full flex flex-col bg-white border-r border-[#E5E5E3] flex-shrink-0">
-      <div className="flex items-center gap-2 px-4 h-[52px] border-b border-[#E5E5E3]">
+    <aside className="w-[220px] h-full flex flex-col bg-white border-r border-[#E5E5E3] flex-shrink-0">
+      <div className="flex items-center gap-2 px-4 h-[56px] border-b border-[#E5E5E3]">
         <Scale size={20} className="text-[#1D9E75]" />
-        <span className="font-semibold text-sm text-[#1C1C1A]">Lance</span>
+        <span className="font-semibold text-sm text-[#1C1C1A]" style={{ fontFamily: "'DM Sans', sans-serif" }}>Lance</span>
       </div>
 
       <nav className="flex-1 overflow-y-auto py-3">
         {navGroups.map((group) => (
           <div key={group.label} className="mb-4">
-            <p className="px-4 mb-1 text-[10px] font-semibold text-[#A3A39E] uppercase tracking-wider">
+            <p className="px-4 mb-1 text-[10px] font-semibold text-[#A3A39E] uppercase tracking-[0.8px]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
               {group.label}
             </p>
             {group.items.map((item) => (
@@ -62,12 +65,13 @@ export default function Sidebar() {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex items-center gap-2.5 px-4 py-2 text-sm transition-colors ${
+                  `flex items-center gap-2.5 px-4 h-[36px] text-sm transition-colors ${
                     isActive
-                      ? 'bg-white border-l-2 border-[#1D9E75] text-[#1D9E75] font-medium pl-[14px]'
-                      : 'text-[#6B6B67] hover:text-[#1C1C1A] hover:bg-[#F2F2F0] border-l-2 border-transparent'
+                      ? 'border-l-[3px] border-[#1D9E75] text-[#1D9E75] font-medium pl-[13px] bg-[rgba(29,158,117,0.06)]'
+                      : 'text-[#6B6B67] hover:text-[#1C1C1A] hover:bg-[#F2F2F0] border-l-[3px] border-transparent'
                   }`
                 }
+                style={{ fontFamily: "'DM Sans', sans-serif" }}
               >
                 <item.icon size={16} />
                 {item.label}
@@ -81,12 +85,13 @@ export default function Sidebar() {
         <NavLink
           to="/settings"
           className={({ isActive }) =>
-            `flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors ${
+            `flex items-center gap-2.5 px-4 h-[36px] text-sm transition-colors ${
               isActive
-                ? 'bg-white border-l-2 border-[#1D9E75] text-[#1D9E75] font-medium pl-[14px]'
-                : 'text-[#6B6B67] hover:text-[#1C1C1A] hover:bg-[#F2F2F0] border-l-2 border-transparent'
+                ? 'border-l-[3px] border-[#1D9E75] text-[#1D9E75] font-medium pl-[13px] bg-[rgba(29,158,117,0.06)]'
+                : 'text-[#6B6B67] hover:text-[#1C1C1A] hover:bg-[#F2F2F0] border-l-[3px] border-transparent'
             }`
           }
+          style={{ fontFamily: "'DM Sans', sans-serif" }}
         >
           <Settings size={16} />
           Settings
@@ -95,6 +100,12 @@ export default function Sidebar() {
           <p className="text-[10px] text-[#A3A39E] leading-relaxed">
             <span className="font-medium">⌘1</span>-8 navigate &middot; <span className="font-medium">⌘N</span> new
           </p>
+          {isLicensed && (
+            <p className="text-[10px] text-[#1D9E75] font-medium mt-1 flex items-center gap-1">
+              <Sparkles size={10} />
+              Licensed
+            </p>
+          )}
         </div>
       </div>
     </aside>

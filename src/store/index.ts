@@ -13,6 +13,7 @@ import type {
   Communication,
   RecurringInvoice,
 } from '../types';
+import { validateLicenseKey } from '../license';
 
 interface ClientSlice {
   clients: Client[];
@@ -81,8 +82,11 @@ interface ExpenseSlice {
 interface ProfileSlice {
   profile: UserProfile | null;
   profileLoaded: boolean;
+  isLicensed: boolean;
   loadProfile: () => Promise<void>;
   saveProfile: (data: UserProfile) => Promise<void>;
+  activateLicense: (key: string) => Promise<boolean>;
+  removeLicense: () => Promise<void>;
 }
 
 interface CommunicationSlice {
@@ -287,13 +291,29 @@ export const useStore = create<AppStore>((set, get) => ({
   // Profile
   profile: null,
   profileLoaded: false,
+  isLicensed: false,
   loadProfile: async () => {
     const profile = await invoke<UserProfile | null>('get_user_profile');
-    set({ profile, profileLoaded: true });
+    const licensed = !!(profile?.license_key && validateLicenseKey(profile.license_key));
+    set({ profile, profileLoaded: true, isLicensed: licensed });
   },
   saveProfile: async (data) => {
     await invoke('upsert_user_profile', { payload: data });
-    set({ profile: data });
+    const licensed = !!(data.license_key && validateLicenseKey(data.license_key));
+    set({ profile: data, isLicensed: licensed });
+  },
+  activateLicense: async (key) => {
+    if (!validateLicenseKey(key)) return false;
+    const now = new Date().toISOString();
+    const updated = { ...get().profile!, license_key: key, licensed_at: now };
+    await invoke('upsert_user_profile', { payload: updated });
+    set({ profile: updated, isLicensed: true });
+    return true;
+  },
+  removeLicense: async () => {
+    const updated = { ...get().profile!, license_key: undefined, licensed_at: undefined };
+    await invoke('upsert_user_profile', { payload: updated });
+    set({ profile: updated, isLicensed: false });
   },
 
   // Communications

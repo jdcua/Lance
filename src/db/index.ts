@@ -154,6 +154,8 @@ async function runMigrations(database: Database): Promise<void> {
     'ALTER TABLE user_profile ADD COLUMN always_include TEXT',
     'ALTER TABLE user_profile ADD COLUMN writing_style TEXT DEFAULT \'professional\'',
     'ALTER TABLE user_profile ADD COLUMN theme TEXT DEFAULT \'light\'',
+    'ALTER TABLE user_profile ADD COLUMN license_key TEXT',
+    'ALTER TABLE user_profile ADD COLUMN licensed_at TEXT',
   ];
   for (const sql of newColumns) {
     try { await database.execute(sql); } catch { /* column already exists */ }
@@ -188,6 +190,14 @@ async function runMigrations(database: Database): Promise<void> {
       last_generated TEXT,
       created_at TEXT NOT NULL,
       FOREIGN KEY (client_id) REFERENCES clients(id)
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS achievements (
+      id TEXT PRIMARY KEY,
+      key TEXT NOT NULL UNIQUE,
+      unlocked_at TEXT NOT NULL
     )
   `);
 }

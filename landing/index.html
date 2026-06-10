@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lance — Freelancer OS</title>
+<meta name="description" content="Win work. Run projects. Get paid. The local-first freelancer OS with proposals, contracts, invoicing, time tracking, and AI insights — all in one app.">
+<meta property="og:title" content="Lance — Freelancer OS">
+<meta property="og:description" content="The freelancer OS that keeps everything in one place — and none of it in the cloud.">
+<meta property="og:image" content="https://lance.decentra.co/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://lance.decentra.co">
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600|inter:400,500" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:#FAFAF9;color:#1C1C1A;-webkit-font-smoothing:antialiased}
+@media (prefers-reduced-motion:reduce){
+*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+
+/* Nav */
+nav{position:sticky;top:0;z-index:100;background:#FAFAF9;border-bottom:1px solid #E5E5E3}
+.nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px;padding:0 24px}
+.nav-brand{display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:16px;color:#1C1C1A;text-decoration:none}
+.nav-brand svg{color:#1D9E75}
+.nav-links{display:flex;align-items:center;gap:32px;list-style:none}
+.nav-links a{text-decoration:none;font-size:14px;color:#6B6B67;transition:color .15s}
+.nav-links a:hover{color:#1C1C1A}
+.btn{padding:8px 16px;font-size:14px;border-radius:8px;font-weight:500;cursor:pointer;border:none;text-decoration:none;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:#1D9E75;color:#fff}
+.btn-primary:hover{background:#178F68}
+.btn-secondary{background:#F7F6F2;color:#1C1C1A;border:1px solid #E5E5E3}
+.btn-secondary:hover{background:#EFEEEA}
+.btn-large{padding:12px 24px;font-size:15px;border-radius:10px}
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:4px;color:#1C1C1A}
+@media (max-width:767px){
+  .nav-links{position:fixed;top:64px;left:0;right:0;background:#FAFAF9;border-bottom:1px solid #E5E5E3;flex-direction:column;padding:16px 24px;gap:12px;display:none;box-shadow:0 4px 12px rgba(0,0,0,.06)}
+  .nav-links.open{display:flex}
+  .hamburger{display:block}
+}
+
+/* Sections */
+section{padding:80px 24px}
+@media(max-width:767px){section{padding:48px 16px}}
+.container{max-width:1100px;margin:0 auto}
+
+/* Hero */
+.hero{text-align:center;padding:100px 24px 80px}
+@media(max-width:767px){.hero{padding:60px 16px 48px}}
+.hero h1{font-family:'DM Sans',sans-serif;font-size:64px;font-weight:600;line-height:1.1;margin-bottom:24px;color:#1C1C1A}
+@media(max-width:767px){.hero h1{font-size:40px}}
+.hero h1 span{display:block;opacity:0;animation:fadeUp .6s ease-out forwards}
+.hero h1 span:nth-child(1){animation-delay:0ms}
+.hero h1 span:nth-child(2){animation-delay:200ms}
+.hero h1 span:nth-child(3){animation-delay:400ms}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.hero-sub{font-size:20px;color:#6B6B67;max-width:580px;margin:0 auto 36px;line-height:1.6}
+.hero-buttons{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.trust-line{font-size:14px;color:#A3A39E}
+.trust-line span{margin:0 8px;color:#D4D4D2}
+
+/* Mockup */
+.mockup-section{background:#F2F2F0;padding:80px 24px}
+.mockup-wrap{max-width:900px;margin:0 auto;perspective:1200px}
+.mockup-frame{background:#fff;border-radius:10px;border:1px solid #D4D4D2;box-shadow:0 20px 60px rgba(0,0,0,.12);overflow:hidden;transform:perspective(1200px) rotateX(2deg) rotateY(-1deg);transition:transform .3s}
+@media(max-width:767px){.mockup-frame{transform:none}}
+.mockup-frame.visible{opacity:1;animation:slideUp .7s ease-out}
+@keyframes slideUp{from{opacity:0;transform:perspective(1200px) rotateX(2deg) rotateY(-1deg) translateY(20px)}to{opacity:1;transform:perspective(1200px) rotateX(2deg) rotateY(-1deg) translateY(0)}}
+.mockup-chrome{height:40px;background:#F2F2F0;display:flex;align-items:center;padding:0 14px;gap:8px;border-bottom:1px solid #E5E5E3}
+.mockup-chrome span{width:12px;height:12px;border-radius:50%}
+.mockup-chrome span:nth-child(1){background:#FF5F57}
+.mockup-chrome span:nth-child(2){background:#FEBC2E}
+.mockup-chrome span:nth-child(3){background:#28C840}
+.mockup-content{display:flex;height:400px}
+@media(max-width:767px){.mockup-content{height:auto;flex-direction:column}}
+.mockup-sidebar{width:180px;background:#fff;border-right:1px solid #E5E5E3;padding:12px 0;flex-shrink:0}
+@media(max-width:767px){.mockup-sidebar{display:none}}
+.mockup-sidebar-item{display:flex;align-items:center;gap:8px;padding:6px 16px;font-size:12px;color:#6B6B67;font-family:'DM Sans',sans-serif}
+.mockup-sidebar-item.active{border-left:3px solid #1D9E75;color:#1D9E75;font-weight:500;background:rgba(29,158,117,.06)}
+.mockup-main{flex:1;display:flex;flex-direction:column}
+.mockup-topbar{height:40px;background:#fff;border-bottom:1px solid #E5E5E3;display:flex;align-items:center;padding:0 16px;font-size:12px;font-weight:600;color:#1C1C1A;font-family:'DM Sans',sans-serif;flex-shrink:0}
+.mockup-body{padding:16px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px}
+.mockup-card{border:1px solid rgba(0,0,0,.07);border-radius:10px;padding:12px 14px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.mockup-card-title{font-weight:600;font-size:13px;font-family:'DM Sans',sans-serif;color:#1C1C1A}
+.mockup-card-sub{font-size:11px;color:#6B6B67;margin-top:2px}
+.mockup-badge{display:inline-block;padding:2px 6px;border-radius:5px;font-size:9px;font-weight:500;font-family:'DM Sans',sans-serif}
+.badge-sent{background:#E6F5EE;color:#1D9E75}
+.badge-draft{background:#F2F2F0;color:#6B6B67}
+.mockup-table{font-size:11px;color:#6B6B67}
+.mockup-table-row{display:flex;justify-content:space-between;padding:3px 0}
+
+/* Pillars */
+.pillars-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+@media(min-width:768px) and (max-width:1023px){.pillars-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:767px){.pillars-grid{grid-template-columns:1fr}}
+.pillar{text-align:left}
+.pillar-icon{width:40px;height:40px;border-radius:8px;background:rgba(29,158,117,.1);display:flex;align-items:center;justify-content:center;margin-bottom:16px;color:#1D9E75}
+.pillar h3{font-family:'DM Sans',sans-serif;font-size:17px;font-weight:600;margin-bottom:12px;color:#1C1C1A}
+.pillar ul{list-style:none;font-size:14px;color:#6B6B67;line-height:2}
+
+/* Pitch */
+.pitch{text-align:center;padding:100px 24px}
+.pitch-block{margin-bottom:80px}
+.pitch-block h2{font-family:'DM Sans',sans-serif;font-size:32px;font-weight:600;margin-bottom:12px;color:#1C1C1A}
+@media(max-width:767px){.pitch-block h2{font-size:24px}}
+.pitch-block p{font-size:17px;color:#6B6B67;line-height:1.7;max-width:560px;margin:0 auto}
+
+/* Themes */
+.themes-section{background:#fff;padding:80px 24px}
+.theme-tabs{display:flex;justify-content:center;gap:4px;margin-bottom:32px;flex-wrap:wrap}
+.theme-tab{padding:8px 20px;font-size:14px;border-radius:8px;border:1px solid transparent;background:transparent;cursor:pointer;font-family:'Inter',sans-serif;color:#6B6B67;transition:all .15s}
+.theme-tab:hover{background:#F2F2F0}
+.theme-tab.active{background:rgba(29,158,117,.06);color:#1D9E75;border-color:rgba(29,158,117,.2);font-weight:500}
+.theme-preview{max-width:520px;margin:0 auto;border-radius:12px;border:1px solid rgba(0,0,0,.07);padding:24px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:background .3s,border .3s}
+.theme-preview h4{font-size:15px;font-weight:600;margin-bottom:4px}
+.theme-preview p{font-size:13px;color:#6B6B67}
+.theme-preview .sample-items{display:flex;gap:8px;margin-top:16px;justify-content:center}
+.theme-preview .sample-item{padding:8px 14px;border-radius:8px;font-size:12px;font-weight:500}
+.theme-note{text-align:center;font-size:13px;color:#A3A39E;margin-top:20px}
+
+/* Theme instances */
+.theme-default{background:#fff;border-color:rgba(0,0,0,.07)}
+.theme-default h4,.theme-default p{color:#1C1C1A}
+.theme-default .sample-item{background:#1D9E75;color:#fff}
+.theme-studio{background:#FDFAF5;border-color:#E8E0D0}
+.theme-studio h4{color:#2C1810}
+.theme-studio .sample-item{background:#C4622D;color:#fff}
+.theme-terminal{background:#0D1117;border-color:#30363D}
+.theme-terminal h4,.theme-terminal p{color:#E6EDF3}
+.theme-terminal .sample-item{background:#3FB950;color:#0D1117}
+.theme-craft{background:#FAFAF8;border-color:#E8E6E0}
+.theme-craft h4{color:#1A1A18}
+.theme-craft .sample-item{background:#4A7FA5;color:#fff}
+.theme-preview{display:none}
+.theme-preview.active{display:block}
+
+/* Pricing */
+.pricing-section{text-align:center}
+.pricing-free{font-size:17px;color:#6B6B67;max-width:520px;margin:0 auto 40px;line-height:1.7}
+.pricing-card{max-width:420px;margin:0 auto;border:1px solid #E5E5E3;border-radius:16px;padding:40px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.04);text-align:center}
+.pricing-card h3{font-family:'DM Sans',sans-serif;font-size:18px;font-weight:600;margin-bottom:4px}
+.pricing-card .sub{font-size:13px;color:#A3A39E;margin-bottom:20px}
+.pricing-card .price{font-family:'DM Sans',sans-serif;font-size:52px;font-weight:600;color:#1C1C1A;margin-bottom:20px}
+.pricing-card ul{list-style:none;text-align:left;margin-bottom:28px}
+.pricing-card li{font-size:14px;color:#6B6B67;padding:6px 0;display:flex;align-items:center;gap:8px}
+.pricing-card li svg{color:#1D9E75;flex-shrink:0}
+.pricing-card .footer-note{font-size:12px;color:#A3A39E;margin-top:16px}
+
+/* Downloads */
+.downloads-grid{display:flex;flex-direction:column;gap:12px;max-width:480px;margin:0 auto}
+.download-btn{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-radius:10px;text-decoration:none;transition:all .15s;font-size:14px}
+.dl-default{background:#fff;border:1px solid #E5E5E3;color:#1C1C1A}
+.dl-default:hover{border-color:#1D9E75}
+.dl-highlighted{background:rgba(29,158,117,.06);border:2px solid #1D9E75;color:#1D9E75;font-weight:500}
+.download-btn .ver{font-size:12px;color:#A3A39E}
+.sys-req{text-align:center;font-size:13px;color:#A3A39E;margin-top:20px}
+
+/* Footer */
+footer{border-top:1px solid #E5E5E3;padding:40px 24px;text-align:center;font-size:13px;color:#A3A39E;line-height:1.8}
+footer a{color:#6B6B67;text-decoration:underline;text-underline-offset:2px}
+footer a:hover{color:#1C1C1A}
+footer .footer-brand{display:flex;align-items:center;justify-content:center;gap:6px;font-family:'DM Sans',sans-serif;font-weight:600;color:#1C1C1A;margin-bottom:12px;text-decoration:none}
+
+/* Section headings */
+.sec-label{text-align:center;font-size:12px;font-weight:600;color:#A3A39E;text-transform:uppercase;letter-spacing:.8px;font-family:'DM Sans',sans-serif;margin-bottom:12px}
+.sec-title{text-align:center;font-family:'DM Sans',sans-serif;font-size:30px;font-weight:600;margin-bottom:40px;color:#1C1C1A}
+
+/* Scroll animations */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .6s ease-out,transform .6s ease-out}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* SVG icons inline */
+.icon-sm{width:16px;height:16px}
+.icon-md{width:20px;height:20px}
+.icon-lg{width:24px;height:24px}
+
+/* Download section */
+#download{padding-bottom:100px}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-brand">
+      <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="3" y2="21"></line><polyline points="8 8 12 4 16 8"></polyline><polyline points="16 16 12 20 8 16"></polyline></svg>
+      Lance
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#download">Download</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#download" class="btn btn-primary">Get Lance — Free</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" x2="21" y1="6" y2="6"></line><line x1="3" x2="21" y1="12" y2="12"></line><line x1="3" x2="21" y1="18" y2="18"></line></svg>
+    </button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <h1>
+      <span>Win work.</span>
+      <span>Run projects.</span>
+      <span>Get paid.</span>
+    </h1>
+    <p class="hero-sub">The freelancer OS that keeps everything in one place — and none of it in the cloud.</p>
+    <div class="hero-buttons">
+      <a href="#download" class="btn btn-primary btn-large" id="heroDownloadBtn">Download for Mac</a>
+    </div>
+    <p class="trust-line">Free forever<span>&middot;</span>Works offline<span>&middot;</span>Your data stays yours</p>
+  </div>
+</section>
+
+<section class="mockup-section">
+  <div class="container">
+    <div class="sec-label">See it in action</div>
+    <div class="sec-title">One app, your entire business.</div>
+    <div class="mockup-wrap">
+      <div class="mockup-frame">
+        <div class="mockup-chrome"><span></span><span></span><span></span></div>
+        <div class="mockup-content">
+          <div class="mockup-sidebar">
+            <div class="mockup-sidebar-item" style="margin-bottom:12px;font-weight:600;color:#1C1C1A;font-size:13px">
+              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="3" y2="21"></line><polyline points="8 8 12 4 16 8"></polyline><polyline points="16 16 12 20 8 16"></polyline></svg>
+              Lance
+            </div>
+            <div style="font-size:9px;font-weight:600;color:#A3A39E;text-transform:uppercase;letter-spacing:.6px;padding:0 16px;margin-bottom:4px;font-family:'DM Sans',sans-serif">Win Work</div>
+            <div class="mockup-sidebar-item active">Proposals</div>
+            <div class="mockup-sidebar-item">Contracts</div>
+            <div style="font-size:9px;font-weight:600;color:#A3A39E;text-transform:uppercase;letter-spacing:.6px;padding:0 16px;margin:8px 0 4px;font-family:'DM Sans',sans-serif">Run Projects</div>
+            <div class="mockup-sidebar-item">Projects</div>
+            <div class="mockup-sidebar-item">Time</div>
+            <div style="font-size:9px;font-weight:600;color:#A3A39E;text-transform:uppercase;letter-spacing:.6px;padding:0 16px;margin:8px 0 4px;font-family:'DM Sans',sans-serif">Get Paid</div>
+            <div class="mockup-sidebar-item">Invoices</div>
+          </div>
+          <div class="mockup-main">
+            <div class="mockup-topbar">Proposals</div>
+            <div class="mockup-body">
+              <div class="mockup-card">
+                <div class="mockup-card-title">Brand Refresh — Acme Corp</div>
+                <div class="mockup-card-sub">Flat rate · $4,500 · Sep 15</div>
+                <span class="mockup-badge badge-sent">Sent</span>
+              </div>
+              <div class="mockup-card">
+                <div class="mockup-card-title">Landing Page — Northside Digital</div>
+                <div class="mockup-card-sub">Hourly · $85/hr · Oct 1</div>
+                <span class="mockup-badge badge-draft">Draft</span>
+              </div>
+              <div class="mockup-card">
+                <div class="mockup-card-title">Consulting Retainer — Studio 12</div>
+                <div class="mockup-card-sub">Flat rate · $2,200/mo · Nov 1</div>
+                <span class="mockup-badge badge-sent">Sent</span>
+              </div>
+              <div class="mockup-card" style="opacity:.6">
+                <div class="mockup-table">
+                  <div class="mockup-table-row"><span>Total sent this month</span><span>$6,700</span></div>
+                  <div class="mockup-table-row"><span>Win rate</span><span>72%</span></div>
+                  <div class="mockup-table-row"><span>Pending response</span><span>3</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="sec-label">Everything you need</div>
+    <div class="sec-title">Run your business in one place.</div>
+    <div class="pillars-grid">
+      <div class="pillar">
+        <div class="pillar-icon">
+          <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" x2="8" y1="13" y2="13"></line><line x1="16" x2="8" y1="17" y2="17"></line></svg>
+        </div>
+        <h3>Win work</h3>
+        <ul><li>Proposals</li><li>Contracts</li><li>AI generator</li><li>Scope warnings</li></ul>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon">
+          <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+        </div>
+        <h3>Run projects</h3>
+        <ul><li>Project tracking</li><li>Milestones</li><li>Time tracking</li><li>One-click flows</li></ul>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon">
+          <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M9 8h7"></path><path d="M9 12h7"></path><path d="M9 16h7"></path></svg>
+        </div>
+        <h3>Get paid</h3>
+        <ul><li>Invoices</li><li>Recurring</li><li>Line items</li><li>PDF + DOCX</li></ul>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon">
+          <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="18" y1="20" y2="10"></line><line x1="12" x2="12" y1="20" y2="4"></line><line x1="6" x2="6" y1="20" y2="14"></line></svg>
+        </div>
+        <h3>Run your business</h3>
+        <ul><li>Finance overview</li><li>Insights</li><li>Win rates</li><li>Client CRM</li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pitch">
+  <div class="container">
+    <div class="pitch-block reveal">
+      <h2>Everything talks to each other.</h2>
+      <p>A client you add once flows into proposals, contracts, invoices, and insights. No re-entry. Ever.</p>
+    </div>
+    <div class="pitch-block reveal">
+      <h2>Your data stays on your machine.</h2>
+      <p>No accounts. No cloud. No server that can leak your client list or financial data.</p>
+    </div>
+    <div class="pitch-block reveal">
+      <h2>The AI makes you sharper.</h2>
+      <p>Not replacing your judgment — sharpening it. Scope warnings, pricing insights, win rate analysis.</p>
+    </div>
+  </div>
+</section>
+
+<section class="themes-section">
+  <div class="container">
+    <div class="sec-label">Four themes. One app.</div>
+    <div class="sec-title">Your workspace, your style.</div>
+    <div class="theme-tabs">
+      <button class="theme-tab active" data-theme="default">Default</button>
+      <button class="theme-tab" data-theme="studio">Studio</button>
+      <button class="theme-tab" data-theme="terminal">Terminal</button>
+      <button class="theme-tab" data-theme="craft">Craft</button>
+    </div>
+    <div class="theme-preview theme-default active" id="preview-default">
+      <h4 style="font-family:'DM Sans',sans-serif">Clean and professional</h4>
+      <p>Balanced and modern. For every freelancer.</p>
+      <div class="sample-items"><span class="sample-item">Proposal</span><span class="sample-item">Invoice</span><span class="sample-item">Client</span></div>
+    </div>
+    <div class="theme-preview theme-studio" id="preview-studio">
+      <h4 style="font-family:'Playfair Display',serif">Warm and editorial — for designers</h4>
+      <p>Sienna accents on warm cream. Print-inspired.</p>
+      <div class="sample-items"><span class="sample-item">Proposal</span><span class="sample-item">Invoice</span><span class="sample-item">Client</span></div>
+    </div>
+    <div class="theme-preview theme-terminal" id="preview-terminal">
+      <h4 style="font-family:'JetBrains Mono',monospace">Dark and sharp — for developers</h4>
+      <p>GitHub-dark with terminal green accents. Focused.</p>
+      <div class="sample-items"><span class="sample-item">Proposal</span><span class="sample-item">Invoice</span><span class="sample-item">Client</span></div>
+    </div>
+    <div class="theme-preview theme-craft" id="preview-craft">
+      <h4 style="font-family:'Lora',serif">Quiet and readable — for writers</h4>
+      <p>Slate blue on near-white. Generous spacing.</p>
+      <div class="sample-items"><span class="sample-item">Proposal</span><span class="sample-item">Invoice</span><span class="sample-item">Client</span></div>
+    </div>
+    <p class="theme-note">Themes unlock as you use Lance. Or unlock all instantly with a license.</p>
+  </div>
+</section>
+
+<section class="pricing-section" id="pricing">
+  <div class="container">
+    <div class="sec-label">Pricing</div>
+    <div class="sec-title">Free.</div>
+    <p class="pricing-free">Seriously. Lance is free to use, forever. No time limit. No feature locks. No nags.<br><br>If Lance saves you time and makes you money, consider supporting it.</p>
+    <div class="pricing-card">
+      <h3>Lance License</h3>
+      <p class="sub">One-time &middot; Yours forever</p>
+      <div class="price">$59</div>
+      <ul>
+        <li><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Removes the launch screen</li>
+        <li><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>All themes unlocked immediately</li>
+        <li><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Supports continued development</li>
+        <li><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Works on all your devices</li>
+      </ul>
+      <a href="https://lance.decentra.co/license" class="btn btn-primary btn-large" style="width:100%;justify-content:center">Get a license</a>
+      <p class="footer-note">No subscription. No account.<br>Pay once, own it forever.</p>
+    </div>
+    <p style="margin-top:32px;font-size:15px;color:#6B6B67">The free version is the full version.</p>
+  </div>
+</section>
+
+<section id="download">
+  <div class="container">
+    <div class="sec-label">Get Lance</div>
+    <div class="sec-title">Free to download. Free to use.</div>
+    <div class="downloads-grid">
+      <a href="#" class="download-btn dl-default" id="dl-mac">
+        <span><strong>↓ Download for macOS</strong></span>
+        <span class="ver">v1.0.0 &middot; Universal Binary</span>
+      </a>
+      <a href="#" class="download-btn dl-default" id="dl-win">
+        <span><strong>↓ Download for Windows</strong></span>
+        <span class="ver">v1.0.0 &middot; 64-bit installer</span>
+      </a>
+      <a href="#" class="download-btn dl-default" id="dl-linux">
+        <span><strong>↓ Download for Linux</strong></span>
+        <span class="ver">v1.0.0 &middot; AppImage</span>
+      </a>
+    </div>
+    <p class="sys-req">System requirements: macOS 11+ &middot; Windows 10+ &middot; Ubuntu 20.04+</p>
+  </div>
+</section>
+
+<footer>
+  <a href="#" class="footer-brand">
+    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="3" y2="21"></line><polyline points="8 8 12 4 16 8"></polyline><polyline points="16 16 12 20 8 16"></polyline></svg>
+    Lance
+  </a>
+  <p>Built by Decentra</p>
+  <p style="margin-top:12px">
+    <a href="#">Privacy Policy</a> &middot;
+    <a href="#">License Terms</a> &middot;
+    <a href="#">GitHub</a>
+  </p>
+  <p style="margin-top:16px;font-size:12px;color:#A3A39E">&copy; 2026 Decentra. Lance is free software with a proprietary license.<br>Your data stays on your device. Always.</p>
+</footer>
+
+<script>
+// Hamburger
+document.getElementById('hamburger').addEventListener('click', function() {
+  document.getElementById('navLinks').classList.toggle('open');
+});
+document.querySelectorAll('.nav-links a').forEach(function(link) {
+  link.addEventListener('click', function() {
+    document.getElementById('navLinks').classList.remove('open');
+  });
+});
+
+// OS detection
+(function() {
+  var ua = navigator.userAgent || navigator.platform || '';
+  var isMac = /Mac|iPhone|iPad|iPod/i.test(ua);
+  var isWin = /Win/i.test(ua);
+  var heroBtn = document.getElementById('heroDownloadBtn');
+  var dlMac = document.getElementById('dl-mac');
+  var dlWin = document.getElementById('dl-win');
+  var dlLinux = document.getElementById('dl-linux');
+  
+  function highlight(id) {
+    [dlMac, dlWin, dlLinux].forEach(function(el) {
+      el.className = el.className.replace(' dl-highlighted', '').replace('dl-highlighted', 'dl-default');
+    });
+    var el = document.getElementById(id);
+    if (el) el.className = el.className.replace('dl-default', '') + ' dl-highlighted';
+  }
+  
+  if (isMac) {
+    if (heroBtn) heroBtn.textContent = 'Download for Mac';
+    highlight('dl-mac');
+  } else if (isWin) {
+    if (heroBtn) heroBtn.textContent = 'Download for Windows';
+    highlight('dl-win');
+  } else {
+    if (heroBtn) heroBtn.textContent = 'Download for Linux';
+    highlight('dl-linux');
+  }
+})();
+
+// Theme switcher
+document.querySelectorAll('.theme-tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    var theme = this.dataset.theme;
+    document.querySelectorAll('.theme-tab').forEach(function(t) { t.classList.remove('active'); });
+    this.classList.add('active');
+    document.querySelectorAll('.theme-preview').forEach(function(p) { p.classList.remove('active'); });
+    var preview = document.getElementById('preview-' + theme);
+    if (preview) preview.classList.add('active');
+  });
+});
+
+// Scroll reveal via IntersectionObserver
+(function() {
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.15 });
+  
+  document.querySelectorAll('.reveal').forEach(function(el) { observer.observe(el); });
+  
+  // Mockup reveal
+  var mockup = document.querySelector('.mockup-frame');
+  if (mockup) {
+    var mockupObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.2 });
+    mockupObserver.observe(mockup);
+  }
+})();
+</script>
+</body>
+</html>

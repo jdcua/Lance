@@ -8,6 +8,8 @@ import Badge from '../components/ui/Badge';
 import { exportProposalPDF, exportProposalDOCX } from '../export';
 import { formatCurrency, formatDate } from '../utils/format';
 import { htmlToPlainText } from '../utils/htmlToText';
+import { useToasts } from '../store/toastStore';
+import { checkAndNotify, tryUnlock } from '../achievements/notify';
 import { Plus, Pencil, Trash2, Send, Eye, Download, FileText } from 'lucide-react';
 
 const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
@@ -64,6 +66,7 @@ function generateContractBody(
 
 export default function Proposals() {
   const { proposals, loadProposals, clients, loadClients, updateProposal, removeProposal, profile, loadProfile, addContract } = useStore();
+  const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [exportDropdown, setExportDropdown] = useState<string | null>(null);
@@ -89,6 +92,16 @@ export default function Proposals() {
 
   const handleSend = async (p: Proposal) => {
     await updateProposal({ ...p, status: 'sent' as const });
+    checkAndNotify(useStore.getState(), addToast);
+  };
+
+  const handleExportPDF = (p: Proposal) => {
+    const client = getClient(p.client_id);
+    if (client && profile) {
+      exportProposalPDF(p, client, profile);
+      tryUnlock('first_export', addToast);
+    }
+    setExportDropdown(null);
   };
 
   const handleDelete = async (id: string) => {
@@ -134,18 +147,12 @@ export default function Proposals() {
     }
   };
 
-  const handleExportPDF = (p: Proposal) => {
-    const client = getClient(p.client_id);
-    if (client && profile) {
-      exportProposalPDF(p, client, profile);
-    }
-    setExportDropdown(null);
-  };
 
   const handleExportDOCX = (p: Proposal) => {
     const client = getClient(p.client_id);
     if (client && profile) {
       exportProposalDOCX(p, client, profile);
+      tryUnlock('first_export', addToast);
     }
     setExportDropdown(null);
   };

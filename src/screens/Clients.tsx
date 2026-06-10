@@ -7,6 +7,8 @@ import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
 import { Plus, Pencil, Trash2, Mail, Phone, Building2, MessageSquare, PhoneCall, MailOpen, Users, X, Check, FileText, FolderKanban, Receipt, Clock } from 'lucide-react';
+import { useToasts } from '../store/toastStore';
+import { checkAndNotify } from '../achievements/notify';
 
 const commIcons: Record<string, typeof MessageSquare> = {
   note: MessageSquare,
@@ -30,6 +32,7 @@ export default function Clients() {
     proposals, loadProposals,
     invoices, loadInvoices,
   } = useStore();
+  const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -111,6 +114,7 @@ export default function Clients() {
         setSelectedId(c.id);
       }
       setShowModal(false);
+      checkAndNotify(useStore.getState(), addToast);
     } finally {
       setSaving(false);
     }
