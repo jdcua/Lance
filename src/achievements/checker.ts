@@ -5,7 +5,7 @@ import type { AppStore } from '../store';
 
 export type StoreState = Pick<
   AppStore,
-  'proposals' | 'invoices' | 'timeEntries' | 'clients' | 'contracts' | 'recurringInvoices'
+  'proposals' | 'invoices' | 'timeEntries' | 'clients' | 'contracts' | 'recurringInvoices' | 'projects'
 >;
 
 async function getUnlockedKeys(): Promise<Set<string>> {
@@ -73,12 +73,29 @@ export async function checkAchievements(store: StoreState): Promise<AchievementK
       key: 'first_export',
       condition: false, // handled via explicit trigger from export flow
     },
+    {
+      key: 'first_project_completed',
+      condition: store.projects.some((p) => p.status === 'completed'),
+    },
   ];
 
   for (const check of checks) {
     if (check.condition && !unlocked.has(check.key)) {
       await saveAchievement(check.key);
       newlyUnlocked.push(check.key);
+
+      if (check.key === 'first_proposal_sent' && !unlocked.has('motion_theme')) {
+        await saveAchievement('motion_theme');
+        newlyUnlocked.push('motion_theme');
+      }
+      if (check.key === 'ten_hours_logged' && !unlocked.has('lens_theme')) {
+        await saveAchievement('lens_theme');
+        newlyUnlocked.push('lens_theme');
+      }
+      if (check.key === 'first_invoice_paid' && !unlocked.has('scale_theme')) {
+        await saveAchievement('scale_theme');
+        newlyUnlocked.push('scale_theme');
+      }
     }
   }
 

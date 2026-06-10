@@ -12,8 +12,8 @@ html, body, #root {
   height: 100%;
   width: 100%;
   overflow: hidden;
-  background-color: #FAFAF9;
-  color: #1C1C1A;
+  background-color: #F8F7F3;
+  color: #181716;
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -124,14 +124,14 @@ button, a, input, textarea, select, .transition-base {
 /* ── Dark mode ── */
 .dark body,
 .dark #root {
-  background-color: #141412;
-  color: #F0EFE9;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #3C3C3A;
+  background: #3A3937;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #4C4C4A;
+  background: #4A4946;
 }

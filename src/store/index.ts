@@ -93,6 +93,7 @@ interface CommunicationSlice {
   communications: Record<string, Communication[]>;
   loadCommunications: (clientId: string) => Promise<void>;
   addCommunication: (data: Communication) => Promise<Communication>;
+  updateCommunication: (id: string, clientId: string, summary: string) => Promise<void>;
   removeCommunication: (id: string, clientId: string) => Promise<void>;
 }
 
@@ -328,6 +329,12 @@ export const useStore = create<AppStore>((set, get) => ({
     const updated = [comm, ...existing].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     set({ communications: { ...get().communications, [data.client_id]: updated } });
     return comm;
+  },
+  updateCommunication: async (id, clientId, summary) => {
+    await invoke('update_communication', { id, summary });
+    const existing = get().communications[clientId] || [];
+    const updated = existing.map((c) => (c.id === id ? { ...c, summary } : c));
+    set({ communications: { ...get().communications, [clientId]: updated } });
   },
   removeCommunication: async (id, clientId) => {
     await invoke('delete_communication', { id });

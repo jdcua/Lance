@@ -5,12 +5,12 @@ export default {
   theme: {
     extend: {
       colors: {
-        accent: "#1D9E75",
-        "page-bg": "#FAFAF9",
-        "text-primary": "#1C1C1A",
-        "text-secondary": "#6B6B67",
+        accent: "#1EC98A",
+        "page-bg": "#F8F7F3",
+        "text-primary": "#181716",
+        "text-secondary": "#68675F",
         "text-tertiary": "#A3A39E",
-        border: "#E5E5E3",
+        border: "#E3E2DB",
         warning: {
           text: "#854F0B",
           bg: "#FAEEDA",
@@ -25,10 +25,10 @@ export default {
         },
       },
       fontFamily: {
-        display: ["'DM Sans'", "sans-serif"],
-        body: ["'Inter'", "sans-serif"],
-        mono: ["'JetBrains Mono'", "monospace"],
-        sans: ["'Inter'", "sans-serif"],
+        display: ["'Syne'", "sans-serif"],
+        body:    ["'Inter'", "sans-serif"],
+        mono:    ["'JetBrains Mono'", "monospace"],
+        sans:    ["'Inter'", "sans-serif"],
       },
       borderRadius: {
         card: "12px",

@@ -8,16 +8,16 @@ interface BadgeProps {
 }
 
 const variantClasses: Record<BadgeVariant, string> = {
-  default: 'bg-[#F2F2F0] text-[#6B6B67]',
-  warning: 'bg-[#FAEEDA] text-[#854F0B]',
-  danger: 'bg-[#FCEBEB] text-[#A32D2D]',
-  info: 'bg-[#E6F1FB] text-[#185FA5]',
-  success: 'bg-[#E6F5EE] text-[#1D9E75]',
+  default: 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]',
+  warning: 'bg-[var(--warning-bg)] text-[var(--warning)]',
+  danger: 'bg-[var(--danger-bg)] text-[var(--danger)]',
+  info: 'bg-[var(--info-bg)] text-[var(--info)]',
+  success: 'bg-[var(--accent-bg)] text-[var(--accent)]',
 };
 
 export default function Badge({ children, variant = 'default' }: BadgeProps) {
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-[6px] text-[11px] font-medium ${variantClasses[variant]}`} style={{ fontFamily: "'DM Sans', sans-serif" }}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-[6px] text-[11px] font-medium ${variantClasses[variant]}`}>
       {children}
     </span>
   );

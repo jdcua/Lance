@@ -71,12 +71,13 @@ export default function Proposals() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [exportDropdown, setExportDropdown] = useState<string | null>(null);
   const [convertingId, setConvertingId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    loadProposals();
-    loadClients();
-    loadProfile();
+    Promise.all([loadProposals(), loadClients(), loadProfile()])
+      .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
+      .finally(() => setLoading(false));
   }, [loadProposals, loadClients, loadProfile]);
 
   useEffect(() => {
@@ -91,8 +92,12 @@ export default function Proposals() {
   }, [exportDropdown]);
 
   const handleSend = async (p: Proposal) => {
-    await updateProposal({ ...p, status: 'sent' as const });
-    checkAndNotify(useStore.getState(), addToast);
+    try {
+      await updateProposal({ ...p, status: 'sent' as const });
+      checkAndNotify(useStore.getState(), addToast);
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to send', 'error');
+    }
   };
 
   const handleExportPDF = (p: Proposal) => {
@@ -106,12 +111,20 @@ export default function Proposals() {
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Delete this proposal?')) {
-      await removeProposal(id);
+      try {
+        await removeProposal(id);
+      } catch (err) {
+        addToast(err?.toString?.() || 'Failed to delete', 'error');
+      }
     }
   };
 
   const handleAccept = async (p: Proposal) => {
-    await updateProposal({ ...p, status: 'accepted' as const });
+    try {
+      await updateProposal({ ...p, status: 'accepted' as const });
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to accept', 'error');
+    }
   };
 
   const getClient = (clientId: string) => clients.find((c) => c.id === clientId);
@@ -142,6 +155,8 @@ export default function Proposals() {
         body,
       });
       navigate('/contracts');
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to convert to contract', 'error');
     } finally {
       setConvertingId(null);
     }
@@ -158,18 +173,20 @@ export default function Proposals() {
   };
 
   const formatRate = (p: Proposal) => {
-    if (!p.rate) return '';
-    const symbol = '$';
-    if (p.rate_type === 'hourly') return `${symbol}${p.rate}/hr`;
-    return `${symbol}${p.rate.toLocaleString()} flat`;
+    if (!p.rate || !profile) return '';
+    const formatted = formatCurrency(p.rate, profile.currency);
+    if (p.rate_type === 'hourly') return `${formatted}/hr`;
+    return `${formatted} flat`;
   };
+
+  if (loading) return <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>
 
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-lg font-semibold text-[#1C1C1A]">Proposals</h2>
-          <p className="text-sm text-[#6B6B67] mt-0.5">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">Proposals</h2>
+          <p className="text-sm text-[var(--text-secondary)] mt-0.5">
             {proposals.filter((p) => p.status === 'draft').length} drafts, {proposals.length} total
           </p>
         </div>
@@ -187,9 +204,9 @@ export default function Proposals() {
         </Card>
       ) : proposals.length === 0 ? (
         <Card className="text-center py-16 flex flex-col items-center">
-          <FileText size={40} className="text-[#A3A39E] mb-4" />
-          <h3 className="text-[15px] font-medium text-[#6B6B67] mb-1.5">No proposals yet</h3>
-          <p className="text-[13px] text-[#A3A39E] max-w-xs mb-5">Create your first proposal to start winning work.</p>
+          <FileText size={40} className="text-[var(--text-tertiary)] mb-4" />
+          <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No proposals yet</h3>
+          <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Create your first proposal to start winning work.</p>
           <Button onClick={() => navigate('/proposals/new')} size="sm" variant="secondary">New Proposal</Button>
         </Card>
       ) : (
@@ -199,22 +216,22 @@ export default function Proposals() {
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-sm font-semibold text-[#1C1C1A]">{p.title}</h3>
+                    <h3 className="text-sm font-semibold text-[var(--text-primary)]">{p.title}</h3>
                     <Badge variant={statusBadge[p.status]}>{p.status}</Badge>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-[#6B6B67] mb-2">
+                  <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)] mb-2">
                     <span>{getClientName(p.client_id)}</span>
                     {formatRate(p) && <span>{formatRate(p)}</span>}
                     {p.timeline && <span>{p.timeline}</span>}
                   </div>
                   {p.scope && (
-                    <p className="text-xs text-[#A3A39E] line-clamp-2 mb-2">{p.scope}</p>
+                    <p className="text-xs text-[var(--text-tertiary)] line-clamp-2 mb-2">{p.scope}</p>
                   )}
                   {p.status === 'accepted' && (
                     <button
                       onClick={() => handleConvertToContract(p)}
                       disabled={convertingId === p.id}
-                      className="inline-flex items-center gap-1.5 text-xs font-medium text-white bg-[#1D9E75] hover:bg-[#178A63] px-3 py-1.5 rounded-[8px] transition-colors disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] px-3 py-1.5 rounded-[8px] transition-colors disabled:opacity-50"
                     >
                       <FileText size={13} />
                       {convertingId === p.id ? 'Creating...' : 'Convert to contract'}
@@ -225,7 +242,7 @@ export default function Proposals() {
                   {p.status === 'draft' && (
                     <button
                       onClick={() => handleSend(p)}
-                      className="p-1.5 rounded-[8px] text-[#1D9E75] hover:bg-[#E6F5EE] transition-colors"
+                      className="p-1.5 rounded-[8px] text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors"
                       title="Send"
                     >
                       <Send size={14} />
@@ -234,7 +251,7 @@ export default function Proposals() {
                   {p.status === 'sent' && (
                     <button
                       onClick={() => handleAccept(p)}
-                      className="p-1.5 rounded-[8px] text-[#1D9E75] hover:bg-[#E6F5EE] transition-colors"
+                      className="p-1.5 rounded-[8px] text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors"
                       title="Accept"
                     >
                       <Send size={14} />
@@ -243,22 +260,22 @@ export default function Proposals() {
                   <div className="relative" ref={exportDropdown === p.id ? dropdownRef : undefined}>
                     <button
                       onClick={() => setExportDropdown(exportDropdown === p.id ? null : p.id)}
-                      className="p-1.5 rounded-[8px] text-[#A3A39E] hover:text-[#1C1C1A] hover:bg-[#F2F2F0] transition-colors"
+                      className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
                       title="Export"
                     >
                       <Download size={14} />
                     </button>
                     {exportDropdown === p.id && (
-                      <div className="absolute right-0 top-full mt-1 bg-white border border-[#E5E5E3] rounded-[8px] shadow-lg py-1 z-10 w-28">
+                      <div className="absolute right-0 top-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px] shadow-lg py-1 z-10 w-28">
                         <button
                           onClick={() => handleExportPDF(p)}
-                          className="w-full text-left px-3 py-1.5 text-xs text-[#1C1C1A] hover:bg-[#F2F2F0] transition-colors"
+                          className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
                         >
                           PDF
                         </button>
                         <button
                           onClick={() => handleExportDOCX(p)}
-                          className="w-full text-left px-3 py-1.5 text-xs text-[#1C1C1A] hover:bg-[#F2F2F0] transition-colors"
+                          className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
                         >
                           DOCX
                         </button>
@@ -267,22 +284,22 @@ export default function Proposals() {
                   </div>
                   <button
                     onClick={() => setExpanded(expanded === p.id ? null : p.id)}
-                    className={`p-1.5 rounded-[8px] transition-colors ${expanded === p.id ? 'text-[#1D9E75] bg-[#E6F5EE]' : 'text-[#A3A39E] hover:text-[#1C1C1A] hover:bg-[#F2F2F0]'}`}
+                    className={`p-1.5 rounded-[8px] transition-colors ${expanded === p.id ? 'text-[var(--accent)] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`}
                     title="View body"
                   >
                     <Eye size={14} />
                   </button>
                   <button
                     onClick={() => handleDelete(p.id)}
-                    className="p-1.5 rounded-[8px] text-[#A3A39E] hover:text-[#A32D2D] hover:bg-[#FCEBEB] transition-colors"
+                    className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[#A32D2D] hover:bg-[#FCEBEB] transition-colors"
                   >
                     <Trash2 size={14} />
                   </button>
                 </div>
               </div>
               {expanded === p.id && p.body && (
-                <div className="mt-3 pt-3 border-t border-[#E5E5E3]">
-                  <p className="text-xs text-[#1C1C1A] whitespace-pre-wrap leading-relaxed">{htmlToPlainText(p.body)}</p>
+                <div className="mt-3 pt-3 border-t border-[var(--border-color)]">
+                  <p className="text-xs text-[var(--text-primary)] whitespace-pre-wrap leading-relaxed">{htmlToPlainText(p.body)}</p>
                 </div>
               )}
             </Card>

@@ -60,6 +60,7 @@ pub fn run() {
             commands::finance::upsert_user_profile,
             commands::communications::get_communications,
             commands::communications::create_communication,
+            commands::communications::update_communication,
             commands::communications::delete_communication,
         ])
         .run(tauri::generate_context!())

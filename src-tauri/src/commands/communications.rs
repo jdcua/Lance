@@ -58,6 +58,17 @@ pub fn create_communication(app: AppHandle, payload: Communication) -> Result<Co
 }
 
 #[tauri::command]
+pub fn update_communication(app: AppHandle, id: String, summary: String) -> Result<(), String> {
+    let conn = db::get_connection(&app)?;
+    conn.execute(
+        "UPDATE communications SET summary = ?1 WHERE id = ?2",
+        rusqlite::params![summary, id],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
 pub fn delete_communication(app: AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
     conn.execute("DELETE FROM communications WHERE id = ?1", [id])

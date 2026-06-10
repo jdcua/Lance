@@ -28,23 +28,23 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }}>
       <div
-        className="w-[480px] bg-white rounded-[16px] shadow-2xl px-10 py-10 text-center"
+        className="w-[480px] bg-[var(--bg-card)] rounded-[16px] shadow-2xl px-10 py-10 text-center"
         style={{ fontFamily: "'Inter', sans-serif" }}
       >
-        <Scale size={32} className="text-[#1D9E75] mx-auto mb-2" />
-        <h1 className="text-[28px] font-semibold text-[#1C1C1A] mb-1" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+        <Scale size={32} className="text-[var(--accent)] mx-auto mb-2" />
+        <h1 className="text-[28px] font-semibold text-[var(--text-primary)] mb-1" style={{ fontFamily: "'Syne', sans-serif" }}>
           Lance
         </h1>
-        <p className="text-sm text-[#6B6B67] mb-6">Freelancer OS</p>
+        <p className="text-sm text-[var(--text-secondary)] mb-6">Freelancer OS</p>
 
-        <p className="text-xs text-[#A3A39E] mb-5">Version 1.0.0 &middot; Built by Decentra</p>
+        <p className="text-xs text-[var(--text-tertiary)] mb-5">Version 1.0.0 &middot; Built by Decentra</p>
 
-        <div className="border-t border-[#E5E5E3] my-5" />
+        <div className="border-t border-[var(--border-color)] my-5" />
 
-        <p className="text-sm text-[#6B6B67] leading-relaxed mb-3">
+        <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-3">
           Lance is free to use, forever.
         </p>
-        <p className="text-sm text-[#6B6B67] leading-relaxed mb-7">
+        <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-7">
           If it's saving you time and making you money, consider supporting its development.
         </p>
 
@@ -57,7 +57,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
           </Button>
         </div>
 
-        <p className="text-xs text-[#A3A39E]">lance.decentra.co</p>
+        <p className="text-xs text-[var(--text-tertiary)]">lance.decentra.co</p>
       </div>
     </div>
   );

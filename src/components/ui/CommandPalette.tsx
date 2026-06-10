@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
-import { Search, FileText, FolderKanban, Receipt, PenLine, Users } from 'lucide-react';
+import { Search, FileText, FolderKanban, Receipt, PenLine, Users, Sparkles } from 'lucide-react';
 
 type ResultItem = {
   id: string;
   label: string;
   sublabel: string;
-  type: 'client' | 'proposal' | 'project' | 'invoice' | 'contract';
+  type: 'client' | 'proposal' | 'project' | 'invoice' | 'contract' | 'action';
   path: string;
+  action?: () => void;
 };
 
 const typeIcons: Record<string, typeof Users> = {
@@ -17,6 +18,7 @@ const typeIcons: Record<string, typeof Users> = {
   project: FolderKanban,
   invoice: Receipt,
   contract: PenLine,
+  action: Sparkles,
 };
 
 const typeLabels: Record<string, string> = {
@@ -25,14 +27,16 @@ const typeLabels: Record<string, string> = {
   project: 'PROJECTS',
   invoice: 'INVOICES',
   contract: 'CONTRACTS',
+  action: 'ACTIONS',
 };
 
 export default function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { clients, proposals, projects, invoices, contracts } = useStore();
+  const { clients, proposals, projects, invoices, contracts, profile } = useStore();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const aiEnabled = profile?.ai_enabled ?? false;
 
   useEffect(() => {
     if (open) {
@@ -45,7 +49,25 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
   const results = useMemo((): ResultItem[] => {
     if (!query.trim()) return [];
     const q = query.toLowerCase();
+
+    // AI actions first if AI is enabled
     const items: ResultItem[] = [];
+    if (aiEnabled) {
+      if ('generate proposal'.includes(q) || 'new proposal'.includes(q) || q.includes('proposal')) {
+        items.push({
+          id: 'ai-proposal', label: 'Generate a proposal',
+          sublabel: 'AI-assisted proposal writing', type: 'action',
+          path: '/proposals/new',
+        });
+      }
+      if ('summarize'.includes(q) || 'summary'.includes(q) || 'insight'.includes(q)) {
+        items.push({
+          id: 'ai-summary', label: 'Generate business summary',
+          sublabel: 'AI-powered insights', type: 'action',
+          path: '/insights',
+        });
+      }
+    }
 
     clients.forEach((c) => {
       if (c.name.toLowerCase().includes(q) || (c.company || '').toLowerCase().includes(q)) {
@@ -80,7 +102,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
       if (grouped[i.type].length < 4) grouped[i.type].push(i);
     });
     return Object.values(grouped).flat();
-  }, [query, clients, proposals, projects, invoices, contracts]);
+  }, [query, clients, proposals, projects, invoices, contracts, aiEnabled]);
 
   const grouped = useMemo(() => {
     const groups: Record<string, ResultItem[]> = {};
@@ -118,11 +140,11 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
     <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[15vh]" onClick={onClose}>
       <div className="fixed inset-0 bg-black/30" />
       <div
-        className="relative bg-white rounded-[12px] shadow-2xl border border-[#E5E5E3] w-[560px] max-h-[420px] flex flex-col overflow-hidden animate-fade-scale-in"
+        className="relative bg-[var(--bg-card)] rounded-[12px] shadow-2xl border border-[var(--border-color)] w-[560px] max-h-[420px] flex flex-col overflow-hidden animate-fade-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-[#E5E5E3]">
-          <Search size={16} className="text-[#A3A39E]" />
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--border-color)]">
+          <Search size={16} className="text-[var(--text-tertiary)]" />
           <input
             ref={inputRef}
             type="text"
@@ -130,23 +152,44 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
             onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
             onKeyDown={handleKeyDown}
             placeholder="Search Lance..."
-            className="flex-1 text-sm outline-none bg-transparent placeholder:text-[#A3A39E]"
+            className="flex-1 text-sm outline-none bg-transparent placeholder:text-[var(--text-tertiary)]"
           />
-          <kbd className="text-[10px] text-[#A3A39E] border border-[#E5E5E3] rounded-[4px] px-1.5 py-0.5">⌘K</kbd>
+          <kbd className="text-[10px] text-[var(--text-tertiary)] border border-[var(--border-color)] rounded-[4px] px-1.5 py-0.5">⌘K</kbd>
         </div>
         <div className="flex-1 overflow-y-auto py-2">
           {!query ? (
-            <div className="px-4 py-6 text-center">
-              <p className="text-xs text-[#A3A39E]">Search clients, proposals, projects, invoices, contracts&hellip;</p>
+            <div className="px-4 py-4 space-y-4">
+              <div>
+                <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider mb-2">Keyboard shortcuts</p>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
+                  {[
+                    ['⌘K', 'Open command palette'],
+                    ['⌘1–8', 'Navigate sections'],
+                    ['⌘N', 'New in current section'],
+                    ['⌘,', 'Open Settings'],
+                    ['⌘⇧P', 'Toggle AI sidebar (if on)'],
+                    ['Esc', 'Close this panel'],
+                  ].map(([key, desc]) => (
+                    <div key={key as string} className="flex items-center gap-2">
+                      <kbd className="text-[10px] text-[var(--text-tertiary)] bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-[4px] px-1.5 py-0.5 font-mono whitespace-nowrap">{key as string}</kbd>
+                      <span className="text-xs text-[var(--text-secondary)]">{desc as string}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider mb-1.5">Quick search</p>
+                <p className="text-xs text-[var(--text-tertiary)]">Type to search clients, proposals, projects, invoices, contracts&hellip;</p>
+              </div>
             </div>
           ) : flatResults.length === 0 ? (
             <div className="px-4 py-6 text-center">
-              <p className="text-xs text-[#A3A39E]">No results found.</p>
+              <p className="text-xs text-[var(--text-tertiary)]">No results found.</p>
             </div>
           ) : (
             Object.entries(grouped).map(([type, items]) => (
               <div key={type} className="mb-3 last:mb-0">
-                <p className="px-4 mb-1 text-[10px] font-semibold text-[#A3A39E] uppercase tracking-wider">{typeLabels[type]}</p>
+                <p className="px-4 mb-1 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">{typeLabels[type]}</p>
                 {items.map((item) => {
                   const Icon = typeIcons[item.type] || Users;
                   const idx = flatResults.indexOf(item);
@@ -155,12 +198,12 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
                       key={item.id}
                       onClick={() => handleSelect(item)}
                       className={`w-full flex items-center gap-3 px-4 py-2 text-left text-sm ${
-                        idx === selectedIndex ? 'bg-[#E6F5EE]' : 'hover:bg-[#F2F2F0]'
+                        idx === selectedIndex ? 'bg-[var(--accent-bg)]' : 'hover:bg-[var(--bg-secondary)]'
                       }`}
                     >
-                      <Icon size={14} className="text-[#A3A39E] flex-shrink-0" />
-                      <span className="flex-1 text-[#1C1C1A]">{item.label}</span>
-                      <span className="text-xs text-[#A3A39E]">{item.sublabel}</span>
+                      <Icon size={14} className="text-[var(--text-tertiary)] flex-shrink-0" />
+                      <span className="flex-1 text-[var(--text-primary)]">{item.label}</span>
+                      <span className="text-xs text-[var(--text-tertiary)]">{item.sublabel}</span>
                     </button>
                   );
                 })}

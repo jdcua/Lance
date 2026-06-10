@@ -35,11 +35,11 @@ export type Proposal = {
   project_id?: string;
   title: string;
   status: 'draft' | 'sent' | 'accepted' | 'declined';
-  scope: string;
+  scope?: string;
   timeline?: string;
   rate?: number;
   rate_type: 'flat' | 'hourly';
-  body: string;
+  body?: string;
   sent_at?: string;
   created_at: string;
 };
@@ -51,7 +51,7 @@ export type Contract = {
   proposal_id?: string;
   title: string;
   status: 'draft' | 'active' | 'completed' | 'cancelled';
-  body: string;
+  body?: string;
   signed_at?: string;
   created_at: string;
 };
@@ -115,6 +115,8 @@ export type UserProfile = {
   theme?: string;
   license_key?: string;
   licensed_at?: string;
+  ai_enabled?: boolean;
+  profession?: string;
 };
 
 export type Communication = {

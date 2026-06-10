@@ -46,7 +46,7 @@ export async function exportProposalDOCX(
                     borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
                   }),
                   new TableCell({
-                    children: [new Paragraph({ children: [new TextRun({ text: formatDate(statusDate), size: 20, color: '#6B6B67' })], alignment: AlignmentType.RIGHT })],
+                    children: [new Paragraph({ children: [new TextRun({ text: formatDate(statusDate), size: 20, color: '#68675F' })], alignment: AlignmentType.RIGHT })],
                     borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
                   }),
                 ],
@@ -54,11 +54,11 @@ export async function exportProposalDOCX(
             ],
           }),
           ...(profile.email
-            ? [new Paragraph({ children: [new TextRun({ text: profile.email, size: 20, color: '#6B6B67' })], spacing: { after: 200 } })]
+            ? [new Paragraph({ children: [new TextRun({ text: profile.email, size: 20, color: '#68675F' })], spacing: { after: 200 } })]
             : []),
 
           new Paragraph({
-            border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '#E5E5E3' } },
+            border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '#E3E2DB' } },
             spacing: { before: 200, after: 200 },
           }),
 
@@ -68,25 +68,25 @@ export async function exportProposalDOCX(
             spacing: { after: 100 },
           }),
           new Paragraph({
-            children: [new TextRun({ text: proposal.title, size: 32, color: '#1C1C1A' })],
+            children: [new TextRun({ text: proposal.title, size: 32, color: '#181716' })],
             spacing: { after: 100 },
           }),
           new Paragraph({
-            children: [new TextRun({ text: `Prepared for: ${client.name}${client.company ? ` (${client.company})` : ''}`, size: 22, color: '#6B6B67' })],
+            children: [new TextRun({ text: `Prepared for: ${client.name}${client.company ? ` (${client.company})` : ''}`, size: 22, color: '#68675F' })],
             spacing: { after: 200 },
           }),
 
           new Paragraph({
-            border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '#E5E5E3' } },
+            border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '#E3E2DB' } },
             spacing: { before: 200, after: 200 },
           }),
 
           ...bodyText.split('\n').map(
-            (line) => new Paragraph({ children: [new TextRun({ text: line, size: 22, color: '#1C1C1A' })], spacing: { line: 360 } })
+            (line) => new Paragraph({ children: [new TextRun({ text: line, size: 22, color: '#181716' })], spacing: { line: 360 } })
           ),
 
           new Paragraph({
-            border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '#E5E5E3' } },
+            border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '#E3E2DB' } },
             spacing: { before: 200, after: 200 },
           }),
 
@@ -97,7 +97,7 @@ export async function exportProposalDOCX(
                   spacing: { after: 60 },
                 }),
                 new Paragraph({
-                  children: [new TextRun({ text: proposal.scope, size: 22, color: '#1C1C1A' })],
+                  children: [new TextRun({ text: proposal.scope, size: 22, color: '#181716' })],
                   spacing: { after: 200 },
                 }),
               ]
@@ -110,7 +110,7 @@ export async function exportProposalDOCX(
                   spacing: { after: 60 },
                 }),
                 new Paragraph({
-                  children: [new TextRun({ text: proposal.timeline, size: 22, color: '#1C1C1A' })],
+                  children: [new TextRun({ text: proposal.timeline, size: 22, color: '#181716' })],
                   spacing: { after: 200 },
                 }),
               ]
@@ -127,7 +127,7 @@ export async function exportProposalDOCX(
                     new TextRun({
                       text: `${formatCurrency(proposal.rate, profile.currency)} ${proposal.rate_type === 'hourly' ? 'per hour' : 'flat'}`,
                       size: 22,
-                      color: '#1C1C1A',
+                      color: '#181716',
                     }),
                   ],
                   spacing: { after: 200 },
@@ -136,7 +136,7 @@ export async function exportProposalDOCX(
             : []),
 
           new Paragraph({
-            border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '#E5E5E3' } },
+            border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '#E3E2DB' } },
             spacing: { before: 200, after: 200 },
           }),
 
@@ -146,7 +146,7 @@ export async function exportProposalDOCX(
           ...(profile.email
             ? [
                 new Paragraph({
-                  children: [new TextRun({ text: profile.email, size: 20, color: '#6B6B67' })],
+                  children: [new TextRun({ text: profile.email, size: 20, color: '#68675F' })],
                 }),
               ]
             : []),
@@ -171,7 +171,7 @@ export async function exportInvoiceDOCX(
   const taxAmount = invoice.subtotal * ((invoice.tax_rate || 0) / 100);
 
   const statusColor =
-    invoice.status === 'paid' ? '#1D9E75' :
+    invoice.status === 'paid' ? 'var(--accent)' :
     invoice.status === 'sent' ? '#854F0B' :
     invoice.status === 'overdue' ? '#A32D2D' : '#A3A39E';
 
@@ -201,7 +201,7 @@ export async function exportInvoiceDOCX(
   const totalRows: Paragraph[] = [
     new Paragraph({
       children: [
-        new TextRun({ text: `Subtotal:  `, size: 22, color: '#6B6B67' }),
+        new TextRun({ text: `Subtotal:  `, size: 22, color: '#68675F' }),
         new TextRun({ text: formatCurrency(invoice.subtotal, profile.currency), size: 22 }),
       ],
       alignment: AlignmentType.RIGHT,
@@ -213,7 +213,7 @@ export async function exportInvoiceDOCX(
     totalRows.push(
       new Paragraph({
         children: [
-          new TextRun({ text: `Tax (${invoice.tax_rate}%):  `, size: 22, color: '#6B6B67' }),
+          new TextRun({ text: `Tax (${invoice.tax_rate}%):  `, size: 22, color: '#68675F' }),
           new TextRun({ text: formatCurrency(taxAmount, profile.currency), size: 22 }),
         ],
         alignment: AlignmentType.RIGHT,
@@ -225,7 +225,7 @@ export async function exportInvoiceDOCX(
     new Paragraph({
       children: [
         new TextRun({ text: 'TOTAL:  ', size: 24, bold: true }),
-        new TextRun({ text: formatCurrency(invoice.total, profile.currency), size: 24, bold: true, color: '#1D9E75' }),
+        new TextRun({ text: formatCurrency(invoice.total, profile.currency), size: 24, bold: true, color: 'var(--accent)' }),
       ],
       alignment: AlignmentType.RIGHT,
       spacing: { before: 60 },
@@ -253,7 +253,7 @@ export async function exportInvoiceDOCX(
                     borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
                   }),
                   new TableCell({
-                    children: [new Paragraph({ children: [new TextRun({ text: invoice.invoice_number, size: 28, color: '#6B6B67' })], alignment: AlignmentType.RIGHT })],
+                    children: [new Paragraph({ children: [new TextRun({ text: invoice.invoice_number, size: 28, color: '#68675F' })], alignment: AlignmentType.RIGHT })],
                     borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
                   }),
                 ],
@@ -279,7 +279,7 @@ export async function exportInvoiceDOCX(
                     borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
                   }),
                   new TableCell({
-                    children: [new Paragraph({ children: [new TextRun({ text: 'Bill to:', size: 22, color: '#6B6B67' })], alignment: AlignmentType.RIGHT })],
+                    children: [new Paragraph({ children: [new TextRun({ text: 'Bill to:', size: 22, color: '#68675F' })], alignment: AlignmentType.RIGHT })],
                     borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
                   }),
                 ],
@@ -287,31 +287,31 @@ export async function exportInvoiceDOCX(
             ],
           }),
           ...(profile.email
-            ? [new Paragraph({ children: [new TextRun({ text: profile.email, size: 20, color: '#6B6B67' })], spacing: { after: 60 } })]
+            ? [new Paragraph({ children: [new TextRun({ text: profile.email, size: 20, color: '#68675F' })], spacing: { after: 60 } })]
             : []),
           new Paragraph({
             alignment: AlignmentType.RIGHT,
             children: [new TextRun({ text: client.name, size: 22 })],
           }),
           ...(client.email
-            ? [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: client.email, size: 20, color: '#6B6B67' })] })]
+            ? [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: client.email, size: 20, color: '#68675F' })] })]
             : []),
 
           new Paragraph({ spacing: { before: 200 } }),
           new Paragraph({
             children: [
-              new TextRun({ text: `Date: ${formatDate(invoice.created_at)}`, size: 20, color: '#6B6B67' }),
+              new TextRun({ text: `Date: ${formatDate(invoice.created_at)}`, size: 20, color: '#68675F' }),
             ],
           }),
           new Paragraph({
             children: [
-              new TextRun({ text: `Due: ${invoice.due_date ? formatDate(invoice.due_date) : '\u2014'}`, size: 20, color: '#6B6B67' }),
+              new TextRun({ text: `Due: ${invoice.due_date ? formatDate(invoice.due_date) : '\u2014'}`, size: 20, color: '#68675F' }),
             ],
             spacing: { after: 200 },
           }),
 
           new Paragraph({
-            border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '#E5E5E3' } },
+            border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '#E3E2DB' } },
             spacing: { before: 100, after: 200 },
           }),
 
@@ -325,7 +325,7 @@ export async function exportInvoiceDOCX(
           }),
 
           new Paragraph({
-            border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '#E5E5E3' } },
+            border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '#E3E2DB' } },
             spacing: { before: 200, after: 100 },
           }),
 
@@ -334,18 +334,18 @@ export async function exportInvoiceDOCX(
           ...(invoice.notes
             ? [
                 new Paragraph({
-                  border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '#E5E5E3' } },
+                  border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '#E3E2DB' } },
                   spacing: { before: 200, after: 200 },
                 }),
                 new Paragraph({
-                  children: [new TextRun({ text: invoice.notes, size: 20, color: '#6B6B67', italics: true })],
+                  children: [new TextRun({ text: invoice.notes, size: 20, color: '#68675F', italics: true })],
                   spacing: { after: 100 },
                 }),
               ]
             : []),
 
           new Paragraph({
-            children: [new TextRun({ text: 'Thank you for your business.', size: 20, color: '#6B6B67' })],
+            children: [new TextRun({ text: 'Thank you for your business.', size: 20, color: '#68675F' })],
             spacing: { before: 200 },
           }),
         ],

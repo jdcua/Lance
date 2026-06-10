@@ -18,6 +18,10 @@ const projectTypes = [
   'Content writing',
   'Photography',
   'Marketing',
+  'Video editing',
+  'Animation',
+  'SEO audit',
+  'Social media',
   'Other',
 ];
 
@@ -29,6 +33,8 @@ export default function NewProposal() {
   const [generating, setGenerating] = useState(false);
   const [warnings, setWarnings] = useState<ScopeWarning[]>([]);
   const [dismissedWarnings, setDismissedWarnings] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+  const aiEnabled = profile?.ai_enabled ?? false;
   const [form, setForm] = useState({
     client_id: '',
     title: '',
@@ -41,8 +47,9 @@ export default function NewProposal() {
   });
 
   useEffect(() => {
-    loadClients();
-    loadProfile();
+    Promise.all([loadClients(), loadProfile()])
+      .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
+      .finally(() => setLoading(false));
   }, [loadClients, loadProfile]);
 
   const handleGenerate = () => {
@@ -97,6 +104,8 @@ export default function NewProposal() {
       });
       navigate('/proposals');
       checkAndNotify(useStore.getState(), addToast);
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to save proposal', 'error');
     } finally {
       setSaving(false);
     }
@@ -104,26 +113,30 @@ export default function NewProposal() {
 
   const activeWarnings = warnings.filter((w) => !dismissedWarnings.has(w.pattern));
 
+  const currencySymbol = profile?.currency === 'USD' || profile?.currency === 'CAD' || profile?.currency === 'AUD' ? '$' : profile?.currency === 'EUR' ? '€' : profile?.currency === 'GBP' ? '£' : '$';
+
+  if (loading) return <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>
+
   return (
     <div className="p-6 max-w-2xl">
       <button
         onClick={() => navigate('/proposals')}
-        className="flex items-center gap-1.5 text-sm text-[#6B6B67] hover:text-[#1C1C1A] mb-6 transition-colors"
+        className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-6 transition-colors"
       >
         <ArrowLeft size={16} />
         Back to Proposals
       </button>
 
-      <h2 className="text-lg font-semibold text-[#1C1C1A] mb-6">New Proposal</h2>
+      <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-6">New Proposal</h2>
 
       <Card className="mb-6">
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-[#6B6B67] mb-1">Client *</label>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Client *</label>
             <select
               value={form.client_id}
               onChange={(e) => setForm({ ...form, client_id: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-[#E5E5E3] rounded-[8px] focus:outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[#1D9E75]/20"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
             >
               <option value="">Select a client...</option>
               {clients.map((c) => (
@@ -133,23 +146,23 @@ export default function NewProposal() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#6B6B67] mb-1">Proposal Title *</label>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Proposal Title *</label>
             <input
               type="text"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="e.g. Website Redesign Proposal"
-              className="w-full px-3 py-2 text-sm border border-[#E5E5E3] rounded-[8px] placeholder:text-[#A3A39E] focus:outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[#1D9E75]/20"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               autoFocus
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#6B6B67] mb-1">Project Type</label>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Project Type</label>
             <select
               value={form.project_type}
               onChange={(e) => setForm({ ...form, project_type: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-[#E5E5E3] rounded-[8px] focus:outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[#1D9E75]/20"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
             >
               {projectTypes.map((pt) => (
                 <option key={pt} value={pt}>{pt}</option>
@@ -158,55 +171,55 @@ export default function NewProposal() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#6B6B67] mb-1">Scope of Work</label>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Scope of Work</label>
             <textarea
               value={form.scope}
               onChange={(e) => { setForm({ ...form, scope: e.target.value }); setWarnings([]); setDismissedWarnings(new Set()); }}
               placeholder="Describe the scope of work..."
               rows={3}
-              className="w-full px-3 py-2 text-sm border border-[#E5E5E3] rounded-[8px] placeholder:text-[#A3A39E] focus:outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[#1D9E75]/20 resize-none"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 resize-none"
             />
           </div>
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[#6B6B67] mb-1">Rate Type</label>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Rate Type</label>
               <select
                 value={form.rate_type}
                 onChange={(e) => setForm({ ...form, rate_type: e.target.value as 'flat' | 'hourly' })}
-                className="w-full px-3 py-2 text-sm border border-[#E5E5E3] rounded-[8px] focus:outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[#1D9E75]/20"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               >
                 <option value="flat">Flat</option>
                 <option value="hourly">Hourly</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#6B6B67] mb-1">Rate ({form.rate_type === 'hourly' ? '$/hr' : '$'})</label>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Rate ({form.rate_type === 'hourly' ? `${currencySymbol}/hr` : currencySymbol})</label>
               <input
                 type="number"
                 value={form.rate}
                 onChange={(e) => setForm({ ...form, rate: e.target.value })}
                 placeholder="0.00"
-                className="w-full px-3 py-2 text-sm border border-[#E5E5E3] rounded-[8px] placeholder:text-[#A3A39E] focus:outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[#1D9E75]/20"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#6B6B67] mb-1">Timeline</label>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Timeline</label>
               <input
                 type="text"
                 value={form.timeline}
                 onChange={(e) => setForm({ ...form, timeline: e.target.value })}
                 placeholder="e.g. 4 weeks"
-                className="w-full px-3 py-2 text-sm border border-[#E5E5E3] rounded-[8px] placeholder:text-[#A3A39E] focus:outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[#1D9E75]/20"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               />
             </div>
           </div>
 
-          <div className="flex items-center justify-center pt-2">
+          <div className="flex flex-col items-center justify-center pt-2 gap-2">
             <Button
               onClick={handleGenerate}
               loading={generating}
-              disabled={!form.scope.trim()}
+              disabled={!form.scope.trim() || !aiEnabled}
               size="md"
             >
               {generating ? (
@@ -218,6 +231,11 @@ export default function NewProposal() {
                 </>
               )}
             </Button>
+            {!aiEnabled && (
+              <p className="text-xs text-[var(--text-tertiary)]">
+                AI features are off. Enable them in Settings &rarr; AI features.
+              </p>
+            )}
           </div>
         </div>
       </Card>

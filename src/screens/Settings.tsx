@@ -11,6 +11,7 @@ import { readTextFile, writeFile } from '@tauri-apps/plugin-fs';
 import { open } from '@tauri-apps/plugin-dialog';
 import { Check, Upload, Download, AlertTriangle, Trash2, Lock, Sparkles, ExternalLink } from 'lucide-react';
 import { THEMES, applyTheme, getTheme } from '../themes/themes';
+import { PROFESSION_THEME, type Profession } from '../themes';
 import { getUnlockedThemes } from '../achievements/checker';
 import type { ThemeId } from '../themes';
 import { validateLicenseKey } from '../license';
@@ -33,6 +34,7 @@ export default function Settings() {
   const addToast = useToasts((s) => s.add);
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [showResetModal, setShowResetModal] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [showLicenseModal, setShowLicenseModal] = useState(false);
   const [licenseKey, setLicenseKey] = useState('');
   const [licenseError, setLicenseError] = useState('');
@@ -51,11 +53,14 @@ export default function Settings() {
     tagline: '',
     always_include: '',
     theme: 'light',
+    ai_enabled: false,
   });
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   useEffect(() => {
-    loadProfile();
+    loadProfile()
+      .catch(err => addToast(err?.toString?.() || 'Failed to load profile', 'error'))
+      .finally(() => setLoading(false));
   }, [loadProfile]);
 
   useEffect(() => {
@@ -74,6 +79,7 @@ export default function Settings() {
         theme: profile.theme || 'light',
         license_key: profile.license_key,
         licensed_at: profile.licensed_at,
+        ai_enabled: profile.ai_enabled ?? false,
       });
     }
   }, [profile]);
@@ -82,13 +88,19 @@ export default function Settings() {
     const stored = (localStorage.getItem('lance:theme') || 'default') as ThemeId;
     setActiveTheme(stored);
     if (isLicensed) {
-      setUnlockedThemes(new Set(['default', 'studio', 'terminal', 'craft']));
+      setUnlockedThemes(new Set(['default', 'studio', 'terminal', 'craft', 'motion', 'lens', 'scale']));
     } else {
       getUnlockedThemes().then((unlocked) => {
-        setUnlockedThemes(new Set(['default', ...unlocked]));
+        const set = new Set(['default', ...unlocked]);
+        // Also unlock profession theme
+        const prof = profile?.profession as Profession | undefined;
+        if (prof && PROFESSION_THEME[prof]) {
+          set.add(PROFESSION_THEME[prof]);
+        }
+        setUnlockedThemes(set);
       });
     }
-  }, [isLicensed]);
+  }, [isLicensed, profile?.profession]);
 
   useEffect(() => {
     if (form.theme === 'dark') {
@@ -102,7 +114,11 @@ export default function Settings() {
     (updates: Partial<UserProfile>, section: string) => {
       const newProfile = { ...form, ...updates };
       setForm(newProfile);
-      saveProfile(newProfile);
+      try {
+        saveProfile(newProfile);
+      } catch (err) {
+        addToast(err?.toString?.() || 'Failed to save', 'error');
+      }
       setSaved((prev) => new Set([...prev, section]));
       if (timers.current[section]) clearTimeout(timers.current[section]);
       timers.current[section] = setTimeout(() => {
@@ -113,7 +129,7 @@ export default function Settings() {
         });
       }, 1500);
     },
-    [form, saveProfile]
+    [form, saveProfile, addToast]
   );
 
   const handleExportData = async () => {
@@ -244,6 +260,9 @@ export default function Settings() {
       } else {
         setLicenseError('Invalid license key — check for typos and try again.');
       }
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to activate license', 'error');
+      setLicenseError('An error occurred. Please try again.');
     } finally {
       setLicenseActivating(false);
     }
@@ -251,58 +270,64 @@ export default function Settings() {
 
   const handleRemoveLicense = async () => {
     if (!window.confirm('Remove your license? The splash screen will return.')) return;
-    await removeLicense();
-    addToast('License removed.', 'info');
-    getUnlockedThemes().then((unlocked) => {
-      setUnlockedThemes(new Set(['default', ...unlocked]));
-    });
+    try {
+      await removeLicense();
+      addToast('License removed.', 'info');
+      getUnlockedThemes().then((unlocked) => {
+        setUnlockedThemes(new Set(['default', ...unlocked]));
+      });
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to remove license', 'error');
+    }
   };
 
   const SectionHead = ({ title }: { title: string }) => (
     <div className="flex items-center gap-2 mb-4">
-      <h3 className="text-sm font-semibold text-[#1C1C1A] dark:text-[#F0EFE9]">{title}</h3>
+      <h3 className="text-sm font-semibold text-[var(--text-primary)] ">{title}</h3>
       {saved.has(title) && (
-        <span className="flex items-center gap-1 text-[10px] text-[#1D9E75] animate-pulse">
+        <span className="flex items-center gap-1 text-[10px] text-[var(--accent)] animate-pulse">
           <Check size={12} /> Saved
         </span>
       )}
     </div>
   );
 
-  const inputClass = "w-full px-3 py-2 text-sm border border-[#E5E5E3] dark:border-[#2C2C2A] rounded-[8px] placeholder:text-[#A3A39E] focus:outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[#1D9E75]/20 bg-white dark:bg-[#1C1C1A] dark:text-[#F0EFE9]";
-  const labelClass = "block text-xs font-medium text-[#6B6B67] dark:text-[#A3A39E] mb-1";
+  const inputClass = "w-full px-3 py-2 text-sm border border-[var(--border-color)]  rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)]  ";
+  const labelClass = "block text-xs font-medium text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-1";
+
+  if (loading) return <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>
 
   return (
     <div className="p-6 max-w-2xl">
-      <h2 className="text-lg font-semibold text-[#1C1C1A] dark:text-[#F0EFE9] mb-6">Settings</h2>
+      <h2 className="text-lg font-semibold text-[var(--text-primary)]  mb-6">Settings</h2>
 
       {/* Section 0: License */}
-      <Card className="mb-6 dark:bg-[#1C1C1A] dark:border-[#2C2C2A]">
+      <Card className="mb-6  ">
         <SectionHead title="License" />
         {isLicensed ? (
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <Sparkles size={14} className="text-[#1D9E75]" />
-              <span className="text-sm font-medium text-[#1D9E75]">Licensed</span>
+              <Sparkles size={14} className="text-[var(--accent)]" />
+              <span className="text-sm font-medium text-[var(--accent)]">Licensed</span>
             </div>
-            <p className="text-sm text-[#6B6B67] dark:text-[#A3A39E] mb-2">
+            <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-2">
               Thank you for supporting Lance.
             </p>
             {form.licensed_at && (
-              <p className="text-xs text-[#A3A39E] mb-4">
+              <p className="text-xs text-[var(--text-tertiary)] mb-4">
                 Licensed on {new Date(form.licensed_at).toLocaleDateString()}.
               </p>
             )}
             <button
               onClick={handleRemoveLicense}
-              className="text-xs text-[#A3A39E] hover:text-[#A32D2D] underline transition-colors"
+              className="text-xs text-[var(--text-tertiary)] hover:text-[#A32D2D] underline transition-colors"
             >
               Remove license
             </button>
           </div>
         ) : (
           <div>
-            <p className="text-sm text-[#6B6B67] dark:text-[#A3A39E] mb-4">
+            <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-4">
               Lance is free to use. A license removes the launch screen and unlocks all themes immediately.
             </p>
             <div className="flex items-center gap-3">
@@ -313,7 +338,7 @@ export default function Settings() {
                 href="https://lance.decentra.co/license"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-sm text-[#1D9E75] hover:underline"
+                className="inline-flex items-center gap-1 text-sm text-[var(--accent)] hover:underline"
               >
                 Get a license &mdash; $59
                 <ExternalLink size={12} />
@@ -324,7 +349,7 @@ export default function Settings() {
       </Card>
 
       {/* Section 1: Profile */}
-      <Card className="mb-6 dark:bg-[#1C1C1A] dark:border-[#2C2C2A]">
+      <Card className="mb-6  ">
         <SectionHead title="Your profile" />
         <div className="space-y-4">
           <div>
@@ -365,13 +390,13 @@ export default function Settings() {
       </Card>
 
       {/* Section 2: Rates */}
-      <Card className="mb-6 dark:bg-[#1C1C1A] dark:border-[#2C2C2A]">
+      <Card className="mb-6  ">
         <SectionHead title="Rates" />
         <div className="space-y-4">
           <div>
             <label className={labelClass}>Default hourly rate</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#A3A39E]">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-tertiary)]">$</span>
               <input
                 type="number"
                 value={form.hourly_rate ?? ''}
@@ -407,7 +432,7 @@ export default function Settings() {
       </Card>
 
       {/* Section 3: Proposal voice */}
-      <Card className="mb-6 dark:bg-[#1C1C1A] dark:border-[#2C2C2A]">
+      <Card className="mb-6  ">
         <SectionHead title="Proposal voice" />
         <div className="space-y-4">
           <div>
@@ -447,16 +472,41 @@ export default function Settings() {
         </div>
       </Card>
 
+      {/* Section 3.5: AI Features */}
+      <Card className="mb-6  ">
+        <SectionHead title="AI features" />
+        <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-4">
+          AI-assisted writing, scope warnings, and pricing analysis run locally on your machine. No data is sent anywhere.
+        </p>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <button
+            onClick={() => autoSave({ ai_enabled: !form.ai_enabled }, 'AI features')}
+            className={`relative w-10 h-6 rounded-full transition-colors ${
+              form.ai_enabled ? 'bg-[var(--accent)]' : 'bg-[#D4D4D2]'
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-[var(--bg-card)] shadow transition-transform ${
+                form.ai_enabled ? 'translate-x-4' : 'translate-x-0'
+              }`}
+            />
+          </button>
+          <span className="text-sm text-[var(--text-primary)]  font-medium">
+            {form.ai_enabled ? 'AI features on' : 'AI features off'}
+          </span>
+        </label>
+      </Card>
+
       {/* Section 4: Appearance */}
-      <Card className="mb-6 dark:bg-[#1C1C1A] dark:border-[#2C2C2A]">
+      <Card className="mb-6  ">
         <SectionHead title="Appearance" />
         <div className="flex items-center gap-3">
           <button
             onClick={() => autoSave({ theme: 'light' }, 'Appearance')}
             className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
               form.theme === 'light'
-                ? 'bg-[#1D9E75] text-white border-[#1D9E75]'
-                : 'bg-white dark:bg-[#2C2C2A] text-[#6B6B67] dark:text-[#A3A39E] border-[#E5E5E3] dark:border-[#2C2C2A]'
+                ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                : 'bg-[var(--bg-card)]  text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] border-[var(--border-color)] '
             }`}
           >
             Light
@@ -465,8 +515,8 @@ export default function Settings() {
             onClick={() => autoSave({ theme: 'dark' }, 'Appearance')}
             className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
               form.theme === 'dark'
-                ? 'bg-[#1D9E75] text-white border-[#1D9E75]'
-                : 'bg-white dark:bg-[#2C2C2A] text-[#6B6B67] dark:text-[#A3A39E] border-[#E5E5E3] dark:border-[#2C2C2A]'
+                ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                : 'bg-[var(--bg-card)]  text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] border-[var(--border-color)] '
             }`}
           >
             Dark
@@ -475,7 +525,7 @@ export default function Settings() {
       </Card>
 
       {/* Section 4.5: Themes */}
-      <Card className="mb-6 dark:bg-[#1C1C1A] dark:border-[#2C2C2A]">
+      <Card className="mb-6  ">
         <SectionHead title="Themes" />
         <div className="space-y-2">
           {THEMES.map((theme) => {
@@ -493,30 +543,30 @@ export default function Settings() {
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-[8px] text-left text-sm transition-colors ${
                   isActive
-                    ? 'bg-[rgba(29,158,117,0.06)] border border-[#1D9E75]/30'
+                    ? 'bg-[var(--accent-bg)] border border-[var(--accent)]/30'
                     : isUnlocked
-                    ? 'hover:bg-[#F2F2F0] dark:hover:bg-[#2C2C2A] border border-transparent'
+                    ? 'hover:bg-[var(--bg-secondary)]  border border-transparent'
                     : 'opacity-60 cursor-not-allowed border border-transparent'
                 }`}
                 disabled={!isUnlocked}
               >
                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                  isActive ? 'border-[#1D9E75]' : 'border-[#D4D4D2]'
+                  isActive ? 'border-[var(--accent)]' : 'border-[#D4D4D2]'
                 }`}>
-                  {isActive && <div className="w-2 h-2 rounded-full bg-[#1D9E75]" />}
+                  {isActive && <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`font-medium ${isUnlocked ? 'text-[#1C1C1A] dark:text-[#F0EFE9]' : 'text-[#A3A39E]'}`}>
+                  <p className={`font-medium ${isUnlocked ? 'text-[var(--text-primary)] ' : 'text-[var(--text-tertiary)]'}`}>
                     {theme.name}
                   </p>
-                  <p className="text-xs text-[#A3A39E] mt-0.5">
+                  <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
                     {theme.description}
                   </p>
                 </div>
                 {isUnlocked ? (
-                  <span className="text-[10px] text-[#A3A39E]">{theme.name}</span>
+                  <span className="text-[10px] text-[var(--text-tertiary)]">{theme.name}</span>
                 ) : (
-                  <span className="flex items-center gap-1 text-[10px] text-[#A3A39E]">
+                  <span className="flex items-center gap-1 text-[10px] text-[var(--text-tertiary)]">
                     <Lock size={10} />
                     {theme.unlockedBy.replace(/^Always available$/, '') || 'Locked'}
                   </span>
@@ -528,13 +578,13 @@ export default function Settings() {
       </Card>
 
       {/* Section 5: Data */}
-      <Card className="mb-6 dark:bg-[#1C1C1A] dark:border-[#2C2C2A]">
+      <Card className="mb-6  ">
         <SectionHead title="Data" />
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#1C1C1A] dark:text-[#F0EFE9]">Export all data</p>
-              <p className="text-xs text-[#A3A39E]">Backup your entire database as JSON</p>
+              <p className="text-sm text-[var(--text-primary)] ">Export all data</p>
+              <p className="text-xs text-[var(--text-tertiary)]">Backup your entire database as JSON</p>
             </div>
             <Button variant="secondary" onClick={handleExportData} size="sm">
               <Download size={14} />
@@ -543,18 +593,18 @@ export default function Settings() {
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#1C1C1A] dark:text-[#F0EFE9]">Import data</p>
-              <p className="text-xs text-[#A3A39E]">Restore from a Lance backup file</p>
+              <p className="text-sm text-[var(--text-primary)] ">Import data</p>
+              <p className="text-xs text-[var(--text-tertiary)]">Restore from a Lance backup file</p>
             </div>
             <Button variant="secondary" onClick={handleImportData} size="sm">
               <Upload size={14} />
               Import
             </Button>
           </div>
-          <div className="border-t border-[#E5E5E3] dark:border-[#2C2C2A] pt-3 flex items-center justify-between">
+          <div className="border-t border-[var(--border-color)]  pt-3 flex items-center justify-between">
             <div>
               <p className="text-sm text-[#A32D2D]">Reset all data</p>
-              <p className="text-xs text-[#A3A39E]">Delete all records permanently</p>
+              <p className="text-xs text-[var(--text-tertiary)]">Delete all records permanently</p>
             </div>
             <Button variant="danger" onClick={() => setShowResetModal(true)} size="sm">
               <Trash2 size={14} />
@@ -590,7 +640,7 @@ export default function Settings() {
               value={licenseKey}
               onChange={(e) => { setLicenseKey(e.target.value.toUpperCase()); setLicenseError(''); }}
               placeholder="LANCE-XXXX-XXXX-XXXX-XXXX"
-              className="w-full px-3 py-2 text-sm border border-[#E5E5E3] rounded-[8px] placeholder:text-[#A3A39E] focus:outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[#1D9E75]/20 bg-white dark:bg-[#1C1C1A] dark:text-[#F0EFE9] dark:border-[#2C2C2A] uppercase"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)]    uppercase"
               style={{ fontFamily: "'JetBrains Mono', monospace" }}
               autoFocus
             />

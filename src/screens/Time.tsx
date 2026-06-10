@@ -18,11 +18,12 @@ export default function TimeScreen() {
   const [entryForm, setEntryForm] = useState({ project_id: '', client_id: '', description: '', start_time: '', end_time: '', billable: true });
   const [durationMinutes, setDurationMinutes] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadTimeEntries();
-    loadProjects();
-    loadClients();
+    Promise.all([loadTimeEntries(), loadProjects(), loadClients()])
+      .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
+      .finally(() => setLoading(false));
   }, [loadTimeEntries, loadProjects, loadClients]);
 
   useEffect(() => {
@@ -67,6 +68,8 @@ export default function TimeScreen() {
         });
       }, 1000);
       setIntervalId(id);
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to start timer', 'error');
     } finally {
       setSaving(false);
     }
@@ -76,16 +79,20 @@ export default function TimeScreen() {
     if (!activeTimer) return;
     if (intervalId) clearInterval(intervalId);
     setIntervalId(null);
-    const endTime = new Date().toISOString();
-    const duration = Math.floor((Date.now() - new Date(activeTimer.entry.start_time).getTime()) / 60000);
-    await updateTimeEntry({
-      ...activeTimer.entry,
-      end_time: endTime,
-      duration_minutes: duration,
-    });
-    setActiveTimer(null);
-    await loadTimeEntries();
-    checkAndNotify(useStore.getState(), addToast);
+    try {
+      const endTime = new Date().toISOString();
+      const duration = Math.floor((Date.now() - new Date(activeTimer.entry.start_time).getTime()) / 60000);
+      await updateTimeEntry({
+        ...activeTimer.entry,
+        end_time: endTime,
+        duration_minutes: duration,
+      });
+      setActiveTimer(null);
+      await loadTimeEntries();
+      checkAndNotify(useStore.getState(), addToast);
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to stop timer', 'error');
+    }
   };
 
   const addManualEntry = async () => {
@@ -110,6 +117,8 @@ export default function TimeScreen() {
       setEntryForm({ project_id: '', client_id: '', description: '', start_time: '', end_time: '', billable: true });
       setDurationMinutes(0);
       checkAndNotify(useStore.getState(), addToast);
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to log entry', 'error');
     } finally {
       setSaving(false);
     }
@@ -117,12 +126,20 @@ export default function TimeScreen() {
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Delete this time entry?')) {
-      await removeTimeEntry(id);
+      try {
+        await removeTimeEntry(id);
+      } catch (err) {
+        addToast(err?.toString?.() || 'Failed to delete', 'error');
+      }
     }
   };
 
   const toggleEntryBillable = async (entry: TimeEntry) => {
-    await updateTimeEntry({ ...entry, billable: !entry.billable });
+    try {
+      await updateTimeEntry({ ...entry, billable: !entry.billable });
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to update', 'error');
+    }
   };
 
   const getProjectName = (projectId: string) => projects.find((p) => p.id === projectId)?.title || 'Unknown';
@@ -140,6 +157,8 @@ export default function TimeScreen() {
   });
   const weekMinutes = weekEntries.reduce((acc, t) => acc + (t.duration_minutes || 0), 0);
   const unbilledMinutes = timeEntries.filter((t) => t.billable && !t.invoiced).reduce((acc, t) => acc + (t.duration_minutes || 0), 0);
+
+  if (loading) return <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>
 
   return (
     <div className="p-6">
@@ -161,14 +180,14 @@ export default function TimeScreen() {
         <Card className="mb-6">
           <div className="flex items-end gap-4">
             <div className="flex-1">
-              <label className="block text-xs font-medium text-[#6B6B67] mb-1">Project</label>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Project</label>
               <select
                 value={entryForm.project_id}
                 onChange={(e) => {
                   const project = projects.find((p) => p.id === e.target.value);
                   setEntryForm({ ...entryForm, project_id: e.target.value, client_id: project?.client_id || '' });
                 }}
-                className="w-full px-3 py-2 text-sm border border-[#E5E5E3] rounded-[8px] focus:outline-none focus:border-[#1D9E75]"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]"
                 disabled={!!activeTimer}
               >
                 <option value="">Select project...</option>
@@ -178,13 +197,13 @@ export default function TimeScreen() {
               </select>
             </div>
             <div className="flex-1">
-              <label className="block text-xs font-medium text-[#6B6B67] mb-1">Description</label>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Description</label>
               <input
                 type="text"
                 value={entryForm.description}
                 onChange={(e) => setEntryForm({ ...entryForm, description: e.target.value })}
                 placeholder="What are you working on?"
-                className="w-full px-3 py-2 text-sm border border-[#E5E5E3] rounded-[8px] placeholder:text-[#A3A39E] focus:outline-none focus:border-[#1D9E75]"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
                 disabled={!!activeTimer}
               />
             </div>
@@ -193,10 +212,10 @@ export default function TimeScreen() {
                 type="checkbox"
                 checked={entryForm.billable}
                 onChange={(e) => setEntryForm({ ...entryForm, billable: e.target.checked })}
-                className="w-4 h-4 rounded border-[#D4D4D2] text-[#1D9E75]"
+                className="w-4 h-4 rounded border-[#D4D4D2] text-[var(--accent)]"
                 disabled={!!activeTimer}
               />
-              <span className="text-xs text-[#6B6B67]">Billable</span>
+              <span className="text-xs text-[var(--text-secondary)]">Billable</span>
             </label>
             {activeTimer ? (
               <Button variant="danger" onClick={stopTimer} size="md">
@@ -214,10 +233,10 @@ export default function TimeScreen() {
       )}
 
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-[#1C1C1A]">Time Entries</h3>
+        <h3 className="text-sm font-semibold text-[var(--text-primary)]">Time Entries</h3>
         <button
           onClick={() => setShowNewEntry(!showNewEntry)}
-          className="text-xs text-[#1D9E75] hover:underline flex items-center gap-1"
+          className="text-xs text-[var(--accent)] hover:underline flex items-center gap-1"
         >
           <Plus size={12} /> Add Manually
         </button>
@@ -234,7 +253,7 @@ export default function TimeScreen() {
                   const project = projects.find((p) => p.id === e.target.value);
                   setEntryForm({ ...entryForm, project_id: e.target.value, client_id: project?.client_id || '' });
                 }}
-                className="w-full px-3 py-2 text-xs border border-[#E5E5E3] rounded-[8px]"
+                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px]"
               >
                 <option value="">Project...</option>
                 {projects.map((p) => (
@@ -243,13 +262,13 @@ export default function TimeScreen() {
               </select>
             </div>
             <div>
-              <label className="block text-[10px] text-[#A3A39E] mb-1">Minutes</label>
+              <label className="block text-[10px] text-[var(--text-tertiary)] mb-1">Minutes</label>
               <input
                 type="number"
                 value={durationMinutes || ''}
                 onChange={(e) => setDurationMinutes(parseInt(e.target.value) || 0)}
                 placeholder="30"
-                className="w-20 px-2 py-2 text-xs border border-[#E5E5E3] rounded-[8px]"
+                className="w-20 px-2 py-2 text-xs border border-[var(--border-color)] rounded-[8px]"
               />
             </div>
             <div className="flex-1">
@@ -258,7 +277,7 @@ export default function TimeScreen() {
                 value={entryForm.description}
                 onChange={(e) => setEntryForm({ ...entryForm, description: e.target.value })}
                 placeholder="Description"
-                className="w-full px-3 py-2 text-xs border border-[#E5E5E3] rounded-[8px]"
+                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px]"
               />
             </div>
             <Button onClick={addManualEntry} loading={saving} disabled={!entryForm.project_id || durationMinutes <= 0} size="sm">
@@ -270,38 +289,38 @@ export default function TimeScreen() {
 
       {timeEntries.length === 0 ? (
         <Card className="text-center py-16 flex flex-col items-center">
-          <Clock size={40} className="text-[#A3A39E] mb-4" />
-          <h3 className="text-[15px] font-medium text-[#6B6B67] mb-1.5">No time entries yet</h3>
-          <p className="text-[13px] text-[#A3A39E] max-w-xs mb-5">Start a timer or add entries manually.</p>
+          <Clock size={40} className="text-[var(--text-tertiary)] mb-4" />
+          <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No time entries yet</h3>
+          <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Start a timer or add entries manually.</p>
         </Card>
       ) : (
         <div className="space-y-2">
-          {timeEntries.slice(0, 50).map((entry) => (
-            <div key={entry.id} className="flex items-center gap-3 px-4 py-2.5 bg-white border border-[#E5E5E3] rounded-[8px]">
+          {timeEntries.map((entry) => (
+            <div key={entry.id} className="flex items-center gap-3 px-4 py-2.5 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px]">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-xs font-medium text-[#1C1C1A]">{getProjectName(entry.project_id)}</span>
-                  <span className="text-[10px] text-[#A3A39E]">—</span>
-                  <span className="text-xs text-[#6B6B67] truncate">{entry.description || 'No description'}</span>
+                  <span className="text-xs font-medium text-[var(--text-primary)]">{getProjectName(entry.project_id)}</span>
+                  <span className="text-[10px] text-[var(--text-tertiary)]">—</span>
+                  <span className="text-xs text-[var(--text-secondary)] truncate">{entry.description || 'No description'}</span>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] text-[#A3A39E]">
+                <div className="flex items-center gap-2 text-[10px] text-[var(--text-tertiary)]">
                   <span>{formatDate(entry.start_time)}</span>
                   <span>{formatTime(entry.start_time)} {entry.end_time ? `- ${formatTime(entry.end_time)}` : ''}</span>
-                  <span className="text-[#6B6B67] font-medium">{entry.duration_minutes ? formatDuration(entry.duration_minutes) : 'In progress'}</span>
+                  <span className="text-[var(--text-secondary)] font-medium">{entry.duration_minutes ? formatDuration(entry.duration_minutes) : 'In progress'}</span>
                   <span>{getClientName(entry.client_id)}</span>
                 </div>
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
                 <button
                   onClick={() => toggleEntryBillable(entry)}
-                  className={`text-[10px] px-1.5 py-0.5 rounded-full border ${entry.billable ? 'bg-[#E6F5EE] text-[#1D9E75] border-[#1D9E75]/20' : 'bg-[#F2F2F0] text-[#A3A39E] border-[#D4D4D2]'}`}
+                  className={`text-[10px] px-1.5 py-0.5 rounded-full border ${entry.billable ? 'bg-[var(--accent-bg)] text-[var(--accent)] border-[var(--accent)]/20' : 'bg-[var(--bg-secondary)] text-[var(--text-tertiary)] border-[#D4D4D2]'}`}
                 >
                   {entry.billable ? 'billable' : 'non-billable'}
                 </button>
                 {entry.invoiced && <Badge variant="info">invoiced</Badge>}
                 <button
                   onClick={() => handleDelete(entry.id)}
-                  className="p-1 text-[#A3A39E] hover:text-[#A32D2D]"
+                  className="p-1 text-[var(--text-tertiary)] hover:text-[#A32D2D]"
                 >
                   <Trash2 size={12} />
                 </button>

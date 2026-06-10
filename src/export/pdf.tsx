@@ -5,23 +5,23 @@ import { htmlToPlainText } from '../utils/htmlToText';
 import { getProfileName } from './common';
 
 const pdfStyles = StyleSheet.create({
-  page: { padding: 60, fontFamily: 'Helvetica', fontSize: 11, color: '#1C1C1A' },
-  divider: { borderBottom: '1 solid #E5E5E3', marginVertical: 16 },
+  page: { padding: 60, fontFamily: 'Helvetica', fontSize: 11, color: '#181716' },
+  divider: { borderBottom: '1 solid #E3E2DB', marginVertical: 16 },
   label: { fontSize: 9, color: '#A3A39E', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
-  value: { fontSize: 11, color: '#1C1C1A', lineHeight: 1.6 },
+  value: { fontSize: 11, color: '#181716', lineHeight: 1.6 },
   freelancerName: { fontSize: 14, fontWeight: 600 },
-  freelancerEmail: { fontSize: 10, color: '#6B6B67' },
-  date: { fontSize: 10, color: '#6B6B67' },
+  freelancerEmail: { fontSize: 10, color: '#68675F' },
+  date: { fontSize: 10, color: '#68675F' },
   heading: { fontSize: 22, fontWeight: 600, marginBottom: 4 },
-  title: { fontSize: 16, color: '#1C1C1A', marginBottom: 8 },
-  preparedFor: { fontSize: 11, color: '#6B6B67' },
+  title: { fontSize: 16, color: '#181716', marginBottom: 8 },
+  preparedFor: { fontSize: 11, color: '#68675F' },
   invoiceHeading: { fontSize: 28, fontWeight: 600 },
-  invoiceNumber: { fontSize: 14, color: '#6B6B67' },
+  invoiceNumber: { fontSize: 14, color: '#68675F' },
   tableHeader: { fontSize: 9, color: '#A3A39E', textTransform: 'uppercase' },
   totalLabel: { fontSize: 12, fontWeight: 600 },
-  totalValue: { fontSize: 12, fontWeight: 600, color: '#1D9E75' },
-  notes: { fontSize: 10, color: '#6B6B67', fontStyle: 'italic' },
-  statusPaid: { color: '#1D9E75' },
+  totalValue: { fontSize: 12, fontWeight: 600, color: 'var(--accent)' },
+  notes: { fontSize: 10, color: '#68675F', fontStyle: 'italic' },
+  statusPaid: { color: 'var(--accent)' },
   statusSent: { color: '#854F0B' },
   statusDraft: { color: '#A3A39E' },
   statusOverdue: { color: '#A32D2D' },
@@ -31,8 +31,8 @@ const pdfStyles = StyleSheet.create({
   tableCellPrice: { flex: 1.5, textAlign: 'right' },
   tableCellTotal: { flex: 1.5, textAlign: 'right' },
   totalRow: { flexDirection: 'row', justifyContent: 'flex-end', paddingTop: 8 },
-  totalRowLabel: { fontSize: 11, color: '#6B6B67' },
-  thankYou: { fontSize: 10, color: '#6B6B67', marginTop: 24 },
+  totalRowLabel: { fontSize: 11, color: '#68675F' },
+  thankYou: { fontSize: 10, color: '#68675F', marginTop: 24 },
 });
 
 export function ProposalPDF({ proposal, client, profile }: { proposal: Proposal; client: Client; profile: UserProfile }) {
@@ -143,7 +143,7 @@ export function InvoicePDF({ invoice, client, profile }: { invoice: Invoice; cli
 
         <View style={pdfStyles.divider} />
 
-        <View style={[pdfStyles.tableRow, { borderBottom: '1 solid #E5E5E3', paddingBottom: 6 }]}>
+        <View style={[pdfStyles.tableRow, { borderBottom: '1 solid #E3E2DB', paddingBottom: 6 }]}>
           <Text style={[pdfStyles.tableHeader, pdfStyles.tableCellDesc]}>DESCRIPTION</Text>
           <Text style={[pdfStyles.tableHeader, pdfStyles.tableCellQty]}>QTY</Text>
           <Text style={[pdfStyles.tableHeader, pdfStyles.tableCellPrice]}>UNIT PRICE</Text>
@@ -155,7 +155,7 @@ export function InvoicePDF({ invoice, client, profile }: { invoice: Invoice; cli
             key={item.id}
             style={[
               pdfStyles.tableRow,
-              { backgroundColor: i % 2 === 0 ? '#FAFAF9' : '#FFFFFF', paddingVertical: 5 },
+              { backgroundColor: i % 2 === 0 ? '#F8F7F3' : '#FFFFFF', paddingVertical: 5 },
             ]}
           >
             <Text style={[pdfStyles.value, pdfStyles.tableCellDesc]}>{item.description}</Text>

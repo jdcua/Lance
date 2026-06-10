@@ -18,8 +18,8 @@ export default function Topbar() {
   const title = pageTitles[location.pathname] || 'Lance';
 
   return (
-    <header className="h-[56px] bg-white border-b border-[#E5E5E3] flex items-center px-6 flex-shrink-0">
-      <h1 className="text-sm font-semibold text-[#1C1C1A]" style={{ fontFamily: "'DM Sans', sans-serif" }}>{title}</h1>
+    <header className="h-[56px] bg-[var(--bg-card)] border-b border-[var(--border-color)] flex items-center px-6 flex-shrink-0">
+      <h1 className="text-sm font-semibold text-[var(--text-primary)]" style={{ fontFamily: "'Syne', sans-serif" }}>{title}</h1>
     </header>
   );
 }

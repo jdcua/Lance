@@ -10,20 +10,24 @@ const icons = {
 };
 
 const colors = {
-  success: 'bg-[#E6F5EE] text-[#1D9E75] border-[#1D9E75]/20',
-  error: 'bg-[#FCEBEB] text-[#A32D2D] border-[#A32D2D]/20',
-  info: 'bg-[#E6F1FB] text-[#185FA5] border-[#185FA5]/20',
-  unlock: 'bg-[#1D9E75] text-white border-[#1D9E75]',
+  success: 'bg-[var(--accent-bg)] text-[var(--accent)] border-[var(--accent)]/20',
+  error: 'bg-[var(--danger-bg)] text-[var(--danger)] border-[var(--danger)]/20',
+  info: 'bg-[var(--info-bg)] text-[var(--info)] border-[var(--info)]/20',
+  unlock: 'bg-[var(--accent)] text-white border-[var(--accent)]',
 };
 
 export default function ToastContainer() {
-  const { toasts, remove } = useToasts();
+  const { toasts, remove, pause, resume } = useToasts();
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col-reverse gap-2 pointer-events-none">
       {toasts.map((toast) => (
         <div
           key={toast.id}
+          role="status"
+          aria-live="polite"
+          onMouseEnter={() => pause(toast.id)}
+          onMouseLeave={() => resume(toast.id)}
           className={`pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-[8px] border shadow-lg text-sm max-w-sm animate-slide-in ${colors[toast.type]}`}
         >
           {(() => {

@@ -36,6 +36,42 @@ const approachByType: Record<string, string[]> = {
     'Implementation roadmap with prioritized actions',
     'Follow-up session to review progress and adjust',
   ],
+  Photography: [
+    'Pre-shoot consultation and creative brief',
+    'Location or studio scouting and setup',
+    'Full-resolution shoot with professional lighting',
+    'Post-production editing and final delivery in agreed formats',
+  ],
+  'Video editing': [
+    'Footage review and narrative structure planning',
+    'Rough cut for timing and flow approval',
+    'Fine cut with color grading, sound mix, and motion graphics',
+    'Final export in requested formats with revision notes addressed',
+  ],
+  Animation: [
+    'Storyboard and style frame approval',
+    'Animatic with timing and motion direction',
+    'Full animation production with feedback loops',
+    'Final render in specified formats with source files',
+  ],
+  'SEO audit': [
+    'Full site crawl and technical audit',
+    'Keyword research and competitive analysis',
+    'Prioritized recommendations with estimated impact',
+    'Implementation guide and 30-day follow-up review',
+  ],
+  'Social media': [
+    'Content strategy and platform audit',
+    'Monthly content calendar with post concepts',
+    'Asset creation and copywriting for each post',
+    'Performance review and strategy adjustment each month',
+  ],
+  'Content writing': [
+    'Topic research and outline approval',
+    'First draft delivery for feedback',
+    'Revision round incorporating your notes',
+    'Final proofread and delivery in agreed format',
+  ],
   default: [
     'Discovery phase to align on goals and success criteria',
     'Structured delivery with clear milestones and check-ins',

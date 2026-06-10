@@ -129,7 +129,27 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            email TEXT,
            hourly_rate REAL,
            currency TEXT DEFAULT 'CAD',
-           writing_voice TEXT
+           writing_voice TEXT,
+           tax_rate REAL,
+           payment_terms INTEGER,
+           tagline TEXT,
+           always_include TEXT,
+           writing_style TEXT,
+           theme TEXT,
+           license_key TEXT,
+           licensed_at TEXT,
+           ai_enabled INTEGER DEFAULT 0,
+           profession TEXT
+         );
+
+         CREATE TABLE IF NOT EXISTS communications (
+           id TEXT PRIMARY KEY,
+           client_id TEXT NOT NULL,
+           type TEXT NOT NULL,
+           summary TEXT NOT NULL,
+           date TEXT NOT NULL,
+           created_at TEXT NOT NULL,
+           FOREIGN KEY (client_id) REFERENCES clients(id)
          );",
     )
     .map_err(|e| format!("Migration failed: {}", e))?;

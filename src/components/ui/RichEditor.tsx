@@ -80,8 +80,8 @@ export default function RichEditor({ content, onChange, placeholder = 'Start wri
   if (!editor) return null;
 
   return (
-    <div className="border border-[#E5E5E3] rounded-[8px] focus-within:border-[#1D9E75] focus-within:ring-1 focus-within:ring-[#1D9E75]/20 overflow-hidden">
-      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-[#E5E5E3] bg-[#FAFAF9] flex-wrap">
+    <div className="border border-[var(--border-color)] rounded-[8px] focus-within:border-[var(--accent)] focus-within:ring-1 focus-within:ring-[var(--accent)]/20 overflow-hidden">
+      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-[var(--border-color)] bg-[var(--bg-primary)] flex-wrap">
         {toolbarItems.map((item) => (
           <button
             key={item.key}
@@ -89,8 +89,8 @@ export default function RichEditor({ content, onChange, placeholder = 'Start wri
             onClick={() => item.action(editor)}
             className={`w-[28px] h-[28px] flex items-center justify-center rounded-[4px] transition-colors ${
               editor.isActive(item.key) || (item.key === 'heading1' && editor.isActive('heading', { level: 1 })) || (item.key === 'heading2' && editor.isActive('heading', { level: 2 }))
-                ? 'bg-[#1D9E75] text-white'
-                : 'text-[#6B6B67] hover:bg-[#F1EFE8]'
+                ? 'bg-[var(--accent)] text-white'
+                : 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
             }`}
           >
             <item.icon size={14} />
@@ -104,7 +104,7 @@ export default function RichEditor({ content, onChange, placeholder = 'Start wri
           padding: 12px 14px;
           font-size: 13px;
           line-height: 1.7;
-          color: #1C1C1A;
+          color: var(--text-primary);
           outline: none;
         }
         .tiptap h1 { font-size: 18px; font-weight: 600; margin: 16px 0 8px; }
@@ -113,15 +113,15 @@ export default function RichEditor({ content, onChange, placeholder = 'Start wri
         .tiptap p { margin: 0 0 10px; }
         .tiptap p.is-editor-empty:first-child::before {
           content: attr(data-placeholder);
-          color: #A3A39E;
+          color: var(--text-tertiary);
           float: left;
           height: 0;
           pointer-events: none;
         }
         .tiptap ul, .tiptap ol { padding-left: 20px; margin-bottom: 10px; }
-        .tiptap blockquote { border-left: 3px solid #1D9E75; padding-left: 12px; color: #6B6B67; }
-        .tiptap hr { border: none; border-top: 1px solid #E5E5E3; margin: 16px 0; }
-        .tiptap code { background: #F1EFE8; padding: 2px 5px; border-radius: 3px; font-size: 12px; }
+        .tiptap blockquote { border-left: 3px solid var(--accent); padding-left: 12px; color: var(--text-secondary); }
+        .tiptap hr { border: none; border-top: 1px solid var(--border-color); margin: 16px 0; }
+        .tiptap code { background: var(--bg-secondary); padding: 2px 5px; border-radius: 3px; font-size: 12px; }
         .tiptap ul[data-type="taskList"] { list-style: none; padding-left: 0; }
         .tiptap ul[data-type="taskList"] li { display: flex; align-items: flex-start; }
         .tiptap ul[data-type="taskList"] li > label { margin-right: 8px; margin-top: 2px; }

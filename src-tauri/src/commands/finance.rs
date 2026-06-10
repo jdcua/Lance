@@ -26,6 +26,10 @@ pub struct UserProfile {
     pub always_include: Option<String>,
     pub writing_style: Option<String>,
     pub theme: Option<String>,
+    pub license_key: Option<String>,
+    pub licensed_at: Option<String>,
+    pub ai_enabled: Option<bool>,
+    pub profession: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -58,6 +62,10 @@ pub struct UpsertProfilePayload {
     pub always_include: Option<String>,
     pub writing_style: Option<String>,
     pub theme: Option<String>,
+    pub license_key: Option<String>,
+    pub licensed_at: Option<String>,
+    pub ai_enabled: Option<bool>,
+    pub profession: Option<String>,
 }
 
 #[tauri::command]
@@ -124,7 +132,7 @@ pub fn delete_expense(app: AppHandle, id: String) -> Result<(), String> {
 #[tauri::command]
 pub fn get_user_profile(app: AppHandle) -> Result<Option<UserProfile>, String> {
     let conn = db::get_connection(&app)?;
-    let mut stmt = conn.prepare("SELECT id, name, email, hourly_rate, currency, writing_voice, tax_rate, payment_terms, tagline, always_include, writing_style, theme FROM user_profile WHERE id = 1")
+    let mut stmt = conn.prepare("SELECT id, name, email, hourly_rate, currency, writing_voice, tax_rate, payment_terms, tagline, always_include, writing_style, theme, license_key, licensed_at, ai_enabled, profession FROM user_profile WHERE id = 1")
         .map_err(|e| e.to_string())?;
     Ok(stmt
         .query_row([], |row| {
@@ -141,6 +149,10 @@ pub fn get_user_profile(app: AppHandle) -> Result<Option<UserProfile>, String> {
                 always_include: row.get(9)?,
                 writing_style: row.get(10)?,
                 theme: row.get(11)?,
+                license_key: row.get(12)?,
+                licensed_at: row.get(13)?,
+                ai_enabled: row.get::<_, Option<i64>>(14)?.map(|v| v != 0),
+                profession: row.get(15)?,
             })
         })
         .ok())
@@ -149,9 +161,10 @@ pub fn get_user_profile(app: AppHandle) -> Result<Option<UserProfile>, String> {
 #[tauri::command]
 pub fn upsert_user_profile(app: AppHandle, payload: UpsertProfilePayload) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
+    let ai_enabled_int = payload.ai_enabled.map(|v| if v { 1 } else { 0 });
     conn.execute(
-        "INSERT INTO user_profile (id, name, email, hourly_rate, currency, writing_voice, tax_rate, payment_terms, tagline, always_include, writing_style, theme) VALUES (1, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11) ON CONFLICT(id) DO UPDATE SET name = ?1, email = ?2, hourly_rate = ?3, currency = ?4, writing_voice = ?5, tax_rate = ?6, payment_terms = ?7, tagline = ?8, always_include = ?9, writing_style = ?10, theme = ?11",
-        rusqlite::params![payload.name, payload.email, payload.hourly_rate, payload.currency, payload.writing_voice, payload.tax_rate, payload.payment_terms, payload.tagline, payload.always_include, payload.writing_style, payload.theme],
+        "INSERT INTO user_profile (id, name, email, hourly_rate, currency, writing_voice, tax_rate, payment_terms, tagline, always_include, writing_style, theme, license_key, licensed_at, ai_enabled, profession) VALUES (1, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15) ON CONFLICT(id) DO UPDATE SET name = ?1, email = ?2, hourly_rate = ?3, currency = ?4, writing_voice = ?5, tax_rate = ?6, payment_terms = ?7, tagline = ?8, always_include = ?9, writing_style = ?10, theme = ?11, license_key = ?12, licensed_at = ?13, ai_enabled = ?14, profession = ?15",
+        rusqlite::params![payload.name, payload.email, payload.hourly_rate, payload.currency, payload.writing_voice, payload.tax_rate, payload.payment_terms, payload.tagline, payload.always_include, payload.writing_style, payload.theme, payload.license_key, payload.licensed_at, ai_enabled_int, payload.profession],
     ).map_err(|e| e.to_string())?;
     Ok(())
 }

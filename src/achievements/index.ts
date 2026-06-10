@@ -8,7 +8,11 @@ export type AchievementKey =
   | 'first_recurring'
   | 'twenty_five_hours'
   | 'ten_invoices'
-  | 'first_export';
+  | 'first_export'
+  | 'motion_theme'
+  | 'lens_theme'
+  | 'scale_theme'
+  | 'first_project_completed';
 
 export type Achievement = {
   key: AchievementKey;
@@ -81,6 +85,34 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: 'Shipped',
     description: 'You exported your first document.',
     reward: 'Export templates unlocked',
+  },
+  {
+    key: 'motion_theme',
+    title: 'Motion theme',
+    description: 'Motion theme unlocked.',
+    reward: 'Motion theme unlocked',
+    unlocksTheme: 'motion',
+  },
+  {
+    key: 'lens_theme',
+    title: 'Lens theme',
+    description: 'Lens theme unlocked.',
+    reward: 'Lens theme unlocked',
+    unlocksTheme: 'lens',
+  },
+  {
+    key: 'scale_theme',
+    title: 'Scale theme',
+    description: 'Scale theme unlocked.',
+    reward: 'Scale theme unlocked',
+    unlocksTheme: 'scale',
+  },
+  {
+    key: 'first_project_completed',
+    title: 'Delivered',
+    description: 'You completed your first project.',
+    reward: 'Motion theme unlocked',
+    unlocksTheme: 'motion',
   },
 ];
 

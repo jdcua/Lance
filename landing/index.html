@@ -16,7 +16,7 @@
 /* ── Reset ─────────────────────────────────── */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { font-family: 'Inter', sans-serif; background: #F8F7F3; color: #181716; -webkit-font-smoothing: antialiased; }
+body { font-family: 'Inter', sans-serif; background: var(--l-bg); color: var(--l-t1); -webkit-font-smoothing: antialiased; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
@@ -189,7 +189,9 @@ nav {
 .hcs-item {
   display: flex; align-items: center; gap: 7px;
   padding: 7px 12px; font-size: 11px; color: var(--d-t2);
+  cursor: pointer; transition: background .15s, color .15s;
 }
+.hcs-item:hover { background: var(--d-s1); color: var(--d-t1); }
 .hcs-item svg { color: var(--d-t3); flex-shrink: 0; }
 .hcs-item.active {
   color: var(--green); background: var(--green-dim);
@@ -211,6 +213,8 @@ nav {
   font-family: 'DM Mono', monospace;
 }
 .hc-content { padding: 10px; display: flex; flex-direction: column; gap: 7px; flex: 1; overflow: hidden; }
+.hc-pane { display: none !important; }
+.hc-pane.active { display: flex !important; }
 .hc-stats { display: flex; gap: 6px; }
 .hc-stat {
   flex: 1; background: var(--d-s2); border: 1px solid var(--d-bd);
@@ -298,8 +302,13 @@ nav {
   background: var(--green); flex-shrink: 0;
 }
 
+.ai-footnote {
+  font-size: 11px; color: var(--l-t2); margin-top: 20px;
+  font-family: 'DM Mono', monospace; text-align: center;
+}
+
 /* ── Full Mockup ─────────────────────────────────── */
-.mockup-section { background: #0C0B0A; padding: 96px 32px; }
+.mockup-section { background: var(--d-bg); padding: 96px 32px; }
 .mockup-outer { max-width: 980px; margin: 0 auto; }
 .mockup-shell {
   background: var(--d-s1); border: 1px solid var(--d-bd);
@@ -346,7 +355,9 @@ nav {
 .ms-item {
   display: flex; align-items: center; gap: 9px;
   padding: 8px 16px; font-size: 13px; color: var(--d-t2);
+  cursor: pointer; transition: background .15s, color .15s;
 }
+.ms-item:hover { background: var(--d-s1); color: var(--d-t1); }
 .ms-item svg { color: var(--d-t3); flex-shrink: 0; width: 14px; height: 14px; }
 .ms-item.active {
   color: var(--green); background: rgba(30,201,138,.07);
@@ -371,6 +382,8 @@ nav {
 .ms-btn-primary { background: var(--green); color: #08150E; }
 .ms-btn-ghost { background: var(--d-s2); color: var(--d-t2); border: 1px solid var(--d-bd); }
 .ms-content { padding: 20px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+.ms-pane { display: none !important; }
+.ms-pane.active { display: flex !important; }
 
 .ms-stats { display: flex; gap: 12px; }
 .ms-stat {
@@ -409,6 +422,7 @@ nav {
 }
 .chip-s { background: var(--green-dim); color: var(--green); }
 .chip-d { background: var(--d-bd); color: var(--d-t2); }
+.chip-o { background: rgba(168,45,45,.15); color: #FB6B6B; }
 .chip-v { background: rgba(96,165,250,.12); color: #60A5FA; }
 
 .ms-time { width: 200px; flex-shrink: 0; }
@@ -451,7 +465,7 @@ nav {
 .why-body { font-size: 14px; line-height: 1.75; color: var(--l-t2); }
 
 /* ── Themes ─────────────────────────────────── */
-.themes-section { background: #0C0B0A; padding: 96px 32px; }
+.themes-section { background: var(--d-bg); padding: 96px 32px; }
 .theme-tabs {
   display: flex; justify-content: center; gap: 6px;
   margin-bottom: 32px; flex-wrap: wrap;
@@ -497,6 +511,21 @@ nav {
 .t-craft h4 { font-family: 'Georgia', serif; color: #1A1A18; }
 .t-craft p { color: #6B6A65; }
 .t-craft .theme-chip { background: #4A7FA5; color: #fff; }
+
+.t-motion { background: #FAFAFE; border-color: #E4E0F4; }
+.t-motion h4 { font-family: 'Space Grotesk', sans-serif; color: #1A1530; }
+.t-motion p { color: #6B6585; }
+.t-motion .theme-chip { background: #8B5CF6; color: #fff; }
+
+.t-lens { background: #1C1814; border-color: #3D3630; }
+.t-lens h4 { font-family: 'Cormorant Garamond', serif; color: #F5F0E8; }
+.t-lens p { color: #B0A898; }
+.t-lens .theme-chip { background: #D97706; color: #1C1814; }
+
+.t-scale { background: #F8F9FC; border-color: #E0E4EE; }
+.t-scale h4 { font-family: 'Inter', sans-serif; color: #0F172A; }
+.t-scale p { color: #5B6478; }
+.t-scale .theme-chip { background: #1E40AF; color: #fff; }
 
 .theme-note {
   text-align: center; font-size: 12px;
@@ -682,79 +711,92 @@ footer a:hover { color: var(--d-t1); }
             Lance
           </div>
           <div class="hcs-group">Win</div>
-          <div class="hcs-item active">
+          <div class="hcs-item active" data-pane="proposals" onclick="switchHeroPane('proposals')">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>
             Proposals
           </div>
-          <div class="hcs-item">
+          <div class="hcs-item" data-pane="contracts" onclick="switchHeroPane('contracts')">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
             Contracts
           </div>
           <div class="hcs-group">Run</div>
-          <div class="hcs-item">
+          <div class="hcs-item" data-pane="projects" onclick="switchHeroPane('projects')">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
             Projects
           </div>
-          <div class="hcs-item">
+          <div class="hcs-item" data-pane="time" onclick="switchHeroPane('time')">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             Time
           </div>
           <div class="hcs-group">Get Paid</div>
-          <div class="hcs-item">
+          <div class="hcs-item" data-pane="invoices" onclick="switchHeroPane('invoices')">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8h7"/><path d="M9 12h7"/><path d="M9 16h5"/></svg>
             Invoices
           </div>
         </div>
         <div class="hc-main">
           <div class="hc-topbar">
-            <span class="hc-topbar-title">Proposals</span>
-            <span class="hc-badge">3 active</span>
+            <span class="hc-topbar-title" id="heroTopbarTitle">Proposals</span>
+            <span class="hc-badge" id="heroBadge">3 active</span>
           </div>
-          <div class="hc-content">
+
+          <!-- Hero pane: Proposals -->
+          <div class="hc-content hc-pane active" id="hero-pane-proposals">
             <div class="hc-stats">
-              <div class="hc-stat">
-                <div class="hc-stat-val g">$12.4k</div>
-                <div class="hc-stat-lbl">Revenue</div>
-              </div>
-              <div class="hc-stat">
-                <div class="hc-stat-val">72%</div>
-                <div class="hc-stat-lbl">Win rate</div>
-              </div>
-              <div class="hc-stat">
-                <div class="hc-stat-val">5</div>
-                <div class="hc-stat-lbl">Active</div>
-              </div>
+              <div class="hc-stat"><div class="hc-stat-val g">$12.4k</div><div class="hc-stat-lbl">Revenue</div></div>
+              <div class="hc-stat"><div class="hc-stat-val">72%</div><div class="hc-stat-lbl">Win rate</div></div>
+              <div class="hc-stat"><div class="hc-stat-val">5</div><div class="hc-stat-lbl">Active</div></div>
             </div>
-            <div class="hc-card">
-              <div>
-                <div class="hc-card-name">Brand Refresh</div>
-                <div class="hc-card-meta">Acme Corp · Flat rate</div>
-              </div>
-              <div class="hc-card-right">
-                <div class="hc-card-amt">$4,500</div>
-                <span class="hc-chip chip-sent">Sent</span>
-              </div>
+            <div class="hc-card"><div><div class="hc-card-name">Brand Refresh</div><div class="hc-card-meta">Acme Corp · Flat rate</div></div><div class="hc-card-right"><div class="hc-card-amt">$4,500</div><span class="hc-chip chip-sent">Sent</span></div></div>
+            <div class="hc-card"><div><div class="hc-card-name">Web Retainer</div><div class="hc-card-meta">Studio 12 · Monthly</div></div><div class="hc-card-right"><div class="hc-card-amt">$2,200</div><span class="hc-chip chip-viewed">Viewed</span></div></div>
+            <div class="hc-card"><div><div class="hc-card-name">Landing Page</div><div class="hc-card-meta">Northside · Hourly</div></div><div class="hc-card-right"><div class="hc-card-amt">$85/hr</div><span class="hc-chip chip-draft">Draft</span></div></div>
+          </div>
+
+          <!-- Hero pane: Contracts -->
+          <div class="hc-content hc-pane" id="hero-pane-contracts">
+            <div class="hc-stats">
+              <div class="hc-stat"><div class="hc-stat-val g">2</div><div class="hc-stat-lbl">Active</div></div>
+              <div class="hc-stat"><div class="hc-stat-val">1</div><div class="hc-stat-lbl">Pending</div></div>
+              <div class="hc-stat"><div class="hc-stat-val">$18.5k</div><div class="hc-stat-lbl">Value</div></div>
             </div>
-            <div class="hc-card">
-              <div>
-                <div class="hc-card-name">Web Retainer</div>
-                <div class="hc-card-meta">Studio 12 · Monthly</div>
-              </div>
-              <div class="hc-card-right">
-                <div class="hc-card-amt">$2,200</div>
-                <span class="hc-chip chip-viewed">Viewed</span>
-              </div>
+            <div class="hc-card"><div><div class="hc-card-name">Brand Refresh</div><div class="hc-card-meta">Acme Corp · Signed</div></div><div class="hc-card-right"><div class="hc-card-amt">$12,000</div><span class="hc-chip chip-sent">Active</span></div></div>
+            <div class="hc-card"><div><div class="hc-card-name">Web Retainer</div><div class="hc-card-meta">Studio 12 · Awaiting</div></div><div class="hc-card-right"><div class="hc-card-amt">$6,500</div><span class="hc-chip chip-viewed">Pending</span></div></div>
+          </div>
+
+          <!-- Hero pane: Projects -->
+          <div class="hc-content hc-pane" id="hero-pane-projects">
+            <div class="hc-stats">
+              <div class="hc-stat"><div class="hc-stat-val g">3</div><div class="hc-stat-lbl">Active</div></div>
+              <div class="hc-stat"><div class="hc-stat-val">2</div><div class="hc-stat-lbl">Done</div></div>
+              <div class="hc-stat"><div class="hc-stat-val">$22k</div><div class="hc-stat-lbl">Budget</div></div>
             </div>
-            <div class="hc-card">
-              <div>
-                <div class="hc-card-name">Landing Page</div>
-                <div class="hc-card-meta">Northside · Hourly</div>
-              </div>
-              <div class="hc-card-right">
-                <div class="hc-card-amt">$85/hr</div>
-                <span class="hc-chip chip-draft">Draft</span>
-              </div>
+            <div class="hc-card"><div><div class="hc-card-name">Brand Refresh</div><div class="hc-card-meta">Acme Corp · Due Oct 30</div></div><div class="hc-card-right"><span class="hc-chip chip-sent">On track</span></div></div>
+            <div class="hc-card"><div><div class="hc-card-name">Web Retainer</div><div class="hc-card-meta">Studio 12 · Ongoing</div></div><div class="hc-card-right"><span class="hc-chip chip-sent">Active</span></div></div>
+            <div class="hc-card"><div><div class="hc-card-name">Landing Page</div><div class="hc-card-meta">Northside · Due Nov 15</div></div><div class="hc-card-right"><span class="hc-chip chip-draft">Behind</span></div></div>
+          </div>
+
+          <!-- Hero pane: Time -->
+          <div class="hc-content hc-pane" id="hero-pane-time">
+            <div class="hc-stats">
+              <div class="hc-stat"><div class="hc-stat-val g">9.3h</div><div class="hc-stat-lbl">This week</div></div>
+              <div class="hc-stat"><div class="hc-stat-val">32.5h</div><div class="hc-stat-lbl">Month</div></div>
+              <div class="hc-stat"><div class="hc-stat-val">12h</div><div class="hc-stat-lbl">Unbilled</div></div>
             </div>
+            <div class="hc-card"><div><div class="hc-card-name">Brand Refresh</div><div class="hc-card-meta">Acme Corp</div></div><div class="hc-card-right"><div class="hc-card-amt" style="color:var(--green);font-size:11px">2:14:32</div></div></div>
+            <div class="hc-card"><div><div class="hc-card-name">Northside Web</div><div class="hc-card-meta">Landing Page</div></div><div class="hc-card-right"><div class="hc-card-amt" style="font-size:11px">1:20:00</div></div></div>
+            <div class="hc-card"><div><div class="hc-card-name">Studio 12 Consult</div><div class="hc-card-meta">Web Retainer</div></div><div class="hc-card-right"><div class="hc-card-amt" style="font-size:11px">3:45:00</div></div></div>
+          </div>
+
+          <!-- Hero pane: Invoices -->
+          <div class="hc-content hc-pane" id="hero-pane-invoices">
+            <div class="hc-stats">
+              <div class="hc-stat"><div class="hc-stat-val g">$0</div><div class="hc-stat-lbl">Paid</div></div>
+              <div class="hc-stat"><div class="hc-stat-val">$6.7k</div><div class="hc-stat-lbl">Owed</div></div>
+              <div class="hc-stat"><div class="hc-stat-val" style="color:#A32D2D">$2.2k</div><div class="hc-stat-lbl">Late</div></div>
+            </div>
+            <div class="hc-card"><div><div class="hc-card-name">INV-003</div><div class="hc-card-meta">Acme Corp · Due Oct 1</div></div><div class="hc-card-right"><div class="hc-card-amt">$4,500</div><span class="hc-chip chip-sent">Sent</span></div></div>
+            <div class="hc-card"><div><div class="hc-card-name">INV-002</div><div class="hc-card-meta">Studio 12 · Due Sep 15</div></div><div class="hc-card-right"><div class="hc-card-amt">$2,200</div><span class="hc-chip chip-draft">Late</span></div></div>
+            <div class="hc-card"><div><div class="hc-card-name">INV-001</div><div class="hc-card-meta">Northside · Paid</div></div><div class="hc-card-right"><div class="hc-card-amt">$1,200</div><span class="hc-chip chip-viewed">Paid</span></div></div>
           </div>
         </div>
       </div>
@@ -779,7 +821,7 @@ footer a:hover { color: var(--d-t1); }
         <ul class="feat-list">
           <li>Proposals with scope warnings</li>
           <li>Contract builder</li>
-          <li>AI-assisted writing</li>
+          <li>AI-assisted writing*</li>
           <li>Win rate tracking</li>
         </ul>
       </div>
@@ -827,190 +869,23 @@ footer a:hover { color: var(--d-t1); }
       </div>
 
     </div>
-  </div>
-</section>
-
-<!-- ── Full Mockup ─────────────────────────── -->
-<section class="mockup-section">
-  <div class="mockup-outer">
-    <div class="eyebrow" style="margin-bottom:12px">See it in action</div>
-    <h2 class="sec-title sec-title-dark">One app. Your entire business.</h2>
-    <div class="mockup-shell reveal">
-      <div class="ms-chrome">
-        <span class="ms-dot ms-r"></span>
-        <span class="ms-dot ms-y"></span>
-        <span class="ms-dot ms-g"></span>
-        <div class="ms-urlbar">
-          <span class="ms-url">lance — Dashboard</span>
-        </div>
-      </div>
-      <div class="ms-body">
-        <div class="ms-sidebar">
-          <div class="ms-brand">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" x2="12" y1="3" y2="21"/><polyline points="8 8 12 4 16 8"/><polyline points="16 16 12 20 8 16"/></svg>
-            Lance
-          </div>
-          <div class="ms-group">Win Work</div>
-          <div class="ms-item active">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>
-            Proposals
-          </div>
-          <div class="ms-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-            Contracts
-          </div>
-          <div class="ms-group">Run Projects</div>
-          <div class="ms-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-            Projects
-          </div>
-          <div class="ms-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Time
-          </div>
-          <div class="ms-group">Get Paid</div>
-          <div class="ms-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8h7"/><path d="M9 12h7"/><path d="M9 16h5"/></svg>
-            Invoices
-          </div>
-          <div class="ms-group">Business</div>
-          <div class="ms-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
-            Insights
-          </div>
-          <div class="ms-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            Clients
-          </div>
-        </div>
-        <div class="ms-main">
-          <div class="ms-header">
-            <span class="ms-header-title">Proposals</span>
-            <div class="ms-header-right">
-              <span class="ms-btn-sm ms-btn-ghost">Filter</span>
-              <span class="ms-btn-sm ms-btn-primary">+ New Proposal</span>
-            </div>
-          </div>
-          <div class="ms-content">
-            <div class="ms-stats">
-              <div class="ms-stat">
-                <div class="ms-stat-val g">$12,400</div>
-                <div class="ms-stat-lbl">Revenue this month</div>
-              </div>
-              <div class="ms-stat">
-                <div class="ms-stat-val">72%</div>
-                <div class="ms-stat-lbl">Win rate</div>
-              </div>
-              <div class="ms-stat">
-                <div class="ms-stat-val">3</div>
-                <div class="ms-stat-lbl">Pending response</div>
-              </div>
-              <div class="ms-stat">
-                <div class="ms-stat-val">$6,700</div>
-                <div class="ms-stat-lbl">Sent this month</div>
-              </div>
-            </div>
-            <div class="ms-two-col">
-              <div class="ms-proposals">
-                <div class="ms-col-head">Active Proposals</div>
-                <div class="ms-proposal">
-                  <div>
-                    <div class="ms-p-name">Brand Refresh — Acme Corp</div>
-                    <div class="ms-p-sub">Flat rate · Sep 15, 2026</div>
-                  </div>
-                  <div class="ms-p-right">
-                    <div class="ms-p-amt">$4,500</div>
-                    <span class="ms-chip chip-s">Sent</span>
-                  </div>
-                </div>
-                <div class="ms-proposal">
-                  <div>
-                    <div class="ms-p-name">Web Retainer — Studio 12</div>
-                    <div class="ms-p-sub">Monthly · Nov 1, 2026</div>
-                  </div>
-                  <div class="ms-p-right">
-                    <div class="ms-p-amt">$2,200<small style="font-size:10px;font-weight:400;color:var(--d-t2)">/mo</small></div>
-                    <span class="ms-chip chip-v">Viewed</span>
-                  </div>
-                </div>
-                <div class="ms-proposal">
-                  <div>
-                    <div class="ms-p-name">Landing Page — Northside</div>
-                    <div class="ms-p-sub">Hourly · $85/hr · Oct 1</div>
-                  </div>
-                  <div class="ms-p-right">
-                    <div class="ms-p-amt">$85/hr</div>
-                    <span class="ms-chip chip-d">Draft</span>
-                  </div>
-                </div>
-              </div>
-              <div class="ms-time">
-                <div class="ms-col-head">Time This Week</div>
-                <div class="ms-timer">
-                  <div>
-                    <div class="ms-timer-proj">Brand Refresh</div>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:6px">
-                    <span class="ms-timer-dot"></span>
-                    <span class="ms-timer-time">2:14:32</span>
-                  </div>
-                </div>
-                <div class="ms-timer">
-                  <div>
-                    <div class="ms-timer-proj">Northside Web</div>
-                  </div>
-                  <span class="ms-timer-time">5:40:00</span>
-                </div>
-                <div class="ms-timer">
-                  <div>
-                    <div class="ms-timer-proj">Studio 12 Consult</div>
-                  </div>
-                  <span class="ms-timer-time">1:20:00</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── Why ─────────────────────────── -->
-<section class="section why-section">
-  <div class="container">
-    <div class="eyebrow">Why Lance</div>
-    <h2 class="sec-title sec-title-light">Built different. On purpose.</h2>
-    <div class="why-grid">
-      <div class="why-card reveal">
-        <div class="why-num">01</div>
-        <div class="why-title">Everything talks to each other.</div>
-        <p class="why-body">A client you add once flows into proposals, contracts, invoices, and insights. No re-entry. No copy-pasting. Ever.</p>
-      </div>
-      <div class="why-card reveal">
-        <div class="why-num">02</div>
-        <div class="why-title">Your data stays on your machine.</div>
-        <p class="why-body">No accounts. No cloud sync. No server that can get breached, sold, or shut down. Your client list and financials are yours.</p>
-      </div>
-      <div class="why-card reveal">
-        <div class="why-num">03</div>
-        <div class="why-title">The AI sharpens your judgment.</div>
-        <p class="why-body">Not replacing your instincts — supporting them. Scope warnings, pricing analysis, win rate patterns. Your edge, amplified.</p>
-      </div>
-    </div>
+    <p class="ai-footnote">* AI features are entirely optional, off by default, and can be toggled on or off at any time.</p>
   </div>
 </section>
 
 <!-- ── Themes ─────────────────────────── -->
 <section class="themes-section">
   <div class="container">
-    <div class="eyebrow">Four themes</div>
+    <div class="eyebrow">Seven themes</div>
     <h2 class="sec-title sec-title-dark">Your workspace. Your style.</h2>
     <div class="theme-tabs">
       <button class="theme-tab active" data-theme="default">Default</button>
       <button class="theme-tab" data-theme="studio">Studio</button>
       <button class="theme-tab" data-theme="terminal">Terminal</button>
       <button class="theme-tab" data-theme="craft">Craft</button>
+      <button class="theme-tab" data-theme="motion">Motion</button>
+      <button class="theme-tab" data-theme="lens">Lens</button>
+      <button class="theme-tab" data-theme="scale">Scale</button>
     </div>
 
     <div class="theme-preview active" id="preview-default">
@@ -1041,8 +916,232 @@ footer a:hover { color: var(--d-t1); }
         <div class="theme-chips"><span class="theme-chip">Proposal</span><span class="theme-chip">Invoice</span><span class="theme-chip">Client</span></div>
       </div>
     </div>
+    <div class="theme-preview" id="preview-motion">
+      <div class="theme-frame t-motion">
+        <h4>Vibrant and kinetic — for animators</h4>
+        <p>Electric violet on cool white. High energy.</p>
+        <div class="theme-chips"><span class="theme-chip">Proposal</span><span class="theme-chip">Invoice</span><span class="theme-chip">Client</span></div>
+      </div>
+    </div>
+    <div class="theme-preview" id="preview-lens">
+      <div class="theme-frame t-lens">
+        <h4>Dark and cinematic — for photographers</h4>
+        <p>Amber gold on deep shadow. Darkroom mood.</p>
+        <div class="theme-chips"><span class="theme-chip">Proposal</span><span class="theme-chip">Invoice</span><span class="theme-chip">Client</span></div>
+      </div>
+    </div>
+    <div class="theme-preview" id="preview-scale">
+      <div class="theme-frame t-scale">
+        <h4>Precise and commanding — for consultants</h4>
+        <p>Deep navy on cool grey. Boardroom-ready.</p>
+        <div class="theme-chips"><span class="theme-chip">Proposal</span><span class="theme-chip">Invoice</span><span class="theme-chip">Client</span></div>
+      </div>
+    </div>
 
     <p class="theme-note">Themes unlock as you use Lance — or unlock all instantly with a license.</p>
+  </div>
+</section>
+
+<!-- ── Full Mockup ─────────────────────────── -->
+<section class="mockup-section">
+  <div class="mockup-outer">
+    <div class="eyebrow" style="margin-bottom:12px">See it in action</div>
+    <h2 class="sec-title sec-title-dark">One app. Your entire business.</h2>
+    <div class="mockup-shell reveal">
+      <div class="ms-chrome">
+        <span class="ms-dot ms-r"></span>
+        <span class="ms-dot ms-y"></span>
+        <span class="ms-dot ms-g"></span>
+        <div class="ms-urlbar">
+          <span class="ms-url">lance — Dashboard</span>
+        </div>
+      </div>
+      <div class="ms-body">
+        <div class="ms-sidebar">
+          <div class="ms-brand">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" x2="12" y1="3" y2="21"/><polyline points="8 8 12 4 16 8"/><polyline points="16 16 12 20 8 16"/></svg>
+            Lance
+          </div>
+          <div class="ms-group">Win Work</div>
+          <div class="ms-item active" data-pane="proposals" onclick="switchMockupPane('proposals')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>
+            Proposals
+          </div>
+          <div class="ms-item" data-pane="contracts" onclick="switchMockupPane('contracts')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            Contracts
+          </div>
+          <div class="ms-group">Run Projects</div>
+          <div class="ms-item" data-pane="projects" onclick="switchMockupPane('projects')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            Projects
+          </div>
+          <div class="ms-item" data-pane="time" onclick="switchMockupPane('time')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Time
+          </div>
+          <div class="ms-group">Get Paid</div>
+          <div class="ms-item" data-pane="invoices" onclick="switchMockupPane('invoices')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8h7"/><path d="M9 12h7"/><path d="M9 16h5"/></svg>
+            Invoices
+          </div>
+          <div class="ms-group">Business</div>
+          <div class="ms-item" data-pane="insights" onclick="switchMockupPane('insights')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+            Insights
+          </div>
+          <div class="ms-item" data-pane="clients" onclick="switchMockupPane('clients')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            Clients
+          </div>
+        </div>
+        <div class="ms-main">
+          <div class="ms-header">
+            <span class="ms-header-title" id="mockupHeader">Proposals</span>
+            <div class="ms-header-right" id="mockupHeaderRight">
+              <span class="ms-btn-sm ms-btn-ghost">Filter</span>
+              <span class="ms-btn-sm ms-btn-primary">+ New</span>
+            </div>
+          </div>
+
+          <!-- Pane: Proposals -->
+          <div class="ms-content ms-pane active" id="pane-proposals">
+            <div class="ms-stats">
+              <div class="ms-stat"><div class="ms-stat-val g">$12,400</div><div class="ms-stat-lbl">Revenue this month</div></div>
+              <div class="ms-stat"><div class="ms-stat-val">72%</div><div class="ms-stat-lbl">Win rate</div></div>
+              <div class="ms-stat"><div class="ms-stat-val">3</div><div class="ms-stat-lbl">Pending response</div></div>
+              <div class="ms-stat"><div class="ms-stat-val">$6,700</div><div class="ms-stat-lbl">Sent this month</div></div>
+            </div>
+            <div class="ms-two-col">
+              <div class="ms-proposals">
+                <div class="ms-col-head">Active Proposals</div>
+                <div class="ms-proposal"><div><div class="ms-p-name">Brand Refresh — Acme Corp</div><div class="ms-p-sub">Flat rate · Sep 15</div></div><div class="ms-p-right"><div class="ms-p-amt">$4,500</div><span class="ms-chip chip-s">Sent</span></div></div>
+                <div class="ms-proposal"><div><div class="ms-p-name">Web Retainer — Studio 12</div><div class="ms-p-sub">Monthly · Nov 1</div></div><div class="ms-p-right"><div class="ms-p-amt">$2,200<small style="font-size:10px;font-weight:400;color:var(--d-t2)">/mo</small></div><span class="ms-chip chip-v">Viewed</span></div></div>
+                <div class="ms-proposal"><div><div class="ms-p-name">Landing Page — Northside</div><div class="ms-p-sub">Hourly · $85/hr</div></div><div class="ms-p-right"><div class="ms-p-amt">$85/hr</div><span class="ms-chip chip-d">Draft</span></div></div>
+              </div>
+              <div class="ms-time">
+                <div class="ms-col-head">Time This Week</div>
+                <div class="ms-timer"><div><div class="ms-timer-proj">Brand Refresh</div></div><div style="display:flex;align-items:center;gap:6px"><span class="ms-timer-dot"></span><span class="ms-timer-time">2:14:32</span></div></div>
+                <div class="ms-timer"><div><div class="ms-timer-proj">Northside Web</div></div><span class="ms-timer-time">5:40:00</span></div>
+                <div class="ms-timer"><div><div class="ms-timer-proj">Studio 12 Consult</div></div><span class="ms-timer-time">1:20:00</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pane: Contracts -->
+          <div class="ms-content ms-pane" id="pane-contracts">
+            <div class="ms-stats">
+              <div class="ms-stat"><div class="ms-stat-val g">2</div><div class="ms-stat-lbl">Active contracts</div></div>
+              <div class="ms-stat"><div class="ms-stat-val">1</div><div class="ms-stat-lbl">Pending signing</div></div>
+              <div class="ms-stat"><div class="ms-stat-val">$18,500</div><div class="ms-stat-lbl">Total value</div></div>
+            </div>
+            <div class="ms-col-head" style="margin-bottom:8px">Active Contracts</div>
+            <div class="ms-proposal"><div><div class="ms-p-name">Brand Refresh — Acme Corp</div><div class="ms-p-sub">Signed Sep 12 · $12,000</div></div><div class="ms-p-right"><span class="ms-chip chip-s">Active</span></div></div>
+            <div class="ms-proposal"><div><div class="ms-p-name">Web Retainer — Studio 12</div><div class="ms-p-sub">Awaiting signature · $6,500</div></div><div class="ms-p-right"><span class="ms-chip chip-v">Pending</span></div></div>
+          </div>
+
+          <!-- Pane: Projects -->
+          <div class="ms-content ms-pane" id="pane-projects">
+            <div class="ms-stats">
+              <div class="ms-stat"><div class="ms-stat-val g">3</div><div class="ms-stat-lbl">Active</div></div>
+              <div class="ms-stat"><div class="ms-stat-val">2</div><div class="ms-stat-lbl">Completed</div></div>
+              <div class="ms-stat"><div class="ms-stat-val">$22k</div><div class="ms-stat-lbl">Total budget</div></div>
+            </div>
+            <div class="ms-col-head" style="margin-bottom:8px">Projects</div>
+            <div class="ms-proposal"><div><div class="ms-p-name">Brand Refresh</div><div class="ms-p-sub">Acme Corp · Due Oct 30</div></div><div class="ms-p-right"><div style="width:40px;height:4px;background:var(--d-bd);border-radius:2px;margin-top:2px"><div style="width:65%;height:100%;background:var(--green);border-radius:2px"></div></div></div></div>
+            <div class="ms-proposal"><div><div class="ms-p-name">Web Retainer</div><div class="ms-p-sub">Studio 12 · Ongoing</div></div><div class="ms-p-right"><div style="width:40px;height:4px;background:var(--d-bd);border-radius:2px;margin-top:2px"><div style="width:40%;height:100%;background:var(--green);border-radius:2px"></div></div></div></div>
+            <div class="ms-proposal"><div><div class="ms-p-name">Landing Page</div><div class="ms-p-sub">Northside · Due Nov 15</div></div><div class="ms-p-right"><div style="width:40px;height:4px;background:var(--d-bd);border-radius:2px;margin-top:2px"><div style="width:25%;height:100%;background:var(--green);border-radius:2px"></div></div></div></div>
+          </div>
+
+          <!-- Pane: Time -->
+          <div class="ms-content ms-pane" id="pane-time">
+            <div class="ms-stats">
+              <div class="ms-stat"><div class="ms-stat-val g">9.3h</div><div class="ms-stat-lbl">This week</div></div>
+              <div class="ms-stat"><div class="ms-stat-val">32.5h</div><div class="ms-stat-lbl">This month</div></div>
+              <div class="ms-stat"><div class="ms-stat-val">12h</div><div class="ms-stat-lbl">Unbilled</div></div>
+            </div>
+            <div class="ms-two-col">
+              <div class="ms-proposals">
+                <div class="ms-col-head">Today</div>
+                <div class="ms-timer"><div><div class="ms-timer-proj">Brand Refresh</div><div class="ms-p-sub" style="font-size:10px">Acme Corp</div></div><div style="display:flex;align-items:center;gap:6px"><span class="ms-timer-dot"></span><span class="ms-timer-time">2:14:32</span></div></div>
+                <div class="ms-timer"><div><div class="ms-timer-proj">Northside Web</div><div class="ms-p-sub" style="font-size:10px">Landing Page</div></div><span class="ms-timer-time">1:20:00</span></div>
+                <div class="ms-col-head" style="margin-top:10px">Yesterday</div>
+                <div class="ms-timer"><div><div class="ms-timer-proj">Studio 12 Consult</div><div class="ms-p-sub" style="font-size:10px">Web Retainer</div></div><span class="ms-timer-time">3:45:00</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pane: Invoices -->
+          <div class="ms-content ms-pane" id="pane-invoices">
+            <div class="ms-stats">
+              <div class="ms-stat"><div class="ms-stat-val g">$0</div><div class="ms-stat-lbl">Paid this month</div></div>
+              <div class="ms-stat"><div class="ms-stat-val">$6,700</div><div class="ms-stat-lbl">Outstanding</div></div>
+              <div class="ms-stat"><div class="ms-stat-val" style="color:#A32D2D">$2,200</div><div class="ms-stat-lbl">Overdue</div></div>
+            </div>
+            <div class="ms-col-head" style="margin-bottom:8px">Recent Invoices</div>
+            <div class="ms-proposal"><div><div class="ms-p-name">INV-2024-003</div><div class="ms-p-sub">Acme Corp · Due Oct 1</div></div><div class="ms-p-right"><div class="ms-p-amt">$4,500</div><span class="ms-chip chip-s">Sent</span></div></div>
+            <div class="ms-proposal"><div><div class="ms-p-name">INV-2024-002</div><div class="ms-p-sub">Studio 12 · Due Sep 15</div></div><div class="ms-p-right"><div class="ms-p-amt">$2,200</div><span class="ms-chip chip-o">Overdue</span></div></div>
+            <div class="ms-proposal"><div><div class="ms-p-name">INV-2024-001</div><div class="ms-p-sub">Northside · Paid Sep 5</div></div><div class="ms-p-right"><div class="ms-p-amt">$1,200</div><span class="ms-chip chip-v">Paid</span></div></div>
+          </div>
+
+          <!-- Pane: Insights -->
+          <div class="ms-content ms-pane" id="pane-insights">
+            <div class="ms-stats">
+              <div class="ms-stat"><div class="ms-stat-val g">72%</div><div class="ms-stat-lbl">Win rate</div></div>
+              <div class="ms-stat"><div class="ms-stat-val">$12.4k</div><div class="ms-stat-lbl">Revenue</div></div>
+              <div class="ms-stat"><div class="ms-stat-val">$8.2k</div><div class="ms-stat-lbl">Profit</div></div>
+              <div class="ms-stat"><div class="ms-stat-val">$6.7k</div><div class="ms-stat-lbl">Pipeline</div></div>
+            </div>
+            <div class="ms-col-head" style="margin-bottom:8px">Project Health</div>
+            <div class="ms-proposal"><div><div class="ms-p-name">Brand Refresh</div><div class="ms-p-sub">On track · Due Oct 30</div></div><div class="ms-p-right"><span class="ms-chip chip-s">Healthy</span></div></div>
+            <div class="ms-proposal"><div><div class="ms-p-name">Landing Page</div><div class="ms-p-sub">Behind schedule · Due Nov 15</div></div><div class="ms-p-right"><span class="ms-chip chip-d">At risk</span></div></div>
+            <div class="ms-col-head" style="margin-top:8px;margin-bottom:8px">Top Clients by Revenue</div>
+            <div class="ms-proposal"><div><div class="ms-p-name">Acme Corp</div><div class="ms-p-sub">3 projects</div></div><div class="ms-p-right"><div class="ms-p-amt">$16,500</div></div></div>
+            <div class="ms-proposal"><div><div class="ms-p-name">Studio 12</div><div class="ms-p-sub">2 projects</div></div><div class="ms-p-right"><div class="ms-p-amt">$8,700</div></div></div>
+          </div>
+
+          <!-- Pane: Clients -->
+          <div class="ms-content ms-pane" id="pane-clients">
+            <div class="ms-stats">
+              <div class="ms-stat"><div class="ms-stat-val g">5</div><div class="ms-stat-lbl">Total clients</div></div>
+              <div class="ms-stat"><div class="ms-stat-val">3</div><div class="ms-stat-lbl">Active</div></div>
+              <div class="ms-stat"><div class="ms-stat-val">$25.2k</div><div class="ms-stat-lbl">Lifetime value</div></div>
+            </div>
+            <div class="ms-col-head" style="margin-bottom:8px">Clients</div>
+            <div class="ms-proposal"><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0"></div><div><div class="ms-p-name">Acme Corp</div><div class="ms-p-sub">3 projects · Last contact Sep 16</div></div></div><div class="ms-p-right"><div class="ms-p-amt">$16.5k</div></div></div>
+            <div class="ms-proposal"><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0"></div><div><div class="ms-p-name">Studio 12</div><div class="ms-p-sub">2 projects · Last contact Oct 1</div></div></div><div class="ms-p-right"><div class="ms-p-amt">$8.7k</div></div></div>
+            <div class="ms-proposal"><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:var(--d-bd);flex-shrink:0"></div><div><div class="ms-p-name">Northside Health</div><div class="ms-p-sub">1 project · Last contact Aug 2</div></div></div><div class="ms-p-right"><div class="ms-p-amt" style="color:var(--d-t2)">—</div></div></div>
+            <div class="ms-proposal"><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:var(--d-bd);flex-shrink:0"></div><div><div class="ms-p-name">Riverside Co</div><div class="ms-p-sub">No active projects</div></div></div><div class="ms-p-right"><div class="ms-p-amt" style="color:var(--d-t2)">—</div></div></div>
+            <div class="ms-proposal"><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:var(--d-bd);flex-shrink:0"></div><div><div class="ms-p-name">Powell & Sons</div><div class="ms-p-sub">No active projects</div></div></div><div class="ms-p-right"><div class="ms-p-amt" style="color:var(--d-t2)">—</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Why ─────────────────────────── -->
+<section class="section why-section">
+  <div class="container">
+    <div class="eyebrow">Why Lance</div>
+    <h2 class="sec-title sec-title-light">Built different. On purpose.</h2>
+    <div class="why-grid">
+      <div class="why-card reveal">
+        <div class="why-num">01</div>
+        <div class="why-title">Everything talks to each other.</div>
+        <p class="why-body">A client you add once flows into proposals, contracts, invoices, and insights. No re-entry. No copy-pasting. Ever.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-num">02</div>
+        <div class="why-title">Your data stays on your machine.</div>
+        <p class="why-body">No accounts. No cloud sync. No server that can get breached, sold, or shut down. Your client list and financials are yours.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-num">03</div>
+        <div class="why-title">The AI sharpens your judgment.*</div>
+        <p class="why-body">Not replacing your instincts — supporting them. Scope warnings, pricing analysis, win rate patterns. Your edge, amplified.</p>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1142,7 +1241,237 @@ footer a:hover { color: var(--d-t1); }
 </footer>
 
 <script>
-// Hamburger
+// ── Theme system ───────────────────────────
+
+var LANDING_THEMES = {
+  default: {
+    name: 'Default',
+    vars: {
+      '--green': '#1EC98A', '--green-h': '#18B47C', '--green-dim': 'rgba(30,201,138,.1)',
+      '--green-glow': '0 0 48px rgba(30,201,138,.18)',
+      '--d-bg': '#111110', '--d-s1': '#1A1918', '--d-s2': '#222120', '--d-bd': '#2D2C2A',
+      '--d-t1': '#F0EFE8', '--d-t2': '#7C7B75', '--d-t3': '#3A3937',
+      '--l-bg': '#F8F7F3', '--l-s1': '#FFFFFF', '--l-bd': '#E3E2DB',
+      '--l-t1': '#181716', '--l-t2': '#68675F'
+    },
+    headingFont: "'Syne', sans-serif",
+    bodyFont: "'Inter', sans-serif",
+    monoFont: "'DM Mono', monospace",
+    fonts: null // already loaded via <link>
+  },
+  studio: {
+    name: 'Studio',
+    vars: {
+      '--green': '#C4622D', '--green-h': '#A84E22', '--green-dim': 'rgba(196,98,45,.1)',
+      '--green-glow': '0 0 48px rgba(196,98,45,.18)',
+      '--d-bg': '#2C1810', '--d-s1': '#3A2015', '--d-s2': '#48281A', '--d-bd': '#5A3522',
+      '--d-t1': '#FDFAF5', '--d-t2': '#C4A99A', '--d-t3': '#7A6255',
+      '--l-bg': '#FDFAF5', '--l-s1': '#FFFFFF', '--l-bd': '#E8E0D0',
+      '--l-t1': '#2C1810', '--l-t2': '#7A6255'
+    },
+    headingFont: "'Playfair Display', serif",
+    bodyFont: "'Source Serif 4', serif",
+    monoFont: "'DM Mono', monospace",
+    fonts: 'playfair-display:400,500,600|source-serif-4:400,500'
+  },
+  terminal: {
+    name: 'Terminal',
+    vars: {
+      '--green': '#3FB950', '--green-h': '#2EA043', '--green-dim': 'rgba(63,185,80,.1)',
+      '--green-glow': '0 0 48px rgba(63,185,80,.18)',
+      '--d-bg': '#0D1117', '--d-s1': '#161B22', '--d-s2': '#21262D', '--d-bd': '#30363D',
+      '--d-t1': '#E6EDF3', '--d-t2': '#8B949E', '--d-t3': '#484F58',
+      '--l-bg': '#161B22', '--l-s1': '#21262D', '--l-bd': '#30363D',
+      '--l-t1': '#E6EDF3', '--l-t2': '#8B949E'
+    },
+    headingFont: "'JetBrains Mono', monospace",
+    bodyFont: "'JetBrains Mono', monospace",
+    monoFont: "'JetBrains Mono', monospace",
+    fonts: 'jetbrains-mono:400,500'
+  },
+  craft: {
+    name: 'Craft',
+    vars: {
+      '--green': '#4A7FA5', '--green-h': '#3A6A8C', '--green-dim': 'rgba(74,127,165,.1)',
+      '--green-glow': '0 0 48px rgba(74,127,165,.18)',
+      '--d-bg': '#1A1A18', '--d-s1': '#242420', '--d-s2': '#2E2E28', '--d-bd': '#3C3C36',
+      '--d-t1': '#FAFAF8', '--d-t2': '#A8A59E', '--d-t3': '#6B6860',
+      '--l-bg': '#FAFAF8', '--l-s1': '#FFFFFF', '--l-bd': '#E8E6E0',
+      '--l-t1': '#1A1A18', '--l-t2': '#6B6860'
+    },
+    headingFont: "'Lora', serif",
+    bodyFont: "'Source Sans 3', sans-serif",
+    monoFont: "'DM Mono', monospace",
+    fonts: 'lora:400,500,600|source-sans-3:400,500'
+  },
+  motion: {
+    name: 'Motion',
+    vars: {
+      '--green': '#8B5CF6', '--green-h': '#7C3AED', '--green-dim': 'rgba(139,92,246,.1)',
+      '--green-glow': '0 0 48px rgba(139,92,246,.18)',
+      '--d-bg': '#1A1530', '--d-s1': '#241F3D', '--d-s2': '#2E2848', '--d-bd': '#3D3560',
+      '--d-t1': '#FAFAFE', '--d-t2': '#A09AB5', '--d-t3': '#6B6585',
+      '--l-bg': '#FAFAFE', '--l-s1': '#FFFFFF', '--l-bd': '#E4E0F4',
+      '--l-t1': '#1A1530', '--l-t2': '#6B6585'
+    },
+    headingFont: "'Space Grotesk', sans-serif",
+    bodyFont: "'Inter', sans-serif",
+    monoFont: "'DM Mono', monospace",
+    fonts: 'space-grotesk:400,500,600|inter:400,500'
+  },
+  lens: {
+    name: 'Lens',
+    vars: {
+      '--green': '#D97706', '--green-h': '#B45309', '--green-dim': 'rgba(217,119,6,.12)',
+      '--green-glow': '0 0 48px rgba(217,119,6,.18)',
+      '--d-bg': '#1C1814', '--d-s1': '#2A2520', '--d-s2': '#322D27', '--d-bd': '#3D3630',
+      '--d-t1': '#F5F0E8', '--d-t2': '#B0A898', '--d-t3': '#6B6560',
+      '--l-bg': '#2A2520', '--l-s1': '#322D27', '--l-bd': '#3D3630',
+      '--l-t1': '#F5F0E8', '--l-t2': '#B0A898'
+    },
+    headingFont: "'Cormorant Garamond', serif",
+    bodyFont: "'Inter', sans-serif",
+    monoFont: "'DM Mono', monospace",
+    fonts: 'cormorant-garamond:400,500,600|inter:400,500'
+  },
+  scale: {
+    name: 'Scale',
+    vars: {
+      '--green': '#1E40AF', '--green-h': '#1E3A8A', '--green-dim': 'rgba(30,64,175,.1)',
+      '--green-glow': '0 0 48px rgba(30,64,175,.18)',
+      '--d-bg': '#0F172A', '--d-s1': '#1A2440', '--d-s2': '#243054', '--d-bd': '#33406A',
+      '--d-t1': '#F8F9FC', '--d-t2': '#94A0B8', '--d-t3': '#5B6478',
+      '--l-bg': '#F8F9FC', '--l-s1': '#FFFFFF', '--l-bd': '#E0E4EE',
+      '--l-t1': '#0F172A', '--l-t2': '#5B6478'
+    },
+    headingFont: "'Inter', sans-serif",
+    bodyFont: "'Inter', sans-serif",
+    monoFont: "'DM Mono', monospace",
+    fonts: 'inter:400,500,600'
+  }
+};
+
+var loadedFonts = {};
+
+function applyLandingTheme(themeId) {
+  var theme = LANDING_THEMES[themeId];
+  if (!theme) return;
+
+  var root = document.documentElement;
+  Object.keys(theme.vars).forEach(function(k) {
+    root.style.setProperty(k, theme.vars[k]);
+  });
+
+  // Update font variables on body and all themed elements
+  root.style.setProperty('--heading-font', theme.headingFont);
+  root.style.setProperty('--body-font', theme.bodyFont);
+  root.style.setProperty('--mono-font', theme.monoFont);
+
+  // Apply body font
+  document.body.style.fontFamily = theme.bodyFont;
+
+  // Update all Syne heading references — all elements with inline or classed heading font
+  var headingEls = document.querySelectorAll('h1,h2,.hero-hl,.sec-title,.nav-brand,.footer-brand,.feat-title,.why-title,.pricing-name,.pricing-price,.hc-card-name,.hc-stat-val,.ms-stat-val,.ms-p-name,.ms-p-amt,.ms-header-title,.dl-name,.hc-topbar-title,.hcs-brand,.ms-brand,.why-num');
+  headingEls.forEach(function(el) {
+    el.style.fontFamily = theme.headingFont;
+  });
+
+  // Update mono elements
+  var monoEls = document.querySelectorAll('.eyebrow,.hero-eyebrow,.hero-trust,.nav-links .btn,.hc-badge,.hc-chip,.ms-chip,.ms-stat-lbl,.ms-col-head,.ms-timer-time,.hc-stat-lbl,.hc-card-meta,.hc-title,.hcs-group,.ms-group,.theme-note,.pricing-note,.download-sub,.dl-ver,.dl-sysreq,.footer-copy,.pricing-free-note,.ai-footnote');
+  monoEls.forEach(function(el) {
+    el.style.fontFamily = theme.monoFont;
+  });
+
+  // Load fonts if needed
+  if (theme.fonts && !loadedFonts[themeId]) {
+    var link = document.createElement('link');
+    link.href = 'https://fonts.bunny.net/css?family=' + theme.fonts;
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+    loadedFonts[themeId] = true;
+  }
+
+  // Save to localStorage
+  try { localStorage.setItem('lance-landing-theme', themeId); } catch(e) {}
+
+  // Update theme tab active states
+  document.querySelectorAll('.theme-tab').forEach(function(tab) {
+    tab.classList.toggle('active', tab.dataset.theme === themeId);
+  });
+
+  // Update theme preview panes
+  document.querySelectorAll('.theme-preview').forEach(function(p) {
+    p.classList.toggle('active', p.id === 'preview-' + themeId);
+  });
+}
+
+// ── Init theme on load ─────────────────────
+(function() {
+  var saved = null;
+  try { saved = localStorage.getItem('lance-landing-theme'); } catch(e) {}
+  applyLandingTheme(saved || 'default');
+})();
+
+// ── Mockup pane switcher ──────────────────
+var paneHeaders = {
+  proposals: { title: 'Proposals', right: '<span class="ms-btn-sm ms-btn-ghost">Filter</span><span class="ms-btn-sm ms-btn-primary">+ New</span>' },
+  contracts:  { title: 'Contracts',  right: '<span class="ms-btn-sm ms-btn-primary">+ New Contract</span>' },
+  projects:   { title: 'Projects',   right: '<span class="ms-btn-sm ms-btn-primary">+ New Project</span>' },
+  time:       { title: 'Time',       right: '<span class="ms-btn-sm ms-btn-ghost">This Week</span>' },
+  invoices:   { title: 'Invoices',   right: '<span class="ms-btn-sm ms-btn-primary">+ New Invoice</span>' },
+  insights:   { title: 'Insights',   right: '<span class="ms-btn-sm ms-btn-ghost">This Month</span>' },
+  clients:    { title: 'Clients',    right: '<span class="ms-btn-sm ms-btn-primary">+ New Client</span>' }
+};
+
+function switchMockupPane(pane) {
+  // Update sidebar active state
+  document.querySelectorAll('.ms-item').forEach(function(item) {
+    item.classList.toggle('active', item.dataset.pane === pane);
+  });
+
+  // Update main content pane
+  document.querySelectorAll('.ms-pane').forEach(function(p) {
+    p.classList.toggle('active', p.id === 'pane-' + pane);
+  });
+
+  // Update header
+  var h = paneHeaders[pane];
+  var headerEl = document.getElementById('mockupHeader');
+  var rightEl = document.getElementById('mockupHeaderRight');
+  if (h && headerEl) headerEl.textContent = h.title;
+  if (h && rightEl) rightEl.innerHTML = h.right;
+}
+
+// ── Hero pane switcher ────────────────────
+var heroPaneBadges = {
+  proposals: '3 active',
+  contracts: '2 active',
+  projects: '5 total',
+  time: '9.3h this week',
+  invoices: '$6.7k owed',
+};
+
+function switchHeroPane(pane) {
+  // Update sidebar active state
+  document.querySelectorAll('.hcs-item').forEach(function(item) {
+    item.classList.toggle('active', item.dataset.pane === pane);
+  });
+
+  // Update main content pane
+  document.querySelectorAll('.hc-pane').forEach(function(p) {
+    p.classList.toggle('active', p.id === 'hero-pane-' + pane);
+  });
+
+  // Update topbar
+  var titleEl = document.getElementById('heroTopbarTitle');
+  var badgeEl = document.getElementById('heroBadge');
+  var title = pane.charAt(0).toUpperCase() + pane.slice(1);
+  var badge = heroPaneBadges[pane] || '';
+  if (titleEl) titleEl.textContent = title;
+  if (badgeEl) badgeEl.textContent = badge;
+}
+
+// ── Hamburger ──────────────────────────────
 document.getElementById('hamburger').addEventListener('click', function() {
   document.getElementById('navLinks').classList.toggle('open');
 });
@@ -1150,7 +1479,7 @@ document.querySelectorAll('.nav-links a').forEach(function(l) {
   l.addEventListener('click', function() { document.getElementById('navLinks').classList.remove('open'); });
 });
 
-// OS detection
+// ── OS detection ───────────────────────────
 (function() {
   var ua = navigator.userAgent || '';
   var isMac = /Mac|iPhone|iPad/i.test(ua) && !/Windows/i.test(ua);
@@ -1175,19 +1504,14 @@ document.querySelectorAll('.nav-links a').forEach(function(l) {
   }
 })();
 
-// Theme tabs
+// ── Theme tabs ─────────────────────────────
 document.querySelectorAll('.theme-tab').forEach(function(tab) {
   tab.addEventListener('click', function() {
-    var theme = this.dataset.theme;
-    document.querySelectorAll('.theme-tab').forEach(function(t) { t.classList.remove('active'); });
-    this.classList.add('active');
-    document.querySelectorAll('.theme-preview').forEach(function(p) { p.classList.remove('active'); });
-    var preview = document.getElementById('preview-' + theme);
-    if (preview) preview.classList.add('active');
+    applyLandingTheme(this.dataset.theme);
   });
 });
 
-// Scroll reveal
+// ── Scroll reveal ──────────────────────────
 (function() {
   var observer = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {

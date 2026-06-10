@@ -3,10 +3,13 @@ import { useStore } from '../store';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import ProgressBar from '../components/ui/ProgressBar';
+import { formatCurrency } from '../utils/format';
+import { useToasts } from '../store/toastStore';
 import { TrendingUp, TrendingDown, DollarSign, Clock, FileText, Users, Lightbulb } from 'lucide-react';
 
 export default function Insights() {
-  const { projects, loadProjects, invoices, loadInvoices, timeEntries, loadTimeEntries, clients, loadClients, proposals, loadProposals, expenses, loadExpenses } = useStore();
+  const { projects, loadProjects, invoices, loadInvoices, timeEntries, loadTimeEntries, clients, loadClients, proposals, loadProposals, expenses, loadExpenses, profile, loadProfile } = useStore();
+  const addToast = useToasts((s) => s.add);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -17,8 +20,11 @@ export default function Insights() {
       loadClients(),
       loadProposals(),
       loadExpenses(),
-    ]).then(() => setLoaded(true));
-  }, [loadProjects, loadInvoices, loadTimeEntries, loadClients, loadProposals, loadExpenses]);
+      loadProfile(),
+    ])
+      .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
+      .finally(() => setLoaded(true));
+  }, [loadProjects, loadInvoices, loadTimeEntries, loadClients, loadProposals, loadExpenses, loadProfile]);
 
   const activeProjects = projects.filter((p) => p.status === 'active').length;
   const completedProjects = projects.filter((p) => p.status === 'completed').length;
@@ -69,16 +75,16 @@ export default function Insights() {
   });
   const topProjectsByTime = Object.values(projectTime).sort((a, b) => b.minutes - a.minutes).slice(0, 5);
 
-  if (!loaded) return null;
+  if (!loaded) return <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>
 
   if (invoices.length < 3 || projects.length < 2) {
     return (
       <div className="p-6">
-        <h2 className="text-lg font-semibold text-[#1C1C1A] mb-6">Business Insights</h2>
+        <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-6">Business Insights</h2>
         <Card className="text-center py-16 flex flex-col items-center">
-          <Lightbulb size={40} className="text-[#A3A39E] mb-4" />
-          <h3 className="text-[15px] font-medium text-[#6B6B67] mb-1.5">Not enough data yet</h3>
-          <p className="text-[13px] text-[#A3A39E] max-w-xs mb-5">Insights appear after you have at least 3 invoices and 2 projects.</p>
+          <Lightbulb size={40} className="text-[var(--text-tertiary)] mb-4" />
+          <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">Not enough data yet</h3>
+          <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Insights appear after you have at least 3 invoices and 2 projects.</p>
         </Card>
       </div>
     );
@@ -86,40 +92,40 @@ export default function Insights() {
 
   return (
     <div className="p-6">
-      <h2 className="text-lg font-semibold text-[#1C1C1A] mb-6">Business Insights</h2>
+      <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-6">Business Insights</h2>
 
       <div className="grid grid-cols-4 gap-3 mb-6">
         <MetricCard label="Active Projects" value={activeProjects} subtext={`${completedProjects} completed`} color="gray" />
-        <MetricCard label="Total Revenue" value={`$${totalPaid.toLocaleString()}`} subtext={`${invoices.filter((i) => i.status === 'paid').length} paid invoices`} trend="up" color="green" />
-        <MetricCard label="Outstanding" value={`$${totalOutstanding.toLocaleString()}`} subtext={overdueInvoices > 0 ? `${overdueInvoices} overdue` : 'all current'} trend={overdueInvoices > 0 ? 'down' : 'neutral'} color={overdueInvoices > 0 ? 'red' : 'amber'} />
+        <MetricCard label="Total Revenue" value={formatCurrency(totalPaid, profile?.currency)} subtext={`${invoices.filter((i) => i.status === 'paid').length} paid invoices`} trend="up" color="green" />
+        <MetricCard label="Outstanding" value={formatCurrency(totalOutstanding, profile?.currency)} subtext={overdueInvoices > 0 ? `${overdueInvoices} overdue` : 'all current'} trend={overdueInvoices > 0 ? 'down' : 'neutral'} color={overdueInvoices > 0 ? 'red' : 'amber'} />
         <MetricCard label="Win Rate" value={`${winRate}%`} subtext={`${proposalsAccepted}/${totalProposals} proposals`} trend={winRate >= 50 ? 'up' : 'down'} color={winRate >= 50 ? 'green' : 'gray'} />
       </div>
 
       <div className="grid grid-cols-2 gap-6 mb-6">
         {/* Project Health */}
         <Card>
-          <h3 className="text-sm font-semibold text-[#1C1C1A] mb-4">Project Health</h3>
+          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4">Project Health</h3>
           {totalProjects === 0 ? (
-            <p className="text-xs text-[#A3A39E]">No projects yet.</p>
+            <p className="text-xs text-[var(--text-tertiary)]">No projects yet.</p>
           ) : (
             <div className="space-y-4">
               <div className="flex justify-between text-xs">
-                <span className="text-[#6B6B67]">Active</span>
-                <span className="font-medium text-[#1C1C1A]">{activeProjects}</span>
+                <span className="text-[var(--text-secondary)]">Active</span>
+                <span className="font-medium text-[var(--text-primary)]">{activeProjects}</span>
               </div>
               <ProgressBar value={activeProjects} max={totalProjects || 1} label="Active" className="insight-bar-animate insight-bar-0" />
               <div className="flex justify-between text-xs">
-                <span className="text-[#6B6B67]">Completed</span>
-                <span className="font-medium text-[#1C1C1A]">{completedProjects}</span>
+                <span className="text-[var(--text-secondary)]">Completed</span>
+                <span className="font-medium text-[var(--text-primary)]">{completedProjects}</span>
               </div>
               <ProgressBar value={completedProjects} max={totalProjects || 1} label="Completed" className="insight-bar-animate insight-bar-1" />
-              <div className="flex justify-between text-xs mt-4 pt-3 border-t border-[#E5E5E3]">
-                <span className="text-[#6B6B67]">Total Tracked</span>
-                <span className="font-medium text-[#1C1C1A]">{Math.round(totalHoursTracked / 60)} hours</span>
+              <div className="flex justify-between text-xs mt-4 pt-3 border-t border-[var(--border-color)]">
+                <span className="text-[var(--text-secondary)]">Total Tracked</span>
+                <span className="font-medium text-[var(--text-primary)]">{Math.round(totalHoursTracked / 60)} hours</span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-[#6B6B67]">This Week</span>
-                <span className="font-medium text-[#1C1C1A]">{Math.round(hoursThisWeek / 6) / 10} hours</span>
+                <span className="text-[var(--text-secondary)]">This Week</span>
+                <span className="font-medium text-[var(--text-primary)]">{Math.round(hoursThisWeek / 6) / 10} hours</span>
               </div>
             </div>
           )}
@@ -127,28 +133,28 @@ export default function Insights() {
 
         {/* Financial Summary */}
         <Card>
-          <h3 className="text-sm font-semibold text-[#1C1C1A] mb-4">Financial Health</h3>
+          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4">Financial Health</h3>
           <div className="space-y-4">
             <div className="flex justify-between text-xs">
-              <span className="text-[#6B6B67]">Revenue</span>
-              <span className="font-medium text-[#1D9E75]">${totalPaid.toLocaleString()}</span>
+              <span className="text-[var(--text-secondary)]">Revenue</span>
+              <span className="font-medium text-[var(--accent)]">{formatCurrency(totalPaid, profile?.currency)}</span>
             </div>
             <div className="flex justify-between text-xs">
-              <span className="text-[#6B6B67]">Expenses</span>
-              <span className="font-medium text-[#A32D2D]">${totalExpenses.toLocaleString()}</span>
+              <span className="text-[var(--text-secondary)]">Expenses</span>
+              <span className="font-medium text-[#A32D2D]">{formatCurrency(totalExpenses, profile?.currency)}</span>
             </div>
-            <div className="flex justify-between text-xs pt-3 border-t border-[#E5E5E3]">
-              <span className="text-[#6B6B67]">Profit Margin</span>
-              <span className={`font-medium ${profitMargin >= 0 ? 'text-[#1D9E75]' : 'text-[#A32D2D]'}`}>{profitMargin}%</span>
+            <div className="flex justify-between text-xs pt-3 border-t border-[var(--border-color)]">
+              <span className="text-[var(--text-secondary)]">Profit Margin</span>
+              <span className={`font-medium ${profitMargin >= 0 ? 'text-[var(--accent)]' : 'text-[#A32D2D]'}`}>{profitMargin}%</span>
             </div>
             <ProgressBar value={Math.max(profitMargin, 0)} max={100} label="Margin %" className="insight-bar-animate insight-bar-2" />
-            <div className="flex justify-between text-xs pt-3 border-t border-[#E5E5E3]">
-              <span className="text-[#6B6B67]">Outstanding</span>
-              <span className="font-medium text-[#854F0B]">${totalOutstanding.toLocaleString()}</span>
+            <div className="flex justify-between text-xs pt-3 border-t border-[var(--border-color)]">
+              <span className="text-[var(--text-secondary)]">Outstanding</span>
+              <span className="font-medium text-[#854F0B]">{formatCurrency(totalOutstanding, profile?.currency)}</span>
             </div>
             <div className="flex justify-between text-xs">
-              <span className="text-[#6B6B67]">Overdue Invoices</span>
-              <span className={`font-medium ${overdueInvoices > 0 ? 'text-[#A32D2D]' : 'text-[#6B6B67]'}`}>{overdueInvoices}</span>
+              <span className="text-[var(--text-secondary)]">Overdue Invoices</span>
+              <span className={`font-medium ${overdueInvoices > 0 ? 'text-[#A32D2D]' : 'text-[var(--text-secondary)]'}`}>{overdueInvoices}</span>
             </div>
           </div>
         </Card>
@@ -157,20 +163,20 @@ export default function Insights() {
       <div className="grid grid-cols-2 gap-6">
         {/* Top Clients */}
         <Card>
-          <h3 className="text-sm font-semibold text-[#1C1C1A] mb-4">Top Clients by Revenue</h3>
+          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4">Top Clients by Revenue</h3>
           {topClients.length === 0 ? (
-            <p className="text-xs text-[#A3A39E]">No revenue data yet.</p>
+            <p className="text-xs text-[var(--text-tertiary)]">No revenue data yet.</p>
           ) : (
             <div className="space-y-3">
               {topClients.map((c, i) => (
                 <div key={c.name} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-[#A3A39E] w-4">#{i + 1}</span>
-                    <span className="text-xs text-[#1C1C1A]">{c.name}</span>
+                    <span className="text-xs text-[var(--text-tertiary)] w-4">#{i + 1}</span>
+                    <span className="text-xs text-[var(--text-primary)]">{c.name}</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-[10px] text-[#A3A39E]">{c.count} invoice{c.count !== 1 ? 's' : ''}</span>
-                    <span className="text-xs font-medium text-[#1C1C1A]">${c.total.toLocaleString()}</span>
+                    <span className="text-[10px] text-[var(--text-tertiary)]">{c.count} invoice{c.count !== 1 ? 's' : ''}</span>
+                    <span className="text-xs font-medium text-[var(--text-primary)]">{formatCurrency(c.total, profile?.currency)}</span>
                   </div>
                 </div>
               ))}
@@ -180,19 +186,19 @@ export default function Insights() {
 
         {/* Top Projects by Time */}
         <Card>
-          <h3 className="text-sm font-semibold text-[#1C1C1A] mb-4">Top Projects by Time</h3>
+          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4">Top Projects by Time</h3>
           {topProjectsByTime.length === 0 ? (
-            <p className="text-xs text-[#A3A39E]">No time tracked yet.</p>
+            <p className="text-xs text-[var(--text-tertiary)]">No time tracked yet.</p>
           ) : (
             <div className="space-y-3">
               {topProjectsByTime.map((p, i) => (
                 <div key={p.name} className="space-y-1">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-[#A3A39E] w-4">#{i + 1}</span>
-                      <span className="text-xs text-[#1C1C1A] truncate">{p.name}</span>
+                      <span className="text-xs text-[var(--text-tertiary)] w-4">#{i + 1}</span>
+                      <span className="text-xs text-[var(--text-primary)] truncate">{p.name}</span>
                     </div>
-                    <span className="text-xs font-medium text-[#1C1C1A]">{Math.round(p.minutes / 6) / 10}h</span>
+                    <span className="text-xs font-medium text-[var(--text-primary)]">{Math.round(p.minutes / 6) / 10}h</span>
                   </div>
                   <ProgressBar
                     value={p.minutes}

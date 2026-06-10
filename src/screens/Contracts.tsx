@@ -27,10 +27,12 @@ export default function Contracts() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ client_id: '', title: '', body: '' });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadContracts();
-    loadClients();
+    Promise.all([loadContracts(), loadClients()])
+      .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
+      .finally(() => setLoading(false));
   }, [loadContracts, loadClients]);
 
   const openNew = () => {
@@ -56,33 +58,49 @@ export default function Contracts() {
       }
       setShowModal(false);
       checkAndNotify(useStore.getState(), addToast);
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to save', 'error');
     } finally {
       setSaving(false);
     }
   };
 
   const handleActivate = async (c: Contract) => {
-    await updateContract({ ...c, status: 'active' as const });
+    try {
+      await updateContract({ ...c, status: 'active' as const });
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to activate', 'error');
+    }
   };
 
   const handleComplete = async (c: Contract) => {
-    await updateContract({ ...c, status: 'completed' as const });
+    try {
+      await updateContract({ ...c, status: 'completed' as const });
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to complete', 'error');
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Delete this contract?')) {
-      await removeContract(id);
+      try {
+        await removeContract(id);
+      } catch (err) {
+        addToast(err?.toString?.() || 'Failed to delete', 'error');
+      }
     }
   };
 
   const getClientName = (clientId: string) => clients.find((c) => c.id === clientId)?.name || 'Unknown';
 
+  if (loading) return <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-lg font-semibold text-[#1C1C1A]">Contracts</h2>
-          <p className="text-sm text-[#6B6B67] mt-0.5">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">Contracts</h2>
+          <p className="text-sm text-[var(--text-secondary)] mt-0.5">
             {contracts.filter((c) => c.status === 'active').length} active, {contracts.length} total
           </p>
         </div>
@@ -100,9 +118,9 @@ export default function Contracts() {
         </Card>
       ) : contracts.length === 0 ? (
         <Card className="text-center py-16 flex flex-col items-center">
-          <PenLine size={40} className="text-[#A3A39E] mb-4" />
-          <h3 className="text-[15px] font-medium text-[#6B6B67] mb-1.5">No contracts yet</h3>
-          <p className="text-[13px] text-[#A3A39E] max-w-xs mb-5">Convert a proposal to get started.</p>
+          <PenLine size={40} className="text-[var(--text-tertiary)] mb-4" />
+          <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No contracts yet</h3>
+          <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Convert a proposal to get started.</p>
         </Card>
       ) : (
         <div className="space-y-3">
@@ -111,12 +129,12 @@ export default function Contracts() {
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-sm font-semibold text-[#1C1C1A]">{c.title}</h3>
+                    <h3 className="text-sm font-semibold text-[var(--text-primary)]">{c.title}</h3>
                     <Badge variant={statusBadge[c.status]}>{c.status}</Badge>
                   </div>
-                  <p className="text-xs text-[#6B6B67] mb-1">{getClientName(c.client_id)}</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">{getClientName(c.client_id)}</p>
                   {c.signed_at && (
-                    <p className="text-xs text-[#A3A39E]">
+                    <p className="text-xs text-[var(--text-tertiary)]">
                       Signed {new Date(c.signed_at).toLocaleDateString()}
                     </p>
                   )}
@@ -125,7 +143,7 @@ export default function Contracts() {
                   {c.status === 'draft' && (
                     <button
                       onClick={() => handleActivate(c)}
-                      className="text-xs text-[#1D9E75] hover:underline px-1"
+                      className="text-xs text-[var(--accent)] hover:underline px-1"
                     >
                       Activate
                     </button>
@@ -133,34 +151,34 @@ export default function Contracts() {
                   {c.status === 'active' && (
                     <button
                       onClick={() => handleComplete(c)}
-                      className="text-xs text-[#1D9E75] hover:underline px-1"
+                      className="text-xs text-[var(--accent)] hover:underline px-1"
                     >
                       Complete
                     </button>
                   )}
                   <button
                     onClick={() => setExpanded(expanded === c.id ? null : c.id)}
-                    className={`p-1.5 rounded-[8px] transition-colors ${expanded === c.id ? 'text-[#1D9E75] bg-[#E6F5EE]' : 'text-[#A3A39E] hover:text-[#1C1C1A] hover:bg-[#F2F2F0]'}`}
+                    className={`p-1.5 rounded-[8px] transition-colors ${expanded === c.id ? 'text-[var(--accent)] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`}
                   >
                     <Eye size={14} />
                   </button>
                   <button
                     onClick={() => openEdit(c)}
-                    className="p-1.5 rounded-[8px] text-[#A3A39E] hover:text-[#1C1C1A] hover:bg-[#F2F2F0] transition-colors"
+                    className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
                   >
                     <Pencil size={14} />
                   </button>
                   <button
                     onClick={() => handleDelete(c.id)}
-                    className="p-1.5 rounded-[8px] text-[#A3A39E] hover:text-[#A32D2D] hover:bg-[#FCEBEB] transition-colors"
+                    className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[#A32D2D] hover:bg-[#FCEBEB] transition-colors"
                   >
                     <Trash2 size={14} />
                   </button>
                 </div>
               </div>
               {expanded === c.id && c.body && (
-                <div className="mt-3 pt-3 border-t border-[#E5E5E3]">
-                  <p className="text-xs text-[#1C1C1A] whitespace-pre-wrap leading-relaxed">{htmlToPlainText(c.body)}</p>
+                <div className="mt-3 pt-3 border-t border-[var(--border-color)]">
+                  <p className="text-xs text-[var(--text-primary)] whitespace-pre-wrap leading-relaxed">{htmlToPlainText(c.body)}</p>
                 </div>
               )}
             </Card>
@@ -171,11 +189,11 @@ export default function Contracts() {
       <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Contract' : 'New Contract'} size="md">
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-[#6B6B67] mb-1">Client *</label>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Client *</label>
             <select
               value={form.client_id}
               onChange={(e) => setForm({ ...form, client_id: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-[#E5E5E3] rounded-[8px] focus:outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[#1D9E75]/20"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
             >
               <option value="">Select a client...</option>
               {clients.map((c) => (
@@ -184,18 +202,18 @@ export default function Contracts() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[#6B6B67] mb-1">Title *</label>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Title *</label>
             <input
               type="text"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="Contract title"
-              className="w-full px-3 py-2 text-sm border border-[#E5E5E3] rounded-[8px] placeholder:text-[#A3A39E] focus:outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[#1D9E75]/20"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               autoFocus
             />
           </div>
            <div>
-            <label className="block text-xs font-medium text-[#6B6B67] mb-1">Contract Body</label>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Contract Body</label>
             <RichEditor
               content={form.body}
               onChange={(html) => setForm({ ...form, body: html })}
