@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Scale } from 'lucide-react';
+import { ArrowUpDown } from 'lucide-react';
 import { useStore } from '../../store';
 import Button from '../ui/Button';
 
@@ -31,7 +31,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
         className="w-[480px] bg-[var(--bg-card)] rounded-[16px] shadow-2xl px-10 py-10 text-center"
         style={{ fontFamily: "'Inter', sans-serif" }}
       >
-        <Scale size={32} className="text-[var(--accent)] mx-auto mb-2" />
+        <ArrowUpDown size={32} className="text-[var(--accent)] mx-auto mb-2" />
         <h1 className="text-[28px] font-semibold text-[var(--text-primary)] mb-1" style={{ fontFamily: "'Syne', sans-serif" }}>
           Lance
         </h1>

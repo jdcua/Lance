@@ -234,9 +234,18 @@ export default function Settings() {
           await tauriInvoke(t.del, { id: r.id });
         }
       }
+      
+      // Finally, delete the user profile itself
+      await tauriInvoke('delete_user_profile');
+      
+      localStorage.clear();
       setShowResetModal(false);
       addToast('All data has been reset', 'info');
-      await loadProfile();
+      
+      // Reload the application to force it back to the onboarding screen
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     } catch {
       addToast('Reset failed', 'error');
     }

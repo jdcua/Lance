@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/nicegui/tauri-apps/main/schemas/config.schema.json",
+  "$schema": "gen/schemas/desktop-schema.json",
   "productName": "Lance",
   "version": "1.0.0",
   "identifier": "co.decentra.lance",
@@ -29,46 +29,13 @@
   "bundle": {
     "active": true,
     "targets": ["nsis", "msi", "dmg", "app", "appimage", "deb"],
-    "identifier": "co.decentra.lance",
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ],
+    "icon": ["icons/icon.png"],
     "shortDescription": "Freelancer OS",
     "longDescription": "Win work. Run projects. Get paid. Run your business.",
-    "copyright": "Copyright \u00a9 2026 Decentra. All rights reserved.",
+    "copyright": "Copyright © 2026 Decentra. All rights reserved.",
     "category": "Productivity",
     "externalBin": [],
-    "resources": [],
-    "nsis": {
-      "displayLanguageSelector": false,
-      "languages": ["English"],
-      "oneClick": true,
-      "perMachine": false
-    },
-    "wix": {
-      "language": "en-US"
-    },
-    "macOS": {
-      "minimumSystemVersion": "11.0",
-      "entitlements": "entitlements.plist",
-      "signingIdentity": null,
-      "providerShortName": null
-    },
-    "dmg": {
-      "background": "assets/dmg-background.png",
-      "windowWidth": 540,
-      "windowHeight": 380
-    },
-    "appimage": {
-      "bundleMediaFramework": false
-    },
-    "deb": {
-      "depends": []
-    }
+    "resources": []
   },
   "plugins": {
     "sql": {

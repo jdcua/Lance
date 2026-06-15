@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import {
-  Scale,
+  ArrowUpDown,
   FileText,
   PenLine,
   FolderKanban,
@@ -50,7 +50,7 @@ export default function Sidebar() {
   return (
     <aside className="w-[220px] h-full flex flex-col bg-[var(--bg-card)] border-r border-[var(--border-color)] flex-shrink-0">
       <div className="flex items-center gap-2 px-4 h-[56px] border-b border-[var(--border-color)]">
-        <Scale size={20} className="text-[var(--accent)]" />
+        <ArrowUpDown size={20} className="text-[var(--accent)]" />
         <span className="font-semibold text-sm text-[var(--text-primary)]" style={{ fontFamily: "'Syne', sans-serif" }}>Lance</span>
       </div>
 

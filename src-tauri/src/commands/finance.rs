@@ -168,3 +168,11 @@ pub fn upsert_user_profile(app: AppHandle, payload: UpsertProfilePayload) -> Res
     ).map_err(|e| e.to_string())?;
     Ok(())
 }
+
+#[tauri::command]
+pub fn delete_user_profile(app: AppHandle) -> Result<(), String> {
+    let conn = db::get_connection(&app)?;
+    conn.execute("DELETE FROM user_profile", [])
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}

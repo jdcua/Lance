@@ -58,6 +58,7 @@ pub fn run() {
             commands::finance::delete_expense,
             commands::finance::get_user_profile,
             commands::finance::upsert_user_profile,
+            commands::finance::delete_user_profile,
             commands::communications::get_communications,
             commands::communications::create_communication,
             commands::communications::update_communication,

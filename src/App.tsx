@@ -37,15 +37,8 @@ export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [onboardingStep, setOnboardingStep] = useState(1);
-  const [onboardingForm, setOnboardingForm] = useState({
-    name: '', email: '', currency: 'CAD' as string, hourly_rate: '', payment_terms: '14',
-    profession: '' as Profession | '',
-    writing_style: 'professional' as string,
-    ai_enabled: false,
-  });
-  const [saving, setSaving] = useState(false);
   const [ranAutoGen, setRanAutoGen] = useState(false);
+
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [showChangelog, setShowChangelog] = useState(false);
@@ -114,7 +107,6 @@ export default function App() {
   useEffect(() => {
     if (profileLoaded && !profile) {
       setShowOnboarding(true);
-      setOnboardingStep(1);
     }
   }, [profileLoaded, profile]);
 
@@ -243,39 +235,9 @@ export default function App() {
     return () => document.removeEventListener('keydown', handler);
   }, [navigate, location, isEditing]);
 
-  const handleOnboardingNext = () => setOnboardingStep((s) => s + 1);
-  const handleOnboardingBack = () => setOnboardingStep((s) => s - 1);
 
-  const handleOnboardingFinish = async () => {
-    if (!onboardingForm.name.trim()) return;
-    setSaving(true);
-    try {
-      await saveProfile({
-        name: onboardingForm.name,
-        email: onboardingForm.email || undefined,
-        currency: onboardingForm.currency,
-        hourly_rate: onboardingForm.hourly_rate ? parseFloat(onboardingForm.hourly_rate) : undefined,
-        payment_terms: parseInt(onboardingForm.payment_terms) || 14,
-        profession: onboardingForm.profession || undefined,
-        writing_style: onboardingForm.writing_style,
-        ai_enabled: onboardingForm.ai_enabled,
-      });
-      // Apply profession theme ONLY if user didn't explicitly pick one in Step 3
-      const storedTheme = localStorage.getItem('lance:theme');
-      if (onboardingForm.profession && (!storedTheme || storedTheme === 'default')) {
-        const themeId = PROFESSION_THEME[onboardingForm.profession as Profession];
-        if (themeId && themeId !== 'default') {
-          applyTheme(getTheme(themeId));
-          localStorage.setItem('lance:theme', themeId);
-        }
-      }
-      setShowOnboarding(false);
-    } finally {
-      setSaving(false);
-    }
-  };
 
-  const inputClass = "w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20";
+  const inputClass = "w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)] text-[var(--text-primary)]";
   const labelClass = "block text-xs font-medium text-[var(--text-secondary)] mb-1";
 
   return (
@@ -314,267 +276,319 @@ export default function App() {
         </div>
       </Modal>
 
-      {/* 5-step Onboarding */}
-      <Modal open={showOnboarding} onClose={() => {}} title="" size="sm">
-        <div className="space-y-5">
-          <div className="flex justify-center gap-2 mb-1">
-            {[1, 2, 3, 4, 5].map((step) => (
-              <div
-                key={step}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  step <= onboardingStep ? 'bg-[var(--accent)]' : 'bg-[#E3E2DB]'
-                }`}
-              />
-            ))}
-          </div>
-
-          {/* Step 1: Welcome + Profession */}
-          {onboardingStep === 1 && (
-            <>
-              <div className="text-center space-y-2">
-                <h3 className="text-lg font-semibold text-[var(--text-primary)]">Welcome to Lance</h3>
-                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-                  Your freelance business, all in one place. What do you do?
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {([
-                  { value: 'writer', label: 'Writer / Editor' },
-                  { value: 'developer', label: 'Developer / Engineer' },
-                  { value: 'designer', label: 'Designer' },
-                  { value: 'animator', label: 'Animator / Video' },
-                  { value: 'photographer', label: 'Photographer' },
-                  { value: 'consultant', label: 'Consultant / Coach' },
-                ] as const).map((p) => (
-                  <button
-                    key={p.value}
-                    onClick={() => {
-                      setOnboardingForm({ ...onboardingForm, profession: p.value });
-                    }}
-                    className={`px-3 py-2.5 text-xs font-medium rounded-[8px] border transition-colors text-left ${
-                      onboardingForm.profession === p.value
-                        ? 'bg-[var(--accent-bg)] border-[var(--accent)] text-[var(--text-primary)]'
-                        : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40'
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-              <div className="flex justify-between pt-1">
-                <Button variant="ghost" onClick={handleOnboardingFinish} size="sm">Skip</Button>
-                <Button onClick={handleOnboardingNext} size="sm">Continue &rarr;</Button>
-              </div>
-            </>
-          )}
-
-          {/* Step 2: Profile */}
-          {onboardingStep === 2 && (
-            <>
-              <div className="text-center mb-2">
-                <h3 className="text-lg font-semibold text-[var(--text-primary)]">Tell us about yourself</h3>
-              </div>
-              <div className="space-y-3">
-                <div>
-                  <label className={labelClass}>Full name</label>
-                  <input
-                    type="text"
-                    value={onboardingForm.name}
-                    onChange={(e) => setOnboardingForm({ ...onboardingForm, name: e.target.value })}
-                    placeholder="Your full name"
-                    className={inputClass}
-                    autoFocus
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Email</label>
-                  <input
-                    type="email"
-                    value={onboardingForm.email}
-                    onChange={(e) => setOnboardingForm({ ...onboardingForm, email: e.target.value })}
-                    placeholder="you@example.com"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Currency</label>
-                  <select
-                    value={onboardingForm.currency}
-                    onChange={(e) => setOnboardingForm({ ...onboardingForm, currency: e.target.value })}
-                    className={inputClass}
-                  >
-                    <option value="CAD">CAD ($)</option>
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                    <option value="GBP">GBP (£)</option>
-                    <option value="AUD">AUD ($)</option>
-                  </select>
-                </div>
-              </div>
-              <div className="flex justify-between pt-2">
-                <Button variant="secondary" onClick={handleOnboardingBack} size="sm">&larr; Back</Button>
-                <Button onClick={handleOnboardingNext} size="sm">Continue &rarr;</Button>
-              </div>
-            </>
-          )}
-
-          {/* Step 3: Themes */}
-          {onboardingStep === 3 && (
-            <>
-              <div className="text-center mb-3">
-                <h3 className="text-lg font-semibold text-[var(--text-primary)]">Pick your workspace</h3>
-                <p className="text-xs text-[var(--text-tertiary)] mt-1">
-                  {onboardingForm.profession
-                    ? `Your ${onboardingForm.profession} theme is unlocked. Earn more as you use Lance.`
-                    : 'All themes unlock through achievements — or instantly with a license.'}
-                </p>
-              </div>
-              <div className="space-y-1 max-h-[300px] overflow-y-auto">
-                {THEMES.map((theme) => {
-                  let isUnlocked: boolean;
-                  if (onboardingForm.profession && theme.id === PROFESSION_THEME[onboardingForm.profession as Profession]) {
-                    isUnlocked = true;
-                  } else {
-                    isUnlocked = theme.id === 'default';
-                  }
-                  const isActive = (localStorage.getItem('lance:theme') || 'default') === theme.id;
-                  return (
-                    <button
-                      key={theme.id}
-                      onClick={() => {
-                        if (!isUnlocked) return;
-                        applyTheme(theme);
-                        localStorage.setItem('lance:theme', theme.id);
-                      }}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-[8px] text-left text-xs transition-colors ${
-                        isActive
-                          ? 'bg-[var(--accent-bg)] border border-[var(--accent)]/30'
-                          : isUnlocked
-                          ? 'hover:bg-[var(--bg-secondary)] border border-transparent'
-                          : 'opacity-50 cursor-not-allowed border border-transparent'
-                      }`}
-                      disabled={!isUnlocked}
-                    >
-                      <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                        isActive ? 'border-[var(--accent)]' : 'border-[#D4D4D2]'
-                      }`}>
-                        {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className={`font-medium ${isUnlocked ? 'text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}>
-                          {theme.name}
-                        </span>
-                        <span className="text-[var(--text-tertiary)] ml-1">{theme.description}</span>
-                      </div>
-                      {!isUnlocked && <span className="text-[10px] text-[var(--text-tertiary)] flex-shrink-0">Locked</span>}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="flex justify-between pt-2">
-                <Button variant="secondary" onClick={handleOnboardingBack} size="sm">&larr; Back</Button>
-                <Button onClick={handleOnboardingNext} size="sm">Continue &rarr;</Button>
-              </div>
-            </>
-          )}
-
-          {/* Step 4: AI + Writing style */}
-          {onboardingStep === 4 && (
-            <>
-              <div className="text-center mb-3">
-                <h3 className="text-lg font-semibold text-[var(--text-primary)]">AI features</h3>
-                <p className="text-xs text-[var(--text-tertiary)] mt-1">
-                  AI runs locally on your machine. No data is ever sent anywhere. Off by default.
-                </p>
-              </div>
-              <div className="space-y-4">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <button
-                    onClick={() => setOnboardingForm({ ...onboardingForm, ai_enabled: !onboardingForm.ai_enabled })}
-                    className={`relative w-10 h-6 rounded-full transition-colors ${
-                      onboardingForm.ai_enabled ? 'bg-[var(--accent)]' : 'bg-[#D4D4D2]'
-                    }`}
-                  >
-                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-[var(--bg-card)] shadow transition-transform ${
-                      onboardingForm.ai_enabled ? 'translate-x-4' : 'translate-x-0'
-                    }`} />
-                  </button>
-                  <div>
-                    <span className="text-sm text-[var(--text-primary)] font-medium">
-                      {onboardingForm.ai_enabled ? 'AI assistance on' : 'AI assistance off'}
-                    </span>
-                    <p className="text-[10px] text-[var(--text-tertiary)]">
-                      Proposal generation, scope warnings, and business insights.
-                    </p>
-                  </div>
-                </label>
-                <div>
-                  <label className={labelClass}>Writing style</label>
-                  <select
-                    value={onboardingForm.writing_style}
-                    onChange={(e) => setOnboardingForm({ ...onboardingForm, writing_style: e.target.value })}
-                    className={inputClass}
-                  >
-                    <option value="professional">Professional</option>
-                    <option value="warm">Warm &amp; personal</option>
-                    <option value="direct">Direct &amp; concise</option>
-                    <option value="bold">Bold &amp; confident</option>
-                  </select>
-                </div>
-              </div>
-              <div className="flex justify-between pt-2">
-                <Button variant="secondary" onClick={handleOnboardingBack} size="sm">&larr; Back</Button>
-                <Button onClick={handleOnboardingNext} size="sm">Continue &rarr;</Button>
-              </div>
-            </>
-          )}
-
-          {/* Step 5: Defaults */}
-          {onboardingStep === 5 && (
-            <>
-              <div className="text-center mb-2">
-                <h3 className="text-lg font-semibold text-[var(--text-primary)]">Set your defaults</h3>
-              </div>
-              <div className="space-y-3">
-                <div>
-                  <label className={labelClass}>Hourly rate</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-tertiary)]">$</span>
-                    <input
-                      type="number"
-                      value={onboardingForm.hourly_rate}
-                      onChange={(e) => setOnboardingForm({ ...onboardingForm, hourly_rate: e.target.value })}
-                      placeholder="0.00"
-                      className={`${inputClass} pl-7`}
-                      autoFocus
-                    />
-                  </div>
-                  <p className="text-[10px] text-[var(--text-tertiary)] mt-1">You can change this anytime in Settings.</p>
-                </div>
-                <div>
-                  <label className={labelClass}>Payment terms (days)</label>
-                  <input
-                    type="number"
-                    value={onboardingForm.payment_terms}
-                    onChange={(e) => setOnboardingForm({ ...onboardingForm, payment_terms: e.target.value })}
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-              <div className="flex justify-between pt-2">
-                <Button variant="secondary" onClick={handleOnboardingBack} size="sm">&larr; Back</Button>
-                <Button onClick={handleOnboardingFinish} loading={saving} disabled={!onboardingForm.name.trim()} size="sm">
-                  Start using Lance &rarr;
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
-      </Modal>
+      <OnboardingFlow showOnboarding={showOnboarding} setShowOnboarding={setShowOnboarding} />
 
       <CommandPalette open={showCommandPalette} onClose={() => setShowCommandPalette(false)} />
 
       <ToastContainer />
     </div>
+  );
+}
+
+function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding: boolean, setShowOnboarding: (s: boolean) => void }) {
+  const { saveProfile } = useStore();
+  const [onboardingStep, setOnboardingStep] = useState(1);
+  const [onboardingForm, setOnboardingForm] = useState({
+    name: '', email: '', currency: 'CAD' as string, hourly_rate: '', payment_terms: '14',
+    profession: '' as Profession | '',
+    writing_style: 'professional' as string,
+    ai_enabled: false,
+  });
+  const [saving, setSaving] = useState(false);
+  const [activeThemeId, setActiveThemeId] = useState<string>(localStorage.getItem('lance:theme') || 'default');
+
+  // Reset step to 1 when modal opens
+  useEffect(() => {
+    if (showOnboarding) {
+      setOnboardingStep(1);
+    }
+  }, [showOnboarding]);
+
+  const handleOnboardingNext = () => setOnboardingStep((s) => s + 1);
+  const handleOnboardingBack = () => setOnboardingStep((s) => s - 1);
+  const handleOnboardingClose = useCallback(() => {}, []);
+
+  const handleOnboardingFinish = async () => {
+    if (!onboardingForm.name.trim()) return;
+    setSaving(true);
+    try {
+      await saveProfile({
+        name: onboardingForm.name,
+        email: onboardingForm.email || undefined,
+        currency: onboardingForm.currency,
+        hourly_rate: onboardingForm.hourly_rate ? parseFloat(onboardingForm.hourly_rate) : undefined,
+        payment_terms: parseInt(onboardingForm.payment_terms) || 14,
+        profession: onboardingForm.profession || undefined,
+        writing_style: onboardingForm.writing_style,
+        ai_enabled: onboardingForm.ai_enabled,
+      });
+      // Apply profession theme ONLY if user didn't explicitly pick one in Step 3
+      const storedTheme = localStorage.getItem('lance:theme');
+      if (onboardingForm.profession && (!storedTheme || storedTheme === 'default')) {
+        const themeId = PROFESSION_THEME[onboardingForm.profession as Profession];
+        if (themeId && themeId !== 'default') {
+          applyTheme(getTheme(themeId));
+          localStorage.setItem('lance:theme', themeId);
+        }
+      }
+      setShowOnboarding(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const inputClass = "w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)] text-[var(--text-primary)]";
+  const labelClass = "block text-xs font-medium text-[var(--text-secondary)] mb-1";
+
+  return (
+    <Modal open={showOnboarding} onClose={handleOnboardingClose} title="" size="sm">
+      <div className="space-y-5">
+        <div className="flex justify-center gap-2 mb-1">
+          {[1, 2, 3, 4, 5].map((step) => (
+            <div
+              key={step}
+              className={`w-2 h-2 rounded-full transition-all ${
+                step <= onboardingStep ? 'bg-[var(--accent)]' : 'bg-[#E3E2DB]'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Step 1: Welcome + Profession */}
+        {onboardingStep === 1 && (
+          <>
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Welcome to Lance</h3>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                Your freelance business, all in one place. What do you do?
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                { value: 'writer', label: 'Writer / Editor' },
+                { value: 'developer', label: 'Developer / Engineer' },
+                { value: 'designer', label: 'Designer' },
+                { value: 'animator', label: 'Animator / Video' },
+                { value: 'photographer', label: 'Photographer' },
+                { value: 'consultant', label: 'Consultant / Coach' },
+              ] as const).map((p) => (
+                <button
+                  key={p.value}
+                  onClick={() => {
+                    setOnboardingForm({ ...onboardingForm, profession: p.value });
+                  }}
+                  className={`px-3 py-2.5 text-xs font-medium rounded-[8px] border transition-colors text-left ${
+                    onboardingForm.profession === p.value
+                      ? 'bg-[var(--accent-bg)] border-[var(--accent)] text-[var(--text-primary)]'
+                      : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex justify-between pt-1">
+              <Button variant="ghost" onClick={handleOnboardingFinish} size="sm">Skip</Button>
+              <Button onClick={handleOnboardingNext} size="sm">Continue &rarr;</Button>
+            </div>
+          </>
+        )}
+
+        {/* Step 2: Profile */}
+        {onboardingStep === 2 && (
+          <>
+            <div className="text-center mb-2">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Tell us about yourself</h3>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className={labelClass}>Full name</label>
+                <input
+                  type="text"
+                  value={onboardingForm.name}
+                  onChange={(e) => setOnboardingForm({ ...onboardingForm, name: e.target.value })}
+                  placeholder="Your full name"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Email</label>
+                <input
+                  type="email"
+                  value={onboardingForm.email}
+                  onChange={(e) => setOnboardingForm({ ...onboardingForm, email: e.target.value })}
+                  placeholder="you@example.com"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Currency</label>
+                <select
+                  value={onboardingForm.currency}
+                  onChange={(e) => setOnboardingForm({ ...onboardingForm, currency: e.target.value })}
+                  className={inputClass}
+                >
+                  <option value="CAD">CAD ($)</option>
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                  <option value="AUD">AUD ($)</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-between pt-2">
+              <Button variant="secondary" onClick={handleOnboardingBack} size="sm">&larr; Back</Button>
+              <Button onClick={handleOnboardingNext} size="sm">Continue &rarr;</Button>
+            </div>
+          </>
+        )}
+
+        {/* Step 3: Themes */}
+        {onboardingStep === 3 && (
+          <>
+            <div className="text-center mb-3">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Pick your workspace</h3>
+              <p className="text-xs text-[var(--text-tertiary)] mt-1">
+                {onboardingForm.profession
+                  ? `Your ${onboardingForm.profession} theme is unlocked. Earn more as you use Lance.`
+                  : 'All themes unlock through achievements — or instantly with a license.'}
+              </p>
+            </div>
+            <div className="space-y-1 max-h-[300px] overflow-y-auto">
+              {THEMES.filter(theme => {
+                if (onboardingForm.profession && theme.id === PROFESSION_THEME[onboardingForm.profession as Profession]) return true;
+                return theme.id === 'default';
+              }).map((theme) => {
+                const isUnlocked = true; // We only render unlocked themes now
+                const isActive = activeThemeId === theme.id;
+                return (
+                  <button
+                    key={theme.id}
+                    onClick={() => {
+                      applyTheme(theme);
+                      localStorage.setItem('lance:theme', theme.id);
+                      setActiveThemeId(theme.id);
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-[8px] text-left text-xs transition-colors ${
+                      isActive
+                        ? 'bg-[var(--accent-bg)] border-[var(--accent)] text-[var(--text-primary)] border'
+                        : 'bg-[var(--bg-secondary)] border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] border'
+                    }`}
+                  >
+                    <div
+                      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                        isActive ? 'border-[var(--accent)]' : 'border-[var(--border-color)]'
+                      }`}
+                    >
+                      {isActive && <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium">{theme.name}</div>
+                      <div className="text-[10px] opacity-70 truncate">{theme.description}</div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex justify-between pt-3">
+              <Button variant="secondary" onClick={handleOnboardingBack} size="sm">&larr; Back</Button>
+              <Button onClick={handleOnboardingNext} size="sm">Continue &rarr;</Button>
+            </div>
+          </>
+        )}
+
+        {/* Step 4: AI Setup */}
+        {onboardingStep === 4 && (
+          <>
+            <div className="text-center mb-2">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">AI Assistant</h3>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed mt-1">
+                Lance includes local AI to help write proposals and analyze finances. It runs on your machine — no cloud, no subscriptions.
+              </p>
+            </div>
+            <div className="space-y-3 py-2">
+              <label className="flex items-start gap-3 p-3 border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-secondary)] cursor-pointer hover:border-[var(--accent)]/50 transition-colors">
+                <div className="pt-0.5">
+                  <input
+                    type="checkbox"
+                    checked={onboardingForm.ai_enabled}
+                    onChange={() => {}}
+                    onClick={() => setOnboardingForm({ ...onboardingForm, ai_enabled: !onboardingForm.ai_enabled })}
+                    className="w-4 h-4 rounded border-[var(--border-color)] text-[var(--accent)] focus:ring-[var(--accent)]"
+                  />
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-[var(--text-primary)]">Enable local AI features</div>
+                  <div className="text-xs text-[var(--text-tertiary)] mt-0.5">
+                    Requires downloading a ~4GB model on first use.
+                  </div>
+                </div>
+              </label>
+
+              {onboardingForm.ai_enabled && (
+                <div className="animate-fade-in pl-1">
+                  <label className={labelClass}>Default writing style</label>
+                  <select
+                    value={onboardingForm.writing_style}
+                    onChange={(e) => setOnboardingForm({ ...onboardingForm, writing_style: e.target.value })}
+                    className={inputClass}
+                  >
+                    <option value="professional">Professional & Direct</option>
+                    <option value="friendly">Friendly & Conversational</option>
+                    <option value="creative">Creative & Persuasive</option>
+                    <option value="technical">Technical & Analytical</option>
+                  </select>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-between pt-2">
+              <Button variant="secondary" onClick={handleOnboardingBack} size="sm">&larr; Back</Button>
+              <Button onClick={handleOnboardingNext} size="sm">Continue &rarr;</Button>
+            </div>
+          </>
+        )}
+
+        {/* Step 5: Rates & Final */}
+        {onboardingStep === 5 && (
+          <>
+            <div className="text-center mb-2">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Final Details</h3>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className={labelClass}>Default Hourly Rate ({onboardingForm.currency})</label>
+                <input
+                  type="number"
+                  value={onboardingForm.hourly_rate}
+                  onChange={(e) => setOnboardingForm({ ...onboardingForm, hourly_rate: e.target.value })}
+                  placeholder="e.g. 75"
+                  className={inputClass}
+                />
+                <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Leave blank if you primarily do flat-rate projects.</p>
+              </div>
+              <div>
+                <label className={labelClass}>Default Payment Terms</label>
+                <select
+                  value={onboardingForm.payment_terms}
+                  onChange={(e) => setOnboardingForm({ ...onboardingForm, payment_terms: e.target.value })}
+                  className={inputClass}
+                >
+                  <option value="0">Due on receipt</option>
+                  <option value="7">Net 7</option>
+                  <option value="14">Net 14</option>
+                  <option value="30">Net 30</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-between pt-4">
+              <Button variant="secondary" onClick={handleOnboardingBack} size="sm" disabled={saving}>&larr; Back</Button>
+              <Button onClick={handleOnboardingFinish} size="sm" disabled={saving || !onboardingForm.name.trim()}>
+                {saving ? 'Saving...' : 'Get Started'}
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+    </Modal>
   );
 }
