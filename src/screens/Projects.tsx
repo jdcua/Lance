@@ -6,10 +6,11 @@ import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
 import ProgressBar from '../components/ui/ProgressBar';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useToasts } from '../store/toastStore';
 import { generateInvoiceNumber } from '../utils/invoiceNumber';
-import { formatCurrency } from '../utils/format';
-import { Plus, Pencil, Trash2, CheckCircle2, Circle, Calendar, DollarSign, ChevronRight, FolderKanban } from 'lucide-react';
+import { formatCurrency, relativeDate } from '../utils/format';
+import { Plus, Pencil, Trash2, CheckCircle2, Circle, Calendar, DollarSign, ChevronRight, FolderKanban, Search, ArrowUpDown } from 'lucide-react';
 
 const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
   active: 'success',
@@ -17,6 +18,8 @@ const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
   paused: 'warning',
   cancelled: 'danger',
 };
+
+type SortKey = 'title' | 'client' | 'status' | 'budget' | 'date';
 
 export default function Projects() {
   const { projects, loadProjects, addProject, updateProject, removeProject, clients, loadClients, milestones, loadMilestones, addMilestone, updateMilestone, removeMilestone, invoices, loadInvoices, addInvoice, profile, loadProfile } = useStore();
@@ -30,6 +33,11 @@ export default function Projects() {
   const [mform, setMForm] = useState({ title: '', due_date: '', invoice_on_completion: false });
   const [invoicePrompt, setInvoicePrompt] = useState<{ milestone: Milestone; project: Project } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [sortKey, setSortKey] = useState<SortKey>('date');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadProjects();
@@ -83,13 +91,16 @@ export default function Projects() {
     }
   };
 
-  const handleDeleteProject = async (id: string) => {
-    if (window.confirm('Delete this project? This cannot be undone.')) {
-      try {
-        await removeProject(id);
-      } catch (err) {
-        addToast(err?.toString?.() || 'Failed to delete project', 'error');
-      }
+  const handleDelete = async () => {
+    if (!confirmDelete) return;
+    setDeleting(true);
+    try {
+      await removeProject(confirmDelete.id);
+      setConfirmDelete(null);
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to delete project', 'error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -136,19 +147,15 @@ export default function Projects() {
     if (!invoicePrompt) return;
     const { milestone, project } = invoicePrompt;
     setInvoicePrompt(null);
-
     try {
       const projectMilestones = milestones[project.id] || [];
       const totalMs = projectMilestones.length || 1;
       const unitPrice = (project.budget || 0) / totalMs;
-
       await loadInvoices();
       const currentInvoices = useStore.getState().invoices;
       const invNumber = generateInvoiceNumber(currentInvoices);
-
       const dueDate = new Date();
       dueDate.setDate(dueDate.getDate() + 14);
-
       const lineItem = {
         id: crypto.randomUUID(),
         description: milestone.title,
@@ -156,7 +163,6 @@ export default function Projects() {
         unit_price: Math.round(unitPrice * 100) / 100,
         total: Math.round(unitPrice * 100) / 100,
       };
-
       await addInvoice({
         client_id: project.client_id,
         project_id: project.id,
@@ -169,9 +175,7 @@ export default function Projects() {
         due_date: dueDate.toISOString().split('T')[0],
         notes: `Generated from milestone: ${milestone.title}`,
       });
-
       await updateMilestone({ ...milestone, completed: true });
-
       addToast(`Invoice ${invNumber} created — review in Invoices`, 'success');
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to generate invoice from milestone', 'error');
@@ -199,11 +203,50 @@ export default function Projects() {
 
   const getClientName = (clientId: string) => clients.find((c) => c.id === clientId)?.name || 'Unknown';
 
-  if (loading) return <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>
+  const filtered = projects.filter(p => {
+    if (!search) return true;
+    const s = search.toLowerCase();
+    return p.title.toLowerCase().includes(s) || getClientName(p.client_id).toLowerCase().includes(s);
+  });
+
+  const sorted = [...filtered].sort((a, b) => {
+    const dir = sortDir === 'asc' ? 1 : -1;
+    switch (sortKey) {
+      case 'title': return dir * a.title.localeCompare(b.title);
+      case 'client': return dir * getClientName(a.client_id).localeCompare(getClientName(b.client_id));
+      case 'status': return dir * a.status.localeCompare(b.status);
+      case 'budget': return dir * ((a.budget || 0) - (b.budget || 0));
+      case 'date': return dir * (new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      default: return 0;
+    }
+  });
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
+
+  if (loading) return (
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="space-y-1">
+          <div className="h-6 w-24 bg-[var(--bg-secondary)] rounded skeleton-pulse" />
+          <div className="h-4 w-32 bg-[var(--bg-secondary)] rounded skeleton-pulse" />
+        </div>
+      </div>
+      <div className="space-y-3">
+        {[...Array(4)].map((_, i) => <div key={i} className="h-28 bg-[var(--bg-secondary)] rounded-[12px] skeleton-pulse" />)}
+      </div>
+    </div>
+  );
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg font-semibold text-[var(--text-primary)]">Projects</h2>
           <p className="text-sm text-[var(--text-secondary)] mt-0.5">
@@ -214,6 +257,34 @@ export default function Projects() {
           <Plus size={14} />
           New Project
         </Button>
+      </div>
+
+      <div className="flex items-center gap-3 mb-4">
+        <div className="relative flex-1 max-w-xs">
+          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search projects..."
+            className="w-full pl-8 pr-3 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]"
+          />
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="text-[10px] text-[var(--text-tertiary)]">Sort:</span>
+          {(['date', 'title', 'client', 'status', 'budget'] as SortKey[]).map(k => (
+            <button
+              key={k}
+              onClick={() => toggleSort(k)}
+              className={`text-[10px] px-2 py-0.5 rounded-[4px] transition-colors capitalize ${
+                sortKey === k ? 'bg-[var(--accent-bg)] text-[var(--accent)] font-medium' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'
+              }`}
+            >
+              {k}
+              {sortKey === k && <span className="ml-0.5">{sortDir === 'asc' ? '↑' : '↓'}</span>}
+            </button>
+          ))}
+        </div>
       </div>
 
       {clients.length === 0 && (
@@ -231,9 +302,13 @@ export default function Projects() {
           <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Create your first project to start tracking work.</p>
           <Button onClick={openNewProject} size="sm" variant="secondary">New Project</Button>
         </Card>
+      ) : filtered.length === 0 && search ? (
+        <Card className="text-center py-12">
+          <p className="text-sm text-[var(--text-tertiary)]">No projects match "{search}"</p>
+        </Card>
       ) : (
         <div className="space-y-3">
-          {projects.map((project) => {
+          {sorted.map((project) => {
             const projectMilestones = milestones[project.id] || [];
             const completedMs = projectMilestones.filter((m) => m.completed).length;
             const totalMs = projectMilestones.length;
@@ -250,7 +325,7 @@ export default function Projects() {
                       {project.start_date && (
                         <span className="flex items-center gap-1">
                           <Calendar size={12} />
-                          {new Date(project.start_date).toLocaleDateString()}
+                          {relativeDate(project.start_date)}
                         </span>
                       )}
                       {project.budget && (
@@ -280,7 +355,7 @@ export default function Projects() {
                       <Pencil size={14} />
                     </button>
                     <button
-                      onClick={() => handleDeleteProject(project.id)}
+                      onClick={() => setConfirmDelete({ id: project.id, title: project.title })}
                       className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[#A32D2D] hover:bg-[#FCEBEB] transition-colors"
                     >
                       <Trash2 size={14} />
@@ -288,7 +363,6 @@ export default function Projects() {
                   </div>
                 </Card>
 
-                {/* Milestones panel */}
                 {selectedProject === project.id && (
                   <div className="ml-4 mt-2 space-y-2 mb-3">
                     <div className="flex items-center justify-between">
@@ -319,39 +393,23 @@ export default function Projects() {
                             <Badge variant="info">invoice</Badge>
                           )}
                           {m.due_date && (
-                            <span className="text-[10px] text-[var(--text-tertiary)]">{new Date(m.due_date).toLocaleDateString()}</span>
+                            <span className="text-[10px] text-[var(--text-tertiary)]">{relativeDate(m.due_date)}</span>
                           )}
                           {invoicePrompt?.milestone.id === m.id && (
                             <div className="flex items-center gap-1 ml-1">
-                              <button
-                                onClick={handleInvoicePromptYes}
-                                className="text-[10px] px-1.5 py-0.5 rounded-[6px] bg-[var(--accent)] text-white font-medium"
-                              >
-                                Yes
-                              </button>
-                              <button
-                                onClick={handleInvoicePromptNo}
-                                className="text-[10px] px-1.5 py-0.5 rounded-[6px] bg-[var(--bg-secondary)] text-[var(--text-secondary)] font-medium"
-                              >
-                                Skip
-                              </button>
+                              <button onClick={handleInvoicePromptYes} className="text-[10px] px-1.5 py-0.5 rounded-[6px] bg-[var(--accent)] text-white font-medium">Yes</button>
+                              <button onClick={handleInvoicePromptNo} className="text-[10px] px-1.5 py-0.5 rounded-[6px] bg-[var(--bg-secondary)] text-[var(--text-secondary)] font-medium">Skip</button>
                             </div>
                           )}
-                          <button
-                            onClick={() => handleDeleteMilestone(m.id)}
-                            className="text-[var(--text-tertiary)] hover:text-[#A32D2D]"
-                          >
+                          <button onClick={() => handleDeleteMilestone(m.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                             <Trash2 size={12} />
                           </button>
                         </div>
                       ))
                     )}
-                    {/* Invoice prompt text */}
                     {invoicePrompt && (
                       <div className="pl-2">
-                        <p className="text-xs text-[#854F0B]">
-                          Generate invoice for this milestone?
-                        </p>
+                        <p className="text-xs text-[#854F0B]">Generate invoice for this milestone?</p>
                       </div>
                     )}
                   </div>
@@ -362,7 +420,6 @@ export default function Projects() {
         </div>
       )}
 
-      {/* Project Modal */}
       <Modal open={showProjectModal} onClose={() => setShowProjectModal(false)} title={editingProject ? 'Edit Project' : 'New Project'} size="md">
         <div className="space-y-4">
           <div>
@@ -453,7 +510,6 @@ export default function Projects() {
         </div>
       </Modal>
 
-      {/* Milestone Modal */}
       <Modal open={showMilestoneModal} onClose={() => setShowMilestoneModal(false)} title="Add Milestone" size="sm">
         <div className="space-y-4">
           <div>
@@ -491,6 +547,17 @@ export default function Projects() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={handleDelete}
+        title="Delete Project"
+        message={`Are you sure you want to delete "${confirmDelete?.title}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        variant="danger"
+        loading={deleting}
+      />
     </div>
   );
 }

@@ -75,16 +75,29 @@ export default function Insights() {
   });
   const topProjectsByTime = Object.values(projectTime).sort((a, b) => b.minutes - a.minutes).slice(0, 5);
 
-  if (!loaded) return <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>
+  if (!loaded) return (
+    <div className="p-6">
+      <div className="h-6 w-48 bg-[var(--bg-secondary)] rounded skeleton-pulse mb-6" />
+      <div className="grid grid-cols-4 gap-3 mb-6">
+        {[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />)}
+      </div>
+      <div className="grid grid-cols-2 gap-6">
+        <div className="h-48 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />
+        <div className="h-48 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />
+      </div>
+    </div>
+  );
 
-  if (invoices.length < 3 || projects.length < 2) {
+  const hasMinimalData = invoices.length > 0 || projects.length > 0;
+
+  if (!hasMinimalData) {
     return (
       <div className="p-6">
         <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-6">Business Insights</h2>
         <Card className="text-center py-16 flex flex-col items-center">
           <Lightbulb size={40} className="text-[var(--text-tertiary)] mb-4" />
           <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">Not enough data yet</h3>
-          <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Insights appear after you have at least 3 invoices and 2 projects.</p>
+          <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Insights appear after you create an invoice or project. Start tracking to see your data.</p>
         </Card>
       </div>
     );

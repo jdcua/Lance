@@ -457,6 +457,18 @@ export default function Settings() {
             </select>
           </div>
           <div>
+            <label className={labelClass}>Writing voice description</label>
+            <textarea
+              value={form.writing_voice || ''}
+              onChange={(e) => setForm({ ...form, writing_voice: e.target.value })}
+              onBlur={() => autoSave({ writing_voice: form.writing_voice }, 'Proposal voice')}
+              placeholder="e.g. I'm a senior full-stack developer who explains things clearly and avoids jargon"
+              rows={2}
+              className={`${inputClass} resize-none`}
+            />
+            <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Describe your voice and expertise. This helps the AI write proposals that sound like you.</p>
+          </div>
+          <div>
             <label className={labelClass}>Tagline / positioning</label>
             <input
               type="text"

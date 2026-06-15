@@ -26,10 +26,13 @@ export default function AIBar() {
   useEffect(() => {
     setInsight('');
     setExpanded(false);
-    if (prompt && aiEnabled) {
+    if (!aiEnabled) return;
+    if (prompt) {
       queryLocalAI(prompt).then((result) => {
         if (result) setInsight(result);
       });
+    } else {
+      setInsight('Tip: Use \u2318K to search, \u2318N to create new items, and \u23181-8 to navigate between sections.');
     }
   }, [prompt, location.pathname, aiEnabled]);
 

@@ -8,6 +8,8 @@ import MetricCard from '../components/ui/MetricCard';
 import { Play, Square, Plus, Trash2, Clock } from 'lucide-react';
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify } from '../achievements/notify';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
+import { relativeDate } from '../utils/format';
 
 export default function TimeScreen() {
   const { timeEntries, loadTimeEntries, addTimeEntry, updateTimeEntry, removeTimeEntry, projects, loadProjects, clients, loadClients } = useStore();
@@ -19,6 +21,8 @@ export default function TimeScreen() {
   const [durationMinutes, setDurationMinutes] = useState(0);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; description: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     Promise.all([loadTimeEntries(), loadProjects(), loadClients()])
@@ -124,13 +128,16 @@ export default function TimeScreen() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Delete this time entry?')) {
-      try {
-        await removeTimeEntry(id);
-      } catch (err) {
-        addToast(err?.toString?.() || 'Failed to delete', 'error');
-      }
+  const handleDelete = async () => {
+    if (!confirmDelete) return;
+    setDeleting(true);
+    try {
+      await removeTimeEntry(confirmDelete.id);
+      setConfirmDelete(null);
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to delete', 'error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -158,7 +165,15 @@ export default function TimeScreen() {
   const weekMinutes = weekEntries.reduce((acc, t) => acc + (t.duration_minutes || 0), 0);
   const unbilledMinutes = timeEntries.filter((t) => t.billable && !t.invoiced).reduce((acc, t) => acc + (t.duration_minutes || 0), 0);
 
-  if (loading) return <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>
+  if (loading) return (
+    <div className="p-6">
+      <div className="grid grid-cols-4 gap-3 mb-6">
+        {[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />)}
+      </div>
+      <div className="h-16 rounded-[8px] bg-[var(--bg-secondary)] skeleton-pulse mb-4" />
+      {[...Array(5)].map((_, i) => <div key={i} className="h-10 bg-[var(--bg-secondary)] rounded-[8px] skeleton-pulse mb-2" />)}
+    </div>
+  );
 
   return (
     <div className="p-6">
@@ -304,7 +319,7 @@ export default function TimeScreen() {
                   <span className="text-xs text-[var(--text-secondary)] truncate">{entry.description || 'No description'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-[10px] text-[var(--text-tertiary)]">
-                  <span>{formatDate(entry.start_time)}</span>
+                  <span>{relativeDate(entry.start_time)}</span>
                   <span>{formatTime(entry.start_time)} {entry.end_time ? `- ${formatTime(entry.end_time)}` : ''}</span>
                   <span className="text-[var(--text-secondary)] font-medium">{entry.duration_minutes ? formatDuration(entry.duration_minutes) : 'In progress'}</span>
                   <span>{getClientName(entry.client_id)}</span>
@@ -319,7 +334,7 @@ export default function TimeScreen() {
                 </button>
                 {entry.invoiced && <Badge variant="info">invoiced</Badge>}
                 <button
-                  onClick={() => handleDelete(entry.id)}
+                  onClick={() => setConfirmDelete({ id: entry.id, description: entry.description || 'No description' })}
                   className="p-1 text-[var(--text-tertiary)] hover:text-[#A32D2D]"
                 >
                   <Trash2 size={12} />
@@ -329,6 +344,15 @@ export default function TimeScreen() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={handleDelete}
+        title="Delete Time Entry"
+        message={`Are you sure you want to delete "${confirmDelete?.description}"? This cannot be undone.`}
+        loading={deleting}
+      />
     </div>
   );
 }

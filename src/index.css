@@ -121,6 +121,17 @@ button, a, input, textarea, select, .transition-base {
 .loading-dot:nth-child(2) { animation-delay: 0.2s; }
 .loading-dot:nth-child(3) { animation-delay: 0.4s; }
 
+/* ── Skeleton loading pulse ── */
+@keyframes skeleton-pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+.skeleton-pulse {
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
 /* ── Dark mode ── */
 .dark body,
 .dark #root {

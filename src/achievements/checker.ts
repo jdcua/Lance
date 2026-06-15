@@ -111,6 +111,11 @@ export async function unlockAchievement(key: AchievementKey): Promise<boolean> {
   return false;
 }
 
+export async function getUnlockedAchievementKeys(): Promise<string[]> {
+  const unlocked = await getUnlockedKeys();
+  return [...unlocked];
+}
+
 export async function getUnlockedThemes(): Promise<string[]> {
   const unlocked = await getUnlockedKeys();
   return ACHIEVEMENTS.filter(

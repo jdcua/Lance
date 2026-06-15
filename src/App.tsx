@@ -15,6 +15,7 @@ import Modal from './components/ui/Modal';
 import Button from './components/ui/Button';
 import ToastContainer from './components/ui/Toast';
 import CommandPalette from './components/ui/CommandPalette';
+import Walkthrough from './components/ui/Walkthrough';
 import SplashScreen from './components/ui/SplashScreen';
 import { useStore } from './store';
 import { useToasts } from './store/toastStore';
@@ -40,8 +41,10 @@ export default function App() {
   const [ranAutoGen, setRanAutoGen] = useState(false);
 
   const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [showChangelog, setShowChangelog] = useState(false);
+  const [showWalkthrough, setShowWalkthrough] = useState(false);
 
   const APP_VERSION = '1.1.0';
   const CHANGELOG = [
@@ -109,6 +112,13 @@ export default function App() {
       setShowOnboarding(true);
     }
   }, [profileLoaded, profile]);
+
+  // Show walkthrough after onboarding completes
+  useEffect(() => {
+    if (!showOnboarding && localStorage.getItem('lance:tour-pending') === 'true') {
+      setShowWalkthrough(true);
+    }
+  }, [showOnboarding]);
 
   // Auto-generate recurring invoices on startup
   useEffect(() => {
@@ -210,6 +220,11 @@ export default function App() {
       }
       if (isEditing()) return;
       const mod = e.metaKey || e.ctrlKey;
+      if (mod && (e.key === '/' || e.key === '?')) {
+        e.preventDefault();
+        setShowShortcuts((prev) => !prev);
+        return;
+      }
       if (mod && e.key === 'n') {
         e.preventDefault();
         const path = location.pathname;
@@ -278,7 +293,36 @@ export default function App() {
 
       <OnboardingFlow showOnboarding={showOnboarding} setShowOnboarding={setShowOnboarding} />
 
+      <Walkthrough open={showWalkthrough} onClose={() => { setShowWalkthrough(false); localStorage.removeItem('lance:tour-pending'); }} />
+
       <CommandPalette open={showCommandPalette} onClose={() => setShowCommandPalette(false)} />
+
+      {/* Keyboard shortcuts cheat sheet */}
+      <Modal open={showShortcuts} onClose={() => setShowShortcuts(false)} title="Keyboard Shortcuts" size="sm">
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            {[
+              ['⌘/Ctrl + K', 'Command palette'],
+              ['⌘/Ctrl + N', 'New item (contextual)'],
+              ['⌘/Ctrl + ,', 'Settings'],
+              ['⌘/Ctrl + /', 'Shortcuts'],
+              ['⌘/Ctrl + 1–8', 'Jump to section'],
+              ['Escape', 'Close modal / palette'],
+            ].map(([key, desc]) => (
+              <div key={key} className="flex items-center justify-between col-span-2 px-3 py-1.5 rounded-[6px] hover:bg-[var(--bg-secondary)]">
+                <kbd className="text-[11px] font-mono text-[var(--accent)] bg-[var(--accent-bg)] px-1.5 py-0.5 rounded-[4px]">{key}</kbd>
+                <span className="text-[var(--text-secondary)]">{desc}</span>
+              </div>
+            ))}
+          </div>
+          <div className="pt-2 border-t border-[var(--border-color)]">
+            <p className="text-[10px] text-[var(--text-tertiary)] text-center">
+              Proposals = ⌘1 &middot; Contracts = ⌘2 &middot; Projects = ⌘3 &middot; Time = ⌘4<br />
+              Invoices = ⌘5 &middot; Clients = ⌘6 &middot; Finance = ⌘7 &middot; Insights = ⌘8
+            </p>
+          </div>
+        </div>
+      </Modal>
 
       <ToastContainer />
     </div>
@@ -296,6 +340,9 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
   });
   const [saving, setSaving] = useState(false);
   const [activeThemeId, setActiveThemeId] = useState<string>(localStorage.getItem('lance:theme') || 'default');
+  const [validationErrors, setValidationErrors] = useState<{ email?: string }>({});
+
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   // Reset step to 1 when modal opens
   useEffect(() => {
@@ -332,6 +379,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
         }
       }
       setShowOnboarding(false);
+      localStorage.setItem('lance:tour-pending', 'true');
     } finally {
       setSaving(false);
     }
@@ -406,7 +454,10 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
                 <input
                   type="text"
                   value={onboardingForm.name}
-                  onChange={(e) => setOnboardingForm({ ...onboardingForm, name: e.target.value })}
+                  onChange={(e) => {
+                    setOnboardingForm({ ...onboardingForm, name: e.target.value });
+                    setValidationErrors({});
+                  }}
                   placeholder="Your full name"
                   className={inputClass}
                 />
@@ -416,10 +467,21 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
                 <input
                   type="email"
                   value={onboardingForm.email}
-                  onChange={(e) => setOnboardingForm({ ...onboardingForm, email: e.target.value })}
+                  onChange={(e) => {
+                    setOnboardingForm({ ...onboardingForm, email: e.target.value });
+                    const val = e.target.value;
+                    if (val && !EMAIL_REGEX.test(val)) {
+                      setValidationErrors({ email: 'Please enter a valid email address' });
+                    } else {
+                      setValidationErrors({});
+                    }
+                  }}
                   placeholder="you@example.com"
                   className={inputClass}
                 />
+                {validationErrors.email && (
+                  <p className="text-red-500 text-xs mt-1">{validationErrors.email}</p>
+                )}
               </div>
               <div>
                 <label className={labelClass}>Currency</label>
@@ -438,7 +500,13 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
             </div>
             <div className="flex justify-between pt-2">
               <Button variant="secondary" onClick={handleOnboardingBack} size="sm">&larr; Back</Button>
-              <Button onClick={handleOnboardingNext} size="sm">Continue &rarr;</Button>
+              <Button
+                onClick={handleOnboardingNext}
+                size="sm"
+                disabled={!onboardingForm.name.trim() || !!validationErrors.email || !EMAIL_REGEX.test(onboardingForm.email)}
+              >
+                Continue &rarr;
+              </Button>
             </div>
           </>
         )}

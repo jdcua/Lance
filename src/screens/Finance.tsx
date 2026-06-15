@@ -5,7 +5,8 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import Modal from '../components/ui/Modal';
-import { formatCurrency, formatDate } from '../utils/format';
+import { formatCurrency, formatDate, formatMonth } from '../utils/format';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useToasts } from '../store/toastStore';
 import { Plus, Pencil, Trash2, BarChart3 } from 'lucide-react';
 
@@ -17,6 +18,8 @@ export default function Finance() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; description: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({ category: 'Other', description: '', amount: '', date: new Date().toISOString().split('T')[0] });
   const [loading, setLoading] = useState(true);
 
@@ -61,13 +64,16 @@ export default function Finance() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Delete this expense?')) {
-      try {
-        await removeExpense(id);
-      } catch (err) {
-        addToast(err?.toString?.() || 'Failed to delete expense', 'error');
-      }
+  const handleDelete = async () => {
+    if (!confirmDelete) return;
+    setDeleting(true);
+    try {
+      await removeExpense(confirmDelete.id);
+      setConfirmDelete(null);
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to delete expense', 'error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -95,7 +101,17 @@ export default function Finance() {
 
   const allMonths = Array.from(new Set([...Object.keys(monthlyExpenses), ...Object.keys(monthlyPaid)])).sort().reverse().slice(0, 12);
 
-  if (loading) return <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>
+  if (loading) return (
+    <div className="p-6">
+      <div className="grid grid-cols-4 gap-3 mb-6">
+        {[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />)}
+      </div>
+      <div className="grid grid-cols-2 gap-6 mb-6">
+        <div className="h-48 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />
+        <div className="h-48 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />
+      </div>
+    </div>
+  );
 
   return (
     <div className="p-6">
@@ -125,7 +141,7 @@ export default function Finance() {
                 const net = income - expense;
                 return (
                   <div key={month} className="flex items-center justify-between text-xs">
-                    <span className="text-[var(--text-secondary)]">{month}</span>
+                    <span className="text-[var(--text-secondary)]">{formatMonth(month)}</span>
                     <div className="flex items-center gap-4">
                       <span className="text-[var(--accent)]">+{formatCurrency(income)}</span>
                       <span className="text-[#A32D2D]">-{formatCurrency(expense)}</span>
@@ -192,7 +208,7 @@ export default function Finance() {
                 <button onClick={() => openEdit(exp)} className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] rounded-[8px]">
                   <Pencil size={14} />
                 </button>
-                <button onClick={() => handleDelete(exp.id)} className="p-1 text-[var(--text-tertiary)] hover:text-[#A32D2D] rounded-[8px]">
+                <button onClick={() => setConfirmDelete({ id: exp.id, description: exp.description })} className="p-1 text-[var(--text-tertiary)] hover:text-[#A32D2D] rounded-[8px]">
                   <Trash2 size={14} />
                 </button>
               </div>
@@ -255,6 +271,15 @@ export default function Finance() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={handleDelete}
+        title="Delete Expense"
+        message={`Are you sure you want to delete "${confirmDelete?.description}"? This cannot be undone.`}
+        loading={deleting}
+      />
     </div>
   );
 }

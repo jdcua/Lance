@@ -6,9 +6,10 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
-import { Plus, Pencil, Trash2, Mail, Phone, Building2, MessageSquare, PhoneCall, MailOpen, Users, X, Check, FileText, FolderKanban, Receipt, Clock } from 'lucide-react';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
+import { Plus, Pencil, Trash2, Mail, Phone, Building2, MessageSquare, PhoneCall, MailOpen, Users, X, Check, FileText, FolderKanban, Receipt, Clock, Search } from 'lucide-react';
 import { useToasts } from '../store/toastStore';
-import { formatCurrency } from '../utils/format';
+import { formatCurrency, relativeDate } from '../utils/format';
 import { checkAndNotify } from '../achievements/notify';
 
 const commIcons: Record<string, typeof MessageSquare> = {
@@ -24,6 +25,8 @@ const commLabels: Record<string, string> = {
   email: 'Email',
   meeting: 'Meeting',
 };
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function Clients() {
   const {
@@ -41,11 +44,15 @@ export default function Clients() {
   const [editing, setEditing] = useState<Client | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', phone: '', company: '', notes: '' });
+  const [formErrors, setFormErrors] = useState<{ email?: string }>({});
   const [showLogForm, setShowLogForm] = useState(false);
   const [logForm, setLogForm] = useState({ type: 'note' as Communication['type'], date: new Date().toISOString().split('T')[0], summary: '' });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{ id: string; name: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [hoveredComm, setHoveredComm] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     Promise.all([loadClients(), loadProjects(), loadProposals(), loadInvoices(), loadProfile()])
@@ -67,7 +74,6 @@ export default function Clients() {
 
   const selectedClient = clients.find((c) => c.id === selectedId);
 
-  // Status dot for client list
   const getClientStatus = (clientId: string) => {
     const hasActive = projects.some((p) => p.client_id === clientId && p.status === 'active');
     const hasProposal = proposals.some((p) => p.client_id === clientId && (p.status === 'sent' || p.status === 'draft'));
@@ -76,7 +82,6 @@ export default function Clients() {
     return 'bg-[#D4D4D2]';
   };
 
-  // Overview stats for selected client
   const getOverview = (clientId: string) => {
     const clientProjects = projects.filter((p) => p.client_id === clientId);
     const clientProposals = proposals.filter((p) => p.client_id === clientId);
@@ -87,9 +92,16 @@ export default function Clients() {
     return { projectCount: clientProjects.length, proposalCount: clientProposals.length, lifetime, outstanding, lastComm };
   };
 
+  const filteredClients = clients.filter(c =>
+    c.name.toLowerCase().includes(search.toLowerCase()) ||
+    (c.company && c.company.toLowerCase().includes(search.toLowerCase())) ||
+    (c.email && c.email.toLowerCase().includes(search.toLowerCase()))
+  );
+
   const openNew = () => {
     setEditing(null);
     setForm({ name: '', email: '', phone: '', company: '', notes: '' });
+    setFormErrors({});
     setShowModal(true);
   };
 
@@ -102,11 +114,16 @@ export default function Clients() {
       company: client.company || '',
       notes: client.notes || '',
     });
+    setFormErrors({});
     setShowModal(true);
   };
 
   const handleSaveClient = async () => {
     if (!form.name.trim()) return;
+    if (form.email && !EMAIL_REGEX.test(form.email)) {
+      setFormErrors({ email: 'Please enter a valid email address' });
+      return;
+    }
     setSaving(true);
     try {
       if (editing) {
@@ -124,14 +141,17 @@ export default function Clients() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Delete this client? This cannot be undone.')) {
-      try {
-        await removeClient(id);
-        if (selectedId === id) setSelectedId(null);
-      } catch (err) {
-        addToast(err?.toString?.() || 'Failed to delete client', 'error');
-      }
+  const handleDelete = async () => {
+    if (!confirmDialog) return;
+    setDeleting(true);
+    try {
+      await removeClient(confirmDialog.id);
+      if (selectedId === confirmDialog.id) setSelectedId(null);
+      setConfirmDialog(null);
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to delete client', 'error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -172,17 +192,44 @@ export default function Clients() {
 
   const clientComms = (communications[selectedId || ''] || []);
 
-  if (loading) return <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>
+  if (loading) return (
+    <div className="flex h-full">
+      <div className="w-[240px] border-r border-[var(--border-color)] bg-[var(--bg-card)] flex-shrink-0">
+        <div className="px-4 py-3 border-b border-[var(--border-color)]">
+          <div className="h-4 w-16 bg-[var(--bg-secondary)] rounded skeleton-pulse" />
+        </div>
+        <div className="py-2 space-y-1 px-2">
+          {[...Array(5)].map((_, i) => <div key={i} className="h-10 bg-[var(--bg-secondary)] rounded-[6px] skeleton-pulse" />)}
+        </div>
+      </div>
+      <div className="flex-1 p-6 space-y-4">
+        <div className="h-6 w-48 bg-[var(--bg-secondary)] rounded skeleton-pulse" />
+        <div className="grid grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => <div key={i} className="h-16 bg-[var(--bg-secondary)] rounded-[8px] skeleton-pulse" />)}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex h-full">
       {/* Left panel — client list */}
       <div className="w-[240px] border-r border-[var(--border-color)] bg-[var(--bg-card)] flex-shrink-0 flex flex-col">
-        <div className="px-4 py-3 border-b border-[var(--border-color)]">
+        <div className="px-4 py-3 border-b border-[var(--border-color)] space-y-2">
           <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Clients</h3>
+          <div className="relative">
+            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Filter..."
+              className="w-full pl-7 pr-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]"
+            />
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto py-2">
-          {clients.map((c) => (
+          {filteredClients.map((c) => (
             <button
               key={c.id}
               onClick={() => setSelectedId(c.id)}
@@ -192,12 +239,15 @@ export default function Clients() {
                   : 'hover:bg-[var(--bg-secondary)] border-l-2 border-transparent'
               }`}
             >
-              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getClientStatus(c.id)}`} />
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getClientStatus(c.id)}`} title={projects.some(p => p.client_id === c.id && p.status === 'active') ? 'Active project' : proposals.some(p => p.client_id === c.id && (p.status === 'sent' || p.status === 'draft')) ? 'Proposal open' : 'No activity'} />
               <span className={`text-xs truncate ${selectedId === c.id ? 'text-[var(--accent)] font-medium' : 'text-[var(--text-primary)]'}`}>
                 {c.name}
               </span>
             </button>
           ))}
+          {filteredClients.length === 0 && search && (
+            <p className="text-xs text-[var(--text-tertiary)] text-center py-4">No clients match "{search}"</p>
+          )}
           <button
             onClick={openNew}
             className="w-full text-left px-4 py-2.5 flex items-center gap-2.5 text-xs text-[var(--accent)] hover:bg-[var(--bg-secondary)] transition-colors"
@@ -221,7 +271,6 @@ export default function Clients() {
           const overview = getOverview(selectedClient.id);
           return (
             <>
-              {/* Client header */}
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <h2 className="text-lg font-semibold text-[var(--text-primary)]">{selectedClient.name}</h2>
@@ -255,7 +304,7 @@ export default function Clients() {
                     <Pencil size={14} />
                   </button>
                   <button
-                    onClick={() => handleDelete(selectedClient.id)}
+                    onClick={() => setConfirmDialog({ id: selectedClient.id, name: selectedClient.name })}
                     className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[#A32D2D] hover:bg-[#FCEBEB] transition-colors"
                     title="Delete client"
                   >
@@ -268,7 +317,6 @@ export default function Clients() {
                 <p className="text-xs text-[var(--text-tertiary)] mb-4">{selectedClient.notes}</p>
               )}
 
-              {/* Overview */}
               <Card className="mb-6">
                 <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-3">Overview</h3>
                 <div className="grid grid-cols-4 gap-4">
@@ -299,7 +347,7 @@ export default function Clients() {
                       <span className="text-xs text-[var(--text-secondary)]">Last contact</span>
                     </div>
                     <span className="text-xs text-[var(--text-primary)]">
-                      {overview.lastComm ? new Date(overview.lastComm.date).toLocaleDateString() : 'No interactions'}
+                      {overview.lastComm ? relativeDate(overview.lastComm.date) : 'No interactions'}
                     </span>
                   </div>
                   {overview.outstanding > 0 && (
@@ -310,7 +358,6 @@ export default function Clients() {
                 </div>
               </Card>
 
-              {/* Communication log */}
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Communication log</h3>
@@ -322,7 +369,6 @@ export default function Clients() {
                   </button>
                 </div>
 
-                {/* Log form */}
                 {showLogForm && (
                   <Card className="mb-4">
                     <div className="space-y-3">
@@ -372,7 +418,6 @@ export default function Clients() {
                   </Card>
                 )}
 
-                {/* Log entries */}
                 {clientComms.length === 0 ? (
                   <p className="text-xs text-[var(--text-tertiary)]">No interactions logged yet.</p>
                 ) : (
@@ -390,7 +435,7 @@ export default function Clients() {
                           <Icon size={14} className="text-[var(--text-tertiary)] mt-0.5 flex-shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="text-[10px] text-[var(--text-tertiary)] mb-0.5">
-                              {commLabels[comm.type]} &middot; {new Date(comm.date).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' })}
+                              {commLabels[comm.type]} &middot; {relativeDate(comm.date)}
                             </p>
                             <p className="text-[13px] text-[var(--text-primary)] leading-relaxed">{comm.summary}</p>
                           </div>
@@ -444,10 +489,13 @@ export default function Clients() {
               <input
                 type="email"
                 value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                onChange={(e) => { setForm({ ...form, email: e.target.value }); setFormErrors({}); }}
                 placeholder="email@example.com"
                 className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               />
+              {formErrors.email && (
+                <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
+              )}
             </div>
             <div>
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Phone</label>
@@ -490,6 +538,17 @@ export default function Clients() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        open={!!confirmDialog}
+        onClose={() => setConfirmDialog(null)}
+        onConfirm={handleDelete}
+        title="Delete Client"
+        message={`Are you sure you want to delete "${confirmDialog?.name}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        variant="danger"
+        loading={deleting}
+      />
     </div>
   );
 }

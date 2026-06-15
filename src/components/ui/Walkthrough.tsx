@@ -1,0 +1,158 @@
+import { useState, useEffect } from 'react';
+import { Rocket, Palette, Command, Zap, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import Button from './Button';
+
+interface WalkthroughProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+interface Slide {
+  title: string;
+  description: string;
+  icon: typeof Rocket;
+}
+
+const SLIDES: Slide[] = [
+  {
+    title: 'Welcome to Lance',
+    description:
+      'Your freelance business, all in one place. From proposals to payments, Lance keeps you organized so you can focus on the work you love.',
+    icon: Rocket,
+  },
+  {
+    title: 'Your Workspace',
+    description:
+      'Pick from 7 beautiful themes to make Lance feel like home. The sidebar gives you quick access to Proposals, Contracts, Projects, Time Tracking, Invoices, Clients, Finance, and Insights.',
+    icon: Palette,
+  },
+  {
+    title: 'Command Palette',
+    description:
+      'Press Cmd+K (Ctrl+K on Windows) to open the command palette. Search for anything and jump anywhere — no mouse required.',
+    icon: Command,
+  },
+  {
+    title: 'Keyboard Shortcuts',
+    description:
+      'Use Cmd+1–8 to switch between sections instantly. Press Cmd+N to create new items from anywhere — add your first client, draft a proposal, log time, or send an invoice.',
+    icon: Zap,
+  },
+  {
+    title: 'Getting Paid',
+    description:
+      'Track projects, send professional invoices, and manage your finances all in one place. Set up recurring invoices, track expenses, and watch your business grow with real-time insights.',
+    icon: FileText,
+  },
+];
+
+export default function Walkthrough({ open, onClose }: WalkthroughProps) {
+  const [slide, setSlide] = useState(0);
+
+  useEffect(() => {
+    if (open) setSlide(0);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  const isLast = slide === SLIDES.length - 1;
+  const Icon = SLIDES[slide].icon;
+
+  const handleNext = () => {
+    if (isLast) {
+      onClose();
+    } else {
+      setSlide((s) => s + 1);
+    }
+  };
+
+  const handlePrev = () => setSlide((s) => s - 1);
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+
+      <div className="relative bg-[var(--bg-card)] rounded-[16px] shadow-2xl w-full max-w-lg mx-4 animate-fade-scale-in overflow-hidden">
+        {/* Progress bar */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-[var(--border-color)]">
+          <div
+            className="h-full bg-[var(--accent)] transition-all duration-500 ease-out rounded-r-full"
+            style={{ width: `${((slide + 1) / SLIDES.length) * 100}%` }}
+          />
+        </div>
+
+        {/* Slide content */}
+        <div className="px-8 pt-10 pb-8">
+          <div className="flex flex-col items-center text-center">
+            {/* Icon circle */}
+            <div className="w-16 h-16 rounded-full bg-[var(--accent-bg)] flex items-center justify-center mb-5 ring-4 ring-[var(--accent)]/10">
+              <Icon size={28} className="text-[var(--accent)]" />
+            </div>
+
+            {/* Slide dots */}
+            <div className="flex gap-1.5 mb-5">
+              {SLIDES.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSlide(i)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    i === slide
+                      ? 'bg-[var(--accent)] w-6'
+                      : 'bg-[var(--border-color)] hover:bg-[var(--text-tertiary)]'
+                  }`}
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              ))}
+            </div>
+
+            {/* Title + description */}
+            <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
+              {SLIDES[slide].title}
+            </h3>
+            <p className="text-sm text-[var(--text-secondary)] leading-relaxed max-w-sm mb-4">
+              {SLIDES[slide].description}
+            </p>
+            {isLast && (
+              <p className="text-xs text-[var(--accent)] mt-2 font-medium">
+                Tip: Start by adding a client, then create projects, track time, and send invoices.
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-8 pb-6 flex items-center justify-between">
+          <div>
+            {slide > 0 ? (
+              <Button variant="secondary" size="sm" onClick={handlePrev}>
+                <ChevronLeft size={14} />
+                Back
+              </Button>
+            ) : (
+              <span />
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-[var(--text-tertiary)] tabular-nums">
+              {slide + 1} / {SLIDES.length}
+            </span>
+            <Button size="sm" onClick={handleNext}>
+              {isLast ? 'Get Started' : 'Next'}
+              {!isLast && <ChevronRight size={14} />}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
