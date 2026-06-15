@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useStore } from '../store';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import { ACHIEVEMENTS } from '../achievements';

@@ -7,7 +7,7 @@ import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { exportProposalPDF, exportProposalDOCX } from '../export';
-import { formatCurrency, relativeDate } from '../utils/format';
+import { formatCurrency } from '../utils/format';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';

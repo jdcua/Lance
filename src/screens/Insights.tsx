@@ -5,7 +5,7 @@ import MetricCard from '../components/ui/MetricCard';
 import ProgressBar from '../components/ui/ProgressBar';
 import { formatCurrency } from '../utils/format';
 import { useToasts } from '../store/toastStore';
-import { TrendingUp, TrendingDown, DollarSign, Clock, FileText, Users, Lightbulb } from 'lucide-react';
+import { Lightbulb } from 'lucide-react';
 
 export default function Insights() {
   const { projects, loadProjects, invoices, loadInvoices, timeEntries, loadTimeEntries, clients, loadClients, proposals, loadProposals, expenses, loadExpenses, profile, loadProfile } = useStore();

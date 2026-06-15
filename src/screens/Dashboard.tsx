@@ -4,7 +4,7 @@ import { useStore } from '../store';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import Button from '../components/ui/Button';
-import { relativeDate, formatCurrency, formatMonth } from '../utils/format';
+import { relativeDate, formatCurrency } from '../utils/format';
 import { useToasts } from '../store/toastStore';
 import { Play, Receipt, FileText, Users, FolderKanban, Clock, Plus, ArrowRight, CheckCircle2, Circle } from 'lucide-react';
 

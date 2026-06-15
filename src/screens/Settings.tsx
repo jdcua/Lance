@@ -4,17 +4,16 @@ import type { UserProfile } from '../types';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useToasts } from '../store/toastStore';
-import { formatCurrency } from '../utils/format';
 import { save } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeFile } from '@tauri-apps/plugin-fs';
 import { open } from '@tauri-apps/plugin-dialog';
 import { Check, Upload, Download, AlertTriangle, Trash2, Lock, Sparkles, ExternalLink } from 'lucide-react';
 import { THEMES, applyTheme, getTheme } from '../themes/themes';
+import type { ThemeId } from '../themes';
 import { PROFESSION_THEME, type Profession } from '../themes';
 import { getUnlockedThemes } from '../achievements/checker';
-import type { ThemeId } from '../themes';
-import { validateLicenseKey } from '../license';
 
 const currencies = ['CAD', 'USD', 'GBP', 'EUR', 'AUD'];
 const writingStyles = ['professional', 'warm', 'direct', 'bold'];
@@ -39,6 +38,7 @@ export default function Settings() {
   const [licenseKey, setLicenseKey] = useState('');
   const [licenseError, setLicenseError] = useState('');
   const [licenseActivating, setLicenseActivating] = useState(false);
+  const [showRemoveLicenseConfirm, setShowRemoveLicenseConfirm] = useState(false);
   const [activeTheme, setActiveTheme] = useState<ThemeId>('default');
   const [unlockedThemes, setUnlockedThemes] = useState<Set<string>>(new Set(['default']));
   const [form, setForm] = useState<UserProfile>({
@@ -265,7 +265,7 @@ export default function Settings() {
         setShowLicenseModal(false);
         setLicenseKey('');
         addToast('Lance is now licensed. Thank you.', 'success');
-        setUnlockedThemes(new Set(['default', 'studio', 'terminal', 'craft']));
+        setUnlockedThemes(new Set(['default', 'studio', 'terminal', 'craft', 'motion', 'lens', 'scale']));
       } else {
         setLicenseError('Invalid license key — check for typos and try again.');
       }
@@ -278,7 +278,7 @@ export default function Settings() {
   };
 
   const handleRemoveLicense = async () => {
-    if (!window.confirm('Remove your license? The splash screen will return.')) return;
+    setShowRemoveLicenseConfirm(false);
     try {
       await removeLicense();
       addToast('License removed.', 'info');
@@ -328,7 +328,7 @@ export default function Settings() {
               </p>
             )}
             <button
-              onClick={handleRemoveLicense}
+              onClick={() => setShowRemoveLicenseConfirm(true)}
               className="text-xs text-[var(--text-tertiary)] hover:text-[#A32D2D] underline transition-colors"
             >
               Remove license
@@ -677,6 +677,16 @@ export default function Settings() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        open={showRemoveLicenseConfirm}
+        onClose={() => setShowRemoveLicenseConfirm(false)}
+        onConfirm={handleRemoveLicense}
+        title="Remove License"
+        message="Remove your license? The splash screen will return on next launch."
+        confirmLabel="Remove"
+        variant="danger"
+      />
     </div>
   );
 }

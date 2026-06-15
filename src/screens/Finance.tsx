@@ -8,13 +8,16 @@ import Modal from '../components/ui/Modal';
 import { formatCurrency, formatDate, formatMonth } from '../utils/format';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useToasts } from '../store/toastStore';
+import { checkAndNotify } from '../achievements/notify';
 import { Plus, Pencil, Trash2, BarChart3 } from 'lucide-react';
 
 const categories = ['Software', 'Equipment', 'Office', 'Travel', 'Marketing', 'Taxes', 'Other'];
 
 export default function Finance() {
-  const { expenses, loadExpenses, addExpense, updateExpense, removeExpense, invoices, loadInvoices } = useStore();
+  const { expenses, loadExpenses, addExpense, updateExpense, removeExpense, invoices, loadInvoices, profile } = useStore();
   const addToast = useToasts((s) => s.add);
+  const currency = profile?.currency;
+  const fmt = (amount: number) => formatCurrency(amount, currency);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [saving, setSaving] = useState(false);
@@ -57,6 +60,7 @@ export default function Finance() {
         await addExpense(data);
       }
       setShowModal(false);
+      checkAndNotify(useStore.getState(), addToast);
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to save expense', 'error');
     } finally {
@@ -116,16 +120,16 @@ export default function Finance() {
   return (
     <div className="p-6">
       <div className="grid grid-cols-4 gap-3 mb-6">
-        <MetricCard label="Revenue (Paid)" value={formatCurrency(totalPaid)} color="green" />
-        <MetricCard label="Expenses" value={formatCurrency(totalExpenses)} color="red" />
+        <MetricCard label="Revenue (Paid)" value={fmt(totalPaid)} color="green" />
+        <MetricCard label="Expenses" value={fmt(totalExpenses)} color="red" />
         <MetricCard
           label="Profit"
-          value={formatCurrency(profit)}
+          value={fmt(profit)}
           trend={profit >= 0 ? 'up' : 'down'}
           subtext={profit >= 0 ? 'positive' : 'negative'}
           color={profit >= 0 ? 'green' : 'red'}
         />
-        <MetricCard label="Outstanding" value={formatCurrency(totalOutstanding)} subtext="unpaid invoices" color="amber" />
+        <MetricCard label="Outstanding" value={fmt(totalOutstanding)} subtext="unpaid invoices" color="amber" />
       </div>
 
       <div className="grid grid-cols-2 gap-6 mb-6">
@@ -143,10 +147,10 @@ export default function Finance() {
                   <div key={month} className="flex items-center justify-between text-xs">
                     <span className="text-[var(--text-secondary)]">{formatMonth(month)}</span>
                     <div className="flex items-center gap-4">
-                      <span className="text-[var(--accent)]">+{formatCurrency(income)}</span>
-                      <span className="text-[#A32D2D]">-{formatCurrency(expense)}</span>
+                      <span className="text-[var(--accent)]">+{fmt(income)}</span>
+                      <span className="text-[#A32D2D]">-{fmt(expense)}</span>
                       <span className={`font-medium ${net >= 0 ? 'text-[var(--accent)]' : 'text-[#A32D2D]'}`}>
-                        {formatCurrency(net)}
+                        {fmt(net)}
                       </span>
                     </div>
                   </div>
@@ -168,7 +172,7 @@ export default function Finance() {
                     <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />
                     <span className="text-xs text-[var(--text-primary)]">{cat.category}</span>
                   </div>
-                  <span className="text-xs font-medium text-[var(--text-primary)]">{formatCurrency(cat.total)}</span>
+                  <span className="text-xs font-medium text-[var(--text-primary)]">{fmt(cat.total)}</span>
                 </div>
               ))}
             </div>
@@ -203,7 +207,7 @@ export default function Finance() {
                 </div>
                 <span className="text-[10px] text-[var(--text-tertiary)]">{formatDate(exp.date)}</span>
               </div>
-              <span className="text-xs font-medium text-[#A32D2D] flex-shrink-0">-{formatCurrency(exp.amount)}</span>
+              <span className="text-xs font-medium text-[#A32D2D] flex-shrink-0">-{fmt(exp.amount)}</span>
               <div className="flex items-center gap-1 flex-shrink-0 ml-2">
                 <button onClick={() => openEdit(exp)} className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] rounded-[8px]">
                   <Pencil size={14} />

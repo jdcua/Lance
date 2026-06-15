@@ -30,7 +30,7 @@ export default function AIBar() {
     if (prompt) {
       queryLocalAI(prompt).then((result) => {
         if (result) setInsight(result);
-      });
+      }).catch(() => {});
     } else {
       setInsight('Tip: Use \u2318K to search, \u2318N to create new items, and \u23181-8 to navigate between sections.');
     }

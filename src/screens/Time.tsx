@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '../store';
 import type { TimeEntry } from '../types';
 import Button from '../components/ui/Button';
@@ -17,7 +17,7 @@ export default function TimeScreen() {
   const [activeTimer, setActiveTimer] = useState<{ entry: TimeEntry; elapsed: number } | null>(null);
   const [intervalId, setIntervalId] = useState<ReturnType<typeof setInterval> | null>(null);
   const [showNewEntry, setShowNewEntry] = useState(false);
-  const [entryForm, setEntryForm] = useState({ project_id: '', client_id: '', description: '', start_time: '', end_time: '', billable: true });
+  const [entryForm, setEntryForm] = useState({ project_id: '', client_id: '', description: '', billable: true });
   const [durationMinutes, setDurationMinutes] = useState(0);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -118,7 +118,7 @@ export default function TimeScreen() {
         duration_minutes: durationMinutes,
       });
       setShowNewEntry(false);
-      setEntryForm({ project_id: '', client_id: '', description: '', start_time: '', end_time: '', billable: true });
+      setEntryForm({ project_id: '', client_id: '', description: '', billable: true });
       setDurationMinutes(0);
       checkAndNotify(useStore.getState(), addToast);
     } catch (err) {
@@ -144,6 +144,7 @@ export default function TimeScreen() {
   const toggleEntryBillable = async (entry: TimeEntry) => {
     try {
       await updateTimeEntry({ ...entry, billable: !entry.billable });
+      checkAndNotify(useStore.getState(), addToast);
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to update', 'error');
     }

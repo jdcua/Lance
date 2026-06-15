@@ -7,6 +7,7 @@ import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
 import MetricCard from '../components/ui/MetricCard';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import ClientSelect from '../components/ui/ClientSelect';
 import { exportInvoicePDF, exportInvoiceDOCX } from '../export';
 import { formatCurrency, relativeDate } from '../utils/format';
 import { generateInvoiceNumber } from '../utils/invoiceNumber';
@@ -409,10 +410,7 @@ export default function Invoices() {
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Client *</label>
-              <select value={form.client_id} onChange={(e) => setForm({ ...form, client_id: e.target.value, project_id: '' })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]">
-                <option value="">Select client...</option>
-                {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+              <ClientSelect clients={clients} value={form.client_id} onChange={(clientId) => setForm({ ...form, client_id: clientId, project_id: '' })} placeholder="Select a client..." />
             </div>
             <div>
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Project (optional)</label>
@@ -500,10 +498,7 @@ export default function Invoices() {
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Client *</label>
-              <select value={riForm.client_id} onChange={(e) => setRiForm({ ...riForm, client_id: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]">
-                <option value="">Select client...</option>
-                {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+              <ClientSelect clients={clients} value={riForm.client_id} onChange={(clientId) => setRiForm({ ...riForm, client_id: clientId })} placeholder="Select a client..." />
             </div>
             <div>
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Frequency</label>

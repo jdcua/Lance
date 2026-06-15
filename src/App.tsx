@@ -251,10 +251,6 @@ export default function App() {
   }, [navigate, location, isEditing]);
 
 
-
-  const inputClass = "w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)] text-[var(--text-primary)]";
-  const labelClass = "block text-xs font-medium text-[var(--text-secondary)] mb-1";
-
   return (
     <div className="h-full flex bg-[var(--bg-primary)]">
       <Sidebar />
