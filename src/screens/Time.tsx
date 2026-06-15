@@ -336,6 +336,7 @@ export default function TimeScreen() {
                 {entry.invoiced && <Badge variant="info">invoiced</Badge>}
                 <button
                   onClick={() => setConfirmDelete({ id: entry.id, description: entry.description || 'No description' })}
+                  aria-label="Delete time entry"
                   className="p-1 text-[var(--text-tertiary)] hover:text-[#A32D2D]"
                 >
                   <Trash2 size={12} />

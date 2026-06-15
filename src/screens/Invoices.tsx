@@ -352,7 +352,7 @@ export default function Invoices() {
                   {inv.status === 'draft' && <button onClick={() => handleMarkSent(inv)} className="text-[10px] text-[var(--accent)] hover:underline px-1">Mark Sent</button>}
                   {(inv.status === 'sent' || inv.status === 'overdue') && <button onClick={() => handleMarkPaid(inv)} className="text-[10px] text-[var(--accent)] hover:underline px-1">Mark Paid</button>}
                   <div className="relative" ref={exportDropdown === inv.id ? dropdownRef : undefined}>
-                    <button onClick={() => setExportDropdown(exportDropdown === inv.id ? null : inv.id)} className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]" title="Export"><Download size={13} /></button>
+                    <button onClick={() => setExportDropdown(exportDropdown === inv.id ? null : inv.id)} aria-label="Export invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]" title="Export"><Download size={13} /></button>
                     {exportDropdown === inv.id && (
                       <div className="absolute right-0 top-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px] shadow-lg py-1 z-10 w-28">
                         <button onClick={() => handleExportPDF(inv)} className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]">PDF</button>
@@ -360,8 +360,8 @@ export default function Invoices() {
                       </div>
                     )}
                   </div>
-                  <button onClick={() => openEdit(inv)} className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]"><Pencil size={14} /></button>
-                  <button onClick={() => setConfirmDelete({ id: inv.id, label: inv.invoice_number, type: 'invoice' })} className="p-1 text-[var(--text-tertiary)] hover:text-[#A32D2D] rounded-[8px]"><Trash2 size={14} /></button>
+                  <button onClick={() => openEdit(inv)} aria-label="Edit invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]"><Pencil size={14} /></button>
+                  <button onClick={() => setConfirmDelete({ id: inv.id, label: inv.invoice_number, type: 'invoice' })} aria-label="Delete invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[#A32D2D] rounded-[8px]"><Trash2 size={14} /></button>
                 </div>
               </div>
             ))}
@@ -397,8 +397,8 @@ export default function Invoices() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0 ml-3">
-                  <button onClick={() => openEditRecurring(ri)} className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"><Pencil size={14} /></button>
-                  <button onClick={() => setConfirmDelete({ id: ri.id, label: ri.title, type: 'recurring' })} className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[#A32D2D] hover:bg-[#FCEBEB]"><Trash2 size={14} /></button>
+                  <button onClick={() => openEditRecurring(ri)} aria-label="Edit recurring invoice" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"><Pencil size={14} /></button>
+                  <button onClick={() => setConfirmDelete({ id: ri.id, label: ri.title, type: 'recurring' })} aria-label="Delete recurring invoice" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[#A32D2D] hover:bg-[#FCEBEB]"><Trash2 size={14} /></button>
                 </div>
               </div>
             </Card>
@@ -470,7 +470,7 @@ export default function Invoices() {
                   <input type="number" value={item.quantity || ''} onChange={(e) => updateItem(i, 'quantity', parseFloat(e.target.value) || 0)} placeholder="Qty" className="w-16 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
                   <input type="number" value={item.unit_price || ''} onChange={(e) => updateItem(i, 'unit_price', parseFloat(e.target.value) || 0)} placeholder="Rate" className="w-24 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
                   <span className="text-xs text-[var(--text-secondary)] w-20 text-right font-medium tabular-nums">{formatCurrency(item.total)}</span>
-                  <button onClick={() => removeItem(i)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]"><Trash2 size={14} /></button>
+                  <button onClick={() => removeItem(i)} aria-label="Remove line item" className="text-[var(--text-tertiary)] hover:text-[#A32D2D]"><Trash2 size={14} /></button>
                 </div>
               ))}
             </div>
@@ -532,7 +532,7 @@ export default function Invoices() {
                   <input type="number" value={item.quantity || ''} onChange={(e) => updateRiItem(i, 'quantity', parseFloat(e.target.value) || 0)} placeholder="Qty" className="w-16 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
                   <input type="number" value={item.unit_price || ''} onChange={(e) => updateRiItem(i, 'unit_price', parseFloat(e.target.value) || 0)} placeholder="Rate" className="w-24 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
                   <span className="text-xs text-[var(--text-secondary)] w-20 text-right font-medium tabular-nums">{formatCurrency(item.total)}</span>
-                  <button onClick={() => removeRiItem(i)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]"><Trash2 size={14} /></button>
+                  <button onClick={() => removeRiItem(i)} aria-label="Remove line item" className="text-[var(--text-tertiary)] hover:text-[#A32D2D]"><Trash2 size={14} /></button>
                 </div>
               ))}
             </div>

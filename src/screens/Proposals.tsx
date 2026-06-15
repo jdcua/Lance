@@ -266,17 +266,17 @@ export default function Proposals() {
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0 ml-3">
                   {p.status === 'draft' && (
-                    <button onClick={() => handleSend(p)} className="p-1.5 rounded-[8px] text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors" title="Send">
+                    <button onClick={() => handleSend(p)} aria-label="Send proposal" className="p-1.5 rounded-[8px] text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors" title="Send">
                       <Send size={14} />
                     </button>
                   )}
                   {p.status === 'sent' && (
-                    <button onClick={() => handleAccept(p)} className="p-1.5 rounded-[8px] text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors" title="Accept">
+                    <button onClick={() => handleAccept(p)} aria-label="Accept proposal" className="p-1.5 rounded-[8px] text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors" title="Accept">
                       <Send size={14} />
                     </button>
                   )}
                   <div className="relative" ref={exportDropdown === p.id ? dropdownRef : undefined}>
-                    <button onClick={() => setExportDropdown(exportDropdown === p.id ? null : p.id)} className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors" title="Export">
+                    <button onClick={() => setExportDropdown(exportDropdown === p.id ? null : p.id)} aria-label="Export proposal" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors" title="Export">
                       <Download size={14} />
                     </button>
                     {exportDropdown === p.id && (
@@ -286,10 +286,10 @@ export default function Proposals() {
                       </div>
                     )}
                   </div>
-                  <button onClick={() => setExpanded(expanded === p.id ? null : p.id)} className={`p-1.5 rounded-[8px] transition-colors ${expanded === p.id ? 'text-[var(--accent)] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`} title="View body">
+                  <button onClick={() => setExpanded(expanded === p.id ? null : p.id)} aria-label="View proposal body" className={`p-1.5 rounded-[8px] transition-colors ${expanded === p.id ? 'text-[var(--accent)] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`} title="View body">
                     <Eye size={14} />
                   </button>
-                  <button onClick={() => setConfirmDelete({ id: p.id, title: p.title })} className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[#A32D2D] hover:bg-[#FCEBEB] transition-colors">
+                  <button onClick={() => setConfirmDelete({ id: p.id, title: p.title })} aria-label="Delete proposal" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[#A32D2D] hover:bg-[#FCEBEB] transition-colors">
                     <Trash2 size={14} />
                   </button>
                 </div>

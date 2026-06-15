@@ -209,10 +209,10 @@ export default function Finance() {
               </div>
               <span className="text-xs font-medium text-[#A32D2D] flex-shrink-0">-{fmt(exp.amount)}</span>
               <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                <button onClick={() => openEdit(exp)} className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] rounded-[8px]">
+                <button onClick={() => openEdit(exp)} aria-label="Edit expense" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] rounded-[8px]">
                   <Pencil size={14} />
                 </button>
-                <button onClick={() => setConfirmDelete({ id: exp.id, description: exp.description })} className="p-1 text-[var(--text-tertiary)] hover:text-[#A32D2D] rounded-[8px]">
+                <button onClick={() => setConfirmDelete({ id: exp.id, description: exp.description })} aria-label="Delete expense" className="p-1 text-[var(--text-tertiary)] hover:text-[#A32D2D] rounded-[8px]">
                   <Trash2 size={14} />
                 </button>
               </div>

@@ -298,6 +298,7 @@ export default function Clients() {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => openEdit(selectedClient)}
+                    aria-label="Edit client"
                     className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
                     title="Edit client"
                   >
@@ -305,6 +306,7 @@ export default function Clients() {
                   </button>
                   <button
                     onClick={() => setConfirmDialog({ id: selectedClient.id, name: selectedClient.name })}
+                    aria-label="Delete client"
                     className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[#A32D2D] hover:bg-[#FCEBEB] transition-colors"
                     title="Delete client"
                   >
@@ -444,15 +446,15 @@ export default function Clients() {
                               {isConfirming ? (
                                 <div className="flex items-center gap-1">
                                   <span className="text-[10px] text-[#A32D2D]">Delete?</span>
-                                  <button onClick={() => handleDeleteComm(comm.id)} className="text-[#A32D2D] hover:text-[#7A2222]">
+                                  <button onClick={() => handleDeleteComm(comm.id)} aria-label="Confirm delete" className="text-[#A32D2D] hover:text-[#7A2222]">
                                     <Check size={14} />
                                   </button>
-                                  <button onClick={() => setDeleteConfirm(null)} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
+                                  <button onClick={() => setDeleteConfirm(null)} aria-label="Cancel delete" className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
                                     <X size={14} />
                                   </button>
                                 </div>
                               ) : (
-                                <button onClick={() => handleDeleteComm(comm.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                                <button onClick={() => handleDeleteComm(comm.id)} aria-label="Delete communication" className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                                   <X size={13} />
                                 </button>
                               )}

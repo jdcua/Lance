@@ -345,18 +345,21 @@ export default function Projects() {
                   <div className="flex items-center gap-1 flex-shrink-0 ml-3">
                     <button
                       onClick={() => openMilestones(project.id)}
+                      aria-label="Expand milestones"
                       className={`p-1.5 rounded-[8px] transition-colors ${selectedProject === project.id ? 'text-[var(--accent)] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`}
                     >
                       <ChevronRight size={14} className={`transition-transform ${selectedProject === project.id ? 'rotate-90' : ''}`} />
                     </button>
                     <button
                       onClick={() => openEditProject(project)}
+                      aria-label="Edit project"
                       className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
                     >
                       <Pencil size={14} />
                     </button>
                     <button
                       onClick={() => setConfirmDelete({ id: project.id, title: project.title })}
+                      aria-label="Delete project"
                       className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[#A32D2D] hover:bg-[#FCEBEB] transition-colors"
                     >
                       <Trash2 size={14} />
@@ -380,7 +383,7 @@ export default function Projects() {
                     ) : (
                       projectMilestones.map((m) => (
                         <div key={m.id} className="flex items-center gap-2 pl-2">
-                          <button onClick={() => handleToggleMilestone(m, project)} className="flex-shrink-0">
+                          <button onClick={() => handleToggleMilestone(m, project)} aria-label="Toggle milestone" className="flex-shrink-0">
                             {m.completed ? (
                               <CheckCircle2 size={16} className="text-[var(--accent)]" />
                             ) : (
@@ -402,7 +405,7 @@ export default function Projects() {
                               <button onClick={handleInvoicePromptNo} className="text-[10px] px-1.5 py-0.5 rounded-[6px] bg-[var(--bg-secondary)] text-[var(--text-secondary)] font-medium">Skip</button>
                             </div>
                           )}
-                          <button onClick={() => handleDeleteMilestone(m.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                          <button onClick={() => handleDeleteMilestone(m.id)} aria-label="Delete milestone" className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                             <Trash2 size={12} />
                           </button>
                         </div>

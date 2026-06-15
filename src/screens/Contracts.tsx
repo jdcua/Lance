@@ -198,18 +198,21 @@ export default function Contracts() {
                   )}
                   <button
                     onClick={() => setExpanded(expanded === c.id ? null : c.id)}
+                    aria-label="View contract body"
                     className={`p-1.5 rounded-[8px] transition-colors ${expanded === c.id ? 'text-[var(--accent)] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`}
                   >
                     <Eye size={14} />
                   </button>
                   <button
                     onClick={() => openEdit(c)}
+                    aria-label="Edit contract"
                     className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
                   >
                     <Pencil size={14} />
                   </button>
                    <button
                     onClick={() => setConfirmDelete({ id: c.id, title: c.title })}
+                    aria-label="Delete contract"
                     className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[#A32D2D] hover:bg-[#FCEBEB] transition-colors"
                   >
                     <Trash2 size={14} />

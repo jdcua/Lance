@@ -1,37 +1,54 @@
 import { createBrowserRouter } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import App from './App';
-import Dashboard from './screens/Dashboard';
-import Proposals from './screens/Proposals';
-import NewProposal from './screens/NewProposal';
-import Contracts from './screens/Contracts';
-import Projects from './screens/Projects';
-import Time from './screens/Time';
-import Invoices from './screens/Invoices';
-import Clients from './screens/Clients';
-import Finance from './screens/Finance';
-import Insights from './screens/Insights';
-import SettingsView from './screens/Settings';
-import AchievementsPage from './screens/Achievements';
-import NotFound from './screens/NotFound';
+
+const Dashboard = lazy(() => import('./screens/Dashboard'));
+const Proposals = lazy(() => import('./screens/Proposals'));
+const NewProposal = lazy(() => import('./screens/NewProposal'));
+const Contracts = lazy(() => import('./screens/Contracts'));
+const Projects = lazy(() => import('./screens/Projects'));
+const Time = lazy(() => import('./screens/Time'));
+const Invoices = lazy(() => import('./screens/Invoices'));
+const Clients = lazy(() => import('./screens/Clients'));
+const Finance = lazy(() => import('./screens/Finance'));
+const Insights = lazy(() => import('./screens/Insights'));
+const SettingsView = lazy(() => import('./screens/Settings'));
+const AchievementsPage = lazy(() => import('./screens/Achievements'));
+const NotFound = lazy(() => import('./screens/NotFound'));
+
+function LazyRoute({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={
+      <div className="p-6 space-y-6">
+        <div className="h-6 w-24 bg-[var(--bg-secondary)] rounded skeleton-pulse" />
+        <div className="space-y-3">
+          {[...Array(4)].map((_, i) => <div key={i} className="h-16 bg-[var(--bg-secondary)] rounded-[12px] skeleton-pulse" />)}
+        </div>
+      </div>
+    }>
+      {children}
+    </Suspense>
+  );
+}
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
     children: [
-      { index: true, element: <Dashboard /> },
-      { path: 'proposals', element: <Proposals /> },
-      { path: 'proposals/new', element: <NewProposal /> },
-      { path: 'contracts', element: <Contracts /> },
-      { path: 'projects', element: <Projects /> },
-      { path: 'time', element: <Time /> },
-      { path: 'invoices', element: <Invoices /> },
-      { path: 'clients', element: <Clients /> },
-      { path: 'finance', element: <Finance /> },
-      { path: 'insights', element: <Insights /> },
-      { path: 'settings', element: <SettingsView /> },
-      { path: 'achievements', element: <AchievementsPage /> },
-      { path: '*', element: <NotFound /> },
+      { index: true, element: <LazyRoute><Dashboard /></LazyRoute> },
+      { path: 'proposals', element: <LazyRoute><Proposals /></LazyRoute> },
+      { path: 'proposals/new', element: <LazyRoute><NewProposal /></LazyRoute> },
+      { path: 'contracts', element: <LazyRoute><Contracts /></LazyRoute> },
+      { path: 'projects', element: <LazyRoute><Projects /></LazyRoute> },
+      { path: 'time', element: <LazyRoute><Time /></LazyRoute> },
+      { path: 'invoices', element: <LazyRoute><Invoices /></LazyRoute> },
+      { path: 'clients', element: <LazyRoute><Clients /></LazyRoute> },
+      { path: 'finance', element: <LazyRoute><Finance /></LazyRoute> },
+      { path: 'insights', element: <LazyRoute><Insights /></LazyRoute> },
+      { path: 'settings', element: <LazyRoute><SettingsView /></LazyRoute> },
+      { path: 'achievements', element: <LazyRoute><AchievementsPage /></LazyRoute> },
+      { path: '*', element: <LazyRoute><NotFound /></LazyRoute> },
     ],
   },
 ]);
