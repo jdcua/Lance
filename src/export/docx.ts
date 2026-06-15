@@ -170,8 +170,10 @@ export async function exportInvoiceDOCX(
   const showTax = invoice.tax_rate != null && invoice.tax_rate > 0;
   const taxAmount = invoice.subtotal * ((invoice.tax_rate || 0) / 100);
 
+  const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#159C65';
+
   const statusColor =
-    invoice.status === 'paid' ? 'var(--accent)' :
+    invoice.status === 'paid' ? accentColor :
     invoice.status === 'sent' ? '#854F0B' :
     invoice.status === 'overdue' ? '#A32D2D' : '#A3A39E';
 
@@ -225,7 +227,7 @@ export async function exportInvoiceDOCX(
     new Paragraph({
       children: [
         new TextRun({ text: 'TOTAL:  ', size: 24, bold: true }),
-        new TextRun({ text: formatCurrency(invoice.total, profile.currency), size: 24, bold: true, color: 'var(--accent)' }),
+        new TextRun({ text: formatCurrency(invoice.total, profile.currency), size: 24, bold: true, color: accentColor }),
       ],
       alignment: AlignmentType.RIGHT,
       spacing: { before: 60 },

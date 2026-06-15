@@ -4,6 +4,8 @@ import { formatCurrency, formatDate } from '../utils/format';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { getProfileName } from './common';
 
+const ACCENT = '#159C65';
+
 const pdfStyles = StyleSheet.create({
   page: { padding: 60, fontFamily: 'Helvetica', fontSize: 11, color: '#181716' },
   divider: { borderBottom: '1 solid #E3E2DB', marginVertical: 16 },
@@ -19,9 +21,9 @@ const pdfStyles = StyleSheet.create({
   invoiceNumber: { fontSize: 14, color: '#68675F' },
   tableHeader: { fontSize: 9, color: '#A3A39E', textTransform: 'uppercase' },
   totalLabel: { fontSize: 12, fontWeight: 600 },
-  totalValue: { fontSize: 12, fontWeight: 600, color: 'var(--accent)' },
+  totalValue: { fontSize: 12, fontWeight: 600, color: ACCENT },
   notes: { fontSize: 10, color: '#68675F', fontStyle: 'italic' },
-  statusPaid: { color: 'var(--accent)' },
+  statusPaid: { color: ACCENT },
   statusSent: { color: '#854F0B' },
   statusDraft: { color: '#A3A39E' },
   statusOverdue: { color: '#A32D2D' },

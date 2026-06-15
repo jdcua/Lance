@@ -11,16 +11,13 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
   const { isLicensed } = useStore();
 
   useEffect(() => {
-    if (isLicensed) {
-      onDismiss();
-      return;
-    }
+    if (isLicensed) return;
     const timer = setTimeout(onDismiss, 2000);
     return () => clearTimeout(timer);
   }, [isLicensed, onDismiss]);
 
   const handleGetLicense = () => {
-    window.open('https://lance.decentra.co/license', '_blank');
+    window.open('https://lance.decentra.co/license', '_blank', 'noopener,noreferrer');
   };
 
   if (isLicensed) return null;
@@ -37,7 +34,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
         </h1>
         <p className="text-sm text-[var(--text-secondary)] mb-6">Freelancer OS</p>
 
-        <p className="text-xs text-[var(--text-tertiary)] mb-5">Version 1.0.0 &middot; Built by Decentra</p>
+        <p className="text-xs text-[var(--text-tertiary)] mb-5">Version 1.1.0 &middot; Built by Decentra</p>
 
         <div className="border-t border-[var(--border-color)] my-5" />
 

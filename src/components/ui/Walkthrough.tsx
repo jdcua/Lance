@@ -56,11 +56,13 @@ export default function Walkthrough({ open, onClose }: WalkthroughProps) {
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') { onClose(); return; }
+      if (e.key === 'ArrowLeft') { setSlide(s => Math.max(0, s - 1)); return; }
+      if (e.key === 'ArrowRight') { handleNext(); return; }
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [open, onClose]);
+  }, [open, onClose, slide]);
 
   if (!open) return null;
 
@@ -81,7 +83,7 @@ export default function Walkthrough({ open, onClose }: WalkthroughProps) {
     <div className="fixed inset-0 z-[60] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative bg-[var(--bg-card)] rounded-[16px] shadow-2xl w-full max-w-lg mx-4 animate-fade-scale-in overflow-hidden">
+      <div className="relative bg-[var(--bg-card)] rounded-[16px] shadow-2xl w-full max-w-lg mx-4 animate-fade-scale-in overflow-hidden" role="dialog" aria-modal="true" aria-label="Product Walkthrough">
         {/* Progress bar */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-[var(--border-color)]">
           <div

@@ -36,7 +36,21 @@ html, body, #root {
   background: #BCBCB8;
 }
 
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #D4D4D2 transparent;
+}
+
 /* ── Micro-animations ── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 
 @keyframes slide-in {
   from { transform: translateX(100%); opacity: 0; }
@@ -133,16 +147,20 @@ button, a, input, textarea, select, .transition-base {
 }
 
 /* ── Dark mode ── */
-.dark body,
-.dark #root {
+html.dark body,
+html.dark #root {
   background-color: var(--bg-primary);
   color: var(--text-primary);
 }
 
-.dark ::-webkit-scrollbar-thumb {
+html.dark ::-webkit-scrollbar-thumb {
   background: #3A3937;
 }
 
-.dark ::-webkit-scrollbar-thumb:hover {
+html.dark ::-webkit-scrollbar-thumb:hover {
   background: #4A4946;
+}
+
+html.dark * {
+  scrollbar-color: #3A3937 transparent;
 }

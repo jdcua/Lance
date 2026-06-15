@@ -125,10 +125,12 @@ export default function Invoices() {
       const invoiceData = { client_id: form.client_id, invoice_number: form.invoice_number, status: form.status, line_items: lineItems, subtotal, tax_rate: taxRate || undefined, total, due_date: form.due_date || undefined, notes: form.notes || undefined };
       if (editing) await updateInvoice({ ...editing, ...invoiceData });
       else await addInvoice(invoiceData);
-      for (const id of selectedTimeIds) {
-        const entry = timeEntries.find((t) => t.id === id);
-        if (entry) await updateTimeEntry({ ...entry, invoiced: true });
-      }
+      const ids = Array.from(selectedTimeIds);
+      const timeUpdates = ids
+        .map(id => timeEntries.find((t: { id: string }) => t.id === id))
+        .filter((entry): entry is NonNullable<typeof entry> => !!entry)
+        .map(entry => updateTimeEntry({ ...entry, invoiced: true }));
+      await Promise.allSettled(timeUpdates);
       setShowModal(false);
       checkAndNotify(useStore.getState(), addToast);
     } catch (err) {

@@ -15,7 +15,10 @@ pub fn get_db_path(app: &AppHandle) -> Result<PathBuf, String> {
 pub fn get_connection(app: &AppHandle) -> Result<Connection, String> {
     let db_path = get_db_path(app)?;
     let path_str = db_path.to_str().ok_or("Invalid db path")?;
-    Connection::open(path_str).map_err(|e| format!("Failed to open database: {}", e))
+    let conn = Connection::open(path_str).map_err(|e| format!("Failed to open database: {}", e))?;
+    conn.execute_batch("PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL;")
+        .map_err(|e| format!("Failed to set pragmas: {}", e))?;
+    Ok(conn)
 }
 
 pub fn run_migrations(conn: &Connection) -> Result<(), String> {
@@ -150,7 +153,40 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            date TEXT NOT NULL,
            created_at TEXT NOT NULL,
            FOREIGN KEY (client_id) REFERENCES clients(id)
-         );",
+         );
+
+         CREATE TABLE IF NOT EXISTS recurring_invoices (
+           id TEXT PRIMARY KEY,
+           client_id TEXT NOT NULL,
+           project_id TEXT,
+           title TEXT NOT NULL,
+           frequency TEXT NOT NULL,
+           line_items TEXT NOT NULL DEFAULT '[]',
+           subtotal REAL NOT NULL DEFAULT 0,
+           tax_rate REAL,
+           total REAL NOT NULL DEFAULT 0,
+           notes TEXT,
+           active INTEGER NOT NULL DEFAULT 1,
+           next_due TEXT NOT NULL,
+           last_generated TEXT,
+           created_at TEXT NOT NULL,
+           FOREIGN KEY (client_id) REFERENCES clients(id)
+         );
+
+         CREATE TABLE IF NOT EXISTS achievements (
+           id TEXT PRIMARY KEY,
+           key TEXT NOT NULL UNIQUE,
+           unlocked_at TEXT NOT NULL
+         );
+
+         CREATE INDEX IF NOT EXISTS idx_projects_client ON projects(client_id);
+         CREATE INDEX IF NOT EXISTS idx_milestones_project ON milestones(project_id);
+         CREATE INDEX IF NOT EXISTS idx_time_entries_project ON time_entries(project_id);
+         CREATE INDEX IF NOT EXISTS idx_invoices_client ON invoices(client_id);
+         CREATE INDEX IF NOT EXISTS idx_communications_client ON communications(client_id);
+         CREATE INDEX IF NOT EXISTS idx_proposals_client ON proposals(client_id);
+         CREATE INDEX IF NOT EXISTS idx_contracts_client ON contracts(client_id);
+         CREATE INDEX IF NOT EXISTS idx_recurring_invoices_client ON recurring_invoices(client_id);",
     )
     .map_err(|e| format!("Migration failed: {}", e))?;
 

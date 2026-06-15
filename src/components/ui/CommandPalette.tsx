@@ -53,14 +53,14 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
     // AI actions first if AI is enabled
     const items: ResultItem[] = [];
     if (aiEnabled) {
-      if ('generate proposal'.includes(q) || 'new proposal'.includes(q) || q.includes('proposal')) {
+      if (q.includes('generate proposal') || q.includes('new proposal') || q.includes('proposal')) {
         items.push({
           id: 'ai-proposal', label: 'Generate a proposal',
           sublabel: 'AI-assisted proposal writing', type: 'action',
           path: '/proposals/new',
         });
       }
-      if ('summarize'.includes(q) || 'summary'.includes(q) || 'insight'.includes(q)) {
+      if (q.includes('summarize') || q.includes('summary') || q.includes('insight')) {
         items.push({
           id: 'ai-summary', label: 'Generate business summary',
           sublabel: 'AI-powered insights', type: 'action',

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
 import BrandLogo from '../ui/BrandLogo';
 import {
@@ -48,16 +49,18 @@ const navGroups = [
 ];
 
 export default function Sidebar() {
-  const isLicensed = useStore((s) => s.isLicensed);
-  const proposals = useStore((s) => s.proposals);
-  const projects = useStore((s) => s.projects);
-  const invoices = useStore((s) => s.invoices);
+  const { isLicensed, proposals, projects, invoices } = useStore((s) => ({
+    isLicensed: s.isLicensed,
+    proposals: s.proposals,
+    projects: s.projects,
+    invoices: s.invoices,
+  }));
 
-  const draftProposals = proposals.filter((p) => p.status === 'draft').length;
-  const activeProjects = projects.filter((p) => p.status === 'active').length;
-  const unpaidInvoices = invoices.filter((i) => i.status === 'sent' || i.status === 'overdue').length;
-
-  const badgeMap: Record<string, number> = { draftProposals, activeProjects, unpaidInvoices };
+  const badgeMap: Record<string, number> = useMemo(() => ({
+    draftProposals: proposals.filter((p) => p.status === 'draft').length,
+    activeProjects: projects.filter((p) => p.status === 'active').length,
+    unpaidInvoices: invoices.filter((i) => i.status === 'sent' || i.status === 'overdue').length,
+  }), [proposals, projects, invoices]);
 
   return (
     <aside className="w-[220px] h-full flex flex-col bg-[var(--bg-card)] border-r border-[var(--border-color)] flex-shrink-0">

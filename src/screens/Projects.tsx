@@ -41,10 +41,10 @@ export default function Projects() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    loadProjects();
-    loadClients();
-    loadProfile();
-  }, [loadProjects, loadClients, loadProfile]);
+    Promise.all([loadProjects(), loadClients(), loadProfile()])
+      .catch(err => addToast(err?.toString?.() || 'Failed to load data', 'error'))
+      .finally(() => setLoading(false));
+  }, []);
 
   const openNewProject = () => {
     setEditingProject(null);

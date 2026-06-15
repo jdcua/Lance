@@ -71,7 +71,7 @@ export async function checkAchievements(store: StoreState): Promise<AchievementK
     },
     {
       key: 'first_export',
-      condition: false, // handled via explicit trigger from export flow
+      condition: localStorage.getItem('lance:has-exported') === 'true',
     },
     {
       key: 'first_project_completed',

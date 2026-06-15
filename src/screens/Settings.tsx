@@ -56,6 +56,7 @@ export default function Settings() {
     ai_enabled: false,
   });
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const formInitialized = useRef(false);
 
   useEffect(() => {
     loadProfile()
@@ -64,7 +65,8 @@ export default function Settings() {
   }, [loadProfile]);
 
   useEffect(() => {
-    if (profile) {
+    if (profile && !formInitialized.current) {
+      formInitialized.current = true;
       setForm({
         name: profile.name || '',
         email: profile.email || '',
@@ -432,7 +434,7 @@ export default function Settings() {
             <input
               type="number"
               value={form.payment_terms ?? 14}
-              onChange={(e) => setForm({ ...form, payment_terms: parseInt(e.target.value) || 14 })}
+              onChange={(e) => { const v = parseInt(e.target.value); setForm({ ...form, payment_terms: isNaN(v) ? 14 : v }); }}
               onBlur={() => autoSave({ payment_terms: form.payment_terms }, 'Rates')}
               className={inputClass}
             />

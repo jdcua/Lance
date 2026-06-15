@@ -65,6 +65,7 @@ export default function NewProposal() {
         timeline: form.timeline,
         rate: form.rate ? parseFloat(form.rate) : 0,
         rateType: form.rate_type,
+        currency: profile?.currency || 'CAD',
         freelancerName: profile?.name || 'Freelancer',
         writingVoice: profile?.writing_style || profile?.writing_voice || 'professional',
         tagline: profile?.tagline,

@@ -17,6 +17,7 @@ import ToastContainer from './components/ui/Toast';
 import CommandPalette from './components/ui/CommandPalette';
 import Walkthrough from './components/ui/Walkthrough';
 import SplashScreen from './components/ui/SplashScreen';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 import { useStore } from './store';
 import { useToasts } from './store/toastStore';
 import { shouldGenerate, getNextDueDate } from './utils/recurringEngine';
@@ -145,6 +146,10 @@ export default function App() {
 
   useEffect(() => {
     if (!ranAutoGen || recurringInvoices.length === 0) return;
+    if (invoices.length === 0 && ranAutoGen) {
+      loadInvoices();
+      return;
+    }
     const generate = async () => {
       const paymentTerms = profile?.payment_terms ?? 14;
       const due = recurringInvoices.filter(shouldGenerate);
@@ -176,7 +181,7 @@ export default function App() {
       }
     };
     generate();
-  }, [ranAutoGen]);
+  }, [ranAutoGen, recurringInvoices.length, invoices.length]);
 
   // Auto-updater: check silently after 3s delay
   useEffect(() => {
@@ -252,6 +257,7 @@ export default function App() {
 
 
   return (
+    <ErrorBoundary>
     <div className="h-full flex bg-[var(--bg-primary)]">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
@@ -322,6 +328,7 @@ export default function App() {
 
       <ToastContainer />
     </div>
+    </ErrorBoundary>
   );
 }
 
@@ -349,7 +356,9 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
 
   const handleOnboardingNext = () => setOnboardingStep((s) => s + 1);
   const handleOnboardingBack = () => setOnboardingStep((s) => s - 1);
-  const handleOnboardingClose = useCallback(() => {}, []);
+  const handleOnboardingClose = useCallback(() => {
+    setShowOnboarding(false);
+  }, []);
 
   const handleOnboardingFinish = async () => {
     if (!onboardingForm.name.trim()) return;

@@ -12,6 +12,7 @@ interface ClientSelectProps {
 export default function ClientSelect({ clients, value, onChange, placeholder = 'Select a client...' }: ClientSelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [activeIndex, setActiveIndex] = useState(-1);
   const ref = useRef<HTMLDivElement>(null);
 
   const selected = clients.find(c => c.id === value);
@@ -28,11 +29,48 @@ export default function ClientSelect({ clients, value, onChange, placeholder = '
       if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(false);
         setSearch('');
+        setActiveIndex(-1);
       }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!open) {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        setOpen(true);
+        setActiveIndex(0);
+      }
+      return;
+    }
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setActiveIndex(prev => Math.min(prev + 1, filtered.length - 1));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setActiveIndex(prev => Math.max(prev - 1, 0));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (filtered[activeIndex]) {
+          onChange(filtered[activeIndex].id);
+          setOpen(false);
+          setSearch('');
+          setActiveIndex(-1);
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setOpen(false);
+        setSearch('');
+        setActiveIndex(-1);
+        break;
+    }
+  };
 
   const inputClass = "w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)] text-[var(--text-primary)]";
 
@@ -40,7 +78,11 @@ export default function ClientSelect({ clients, value, onChange, placeholder = '
     <div ref={ref} className="relative">
       <button
         type="button"
-        onClick={() => setOpen(!open)}
+        role="combobox"
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        onClick={() => { setOpen(!open); setActiveIndex(0); }}
+        onKeyDown={handleKeyDown}
         className={`${inputClass} text-left flex items-center justify-between`}
       >
         <span className={selected ? 'text-[var(--text-primary)]' : 'text-[var(--text-tertiary)] truncate'}>
@@ -62,21 +104,26 @@ export default function ClientSelect({ clients, value, onChange, placeholder = '
               onClick={e => e.stopPropagation()}
             />
           </div>
-          <div className="overflow-y-auto">
+          <div className="overflow-y-auto" role="listbox">
             {filtered.length === 0 ? (
               <p className="px-3 py-4 text-xs text-[var(--text-tertiary)] text-center">No clients found</p>
             ) : (
-              filtered.map(c => (
+              filtered.map((c, idx) => (
                 <button
                   key={c.id}
                   type="button"
+                  role="option"
+                  aria-selected={c.id === value}
                   onClick={() => {
                     onChange(c.id);
                     setOpen(false);
                     setSearch('');
+                    setActiveIndex(-1);
                   }}
-                  className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-[var(--bg-secondary)] transition-colors ${
-                    c.id === value ? 'bg-[var(--accent-bg)]' : ''
+                  className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between transition-colors ${
+                    idx === activeIndex ? 'bg-[var(--accent-bg)]' : ''
+                  } ${
+                    c.id === value ? 'bg-[var(--accent-bg)]' : 'hover:bg-[var(--bg-secondary)]'
                   }`}
                 >
                   <div className="min-w-0">

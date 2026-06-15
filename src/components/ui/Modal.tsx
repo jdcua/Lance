@@ -20,20 +20,48 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
 
   useEffect(() => {
     if (open) {
+      const el = modalRef.current;
+      if (!el) return;
+
       const handleEsc = (e: KeyboardEvent) => {
         if (e.key === 'Escape') onClose();
       };
+
+      const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Tab') {
+          const focusable = el.querySelectorAll<HTMLElement>(focusableSelector);
+          if (focusable.length === 0) return;
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+          if (e.shiftKey) {
+            if (document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            }
+          } else {
+            if (document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+        }
+      };
+
       document.addEventListener('keydown', handleEsc);
+      document.addEventListener('keydown', handleKeyDown);
 
-      const el = modalRef.current;
-      if (el) {
-        const focusable = el.querySelector<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        focusable?.focus();
-      }
+      document.body.style.overflow = 'hidden';
 
-      return () => document.removeEventListener('keydown', handleEsc);
+      const firstFocusable = el.querySelector<HTMLElement>(focusableSelector);
+      firstFocusable?.focus();
+
+      return () => {
+        document.removeEventListener('keydown', handleEsc);
+        document.removeEventListener('keydown', handleKeyDown);
+        document.body.style.overflow = '';
+      };
     }
   }, [open, onClose]);
 

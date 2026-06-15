@@ -5,6 +5,7 @@ export type ProposalInputs = {
   timeline: string;
   rate: number;
   rateType: 'flat' | 'hourly';
+  currency: string;
   freelancerName: string;
   writingVoice?: string;
   tagline?: string;
@@ -145,19 +146,19 @@ function getApproach(projectType: string): string[] {
   return approachByType[key || 'default'] || approachByType.default;
 }
 
-function formatRate(rate: number, rateType: 'flat' | 'hourly'): string {
-  const currency = new Intl.NumberFormat('en-CA', {
+function formatRate(rate: number, rateType: 'flat' | 'hourly', currency: string): string {
+  const formatted = new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'CAD',
+    currency: currency,
   }).format(rate);
-  if (rateType === 'hourly') return `${currency} per hour`;
-  return `${currency} flat project fee`;
+  if (rateType === 'hourly') return `${formatted} per hour`;
+  return `${formatted} flat project fee`;
 }
 
 export function generateProposalBody(inputs: ProposalInputs): string {
   const approach = getApproach(inputs.projectType);
   const opening = getOpening(inputs);
-  const rateStr = formatRate(inputs.rate, inputs.rateType);
+  const rateStr = formatRate(inputs.rate, inputs.rateType, inputs.currency);
   const freelancerName = inputs.freelancerName;
 
   const sections: string[] = [];

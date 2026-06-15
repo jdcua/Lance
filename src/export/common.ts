@@ -11,4 +11,5 @@ export async function saveFile(blob: Blob, defaultName: string): Promise<void> {
   if (!filePath) return;
   const buffer = await blob.arrayBuffer();
   await writeFile(filePath, new Uint8Array(buffer));
+  localStorage.setItem('lance:has-exported', 'true');
 }

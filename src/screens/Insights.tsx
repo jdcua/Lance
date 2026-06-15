@@ -138,7 +138,7 @@ export default function Insights() {
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-[var(--text-secondary)]">This Week</span>
-                <span className="font-medium text-[var(--text-primary)]">{Math.round(hoursThisWeek / 6) / 10} hours</span>
+                <span className="font-medium text-[var(--text-primary)]">{Math.round(hoursThisWeek / 60 * 10) / 10} hours</span>
               </div>
             </div>
           )}

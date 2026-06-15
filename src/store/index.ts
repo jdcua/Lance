@@ -116,8 +116,12 @@ export const useStore = create<AppStore>((set, get) => ({
   // Clients
   clients: [],
   loadClients: async () => {
-    const clients = await invoke<Client[]>('get_clients');
-    set({ clients });
+    try {
+      const clients = await invoke<Client[]>('get_clients');
+      set({ clients });
+    } catch (e) {
+      console.error('[store] loadClients failed:', e);
+    }
   },
   addClient: async (data) => {
     const client = await invoke<Client>('create_client', { payload: data });
@@ -136,8 +140,12 @@ export const useStore = create<AppStore>((set, get) => ({
   // Projects
   projects: [],
   loadProjects: async () => {
-    const projects = await invoke<Project[]>('get_projects');
-    set({ projects });
+    try {
+      const projects = await invoke<Project[]>('get_projects');
+      set({ projects });
+    } catch (e) {
+      console.error('[store] loadProjects failed:', e);
+    }
   },
   addProject: async (data) => {
     const project = await invoke<Project>('create_project', { payload: data });
@@ -185,8 +193,12 @@ export const useStore = create<AppStore>((set, get) => ({
   // Proposals
   proposals: [],
   loadProposals: async () => {
-    const proposals = await invoke<Proposal[]>('get_proposals');
-    set({ proposals });
+    try {
+      const proposals = await invoke<Proposal[]>('get_proposals');
+      set({ proposals });
+    } catch (e) {
+      console.error('[store] loadProposals failed:', e);
+    }
   },
   addProposal: async (data) => {
     const proposal = await invoke<Proposal>('create_proposal', { payload: data });
@@ -205,8 +217,12 @@ export const useStore = create<AppStore>((set, get) => ({
   // Contracts
   contracts: [],
   loadContracts: async () => {
-    const contracts = await invoke<Contract[]>('get_contracts');
-    set({ contracts });
+    try {
+      const contracts = await invoke<Contract[]>('get_contracts');
+      set({ contracts });
+    } catch (e) {
+      console.error('[store] loadContracts failed:', e);
+    }
   },
   addContract: async (data) => {
     const contract = await invoke<Contract>('create_contract', { payload: data });
@@ -225,8 +241,12 @@ export const useStore = create<AppStore>((set, get) => ({
   // Time Entries
   timeEntries: [],
   loadTimeEntries: async () => {
-    const timeEntries = await invoke<TimeEntry[]>('get_time_entries');
-    set({ timeEntries });
+    try {
+      const timeEntries = await invoke<TimeEntry[]>('get_time_entries');
+      set({ timeEntries });
+    } catch (e) {
+      console.error('[store] loadTimeEntries failed:', e);
+    }
   },
   addTimeEntry: async (data) => {
     const entry = await invoke<TimeEntry>('create_time_entry', { payload: data });
@@ -245,12 +265,16 @@ export const useStore = create<AppStore>((set, get) => ({
   // Invoices
   invoices: [],
   loadInvoices: async () => {
-    const raw = await invoke<Invoice[]>('get_invoices');
-    const invoices = raw.map((inv: Invoice) => ({
-      ...inv,
-      line_items: typeof inv.line_items === 'string' ? JSON.parse(inv.line_items as string) : inv.line_items,
-    }));
-    set({ invoices });
+    try {
+      const raw = await invoke<Invoice[]>('get_invoices');
+      const invoices = raw.map((inv: Invoice) => ({
+        ...inv,
+        line_items: typeof inv.line_items === 'string' ? JSON.parse(inv.line_items as string) : inv.line_items,
+      }));
+      set({ invoices });
+    } catch (e) {
+      console.error('[store] loadInvoices failed:', e);
+    }
   },
   addInvoice: async (data) => {
     const payload = { ...data, line_items: JSON.stringify(data.line_items) };
@@ -272,8 +296,12 @@ export const useStore = create<AppStore>((set, get) => ({
   // Expenses
   expenses: [],
   loadExpenses: async () => {
-    const expenses = await invoke<Expense[]>('get_expenses');
-    set({ expenses });
+    try {
+      const expenses = await invoke<Expense[]>('get_expenses');
+      set({ expenses });
+    } catch (e) {
+      console.error('[store] loadExpenses failed:', e);
+    }
   },
   addExpense: async (data) => {
     const expense = await invoke<Expense>('create_expense', { payload: data });
@@ -294,9 +322,14 @@ export const useStore = create<AppStore>((set, get) => ({
   profileLoaded: false,
   isLicensed: false,
   loadProfile: async () => {
-    const profile = await invoke<UserProfile | null>('get_user_profile');
-    const licensed = !!(profile?.license_key && validateLicenseKey(profile.license_key));
-    set({ profile, profileLoaded: true, isLicensed: licensed });
+    try {
+      const profile = await invoke<UserProfile | null>('get_user_profile');
+      const licensed = !!(profile?.license_key && validateLicenseKey(profile.license_key));
+      set({ profile, profileLoaded: true, isLicensed: licensed });
+    } catch (e) {
+      console.error('[store] loadProfile failed:', e);
+      set({ profileLoaded: true });
+    }
   },
   saveProfile: async (data) => {
     await invoke('upsert_user_profile', { payload: data });
@@ -305,14 +338,18 @@ export const useStore = create<AppStore>((set, get) => ({
   },
   activateLicense: async (key) => {
     if (!validateLicenseKey(key)) return false;
+    const profile = get().profile;
+    if (!profile) return false;
     const now = new Date().toISOString();
-    const updated = { ...get().profile!, license_key: key, licensed_at: now };
+    const updated = { ...profile, license_key: key, licensed_at: now };
     await invoke('upsert_user_profile', { payload: updated });
     set({ profile: updated, isLicensed: true });
     return true;
   },
   removeLicense: async () => {
-    const updated = { ...get().profile!, license_key: undefined, licensed_at: undefined };
+    const profile = get().profile;
+    if (!profile) return;
+    const updated = { ...profile, license_key: undefined, licensed_at: undefined };
     await invoke('upsert_user_profile', { payload: updated });
     set({ profile: updated, isLicensed: false });
   },
@@ -345,12 +382,16 @@ export const useStore = create<AppStore>((set, get) => ({
   // Recurring Invoices
   recurringInvoices: [],
   loadRecurringInvoices: async () => {
-    const raw = await invoke<RecurringInvoice[]>('get_recurring_invoices');
-    const items = raw.map((ri: RecurringInvoice) => ({
-      ...ri,
-      line_items: typeof ri.line_items === 'string' ? JSON.parse(ri.line_items as string) : ri.line_items,
-    }));
-    set({ recurringInvoices: items });
+    try {
+      const raw = await invoke<RecurringInvoice[]>('get_recurring_invoices');
+      const items = raw.map((ri: RecurringInvoice) => ({
+        ...ri,
+        line_items: typeof ri.line_items === 'string' ? JSON.parse(ri.line_items as string) : ri.line_items,
+      }));
+      set({ recurringInvoices: items });
+    } catch (e) {
+      console.error('[store] loadRecurringInvoices failed:', e);
+    }
   },
   addRecurringInvoice: async (data) => {
     const payload = { ...data, line_items: JSON.stringify(data.line_items) };

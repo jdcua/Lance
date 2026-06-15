@@ -200,8 +200,23 @@ pub fn get_recurring_invoices(app: AppHandle) -> Result<Vec<RecurringInvoice>, S
     Ok(items)
 }
 
+#[derive(Debug, Deserialize)]
+pub struct CreateRecurringInvoicePayload {
+    pub client_id: String,
+    pub project_id: Option<String>,
+    pub title: String,
+    pub frequency: String,
+    pub line_items: String,
+    pub subtotal: f64,
+    pub tax_rate: Option<f64>,
+    pub total: f64,
+    pub notes: Option<String>,
+    pub active: bool,
+    pub next_due: String,
+}
+
 #[tauri::command]
-pub fn create_recurring_invoice(app: AppHandle, payload: RecurringInvoice) -> Result<RecurringInvoice, String> {
+pub fn create_recurring_invoice(app: AppHandle, payload: CreateRecurringInvoicePayload) -> Result<RecurringInvoice, String> {
     let conn = db::get_connection(&app)?;
     let id = uuid::Uuid::new_v4().to_string();
     let created_at = super::clients::chrono_now();

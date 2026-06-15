@@ -60,7 +60,7 @@ export default function Dashboard() {
     <div className="p-6">
       <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-1">Dashboard</h2>
       <p className="text-sm text-[var(--text-secondary)] mb-6">
-        {profile?.name ? `Welcome back, ${profile.name.split(' ')[0]}.` : 'Welcome to Lance.'}
+        {profile?.name?.trim() ? `Welcome back, ${profile.name.split(' ')[0]}.` : 'Welcome to Lance.'}
       </p>
 
       {!hasData && (
