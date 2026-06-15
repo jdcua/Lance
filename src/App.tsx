@@ -183,24 +183,24 @@ export default function App() {
     generate();
   }, [ranAutoGen, recurringInvoices.length, invoices.length]);
 
-  // Auto-updater: check silently after 3s delay
-  useEffect(() => {
-    const checkUpdate = async () => {
-      try {
-        const { check } = await import('@tauri-apps/plugin-updater');
-        const update = await check();
-        if (update?.available) {
-          addToast(`Lance ${update.version} is available — updating in background`, 'info');
-          await update.downloadAndInstall();
-          addToast('Update installed — restart Lance to apply', 'success');
-        }
-      } catch {
-        // Silent fail — updates are best-effort
-      }
-    };
-    const timer = setTimeout(checkUpdate, 3000);
-    return () => clearTimeout(timer);
-  }, []);
+  // TODO: Re-enable auto-updater when endpoint is live
+  // useEffect(() => {
+  //   const checkUpdate = async () => {
+  //     try {
+  //       const { check } = await import('@tauri-apps/plugin-updater');
+  //       const update = await check();
+  //       if (update?.available) {
+  //         addToast(`Lance ${update.version} is available — updating in background`, 'info');
+  //         await update.downloadAndInstall();
+  //         addToast('Update installed — restart Lance to apply', 'success');
+  //       }
+  //     } catch {
+  //       // Silent fail — updates are best-effort
+  //     }
+  //   };
+  //   const timer = setTimeout(checkUpdate, 3000);
+  //   return () => clearTimeout(timer);
+  // }, []);
 
   // Keyboard shortcuts
   const isEditing = useCallback((): boolean => {

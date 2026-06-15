@@ -40,11 +40,6 @@
   "plugins": {
     "sql": {
       "preload": ["sqlite:lance.db"]
-    },
-    "updater": {
-      "endpoints": ["https://lance.decentra.co/releases/{{target}}/{{arch}}/{{current_version}}"],
-      "dialog": false,
-      "pubkey": "__UPDATER_PUBLIC_KEY__"
     }
   }
 }
