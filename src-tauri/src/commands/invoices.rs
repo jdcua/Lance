@@ -221,8 +221,8 @@ pub fn create_recurring_invoice(app: AppHandle, payload: CreateRecurringInvoiceP
     let id = uuid::Uuid::new_v4().to_string();
     let created_at = super::clients::chrono_now();
     conn.execute(
-        "INSERT INTO recurring_invoices (id, client_id, project_id, title, frequency, line_items, subtotal, tax_rate, total, notes, active, next_due, last_generated, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
-        rusqlite::params![id, payload.client_id, payload.project_id, payload.title, payload.frequency, payload.line_items, payload.subtotal, payload.tax_rate, payload.total, payload.notes, payload.active as i32, payload.next_due, payload.last_generated, created_at],
+        "INSERT INTO recurring_invoices (id, client_id, project_id, title, frequency, line_items, subtotal, tax_rate, total, notes, active, next_due, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+        rusqlite::params![id, payload.client_id, payload.project_id, payload.title, payload.frequency, payload.line_items, payload.subtotal, payload.tax_rate, payload.total, payload.notes, payload.active as i32, payload.next_due, created_at],
     ).map_err(|e| e.to_string())?;
     Ok(RecurringInvoice {
         id,
@@ -237,7 +237,7 @@ pub fn create_recurring_invoice(app: AppHandle, payload: CreateRecurringInvoiceP
         notes: payload.notes,
         active: payload.active,
         next_due: payload.next_due,
-        last_generated: payload.last_generated,
+        last_generated: None,
         created_at,
     })
 }
