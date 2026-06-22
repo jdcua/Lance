@@ -144,3 +144,72 @@ export type RecurringInvoice = {
   last_generated?: string;
   created_at: string;
 };
+
+export type ImportLog = {
+  id: string;
+  filename: string;
+  file_type: string;
+  file_path: string;
+  detected_type?: string;
+  target_entity?: string;
+  target_id?: string;
+  status: 'pending' | 'imported' | 'skipped' | 'error';
+  error_message?: string;
+  imported_at: string;
+};
+
+export type Attachment = {
+  id: string;
+  entity_type: 'client' | 'project' | 'proposal' | 'contract' | 'invoice';
+  entity_id: string;
+  filename: string;
+  file_path: string;
+  mime_type: string;
+  size_bytes: number;
+  tags: string;
+  notes?: string;
+  created_at: string;
+};
+
+export type DetectedEntityType =
+  | 'client_list'
+  | 'project_list'
+  | 'invoice'
+  | 'expense_list'
+  | 'contract'
+  | 'proposal'
+  | 'financial_data'
+  | 'attachment'
+  | 'unknown';
+
+export type ImportFileType = 'spreadsheet' | 'document' | 'image';
+
+export type ImportDetection = {
+  file: File;
+  fileType: ImportFileType;
+  detectedEntity: DetectedEntityType;
+  confidence: number;
+  preview: ImportPreview;
+  columnMapping?: Record<string, string>;
+  userOverride?: DetectedEntityType;
+  skipped?: boolean;
+  targetEntityId?: string;
+};
+
+export type ImportPreview = {
+  headers?: string[];
+  rows?: Record<string, string>[];
+  extractedFields?: Record<string, string>;
+  extractedLineItems?: Array<{
+    description: string;
+    quantity: number;
+    unit_price: number;
+    total: number;
+  }>;
+  rawText?: string;
+  summary: string;
+  rowCount?: number;
+  imageDataUrl?: string;
+  imageDimensions?: { width: number; height: number };
+};
+

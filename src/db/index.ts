@@ -200,4 +200,34 @@ async function runMigrations(database: Database): Promise<void> {
       unlocked_at TEXT NOT NULL
     )
   `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS import_log (
+      id TEXT PRIMARY KEY,
+      filename TEXT NOT NULL,
+      file_type TEXT NOT NULL,
+      file_path TEXT NOT NULL,
+      detected_type TEXT,
+      target_entity TEXT,
+      target_id TEXT,
+      status TEXT NOT NULL DEFAULT 'pending',
+      error_message TEXT,
+      imported_at TEXT NOT NULL
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS attachments (
+      id TEXT PRIMARY KEY,
+      entity_type TEXT NOT NULL,
+      entity_id TEXT NOT NULL,
+      filename TEXT NOT NULL,
+      file_path TEXT NOT NULL,
+      mime_type TEXT NOT NULL,
+      size_bytes INTEGER NOT NULL,
+      tags TEXT DEFAULT '[]',
+      notes TEXT,
+      created_at TEXT NOT NULL
+    )
+  `);
 }

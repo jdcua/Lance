@@ -179,6 +179,32 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            unlocked_at TEXT NOT NULL
          );
 
+         CREATE TABLE IF NOT EXISTS import_log (
+           id TEXT PRIMARY KEY,
+           filename TEXT NOT NULL,
+           file_type TEXT NOT NULL,
+           file_path TEXT NOT NULL,
+           detected_type TEXT,
+           target_entity TEXT,
+           target_id TEXT,
+           status TEXT NOT NULL DEFAULT 'pending',
+           error_message TEXT,
+           imported_at TEXT NOT NULL
+         );
+
+         CREATE TABLE IF NOT EXISTS attachments (
+           id TEXT PRIMARY KEY,
+           entity_type TEXT NOT NULL,
+           entity_id TEXT NOT NULL,
+           filename TEXT NOT NULL,
+           file_path TEXT NOT NULL,
+           mime_type TEXT NOT NULL,
+           size_bytes INTEGER NOT NULL,
+           tags TEXT DEFAULT '[]',
+           notes TEXT,
+           created_at TEXT NOT NULL
+         );
+
          CREATE INDEX IF NOT EXISTS idx_projects_client ON projects(client_id);
          CREATE INDEX IF NOT EXISTS idx_milestones_project ON milestones(project_id);
          CREATE INDEX IF NOT EXISTS idx_time_entries_project ON time_entries(project_id);
@@ -186,7 +212,10 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
          CREATE INDEX IF NOT EXISTS idx_communications_client ON communications(client_id);
          CREATE INDEX IF NOT EXISTS idx_proposals_client ON proposals(client_id);
          CREATE INDEX IF NOT EXISTS idx_contracts_client ON contracts(client_id);
-         CREATE INDEX IF NOT EXISTS idx_recurring_invoices_client ON recurring_invoices(client_id);",
+         CREATE INDEX IF NOT EXISTS idx_recurring_invoices_client ON recurring_invoices(client_id);
+         CREATE INDEX IF NOT EXISTS idx_import_log_status ON import_log(status);
+         CREATE INDEX IF NOT EXISTS idx_attachments_entity ON attachments(entity_type, entity_id);
+         CREATE INDEX IF NOT EXISTS idx_attachments_mime ON attachments(mime_type);",
     )
     .map_err(|e| format!("Migration failed: {}", e))?;
 

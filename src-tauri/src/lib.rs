@@ -64,6 +64,14 @@ pub fn run() {
             commands::communications::create_communication,
             commands::communications::update_communication,
             commands::communications::delete_communication,
+            commands::imports::get_imports_dir,
+            commands::imports::save_import_file,
+            commands::imports::log_import,
+            commands::imports::get_import_log,
+            commands::imports::create_attachment,
+            commands::imports::get_attachments,
+            commands::imports::get_all_attachments,
+            commands::imports::delete_attachment,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
