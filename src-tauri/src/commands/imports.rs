@@ -63,11 +63,11 @@ pub struct CreateAttachmentPayload {
 
 fn get_imports_dir_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     use tauri::Manager;
-    let app_dir = app
+    let documents_dir = app
         .path()
-        .app_data_dir()
-        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
-    let imports_dir = app_dir.join("imports");
+        .document_dir()
+        .map_err(|e| format!("Failed to get documents dir: {}", e))?;
+    let imports_dir = documents_dir.join("Lance").join("imports");
     std::fs::create_dir_all(&imports_dir)
         .map_err(|e| format!("Failed to create imports dir: {}", e))?;
     Ok(imports_dir)

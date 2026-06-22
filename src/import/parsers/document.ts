@@ -26,7 +26,10 @@ async function parsePDFText(file: File): Promise<string> {
     const page = await doc.getPage(i);
     const content = await page.getTextContent();
     const pageText = content.items
-      .map((item: { str?: string }) => item.str || '')
+      .map((item) => {
+        if ('str' in item) return item.str;
+        return '';
+      })
       .join(' ');
     textParts.push(pageText);
   }

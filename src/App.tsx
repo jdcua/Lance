@@ -6,7 +6,7 @@
  * License: Proprietary. See LICENSE.md.
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
@@ -18,6 +18,8 @@ import CommandPalette from './components/ui/CommandPalette';
 import Walkthrough from './components/ui/Walkthrough';
 import SplashScreen from './components/ui/SplashScreen';
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import ImportModal from './components/ui/ImportModal';
+import DropZoneOverlay from './components/ui/DropZoneOverlay';
 import { useStore } from './store';
 import { useToasts } from './store/toastStore';
 import { shouldGenerate, getNextDueDate } from './utils/recurringEngine';
@@ -46,6 +48,10 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [showChangelog, setShowChangelog] = useState(false);
   const [showWalkthrough, setShowWalkthrough] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFiles, setImportFiles] = useState<File[] | undefined>(undefined);
+  const [dragOver, setDragOver] = useState(false);
+  const dragCounter = useRef(0);
 
   const APP_VERSION = '1.1.0';
   const CHANGELOG = [
@@ -202,6 +208,60 @@ export default function App() {
   //   return () => clearTimeout(timer);
   // }, []);
 
+  // Global drag-and-drop for import
+  useEffect(() => {
+    const handleDragEnter = (e: DragEvent) => {
+      e.preventDefault();
+      dragCounter.current++;
+      if (dragCounter.current === 1) {
+        setDragOver(true);
+      }
+    };
+    const handleDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      dragCounter.current--;
+      if (dragCounter.current === 0) {
+        setDragOver(false);
+      }
+    };
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+    };
+    const handleDrop = (e: DragEvent) => {
+      e.preventDefault();
+      dragCounter.current = 0;
+      setDragOver(false);
+
+      if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+        const files = Array.from(e.dataTransfer.files);
+        setImportFiles(files);
+        setShowImportModal(true);
+      }
+    };
+
+    document.addEventListener('dragenter', handleDragEnter);
+    document.addEventListener('dragleave', handleDragLeave);
+    document.addEventListener('dragover', handleDragOver);
+    document.addEventListener('drop', handleDrop);
+
+    return () => {
+      document.removeEventListener('dragenter', handleDragEnter);
+      document.removeEventListener('dragleave', handleDragLeave);
+      document.removeEventListener('dragover', handleDragOver);
+      document.removeEventListener('drop', handleDrop);
+    };
+  }, []);
+
+  // Listen for lance:open-import custom event (sidebar button)
+  useEffect(() => {
+    const handler = () => {
+      setImportFiles(undefined);
+      setShowImportModal(true);
+    };
+    document.addEventListener('lance:open-import', handler);
+    return () => document.removeEventListener('lance:open-import', handler);
+  }, []);
+
   // Keyboard shortcuts
   const isEditing = useCallback((): boolean => {
     const tag = (document.activeElement?.tagName || '').toLowerCase();
@@ -296,6 +356,14 @@ export default function App() {
       <OnboardingFlow showOnboarding={showOnboarding} setShowOnboarding={setShowOnboarding} />
 
       <Walkthrough open={showWalkthrough} onClose={() => { setShowWalkthrough(false); localStorage.removeItem('lance:tour-pending'); }} />
+
+      <ImportModal
+        open={showImportModal}
+        onClose={() => { setShowImportModal(false); setImportFiles(undefined); }}
+        initialFiles={importFiles}
+      />
+
+      <DropZoneOverlay visible={dragOver} />
 
       <CommandPalette open={showCommandPalette} onClose={() => setShowCommandPalette(false)} />
 

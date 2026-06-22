@@ -12,6 +12,8 @@ import type {
   UserProfile,
   Communication,
   RecurringInvoice,
+  ImportLog,
+  Attachment,
 } from '../types';
 import { validateLicenseKey } from '../license';
 
@@ -105,7 +107,24 @@ interface RecurringInvoiceSlice {
   removeRecurringInvoice: (id: string) => Promise<void>;
 }
 
-export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & ExpenseSlice & ProfileSlice & CommunicationSlice & RecurringInvoiceSlice;
+interface ImportSlice {
+  importHistory: ImportLog[];
+  loadImportHistory: () => Promise<void>;
+  saveImportFile: (file: File) => Promise<string>;
+  logImport: (data: Omit<ImportLog, 'id' | 'imported_at'>) => Promise<ImportLog>;
+  getImportsDir: () => Promise<string>;
+}
+
+interface AttachmentSlice {
+  attachments: Record<string, Attachment[]>;
+  allAttachments: Attachment[];
+  loadAttachments: (entityType: string, entityId: string) => Promise<void>;
+  loadAllAttachments: () => Promise<void>;
+  addAttachment: (data: Omit<Attachment, 'id' | 'created_at'>) => Promise<Attachment>;
+  removeAttachment: (id: string, entityType: string, entityId: string) => Promise<void>;
+}
+
+export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & ExpenseSlice & ProfileSlice & CommunicationSlice & RecurringInvoiceSlice & ImportSlice & AttachmentSlice;
 
 const invoke = async <T>(cmd: string, args?: Record<string, unknown>): Promise<T> => {
   const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
@@ -408,5 +427,66 @@ export const useStore = create<AppStore>((set, get) => ({
   removeRecurringInvoice: async (id) => {
     await invoke('delete_recurring_invoice', { id });
     set({ recurringInvoices: get().recurringInvoices.filter((r) => r.id !== id) });
+  },
+
+  // Import History
+  importHistory: [],
+  loadImportHistory: async () => {
+    try {
+      const logs = await invoke<ImportLog[]>('get_import_log');
+      set({ importHistory: logs });
+    } catch (e) {
+      console.error('[store] loadImportHistory failed:', e);
+    }
+  },
+  saveImportFile: async (file: File) => {
+    const buffer = await file.arrayBuffer();
+    const data = Array.from(new Uint8Array(buffer));
+    const path = await invoke<string>('save_import_file', { filename: file.name, data });
+    return path;
+  },
+  logImport: async (data) => {
+    const log = await invoke<ImportLog>('log_import', { payload: data });
+    set({ importHistory: [log, ...get().importHistory] });
+    return log;
+  },
+  getImportsDir: async () => {
+    return invoke<string>('get_imports_dir');
+  },
+
+  // Attachments
+  attachments: {},
+  allAttachments: [],
+  loadAttachments: async (entityType, entityId) => {
+    const key = `${entityType}:${entityId}`;
+    const items = await invoke<Attachment[]>('get_attachments', { entityType, entityId });
+    set({ attachments: { ...get().attachments, [key]: items } });
+  },
+  loadAllAttachments: async () => {
+    try {
+      const items = await invoke<Attachment[]>('get_all_attachments');
+      set({ allAttachments: items });
+    } catch (e) {
+      console.error('[store] loadAllAttachments failed:', e);
+    }
+  },
+  addAttachment: async (data) => {
+    const attachment = await invoke<Attachment>('create_attachment', { payload: data });
+    const key = `${data.entity_type}:${data.entity_id}`;
+    const existing = get().attachments[key] || [];
+    set({
+      attachments: { ...get().attachments, [key]: [attachment, ...existing] },
+      allAttachments: [attachment, ...get().allAttachments],
+    });
+    return attachment;
+  },
+  removeAttachment: async (id, entityType, entityId) => {
+    await invoke('delete_attachment', { id });
+    const key = `${entityType}:${entityId}`;
+    const existing = get().attachments[key] || [];
+    set({
+      attachments: { ...get().attachments, [key]: existing.filter((a) => a.id !== id) },
+      allAttachments: get().allAttachments.filter((a) => a.id !== id),
+    });
   },
 }));

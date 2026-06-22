@@ -14,6 +14,7 @@ import {
   Sparkles,
   Trophy,
   LayoutDashboard,
+  Upload,
 } from 'lucide-react';
 import { useStore } from '../../store';
 
@@ -122,6 +123,14 @@ export default function Sidebar() {
           <p className="px-4 mb-1 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.8px]" style={{ fontFamily: "'Syne', sans-serif" }}>
             MORE
           </p>
+          <button
+            onClick={() => document.dispatchEvent(new CustomEvent('lance:open-import'))}
+            className="w-full flex items-center gap-2.5 px-4 h-[36px] text-sm transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] border-l-[3px] border-transparent"
+            style={{ fontFamily: "'Syne', sans-serif" }}
+          >
+            <Upload size={16} />
+            Import
+          </button>
           <NavLink
             to="/achievements"
             className={({ isActive }) =>
