@@ -15,6 +15,10 @@ import type {
   ImportLog,
   Attachment,
   AssetStats,
+  MetricDefinition,
+  MetricValue,
+  MetricTemplate,
+  HeadlineMetric,
 } from '../types';
 import { validateLicenseKey } from '../license';
 
@@ -133,7 +137,26 @@ interface AttachmentSlice {
   searchAssets: (query: string) => Promise<Attachment[]>;
 }
 
-export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & ExpenseSlice & ProfileSlice & CommunicationSlice & RecurringInvoiceSlice & ImportSlice & AttachmentSlice;
+interface MetricSlice {
+  metricDefs: Record<string, MetricDefinition[]>;
+  metricValues: Record<string, MetricValue[]>;
+  headlineMetrics: HeadlineMetric[];
+  metricTemplates: MetricTemplate[];
+  loadMetricDefs: (clientId: string) => Promise<void>;
+  addMetricDef: (data: Omit<MetricDefinition, 'id' | 'created_at'>) => Promise<MetricDefinition>;
+  updateMetricDef: (data: Omit<MetricDefinition, 'client_id' | 'created_at'>) => Promise<void>;
+  removeMetricDef: (id: string, clientId: string) => Promise<void>;
+  loadMetricValues: (definitionId: string, limit?: number) => Promise<void>;
+  logMetricValue: (data: Omit<MetricValue, 'id' | 'created_at'>) => Promise<MetricValue>;
+  removeMetricValue: (id: string, definitionId: string) => Promise<void>;
+  loadHeadlineMetrics: () => Promise<void>;
+  loadMetricTemplates: () => Promise<void>;
+  saveMetricTemplate: (name: string, definitions: Omit<MetricDefinition, 'id' | 'client_id' | 'created_at'>[]) => Promise<void>;
+  removeMetricTemplate: (id: string) => Promise<void>;
+  applyMetricTemplate: (templateName: string, clientId: string) => Promise<void>;
+}
+
+export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & ExpenseSlice & ProfileSlice & CommunicationSlice & RecurringInvoiceSlice & ImportSlice & AttachmentSlice & MetricSlice;
 
 const invoke = async <T>(cmd: string, args?: Record<string, unknown>): Promise<T> => {
   const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
@@ -562,5 +585,101 @@ export const useStore = create<AppStore>((set, get) => ({
   },
   searchAssets: async (query) => {
     return invoke<Attachment[]>('search_assets', { query });
+  },
+
+  // Metrics
+  metricDefs: {},
+  metricValues: {},
+  headlineMetrics: [],
+  metricTemplates: [],
+  loadMetricDefs: async (clientId) => {
+    try {
+      const defs = await invoke<MetricDefinition[]>('get_metric_definitions', { clientId });
+      set({ metricDefs: { ...get().metricDefs, [clientId]: defs } });
+    } catch (e) {
+      console.error('[store] loadMetricDefs failed:', e);
+    }
+  },
+  addMetricDef: async (data) => {
+    const def = await invoke<MetricDefinition>('create_metric_definition', { payload: data });
+    const existing = get().metricDefs[data.client_id] || [];
+    set({ metricDefs: { ...get().metricDefs, [data.client_id]: [...existing, def] } });
+    return def;
+  },
+  updateMetricDef: async (data) => {
+    await invoke('update_metric_definition', { payload: data });
+    const updated = { ...get().metricDefs };
+    for (const key of Object.keys(updated)) {
+      updated[key] = updated[key].map((d) => (d.id === data.id ? { ...d, ...data } : d));
+    }
+    set({ metricDefs: updated });
+  },
+  removeMetricDef: async (id, clientId) => {
+    await invoke('delete_metric_definition', { id });
+    const updated = { ...get().metricDefs };
+    updated[clientId] = (updated[clientId] || []).filter((d) => d.id !== id);
+    set({ metricDefs: updated });
+  },
+  loadMetricValues: async (definitionId, limit) => {
+    try {
+      const values = await invoke<MetricValue[]>('get_metric_values', { definitionId, limit: limit ?? null });
+      set({ metricValues: { ...get().metricValues, [definitionId]: values } });
+    } catch (e) {
+      console.error('[store] loadMetricValues failed:', e);
+    }
+  },
+  logMetricValue: async (data) => {
+    const val = await invoke<MetricValue>('log_metric_value', { payload: data });
+    const existing = get().metricValues[data.definition_id] || [];
+    set({ metricValues: { ...get().metricValues, [data.definition_id]: [...existing, val] } });
+    return val;
+  },
+  removeMetricValue: async (id, definitionId) => {
+    await invoke('delete_metric_value', { id });
+    const existing = get().metricValues[definitionId] || [];
+    set({ metricValues: { ...get().metricValues, [definitionId]: existing.filter((v) => v.id !== id) } });
+  },
+  loadHeadlineMetrics: async () => {
+    try {
+      const metrics = await invoke<HeadlineMetric[]>('get_all_headline_metrics');
+      set({ headlineMetrics: metrics });
+    } catch (e) {
+      console.error('[store] loadHeadlineMetrics failed:', e);
+    }
+  },
+  loadMetricTemplates: async () => {
+    try {
+      const templates = await invoke<MetricTemplate[]>('get_metric_templates');
+      set({ metricTemplates: templates });
+    } catch (e) {
+      console.error('[store] loadMetricTemplates failed:', e);
+    }
+  },
+  saveMetricTemplate: async (name, definitions) => {
+    await invoke('save_metric_template', {
+      payload: { name, definitions_json: JSON.stringify(definitions) },
+    });
+    await get().loadMetricTemplates();
+  },
+  removeMetricTemplate: async (id) => {
+    await invoke('delete_metric_template', { id });
+    set({ metricTemplates: get().metricTemplates.filter((t) => t.id !== id) });
+  },
+  applyMetricTemplate: async (templateName, clientId) => {
+    const templates = get().metricTemplates;
+    if (!templates.length) await get().loadMetricTemplates();
+    const tmpl = get().metricTemplates.find((t) => t.name === templateName);
+    if (!tmpl) return;
+    const definitions: Array<Pick<MetricDefinition, 'name' | 'metric_type' | 'unit_label' | 'is_headline' | 'sort_order'>> = JSON.parse(tmpl.definitions_json);
+    for (const def of definitions) {
+      await get().addMetricDef({
+        client_id: clientId,
+        name: def.name,
+        metric_type: def.metric_type as MetricDefinition['metric_type'],
+        unit_label: def.unit_label,
+        is_headline: def.is_headline,
+        sort_order: def.sort_order,
+      });
+    }
   },
 }));

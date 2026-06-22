@@ -79,6 +79,17 @@ pub fn run() {
             commands::imports::update_attachment_meta,
             commands::imports::get_asset_stats,
             commands::imports::search_assets,
+            commands::metrics::create_metric_definition,
+            commands::metrics::get_metric_definitions,
+            commands::metrics::update_metric_definition,
+            commands::metrics::delete_metric_definition,
+            commands::metrics::log_metric_value,
+            commands::metrics::get_metric_values,
+            commands::metrics::delete_metric_value,
+            commands::metrics::get_all_headline_metrics,
+            commands::metrics::save_metric_template,
+            commands::metrics::get_metric_templates,
+            commands::metrics::delete_metric_template,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -230,4 +230,41 @@ async function runMigrations(database: Database): Promise<void> {
       created_at TEXT NOT NULL
     )
   `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS metric_definitions (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      metric_type TEXT NOT NULL DEFAULT 'number',
+      unit_label TEXT,
+      is_headline INTEGER NOT NULL DEFAULT 0,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS metric_values (
+      id TEXT PRIMARY KEY,
+      definition_id TEXT NOT NULL,
+      client_id TEXT NOT NULL,
+      value TEXT NOT NULL,
+      period TEXT NOT NULL,
+      notes TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (definition_id) REFERENCES metric_definitions(id) ON DELETE CASCADE,
+      FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS metric_templates (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE,
+      definitions_json TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    )
+  `);
 }

@@ -181,6 +181,46 @@ export type AssetStats = {
   }>;
 };
 
+export type MetricDefinition = {
+  id: string;
+  client_id: string;
+  name: string;
+  metric_type: 'number' | 'percentage' | 'currency' | 'text';
+  unit_label?: string;
+  is_headline: boolean;
+  sort_order: number;
+  created_at: string;
+};
+
+export type MetricValue = {
+  id: string;
+  definition_id: string;
+  client_id: string;
+  value: string;
+  period: string;
+  notes?: string;
+  created_at: string;
+};
+
+export type MetricTemplate = {
+  id: string;
+  name: string;
+  definitions_json: string;
+  created_at: string;
+};
+
+export type HeadlineMetric = {
+  client_id: string;
+  client_name: string;
+  definition_id: string;
+  metric_name: string;
+  metric_type: string;
+  unit_label?: string;
+  latest_value?: string;
+  previous_value?: string;
+  values: MetricValue[];
+};
+
 export type DetectedEntityType =
   | 'client_list'
   | 'project_list'

@@ -215,7 +215,43 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
          CREATE INDEX IF NOT EXISTS idx_recurring_invoices_client ON recurring_invoices(client_id);
          CREATE INDEX IF NOT EXISTS idx_import_log_status ON import_log(status);
          CREATE INDEX IF NOT EXISTS idx_attachments_entity ON attachments(entity_type, entity_id);
-         CREATE INDEX IF NOT EXISTS idx_attachments_mime ON attachments(mime_type);",
+         CREATE INDEX IF NOT EXISTS idx_attachments_mime ON attachments(mime_type);
+
+         CREATE TABLE IF NOT EXISTS metric_definitions (
+           id TEXT PRIMARY KEY,
+           client_id TEXT NOT NULL,
+           name TEXT NOT NULL,
+           metric_type TEXT NOT NULL DEFAULT 'number',
+           unit_label TEXT,
+           is_headline INTEGER NOT NULL DEFAULT 0,
+           sort_order INTEGER NOT NULL DEFAULT 0,
+           created_at TEXT NOT NULL,
+           FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+         );
+
+         CREATE TABLE IF NOT EXISTS metric_values (
+           id TEXT PRIMARY KEY,
+           definition_id TEXT NOT NULL,
+           client_id TEXT NOT NULL,
+           value TEXT NOT NULL,
+           period TEXT NOT NULL,
+           notes TEXT,
+           created_at TEXT NOT NULL,
+           FOREIGN KEY (definition_id) REFERENCES metric_definitions(id) ON DELETE CASCADE,
+           FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+         );
+
+         CREATE TABLE IF NOT EXISTS metric_templates (
+           id TEXT PRIMARY KEY,
+           name TEXT NOT NULL UNIQUE,
+           definitions_json TEXT NOT NULL,
+           created_at TEXT NOT NULL
+         );
+
+         CREATE INDEX IF NOT EXISTS idx_metric_defs_client ON metric_definitions(client_id);
+         CREATE INDEX IF NOT EXISTS idx_metric_values_def ON metric_values(definition_id);
+         CREATE INDEX IF NOT EXISTS idx_metric_values_client ON metric_values(client_id);
+         CREATE INDEX IF NOT EXISTS idx_metric_values_period ON metric_values(definition_id, period);",
     )
     .map_err(|e| format!("Migration failed: {}", e))?;
 

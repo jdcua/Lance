@@ -4,6 +4,7 @@ pub mod contracts;
 pub mod finance;
 pub mod imports;
 pub mod invoices;
+pub mod metrics;
 pub mod projects;
 pub mod proposals;
 pub mod time;

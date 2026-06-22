@@ -3,12 +3,13 @@ import { useStore } from '../store';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import ProgressBar from '../components/ui/ProgressBar';
+import Sparkline from '../components/ui/Sparkline';
 import { formatCurrency } from '../utils/format';
 import { useToasts } from '../store/toastStore';
-import { Lightbulb } from 'lucide-react';
+import { Lightbulb, BarChart3, TrendingUp, TrendingDown, Minus, Star } from 'lucide-react';
 
 export default function Insights() {
-  const { projects, loadProjects, invoices, loadInvoices, timeEntries, loadTimeEntries, clients, loadClients, proposals, loadProposals, expenses, loadExpenses, profile, loadProfile } = useStore();
+  const { projects, loadProjects, invoices, loadInvoices, timeEntries, loadTimeEntries, clients, loadClients, proposals, loadProposals, expenses, loadExpenses, profile, loadProfile, headlineMetrics, loadHeadlineMetrics } = useStore();
   const addToast = useToasts((s) => s.add);
   const [loaded, setLoaded] = useState(false);
 
@@ -21,6 +22,7 @@ export default function Insights() {
       loadProposals(),
       loadExpenses(),
       loadProfile(),
+      loadHeadlineMetrics(),
     ])
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoaded(true));
@@ -226,6 +228,101 @@ export default function Insights() {
           )}
         </Card>
       </div>
+
+      {/* Client Performance — Custom Metrics */}
+      <div className="mt-6">
+        <div className="flex items-center gap-2 mb-4">
+          <BarChart3 size={16} className="text-[var(--text-tertiary)]" />
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Client Performance</h3>
+        </div>
+
+        {headlineMetrics.length === 0 ? (
+          <Card className="text-center py-10 flex flex-col items-center">
+            <Star size={32} className="text-[var(--text-tertiary)] mb-3" />
+            <h4 className="text-sm font-medium text-[var(--text-secondary)] mb-1">No client metrics yet</h4>
+            <p className="text-xs text-[var(--text-tertiary)] max-w-sm leading-relaxed">
+              Define custom metrics on any client profile and mark them as "Headline" to see them here. Track CPM, ROAS, story points, revision rounds — whatever matters to your craft.
+            </p>
+          </Card>
+        ) : (
+          <Card className="!p-0 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-[var(--bg-secondary)]">
+                    <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Client</th>
+                    <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Metric</th>
+                    <th className="px-4 py-2.5 text-center text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Trend</th>
+                    <th className="px-4 py-2.5 text-right text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Latest</th>
+                    <th className="px-4 py-2.5 text-right text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Previous</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {headlineMetrics.map((hm) => {
+                    const numericValues = hm.values
+                      .map((v) => parseFloat(v.value))
+                      .filter((v) => !isNaN(v));
+
+                    const latest = parseFloat(hm.latest_value || '');
+                    const previous = parseFloat(hm.previous_value || '');
+                    const isUp = !isNaN(latest) && !isNaN(previous) && latest > previous;
+                    const isDown = !isNaN(latest) && !isNaN(previous) && latest < previous;
+                    const isFlat = !isNaN(latest) && !isNaN(previous) && latest === previous;
+
+                    const TrendIcon = isUp ? TrendingUp : isDown ? TrendingDown : Minus;
+                    const trendColor = isUp ? 'text-[var(--accent)]' : isDown ? 'text-[#A32D2D]' : 'text-[var(--text-tertiary)]';
+
+                    return (
+                      <tr key={`${hm.client_id}:${hm.definition_id}`} className="border-t border-[var(--border-color)] hover:bg-[var(--bg-secondary)]/50 transition-colors">
+                        <td className="px-4 py-3">
+                          <span className="font-medium text-[var(--text-primary)]">{hm.client_name}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="text-[var(--text-primary)]">{hm.metric_name}</span>
+                          {hm.unit_label && (
+                            <span className="text-[var(--text-tertiary)] ml-1">({hm.unit_label})</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {numericValues.length >= 2 ? (
+                            <div className="flex items-center justify-center gap-2">
+                              <TrendIcon size={12} className={trendColor} />
+                              <Sparkline values={numericValues} width={60} height={22} color={isUp ? 'var(--accent)' : isDown ? 'var(--danger)' : 'var(--text-tertiary)'} />
+                            </div>
+                          ) : (
+                            <span className="text-[var(--text-tertiary)]">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right font-medium text-[var(--text-primary)]">
+                          {hm.latest_value
+                            ? hm.metric_type === 'currency' ? `$${formatMetricVal(hm.latest_value)}` :
+                              hm.metric_type === 'percentage' ? `${formatMetricVal(hm.latest_value)}%` :
+                              hm.latest_value
+                            : '—'}
+                        </td>
+                        <td className="px-4 py-3 text-right text-[var(--text-tertiary)]">
+                          {hm.previous_value
+                            ? hm.metric_type === 'currency' ? `$${formatMetricVal(hm.previous_value)}` :
+                              hm.metric_type === 'percentage' ? `${formatMetricVal(hm.previous_value)}%` :
+                              hm.previous_value
+                            : '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        )}
+      </div>
     </div>
   );
+}
+
+function formatMetricVal(v: string): string {
+  const n = parseFloat(v);
+  if (isNaN(n)) return v;
+  if (Number.isInteger(n)) return n.toString();
+  return n.toFixed(1);
 }
