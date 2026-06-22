@@ -6,19 +6,20 @@ import MetricCard from '../components/ui/MetricCard';
 import Button from '../components/ui/Button';
 import { relativeDate, formatCurrency } from '../utils/format';
 import { useToasts } from '../store/toastStore';
-import { Play, Receipt, FileText, Users, FolderKanban, Clock, Plus, ArrowRight, CheckCircle2, Circle } from 'lucide-react';
+import { Play, Receipt, FileText, Users, FolderKanban, Clock, Plus, ArrowRight, CheckCircle2, Circle, Bell, Send, Check, X } from 'lucide-react';
+import { generateFollowUpDraft } from '../utils/followUpTemplates';
 
 export default function Dashboard() {
-  const { invoices, loadInvoices, proposals, loadProposals, projects, loadProjects, clients, loadClients, timeEntries, loadTimeEntries, profile, loadProfile, expenses, loadExpenses } = useStore();
+  const { invoices, loadInvoices, proposals, loadProposals, projects, loadProjects, clients, loadClients, timeEntries, loadTimeEntries, profile, loadProfile, expenses, loadExpenses, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings } = useStore();
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([loadInvoices(), loadProposals(), loadProjects(), loadClients(), loadTimeEntries(), loadExpenses(), loadProfile()])
+    Promise.all([loadInvoices(), loadProposals(), loadProjects(), loadClients(), loadTimeEntries(), loadExpenses(), loadProfile(), loadPendingFollowUps()])
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
-  }, [loadInvoices, loadProposals, loadProjects, loadClients, loadTimeEntries, loadExpenses, loadProfile]);
+  }, [loadInvoices, loadProposals, loadProjects, loadClients, loadTimeEntries, loadExpenses, loadProfile, loadPendingFollowUps]);
 
   const unpaidInvoices = invoices.filter(i => i.status === 'sent' || i.status === 'overdue');
   const activeProjects = projects.filter(p => p.status === 'active');
@@ -105,6 +106,60 @@ export default function Dashboard() {
         <MetricCard label="Active Projects" value={activeProjects.length} subtext={`${projects.length} total`} color={activeProjects.length > 0 ? 'green' : 'gray'} />
         <MetricCard label="Today" value={todaysMinutes > 0 ? `${Math.floor(todaysMinutes / 60)}h ${todaysMinutes % 60}m` : '—'} subtext="time tracked" color={todaysMinutes > 0 ? 'green' : 'gray'} />
       </div>
+
+      {/* Needs Attention — Follow-ups */}
+      {pendingFollowUps.length > 0 && (
+        <Card className="mb-6 border-[var(--accent)]/20">
+          <div className="flex items-center gap-2 mb-3">
+            <Bell size={14} className="text-[var(--accent)]" />
+            <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Needs Attention</h3>
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">{pendingFollowUps.length}</span>
+          </div>
+          <div className="space-y-2">
+            {pendingFollowUps.slice(0, 3).map((fu) => {
+              const isProposal = fu.entity_type === 'proposal';
+              const entity = isProposal
+                ? proposals.find((p) => p.id === fu.entity_id)
+                : invoices.find((i) => i.id === fu.entity_id);
+              if (!entity) return null;
+              const client = clients.find((c) => c.id === (isProposal ? (entity as typeof proposals[0]).client_id : (entity as typeof invoices[0]).client_id));
+              const daysElapsed = Math.floor((Date.now() - (isProposal ? new Date((entity as typeof proposals[0]).sent_at || (entity as typeof proposals[0]).created_at).getTime() : new Date((entity as typeof invoices[0]).due_date || '').getTime())) / 86400000);
+              const templateKey = isProposal
+                ? (daysElapsed >= 10 ? 'proposal_day14' : daysElapsed >= 4 ? 'proposal_day7' : 'proposal_day3')
+                : (daysElapsed >= 10 ? 'invoice_day14' : daysElapsed >= 4 ? 'invoice_day7' : 'invoice_day1');
+              const draft = generateFollowUpDraft(templateKey, {
+                clientName: client?.name || 'Unknown',
+                proposalTitle: isProposal ? (entity as typeof proposals[0]).title : undefined,
+                invoiceNumber: isProposal ? undefined : (entity as typeof invoices[0]).invoice_number,
+                amount: isProposal ? undefined : formatCurrency((entity as typeof invoices[0]).total),
+                dueDate: isProposal ? undefined : (entity as typeof invoices[0]).due_date,
+                daysElapsed,
+                projectName: '',
+                freelancerName: profile?.name || 'Freelancer',
+              }, followUpSettings.templates);
+              return (
+                <div key={fu.id} className="flex items-start justify-between px-3 py-2 rounded-[8px] bg-[var(--bg-secondary)]/50">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-[var(--text-primary)]">
+                      {isProposal ? 'Proposal' : 'Invoice'}: {isProposal ? (entity as typeof proposals[0]).title : (entity as typeof invoices[0]).invoice_number}
+                    </p>
+                    <p className="text-[10px] text-[var(--text-secondary)]">{client?.name || 'Unknown'} &middot; {daysElapsed}d</p>
+                    <p className="text-[10px] text-[var(--text-tertiary)] mt-1 line-clamp-2">{draft.split('\n')[0]}</p>
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0 ml-3">
+                    <button onClick={async () => { await updateFollowUpStatus(fu.id, 'dismissed', 'dismissed'); }} className="p-1 rounded-[6px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)]" title="Dismiss"><X size={12} /></button>
+                    <button onClick={async () => {
+                      await navigator.clipboard.writeText(draft);
+                      await updateFollowUpStatus(fu.id, 'sent', 'sent');
+                      addToast('Copied to clipboard', 'success');
+                    }} className="p-1 rounded-[6px] text-[var(--accent)] hover:bg-[var(--accent-bg)]" title="Copy & dismiss"><Send size={12} /></button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
 
       <div className="grid grid-cols-2 gap-6">
         <Card>

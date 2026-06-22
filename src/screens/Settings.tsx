@@ -9,11 +9,12 @@ import { useToasts } from '../store/toastStore';
 import { save } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeFile } from '@tauri-apps/plugin-fs';
 import { open } from '@tauri-apps/plugin-dialog';
-import { Check, Upload, Download, AlertTriangle, Trash2, Lock, Sparkles, ExternalLink } from 'lucide-react';
+import { Check, Upload, Download, AlertTriangle, Trash2, Lock, Sparkles, ExternalLink, Bell, Eye } from 'lucide-react';
 import { THEMES, applyTheme, getTheme } from '../themes/themes';
 import type { ThemeId } from '../themes';
 import { PROFESSION_THEME, type Profession } from '../themes';
 import { getUnlockedThemes } from '../achievements/checker';
+import { TEMPLATE_LABELS } from '../utils/followUpTemplates';
 
 const currencies = ['CAD', 'USD', 'GBP', 'EUR', 'AUD'];
 const writingStyles = ['professional', 'warm', 'direct', 'bold'];
@@ -29,7 +30,7 @@ function labelForStyle(s: string): string {
 }
 
 export default function Settings() {
-  const { profile, loadProfile, saveProfile, isLicensed, activateLicense, removeLicense } = useStore();
+  const { profile, loadProfile, saveProfile, isLicensed, activateLicense, removeLicense, followUpSettings, loadFollowUpSettings, saveFollowUpSettings } = useStore();
   const addToast = useToasts((s) => s.add);
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [showResetModal, setShowResetModal] = useState(false);
@@ -41,6 +42,12 @@ export default function Settings() {
   const [showRemoveLicenseConfirm, setShowRemoveLicenseConfirm] = useState(false);
   const [activeTheme, setActiveTheme] = useState<ThemeId>('default');
   const [unlockedThemes, setUnlockedThemes] = useState<Set<string>>(new Set(['default']));
+  const [fuEnabled, setFuEnabled] = useState(true);
+  const [fuProposalDelay, setFuProposalDelay] = useState(3);
+  const [fuInvoiceDelay, setFuInvoiceDelay] = useState(0);
+  const [fuTemplates, setFuTemplates] = useState<Record<string, string>>({});
+  const [fuPreview, setFuPreview] = useState<string | null>(null);
+  const fuInitRef = useRef(false);
   const [form, setForm] = useState<UserProfile>({
     name: '',
     email: '',
@@ -103,6 +110,21 @@ export default function Settings() {
       });
     }
   }, [isLicensed, profile?.profession]);
+
+  // Load follow-up settings
+  useEffect(() => {
+    loadFollowUpSettings();
+  }, []);
+
+  useEffect(() => {
+    if (!fuInitRef.current && followUpSettings.templates && Object.keys(followUpSettings.templates).length > 0) {
+      fuInitRef.current = true;
+      setFuEnabled(followUpSettings.enabled);
+      setFuProposalDelay(followUpSettings.proposal_delay_days);
+      setFuInvoiceDelay(followUpSettings.invoice_delay_days);
+      setFuTemplates({ ...followUpSettings.templates });
+    }
+  }, [followUpSettings]);
 
   useEffect(() => {
     if (form.theme === 'dark') {
@@ -633,6 +655,95 @@ export default function Settings() {
               <Trash2 size={14} />
               Reset
             </Button>
+          </div>
+        </div>
+      </Card>
+
+      {/* Section 6: Follow-ups */}
+      <Card className="mb-6">
+        <SectionHead title="Follow-ups" />
+        <div className="space-y-4">
+          <p className="text-xs text-[var(--text-tertiary)]">Lance monitors sent proposals and invoices and drafts friendly follow-up messages when they need attention. You control everything — messages are never sent automatically.</p>
+
+          {/* Toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-[var(--text-primary)]">Enable follow-ups</p>
+              <p className="text-xs text-[var(--text-tertiary)]">Draft reminders for overdue proposals and invoices</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={fuEnabled}
+                onChange={(e) => {
+                  setFuEnabled(e.target.checked);
+                  saveFollowUpSettings({ enabled: e.target.checked });
+                }}
+                className="sr-only peer"
+              />
+              <div className="w-9 h-5 bg-[var(--border-color)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--accent)]" />
+            </label>
+          </div>
+
+          {/* Delays */}
+          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-[var(--border-color)]">
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Proposal delay (days)</label>
+              <input
+                type="number"
+                min={1}
+                max={30}
+                value={fuProposalDelay}
+                onChange={(e) => {
+                  const v = Math.max(1, Math.min(30, parseInt(e.target.value) || 1));
+                  setFuProposalDelay(v);
+                  saveFollowUpSettings({ proposal_delay_days: v });
+                }}
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              />
+              <p className="text-[10px] text-[var(--text-tertiary)] mt-1">First follow-up triggers after this many days of no response.</p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Invoice overdue delay (days)</label>
+              <input
+                type="number"
+                min={0}
+                max={30}
+                value={fuInvoiceDelay}
+                onChange={(e) => {
+                  const v = Math.max(0, Math.min(30, parseInt(e.target.value) || 0));
+                  setFuInvoiceDelay(v);
+                  saveFollowUpSettings({ invoice_delay_days: v });
+                }}
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              />
+              <p className="text-[10px] text-[var(--text-tertiary)] mt-1">First reminder triggers after due date passes by this many days.</p>
+            </div>
+          </div>
+
+          {/* Templates */}
+          <div className="pt-2 border-t border-[var(--border-color)]">
+            <p className="text-sm font-medium text-[var(--text-primary)] mb-3">Message Templates</p>
+            <p className="text-xs text-[var(--text-tertiary)] mb-4">
+              Use <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{client_name}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{proposal_title}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{invoice_number}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{amount}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{due_date}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{days_elapsed}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{freelancer_name}'}</code> — they fill in automatically.
+            </p>
+            <div className="space-y-3">
+              {Object.entries(TEMPLATE_LABELS).map(([key, label]) => (
+                <div key={key}>
+                  <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1">{label}</label>
+                  <textarea
+                    value={fuTemplates[key] || ''}
+                    onChange={(e) => {
+                      const updated = { ...fuTemplates, [key]: e.target.value };
+                      setFuTemplates(updated);
+                      saveFollowUpSettings({ templates: updated });
+                    }}
+                    rows={5}
+                    className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none leading-relaxed font-mono"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </Card>

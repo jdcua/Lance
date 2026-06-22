@@ -36,6 +36,9 @@ export default function App() {
     recurringInvoices, loadRecurringInvoices, updateRecurringInvoice,
     invoices, loadInvoices, addInvoice,
     clients, loadClients,
+    proposals, loadProposals,
+    loadFollowUpSettings, loadPendingFollowUps,
+    logFollowUp, followUpSettings, pendingFollowUps,
   } = useStore();
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
@@ -188,6 +191,71 @@ export default function App() {
     };
     generate();
   }, [ranAutoGen, recurringInvoices.length, invoices.length]);
+
+  // Follow-up checker — runs on startup + every 30 minutes
+  useEffect(() => {
+    if (!profileLoaded) return;
+    loadFollowUpSettings();
+
+    const checkFollowUps = async () => {
+      try {
+        const { getTemplateKey, getStage } = await import('./utils/followUpTemplates');
+        const state = useStore.getState();
+        const settings = state.followUpSettings;
+        if (!settings.enabled) return;
+
+        await state.loadProposals();
+        await state.loadInvoices();
+        await state.loadPendingFollowUps();
+        const currentPending = useStore.getState().pendingFollowUps;
+
+        const now = new Date();
+
+        // Check proposals
+        for (const p of useStore.getState().proposals) {
+          if (p.status !== 'sent') continue;
+          const sentDate = p.sent_at ? new Date(p.sent_at) : new Date(p.created_at);
+          const daysElapsed = Math.floor((now.getTime() - sentDate.getTime()) / 86400000);
+          if (daysElapsed < settings.proposal_delay_days) continue;
+
+          const stage = getStage('proposal', daysElapsed - settings.proposal_delay_days);
+          const alreadyPending = currentPending.some(
+            (l) => l.entity_type === 'proposal' && l.entity_id === p.id && l.stage === stage
+          );
+          if (alreadyPending) continue;
+
+          const templateKey = getTemplateKey('proposal', daysElapsed, settings.proposal_delay_days);
+          if (!templateKey) continue;
+
+          await state.logFollowUp({ entity_type: 'proposal', entity_id: p.id, stage });
+        }
+
+        // Check invoices
+        for (const inv of useStore.getState().invoices) {
+          if (inv.status !== 'sent' && inv.status !== 'overdue') continue;
+          if (!inv.due_date) continue;
+          const dueDate = new Date(inv.due_date);
+          const daysElapsed = Math.floor((now.getTime() - dueDate.getTime()) / 86400000);
+          if (daysElapsed < settings.invoice_delay_days) continue;
+
+          const stage = getStage('invoice', daysElapsed);
+          const alreadyPending = currentPending.some(
+            (l) => l.entity_type === 'invoice' && l.entity_id === inv.id && l.stage === stage
+          );
+          if (alreadyPending) continue;
+
+          const templateKey = getTemplateKey('invoice', daysElapsed, settings.invoice_delay_days);
+          if (!templateKey) continue;
+
+          await state.logFollowUp({ entity_type: 'invoice', entity_id: inv.id, stage });
+        }
+      } catch { /* follow-up check is non-critical */ }
+    };
+
+    checkFollowUps();
+    const interval = setInterval(checkFollowUps, 30 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [profileLoaded]);
 
   // TODO: Re-enable auto-updater when endpoint is live
   // useEffect(() => {

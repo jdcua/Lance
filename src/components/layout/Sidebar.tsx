@@ -51,12 +51,13 @@ const navGroups = [
 ];
 
 export default function Sidebar() {
-  const { isLicensed, proposals, projects, invoices, allAttachments } = useStore((s) => ({
+  const { isLicensed, proposals, projects, invoices, allAttachments, pendingFollowUps } = useStore((s) => ({
     isLicensed: s.isLicensed,
     proposals: s.proposals,
     projects: s.projects,
     invoices: s.invoices,
     allAttachments: s.allAttachments,
+    pendingFollowUps: s.pendingFollowUps,
   }));
 
   const badgeMap: Record<string, number> = useMemo(() => ({
@@ -64,7 +65,9 @@ export default function Sidebar() {
     activeProjects: projects.filter((p) => p.status === 'active').length,
     unpaidInvoices: invoices.filter((i) => i.status === 'sent' || i.status === 'overdue').length,
     totalAssets: allAttachments.length,
-  }), [proposals, projects, invoices, allAttachments]);
+    proposalFollowUps: pendingFollowUps.filter((f) => f.entity_type === 'proposal').length,
+    invoiceFollowUps: pendingFollowUps.filter((f) => f.entity_type === 'invoice').length,
+  }), [proposals, projects, invoices, allAttachments, pendingFollowUps]);
 
   return (
     <aside className="w-[220px] h-full flex flex-col bg-[var(--bg-card)] border-r border-[var(--border-color)] flex-shrink-0">
@@ -116,6 +119,12 @@ export default function Sidebar() {
                   }`}>
                     {badgeMap[item.badgeKey]}
                   </span>
+                )}
+                {item.to === '/proposals' && badgeMap.proposalFollowUps > 0 && (
+                  <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#FAEEDA] text-[#B86E1C] ml-0.5">{badgeMap.proposalFollowUps}</span>
+                )}
+                {item.to === '/invoices' && badgeMap.invoiceFollowUps > 0 && (
+                  <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#FAEEDA] text-[#B86E1C] ml-0.5">{badgeMap.invoiceFollowUps}</span>
                 )}
               </NavLink>
             ))}

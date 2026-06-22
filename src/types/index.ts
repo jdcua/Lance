@@ -221,6 +221,24 @@ export type HeadlineMetric = {
   values: MetricValue[];
 };
 
+export type FollowUpLog = {
+  id: string;
+  entity_type: 'proposal' | 'invoice';
+  entity_id: string;
+  stage: number;
+  status: 'pending' | 'sent' | 'dismissed' | 'snoozed' | 'responded' | 'paid' | 'superseded';
+  drafted_at: string;
+  actioned_at?: string;
+  action?: string;
+};
+
+export type FollowUpSettings = {
+  enabled: boolean;
+  proposal_delay_days: number;
+  invoice_delay_days: number;
+  templates: Record<string, string>;
+};
+
 export type DetectedEntityType =
   | 'client_list'
   | 'project_list'

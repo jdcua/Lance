@@ -12,7 +12,8 @@ import { exportInvoicePDF, exportInvoiceDOCX } from '../export';
 import { formatCurrency, relativeDate } from '../utils/format';
 import { generateInvoiceNumber } from '../utils/invoiceNumber';
 import { useToasts } from '../store/toastStore';
-import { Plus, Pencil, Trash2, Download, Clock, RotateCw, Receipt, Search, ArrowUpDown } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download, Clock, RotateCw, Receipt, Search, ArrowUpDown, Bell, Send, Check, X } from 'lucide-react';
+import { generateFollowUpDraft } from '../utils/followUpTemplates';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
 
 const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
@@ -36,6 +37,7 @@ export default function Invoices() {
     invoices, loadInvoices, clients, loadClients, addInvoice, updateInvoice, removeInvoice, profile, loadProfile,
     timeEntries, loadTimeEntries, updateTimeEntry, projects, loadProjects,
     recurringInvoices, loadRecurringInvoices, addRecurringInvoice, updateRecurringInvoice, removeRecurringInvoice,
+    pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings,
   } = useStore();
   const addToast = useToasts((s) => s.add);
   const [showModal, setShowModal] = useState(false);
@@ -67,7 +69,8 @@ export default function Invoices() {
     Promise.all([loadInvoices(), loadClients(), loadProfile(), loadProjects()])
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
-  }, [loadInvoices, loadClients, loadProfile, loadProjects]);
+    loadPendingFollowUps();
+  }, [loadInvoices, loadClients, loadProfile, loadProjects, loadPendingFollowUps]);
 
   useEffect(() => {
     if (activeTab === 'recurring') loadRecurringInvoices();
@@ -347,6 +350,61 @@ export default function Invoices() {
                     {inv.paid_at && <span>Paid: {relativeDate(inv.paid_at)}</span>}
                     <span>{inv.line_items.length} item{inv.line_items.length !== 1 ? 's' : ''}</span>
                   </div>
+                  {/* Follow-up indicator */}
+                  {(() => {
+                    const fu = pendingFollowUps.find((f) => f.entity_type === 'invoice' && f.entity_id === inv.id);
+                    if (!fu || inv.status === 'paid') return null;
+                    const client = getClient(inv.client_id);
+                    const dueDate = inv.due_date ? new Date(inv.due_date) : null;
+                    const daysElapsed = dueDate ? Math.floor((Date.now() - dueDate.getTime()) / 86400000) : 0;
+                    const templateKey = daysElapsed >= 10 ? 'invoice_day14' : daysElapsed >= 4 ? 'invoice_day7' : 'invoice_day1';
+                    const draft = generateFollowUpDraft(templateKey, {
+                      clientName: client?.name || 'Unknown',
+                      invoiceNumber: inv.invoice_number,
+                      amount: formatCurrency(inv.total),
+                      dueDate: inv.due_date,
+                      daysElapsed,
+                      freelancerName: profile?.name || 'Freelancer',
+                    }, followUpSettings.templates);
+                    return (
+                      <div className="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-[var(--border-color)]/50">
+                        <Bell size={10} className="text-[var(--accent)]" />
+                        <span className="text-[10px] text-[var(--accent)]">Follow-up ready — {daysElapsed}d overdue</span>
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            await navigator.clipboard.writeText(draft);
+                            await updateFollowUpStatus(fu.id, 'sent', 'sent');
+                            addToast('Copied to clipboard', 'success');
+                          }}
+                          className="text-[10px] text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] px-1.5 py-0.5 rounded-[4px] transition-colors flex-shrink-0"
+                        >
+                          Copy
+                        </button>
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            await updateFollowUpStatus(fu.id, 'dismissed', 'dismissed');
+                            addToast('Dismissed', 'info');
+                          }}
+                          className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] px-1 flex-shrink-0"
+                        >
+                          <X size={10} />
+                        </button>
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            await updateFollowUpStatus(fu.id, 'paid', 'marked_paid');
+                            await updateInvoice({ ...inv, status: 'paid' as const });
+                            addToast('Marked as paid', 'success');
+                          }}
+                          className="text-[10px] text-[var(--accent)] hover:underline ml-auto flex-shrink-0"
+                        >
+                          Mark Paid
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {inv.status === 'draft' && <button onClick={() => handleMarkSent(inv)} className="text-[10px] text-[var(--accent)] hover:underline px-1">Mark Sent</button>}

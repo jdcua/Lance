@@ -267,4 +267,17 @@ async function runMigrations(database: Database): Promise<void> {
       created_at TEXT NOT NULL
     )
   `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS follow_up_log (
+      id TEXT PRIMARY KEY,
+      entity_type TEXT NOT NULL,
+      entity_id TEXT NOT NULL,
+      stage INTEGER NOT NULL DEFAULT 1,
+      status TEXT NOT NULL DEFAULT 'pending',
+      drafted_at TEXT NOT NULL,
+      actioned_at TEXT,
+      action TEXT
+    )
+  `);
 }

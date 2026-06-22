@@ -19,6 +19,8 @@ import type {
   MetricValue,
   MetricTemplate,
   HeadlineMetric,
+  FollowUpLog,
+  FollowUpSettings,
 } from '../types';
 import { validateLicenseKey } from '../license';
 
@@ -156,7 +158,19 @@ interface MetricSlice {
   applyMetricTemplate: (templateName: string, clientId: string) => Promise<void>;
 }
 
-export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & ExpenseSlice & ProfileSlice & CommunicationSlice & RecurringInvoiceSlice & ImportSlice & AttachmentSlice & MetricSlice;
+interface FollowUpSlice {
+  followUpLogs: Record<string, FollowUpLog[]>;
+  pendingFollowUps: FollowUpLog[];
+  followUpSettings: FollowUpSettings;
+  loadFollowUpSettings: () => void;
+  saveFollowUpSettings: (settings: Partial<FollowUpSettings>) => void;
+  loadFollowUpLog: (entityType: string, entityId: string) => Promise<void>;
+  logFollowUp: (data: { entity_type: string; entity_id: string; stage: number }) => Promise<FollowUpLog>;
+  updateFollowUpStatus: (id: string, status: string, action?: string) => Promise<void>;
+  loadPendingFollowUps: () => Promise<void>;
+}
+
+export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & ExpenseSlice & ProfileSlice & CommunicationSlice & RecurringInvoiceSlice & ImportSlice & AttachmentSlice & MetricSlice & FollowUpSlice;
 
 const invoke = async <T>(cmd: string, args?: Record<string, unknown>): Promise<T> => {
   const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
@@ -680,6 +694,63 @@ export const useStore = create<AppStore>((set, get) => ({
         is_headline: def.is_headline,
         sort_order: def.sort_order,
       });
+    }
+  },
+
+  // Follow-ups
+  followUpLogs: {},
+  pendingFollowUps: [],
+  followUpSettings: { enabled: true, proposal_delay_days: 3, invoice_delay_days: 0, templates: {} },
+  loadFollowUpSettings: () => {
+    try {
+      const stored = localStorage.getItem('lance:follow-up-settings');
+      if (stored) {
+        const defaults = { enabled: true, proposal_delay_days: 3, invoice_delay_days: 0, templates: {} };
+        set({ followUpSettings: { ...defaults, ...JSON.parse(stored) } });
+      }
+    } catch { /* use defaults */ }
+  },
+  saveFollowUpSettings: (updates) => {
+    const current = get().followUpSettings;
+    const merged = { ...current, ...updates };
+    set({ followUpSettings: merged });
+    localStorage.setItem('lance:follow-up-settings', JSON.stringify(merged));
+  },
+  loadFollowUpLog: async (entityType, entityId) => {
+    try {
+      const key = `${entityType}:${entityId}`;
+      const logs = await invoke<FollowUpLog[]>('get_follow_up_log', { entityType, entityId });
+      set({ followUpLogs: { ...get().followUpLogs, [key]: logs } });
+    } catch (e) {
+      console.error('[store] loadFollowUpLog failed:', e);
+    }
+  },
+  logFollowUp: async (data) => {
+    const log = await invoke<FollowUpLog>('log_follow_up', { payload: data });
+    const key = `${data.entity_type}:${data.entity_id}`;
+    const existing = get().followUpLogs[key] || [];
+    set({ followUpLogs: { ...get().followUpLogs, [key]: [log, ...existing] } });
+    return log;
+  },
+  updateFollowUpStatus: async (id, status, action) => {
+    await invoke('update_follow_up_status', { payload: { id, status, action: action ?? null } });
+    const allLogs = { ...get().followUpLogs };
+    for (const key of Object.keys(allLogs)) {
+      allLogs[key] = allLogs[key].map((l) =>
+        l.id === id ? { ...l, status: status as FollowUpLog['status'], action: action ?? l.action, actioned_at: new Date().toISOString() } : l
+      );
+    }
+    set({
+      followUpLogs: allLogs,
+      pendingFollowUps: get().pendingFollowUps.filter((l) => l.id !== id),
+    });
+  },
+  loadPendingFollowUps: async () => {
+    try {
+      const logs = await invoke<FollowUpLog[]>('get_all_pending_follow_ups');
+      set({ pendingFollowUps: logs });
+    } catch (e) {
+      console.error('[store] loadPendingFollowUps failed:', e);
     }
   },
 }));

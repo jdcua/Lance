@@ -251,7 +251,20 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
          CREATE INDEX IF NOT EXISTS idx_metric_defs_client ON metric_definitions(client_id);
          CREATE INDEX IF NOT EXISTS idx_metric_values_def ON metric_values(definition_id);
          CREATE INDEX IF NOT EXISTS idx_metric_values_client ON metric_values(client_id);
-         CREATE INDEX IF NOT EXISTS idx_metric_values_period ON metric_values(definition_id, period);",
+         CREATE INDEX IF NOT EXISTS idx_metric_values_period ON metric_values(definition_id, period);
+
+         CREATE TABLE IF NOT EXISTS follow_up_log (
+           id TEXT PRIMARY KEY,
+           entity_type TEXT NOT NULL,
+           entity_id TEXT NOT NULL,
+           stage INTEGER NOT NULL DEFAULT 1,
+           status TEXT NOT NULL DEFAULT 'pending',
+           drafted_at TEXT NOT NULL,
+           actioned_at TEXT,
+           action TEXT
+         );
+
+         CREATE INDEX IF NOT EXISTS idx_follow_up_entity ON follow_up_log(entity_type, entity_id);",
     )
     .map_err(|e| format!("Migration failed: {}", e))?;
 

@@ -11,7 +11,8 @@ import { formatCurrency } from '../utils/format';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
-import { Plus, Trash2, Send, Eye, Download, FileText, Search, ArrowUpDown } from 'lucide-react';
+import { Plus, Trash2, Send, Eye, Download, FileText, Search, ArrowUpDown, Bell, Check, X } from 'lucide-react';
+import { generateFollowUpDraft } from '../utils/followUpTemplates';
 
 const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
   draft: 'warning',
@@ -48,7 +49,7 @@ function generateContractBody(
 type SortKey = 'title' | 'client' | 'status' | 'date';
 
 export default function Proposals() {
-  const { proposals, loadProposals, clients, loadClients, updateProposal, removeProposal, profile, loadProfile, addContract } = useStore();
+  const { proposals, loadProposals, clients, loadClients, updateProposal, removeProposal, profile, loadProfile, addContract, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings } = useStore();
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -66,7 +67,8 @@ export default function Proposals() {
     Promise.all([loadProposals(), loadClients(), loadProfile()])
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
-  }, [loadProposals, loadClients, loadProfile]);
+    loadPendingFollowUps();
+  }, [loadProposals, loadClients, loadProfile, loadPendingFollowUps]);
 
   useEffect(() => {
     if (!exportDropdown) return;
@@ -294,9 +296,68 @@ export default function Proposals() {
                   </button>
                 </div>
               </div>
-              {expanded === p.id && p.body && (
-                <div className="mt-3 pt-3 border-t border-[var(--border-color)]">
-                  <p className="text-xs text-[var(--text-primary)] whitespace-pre-wrap leading-relaxed">{htmlToPlainText(p.body)}</p>
+              {expanded === p.id && (
+                <div className="mt-3 pt-3 border-t border-[var(--border-color)] space-y-3">
+                  {/* Follow-up banner */}
+                  {(() => {
+                    const fu = pendingFollowUps.find((f) => f.entity_type === 'proposal' && f.entity_id === p.id);
+                    if (fu && p.status === 'sent') {
+                      const client = getClient(p.client_id);
+                      const sentDate = p.sent_at ? new Date(p.sent_at) : new Date(p.created_at);
+                      const daysElapsed = Math.floor((Date.now() - sentDate.getTime()) / 86400000);
+                      const templateKey = daysElapsed >= 10 ? 'proposal_day14' : daysElapsed >= 4 ? 'proposal_day7' : 'proposal_day3';
+                      const draft = generateFollowUpDraft(templateKey, {
+                        clientName: client?.name || 'Unknown',
+                        proposalTitle: p.title,
+                        daysElapsed,
+                        projectName: p.title,
+                        freelancerName: profile?.name || 'Freelancer',
+                      }, followUpSettings.templates);
+                      return (
+                        <div className="px-3 py-2.5 rounded-[8px] bg-[var(--accent-bg)]/30 border border-[var(--accent)]/20">
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <Bell size={12} className="text-[var(--accent)]" />
+                            <span className="text-[10px] font-semibold text-[var(--accent)] uppercase tracking-wide">Follow-up Draft — Stage {fu.stage}</span>
+                            <span className="text-[10px] text-[var(--text-tertiary)]">{daysElapsed}d since sent</span>
+                          </div>
+                          <textarea
+                            value={draft}
+                            onChange={() => {}}
+                            rows={5}
+                            className="w-full px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] resize-none leading-relaxed mb-2"
+                          />
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={async () => {
+                                await navigator.clipboard.writeText(draft);
+                                await updateFollowUpStatus(fu.id, 'sent', 'sent');
+                                addToast('Copied to clipboard', 'success');
+                              }}
+                              className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] rounded-[6px] transition-colors"
+                            >
+                              <Send size={10} /> Send
+                            </button>
+                            <button
+                              onClick={async () => { await updateFollowUpStatus(fu.id, 'dismissed', 'dismissed'); addToast('Follow-up dismissed', 'info'); }}
+                              className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-[6px] hover:bg-[var(--bg-secondary)] transition-colors"
+                            >
+                              <X size={10} /> Dismiss
+                            </button>
+                            <button
+                              onClick={async () => { await updateFollowUpStatus(fu.id, 'responded', 'responded_to'); addToast('Marked as responded', 'success'); }}
+                              className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--accent)] hover:bg-[var(--accent-bg)] rounded-[6px] transition-colors ml-auto"
+                            >
+                              <Check size={10} /> Mark Responded
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                  {p.body && (
+                    <p className="text-xs text-[var(--text-primary)] whitespace-pre-wrap leading-relaxed">{htmlToPlainText(p.body)}</p>
+                  )}
                 </div>
               )}
             </Card>

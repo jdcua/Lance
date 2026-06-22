@@ -2,6 +2,7 @@ pub mod clients;
 pub mod communications;
 pub mod contracts;
 pub mod finance;
+pub mod follow_ups;
 pub mod imports;
 pub mod invoices;
 pub mod metrics;

@@ -90,6 +90,10 @@ pub fn run() {
             commands::metrics::save_metric_template,
             commands::metrics::get_metric_templates,
             commands::metrics::delete_metric_template,
+            commands::follow_ups::log_follow_up,
+            commands::follow_ups::get_follow_up_log,
+            commands::follow_ups::update_follow_up_status,
+            commands::follow_ups::get_all_pending_follow_ups,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
