@@ -1,4 +1,4 @@
-import type { Database } from '@tauri-apps/plugin-sql';
+import Database from '@tauri-apps/plugin-sql';
 
 export async function activeProjectsCount(db: Database, _profileId: number): Promise<string | number> {
   const rows: any[] = await db.select("SELECT COUNT(*) as c FROM projects WHERE status = 'active'");

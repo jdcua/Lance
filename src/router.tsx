@@ -15,6 +15,7 @@ const Insights = lazy(() => import('./screens/Insights'));
 const SettingsView = lazy(() => import('./screens/Settings'));
 const AchievementsPage = lazy(() => import('./screens/Achievements'));
 const Assets = lazy(() => import('./screens/Assets'));
+const ArchetypePicker = lazy(() => import('./screens/ArchetypePicker'));
 const NotFound = lazy(() => import('./screens/NotFound'));
 
 function LazyRoute({ children }: { children: React.ReactNode }) {
@@ -38,6 +39,7 @@ export const router = createBrowserRouter([
     element: <App />,
     children: [
       { index: true, element: <LazyRoute><Dashboard /></LazyRoute> },
+      { path: 'archetype', element: <LazyRoute><ArchetypePicker /></LazyRoute> },
       { path: 'proposals', element: <LazyRoute><Proposals /></LazyRoute> },
       { path: 'proposals/new', element: <LazyRoute><NewProposal /></LazyRoute> },
       { path: 'contracts', element: <LazyRoute><Contracts /></LazyRoute> },

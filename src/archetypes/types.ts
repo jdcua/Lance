@@ -1,4 +1,4 @@
-import type { Database } from '@tauri-apps/plugin-sql';
+import Database from '@tauri-apps/plugin-sql';
 
 export interface MetricCardDef {
   id: string;

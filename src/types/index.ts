@@ -117,6 +117,7 @@ export type UserProfile = {
   licensed_at?: string;
   ai_enabled?: boolean;
   profession?: string;
+  custom_archetype_config?: string;
 };
 
 export type Communication = {

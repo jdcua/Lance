@@ -27,6 +27,7 @@ import { generateInvoiceNumber } from './utils/invoiceNumber';
 import { applyTheme, getTheme, THEMES } from './themes/themes';
 import type { Profession } from './themes';
 import { PROFESSION_THEME } from './themes';
+import { getArchetype, ARCHETYPE_LIST } from './archetypes';
 import { checkAchievements } from './achievements/checker';
 import { ACHIEVEMENTS } from './achievements';
 
@@ -330,6 +331,13 @@ export default function App() {
     return () => document.removeEventListener('lance:open-import', handler);
   }, []);
 
+  // Listen for lance:open-archetype-picker from Settings
+  useEffect(() => {
+    const handler = () => navigate('/archetype');
+    document.addEventListener('lance:open-archetype-picker', handler);
+    return () => document.removeEventListener('lance:open-archetype-picker', handler);
+  }, [navigate]);
+
   // Keyboard shortcuts
   const isEditing = useCallback((): boolean => {
     const tag = (document.activeElement?.tagName || '').toLowerCase();
@@ -375,8 +383,13 @@ export default function App() {
       }
       if (mod && !e.shiftKey && e.key >= '1' && e.key <= '8') {
         e.preventDefault();
-        const routes = ['/proposals', '/contracts', '/projects', '/time', '/invoices', '/clients', '/finance', '/insights'];
-        navigate(routes[parseInt(e.key) - 1]);
+        const idx = parseInt(e.key) - 1;
+        const profile = useStore.getState().profile;
+        const config = getArchetype(profile?.profession || 'default');
+        const sidebarPaths = config.sidebar.map((s) => s.path);
+        if (sidebarPaths[idx]) {
+          navigate(sidebarPaths[idx]);
+        }
       }
     };
     document.addEventListener('keydown', handler);
@@ -513,7 +526,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
       // Apply profession theme ONLY if user didn't explicitly pick one in Step 3
       const storedTheme = localStorage.getItem('lance:theme');
       if (onboardingForm.profession && (!storedTheme || storedTheme === 'default')) {
-        const themeId = PROFESSION_THEME[onboardingForm.profession as Profession];
+        const themeId = PROFESSION_THEME[onboardingForm.profession as Profession] || 'default';
         if (themeId && themeId !== 'default') {
           applyTheme(getTheme(themeId));
           localStorage.setItem('lance:theme', themeId);
@@ -552,27 +565,21 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
                 Your freelance business, all in one place. What do you do?
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              {([
-                { value: 'writer', label: 'Writer / Editor' },
-                { value: 'developer', label: 'Developer / Engineer' },
-                { value: 'designer', label: 'Designer' },
-                { value: 'animator', label: 'Animator / Video' },
-                { value: 'photographer', label: 'Photographer' },
-                { value: 'consultant', label: 'Consultant / Coach' },
-              ] as const).map((p) => (
+            <div className="grid grid-cols-2 gap-2 max-h-[280px] overflow-y-auto pr-1">
+              {ARCHETYPE_LIST.filter((a) => a.id !== 'custom' && a.id !== 'default').map((archetype) => (
                 <button
-                  key={p.value}
+                  key={archetype.id}
                   onClick={() => {
-                    setOnboardingForm({ ...onboardingForm, profession: p.value });
+                    setOnboardingForm({ ...onboardingForm, profession: archetype.id as Profession });
                   }}
-                  className={`px-3 py-2.5 text-xs font-medium rounded-[8px] border transition-colors text-left ${
-                    onboardingForm.profession === p.value
+                  className={`flex items-center gap-2 px-3 py-2.5 text-xs font-medium rounded-[8px] border transition-colors text-left ${
+                    onboardingForm.profession === archetype.id
                       ? 'bg-[var(--accent-bg)] border-[var(--accent)] text-[var(--text-primary)]'
                       : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40'
                   }`}
                 >
-                  {p.label}
+                  <span className="text-base flex-shrink-0">{archetype.emoji}</span>
+                  <span className="truncate">{archetype.label}</span>
                 </button>
               ))}
             </div>

@@ -9,10 +9,11 @@ import { useToasts } from '../store/toastStore';
 import { save } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeFile } from '@tauri-apps/plugin-fs';
 import { open } from '@tauri-apps/plugin-dialog';
-import { Check, Upload, Download, AlertTriangle, Trash2, Lock, Sparkles, ExternalLink, Bell, Eye } from 'lucide-react';
+import { Check, Upload, Download, AlertTriangle, Trash2, Lock, Sparkles, ExternalLink, Bell, Eye, ArrowRight } from 'lucide-react';
 import { THEMES, applyTheme, getTheme } from '../themes/themes';
 import type { ThemeId } from '../themes';
 import { PROFESSION_THEME, type Profession } from '../themes';
+import { getArchetype, ARCHETYPE_LIST } from '../archetypes';
 import { getUnlockedThemes } from '../achievements/checker';
 import { TEMPLATE_LABELS } from '../utils/followUpTemplates';
 
@@ -619,6 +620,58 @@ export default function Settings() {
               </button>
             );
           })}
+        </div>
+      </Card>
+
+      {/* Section 4.6: Archetype */}
+      <Card className="mb-6">
+        <SectionHead title="Profession" />
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-[var(--text-primary)]">Your Archetype</p>
+              <p className="text-xs text-[var(--text-tertiary)]">
+                {(() => {
+                  const arch = getArchetype(profile?.profession || 'default');
+                  return `${arch.emoji} ${arch.label}`;
+                })()}
+              </p>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                document.dispatchEvent(new CustomEvent('lance:open-archetype-picker'));
+              }}
+            >
+              Change <ArrowRight size={14} />
+            </Button>
+          </div>
+          <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
+            Your archetype customizes your sidebar layout, dashboard metrics, insights panels, and rate label. You can switch anytime — your data stays the same.
+          </p>
+          <div className="grid grid-cols-2 gap-1.5">
+            {ARCHETYPE_LIST.filter(a => a.id !== 'default' && a.id !== 'custom').slice(0, 8).map((archetype) => (
+              <button
+                key={archetype.id}
+                onClick={async () => {
+                  const theme = getTheme(archetype.theme);
+                  applyTheme(theme);
+                  localStorage.setItem('lance:theme', archetype.theme);
+                  if (profile) {
+                    try {
+                      await saveProfile({ ...profile, profession: archetype.id });
+                      addToast(`Switched to ${archetype.label}`, 'success');
+                    } catch { addToast('Failed to switch', 'error'); }
+                  }
+                }}
+                className="flex items-center gap-2 px-3 py-2 rounded-[8px] text-xs text-left transition-colors hover:bg-[var(--bg-secondary)] border border-[var(--border-color)] bg-[var(--bg-card)]"
+              >
+                <span>{archetype.emoji}</span>
+                <span className="text-[var(--text-primary)] truncate">{archetype.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </Card>
 

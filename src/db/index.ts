@@ -156,6 +156,8 @@ async function runMigrations(database: Database): Promise<void> {
     'ALTER TABLE user_profile ADD COLUMN theme TEXT DEFAULT \'light\'',
     'ALTER TABLE user_profile ADD COLUMN license_key TEXT',
     'ALTER TABLE user_profile ADD COLUMN licensed_at TEXT',
+    'ALTER TABLE user_profile ADD COLUMN profession TEXT',
+    'ALTER TABLE user_profile ADD COLUMN custom_archetype_config TEXT',
   ];
   for (const sql of newColumns) {
     try { await database.execute(sql); } catch { /* column already exists */ }
@@ -278,6 +280,99 @@ async function runMigrations(database: Database): Promise<void> {
       drafted_at TEXT NOT NULL,
       actioned_at TEXT,
       action TEXT
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS archetype_render_log (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      pass_name TEXT,
+      duration_minutes INTEGER,
+      software TEXT,
+      frame_range TEXT,
+      notes TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (project_id) REFERENCES projects(id)
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS archetype_sessions (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      project_id TEXT,
+      session_type TEXT,
+      duration_minutes INTEGER,
+      notes TEXT,
+      action_items TEXT,
+      next_session_date TEXT,
+      created_at TEXT NOT NULL
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS archetype_shoots (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      shoot_date TEXT,
+      location TEXT,
+      shoot_type TEXT,
+      camera_system TEXT,
+      hours_on_location REAL,
+      conditions_notes TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (project_id) REFERENCES projects(id)
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS archetype_revisions (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      round_number INTEGER NOT NULL,
+      change_summary TEXT,
+      approved INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (project_id) REFERENCES projects(id)
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS archetype_builds (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      version TEXT,
+      platform TEXT,
+      notes TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (project_id) REFERENCES projects(id)
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS archetype_keywords (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      keyword TEXT NOT NULL,
+      position_start REAL,
+      position_current REAL,
+      target_position REAL,
+      created_at TEXT NOT NULL
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS archetype_datasets (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      dataset_name TEXT,
+      source TEXT,
+      size_bytes INTEGER,
+      format_type TEXT,
+      license_type TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (project_id) REFERENCES projects(id)
     )
   `);
 }
