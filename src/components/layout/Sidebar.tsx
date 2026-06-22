@@ -16,49 +16,59 @@ import {
   LayoutDashboard,
   Upload,
   Package,
+  Camera,
+  Monitor,
+  Clapperboard,
+  Code2,
+  Palette,
+  Brain,
+  Film,
+  Paintbrush,
+  Box,
+  Gamepad2,
+  Layers,
+  Target,
+  MessageCircle,
+  FileEdit,
+  Music,
+  FileAudio,
+  Building2,
+  ClipboardList,
+  Languages,
+  Search,
+  BarChart4,
+  Settings2,
+  Briefcase,
+  CheckSquare,
+  Calendar,
+  Calculator,
+  Pen,
 } from 'lucide-react';
 import { useStore } from '../../store';
+import { getArchetype } from '../../archetypes';
+import type { SidebarItemDef } from '../../archetypes';
 
-const navGroups = [
-  {
-    label: 'WIN WORK',
-    items: [
-      { to: '/proposals', icon: FileText, label: 'Proposals', badgeKey: 'draftProposals' },
-      { to: '/contracts', icon: PenLine, label: 'Contracts', badgeKey: null },
-    ],
-  },
-  {
-    label: 'RUN PROJECTS',
-    items: [
-      { to: '/projects', icon: FolderKanban, label: 'Projects', badgeKey: 'activeProjects' },
-      { to: '/time', icon: Clock, label: 'Time', badgeKey: null },
-    ],
-  },
-  {
-    label: 'GET PAID',
-    items: [
-      { to: '/invoices', icon: Receipt, label: 'Invoices', badgeKey: 'unpaidInvoices' },
-    ],
-  },
-  {
-    label: 'BUSINESS',
-    items: [
-      { to: '/clients', icon: Users, label: 'Clients', badgeKey: null },
-      { to: '/finance', icon: BarChart3, label: 'Finance', badgeKey: null },
-      { to: '/insights', icon: Lightbulb, label: 'Insights', badgeKey: null },
-    ],
-  },
-];
+const ICON_MAP: Record<string, any> = {
+  FileText, PenLine, FolderKanban, Clock, Receipt, Users, BarChart3, Lightbulb,
+  Settings, Trophy, LayoutDashboard, Upload, Package, Camera, Monitor,
+  Clapperboard, Code2, Palette, Brain, Film, Paintbrush, Box, Gamepad2,
+  Layers, Target, MessageCircle, FileEdit, Music, FileAudio, Building2,
+  ClipboardList, Languages, Search, BarChart4, Settings2, Briefcase,
+  CheckSquare, Calendar, Calculator, Pen, Sparkles,
+};
 
 export default function Sidebar() {
-  const { isLicensed, proposals, projects, invoices, allAttachments, pendingFollowUps } = useStore((s) => ({
+  const { isLicensed, proposals, projects, invoices, allAttachments, pendingFollowUps, profile } = useStore((s) => ({
     isLicensed: s.isLicensed,
     proposals: s.proposals,
     projects: s.projects,
     invoices: s.invoices,
     allAttachments: s.allAttachments,
     pendingFollowUps: s.pendingFollowUps,
+    profile: s.profile,
   }));
+
+  const archetype = useMemo(() => getArchetype(profile?.profession || 'default'), [profile?.profession]);
 
   const badgeMap: Record<string, number> = useMemo(() => ({
     draftProposals: proposals.filter((p) => p.status === 'draft').length,
@@ -68,6 +78,22 @@ export default function Sidebar() {
     proposalFollowUps: pendingFollowUps.filter((f) => f.entity_type === 'proposal').length,
     invoiceFollowUps: pendingFollowUps.filter((f) => f.entity_type === 'invoice').length,
   }), [proposals, projects, invoices, allAttachments, pendingFollowUps]);
+
+  const sidebarItems = useMemo(() => {
+    const items = archetype.sidebar || [];
+    // Group items into labeled groups based on archetype order
+    const groups: { label: string; items: SidebarItemDef[] }[] = [];
+    const groupLabels = ['WORK', 'MANAGE', 'ANALYZE'];
+    const splitSize = Math.ceil(items.length / 3);
+
+    for (let i = 0; i < items.length; i += splitSize) {
+      groups.push({
+        label: groupLabels[Math.floor(i / splitSize)] || 'MORE',
+        items: items.slice(i, i + splitSize),
+      });
+    }
+    return { items, groups };
+  }, [archetype]);
 
   return (
     <aside className="w-[220px] h-full flex flex-col bg-[var(--bg-card)] border-r border-[var(--border-color)] flex-shrink-0">
@@ -93,69 +119,54 @@ export default function Sidebar() {
           Dashboard
         </NavLink>
 
-        {navGroups.map((group) => (
+        {sidebarItems.groups.map((group) => (
           <div key={group.label} className="mb-4">
             <p className="px-4 mb-1 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.8px]" style={{ fontFamily: "'Syne', sans-serif" }}>
               {group.label}
             </p>
-            {group.items.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  `flex items-center gap-2.5 px-4 h-[36px] text-sm transition-colors ${
-                    isActive
-                      ? 'border-l-[3px] border-[var(--accent)] text-[var(--accent)] font-medium pl-[13px] bg-[var(--accent-bg)]'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] border-l-[3px] border-transparent'
-                  }`
-                }
-                style={{ fontFamily: "'Syne', sans-serif" }}
-              >
-                <item.icon size={16} />
-                <span className="flex-1">{item.label}</span>
-                {item.badgeKey && badgeMap[item.badgeKey] > 0 && (
-                  <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
-                    item.badgeKey === 'unpaidInvoices' ? 'bg-[#FCEBEB] text-[#A32D2D]' : 'bg-[var(--accent-bg)] text-[var(--accent)]'
-                  }`}>
-                    {badgeMap[item.badgeKey]}
-                  </span>
-                )}
-                {item.to === '/proposals' && badgeMap.proposalFollowUps > 0 && (
-                  <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#FAEEDA] text-[#B86E1C] ml-0.5">{badgeMap.proposalFollowUps}</span>
-                )}
-                {item.to === '/invoices' && badgeMap.invoiceFollowUps > 0 && (
-                  <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#FAEEDA] text-[#B86E1C] ml-0.5">{badgeMap.invoiceFollowUps}</span>
-                )}
-              </NavLink>
-            ))}
+            {group.items.map((item) => {
+              const Icon = ICON_MAP[item.icon] || Package;
+              const badgeKey = item.path === '/proposals' ? 'draftProposals'
+                : item.path === '/projects' ? 'activeProjects'
+                : item.path === '/invoices' ? 'unpaidInvoices'
+                : item.path === '/assets' ? 'totalAssets'
+                : null;
+
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  className={({ isActive }) =>
+                    `flex items-center gap-2.5 px-4 h-[36px] text-sm transition-colors ${
+                      isActive
+                        ? 'border-l-[3px] border-[var(--accent)] text-[var(--accent)] font-medium pl-[13px] bg-[var(--accent-bg)]'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] border-l-[3px] border-transparent'
+                    }`
+                  }
+                  style={{ fontFamily: "'Syne', sans-serif" }}
+                >
+                  <Icon size={16} />
+                  <span className="flex-1">{item.label}</span>
+                  {item.badge === 'new' && (
+                    <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">New</span>
+                  )}
+                  {item.badge === 'alert' && badgeMap.unpaidInvoices > 0 && (
+                    <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#FCEBEB] text-[#A32D2D]">{badgeMap.unpaidInvoices}</span>
+                  )}
+                  {badgeKey && badgeMap[badgeKey] > 0 && (
+                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                      badgeKey === 'unpaidInvoices' ? 'bg-[#FCEBEB] text-[#A32D2D]' : 'bg-[var(--accent-bg)] text-[var(--accent)]'
+                    }`}>
+                      {badgeMap[badgeKey]}
+                    </span>
+                  )}
+                </NavLink>
+              );
+            })}
           </div>
         ))}
 
-        <div className="mb-4">
-          <p className="px-4 mb-1 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.8px]" style={{ fontFamily: "'Syne', sans-serif" }}>
-            ASSETS
-          </p>
-          <NavLink
-            to="/assets"
-            className={({ isActive }) =>
-              `flex items-center gap-2.5 px-4 h-[36px] text-sm transition-colors ${
-                isActive
-                  ? 'border-l-[3px] border-[var(--accent)] text-[var(--accent)] font-medium pl-[13px] bg-[var(--accent-bg)]'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] border-l-[3px] border-transparent'
-              }`
-            }
-            style={{ fontFamily: "'Syne', sans-serif" }}
-          >
-            <Package size={16} />
-            <span className="flex-1">Assets</span>
-            {badgeMap.totalAssets > 0 && (
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
-                {badgeMap.totalAssets}
-              </span>
-            )}
-          </NavLink>
-        </div>
-
+        {/* Always-available items */}
         <div className="mb-4">
           <p className="px-4 mb-1 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.8px]" style={{ fontFamily: "'Syne', sans-serif" }}>
             MORE
@@ -181,6 +192,20 @@ export default function Sidebar() {
           >
             <Trophy size={16} />
             Achievements
+          </NavLink>
+          <NavLink
+            to="/archetype"
+            className={({ isActive }) =>
+              `flex items-center gap-2.5 px-4 h-[36px] text-sm transition-colors ${
+                isActive
+                  ? 'border-l-[3px] border-[var(--accent)] text-[var(--accent)] font-medium pl-[13px] bg-[var(--accent-bg)]'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] border-l-[3px] border-transparent'
+              }`
+            }
+            style={{ fontFamily: "'Syne', sans-serif" }}
+          >
+            <Sparkles size={16} />
+            Archetype
           </NavLink>
         </div>
       </nav>

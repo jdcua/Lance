@@ -1,0 +1,104 @@
+import type { Database } from '@tauri-apps/plugin-sql';
+
+export interface MetricCardDef {
+  id: string;
+  label: string;
+  query: (db: Database, profileId: number) => Promise<string | number>;
+  format: 'currency' | 'hours' | 'count' | 'percent' | 'text';
+  color?: 'green' | 'amber' | 'red' | 'blue' | 'purple';
+  tooltip?: string;
+}
+
+export interface WidgetDef {
+  id: string;
+  component: string;
+  priority: number;
+  props?: Record<string, any>;
+}
+
+export interface SidebarItemDef {
+  id: string;
+  label: string;
+  icon: string;
+  path: string;
+  archetypeOnly?: boolean;
+  badge?: 'count' | 'alert' | 'new';
+}
+
+export interface InsightPanelDef {
+  id: string;
+  title: string;
+  component: string;
+  query: string;
+  mode: 'quantitative' | 'qualitative';
+  priority: number;
+}
+
+export interface ArchetypeFeatureDef {
+  id: string;
+  name: string;
+  description: string;
+  component: string;
+  route?: string;
+  injectInto?: string;
+  position?: 'tab' | 'panel' | 'sidebar-widget' | 'modal';
+}
+
+export interface ArchetypeConfig {
+  id: string;
+  label: string;
+  emoji: string;
+  tagline: string;
+  description: string;
+  psychProfile: string;
+  icon: string;
+  theme: string;
+
+  dashboard: {
+    greeting: string;
+    subgreeting: string;
+    metricCards: MetricCardDef[];
+    widgets: WidgetDef[];
+    quickActions: Array<{ label: string; action: string; icon: string }>;
+  };
+
+  sidebar: SidebarItemDef[];
+
+  insights: {
+    mode: 'quantitative' | 'qualitative' | 'hybrid';
+    headline: string;
+    panels: InsightPanelDef[];
+    hidePanels: string[];
+  };
+
+  archetypeFeatures: ArchetypeFeatureDef[];
+
+  proposalTypes: string[];
+  defaultRateLabel: string;
+
+  aiPrompts: Record<string, string>;
+}
+
+export type ArchetypeId =
+  | 'default'
+  | 'animator'
+  | 'developer'
+  | 'designer'
+  | 'photographer'
+  | 'writer'
+  | 'consultant'
+  | 'filmmaker'
+  | 'illustrator'
+  | '3d-artist'
+  | 'game-developer'
+  | 'ux-designer'
+  | 'marketing'
+  | 'social-media'
+  | 'copywriter'
+  | 'musician'
+  | 'architect'
+  | 'virtual-assistant'
+  | 'translator'
+  | 'seo'
+  | 'data-analyst'
+  | 'custom';

@@ -8,18 +8,70 @@ import { relativeDate, formatCurrency } from '../utils/format';
 import { useToasts } from '../store/toastStore';
 import { Play, Receipt, FileText, Users, FolderKanban, Clock, Plus, ArrowRight, CheckCircle2, Circle, Bell, Send, Check, X } from 'lucide-react';
 import { generateFollowUpDraft } from '../utils/followUpTemplates';
+import { getArchetype } from '../archetypes';
+import type { ArchetypeConfig } from '../archetypes';
+import { getDb } from '../db';
+import * as queries from '../archetypes/queries';
 
 export default function Dashboard() {
   const { invoices, loadInvoices, proposals, loadProposals, projects, loadProjects, clients, loadClients, timeEntries, loadTimeEntries, profile, loadProfile, expenses, loadExpenses, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings } = useStore();
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [archetype, setArchetype] = useState<ArchetypeConfig | null>(null);
+  const [metricValues, setMetricValues] = useState<Record<string, string | number>>({});
 
   useEffect(() => {
     Promise.all([loadInvoices(), loadProposals(), loadProjects(), loadClients(), loadTimeEntries(), loadExpenses(), loadProfile(), loadPendingFollowUps()])
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
   }, [loadInvoices, loadProposals, loadProjects, loadClients, loadTimeEntries, loadExpenses, loadProfile, loadPendingFollowUps]);
+
+  useEffect(() => {
+    if (!profile) return;
+    let config: ArchetypeConfig;
+    if (profile.profession === 'custom' && (profile as any).custom_archetype_config) {
+      try {
+        config = JSON.parse((profile as any).custom_archetype_config);
+      } catch {
+        config = getArchetype(profile.profession || 'default');
+      }
+    } else {
+      config = getArchetype(profile.profession || 'default');
+    }
+    setArchetype(config);
+  }, [profile]);
+
+  useEffect(() => {
+    if (!archetype) return;
+    const loadMetrics = async () => {
+      const db = await getDb();
+      const values: Record<string, string | number> = {};
+      for (const card of archetype.dashboard.metricCards) {
+        try {
+          if (card.query) {
+            values[card.id] = await card.query(db, profile?.id || 1);
+          } else {
+            const queryFn = (queries as any)[card.id];
+            if (queryFn) {
+              values[card.id] = await queryFn(db, profile?.id || 1);
+            } else {
+              values[card.id] = '—';
+            }
+          }
+        } catch {
+          values[card.id] = '—';
+        }
+      }
+      setMetricValues(values);
+    };
+    loadMetrics();
+  }, [archetype, profile]);
+
+  if (!archetype) {
+    const config = getArchetype('default');
+    setArchetype(config);
+  }
 
   const unpaidInvoices = invoices.filter(i => i.status === 'sent' || i.status === 'overdue');
   const activeProjects = projects.filter(p => p.status === 'active');
@@ -32,10 +84,13 @@ export default function Dashboard() {
   const recentTime = [...timeEntries].filter(t => t.duration_minutes).sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime()).slice(0, 5);
 
   const hasData = clients.length > 0 || invoices.length > 0 || projects.length > 0;
+  const effectiveArchetype = archetype || getArchetype('default');
 
   if (loading) {
     return (
       <div className="p-6 space-y-6">
+        <div className="h-6 w-32 bg-[var(--bg-secondary)] rounded skeleton-pulse mb-1" />
+        <div className="h-4 w-48 bg-[var(--bg-secondary)] rounded skeleton-pulse mb-4" />
         <div className="grid grid-cols-4 gap-3">
           {[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />)}
         </div>
@@ -59,9 +114,13 @@ export default function Dashboard() {
 
   return (
     <div className="p-6">
-      <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-1">Dashboard</h2>
+      <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-1">
+        {effectiveArchetype.dashboard.greeting}
+      </h2>
       <p className="text-sm text-[var(--text-secondary)] mb-6">
-        {profile?.name?.trim() ? `Welcome back, ${profile.name.split(' ')[0]}.` : 'Welcome to Lance.'}
+        {profile?.name?.trim()
+          ? `${effectiveArchetype.dashboard.subgreeting.replace('Your', `${profile.name.split(' ')[0]}'s`)}`
+          : effectiveArchetype.dashboard.subgreeting}
       </p>
 
       {!hasData && (
@@ -101,10 +160,15 @@ export default function Dashboard() {
       )}
 
       <div className="grid grid-cols-4 gap-3 mb-6">
-        <MetricCard label="Outstanding" value={formatCurrency(totalOutstanding, profile?.currency)} subtext={`${unpaidInvoices.length} unpaid`} color={unpaidInvoices.length > 0 ? 'amber' : 'gray'} />
-        <MetricCard label="Paid (Lifetime)" value={formatCurrency(totalPaid, profile?.currency)} subtext={`${invoices.filter(i => i.status === 'paid').length} invoices`} color="green" />
-        <MetricCard label="Active Projects" value={activeProjects.length} subtext={`${projects.length} total`} color={activeProjects.length > 0 ? 'green' : 'gray'} />
-        <MetricCard label="Today" value={todaysMinutes > 0 ? `${Math.floor(todaysMinutes / 60)}h ${todaysMinutes % 60}m` : '—'} subtext="time tracked" color={todaysMinutes > 0 ? 'green' : 'gray'} />
+        {effectiveArchetype.dashboard.metricCards.map((card) => (
+          <MetricCard
+            key={card.id}
+            label={card.label}
+            value={metricValues[card.id] ?? '...'}
+            color={card.color || 'gray'}
+            tooltip={card.tooltip}
+          />
+        ))}
       </div>
 
       {/* Needs Attention — Follow-ups */}
@@ -159,6 +223,28 @@ export default function Dashboard() {
             })}
           </div>
         </Card>
+      )}
+
+      {/* Quick Actions */}
+      {hasData && effectiveArchetype.dashboard.quickActions.length > 0 && (
+        <div className="flex gap-2 mb-6">
+          {effectiveArchetype.dashboard.quickActions.map((action) => (
+            <Button
+              key={action.label}
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                if (action.action.startsWith('/')) {
+                  navigate(action.action);
+                } else {
+                  document.dispatchEvent(new CustomEvent(`lance:${action.action}`));
+                }
+              }}
+            >
+              {action.label}
+            </Button>
+          ))}
+        </div>
       )}
 
       <div className="grid grid-cols-2 gap-6">

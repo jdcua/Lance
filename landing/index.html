@@ -269,7 +269,7 @@ nav {
 /* ── Features ─────────────────────────────────── */
 .features-section { background: var(--l-bg); }
 .features-grid {
-  display: grid; grid-template-columns: repeat(4,1fr); gap: 16px;
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 16px;
 }
 @media (max-width: 1023px) { .features-grid { grid-template-columns: repeat(2,1fr); } }
 @media (max-width: 480px) { .features-grid { grid-template-columns: 1fr; } }
@@ -672,7 +672,7 @@ footer a:hover { color: var(--d-t1); }
     <div class="hero-text">
       <div class="hero-eyebrow">
         <span class="hero-eyebrow-dot"></span>
-        Freelancer OS — v1.0.0
+        Freelancer OS — v1.1.0
       </div>
 
       <h1 class="hero-hl">
@@ -682,7 +682,7 @@ footer a:hover { color: var(--d-t1); }
       </h1>
 
       <p class="hero-sub">
-        The freelancer OS that keeps proposals, contracts, invoicing, and time tracking in one app — and none of your data in the cloud.
+        The freelancer OS that keeps proposals, contracts, invoicing, time tracking, assets, and client metrics in one app — and none of your data in the cloud.
       </p>
 
       <div class="hero-cta">
@@ -850,8 +850,36 @@ footer a:hover { color: var(--d-t1); }
         <ul class="feat-list">
           <li>Invoices in PDF + DOCX</li>
           <li>Recurring invoices</li>
-          <li>Line items</li>
-          <li>Payment status</li>
+          <li>Automated follow-ups</li>
+          <li>Payment status tracking</li>
+        </ul>
+      </div>
+
+      <div class="feat-card reveal">
+        <div class="feat-icon">
+          <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+        </div>
+        <div class="feat-title">Import anything</div>
+        <p class="feat-desc">Drag-and-drop client lists, invoices, contracts, and files — Lance classifies and routes them for you.</p>
+        <ul class="feat-list">
+          <li>XLSX, CSV, PDF, DOCX, images</li>
+          <li>Auto-classification engine</li>
+          <li>Column mapping tool</li>
+          <li>5-step review before import</li>
+        </ul>
+      </div>
+
+      <div class="feat-card reveal">
+        <div class="feat-icon">
+          <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><path d="M9 21V9"/></svg>
+        </div>
+        <div class="feat-title">Asset library</div>
+        <p class="feat-desc">Logos, contract templates, brief docs, reference images — all organized by client and project.</p>
+        <ul class="feat-list">
+          <li>Global + per-client folders</li>
+          <li>Grid/list view, search, tagging</li>
+          <li>Quick preview pane</li>
+          <li>Attach to any entity</li>
         </ul>
       </div>
 
@@ -859,13 +887,27 @@ footer a:hover { color: var(--d-t1); }
         <div class="feat-icon">
           <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
         </div>
+        <div class="feat-title">Custom client metrics</div>
+        <p class="feat-desc">Track what matters to your craft — CPM, ROAS, story points, revision rounds, or anything you define.</p>
+        <ul class="feat-list">
+          <li>Define any metric per client</li>
+          <li>Log values per project or period</li>
+          <li>Sparkline history charts</li>
+          <li>Headline metrics on client cards</li>
+        </ul>
+      </div>
+
+      <div class="feat-card reveal">
+        <div class="feat-icon">
+          <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
         <div class="feat-title">See the picture</div>
-        <p class="feat-desc">Know your numbers without a spreadsheet. Revenue, pipeline, win rates — always visible.</p>
+        <p class="feat-desc">Know your numbers without a spreadsheet. Revenue, pipeline, client performance — always visible.</p>
         <ul class="feat-list">
           <li>Finance overview</li>
-          <li>Pricing insights</li>
+          <li>Client performance insights</li>
           <li>Client CRM</li>
-          <li>Business health</li>
+          <li>Metric templates per craft</li>
         </ul>
       </div>
 
@@ -991,10 +1033,15 @@ footer a:hover { color: var(--d-t1); }
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
             Insights
           </div>
-          <div class="ms-item" data-pane="clients" onclick="switchMockupPane('clients')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            Clients
-          </div>
+           <div class="ms-item" data-pane="clients" onclick="switchMockupPane('clients')">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+             Clients
+           </div>
+           <div class="ms-group">Assets</div>
+           <div class="ms-item" data-pane="assets" onclick="switchMockupPane('assets')">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+             Assets
+           </div>
         </div>
         <div class="ms-main">
           <div class="ms-header">
@@ -1113,8 +1160,21 @@ footer a:hover { color: var(--d-t1); }
             <div class="ms-proposal"><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0"></div><div><div class="ms-p-name">Studio 12</div><div class="ms-p-sub">2 projects · Last contact Oct 1</div></div></div><div class="ms-p-right"><div class="ms-p-amt">$8.7k</div></div></div>
             <div class="ms-proposal"><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:var(--d-bd);flex-shrink:0"></div><div><div class="ms-p-name">Northside Health</div><div class="ms-p-sub">1 project · Last contact Aug 2</div></div></div><div class="ms-p-right"><div class="ms-p-amt" style="color:var(--d-t2)">—</div></div></div>
             <div class="ms-proposal"><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:var(--d-bd);flex-shrink:0"></div><div><div class="ms-p-name">Riverside Co</div><div class="ms-p-sub">No active projects</div></div></div><div class="ms-p-right"><div class="ms-p-amt" style="color:var(--d-t2)">—</div></div></div>
-            <div class="ms-proposal"><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:var(--d-bd);flex-shrink:0"></div><div><div class="ms-p-name">Powell & Sons</div><div class="ms-p-sub">No active projects</div></div></div><div class="ms-p-right"><div class="ms-p-amt" style="color:var(--d-t2)">—</div></div></div>
-          </div>
+             <div class="ms-proposal"><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:var(--d-bd);flex-shrink:0"></div><div><div class="ms-p-name">Powell & Sons</div><div class="ms-p-sub">No active projects</div></div></div><div class="ms-p-right"><div class="ms-p-amt" style="color:var(--d-t2)">—</div></div></div>
+           </div>
+
+           <!-- Pane: Assets -->
+           <div class="ms-content ms-pane" id="pane-assets">
+             <div class="ms-stats">
+               <div class="ms-stat"><div class="ms-stat-val g">14</div><div class="ms-stat-lbl">Total files</div></div>
+               <div class="ms-stat"><div class="ms-stat-val">4.2 MB</div><div class="ms-stat-lbl">Storage used</div></div>
+               <div class="ms-stat"><div class="ms-stat-val">3</div><div class="ms-stat-lbl">Clients with assets</div></div>
+             </div>
+             <div class="ms-col-head" style="margin-bottom:8px">Recent Assets</div>
+             <div class="ms-proposal"><div style="display:flex;align-items:center;gap:8px"><div style="width:24px;height:24px;background:var(--d-s2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--green);flex-shrink:0">IMG</div><div><div class="ms-p-name">logo-final.png</div><div class="ms-p-sub">Acme Corp · 120 KB · PNG</div></div></div><span class="ms-chip chip-s">Client</span></div></div>
+             <div class="ms-proposal"><div style="display:flex;align-items:center;gap:8px"><div style="width:24px;height:24px;background:var(--d-s2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--green);flex-shrink:0">DOC</div><div><div class="ms-p-name">contract-template.docx</div><div class="ms-p-sub">Library · 45 KB · DOCX</div></div></div><span class="ms-chip chip-v">Template</span></div></div>
+             <div class="ms-proposal"><div style="display:flex;align-items:center;gap:8px"><div style="width:24px;height:24px;background:var(--d-s2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--green);flex-shrink:0">PDF</div><div><div class="ms-p-name">creative-brief.pdf</div><div class="ms-p-sub">Studio 12 · 380 KB · PDF</div></div></div><span class="ms-chip chip-s">Project</span></div></div>
+           </div>
         </div>
       </div>
     </div>
@@ -1152,7 +1212,7 @@ footer a:hover { color: var(--d-t1); }
     <div class="eyebrow">Pricing</div>
     <h2 class="sec-title sec-title-light">Genuinely free.</h2>
     <p class="pricing-intro">
-      No time limit. No feature locks. No nag screens. Lance is free to use forever.<br>
+      No time limit. No feature locks. No nag screens. Lance is free to use forever — including imports, asset management, and custom metrics.<br>
       If it saves you time and makes you money — consider supporting it.
     </p>
     <div class="pricing-card reveal">
@@ -1189,7 +1249,7 @@ footer a:hover { color: var(--d-t1); }
   <div class="container">
     <div class="eyebrow">Get Lance</div>
     <h2 class="sec-title sec-title-dark" style="margin-bottom:8px">Free to download. Free to use.</h2>
-    <p class="download-sub">v1.0.0 · macOS · Windows · Linux</p>
+    <p class="download-sub">v1.1.0 · macOS · Windows · Linux</p>
     <div class="dl-grid">
       <a href="#" class="dl-btn" id="dl-mac">
         <div class="dl-left">
@@ -1421,7 +1481,8 @@ var paneHeaders = {
   time:       { title: 'Time',       right: '<span class="ms-btn-sm ms-btn-ghost">This Week</span>' },
   invoices:   { title: 'Invoices',   right: '<span class="ms-btn-sm ms-btn-primary">+ New Invoice</span>' },
   insights:   { title: 'Insights',   right: '<span class="ms-btn-sm ms-btn-ghost">This Month</span>' },
-  clients:    { title: 'Clients',    right: '<span class="ms-btn-sm ms-btn-primary">+ New Client</span>' }
+  clients:    { title: 'Clients',    right: '<span class="ms-btn-sm ms-btn-primary">+ New Client</span>' },
+  assets:     { title: 'Assets',     right: '<span class="ms-btn-sm ms-btn-primary">+ Upload</span>' }
 };
 
 function switchMockupPane(pane) {
