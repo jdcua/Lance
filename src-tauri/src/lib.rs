@@ -68,10 +68,17 @@ pub fn run() {
             commands::imports::save_import_file,
             commands::imports::log_import,
             commands::imports::get_import_log,
+            commands::imports::get_assets_dir,
+            commands::imports::save_asset_file,
             commands::imports::create_attachment,
             commands::imports::get_attachments,
             commands::imports::get_all_attachments,
             commands::imports::delete_attachment,
+            commands::imports::rename_attachment,
+            commands::imports::move_attachment,
+            commands::imports::update_attachment_meta,
+            commands::imports::get_asset_stats,
+            commands::imports::search_assets,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

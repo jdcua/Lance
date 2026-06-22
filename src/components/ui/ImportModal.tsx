@@ -64,7 +64,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
-    saveImportFile, logImport,
+    saveImportFile, saveAssetFile, logImport,
     addClient, addProject, addInvoice, addExpense, addAttachment,
     addProposal, addContract,
     clients, loadClients,
@@ -152,8 +152,13 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
 
     for (const detection of active) {
       try {
-        const filePath = await saveImportFile(detection.file);
         const effectiveType = detection.userOverride || detection.detectedEntity;
+        const isUnclassified = effectiveType === 'unknown';
+        const landingInLibrary = detection.fileType === 'image' || effectiveType === 'attachment' || isUnclassified;
+
+        const filePath = landingInLibrary
+          ? await saveAssetFile(detection.file)
+          : await saveImportFile(detection.file);
 
         await logImport({
           filename: detection.file.name,
@@ -164,15 +169,19 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
           status: 'pending',
         });
 
-        if (detection.fileType === 'image' || effectiveType === 'attachment' || effectiveType === 'unknown') {
+        if (landingInLibrary) {
+          const importDate = new Date().toISOString().split('T')[0];
+          const tagList = ['imported', `date:${importDate}`, `type:${detection.fileType}`];
+          if (isUnclassified) tagList.push('unclassified');
+          const tags = JSON.stringify(tagList);
           await addAttachment({
-            entity_type: 'client',
-            entity_id: '_unlinked',
+            entity_type: 'library',
+            entity_id: 'root',
             filename: detection.file.name,
             file_path: filePath,
             mime_type: detection.file.type || 'application/octet-stream',
             size_bytes: detection.file.size,
-            tags: '["imported"]',
+            tags,
           });
           await logImport({
             filename: detection.file.name,

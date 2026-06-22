@@ -223,3 +223,23 @@ html.dark * {
 .check-mark-animate {
   animation: check-in 0.4s ease-out forwards;
 }
+
+/* ── Asset grid animations ── */
+
+@keyframes asset-card-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.asset-card-enter {
+  animation: asset-card-in 0.2s ease-out;
+}
+
+@keyframes asset-preview-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.asset-preview-animate {
+  animation: asset-preview-in 0.15s ease-out;
+}

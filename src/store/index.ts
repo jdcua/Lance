@@ -14,6 +14,7 @@ import type {
   RecurringInvoice,
   ImportLog,
   Attachment,
+  AssetStats,
 } from '../types';
 import { validateLicenseKey } from '../license';
 
@@ -118,10 +119,18 @@ interface ImportSlice {
 interface AttachmentSlice {
   attachments: Record<string, Attachment[]>;
   allAttachments: Attachment[];
+  assetStats: AssetStats | null;
   loadAttachments: (entityType: string, entityId: string) => Promise<void>;
   loadAllAttachments: () => Promise<void>;
   addAttachment: (data: Omit<Attachment, 'id' | 'created_at'>) => Promise<Attachment>;
   removeAttachment: (id: string, entityType: string, entityId: string) => Promise<void>;
+  saveAssetFile: (file: File) => Promise<string>;
+  getAssetsDir: () => Promise<string>;
+  renameAttachment: (id: string, newFilename: string) => Promise<Attachment>;
+  moveAttachment: (id: string, entityType: string, entityId: string, oldEntityType: string, oldEntityId: string) => Promise<Attachment>;
+  updateAttachmentMeta: (id: string, data: { tags?: string; notes?: string }) => Promise<Attachment>;
+  loadAssetStats: () => Promise<void>;
+  searchAssets: (query: string) => Promise<Attachment[]>;
 }
 
 export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & ExpenseSlice & ProfileSlice & CommunicationSlice & RecurringInvoiceSlice & ImportSlice & AttachmentSlice;
@@ -457,6 +466,7 @@ export const useStore = create<AppStore>((set, get) => ({
   // Attachments
   attachments: {},
   allAttachments: [],
+  assetStats: null,
   loadAttachments: async (entityType, entityId) => {
     const key = `${entityType}:${entityId}`;
     const items = await invoke<Attachment[]>('get_attachments', { entityType, entityId });
@@ -488,5 +498,69 @@ export const useStore = create<AppStore>((set, get) => ({
       attachments: { ...get().attachments, [key]: existing.filter((a) => a.id !== id) },
       allAttachments: get().allAttachments.filter((a) => a.id !== id),
     });
+  },
+  saveAssetFile: async (file: File) => {
+    const buffer = await file.arrayBuffer();
+    const data = Array.from(new Uint8Array(buffer));
+    const path = await invoke<string>('save_asset_file', { filename: file.name, data });
+    return path;
+  },
+  getAssetsDir: async () => {
+    return invoke<string>('get_assets_dir');
+  },
+  renameAttachment: async (id, newFilename) => {
+    const attachment = await invoke<Attachment>('rename_attachment', {
+      payload: { id, new_filename: newFilename },
+    });
+    set({
+      allAttachments: get().allAttachments.map((a) => (a.id === id ? attachment : a)),
+      attachments: Object.fromEntries(
+        Object.entries(get().attachments).map(([k, v]) => [
+          k,
+          v.map((a) => (a.id === id ? attachment : a)),
+        ])
+      ),
+    });
+    return attachment;
+  },
+  moveAttachment: async (id, entityType, entityId, oldEntityType, oldEntityId) => {
+    const attachment = await invoke<Attachment>('move_attachment', {
+      payload: { id, entity_type: entityType, entity_id: entityId },
+    });
+    const oldKey = `${oldEntityType}:${oldEntityId}`;
+    const newKey = `${entityType}:${entityId}`;
+    const oldList = (get().attachments[oldKey] || []).filter((a) => a.id !== id);
+    const newList = [attachment, ...(get().attachments[newKey] || [])];
+    set({
+      attachments: { ...get().attachments, [oldKey]: oldList, [newKey]: newList },
+      allAttachments: get().allAttachments.map((a) => (a.id === id ? attachment : a)),
+    });
+    return attachment;
+  },
+  updateAttachmentMeta: async (id, data) => {
+    const attachment = await invoke<Attachment>('update_attachment_meta', {
+      payload: { id, ...data },
+    });
+    set({
+      allAttachments: get().allAttachments.map((a) => (a.id === id ? attachment : a)),
+      attachments: Object.fromEntries(
+        Object.entries(get().attachments).map(([k, v]) => [
+          k,
+          v.map((a) => (a.id === id ? attachment : a)),
+        ])
+      ),
+    });
+    return attachment;
+  },
+  loadAssetStats: async () => {
+    try {
+      const stats = await invoke<AssetStats>('get_asset_stats');
+      set({ assetStats: stats });
+    } catch (e) {
+      console.error('[store] loadAssetStats failed:', e);
+    }
+  },
+  searchAssets: async (query) => {
+    return invoke<Attachment[]>('search_assets', { query });
   },
 }));

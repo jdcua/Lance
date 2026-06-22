@@ -15,6 +15,7 @@ import {
   Trophy,
   LayoutDashboard,
   Upload,
+  Package,
 } from 'lucide-react';
 import { useStore } from '../../store';
 
@@ -50,18 +51,20 @@ const navGroups = [
 ];
 
 export default function Sidebar() {
-  const { isLicensed, proposals, projects, invoices } = useStore((s) => ({
+  const { isLicensed, proposals, projects, invoices, allAttachments } = useStore((s) => ({
     isLicensed: s.isLicensed,
     proposals: s.proposals,
     projects: s.projects,
     invoices: s.invoices,
+    allAttachments: s.allAttachments,
   }));
 
   const badgeMap: Record<string, number> = useMemo(() => ({
     draftProposals: proposals.filter((p) => p.status === 'draft').length,
     activeProjects: projects.filter((p) => p.status === 'active').length,
     unpaidInvoices: invoices.filter((i) => i.status === 'sent' || i.status === 'overdue').length,
-  }), [proposals, projects, invoices]);
+    totalAssets: allAttachments.length,
+  }), [proposals, projects, invoices, allAttachments]);
 
   return (
     <aside className="w-[220px] h-full flex flex-col bg-[var(--bg-card)] border-r border-[var(--border-color)] flex-shrink-0">
@@ -118,6 +121,31 @@ export default function Sidebar() {
             ))}
           </div>
         ))}
+
+        <div className="mb-4">
+          <p className="px-4 mb-1 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.8px]" style={{ fontFamily: "'Syne', sans-serif" }}>
+            ASSETS
+          </p>
+          <NavLink
+            to="/assets"
+            className={({ isActive }) =>
+              `flex items-center gap-2.5 px-4 h-[36px] text-sm transition-colors ${
+                isActive
+                  ? 'border-l-[3px] border-[var(--accent)] text-[var(--accent)] font-medium pl-[13px] bg-[var(--accent-bg)]'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] border-l-[3px] border-transparent'
+              }`
+            }
+            style={{ fontFamily: "'Syne', sans-serif" }}
+          >
+            <Package size={16} />
+            <span className="flex-1">Assets</span>
+            {badgeMap.totalAssets > 0 && (
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
+                {badgeMap.totalAssets}
+              </span>
+            )}
+          </NavLink>
+        </div>
 
         <div className="mb-4">
           <p className="px-4 mb-1 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.8px]" style={{ fontFamily: "'Syne', sans-serif" }}>

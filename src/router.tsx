@@ -14,6 +14,7 @@ const Finance = lazy(() => import('./screens/Finance'));
 const Insights = lazy(() => import('./screens/Insights'));
 const SettingsView = lazy(() => import('./screens/Settings'));
 const AchievementsPage = lazy(() => import('./screens/Achievements'));
+const Assets = lazy(() => import('./screens/Assets'));
 const NotFound = lazy(() => import('./screens/NotFound'));
 
 function LazyRoute({ children }: { children: React.ReactNode }) {
@@ -48,6 +49,7 @@ export const router = createBrowserRouter([
       { path: 'insights', element: <LazyRoute><Insights /></LazyRoute> },
       { path: 'settings', element: <LazyRoute><SettingsView /></LazyRoute> },
       { path: 'achievements', element: <LazyRoute><AchievementsPage /></LazyRoute> },
+      { path: 'assets', element: <LazyRoute><Assets /></LazyRoute> },
       { path: '*', element: <LazyRoute><NotFound /></LazyRoute> },
     ],
   },

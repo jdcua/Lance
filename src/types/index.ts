@@ -160,7 +160,7 @@ export type ImportLog = {
 
 export type Attachment = {
   id: string;
-  entity_type: 'client' | 'project' | 'proposal' | 'contract' | 'invoice';
+  entity_type: 'client' | 'project' | 'proposal' | 'contract' | 'invoice' | 'library';
   entity_id: string;
   filename: string;
   file_path: string;
@@ -169,6 +169,16 @@ export type Attachment = {
   tags: string;
   notes?: string;
   created_at: string;
+};
+
+export type AssetStats = {
+  total_files: number;
+  total_size_bytes: number;
+  by_entity: Array<{
+    entity_type: string;
+    entity_id: string;
+    count: number;
+  }>;
 };
 
 export type DetectedEntityType =
