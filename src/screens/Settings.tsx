@@ -584,7 +584,7 @@ export default function Settings() {
         </div>
       </Card>
 
-      {/* Section 3.5: AI Features */}
+      {/* Section 3.5: AI Features (COMMENTED OUT FOR v1.1.0)
       <Card className="mb-6  ">
         <SectionHead title="AI features" />
         <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-4">
@@ -608,6 +608,7 @@ export default function Settings() {
           </span>
         </label>
       </Card>
+      */}
 
       {/* Section 4: Appearance */}
       <Card className="mb-6  ">

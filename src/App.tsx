@@ -400,7 +400,7 @@ export default function App() {
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
-        <AIBar />
+        {/* <AIBar /> */}
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
@@ -543,7 +543,8 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
     <Modal open={showOnboarding} onClose={handleOnboardingClose} title="" size="sm">
       <div className="space-y-5">
         <div className="flex justify-center gap-2 mb-1">
-          {[1, 2, 3, 4, 5].map((step) => (
+          {/* [1, 2, 3, 4, 5] -> AI disabled for v1.1.0 */}
+          {[1, 2, 3, 4].map((step) => (
             <div
               key={step}
               className={`w-2 h-2 rounded-full transition-all ${
@@ -710,7 +711,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
           </>
         )}
 
-        {/* Step 4: AI Setup */}
+        {/* Step 4: AI Setup (COMMENTED OUT FOR v1.1.0)
         {onboardingStep === 4 && (
           <>
             <div className="text-center mb-2">
@@ -760,9 +761,10 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
             </div>
           </>
         )}
+        */}
 
-        {/* Step 5: Rates & Final */}
-        {onboardingStep === 5 && (
+        {/* Step 4 (Formerly 5): Rates & Final */}
+        {onboardingStep === 4 && (
           <>
             <div className="text-center mb-2">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Final Details</h3>
