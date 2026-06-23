@@ -31,6 +31,18 @@ const files = [
   },
 ];
 
+const currentVersions = new Set();
+for (const file of files) {
+  const content = fs.readFileSync(file.path, 'utf8');
+  const match = content.match(/"version":\s*"([^"]+)"/) || content.match(/^version\s*=\s*"([^"]+)"/m);
+  if (match) currentVersions.add(match[1]);
+}
+
+if (currentVersions.size === 1 && currentVersions.has(newVersion)) {
+  console.error(`✗ Version ${newVersion} is already set in all files. Nothing to bump.`);
+  process.exit(1);
+}
+
 let count = 0;
 for (const file of files) {
   const content = fs.readFileSync(file.path, 'utf8');
