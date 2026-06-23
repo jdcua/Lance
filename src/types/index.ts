@@ -118,6 +118,8 @@ export type UserProfile = {
   ai_enabled?: boolean;
   profession?: string;
   custom_archetype_config?: string;
+  density?: string;
+  accent_color?: string;
 };
 
 export type Communication = {
@@ -280,5 +282,25 @@ export type ImportPreview = {
   rowCount?: number;
   imageDataUrl?: string;
   imageDimensions?: { width: number; height: number };
+};
+
+export type ExportTemplate = {
+  id: string;
+  name: string;
+  type: 'invoice_pdf' | 'proposal_pdf' | 'proposal_docx' | 'contract_docx';
+  header?: string;
+  footer?: string;
+  sections: string[];
+  color_scheme?: string;
+  created_at: string;
+};
+
+export type ContractTemplate = {
+  id: string;
+  name: string;
+  category?: string;
+  body: string;
+  variables: string[];
+  created_at: string;
 };
 

@@ -158,6 +158,8 @@ async function runMigrations(database: Database): Promise<void> {
     'ALTER TABLE user_profile ADD COLUMN licensed_at TEXT',
     'ALTER TABLE user_profile ADD COLUMN profession TEXT',
     'ALTER TABLE user_profile ADD COLUMN custom_archetype_config TEXT',
+    'ALTER TABLE user_profile ADD COLUMN density TEXT DEFAULT \'comfortable\'',
+    'ALTER TABLE user_profile ADD COLUMN accent_color TEXT',
   ];
   for (const sql of newColumns) {
     try { await database.execute(sql); } catch { /* column already exists */ }
@@ -373,6 +375,30 @@ async function runMigrations(database: Database): Promise<void> {
       license_type TEXT,
       created_at TEXT NOT NULL,
       FOREIGN KEY (project_id) REFERENCES projects(id)
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS export_templates (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL,
+      header TEXT,
+      footer TEXT,
+      sections TEXT NOT NULL DEFAULT '[]',
+      color_scheme TEXT,
+      created_at TEXT NOT NULL
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS contract_templates (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      category TEXT,
+      body TEXT NOT NULL,
+      variables TEXT NOT NULL DEFAULT '[]',
+      created_at TEXT NOT NULL
     )
   `);
 }

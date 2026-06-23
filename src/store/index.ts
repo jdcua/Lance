@@ -21,6 +21,8 @@ import type {
   HeadlineMetric,
   FollowUpLog,
   FollowUpSettings,
+  ExportTemplate,
+  ContractTemplate,
 } from '../types';
 import { validateLicenseKey } from '../license';
 
@@ -170,7 +172,23 @@ interface FollowUpSlice {
   loadPendingFollowUps: () => Promise<void>;
 }
 
-export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & ExpenseSlice & ProfileSlice & CommunicationSlice & RecurringInvoiceSlice & ImportSlice & AttachmentSlice & MetricSlice & FollowUpSlice;
+interface ExportTemplateSlice {
+  exportTemplates: ExportTemplate[];
+  loadExportTemplates: () => Promise<void>;
+  addExportTemplate: (data: Omit<ExportTemplate, 'id' | 'created_at'>) => Promise<ExportTemplate>;
+  updateExportTemplate: (data: ExportTemplate) => Promise<void>;
+  removeExportTemplate: (id: string) => Promise<void>;
+}
+
+interface ContractTemplateSlice {
+  contractTemplates: ContractTemplate[];
+  loadContractTemplates: () => Promise<void>;
+  addContractTemplate: (data: Omit<ContractTemplate, 'id' | 'created_at'>) => Promise<ContractTemplate>;
+  updateContractTemplate: (data: ContractTemplate) => Promise<void>;
+  removeContractTemplate: (id: string) => Promise<void>;
+}
+
+export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & ExpenseSlice & ProfileSlice & CommunicationSlice & RecurringInvoiceSlice & ImportSlice & AttachmentSlice & MetricSlice & FollowUpSlice & ExportTemplateSlice & ContractTemplateSlice;
 
 const invoke = async <T>(cmd: string, args?: Record<string, unknown>): Promise<T> => {
   const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
@@ -752,5 +770,95 @@ export const useStore = create<AppStore>((set, get) => ({
     } catch (e) {
       console.error('[store] loadPendingFollowUps failed:', e);
     }
+  },
+
+  // Export Templates
+  exportTemplates: [],
+  loadExportTemplates: async () => {
+    try {
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      const rows = await db.select<ExportTemplate[]>('SELECT * FROM export_templates ORDER BY created_at DESC');
+      const parsed = rows.map((r: ExportTemplate) => ({
+        ...r,
+        sections: typeof r.sections === 'string' ? JSON.parse(r.sections as string) : r.sections,
+      }));
+      set({ exportTemplates: parsed });
+    } catch (e) {
+      console.error('[store] loadExportTemplates failed:', e);
+    }
+  },
+  addExportTemplate: async (data) => {
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const { getDb } = await import('../db');
+    const db = await getDb();
+    await db.execute(
+      'INSERT INTO export_templates (id, name, type, header, footer, sections, color_scheme, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [id, data.name, data.type, data.header || '', data.footer || '', JSON.stringify(data.sections || []), data.color_scheme || '', now]
+    );
+    const template: ExportTemplate = { id, ...data, created_at: now };
+    set({ exportTemplates: [template, ...get().exportTemplates] });
+    return template;
+  },
+  updateExportTemplate: async (data) => {
+    const { getDb } = await import('../db');
+    const db = await getDb();
+    await db.execute(
+      'UPDATE export_templates SET name = ?, type = ?, header = ?, footer = ?, sections = ?, color_scheme = ? WHERE id = ?',
+      [data.name, data.type, data.header || '', data.footer || '', JSON.stringify(data.sections || []), data.color_scheme || '', data.id]
+    );
+    set({ exportTemplates: get().exportTemplates.map((t) => (t.id === data.id ? data : t)) });
+  },
+  removeExportTemplate: async (id) => {
+    const { getDb } = await import('../db');
+    const db = await getDb();
+    await db.execute('DELETE FROM export_templates WHERE id = ?', [id]);
+    set({ exportTemplates: get().exportTemplates.filter((t) => t.id !== id) });
+  },
+
+  // Contract Templates
+  contractTemplates: [],
+  loadContractTemplates: async () => {
+    try {
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      const rows = await db.select<ContractTemplate[]>('SELECT * FROM contract_templates ORDER BY created_at DESC');
+      const parsed = rows.map((r: ContractTemplate) => ({
+        ...r,
+        variables: typeof r.variables === 'string' ? JSON.parse(r.variables as string) : r.variables,
+      }));
+      set({ contractTemplates: parsed });
+    } catch (e) {
+      console.error('[store] loadContractTemplates failed:', e);
+    }
+  },
+  addContractTemplate: async (data) => {
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const { getDb } = await import('../db');
+    const db = await getDb();
+    await db.execute(
+      'INSERT INTO contract_templates (id, name, category, body, variables, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+      [id, data.name, data.category || '', data.body, JSON.stringify(data.variables || []), now]
+    );
+    const template: ContractTemplate = { id, ...data, created_at: now };
+    set({ contractTemplates: [template, ...get().contractTemplates] });
+    return template;
+  },
+  updateContractTemplate: async (data) => {
+    const { getDb } = await import('../db');
+    const db = await getDb();
+    await db.execute(
+      'UPDATE contract_templates SET name = ?, category = ?, body = ?, variables = ? WHERE id = ?',
+      [data.name, data.category || '', data.body, JSON.stringify(data.variables || []), data.id]
+    );
+    set({ contractTemplates: get().contractTemplates.map((t) => (t.id === data.id ? data : t)) });
+  },
+  removeContractTemplate: async (id) => {
+    const { getDb } = await import('../db');
+    const db = await getDb();
+    await db.execute('DELETE FROM contract_templates WHERE id = ?', [id]);
+    set({ contractTemplates: get().contractTemplates.filter((t) => t.id !== id) });
   },
 }));

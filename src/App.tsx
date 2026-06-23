@@ -88,16 +88,29 @@ export default function App() {
   useEffect(() => {
     const explicitTheme = profile?.theme;
     if (explicitTheme) {
-      // User has set a preference — respect it
       document.documentElement.classList.toggle('dark', explicitTheme === 'dark');
     } else if (profileLoaded && !profile) {
-      // First launch — auto-detect OS preference
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       document.documentElement.classList.toggle('dark', prefersDark);
     } else {
       document.documentElement.classList.remove('dark');
     }
   }, [profile?.theme, profileLoaded, profile]);
+
+  // Apply saved density and accent color from localStorage
+  useEffect(() => {
+    const savedDensity = localStorage.getItem('lance:density');
+    if (savedDensity === 'compact') {
+      document.body.classList.add('density-compact');
+    }
+    const savedAccent = localStorage.getItem('lance:accent-color');
+    if (savedAccent) {
+      document.body.classList.forEach((cls) => {
+        if (cls.startsWith('accent-')) document.body.classList.remove(cls);
+      });
+      document.body.classList.add(`accent-${savedAccent}`);
+    }
+  }, []);
 
   // Apply color theme on mount
   useEffect(() => {

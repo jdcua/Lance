@@ -243,3 +243,43 @@ html.dark * {
 .asset-preview-animate {
   animation: asset-preview-in 0.15s ease-out;
 }
+
+/* ── Density system ── */
+:root {
+  --row-height: 1;
+  --item-padding: 1;
+  --card-padding: 1;
+}
+
+.density-compact {
+  --row-height: 0.8;
+  --item-padding: 0.75;
+  --card-padding: 0.8;
+}
+
+.density-compact table tr {
+  height: calc(var(--row-height) * 100%);
+}
+
+.density-compact .list-item-pad {
+  padding-top: calc(var(--item-padding) * 1em);
+  padding-bottom: calc(var(--item-padding) * 1em);
+}
+
+.density-compact .sidebar-item-h {
+  height: calc(36px * var(--row-height));
+}
+
+.density-compact .card-pad {
+  padding: calc(var(--card-padding) * 20px) calc(var(--card-padding) * 24px);
+}
+
+/* ── Accent color system ── */
+.accent-sage    { --color-accent: #1EC98A; --color-accent-hover: #18B47C; --color-accent-bg: rgba(30,201,138,0.1); }
+.accent-amber   { --color-accent: #F59E0B; --color-accent-hover: #D97706; --color-accent-bg: rgba(245,158,11,0.1); }
+.accent-rose    { --color-accent: #E11D48; --color-accent-hover: #BE123C; --color-accent-bg: rgba(225,29,72,0.1); }
+.accent-sky     { --color-accent: #0EA5E9; --color-accent-hover: #0284C7; --color-accent-bg: rgba(14,165,233,0.1); }
+.accent-violet  { --color-accent: #8B5CF6; --color-accent-hover: #7C3AED; --color-accent-bg: rgba(139,92,246,0.1); }
+.accent-teal    { --color-accent: #14B8A6; --color-accent-hover: #0D9488; --color-accent-bg: rgba(20,184,166,0.1); }
+.accent-orange  { --color-accent: #F97316; --color-accent-hover: #EA580C; --color-accent-bg: rgba(249,115,22,0.1); }
+.accent-slate   { --color-accent: #64748B; --color-accent-hover: #475569; --color-accent-bg: rgba(100,116,139,0.1); }

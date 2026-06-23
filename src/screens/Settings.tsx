@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useStore } from '../store';
-import type { UserProfile } from '../types';
+import type { UserProfile, ExportTemplate } from '../types';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
@@ -9,16 +9,27 @@ import { useToasts } from '../store/toastStore';
 import { save } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeFile } from '@tauri-apps/plugin-fs';
 import { open } from '@tauri-apps/plugin-dialog';
-import { Check, Upload, Download, AlertTriangle, Trash2, Lock, Sparkles, ExternalLink, Bell, Eye, ArrowRight } from 'lucide-react';
+import { Check, Upload, Download, AlertTriangle, Trash2, Lock, Sparkles, ExternalLink, Bell, Eye, ArrowRight, FileText } from 'lucide-react';
 import { THEMES, applyTheme, getTheme } from '../themes/themes';
 import type { ThemeId } from '../themes';
 import { PROFESSION_THEME, type Profession } from '../themes';
 import { getArchetype, ARCHETYPE_LIST } from '../archetypes';
-import { getUnlockedThemes } from '../achievements/checker';
+import { getUnlockedThemes, getUnlockedAchievementKeys } from '../achievements/checker';
 import { TEMPLATE_LABELS } from '../utils/followUpTemplates';
 
 const currencies = ['CAD', 'USD', 'GBP', 'EUR', 'AUD'];
 const writingStyles = ['professional', 'warm', 'direct', 'bold'];
+
+const ACCENT_COLORS = [
+  { id: 'sage', label: 'Sage', hex: '#1EC98A' },
+  { id: 'amber', label: 'Amber', hex: '#F59E0B' },
+  { id: 'rose', label: 'Rose', hex: '#E11D48' },
+  { id: 'sky', label: 'Sky', hex: '#0EA5E9' },
+  { id: 'violet', label: 'Violet', hex: '#8B5CF6' },
+  { id: 'teal', label: 'Teal', hex: '#14B8A6' },
+  { id: 'orange', label: 'Orange', hex: '#F97316' },
+  { id: 'slate', label: 'Slate', hex: '#64748B' },
+];
 
 function labelForStyle(s: string): string {
   const map: Record<string, string> = {
@@ -49,6 +60,11 @@ export default function Settings() {
   const [fuTemplates, setFuTemplates] = useState<Record<string, string>>({});
   const [fuPreview, setFuPreview] = useState<string | null>(null);
   const fuInitRef = useRef(false);
+  const [density, setDensity] = useState<string>('comfortable');
+  const [accentColor, setAccentColor] = useState<string>('sage');
+  const [unlockedAchievements, setUnlockedAchievements] = useState<Set<string>>(new Set());
+  const densityInitRef = useRef(false);
+  const accentInitRef = useRef(false);
   const [form, setForm] = useState<UserProfile>({
     name: '',
     email: '',
@@ -100,17 +116,40 @@ export default function Settings() {
     if (isLicensed) {
       setUnlockedThemes(new Set(['default', 'studio', 'terminal', 'craft', 'motion', 'lens', 'scale']));
     } else {
-      getUnlockedThemes().then((unlocked) => {
+      Promise.all([getUnlockedThemes(), getUnlockedAchievementKeys()]).then(([unlocked, achievementKeys]) => {
         const set = new Set(['default', ...unlocked]);
-        // Also unlock profession theme
         const prof = profile?.profession as Profession | undefined;
         if (prof && PROFESSION_THEME[prof]) {
           set.add(PROFESSION_THEME[prof]);
         }
         setUnlockedThemes(set);
+        setUnlockedAchievements(new Set(achievementKeys));
       });
     }
   }, [isLicensed, profile?.profession]);
+
+  // Load density and accent from localStorage
+  useEffect(() => {
+    if (!densityInitRef.current) {
+      densityInitRef.current = true;
+      const saved = localStorage.getItem('lance:density') || 'comfortable';
+      setDensity(saved);
+      if (saved === 'compact') {
+        document.body.classList.add('density-compact');
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!accentInitRef.current) {
+      accentInitRef.current = true;
+      const saved = localStorage.getItem('lance:accent-color');
+      if (saved) {
+        setAccentColor(saved);
+        applyAccentColor(saved);
+      }
+    }
+  }, []);
 
   // Load follow-up settings
   useEffect(() => {
@@ -156,6 +195,33 @@ export default function Settings() {
     },
     [form, saveProfile, addToast]
   );
+
+  const applyAccentColor = (colorId: string) => {
+    const acc = ACCENT_COLORS.find((c) => c.id === colorId);
+    if (!acc) return;
+    document.body.classList.forEach((cls) => {
+      if (cls.startsWith('accent-')) document.body.classList.remove(cls);
+    });
+    document.body.classList.add(`accent-${colorId}`);
+    const root = document.documentElement;
+    root.style.setProperty('--color-accent', acc.hex);
+  };
+
+  const handleDensityChange = (newDensity: string) => {
+    setDensity(newDensity);
+    if (newDensity === 'compact') {
+      document.body.classList.add('density-compact');
+    } else {
+      document.body.classList.remove('density-compact');
+    }
+    localStorage.setItem('lance:density', newDensity);
+  };
+
+  const handleAccentChange = (colorId: string) => {
+    setAccentColor(colorId);
+    applyAccentColor(colorId);
+    localStorage.setItem('lance:accent-color', colorId);
+  };
 
   const handleExportData = async () => {
     try {
@@ -546,7 +612,7 @@ export default function Settings() {
       {/* Section 4: Appearance */}
       <Card className="mb-6  ">
         <SectionHead title="Appearance" />
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 mb-4">
           <button
             onClick={() => autoSave({ theme: 'light' }, 'Appearance')}
             className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
@@ -568,6 +634,34 @@ export default function Settings() {
             Dark
           </button>
         </div>
+        {unlockedAchievements.has('three_proposals') && (
+          <div className="pt-3 border-t border-[var(--border-color)]">
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-2">Layout density</label>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => handleDensityChange('comfortable')}
+                className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
+                  density === 'comfortable'
+                    ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                    : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-color)]'
+                }`}
+              >
+                Comfortable
+              </button>
+              <button
+                onClick={() => handleDensityChange('compact')}
+                className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
+                  density === 'compact'
+                    ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                    : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-color)]'
+                }`}
+              >
+                Compact
+              </button>
+            </div>
+            <p className="text-[10px] text-[var(--text-tertiary)] mt-2">Compact mode reduces row heights, padding, and spacing across the interface.</p>
+          </div>
+        )}
       </Card>
 
       {/* Section 4.5: Themes */}
@@ -622,6 +716,33 @@ export default function Settings() {
           })}
         </div>
       </Card>
+
+      {/* Section 4.55: Accent Color */}
+      {unlockedAchievements.has('five_clients') && (
+        <Card className="mb-6">
+          <SectionHead title="Accent color" />
+          <p className="text-xs text-[var(--text-tertiary)] mb-3">Choose a color that personalizes buttons, badges, progress bars, and metric cards.</p>
+          <div className="grid grid-cols-4 gap-2">
+            {ACCENT_COLORS.map((color) => (
+              <button
+                key={color.id}
+                onClick={() => handleAccentChange(color.id)}
+                className={`flex flex-col items-center gap-1.5 px-3 py-3 rounded-[8px] border transition-colors ${
+                  accentColor === color.id
+                    ? 'border-[var(--accent)] bg-[var(--accent-bg)]'
+                    : 'border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-secondary)]'
+                }`}
+              >
+                <div
+                  className="w-6 h-6 rounded-full"
+                  style={{ backgroundColor: color.hex }}
+                />
+                <span className="text-[10px] text-[var(--text-primary)]">{color.label}</span>
+              </button>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Section 4.6: Archetype */}
       <Card className="mb-6">
@@ -711,6 +832,14 @@ export default function Settings() {
           </div>
         </div>
       </Card>
+
+      {/* Section 5.5: Export Templates */}
+      {unlockedAchievements.has('first_export') && (
+        <Card className="mb-6">
+          <SectionHead title="Export Templates" />
+          <ExportTemplatesSection />
+        </Card>
+      )}
 
       {/* Section 6: Follow-ups */}
       <Card className="mb-6">
@@ -853,6 +982,229 @@ export default function Settings() {
         confirmLabel="Remove"
         variant="danger"
       />
+    </div>
+  );
+}
+
+const EXPORT_TYPES = [
+  { value: 'invoice_pdf', label: 'Invoice PDF' },
+  { value: 'proposal_pdf', label: 'Proposal PDF' },
+  { value: 'proposal_docx', label: 'Proposal DOCX' },
+  { value: 'contract_docx', label: 'Contract DOCX' },
+];
+
+const SECTION_OPTIONS: Record<string, string[]> = {
+  invoice_pdf: ['Header', 'Footer', 'From address', 'Client address', 'Line items table', 'Total summary', 'Notes', 'Payment instructions'],
+  proposal_pdf: ['Header', 'Footer', 'Cover page', 'Scope of work', 'Timeline', 'Pricing table', 'Terms', 'Signature block'],
+  proposal_docx: ['Header', 'Footer', 'Cover page', 'Scope of work', 'Timeline', 'Pricing table', 'Terms', 'Signature block'],
+  contract_docx: ['Header', 'Footer', 'Parties', 'Scope', 'Payment terms', 'Timeline', 'Signatures'],
+};
+
+function ExportTemplatesSection() {
+  const { exportTemplates, loadExportTemplates, addExportTemplate, updateExportTemplate, removeExportTemplate } = useStore();
+  const addToast = useToasts((s) => s.add);
+  const [loaded, setLoaded] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<ExportTemplate | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    name: '',
+    type: 'invoice_pdf' as ExportTemplate['type'],
+    header: '',
+    footer: '',
+    sections: [] as string[],
+    color_scheme: '',
+  });
+
+  useEffect(() => {
+    loadExportTemplates().finally(() => setLoaded(true));
+  }, []);
+
+  const openNew = () => {
+    setEditing(null);
+    setForm({ name: '', type: 'invoice_pdf', header: '', footer: '', sections: [], color_scheme: '' });
+    setShowForm(true);
+  };
+
+  const openEdit = (t: ExportTemplate) => {
+    setEditing(t);
+    setForm({
+      name: t.name,
+      type: t.type,
+      header: t.header || '',
+      footer: t.footer || '',
+      sections: t.sections || [],
+      color_scheme: t.color_scheme || '',
+    });
+    setShowForm(true);
+  };
+
+  const handleSave = async () => {
+    if (!form.name.trim()) return;
+    setSaving(true);
+    try {
+      if (editing) {
+        await updateExportTemplate({ ...editing, ...form, sections: form.sections });
+      } else {
+        await addExportTemplate({ ...form, sections: form.sections });
+      }
+      setShowForm(false);
+      addToast('Template saved', 'success');
+    } catch {
+      addToast('Failed to save template', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await removeExportTemplate(id);
+      addToast('Template deleted', 'info');
+    } catch {
+      addToast('Failed to delete', 'error');
+    }
+  };
+
+  const toggleSection = (section: string) => {
+    setForm((prev) => {
+      const sections = prev.sections.includes(section)
+        ? prev.sections.filter((s) => s !== section)
+        : [...prev.sections, section];
+      return { ...prev, sections };
+    });
+  };
+
+  const availableSections = SECTION_OPTIONS[form.type] || [];
+
+  const inputClass = "w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)]";
+
+  return (
+    <div>
+      {!loaded ? (
+        <div className="h-8 bg-[var(--bg-secondary)] rounded skeleton-pulse" />
+      ) : exportTemplates.length === 0 ? (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-[var(--text-tertiary)]">No export templates yet. Create reusable export configurations.</p>
+          <Button variant="secondary" size="sm" onClick={openNew}>
+            <FileText size={14} />
+            New Template
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {exportTemplates.map((t) => (
+            <div key={t.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[8px]">
+              <div>
+                <p className="text-sm font-medium text-[var(--text-primary)]">{t.name}</p>
+                <p className="text-[10px] text-[var(--text-tertiary)]">{EXPORT_TYPES.find((et) => et.value === t.type)?.label || t.type}</p>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => openEdit(t)}
+                  className="px-2 py-1 text-[10px] text-[var(--accent)] hover:bg-[var(--accent-bg)] rounded-[6px]"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(t.id)}
+                  className="px-2 py-1 text-[10px] text-[#A32D2D] hover:bg-[#FCEBEB] rounded-[6px]"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+          <div className="pt-2">
+            <Button variant="secondary" size="sm" onClick={openNew}>
+              <FileText size={14} />
+              New Template
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {showForm && (
+        <div className="mt-4 p-4 bg-[var(--bg-secondary)] rounded-[8px] space-y-4">
+          <h4 className="text-sm font-semibold text-[var(--text-primary)]">
+            {editing ? 'Edit Template' : 'New Template'}
+          </h4>
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Template name</label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="e.g. My Brand Export"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Document type</label>
+            <select
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value as ExportTemplate['type'], sections: [] })}
+              className={inputClass}
+            >
+              {EXPORT_TYPES.map((et) => (
+                <option key={et.value} value={et.value}>{et.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Header</label>
+            <input
+              type="text"
+              value={form.header}
+              onChange={(e) => setForm({ ...form, header: e.target.value })}
+              placeholder="Custom company name or logo text"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Footer</label>
+            <input
+              type="text"
+              value={form.footer}
+              onChange={(e) => setForm({ ...form, footer: e.target.value })}
+              placeholder="Custom footer text"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Color scheme</label>
+            <input
+              type="text"
+              value={form.color_scheme}
+              onChange={(e) => setForm({ ...form, color_scheme: e.target.value })}
+              placeholder="Hex color for PDF primary color"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-2">Include sections</label>
+            <div className="grid grid-cols-2 gap-1.5">
+              {availableSections.map((section) => (
+                <label key={section} className="flex items-center gap-2 py-0.5">
+                  <input
+                    type="checkbox"
+                    checked={form.sections.includes(section)}
+                    onChange={() => toggleSection(section)}
+                    className="w-3.5 h-3.5 rounded border-[#D4D4D2] text-[var(--accent)]"
+                  />
+                  <span className="text-xs text-[var(--text-primary)]">{section}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" onClick={() => setShowForm(false)} size="sm">Cancel</Button>
+            <Button onClick={handleSave} loading={saving} disabled={!form.name.trim()} size="sm">
+              {editing ? 'Update' : 'Create'}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
