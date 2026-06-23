@@ -129,7 +129,7 @@ export default function App() {
         applyTheme(current);
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [isLicensed]);
 
   useEffect(() => {
