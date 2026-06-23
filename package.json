@@ -17,7 +17,8 @@
     "format": "prettier --write src/",
     "format:check": "prettier --check src/",
     "gen-license": "node scripts/generate-license.cjs",
-    "scripts:sign-update": "echo 'Use: npx tauri signer generate -k ~/.tauri/updater.key -p ~/.tauri/updater.pub --json > scripts/updater-endpoint-template.json'"
+    "scripts:sign-update": "echo 'Use: npx tauri signer generate -k ~/.tauri/updater.key -p ~/.tauri/updater.pub --json > scripts/updater-endpoint-template.json'",
+    "version:bump": "node scripts/bump-version.cjs"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.5.1",

@@ -29,6 +29,7 @@
   "bundle": {
     "active": true,
     "targets": ["nsis", "msi", "dmg", "app", "appimage", "deb"],
+    "createUpdaterArtifacts": true,
     "icon": ["icons/icon.png"],
     "shortDescription": "Freelancer OS",
     "longDescription": "Win work. Run projects. Get paid. Run your business.",
@@ -46,8 +47,12 @@
     },
     "updater": {
       "active": true,
-      "endpoints": ["https://releases.decentra.co/lance/{{target}}/{{arch}}/{{current_version}}"],
-      "dialog": false
+      "endpoints": ["https://github.com/jdcua/lance/releases/latest/download/latest.json"],
+      "pubkey": "__LANCE_PUBKEY__",
+      "dialog": false,
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }
