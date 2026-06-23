@@ -344,7 +344,7 @@ export default function ClientImportModal({
             await updateClient({ ...existing, ...updates });
           }
           await addCommunication({
-            id: '',
+            id: crypto.randomUUID(),
             client_id: existing.id,
             type: 'note',
             summary: `Imported via CSV on ${importDate}`,
@@ -361,7 +361,7 @@ export default function ClientImportModal({
             notes: item.row.notes || undefined,
           });
           await addCommunication({
-            id: '',
+            id: crypto.randomUUID(),
             client_id: newClient.id,
             type: 'note',
             summary: `Imported via CSV on ${importDate}`,

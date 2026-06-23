@@ -8,13 +8,13 @@ export async function activeProjectsCount(db: Database, _profileId: number): Pro
 export async function totalOutstanding(db: Database, profileId: number): Promise<string | number> {
   const prof = await db.select("SELECT currency FROM user_profile WHERE id = $1", [profileId]);
   const currency = (prof as any[])[0]?.currency || 'CAD';
-  const rows: any[] = await db.select("SELECT COALESCE(SUM(total), 0) as s FROM invoices WHERE status IN ('sent', 'overdue')");
+  const rows: any[] = await db.select("SELECT COALESCE(SUM(total), 0) as s FROM invoices WHERE status IN ('sent', 'partial', 'overdue')");
   const val = rows[0]?.s ?? 0;
   return formatCurrency(val, currency);
 }
 
 export async function unpaidInvoicesCount(db: Database, _profileId: number): Promise<string | number> {
-  const rows: any[] = await db.select("SELECT COUNT(*) as c FROM invoices WHERE status IN ('sent', 'overdue')");
+  const rows: any[] = await db.select("SELECT COUNT(*) as c FROM invoices WHERE status IN ('sent', 'partial', 'overdue')");
   return rows[0]?.c ?? 0;
 }
 

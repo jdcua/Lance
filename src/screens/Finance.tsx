@@ -855,9 +855,11 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
   const openPaymentModal = (invId: string) => {
     const inv = invoices.find((i) => i.id === invId);
     if (!inv) return;
+    const paidTotal = (payments[invId] || []).reduce((s, p) => s + p.amount, 0);
+    const remaining = Math.max(0, inv.total - paidTotal);
     setPaymentInvId(invId);
     setPaymentForm({
-      amount: inv.total.toString(),
+      amount: remaining > 0 ? remaining.toString() : inv.total.toString(),
       payment_date: new Date().toISOString().split('T')[0],
       payment_method: 'Bank Transfer',
       reference: '',

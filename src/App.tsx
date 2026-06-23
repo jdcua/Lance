@@ -61,7 +61,7 @@ export default function App() {
   const [dragOver, setDragOver] = useState(false);
   const dragCounter = useRef(0);
 
-  const APP_VERSION = '1.1.0';
+  const APP_VERSION = '1.0.0';
   const CHANGELOG = [
     '7 themes: Default, Studio, Terminal, Craft, Motion, Lens, Scale',
     'Onboarding asks what you do & picks your first theme',
@@ -315,13 +315,17 @@ export default function App() {
           const clientName = client?.name || 'Unknown';
 
           await state.addCommunication({
-            id: '',
+            id: crypto.randomUUID(),
             client_id: ep.client_id,
             type: 'note',
             summary: `Proposal '${ep.title}' expired automatically`,
             date: new Date().toISOString(),
             created_at: new Date().toISOString(),
           });
+
+          if (settings.enabled && client?.email) {
+            await state.logFollowUp({ entity_type: 'proposal', entity_id: ep.id, stage: 3 });
+          }
 
           if (settings.enabled) {
             addToast(`Proposal '${ep.title}' for ${clientName} has expired`, 'info');
@@ -587,18 +591,39 @@ export default function App() {
               </div>
             ))}
           </div>
-          <div className="pt-2 border-t border-[var(--border-color)]">
-            <p className="text-[10px] text-[var(--text-tertiary)] text-center">
-              Proposals = ⌘1 &middot; Contracts = ⌘2 &middot; Projects = ⌘3 &middot; Time = ⌘4<br />
-              Invoices = ⌘5 &middot; Clients = ⌘6 &middot; Finance = ⌘7 &middot; Insights = ⌘8
-            </p>
-          </div>
+          <DynamicShortcutLegend />
         </div>
       </Modal>
 
       <ToastContainer />
     </div>
     </ErrorBoundary>
+  );
+}
+
+function DynamicShortcutLegend() {
+  const profile = useStore((s) => s.profile);
+  const config = getArchetype(profile?.profession || 'default');
+  const sidebarPaths = config.sidebar.map((s) => s.path);
+  const sidebarLabels = config.sidebar.map((s) => s.label);
+
+  const items = sidebarPaths.slice(0, 8).map((path, i) => {
+    const label = sidebarLabels[i] || path.replace('/', '');
+    return { label: label.charAt(0).toUpperCase() + label.slice(1), num: i + 1 };
+  });
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="pt-2 border-t border-[var(--border-color)]">
+      <p className="text-[10px] text-[var(--text-tertiary)] text-center">
+        {items.map((item, i) => (
+          <span key={item.num}>
+            {item.label} = ⌘{item.num}{i < items.length - 1 ? ' · ' : ''}
+          </span>
+        ))}
+      </p>
+    </div>
   );
 }
 
@@ -671,7 +696,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
     <Modal open={showOnboarding} onClose={handleOnboardingClose} title="" size="sm">
       <div className="space-y-5">
         <div className="flex justify-center gap-2 mb-1">
-          {/* [1, 2, 3, 4, 5] -> AI disabled for v1.1.0 */}
+          {/* [1, 2, 3, 4, 5] -> AI disabled for v1.0.0 */}
           {[1, 2, 3, 4].map((step) => (
             <div
               key={step}
@@ -839,7 +864,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
           </>
         )}
 
-        {/* Step 4: AI Setup (COMMENTED OUT FOR v1.1.0)
+        {/* Step 4: AI Setup (COMMENTED OUT FOR v1.0.0)
         {onboardingStep === 4 && (
           <>
             <div className="text-center mb-2">

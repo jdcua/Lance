@@ -114,13 +114,6 @@ export default function Dashboard() {
     setArchetype(config);
   }
 
-  const unpaidInvoices = invoices.filter(i => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue');
-  const activeProjects = projects.filter(p => p.status === 'active');
-  const draftProposals = proposals.filter(p => p.status === 'draft');
-  const totalOutstanding = unpaidInvoices.reduce((s, i) => s + i.total, 0);
-  const totalPaid = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.total, 0);
-  const todaysMinutes = timeEntries.filter(t => t.start_time.startsWith(new Date().toISOString().split('T')[0])).reduce((s, t) => s + (t.duration_minutes || 0), 0);
-
   const recentInvoices = [...invoices].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5);
   const recentTime = [...timeEntries].filter(t => t.duration_minutes).sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime()).slice(0, 5);
 

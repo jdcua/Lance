@@ -238,7 +238,7 @@ export default function Invoices() {
         const client = getClient(reminderInv.client_id);
         if (client) {
           await addCommunication({
-            id: '',
+            id: crypto.randomUUID(),
             client_id: client.id,
             type: 'email',
             summary: `Invoice reminder sent for ${reminderInv.invoice_number}`,

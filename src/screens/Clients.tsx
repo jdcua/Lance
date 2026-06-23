@@ -188,7 +188,7 @@ export default function Clients() {
     setSaving(true);
     try {
       await addCommunication({
-        id: '',
+        id: crypto.randomUUID(),
         client_id: selectedId,
         type: logForm.type,
         summary: logForm.summary,
