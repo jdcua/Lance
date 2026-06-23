@@ -12,7 +12,7 @@ import { exportInvoicePDF, exportInvoiceDOCX } from '../export';
 import { formatCurrency, relativeDate } from '../utils/format';
 import { generateInvoiceNumber } from '../utils/invoiceNumber';
 import { useToasts } from '../store/toastStore';
-import { Plus, Pencil, Trash2, Download, Clock, RotateCw, Receipt, Search, ArrowUpDown, Bell, Send, Check, X, Copy } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download, Clock, RotateCw, Receipt, Search, Bell, X, Copy, DollarSign, ChevronDown, ChevronRight } from 'lucide-react';
 import { generateFollowUpDraft } from '../utils/followUpTemplates';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
 
@@ -20,6 +20,7 @@ const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
   draft: 'warning',
   sent: 'info',
   paid: 'success',
+  partial: 'warning',
   overdue: 'danger',
 };
 
@@ -38,6 +39,7 @@ export default function Invoices() {
     timeEntries, loadTimeEntries, updateTimeEntry, projects, loadProjects,
     recurringInvoices, loadRecurringInvoices, addRecurringInvoice, updateRecurringInvoice, removeRecurringInvoice,
     pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings,
+    payments, loadPayments, addPayment, removePayment,
   } = useStore();
   const addToast = useToasts((s) => s.add);
   const [showModal, setShowModal] = useState(false);
@@ -64,6 +66,19 @@ export default function Invoices() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; label: string; type: 'invoice' | 'recurring' } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentInv, setPaymentInv] = useState<Invoice | null>(null);
+  const [paymentForm, setPaymentForm] = useState({
+    amount: '',
+    payment_date: new Date().toISOString().split('T')[0],
+    payment_method: 'Bank Transfer',
+    reference: '',
+    notes: '',
+  });
+  const [paymentSaving, setPaymentSaving] = useState(false);
+  const [expandedInv, setExpandedInv] = useState<string | null>(null);
+  const [confirmDeletePayment, setConfirmDeletePayment] = useState<{ id: string; invoiceId: string } | null>(null);
+  const [deletingPayment, setDeletingPayment] = useState(false);
 
   useEffect(() => {
     Promise.all([loadInvoices(), loadClients(), loadProfile(), loadProjects()])
@@ -153,9 +168,93 @@ export default function Invoices() {
     } finally { setDeleting(false); }
   };
 
-  const handleMarkPaid = async (inv: Invoice) => {
-    try { await updateInvoice({ ...inv, status: 'paid' as const }); checkAndNotify(useStore.getState(), addToast); }
-    catch (err) { addToast(err?.toString?.() || 'Failed to mark as paid', 'error'); }
+  const openPaymentModal = (inv: Invoice) => {
+    setPaymentInv(inv);
+    setPaymentForm({
+      amount: inv.total.toString(),
+      payment_date: new Date().toISOString().split('T')[0],
+      payment_method: 'Bank Transfer',
+      reference: '',
+      notes: '',
+    });
+    setShowPaymentModal(true);
+  };
+
+  const getPaidTotal = (invId: string) => {
+    return (payments[invId] || []).reduce((sum, p) => sum + p.amount, 0);
+  };
+
+  const getRemainingBalance = (inv: Invoice) => {
+    return Math.max(0, inv.total - getPaidTotal(inv.id));
+  };
+
+  const computeInvoiceStatus = (inv: Invoice, paidTotal: number): Invoice['status'] => {
+    if (paidTotal >= inv.total) return 'paid';
+    if (paidTotal > 0) return 'partial';
+    if (inv.status === 'draft' || inv.status === 'sent') return inv.status;
+    if (inv.due_date && new Date(inv.due_date) < new Date()) return 'overdue';
+    return inv.status;
+  };
+
+  const handleRecordPayment = async () => {
+    if (!paymentInv || !paymentForm.amount) return;
+    setPaymentSaving(true);
+    try {
+      const amount = parseFloat(paymentForm.amount);
+      await addPayment({
+        invoice_id: paymentInv.id,
+        amount,
+        payment_date: paymentForm.payment_date,
+        payment_method: paymentForm.payment_method,
+        reference: paymentForm.reference || undefined,
+        notes: paymentForm.notes || undefined,
+      });
+      const updatedPayments = useStore.getState().payments[paymentInv.id] || [];
+      const paidTotal = updatedPayments.reduce((s, p) => s + p.amount, 0) + amount;
+      const newStatus = computeInvoiceStatus(paymentInv, paidTotal);
+      const isFullyPaid = newStatus === 'paid';
+      if (newStatus !== paymentInv.status || isFullyPaid) {
+        const updateData: Partial<Invoice> = { status: newStatus };
+        if (isFullyPaid) updateData.paid_at = paymentForm.payment_date;
+        await updateInvoice({ ...paymentInv, ...updateData, status: newStatus } as Invoice);
+      }
+      if (isFullyPaid) {
+        const fu = pendingFollowUps.find((f) => f.entity_type === 'invoice' && f.entity_id === paymentInv.id);
+        if (fu) {
+          await updateFollowUpStatus(fu.id, 'paid', 'marked_paid').catch(() => {});
+        }
+      }
+      setShowPaymentModal(false);
+      checkAndNotify(useStore.getState(), addToast);
+      addToast('Payment recorded', 'success');
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to record payment', 'error');
+    } finally { setPaymentSaving(false); }
+  };
+
+  const handleDeletePayment = async () => {
+    if (!confirmDeletePayment) return;
+    setDeletingPayment(true);
+    try {
+      const { id, invoiceId } = confirmDeletePayment;
+      await removePayment(id, invoiceId);
+      const inv = invoices.find((i) => i.id === invoiceId);
+      if (inv) {
+        const remainingPayments = (useStore.getState().payments[invoiceId] || [])
+          .filter((p) => p.id !== id);
+        const paidTotal = remainingPayments.reduce((s, p) => s + p.amount, 0);
+        const newStatus = computeInvoiceStatus(inv, paidTotal);
+        if (newStatus !== inv.status) {
+          const updateData: Partial<Invoice> = { status: newStatus };
+          if (newStatus !== 'paid') updateData.paid_at = undefined;
+          await updateInvoice({ ...inv, ...updateData, status: newStatus } as Invoice);
+        }
+      }
+      setConfirmDeletePayment(null);
+      addToast('Payment deleted', 'info');
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to delete payment', 'error');
+    } finally { setDeletingPayment(false); }
   };
 
   const handleMarkSent = async (inv: Invoice) => {
@@ -275,7 +374,7 @@ export default function Invoices() {
     setExportDropdown(null);
   };
 
-  const totalOutstanding = invoices.filter(i => i.status === 'sent' || i.status === 'overdue').reduce((s, i) => s + i.total, 0);
+  const totalOutstanding = invoices.filter(i => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').reduce((s, i) => s + i.total, 0);
   const totalPaid = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.total, 0);
 
   const filteredInvoices = invoices.filter(inv => {
@@ -321,7 +420,7 @@ export default function Invoices() {
   return (
     <div className="p-6">
       <div className="grid grid-cols-3 gap-3 mb-6">
-        <MetricCard label="Outstanding" value={formatCurrency(totalOutstanding)} subtext={`${invoices.filter(i => i.status === 'sent' || i.status === 'overdue').length} invoices`} color="amber" />
+        <MetricCard label="Outstanding" value={formatCurrency(totalOutstanding)} subtext={`${invoices.filter(i => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').length} invoices`} color="amber" />
         <MetricCard label="Paid" value={formatCurrency(totalPaid)} subtext={`${invoices.filter(i => i.status === 'paid').length} invoices`} trend="up" color="green" />
         <MetricCard label="Overdue" value={formatCurrency(invoices.filter(i => i.status === 'overdue').reduce((s, i) => s + i.total, 0))} subtext="needs attention" trend={invoices.filter(i => i.status === 'overdue').length > 0 ? 'down' : 'neutral'} color={invoices.filter(i => i.status === 'overdue').length > 0 ? 'red' : 'gray'} />
       </div>
@@ -364,94 +463,147 @@ export default function Invoices() {
           <Card className="text-center py-12"><p className="text-sm text-[var(--text-tertiary)]">No invoices match "{search}"</p></Card>
         ) : (
           <div className="space-y-2">
-            {sortedInvoices.map((inv) => (
-              <div key={inv.id} className={`flex items-center gap-3 px-4 py-3 bg-[var(--bg-card)] border rounded-[8px] ${inv.status === 'overdue' ? 'border-l-[3px] border-l-[var(--danger)] border-[var(--border-color)]' : 'border-[var(--border-color)]'}`}>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-xs font-semibold text-[var(--text-primary)]">{inv.invoice_number}</span>
-                    <span className="text-xs text-[var(--text-secondary)]">{getClientName(inv.client_id)}</span>
-                    <Badge variant={statusBadge[inv.status]}>{inv.status}</Badge>
-                  </div>
-                  <div className="flex items-center gap-3 text-[10px] text-[var(--text-tertiary)]">
-                    <span>{formatCurrency(inv.total)}</span>
-                    {inv.due_date && <span>Due: {relativeDate(inv.due_date)}</span>}
-                    {inv.paid_at && <span>Paid: {relativeDate(inv.paid_at)}</span>}
-                    <span>{inv.line_items.length} item{inv.line_items.length !== 1 ? 's' : ''}</span>
-                  </div>
-                  {/* Follow-up indicator */}
-                  {(() => {
-                    const fu = pendingFollowUps.find((f) => f.entity_type === 'invoice' && f.entity_id === inv.id);
-                    if (!fu || inv.status === 'paid') return null;
-                    const client = getClient(inv.client_id);
-                    const dueDate = inv.due_date ? new Date(inv.due_date) : null;
-                    const daysElapsed = dueDate ? Math.floor((Date.now() - dueDate.getTime()) / 86400000) : 0;
-                    const templateKey = daysElapsed >= 10 ? 'invoice_day14' : daysElapsed >= 4 ? 'invoice_day7' : 'invoice_day1';
-                    const draft = generateFollowUpDraft(templateKey, {
-                      clientName: client?.name || 'Unknown',
-                      invoiceNumber: inv.invoice_number,
-                      amount: formatCurrency(inv.total),
-                      dueDate: inv.due_date,
-                      daysElapsed,
-                      freelancerName: profile?.name || 'Freelancer',
-                    }, followUpSettings.templates);
-                    return (
-                      <div className="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-[var(--border-color)]/50">
-                        <Bell size={10} className="text-[var(--accent)]" />
-                        <span className="text-[10px] text-[var(--accent)]">Follow-up ready — {daysElapsed}d overdue</span>
-                        <button
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            await navigator.clipboard.writeText(draft);
-                            await updateFollowUpStatus(fu.id, 'sent', 'sent');
-                            addToast('Copied to clipboard', 'success');
-                          }}
-                          className="text-[10px] text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] px-1.5 py-0.5 rounded-[4px] transition-colors flex-shrink-0"
-                        >
-                          Copy
-                        </button>
-                        <button
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            await updateFollowUpStatus(fu.id, 'dismissed', 'dismissed');
-                            addToast('Dismissed', 'info');
-                          }}
-                          className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] px-1 flex-shrink-0"
-                        >
-                          <X size={10} />
-                        </button>
-                        <button
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            await updateFollowUpStatus(fu.id, 'paid', 'marked_paid');
-                            await updateInvoice({ ...inv, status: 'paid' as const });
-                            addToast('Marked as paid', 'success');
-                          }}
-                          className="text-[10px] text-[var(--accent)] hover:underline ml-auto flex-shrink-0"
-                        >
-                          Mark Paid
-                        </button>
+            {sortedInvoices.map((inv) => {
+              const isExpanded = expandedInv === inv.id;
+              const paidTotal = getPaidTotal(inv.id);
+              const remaining = getRemainingBalance(inv);
+              const invPayments = payments[inv.id] || [];
+              const toggleExpand = () => {
+                if (isExpanded) {
+                  setExpandedInv(null);
+                } else {
+                  setExpandedInv(inv.id);
+                  if (!payments[inv.id]) loadPayments(inv.id);
+                }
+              };
+              return (
+                <div key={inv.id}>
+                  <div className={`flex items-center gap-3 px-4 py-3 bg-[var(--bg-card)] border rounded-[8px] ${isExpanded ? 'rounded-b-none border-b-0' : ''} ${inv.status === 'overdue' ? 'border-l-[3px] border-l-[var(--danger)] border-[var(--border-color)]' : 'border-[var(--border-color)]'}`}>
+                    <button onClick={toggleExpand} className="p-0.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] flex-shrink-0">
+                      {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-xs font-semibold text-[var(--text-primary)]">{inv.invoice_number}</span>
+                        <span className="text-xs text-[var(--text-secondary)]">{getClientName(inv.client_id)}</span>
+                        <Badge variant={statusBadge[inv.status]}>{inv.status}</Badge>
                       </div>
-                    );
-                  })()}
-                </div>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  {inv.status === 'draft' && <button onClick={() => handleMarkSent(inv)} className="text-[10px] text-[var(--accent)] hover:underline px-1">Mark Sent</button>}
-                  {(inv.status === 'sent' || inv.status === 'overdue') && <button onClick={() => handleMarkPaid(inv)} className="text-[10px] text-[var(--accent)] hover:underline px-1">Mark Paid</button>}
-                  <div className="relative" ref={exportDropdown === inv.id ? dropdownRef : undefined}>
-                    <button onClick={() => setExportDropdown(exportDropdown === inv.id ? null : inv.id)} aria-label="Export invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]" title="Export"><Download size={13} /></button>
-                    {exportDropdown === inv.id && (
-                      <div className="absolute right-0 top-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px] shadow-lg py-1 z-10 w-28">
-                        <button onClick={() => handleExportPDF(inv)} className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]">PDF</button>
-                        <button onClick={() => handleExportDOCX(inv)} className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]">DOCX</button>
+                      <div className="flex items-center gap-3 text-[10px] text-[var(--text-tertiary)]">
+                        <span>{formatCurrency(inv.total)}</span>
+                        {inv.due_date && <span>Due: {relativeDate(inv.due_date)}</span>}
+                        {inv.paid_at && <span>Paid: {relativeDate(inv.paid_at)}</span>}
+                        {paidTotal > 0 && !inv.paid_at && <span className="text-[var(--warning-text)]">Paid: {formatCurrency(paidTotal)}</span>}
+                        {remaining > 0 && remaining < inv.total && <span className="text-[var(--warning-text)]">Remaining: {formatCurrency(remaining)}</span>}
+                        <span>{inv.line_items.length} item{inv.line_items.length !== 1 ? 's' : ''}</span>
                       </div>
-                    )}
+                      {/* Follow-up indicator */}
+                      {(() => {
+                        const fu = pendingFollowUps.find((f) => f.entity_type === 'invoice' && f.entity_id === inv.id);
+                        if (!fu || inv.status === 'paid') return null;
+                        const client = getClient(inv.client_id);
+                        const dueDate = inv.due_date ? new Date(inv.due_date) : null;
+                        const daysElapsed = dueDate ? Math.floor((Date.now() - dueDate.getTime()) / 86400000) : 0;
+                        const templateKey = daysElapsed >= 10 ? 'invoice_day14' : daysElapsed >= 4 ? 'invoice_day7' : 'invoice_day1';
+                        const draft = generateFollowUpDraft(templateKey, {
+                          clientName: client?.name || 'Unknown',
+                          invoiceNumber: inv.invoice_number,
+                          amount: formatCurrency(inv.total),
+                          dueDate: inv.due_date,
+                          daysElapsed,
+                          freelancerName: profile?.name || 'Freelancer',
+                        }, followUpSettings.templates);
+                        return (
+                          <div className="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-[var(--border-color)]/50">
+                            <Bell size={10} className="text-[var(--accent)]" />
+                            <span className="text-[10px] text-[var(--accent)]">Follow-up ready — {daysElapsed}d overdue</span>
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                await navigator.clipboard.writeText(draft);
+                                await updateFollowUpStatus(fu.id, 'sent', 'sent');
+                                addToast('Copied to clipboard', 'success');
+                              }}
+                              className="text-[10px] text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] px-1.5 py-0.5 rounded-[4px] transition-colors flex-shrink-0"
+                            >
+                              Copy
+                            </button>
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                await updateFollowUpStatus(fu.id, 'dismissed', 'dismissed');
+                                addToast('Dismissed', 'info');
+                              }}
+                              className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] px-1 flex-shrink-0"
+                            >
+                              <X size={10} />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openPaymentModal(inv);
+                              }}
+                              className="text-[10px] text-[var(--accent)] hover:underline ml-auto flex-shrink-0"
+                            >
+                              Record Payment
+                            </button>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {inv.status === 'draft' && <button onClick={() => handleMarkSent(inv)} className="text-[10px] text-[var(--accent)] hover:underline px-1">Mark Sent</button>}
+                      {(inv.status === 'sent' || inv.status === 'overdue' || inv.status === 'partial') && <button onClick={() => openPaymentModal(inv)} className="text-[10px] text-[var(--accent)] hover:underline px-1">Record Payment</button>}
+                      <div className="relative" ref={exportDropdown === inv.id ? dropdownRef : undefined}>
+                        <button onClick={() => setExportDropdown(exportDropdown === inv.id ? null : inv.id)} aria-label="Export invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]" title="Export"><Download size={13} /></button>
+                        {exportDropdown === inv.id && (
+                          <div className="absolute right-0 top-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px] shadow-lg py-1 z-10 w-28">
+                            <button onClick={() => handleExportPDF(inv)} className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]">PDF</button>
+                            <button onClick={() => handleExportDOCX(inv)} className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]">DOCX</button>
+                          </div>
+                        )}
+                      </div>
+                      <button onClick={() => handleDuplicate(inv)} aria-label="Duplicate invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]" title="Duplicate"><Copy size={14} /></button>
+                      <button onClick={() => openEdit(inv)} aria-label="Edit invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]"><Pencil size={14} /></button>
+                      <button onClick={() => setConfirmDelete({ id: inv.id, label: inv.invoice_number, type: 'invoice' })} aria-label="Delete invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--danger)] rounded-[8px]"><Trash2 size={14} /></button>
+                    </div>
                   </div>
-                  <button onClick={() => handleDuplicate(inv)} aria-label="Duplicate invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]" title="Duplicate"><Copy size={14} /></button>
-                  <button onClick={() => openEdit(inv)} aria-label="Edit invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]"><Pencil size={14} /></button>
-                  <button onClick={() => setConfirmDelete({ id: inv.id, label: inv.invoice_number, type: 'invoice' })} aria-label="Delete invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--danger)] rounded-[8px]"><Trash2 size={14} /></button>
+                  {isExpanded && (
+                    <div className="border border-t-0 border-[var(--border-color)] rounded-b-[8px] bg-[var(--bg-secondary)]/30 px-4 py-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5"><DollarSign size={12} />Payments</h4>
+                        <button onClick={() => openPaymentModal(inv)} className="text-[10px] text-[var(--accent)] hover:underline">+ Record Payment</button>
+                      </div>
+                      <div className="flex items-center gap-4 mb-2 text-[10px]">
+                        <span className="text-[var(--text-secondary)]">Total paid: <span className="font-medium text-[var(--accent)]">{formatCurrency(paidTotal)}</span></span>
+                        <span className="text-[var(--text-secondary)]">Remaining: <span className={`font-medium ${remaining > 0 ? 'text-[var(--warning-text)]' : 'text-[var(--accent)]'}`}>{formatCurrency(remaining)}</span></span>
+                      </div>
+                      {invPayments.length === 0 ? (
+                        <p className="text-[10px] text-[var(--text-tertiary)]">No payments recorded yet.</p>
+                      ) : (
+                        <div className="space-y-1">
+                          {invPayments.map((p) => (
+                            <div key={p.id} className="flex items-center justify-between px-2 py-1.5 rounded-[6px] bg-[var(--bg-card)]">
+                              <div className="flex items-center gap-3 text-[10px]">
+                                <span className="text-[var(--text-primary)] font-medium">{formatCurrency(p.amount)}</span>
+                                <span className="text-[var(--text-secondary)]">{relativeDate(p.payment_date)}</span>
+                                <span className="text-[var(--text-tertiary)]">{p.payment_method}</span>
+                                {p.reference && <span className="text-[var(--text-tertiary)]">Ref: {p.reference}</span>}
+                              </div>
+                              <button
+                                onClick={() => setConfirmDeletePayment({ id: p.id, invoiceId: inv.id })}
+                                className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"
+                              >
+                                <Trash2 size={11} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )
       ) : recurringInvoices.length === 0 ? (
@@ -643,6 +795,46 @@ export default function Invoices() {
         </div>
       </Modal>
 
+      {/* Payment Recording Modal */}
+      <Modal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} title="Record Payment" size="sm">
+        <div className="space-y-4">
+          {paymentInv && (
+            <div className="px-3 py-2 rounded-[8px] bg-[var(--bg-secondary)]">
+              <p className="text-xs font-medium text-[var(--text-primary)]">{paymentInv.invoice_number}</p>
+              <p className="text-[10px] text-[var(--text-secondary)]">{getClientName(paymentInv.client_id)} &middot; {formatCurrency(paymentInv.total)}</p>
+            </div>
+          )}
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Payment Date</label>
+            <input type="date" value={paymentForm.payment_date} onChange={(e) => setPaymentForm({ ...paymentForm, payment_date: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Amount Received</label>
+            <input type="number" value={paymentForm.amount} onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })} placeholder="0.00" className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Payment Method</label>
+            <select value={paymentForm.payment_method} onChange={(e) => setPaymentForm({ ...paymentForm, payment_method: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]">
+              {['Bank Transfer', 'E-Transfer', 'Cash', 'Cheque', 'Credit Card', 'PayPal', 'Stripe', 'Wise', 'Crypto', 'Other'].map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Reference / Transaction ID</label>
+            <input type="text" value={paymentForm.reference} onChange={(e) => setPaymentForm({ ...paymentForm, reference: e.target.value })} placeholder="Optional" className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Notes</label>
+            <textarea value={paymentForm.notes} onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })} placeholder="Optional" rows={2} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none" />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" onClick={() => setShowPaymentModal(false)} size="sm">Cancel</Button>
+            <Button onClick={handleRecordPayment} loading={paymentSaving} disabled={!paymentForm.amount} size="sm">Record Payment</Button>
+          </div>
+        </div>
+      </Modal>
+
       <ConfirmDialog
         open={!!confirmDelete}
         onClose={() => setConfirmDelete(null)}
@@ -652,6 +844,17 @@ export default function Invoices() {
         confirmLabel="Delete"
         variant="danger"
         loading={deleting}
+      />
+
+      <ConfirmDialog
+        open={!!confirmDeletePayment}
+        onClose={() => setConfirmDeletePayment(null)}
+        onConfirm={handleDeletePayment}
+        title="Delete Payment"
+        message="Are you sure you want to delete this payment? The invoice status will be recalculated."
+        confirmLabel="Delete"
+        variant="danger"
+        loading={deletingPayment}
       />
     </div>
   );

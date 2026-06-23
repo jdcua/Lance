@@ -113,7 +113,7 @@ export default function Clients() {
     const clientProposals = proposals.filter((p) => p.client_id === clientId);
     const clientInvoices = invoices.filter((i) => i.client_id === clientId);
     const lifetime = clientInvoices.filter((i) => i.status === 'paid').reduce((s, i) => s + i.total, 0);
-    const outstanding = clientInvoices.filter((i) => i.status === 'sent' || i.status === 'overdue').reduce((s, i) => s + i.total, 0);
+    const outstanding = clientInvoices.filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').reduce((s, i) => s + i.total, 0);
     const lastComm = (communications[clientId] || [])[0];
     return { projectCount: clientProjects.length, proposalCount: clientProposals.length, lifetime, outstanding, lastComm };
   };

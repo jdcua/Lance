@@ -447,6 +447,20 @@ async function runMigrations(database: Database): Promise<void> {
     )
   `);
 
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS invoice_payments (
+      id TEXT PRIMARY KEY,
+      invoice_id TEXT NOT NULL,
+      amount REAL NOT NULL,
+      payment_date TEXT NOT NULL,
+      payment_method TEXT NOT NULL,
+      reference TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
+    )
+  `);
+
   await database.execute('CREATE INDEX IF NOT EXISTS idx_projects_client ON projects(client_id)');
   await database.execute('CREATE INDEX IF NOT EXISTS idx_milestones_project ON milestones(project_id)');
   await database.execute('CREATE INDEX IF NOT EXISTS idx_time_entries_project ON time_entries(project_id)');

@@ -73,7 +73,7 @@ export default function Sidebar() {
   const badgeMap: Record<string, number> = useMemo(() => ({
     draftProposals: proposals.filter((p) => p.status === 'draft').length,
     activeProjects: projects.filter((p) => p.status === 'active').length,
-    unpaidInvoices: invoices.filter((i) => i.status === 'sent' || i.status === 'overdue').length,
+    unpaidInvoices: invoices.filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').length,
     totalAssets: allAttachments.length,
     proposalFollowUps: pendingFollowUps.filter((f) => f.entity_type === 'proposal').length,
     invoiceFollowUps: pendingFollowUps.filter((f) => f.entity_type === 'invoice').length,

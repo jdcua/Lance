@@ -26,6 +26,7 @@ const pdfStyles = StyleSheet.create({
   statusPaid: { color: ACCENT },
   statusSent: { color: 'var(--warning-text)' },
   statusDraft: { color: '#A3A39E' },
+  statusPartial: { color: 'var(--warning-text)' },
   statusOverdue: { color: 'var(--danger)' },
   tableRow: { flexDirection: 'row', paddingVertical: 4 },
   tableCellDesc: { flex: 3 },
@@ -106,6 +107,7 @@ export function InvoicePDF({ invoice, client, profile }: { invoice: Invoice; cli
   const statusColor =
     invoice.status === 'paid' ? pdfStyles.statusPaid :
     invoice.status === 'sent' ? pdfStyles.statusSent :
+    invoice.status === 'partial' ? pdfStyles.statusPartial :
     invoice.status === 'overdue' ? pdfStyles.statusOverdue :
     pdfStyles.statusDraft;
 

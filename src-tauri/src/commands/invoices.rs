@@ -149,6 +149,109 @@ pub fn delete_invoice(app: AppHandle, id: String) -> Result<(), String> {
     Ok(())
 }
 
+// ── Invoice Payments ──
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct InvoicePayment {
+    pub id: String,
+    pub invoice_id: String,
+    pub amount: f64,
+    pub payment_date: String,
+    pub payment_method: String,
+    pub reference: Option<String>,
+    pub notes: Option<String>,
+    pub created_at: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CreatePaymentPayload {
+    pub invoice_id: String,
+    pub amount: f64,
+    pub payment_date: String,
+    pub payment_method: String,
+    pub reference: Option<String>,
+    pub notes: Option<String>,
+}
+
+#[tauri::command]
+pub fn get_invoice_payments(app: AppHandle, invoice_id: String) -> Result<Vec<InvoicePayment>, String> {
+    let conn = db::get_connection(&app)?;
+    let mut stmt = conn
+        .prepare("SELECT id, invoice_id, amount, payment_date, payment_method, reference, notes, created_at FROM invoice_payments WHERE invoice_id = ? ORDER BY payment_date DESC")
+        .map_err(|_| "Database operation failed".to_string())?;
+    let payments = stmt
+        .query_map([&invoice_id], |row| {
+            Ok(InvoicePayment {
+                id: row.get(0)?,
+                invoice_id: row.get(1)?,
+                amount: row.get(2)?,
+                payment_date: row.get(3)?,
+                payment_method: row.get(4)?,
+                reference: row.get(5)?,
+                notes: row.get(6)?,
+                created_at: row.get(7)?,
+            })
+        })
+        .map_err(|_| "Database operation failed".to_string())?
+        .filter_map(|r| r.ok())
+        .collect();
+    Ok(payments)
+}
+
+#[tauri::command]
+pub fn create_invoice_payment(app: AppHandle, payload: CreatePaymentPayload) -> Result<InvoicePayment, String> {
+    let conn = db::get_connection(&app)?;
+    let id = uuid::Uuid::new_v4().to_string();
+    let created_at = super::clients::chrono_now();
+    conn.execute(
+        "INSERT INTO invoice_payments (id, invoice_id, amount, payment_date, payment_method, reference, notes, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        rusqlite::params![id, payload.invoice_id, payload.amount, payload.payment_date, payload.payment_method, payload.reference, payload.notes, created_at],
+    ).map_err(|_| "Database operation failed".to_string())?;
+    Ok(InvoicePayment {
+        id,
+        invoice_id: payload.invoice_id,
+        amount: payload.amount,
+        payment_date: payload.payment_date,
+        payment_method: payload.payment_method,
+        reference: payload.reference,
+        notes: payload.notes,
+        created_at,
+    })
+}
+
+#[tauri::command]
+pub fn get_all_invoice_payments(app: AppHandle) -> Result<Vec<InvoicePayment>, String> {
+    let conn = db::get_connection(&app)?;
+    let mut stmt = conn
+        .prepare("SELECT id, invoice_id, amount, payment_date, payment_method, reference, notes, created_at FROM invoice_payments ORDER BY payment_date DESC")
+        .map_err(|_| "Database operation failed".to_string())?;
+    let payments = stmt
+        .query_map([], |row| {
+            Ok(InvoicePayment {
+                id: row.get(0)?,
+                invoice_id: row.get(1)?,
+                amount: row.get(2)?,
+                payment_date: row.get(3)?,
+                payment_method: row.get(4)?,
+                reference: row.get(5)?,
+                notes: row.get(6)?,
+                created_at: row.get(7)?,
+            })
+        })
+        .map_err(|_| "Database operation failed".to_string())?
+        .filter_map(|r| r.ok())
+        .collect();
+    Ok(payments)
+}
+
+#[tauri::command]
+pub fn delete_invoice_payment(app: AppHandle, id: String) -> Result<(), String> {
+    let conn = db::get_connection(&app)?;
+    conn.execute("DELETE FROM invoice_payments WHERE id = ?", [&id])
+        .map_err(|_| "Database operation failed".to_string())?;
+    Ok(())
+}
+
 // ── Recurring Invoices ──
 
 #[derive(Debug, Serialize, Deserialize)]

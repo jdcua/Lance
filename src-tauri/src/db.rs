@@ -267,6 +267,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
          );
 
          CREATE INDEX IF NOT EXISTS idx_follow_up_entity ON follow_up_log(entity_type, entity_id);
+         CREATE INDEX IF NOT EXISTS idx_invoice_payments_invoice ON invoice_payments(invoice_id);
 
          CREATE TABLE IF NOT EXISTS archetype_render_log (
            id TEXT PRIMARY KEY,

@@ -74,7 +74,7 @@ export type Invoice = {
   client_id: string;
   project_id?: string;
   invoice_number: string;
-  status: 'draft' | 'sent' | 'paid' | 'overdue';
+  status: 'draft' | 'sent' | 'paid' | 'partial' | 'overdue';
   line_items: LineItem[];
   subtotal: number;
   tax_rate?: number;
@@ -91,6 +91,17 @@ export type LineItem = {
   quantity: number;
   unit_price: number;
   total: number;
+};
+
+export type InvoicePayment = {
+  id: string;
+  invoice_id: string;
+  amount: number;
+  payment_date: string;
+  payment_method: string;
+  reference?: string;
+  notes?: string;
+  created_at: string;
 };
 
 export type Expense = {

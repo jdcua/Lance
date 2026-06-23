@@ -7,6 +7,7 @@ import type {
   Contract,
   TimeEntry,
   Invoice,
+  InvoicePayment,
   LineItem,
   Expense,
   UserProfile,
@@ -95,6 +96,14 @@ interface InvoiceSlice {
   updateInvoice: (data: Invoice) => Promise<void>;
   removeInvoice: (id: string) => Promise<void>;
   refreshInvoice: (id: string) => Promise<Invoice | null>;
+}
+
+interface InvoicePaymentSlice {
+  payments: Record<string, InvoicePayment[]>;
+  loadPayments: (invoiceId: string) => Promise<void>;
+  loadAllPayments: () => Promise<void>;
+  addPayment: (data: { invoice_id: string; amount: number; payment_date: string; payment_method: string; reference?: string; notes?: string }) => Promise<InvoicePayment>;
+  removePayment: (id: string, invoiceId: string) => Promise<void>;
 }
 
 interface ExpenseSlice {
@@ -263,7 +272,7 @@ interface ArchetypeDatasetSlice {
   removeDataset: (id: string, projectId: string) => Promise<void>;
 }
 
-export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & ExpenseSlice & ProfileSlice & CommunicationSlice & RecurringInvoiceSlice & ImportSlice & AttachmentSlice & MetricSlice & FollowUpSlice & ExportTemplateSlice & ContractTemplateSlice & ProjectTemplateSlice & ArchetypeRenderLogSlice & ArchetypeSessionSlice & ArchetypeShootSlice & ArchetypeRevisionSlice & ArchetypeBuildSlice & ArchetypeKeywordSlice & ArchetypeDatasetSlice;
+export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & InvoicePaymentSlice & ExpenseSlice & ProfileSlice & CommunicationSlice & RecurringInvoiceSlice & ImportSlice & AttachmentSlice & MetricSlice & FollowUpSlice & ExportTemplateSlice & ContractTemplateSlice & ProjectTemplateSlice & ArchetypeRenderLogSlice & ArchetypeSessionSlice & ArchetypeShootSlice & ArchetypeRevisionSlice & ArchetypeBuildSlice & ArchetypeKeywordSlice & ArchetypeDatasetSlice;
 
 const invoke = async <T>(cmd: string, args?: Record<string, unknown>): Promise<T> => {
   const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
@@ -491,6 +500,41 @@ export const useStore = create<AppStore>((set, get) => ({
       set({ invoices: get().invoices.map((i) => (i.id === id ? invoice : i)) });
     }
     return invoice;
+  },
+
+  // Invoice Payments
+  payments: {},
+  loadPayments: async (invoiceId) => {
+    try {
+      const payments = await invoke<InvoicePayment[]>('get_invoice_payments', { invoiceId });
+      set({ payments: { ...get().payments, [invoiceId]: payments } });
+    } catch (e) {
+      console.error('[store] loadPayments failed:', e);
+    }
+  },
+  loadAllPayments: async () => {
+    try {
+      const allPayments = await invoke<InvoicePayment[]>('get_all_invoice_payments');
+      const byInvoice: Record<string, InvoicePayment[]> = {};
+      for (const p of allPayments) {
+        if (!byInvoice[p.invoice_id]) byInvoice[p.invoice_id] = [];
+        byInvoice[p.invoice_id].push(p);
+      }
+      set({ payments: byInvoice });
+    } catch (e) {
+      console.error('[store] loadAllPayments failed:', e);
+    }
+  },
+  addPayment: async (data) => {
+    const payment = await invoke<InvoicePayment>('create_invoice_payment', { payload: data });
+    const existing = get().payments[data.invoice_id] || [];
+    set({ payments: { ...get().payments, [data.invoice_id]: [payment, ...existing] } });
+    return payment;
+  },
+  removePayment: async (id, invoiceId) => {
+    await invoke('delete_invoice_payment', { id });
+    const existing = get().payments[invoiceId] || [];
+    set({ payments: { ...get().payments, [invoiceId]: existing.filter((p) => p.id !== id) } });
   },
 
   // Expenses

@@ -82,7 +82,7 @@ export default function Dashboard() {
     setArchetype(config);
   }
 
-  const unpaidInvoices = invoices.filter(i => i.status === 'sent' || i.status === 'overdue');
+  const unpaidInvoices = invoices.filter(i => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue');
   const activeProjects = projects.filter(p => p.status === 'active');
   const draftProposals = proposals.filter(p => p.status === 'draft');
   const totalOutstanding = unpaidInvoices.reduce((s, i) => s + i.total, 0);

@@ -39,8 +39,8 @@ export default function Insights() {
 
   const totalInvoiced = invoices.reduce((sum, i) => sum + i.total, 0);
   const totalPaid = invoices.filter((i) => i.status === 'paid').reduce((sum, i) => sum + i.total, 0);
-  const totalOutstanding = invoices.filter((i) => i.status === 'sent' || i.status === 'overdue').reduce((sum, i) => sum + i.total, 0);
-  const overdueInvoices = invoices.filter((i) => i.status === 'overdue').length;
+  const totalOutstanding = invoices.filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').reduce((sum, i) => sum + i.total, 0);
+  const overdueInvoices = invoices.filter((i) => i.status === 'partial' || i.status === 'overdue').length;
 
   const totalHoursTracked = timeEntries.reduce((sum, t) => sum + (t.duration_minutes || 0), 0);
   const hoursThisWeek = timeEntries.filter((t) => {
