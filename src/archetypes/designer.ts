@@ -14,10 +14,10 @@ const designer: ArchetypeConfig = {
     greeting: 'What are you designing today?',
     subgreeting: 'Your projects, revisions, and asset deliveries at a glance.',
     metricCards: [
-      { id: 'active-projects', label: 'Active revision cycles', query: null as any, format: 'count', color: 'purple' },
-      { id: 'draft-proposals', label: 'Awaiting client feedback', query: null as any, format: 'count', color: 'amber' },
-      { id: 'assets-count', label: 'Assets delivered this month', query: null as any, format: 'count', color: 'green' },
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active revision cycles', query: null as any, format: 'count', color: 'purple' },
+      { id: 'draftsCount', label: 'Awaiting client feedback', query: null as any, format: 'count', color: 'amber' },
+      { id: 'assetsCount', label: 'Assets delivered this month', query: null as any, format: 'count', color: 'green' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'revision-tracker-widget', component: 'RevisionTrackerWidget', priority: 1 },

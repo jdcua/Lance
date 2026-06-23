@@ -144,7 +144,8 @@ pub fn update_invoice(app: AppHandle, payload: UpdateInvoicePayload) -> Result<(
 #[tauri::command]
 pub fn delete_invoice(app: AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM invoices WHERE id = ?", [&id]).map_err(|_| "Database operation failed".to_string())?;
+    conn.execute("DELETE FROM invoices WHERE id = ?", [&id])
+        .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 

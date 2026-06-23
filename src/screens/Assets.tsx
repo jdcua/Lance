@@ -177,7 +177,7 @@ export default function Assets() {
       addToast('Asset attached', 'success');
     } catch {
       addToast('Failed to attach', 'error');
-    }
+    } /* attachment is best-effort */
   };
 
   const handleAddTag = async (asset: Attachment, tag: string) => {

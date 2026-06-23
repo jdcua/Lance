@@ -225,7 +225,8 @@ pub fn get_metric_values(
 #[tauri::command]
 pub fn delete_metric_value(app: tauri::AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM metric_values WHERE id = ?", [&id]).map_err(|_| "Database operation failed".to_string())?;
+    conn.execute("DELETE FROM metric_values WHERE id = ?", [&id])
+        .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 
@@ -324,7 +325,9 @@ pub fn get_all_headline_metrics(app: tauri::AppHandle) -> Result<Vec<HeadlineMet
 
     // Get client names
     let client_names: std::collections::HashMap<String, String> = {
-        let mut stmt = conn.prepare("SELECT id, name FROM clients").map_err(|_| "Database operation failed".to_string())?;
+        let mut stmt = conn
+            .prepare("SELECT id, name FROM clients")
+            .map_err(|_| "Database operation failed".to_string())?;
         let results: Vec<(String, String)> = stmt
             .query_map([], |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?)))
             .map_err(|_| "Database operation failed".to_string())?
@@ -407,6 +410,7 @@ pub fn get_metric_templates(app: tauri::AppHandle) -> Result<Vec<MetricTemplate>
 #[tauri::command]
 pub fn delete_metric_template(app: tauri::AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM metric_templates WHERE id = ?", [&id]).map_err(|_| "Database operation failed".to_string())?;
+    conn.execute("DELETE FROM metric_templates WHERE id = ?", [&id])
+        .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }

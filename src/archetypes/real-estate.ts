@@ -14,10 +14,10 @@ const realEstate: ArchetypeConfig = {
     greeting: "What's on the market?",
     subgreeting: 'Your listings, showings, and pipeline at a glance.',
     metricCards: [
-      { id: 'active-projects', label: 'Active listings', query: null as any, format: 'count', color: 'blue' },
-      { id: 'upcoming-milestones', label: 'Showings this week', query: null as any, format: 'count', color: 'green' },
-      { id: 'clients-count', label: 'Active buyers', query: null as any, format: 'count', color: 'purple' },
-      { id: 'outstanding', label: 'Pending commissions', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active listings', query: null as any, format: 'count', color: 'blue' },
+      { id: 'upcomingMilestones', label: 'Showings this week', query: null as any, format: 'count', color: 'green' },
+      { id: 'clientsCount', label: 'Active buyers', query: null as any, format: 'count', color: 'purple' },
+      { id: 'totalOutstanding', label: 'Pending commissions', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'listing-tracker-widget', component: 'ListingTrackerWidget', priority: 1 },

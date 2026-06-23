@@ -12,8 +12,8 @@ html, body, #root {
   height: 100%;
   width: 100%;
   overflow: hidden;
-  background-color: #F8F7F3;
-  color: #181716;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -28,18 +28,18 @@ html, body, #root {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #D4D4D2;
+  background: var(--neutral-border);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #BCBCB8;
+  background: var(--text-tertiary);
 }
 
 /* Firefox scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #D4D4D2 transparent;
+  scrollbar-color: var(--neutral-border) transparent;
 }
 
 /* ── Micro-animations ── */
@@ -118,15 +118,15 @@ html.dark #root {
 }
 
 html.dark ::-webkit-scrollbar-thumb {
-  background: #3A3937;
+  background: var(--text-tertiary);
 }
 
 html.dark ::-webkit-scrollbar-thumb:hover {
-  background: #4A4946;
+  background: var(--text-secondary);
 }
 
 html.dark * {
-  scrollbar-color: #3A3937 transparent;
+  scrollbar-color: var(--text-tertiary) transparent;
 }
 
 /* ── Import animations ── */

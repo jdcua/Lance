@@ -14,10 +14,10 @@ const gameDeveloper: ArchetypeConfig = {
     greeting: "What's building today?",
     subgreeting: 'Your features, QA, and builds at a glance.',
     metricCards: [
-      { id: 'active-projects', label: 'Active projects', query: null as any, format: 'count', color: 'green' },
-      { id: 'unbilled-hours', label: 'Unbilled hours', query: null as any, format: 'hours', color: 'amber' },
-      { id: 'upcoming-milestones', label: 'Upcoming milestones', query: null as any, format: 'count', color: 'purple' },
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active projects', query: null as any, format: 'count', color: 'green' },
+      { id: 'unbilledHours', label: 'Unbilled hours', query: null as any, format: 'hours', color: 'amber' },
+      { id: 'upcomingMilestones', label: 'Upcoming milestones', query: null as any, format: 'count', color: 'purple' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'feature-scope-widget', component: 'FeatureScopeWidget', priority: 1 },

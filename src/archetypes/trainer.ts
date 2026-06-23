@@ -14,10 +14,10 @@ const trainer: ArchetypeConfig = {
     greeting: "Who's training today?",
     subgreeting: 'Your clients, sessions, and progress at a glance.',
     metricCards: [
-      { id: 'clients-count', label: 'Active clients', query: null as any, format: 'count', color: 'green' },
-      { id: 'sessions-week', label: 'Sessions this week', query: null as any, format: 'count', color: 'blue' },
-      { id: 'completed-projects', label: 'Programs completed this month', query: null as any, format: 'count', color: 'purple' },
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'clientsCount', label: 'Active clients', query: null as any, format: 'count', color: 'green' },
+      { id: 'sessionsThisWeek', label: 'Sessions this week', query: null as any, format: 'count', color: 'blue' },
+      { id: 'projectsCompleted', label: 'Programs completed this month', query: null as any, format: 'count', color: 'purple' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'client-progress-widget', component: 'ClientProgressWidget', priority: 1 },

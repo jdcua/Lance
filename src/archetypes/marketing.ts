@@ -14,10 +14,10 @@ const marketing: ArchetypeConfig = {
     greeting: "What's the strategy today?",
     subgreeting: 'Your campaigns, retainer health, and report cadence at a glance.',
     metricCards: [
-      { id: 'active-projects', label: 'Active campaigns', query: null as any, format: 'count', color: 'blue' },
-      { id: 'active-retainers', label: 'Active retainers', query: null as any, format: 'count', color: 'green' },
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
-      { id: 'clients-count', label: 'Active clients', query: null as any, format: 'count', color: 'purple' },
+      { id: 'activeProjectsCount', label: 'Active campaigns', query: null as any, format: 'count', color: 'blue' },
+      { id: 'activeRetainers', label: 'Active retainers', query: null as any, format: 'count', color: 'green' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'clientsCount', label: 'Active clients', query: null as any, format: 'count', color: 'purple' },
     ],
     widgets: [
       { id: 'campaign-tracker-widget', component: 'CampaignTrackerWidget', priority: 1 },

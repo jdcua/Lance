@@ -121,7 +121,8 @@ pub fn update_client(app: tauri::AppHandle, payload: UpdateClientPayload) -> Res
 #[tauri::command]
 pub fn delete_client(app: tauri::AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM clients WHERE id = ?", [&id]).map_err(|_| "Database operation failed".to_string())?;
+    conn.execute("DELETE FROM clients WHERE id = ?", [&id])
+        .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 

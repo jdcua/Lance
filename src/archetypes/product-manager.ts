@@ -14,10 +14,10 @@ const productManager: ArchetypeConfig = {
     greeting: "What's on the roadmap?",
     subgreeting: 'Your features, priorities, and velocity at a glance.',
     metricCards: [
-      { id: 'active-projects', label: 'Active initiatives', query: null as any, format: 'count', color: 'blue' },
-      { id: 'upcoming-milestones', label: 'Features shipping this week', query: null as any, format: 'count', color: 'green' },
-      { id: 'draft-proposals', label: 'Features in discovery', query: null as any, format: 'count', color: 'purple' },
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active initiatives', query: null as any, format: 'count', color: 'blue' },
+      { id: 'upcomingMilestones', label: 'Features shipping this week', query: null as any, format: 'count', color: 'green' },
+      { id: 'draftsCount', label: 'Features in discovery', query: null as any, format: 'count', color: 'purple' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'roadmap-widget', component: 'RoadmapWidget', priority: 1 },

@@ -14,10 +14,10 @@ const voiceActor: ArchetypeConfig = {
     greeting: 'What are you recording?',
     subgreeting: 'Your auditions, bookings, and session time at a glance.',
     metricCards: [
-      { id: 'active-projects', label: 'Bookings this month', query: null as any, format: 'count', color: 'green' },
-      { id: 'draft-proposals', label: 'Pending auditions', query: null as any, format: 'count', color: 'blue' },
-      { id: 'todays-hours', label: 'Session minutes this week', query: null as any, format: 'hours', color: 'purple' },
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Bookings this month', query: null as any, format: 'count', color: 'green' },
+      { id: 'draftsCount', label: 'Pending auditions', query: null as any, format: 'count', color: 'blue' },
+      { id: 'todaysHours', label: 'Session minutes this week', query: null as any, format: 'hours', color: 'purple' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'audition-log-widget', component: 'AuditionLogWidget', priority: 1 },

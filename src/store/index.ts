@@ -450,7 +450,7 @@ export const useStore = create<AppStore>((set, get) => ({
       const raw = await invoke<Invoice[]>('get_invoices');
       const invoices = raw.map((inv: Invoice) => ({
         ...inv,
-        line_items: typeof inv.line_items === 'string' ? JSON.parse(inv.line_items as string) : inv.line_items,
+        line_items: typeof inv.line_items === 'string' ? JSON.parse(inv.line_items) : inv.line_items,
       }));
       set({ invoices });
     } catch (e) {
@@ -860,7 +860,7 @@ export const useStore = create<AppStore>((set, get) => ({
     const allLogs = { ...get().followUpLogs };
     for (const key of Object.keys(allLogs)) {
       allLogs[key] = allLogs[key].map((l) =>
-        l.id === id ? { ...l, status: status as FollowUpLog['status'], action: action ?? l.action, actioned_at: new Date().toISOString() } : l
+          l.id === id ? { ...l, status: status as FollowUpLog['status'], action: action ?? l.action, actioned_at: new Date().toISOString() } : l
       );
     }
     set({

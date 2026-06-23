@@ -14,10 +14,10 @@ const fashionDesigner: ArchetypeConfig = {
     greeting: "What are you designing?",
     subgreeting: 'Your collections, fittings, and sourcing at a glance.',
     metricCards: [
-      { id: 'active-projects', label: 'Active collections', query: null as any, format: 'count', color: 'purple' },
-      { id: 'upcoming-milestones', label: 'Fittings this week', query: null as any, format: 'count', color: 'blue' },
-      { id: 'expenses-total', label: 'Materials cost this month', query: null as any, format: 'currency', color: 'amber' },
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active collections', query: null as any, format: 'count', color: 'purple' },
+      { id: 'upcomingMilestones', label: 'Fittings this week', query: null as any, format: 'count', color: 'blue' },
+      { id: 'expensesTotal', label: 'Materials cost this month', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'collection-tracker-widget', component: 'CollectionTrackerWidget', priority: 1 },

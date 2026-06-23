@@ -14,10 +14,10 @@ const recruiter: ArchetypeConfig = {
     greeting: "Who's in the pipeline?",
     subgreeting: 'Your candidates, placements, and commissions at a glance.',
     metricCards: [
-      { id: 'active-projects', label: 'Active searches', query: null as any, format: 'count', color: 'blue' },
-      { id: 'upcoming-milestones', label: 'Candidates in final stage', query: null as any, format: 'count', color: 'green' },
-      { id: 'clients-count', label: 'Active clients', query: null as any, format: 'count', color: 'purple' },
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active searches', query: null as any, format: 'count', color: 'blue' },
+      { id: 'upcomingMilestones', label: 'Candidates in final stage', query: null as any, format: 'count', color: 'green' },
+      { id: 'clientsCount', label: 'Active clients', query: null as any, format: 'count', color: 'purple' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'pipeline-widget', component: 'PipelineWidget', priority: 1 },

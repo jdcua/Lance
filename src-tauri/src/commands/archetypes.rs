@@ -142,60 +142,63 @@ pub fn get_sessions(
     let conn = db::get_connection(&app)?;
     if let Some(ref pid) = project_id {
         let mut stmt = conn.prepare("SELECT id, client_id, project_id, session_type, duration_minutes, notes, action_items, next_session_date, created_at FROM archetype_sessions WHERE project_id = ?1 ORDER BY created_at DESC").map_err(|_| "Database operation failed".to_string())?;
-        let rows: Vec<ArchetypeSession> = stmt.query_map([pid], |row| {
-            Ok(ArchetypeSession {
-                id: row.get(0)?,
-                client_id: row.get(1)?,
-                project_id: row.get(2)?,
-                session_type: row.get(3)?,
-                duration_minutes: row.get(4)?,
-                notes: row.get(5)?,
-                action_items: row.get(6)?,
-                next_session_date: row.get(7)?,
-                created_at: row.get(8)?,
+        let rows: Vec<ArchetypeSession> = stmt
+            .query_map([pid], |row| {
+                Ok(ArchetypeSession {
+                    id: row.get(0)?,
+                    client_id: row.get(1)?,
+                    project_id: row.get(2)?,
+                    session_type: row.get(3)?,
+                    duration_minutes: row.get(4)?,
+                    notes: row.get(5)?,
+                    action_items: row.get(6)?,
+                    next_session_date: row.get(7)?,
+                    created_at: row.get(8)?,
+                })
             })
-        })
-        .map_err(|_| "Database operation failed".to_string())?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|_| "Database operation failed".to_string())?;
+            .map_err(|_| "Database operation failed".to_string())?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|_| "Database operation failed".to_string())?;
         Ok(rows)
     } else if let Some(ref cid) = client_id {
         let mut stmt = conn.prepare("SELECT id, client_id, project_id, session_type, duration_minutes, notes, action_items, next_session_date, created_at FROM archetype_sessions WHERE client_id = ?1 ORDER BY created_at DESC").map_err(|_| "Database operation failed".to_string())?;
-        let rows: Vec<ArchetypeSession> = stmt.query_map([cid], |row| {
-            Ok(ArchetypeSession {
-                id: row.get(0)?,
-                client_id: row.get(1)?,
-                project_id: row.get(2)?,
-                session_type: row.get(3)?,
-                duration_minutes: row.get(4)?,
-                notes: row.get(5)?,
-                action_items: row.get(6)?,
-                next_session_date: row.get(7)?,
-                created_at: row.get(8)?,
+        let rows: Vec<ArchetypeSession> = stmt
+            .query_map([cid], |row| {
+                Ok(ArchetypeSession {
+                    id: row.get(0)?,
+                    client_id: row.get(1)?,
+                    project_id: row.get(2)?,
+                    session_type: row.get(3)?,
+                    duration_minutes: row.get(4)?,
+                    notes: row.get(5)?,
+                    action_items: row.get(6)?,
+                    next_session_date: row.get(7)?,
+                    created_at: row.get(8)?,
+                })
             })
-        })
-        .map_err(|_| "Database operation failed".to_string())?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|_| "Database operation failed".to_string())?;
+            .map_err(|_| "Database operation failed".to_string())?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|_| "Database operation failed".to_string())?;
         Ok(rows)
     } else {
         let mut stmt = conn.prepare("SELECT id, client_id, project_id, session_type, duration_minutes, notes, action_items, next_session_date, created_at FROM archetype_sessions ORDER BY created_at DESC").map_err(|_| "Database operation failed".to_string())?;
-        let rows: Vec<ArchetypeSession> = stmt.query_map([], |row| {
-            Ok(ArchetypeSession {
-                id: row.get(0)?,
-                client_id: row.get(1)?,
-                project_id: row.get(2)?,
-                session_type: row.get(3)?,
-                duration_minutes: row.get(4)?,
-                notes: row.get(5)?,
-                action_items: row.get(6)?,
-                next_session_date: row.get(7)?,
-                created_at: row.get(8)?,
+        let rows: Vec<ArchetypeSession> = stmt
+            .query_map([], |row| {
+                Ok(ArchetypeSession {
+                    id: row.get(0)?,
+                    client_id: row.get(1)?,
+                    project_id: row.get(2)?,
+                    session_type: row.get(3)?,
+                    duration_minutes: row.get(4)?,
+                    notes: row.get(5)?,
+                    action_items: row.get(6)?,
+                    next_session_date: row.get(7)?,
+                    created_at: row.get(8)?,
+                })
             })
-        })
-        .map_err(|_| "Database operation failed".to_string())?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|_| "Database operation failed".to_string())?;
+            .map_err(|_| "Database operation failed".to_string())?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|_| "Database operation failed".to_string())?;
         Ok(rows)
     }
 }
@@ -328,7 +331,8 @@ pub fn create_shoot(
 #[tauri::command]
 pub fn delete_shoot(app: tauri::AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM archetype_shoots WHERE id = ?", [&id]).map_err(|_| "Database operation failed".to_string())?;
+    conn.execute("DELETE FROM archetype_shoots WHERE id = ?", [&id])
+        .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 
@@ -485,7 +489,8 @@ pub fn create_build(
 #[tauri::command]
 pub fn delete_build(app: tauri::AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM archetype_builds WHERE id = ?", [&id]).map_err(|_| "Database operation failed".to_string())?;
+    conn.execute("DELETE FROM archetype_builds WHERE id = ?", [&id])
+        .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 

@@ -14,10 +14,10 @@ const nutritionist: ArchetypeConfig = {
     greeting: "Who are you nourishing today?",
     subgreeting: 'Your clients, consultations, and meal plans at a glance.',
     metricCards: [
-      { id: 'clients-count', label: 'Active clients', query: null as any, format: 'count', color: 'green' },
-      { id: 'sessions-week', label: 'Consultations this week', query: null as any, format: 'count', color: 'blue' },
-      { id: 'draft-proposals', label: 'Meal plans pending delivery', query: null as any, format: 'count', color: 'purple' },
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'clientsCount', label: 'Active clients', query: null as any, format: 'count', color: 'green' },
+      { id: 'sessionsThisWeek', label: 'Consultations this week', query: null as any, format: 'count', color: 'blue' },
+      { id: 'draftsCount', label: 'Meal plans pending delivery', query: null as any, format: 'count', color: 'purple' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'meal-plan-widget', component: 'MealPlanWidget', priority: 1 },

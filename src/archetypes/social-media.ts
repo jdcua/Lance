@@ -14,10 +14,10 @@ const socialMedia: ArchetypeConfig = {
     greeting: "What's posting today?",
     subgreeting: 'Your content calendar, platforms, and client load at a glance.',
     metricCards: [
-      { id: 'active-projects', label: 'Active clients', query: null as any, format: 'count', color: 'green' },
-      { id: 'upcoming-milestones', label: 'Posts scheduled this week', query: null as any, format: 'count', color: 'blue' },
-      { id: 'assets-count', label: 'Posts published this month', query: null as any, format: 'count', color: 'purple' },
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active clients', query: null as any, format: 'count', color: 'green' },
+      { id: 'upcomingMilestones', label: 'Posts scheduled this week', query: null as any, format: 'count', color: 'blue' },
+      { id: 'assetsCount', label: 'Posts published this month', query: null as any, format: 'count', color: 'purple' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'content-calendar-widget', component: 'ContentCalendarWidget', priority: 1 },

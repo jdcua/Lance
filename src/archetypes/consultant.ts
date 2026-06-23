@@ -14,10 +14,10 @@ const consultant: ArchetypeConfig = {
     greeting: 'Who are you serving today?',
     subgreeting: 'Your retainers, sessions, and client health at a glance.',
     metricCards: [
-      { id: 'active-retainers', label: 'Active retainers', query: null as any, format: 'count', color: 'green' },
-      { id: 'sessions-week', label: 'Sessions this week', query: null as any, format: 'count', color: 'blue' },
-      { id: 'retainer-split', label: 'Retainer vs project revenue', query: null as any, format: 'percent', color: 'purple' },
-      { id: 'clients-count', label: 'Active clients', query: null as any, format: 'count', color: 'green' },
+      { id: 'activeRetainers', label: 'Active retainers', query: null as any, format: 'count', color: 'green' },
+      { id: 'sessionsThisWeek', label: 'Sessions this week', query: null as any, format: 'count', color: 'blue' },
+      { id: 'retainerVsProjectSplit', label: 'Retainer vs project revenue', query: null as any, format: 'percent', color: 'purple' },
+      { id: 'clientsCount', label: 'Active clients', query: null as any, format: 'count', color: 'green' },
     ],
     widgets: [
       { id: 'retainer-health-widget', component: 'RetainerHealthWidget', priority: 1 },

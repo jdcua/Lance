@@ -14,10 +14,10 @@ const cxStrategist: ArchetypeConfig = {
     greeting: "What's the customer saying?",
     subgreeting: 'Your journey maps, satisfaction scores, and initiatives at a glance.',
     metricCards: [
-      { id: 'active-projects', label: 'Active CX initiatives', query: null as any, format: 'count', color: 'blue' },
-      { id: 'clients-count', label: 'Clients under management', query: null as any, format: 'count', color: 'green' },
-      { id: 'draft-proposals', label: 'Initiatives pending deployment', query: null as any, format: 'count', color: 'purple' },
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active CX initiatives', query: null as any, format: 'count', color: 'blue' },
+      { id: 'clientsCount', label: 'Clients under management', query: null as any, format: 'count', color: 'green' },
+      { id: 'draftsCount', label: 'Initiatives pending deployment', query: null as any, format: 'count', color: 'purple' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'journey-map-widget', component: 'JourneyMapWidget', priority: 1 },

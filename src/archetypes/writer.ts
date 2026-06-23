@@ -14,10 +14,10 @@ const writer: ArchetypeConfig = {
     greeting: 'What are you writing today?',
     subgreeting: 'Your words, deadlines, and rates at a glance.',
     metricCards: [
-      { id: 'deadline-pressure', label: 'Deadlines in next 7 days', query: null as any, format: 'count', color: 'red' },
-      { id: 'effective-rate', label: 'Effective per-word rate', query: null as any, format: 'currency', color: 'blue' },
-      { id: 'active-projects', label: 'Active projects', query: null as any, format: 'count', color: 'purple' },
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'deadlinePressure', label: 'Deadlines in next 7 days', query: null as any, format: 'count', color: 'red' },
+      { id: 'effectiveHourlyRate', label: 'Effective per-word rate', query: null as any, format: 'currency', color: 'blue' },
+      { id: 'activeProjectsCount', label: 'Active projects', query: null as any, format: 'count', color: 'purple' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'deadline-board-widget', component: 'DeadlineBoardWidget', priority: 1 },

@@ -138,8 +138,8 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            always_include TEXT,
            writing_style TEXT DEFAULT 'professional',
            theme TEXT DEFAULT 'light',
-           license_key TEXT,
-           licensed_at TEXT,
+          license_key TEXT,                                     -- TODO(v2): encrypt at rest with app-specific key
+          licensed_at TEXT,
            ai_enabled INTEGER DEFAULT 0,
            profession TEXT,
            custom_archetype_config TEXT,

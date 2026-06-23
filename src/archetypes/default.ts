@@ -14,10 +14,10 @@ const defaultArchetype: ArchetypeConfig = {
     greeting: 'Welcome back',
     subgreeting: 'Here\'s your business at a glance.',
     metricCards: [
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
-      { id: 'paid', label: 'Paid (Lifetime)', query: null as any, format: 'currency', color: 'green' },
-      { id: 'active-projects', label: 'Active Projects', query: null as any, format: 'count', color: 'green' },
-      { id: 'today', label: 'Today', query: null as any, format: 'hours', color: 'green' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'totalPaidRevenue', label: 'Paid (Lifetime)', query: null as any, format: 'currency', color: 'green' },
+      { id: 'activeProjectsCount', label: 'Active Projects', query: null as any, format: 'count', color: 'green' },
+      { id: 'todaysHours', label: 'Today', query: null as any, format: 'hours', color: 'green' },
     ],
     widgets: [
       { id: 'recent-invoices', component: 'RecentInvoices', priority: 1 },

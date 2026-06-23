@@ -14,10 +14,10 @@ const uxDesigner: ArchetypeConfig = {
     greeting: "What are you designing today?",
     subgreeting: 'Your research, prototypes, and handoffs at a glance.',
     metricCards: [
-      { id: 'active-projects', label: 'Active projects', query: null as any, format: 'count', color: 'purple' },
-      { id: 'unbilled-hours', label: 'Research hours this month', query: null as any, format: 'hours', color: 'blue' },
-      { id: 'draft-proposals', label: 'Draft proposals', query: null as any, format: 'count', color: 'amber' },
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active projects', query: null as any, format: 'count', color: 'purple' },
+      { id: 'unbilledHours', label: 'Research hours this month', query: null as any, format: 'hours', color: 'blue' },
+      { id: 'draftsCount', label: 'Draft proposals', query: null as any, format: 'count', color: 'amber' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'prototype-tracker-widget', component: 'PrototypeTrackerWidget', priority: 1 },

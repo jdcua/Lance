@@ -14,10 +14,10 @@ const virtualAssistant: ArchetypeConfig = {
     greeting: "What's on your list today?",
     subgreeting: 'Your tasks, client load, and scope at a glance.',
     metricCards: [
-      { id: 'active-projects', label: 'Active clients', query: null as any, format: 'count', color: 'green' },
-      { id: 'todays-hours', label: 'Hours today', query: null as any, format: 'hours', color: 'blue' },
-      { id: 'hours-active-week', label: 'Hours this week', query: null as any, format: 'hours', color: 'purple' },
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active clients', query: null as any, format: 'count', color: 'green' },
+      { id: 'todaysHours', label: 'Hours today', query: null as any, format: 'hours', color: 'blue' },
+      { id: 'thisWeeksHours', label: 'Hours this week', query: null as any, format: 'hours', color: 'purple' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'client-load-widget', component: 'ClientLoadWidget', priority: 1 },

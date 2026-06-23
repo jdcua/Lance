@@ -14,10 +14,10 @@ const seo: ArchetypeConfig = {
     greeting: "What's ranking today?",
     subgreeting: 'Your keywords, deliverables, and retainer health at a glance.',
     metricCards: [
-      { id: 'active-retainers', label: 'Active retainers', query: null as any, format: 'count', color: 'green' },
-      { id: 'active-projects', label: 'Active projects', query: null as any, format: 'count', color: 'blue' },
-      { id: 'draft-proposals', label: 'Deliverables pending', query: null as any, format: 'count', color: 'amber' },
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeRetainers', label: 'Active retainers', query: null as any, format: 'count', color: 'green' },
+      { id: 'activeProjectsCount', label: 'Active projects', query: null as any, format: 'count', color: 'blue' },
+      { id: 'draftsCount', label: 'Deliverables pending', query: null as any, format: 'count', color: 'amber' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'keyword-tracker-widget', component: 'KeywordTrackerWidget', priority: 1 },

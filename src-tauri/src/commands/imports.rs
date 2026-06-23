@@ -76,8 +76,7 @@ fn get_assets_dir_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     let documents_dir =
         app.path().document_dir().map_err(|_| "Failed to get documents dir".to_string())?;
     let assets_dir = documents_dir.join("Lance").join("Assets");
-    std::fs::create_dir_all(&assets_dir)
-        .map_err(|_| "Failed to create assets dir".to_string())?;
+    std::fs::create_dir_all(&assets_dir).map_err(|_| "Failed to create assets dir".to_string())?;
     Ok(assets_dir)
 }
 
@@ -128,9 +127,7 @@ fn sanitize_filename(filename: &str) -> String {
         .chars()
         .map(|c| if c.is_alphanumeric() || c == '.' || c == '-' || c == '_' { c } else { '_' })
         .collect();
-    sanitized
-        .trim_start_matches('.')
-        .replace("..", "__")
+    sanitized.trim_start_matches('.').replace("..", "__").trim_start_matches('.').to_string()
 }
 
 // ── Import Log Commands ──
@@ -306,7 +303,8 @@ pub fn delete_attachment(app: tauri::AppHandle, id: String) -> Result<(), String
     let file_path: Option<String> = conn
         .query_row("SELECT file_path FROM attachments WHERE id = ?", [&id], |row| row.get(0))
         .ok();
-    conn.execute("DELETE FROM attachments WHERE id = ?", [&id]).map_err(|_| "Database operation failed".to_string())?;
+    conn.execute("DELETE FROM attachments WHERE id = ?", [&id])
+        .map_err(|_| "Database operation failed".to_string())?;
     // Best-effort file cleanup
     if let Some(path) = file_path {
         let _ = std::fs::remove_file(path);

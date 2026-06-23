@@ -14,10 +14,10 @@ const legal: ArchetypeConfig = {
     greeting: "What's on the docket?",
     subgreeting: 'Your cases, deadlines, and billable hours at a glance.',
     metricCards: [
-      { id: 'active-projects', label: 'Active cases', query: null as any, format: 'count', color: 'blue' },
-      { id: 'deadline-pressure', label: 'Deadlines in 7 days', query: null as any, format: 'count', color: 'red' },
-      { id: 'hours-active-week', label: 'Billable hours this month', query: null as any, format: 'hours', color: 'green' },
-      { id: 'outstanding', label: 'Outstanding retainers', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active cases', query: null as any, format: 'count', color: 'blue' },
+      { id: 'deadlinePressure', label: 'Deadlines in 7 days', query: null as any, format: 'count', color: 'red' },
+      { id: 'thisWeeksHours', label: 'Billable hours this month', query: null as any, format: 'hours', color: 'green' },
+      { id: 'totalOutstanding', label: 'Outstanding retainers', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'case-tracker-widget', component: 'CaseTrackerWidget', priority: 1 },

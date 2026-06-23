@@ -14,10 +14,10 @@ const embedded: ArchetypeConfig = {
     greeting: "What's on the bench?",
     subgreeting: 'Your builds, components, and fabrication at a glance.',
     metricCards: [
-      { id: 'active-projects', label: 'Active builds', query: null as any, format: 'count', color: 'blue' },
-      { id: 'expenses-total', label: 'Component cost this month', query: null as any, format: 'currency', color: 'amber' },
-      { id: 'upcoming-milestones', label: 'Fabrication orders pending', query: null as any, format: 'count', color: 'purple' },
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active builds', query: null as any, format: 'count', color: 'blue' },
+      { id: 'expensesTotal', label: 'Component cost this month', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'upcomingMilestones', label: 'Fabrication orders pending', query: null as any, format: 'count', color: 'purple' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'bom-tracker-widget', component: 'BOMTrackerWidget', priority: 1 },

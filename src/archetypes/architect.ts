@@ -14,10 +14,10 @@ const architect: ArchetypeConfig = {
     greeting: "What's in design today?",
     subgreeting: 'Your phases, consultants, and submissions at a glance.',
     metricCards: [
-      { id: 'active-projects', label: 'Active projects', query: null as any, format: 'count', color: 'blue' },
-      { id: 'upcoming-milestones', label: 'Upcoming milestone invoice triggers', query: null as any, format: 'count', color: 'green' },
-      { id: 'unbilled-hours', label: 'Unbilled hours', query: null as any, format: 'hours', color: 'amber' },
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active projects', query: null as any, format: 'count', color: 'blue' },
+      { id: 'upcomingMilestones', label: 'Upcoming milestone invoice triggers', query: null as any, format: 'count', color: 'green' },
+      { id: 'unbilledHours', label: 'Unbilled hours', query: null as any, format: 'hours', color: 'amber' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'phase-gate-widget', component: 'PhaseGateWidget', priority: 1 },

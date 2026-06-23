@@ -14,10 +14,10 @@ const dataAnalyst: ArchetypeConfig = {
     greeting: "What's the data saying today?",
     subgreeting: 'Your datasets, phases, and tool costs at a glance.',
     metricCards: [
-      { id: 'active-projects', label: 'Active analyses', query: null as any, format: 'count', color: 'blue' },
-      { id: 'hours-active-week', label: 'Hours this week', query: null as any, format: 'hours', color: 'green' },
-      { id: 'expenses-total', label: 'Tool costs this month', query: null as any, format: 'currency', color: 'amber' },
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active analyses', query: null as any, format: 'count', color: 'blue' },
+      { id: 'thisWeeksHours', label: 'Hours this week', query: null as any, format: 'hours', color: 'green' },
+      { id: 'expensesTotal', label: 'Tool costs this month', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'analysis-phase-widget', component: 'AnalysisPhaseWidget', priority: 1 },

@@ -14,10 +14,10 @@ const accountant: ArchetypeConfig = {
     greeting: "What's on the books?",
     subgreeting: 'Your engagements, hours, and tax deadlines at a glance.',
     metricCards: [
-      { id: 'active-projects', label: 'Active engagements', query: null as any, format: 'count', color: 'blue' },
-      { id: 'unbilled-hours', label: 'Unbilled hours', query: null as any, format: 'hours', color: 'amber' },
-      { id: 'expenses-total', label: 'Expenses logged this month', query: null as any, format: 'currency', color: 'green' },
-      { id: 'outstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active engagements', query: null as any, format: 'count', color: 'blue' },
+      { id: 'unbilledHours', label: 'Unbilled hours', query: null as any, format: 'hours', color: 'amber' },
+      { id: 'expensesTotal', label: 'Expenses logged this month', query: null as any, format: 'currency', color: 'green' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'ledger-widget', component: 'LedgerWidget', priority: 1 },

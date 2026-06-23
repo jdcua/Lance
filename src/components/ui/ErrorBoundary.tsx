@@ -33,7 +33,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               An unexpected error occurred. Please try reloading the application.
             </p>
             <pre className="text-[10px] text-[var(--text-tertiary)] mb-4 bg-[var(--bg-secondary)] p-3 rounded-[8px] text-left overflow-auto max-h-32">
-              {this.state.error?.message || 'Unknown error'}
+              An unexpected error occurred. Please reload the application.
             </pre>
             <Button
               onClick={() => {
