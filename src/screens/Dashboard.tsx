@@ -24,6 +24,11 @@ export default function Dashboard() {
   const [archetype, setArchetype] = useState<ArchetypeConfig | null>(null);
   const [metricValues, setMetricValues] = useState<Record<string, string | number>>({});
   const [portalActivity, setPortalActivity] = useState<PortalActivity[]>([]);
+  const [lastBackupInfo, setLastBackupInfo] = useState<{
+    enabled: boolean;
+    last_backup_at: string | null;
+    daysAgo: number | null;
+  } | null>(null);
 
   useEffect(() => {
     Promise.all([loadInvoices(), loadProposals(), loadProjects(), loadClients(), loadTimeEntries(), loadExpenses(), loadProfile(), loadPendingFollowUps()])
@@ -38,7 +43,25 @@ export default function Dashboard() {
       localStorage.setItem('lance:seeded-toast-shown', 'true');
     }
     loadPortalActivity();
+    loadBackupInfo();
   }, [loading]);
+
+  const loadBackupInfo = async () => {
+    try {
+      const { getLastBackupInfo } = await import('../utils/backup');
+      const info = await getLastBackupInfo();
+      if (info && info.enabled && info.last_backup_at) {
+        const daysAgo = Math.floor(
+          (Date.now() - new Date(info.last_backup_at).getTime()) / 86400000
+        );
+        setLastBackupInfo({ enabled: info.enabled, last_backup_at: info.last_backup_at, daysAgo });
+      } else if (info && info.enabled) {
+        setLastBackupInfo({ enabled: true, last_backup_at: null, daysAgo: null });
+      }
+    } catch {
+      /* non-critical */
+    }
+  };
 
   const loadPortalActivity = async () => {
     try {
@@ -303,6 +326,19 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 gap-6">
         <DashboardWidgets archetype={effectiveArchetype} recentInvoices={recentInvoices} recentTime={recentTime} profile={profile} projects={projects} navigate={navigate} />
       </div>
+
+      {lastBackupInfo && lastBackupInfo.enabled && (
+        <div className="mt-6 pt-3 border-t border-[var(--border-color)]">
+          <button
+            onClick={() => navigate('/settings')}
+            className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
+          >
+            {lastBackupInfo.last_backup_at && lastBackupInfo.daysAgo !== null
+              ? `Last backed up: ${lastBackupInfo.daysAgo === 0 ? 'today' : lastBackupInfo.daysAgo === 1 ? '1 day ago' : `${lastBackupInfo.daysAgo} days ago`}`
+              : 'Auto-backup enabled but not yet run'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

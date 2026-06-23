@@ -512,6 +512,30 @@ async function runMigrations(database: Database): Promise<void> {
     )
   `);
 
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS schema_version (
+      version INTEGER NOT NULL
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS auto_backup_state (
+      id INTEGER PRIMARY KEY DEFAULT 1,
+      enabled INTEGER NOT NULL DEFAULT 0,
+      frequency TEXT NOT NULL DEFAULT 'weekly',
+      backup_path TEXT,
+      last_backup_at TEXT,
+      last_backup_error TEXT
+    )
+  `);
+
+  const versionColumns = [
+    'ALTER TABLE recurring_invoices ADD COLUMN last_catch_up_warning TEXT',
+  ];
+  for (const sql of versionColumns) {
+    try { await database.execute(sql); } catch { /* column already exists */ }
+  }
+
   await database.execute('CREATE INDEX IF NOT EXISTS idx_projects_client ON projects(client_id)');
   await database.execute('CREATE INDEX IF NOT EXISTS idx_milestones_project ON milestones(project_id)');
   await database.execute('CREATE INDEX IF NOT EXISTS idx_time_entries_project ON time_entries(project_id)');
@@ -563,4 +587,25 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute('CREATE INDEX IF NOT EXISTS idx_metrics_values_client_period ON metric_values(client_id, period)');
 
   await database.execute('CREATE INDEX IF NOT EXISTS idx_app_events_type ON app_events(event_type)');
+
+  const row = await database.select<{ cnt: number }[]>('SELECT COUNT(*) as cnt FROM schema_version');
+  if (!row || row.length === 0 || row[0].cnt === 0) {
+    await database.execute('INSERT INTO schema_version (version) VALUES (?)', [computeSchemaVersion()]);
+  }
+}
+
+function computeSchemaVersion(): number {
+  const count = runMigrations.toString().match(/CREATE TABLE IF NOT EXISTS/g);
+  return count ? count.length : 1;
+}
+
+export function getCurrentSchemaVersion(): number {
+  return computeSchemaVersion();
+}
+
+export async function getSchemaVersionFromDb(): Promise<number> {
+  const { getDb } = await import('./index');
+  const db = await getDb();
+  const rows = await db.select<{ version: number }[]>('SELECT version FROM schema_version LIMIT 1');
+  return rows && rows.length > 0 ? rows[0].version : computeSchemaVersion();
 }

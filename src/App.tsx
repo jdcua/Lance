@@ -24,7 +24,7 @@ import DropZoneOverlay from './components/ui/DropZoneOverlay';
 import { useStore } from './store';
 import { useToasts } from './store/toastStore';
 import { useAutoUpdater } from './hooks/useAutoUpdater';
-import { shouldGenerate, getNextDueDate } from './utils/recurringEngine';
+import { shouldGenerate, getNextDueDate, countCyclesBehind, getCatchUpCount, shouldShowCatchUpWarning } from './utils/recurringEngine';
 import { generateInvoiceNumber } from './utils/invoiceNumber';
 import { applyTheme, getTheme, THEMES } from './themes/themes';
 import type { Profession } from './themes';
@@ -179,40 +179,83 @@ export default function App() {
       loadInvoices();
       return;
     }
-    const handle = requestIdleCallback(() => {
+    const handle = requestIdleCallback(async () => {
       const paymentTerms = profile?.payment_terms ?? 14;
       const due = recurringInvoices.filter(shouldGenerate);
       for (const ri of due) {
-        const currentInvoices = useStore.getState().invoices;
-        const invNumber = generateInvoiceNumber(currentInvoices);
-        const dueDate = new Date();
-        dueDate.setDate(dueDate.getDate() + paymentTerms);
-        addInvoice({
-          client_id: ri.client_id,
-          project_id: ri.project_id,
-          invoice_number: invNumber,
-          status: 'draft',
-          line_items: ri.line_items,
-          subtotal: ri.subtotal,
-          tax_rate: ri.tax_rate,
-          total: ri.total,
-          due_date: dueDate.toISOString().split('T')[0],
-          notes: ri.notes,
-        }).then(() => {
-          const now = new Date();
-          return updateRecurringInvoice({
-            ...ri,
-            next_due: getNextDueDate(ri.frequency, new Date(ri.next_due)).toISOString(),
-            last_generated: now.toISOString(),
-          });
-        }).then(() => {
-          const client = useStore.getState().clients.find((c) => c.id === ri.client_id);
-          addToast(`Invoice generated for ${client?.name || ri.client_id}`, 'success');
-        }).catch(() => { /* non-critical */ });
+        const cyclesBehind = countCyclesBehind(ri);
+        const { generate, capped } = getCatchUpCount(cyclesBehind);
+
+        for (let i = 0; i < generate; i++) {
+          const currentInvoices = useStore.getState().invoices;
+          const invNumber = generateInvoiceNumber(currentInvoices);
+          const dueDate = new Date();
+          dueDate.setDate(dueDate.getDate() + paymentTerms);
+          try {
+            await addInvoice({
+              client_id: ri.client_id,
+              project_id: ri.project_id,
+              invoice_number: invNumber,
+              status: 'draft',
+              line_items: ri.line_items,
+              subtotal: ri.subtotal,
+              tax_rate: ri.tax_rate,
+              total: ri.total,
+              due_date: dueDate.toISOString().split('T')[0],
+              notes: ri.notes,
+            });
+            const now = new Date();
+            await updateRecurringInvoice({
+              ...ri,
+              next_due: getNextDueDate(ri.frequency, new Date(ri.next_due)).toISOString(),
+              last_generated: now.toISOString(),
+            });
+            const client = useStore.getState().clients.find((c) => c.id === ri.client_id);
+            addToast(`Invoice generated for ${client?.name || ri.client_id}`, 'success');
+          } catch {
+            /* non-critical */
+          }
+        }
+
+        if (capped && shouldShowCatchUpWarning(ri)) {
+          addToast(
+            `\u26A0\uFE0F ${ri.title} recurring invoice is ${cyclesBehind} cycles overdue. ${generate} drafts created \u2014 review in Invoices.`,
+            'info',
+            6000
+          );
+
+          try {
+            const { getDb } = await import('./db');
+            const db = await getDb();
+            await db.execute(
+              'UPDATE recurring_invoices SET last_catch_up_warning = ? WHERE id = ?',
+              [new Date().toISOString(), ri.id]
+            );
+          } catch {
+            /* non-critical */
+          }
+        }
       }
     });
     return () => cancelIdleCallback(handle);
   }, [hasRanAutoGen, recurringInvoices.length, invoices.length]);
+
+  // Auto-backup check — runs after engines, deferred
+  useEffect(() => {
+    if (!hasRanAutoGen) return;
+    const handle = requestIdleCallback(async () => {
+      try {
+        const { runAutoBackup } = await import('./utils/backup');
+        const result = await runAutoBackup();
+        if (!result.success && result.error) {
+          addToast(`Auto-backup failed: ${result.error}`, 'error', 8000);
+        }
+      } catch {
+        /* non-critical */
+      }
+    });
+    return () => cancelIdleCallback(handle);
+  }, [hasRanAutoGen]);
 
   // Follow-up checker — deferred after first render, runs every 30 minutes
   useEffect(() => {

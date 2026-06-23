@@ -9,7 +9,7 @@ import { useToasts } from '../store/toastStore';
 import { save } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeFile } from '@tauri-apps/plugin-fs';
 import { open } from '@tauri-apps/plugin-dialog';
-import { Check, Upload, Download, AlertTriangle, Trash2, Lock, Sparkles, ExternalLink, Bell, Eye, ArrowRight, FileText } from 'lucide-react';
+import { Check, Upload, Download, AlertTriangle, Trash2, Lock, Sparkles, ExternalLink, Bell, Eye, ArrowRight, FileText, FolderOpen } from 'lucide-react';
 import { THEMES, applyTheme, getTheme } from '../themes/themes';
 import type { ThemeId } from '../themes';
 import { PROFESSION_THEME, type Profession } from '../themes';
@@ -17,6 +17,9 @@ import { getArchetype, ARCHETYPE_LIST } from '../archetypes';
 import { getUnlockedThemes, getUnlockedAchievementKeys } from '../achievements/checker';
 import { TEMPLATE_LABELS, DEFAULT_SUBJECT_TEMPLATES } from '../utils/followUpTemplates';
 import { clearSampleData } from '../utils/seedData';
+import { createExportEnvelope, validateImportEnvelope, performImport, formatTableCounts, logVersionEvent } from '../utils/backup';
+import type { BackupEnvelope, ImportValidationResult } from '../utils/backup';
+import { getCurrentSchemaVersion } from '../db';
 
 const currencies = ['CAD', 'USD', 'GBP', 'EUR', 'AUD'];
 const writingStyles = ['professional', 'warm', 'direct', 'bold'];
@@ -54,6 +57,19 @@ export default function Settings() {
   const [licenseActivating, setLicenseActivating] = useState(false);
   const [showRemoveLicenseConfirm, setShowRemoveLicenseConfirm] = useState(false);
   const [isSeeded, setIsSeeded] = useState(localStorage.getItem('lance:seeded') === 'true');
+  const [showAssetWarning, setShowAssetWarning] = useState(false);
+  const [showImportSummary, setShowImportSummary] = useState(false);
+  const [importSummaryData, setImportSummaryData] = useState<ImportValidationResult | null>(null);
+  const [importReplaceMode, setImportReplaceMode] = useState(false);
+  const [importReplaceConfirm, setImportReplaceConfirm] = useState('');
+  const [importPending, setImportPending] = useState(false);
+  const [pendingImportEnvelope, setPendingImportEnvelope] = useState<BackupEnvelope | null>(null);
+  const [autoBackupEnabled, setAutoBackupEnabled] = useState(false);
+  const [autoBackupFreq, setAutoBackupFreq] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
+  const [autoBackupPath, setAutoBackupPath] = useState('');
+  const [autoBackupLoaded, setAutoBackupLoaded] = useState(false);
+  const [showSchemaWarnModal, setShowSchemaWarnModal] = useState(false);
+  const [schemaWarnData, setSchemaWarnData] = useState<{ from: number; to: number } | null>(null);
   const [activeTheme, setActiveTheme] = useState<ThemeId>('default');
   const [unlockedThemes, setUnlockedThemes] = useState<Set<string>>(new Set(['default']));
   const [fuEnabled, setFuEnabled] = useState(true);
@@ -172,6 +188,43 @@ export default function Settings() {
   }, [followUpSettings]);
 
   useEffect(() => {
+    loadAutoBackupState();
+  }, []);
+
+  const loadAutoBackupState = async () => {
+    try {
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      const rows = await db.select<{ enabled: number; frequency: string; backup_path: string }[]>(
+        'SELECT enabled, frequency, backup_path FROM auto_backup_state LIMIT 1'
+      );
+      if (rows && rows.length > 0) {
+        setAutoBackupEnabled(!!rows[0].enabled);
+        setAutoBackupFreq((rows[0].frequency as 'daily' | 'weekly' | 'monthly') || 'weekly');
+        setAutoBackupPath(rows[0].backup_path || '');
+      }
+    } catch {
+      /* auto-backup state load is non-critical */
+    } finally {
+      setAutoBackupLoaded(true);
+    }
+  };
+
+  const saveAutoBackupState = async (enabled: boolean, frequency: string, path?: string) => {
+    try {
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      await db.execute(
+        `INSERT INTO auto_backup_state (id, enabled, frequency, backup_path) VALUES (1, ?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET enabled = excluded.enabled, frequency = excluded.frequency, backup_path = excluded.backup_path`,
+        [enabled ? 1 : 0, frequency, path || autoBackupPath]
+      );
+    } catch {
+      /* non-critical */
+    }
+  };
+
+  useEffect(() => {
     if (form.theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
@@ -230,6 +283,41 @@ export default function Settings() {
 
   const handleExportData = async () => {
     try {
+      const assetWarningSeen = localStorage.getItem('lance:export-asset-warning-seen') === 'true';
+      if (!assetWarningSeen) {
+        const { getDb } = await import('../db');
+        let hasAssets = false;
+        try {
+          const db = await getDb();
+          const rows = await db.select<{ cnt: number }[]>('SELECT COUNT(*) as cnt FROM attachments');
+          hasAssets = rows && rows.length > 0 && rows[0].cnt > 0;
+        } catch { /* non-critical */ }
+        if (hasAssets) {
+          setShowAssetWarning(true);
+          return;
+        }
+      }
+
+      await doExportData();
+    } catch {
+      addToast('Export failed', 'error');
+    }
+  };
+
+  const handleDismissAssetWarning = (dontShowAgain: boolean) => {
+    if (dontShowAgain) {
+      localStorage.setItem('lance:export-asset-warning-seen', 'true');
+    }
+    setShowAssetWarning(false);
+  };
+
+  const handleAssetWarningContinue = () => {
+    setShowAssetWarning(false);
+    doExportData();
+  };
+
+  const doExportData = async () => {
+    try {
       const data: Record<string, unknown[]> = {};
       const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
       data.clients = await tauriInvoke('get_clients');
@@ -241,14 +329,18 @@ export default function Settings() {
       data.expenses = await tauriInvoke('get_expenses');
       data.user_profile = profile ? [profile] : [];
 
-      const json = JSON.stringify(data, null, 2);
+      const APP_VERSION = '1.0.0';
+      const schemaVersion = getCurrentSchemaVersion();
+      const envelope = createExportEnvelope(data, APP_VERSION, schemaVersion);
+
+      const json = JSON.stringify(envelope, null, 2);
       const filePath = await save({ defaultPath: `Lance_Backup_${new Date().toISOString().split('T')[0]}.json` });
       if (!filePath) return;
       await writeFile(filePath, new TextEncoder().encode(json));
       addToast('Data exported successfully', 'success');
     } catch {
       addToast('Export failed', 'error');
-    } /* file write errors surface as toast */
+    }
   };
 
   const handleImportData = async () => {
@@ -259,65 +351,112 @@ export default function Settings() {
       if (!filePath) return;
       const content = await readTextFile(filePath);
 
-      // Reject files over 50MB
       const bytes = new TextEncoder().encode(content);
       if (bytes.length > 50 * 1024 * 1024) {
         addToast('Import failed — file exceeds 50MB limit', 'error');
         return;
       }
 
-      const data = JSON.parse(content);
-
-      const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
-
-      if (data.user_profile?.[0]) {
-        await saveProfile(data.user_profile[0]);
-      }
-      if (Array.isArray(data.clients)) {
-        for (const c of data.clients) {
-          try { await tauriInvoke('create_client', { payload: c }); } catch { /* skip duplicate */ }
-        }
-      }
-      if (Array.isArray(data.projects)) {
-        for (const p of data.projects) {
-          try { await tauriInvoke('create_project', { payload: p }); } catch { /* skip duplicate */ }
-        }
-      }
-      if (Array.isArray(data.proposals)) {
-        for (const p of data.proposals) {
-          try { await tauriInvoke('create_proposal', { payload: p }); } catch { /* skip duplicate */ }
-        }
-      }
-      if (Array.isArray(data.contracts)) {
-        for (const p of data.contracts) {
-          try { await tauriInvoke('create_contract', { payload: p }); } catch { /* skip duplicate */ }
-        }
-      }
-      if (Array.isArray(data.time_entries)) {
-        for (const t of data.time_entries) {
-          try { await tauriInvoke('create_time_entry', { payload: t }); } catch { /* skip duplicate */ }
-        }
-      }
-      if (Array.isArray(data.invoices)) {
-        for (const inv of data.invoices) {
-          try {
-            await tauriInvoke('create_invoice', {
-              payload: { ...inv, line_items: typeof inv.line_items === 'string' ? inv.line_items : JSON.stringify(inv.line_items) },
-            });
-          } catch { /* skip duplicate */ }
-        }
-      }
-      if (Array.isArray(data.expenses)) {
-        for (const e of data.expenses) {
-          try { await tauriInvoke('create_expense', { payload: e }); } catch { /* skip duplicate */ }
-        }
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(content);
+      } catch {
+        addToast('Import failed — file is not valid JSON', 'error');
+        return;
       }
 
-      addToast('Data imported successfully', 'success');
-      await loadProfile();
+      const validation = validateImportEnvelope(parsed);
+      if (!validation.valid) {
+        addToast(`Import failed — ${validation.error}`, 'error');
+        return;
+      }
+
+      if (!validation.envelope) {
+        addToast('Import failed — invalid backup format', 'error');
+        return;
+      }
+
+      const envelope = validation.envelope;
+      const currentSchema = getCurrentSchemaVersion();
+
+      if (envelope.schema_version > currentSchema) {
+        setSchemaWarnData({ from: envelope.schema_version, to: currentSchema });
+        setPendingImportEnvelope(envelope);
+        setShowSchemaWarnModal(true);
+        return;
+      }
+
+      if (envelope.schema_version < currentSchema) {
+        await logVersionEvent('import_schema_mismatch', {
+          backup_version: envelope.schema_version,
+          app_version: currentSchema,
+          backup_app_version: envelope.version,
+        });
+      }
+
+      proceedToImportSummary(envelope);
     } catch {
       addToast('Import failed — check file format', 'error');
-    } /* import errors surface as toast; no partial state left */
+    }
+  };
+
+  const proceedWithSchemaWarning = () => {
+    setShowSchemaWarnModal(false);
+    if (pendingImportEnvelope) {
+      proceedToImportSummary(pendingImportEnvelope);
+      setPendingImportEnvelope(null);
+    }
+  };
+
+  const proceedToImportSummary = (envelope: BackupEnvelope) => {
+    const validation = validateImportEnvelope(envelope);
+    setImportSummaryData(validation);
+    setImportReplaceMode(false);
+    setImportReplaceConfirm('');
+    setShowImportSummary(true);
+  };
+
+  const handleConfirmImport = async () => {
+    if (importReplaceMode && importReplaceConfirm !== 'REPLACE') {
+      return;
+    }
+
+    setImportPending(true);
+    setShowImportSummary(false);
+
+    try {
+      if (!importSummaryData?.envelope) {
+        addToast('Import failed — no data to import', 'error');
+        setImportPending(false);
+        return;
+      }
+
+      const envelope = importSummaryData.envelope;
+
+      const mode = importReplaceMode ? 'replace' : 'additive';
+      const result = await performImport(envelope, mode);
+
+      if (result.imported === 0 && result.skipped === 0 && result.failed > 0) {
+        addToast('Import failed — no data was changed', 'error');
+      } else {
+        const parts: string[] = [];
+        if (result.imported > 0) parts.push(`Imported: ${result.imported} records across ${result.tablesWritten} tables`);
+        if (result.skipped > 0) parts.push(`Skipped: ${result.skipped} duplicates`);
+        if (result.failed > 0) {
+          parts.push(`Failed: ${result.failed} records`);
+          if (result.errors.length > 0) {
+            parts.push(`(${result.errors.slice(0, 3).join('; ')})`);
+          }
+        }
+        addToast(parts.join('\n'), result.failed > 0 ? 'error' : 'success', 6000);
+      }
+
+      await loadProfile();
+    } catch (err) {
+      addToast(`Import failed — ${(err as Error)?.message || 'no data was changed'}`, 'error');
+    } finally {
+      setImportPending(false);
+    }
   };
 
   const handleClearSampleData = async () => {
@@ -891,6 +1030,26 @@ export default function Settings() {
               </Button>
             </div>
           )}
+          <div className="border-t border-[var(--border-color)] pt-3 flex items-center justify-between">
+            <div>
+              <p className="text-sm text-[var(--text-primary)]">Assets folder</p>
+              <p className="text-xs text-[var(--text-tertiary)]">Open attached files in your file manager</p>
+            </div>
+            <Button variant="secondary" onClick={async () => {
+              try {
+                const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
+                const assetsDir = await tauriInvoke<string>('get_assets_dir');
+                const { open: shellOpen } = await import('@tauri-apps/plugin-shell');
+                await shellOpen(assetsDir);
+              } catch {
+                addToast('Failed to open assets folder', 'error');
+              }
+            }} size="sm">
+              <FolderOpen size={14} />
+              Open
+            </Button>
+          </div>
+
           <div className="border-t border-[var(--border-color)]  pt-3 flex items-center justify-between">
             <div>
               <p className="text-sm text-[var(--danger)]">Reset all data</p>
@@ -907,6 +1066,87 @@ export default function Settings() {
           </div>
         </div>
       </Card>
+
+      {/* Auto-backup */}
+      {autoBackupLoaded && (
+        <Card className="mb-6">
+          <SectionHead title="Auto-backup" />
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-[var(--text-primary)]">Enable auto-backup</p>
+                <p className="text-xs text-[var(--text-tertiary)]">Silently export your data on a schedule</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={autoBackupEnabled}
+                  onChange={(e) => {
+                    setAutoBackupEnabled(e.target.checked);
+                    saveAutoBackupState(e.target.checked, autoBackupFreq);
+                  }}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-[var(--border-color)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--accent)]" />
+              </label>
+            </div>
+
+            {autoBackupEnabled && (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Frequency</label>
+                  <select
+                    value={autoBackupFreq}
+                    onChange={(e) => {
+                      const freq = e.target.value as 'daily' | 'weekly' | 'monthly';
+                      setAutoBackupFreq(freq);
+                      saveAutoBackupState(true, freq);
+                    }}
+                    className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                  >
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Backup location</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={autoBackupPath}
+                      readOnly
+                      placeholder="Choose a folder..."
+                      className="flex-1 px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-secondary)] text-[var(--text-tertiary)] truncate"
+                    />
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          const { open: openDialog } = await import('@tauri-apps/plugin-dialog');
+                          const selected = await openDialog({ directory: true, title: 'Choose backup folder' });
+                          if (selected && typeof selected === 'string') {
+                            setAutoBackupPath(selected);
+                            saveAutoBackupState(true, autoBackupFreq, selected);
+                          }
+                        } catch {
+                          /* dialog cancelled */
+                        }
+                      }}
+                    >
+                      Browse
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
+                    Keeps last 10 backups; older files are deleted automatically.
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        </Card>
+      )}
 
       {/* Section 5.5: Export Templates */}
       {unlockedAchievements.has('first_export') && (
@@ -1073,6 +1313,141 @@ export default function Settings() {
             <Button variant="secondary" onClick={() => setShowLicenseModal(false)} size="sm">Cancel</Button>
             <Button variant="primary" onClick={handleActivateLicense} loading={licenseActivating} disabled={!licenseKey.trim()} size="sm">
               Activate
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Asset warning modal */}
+      <Modal open={showAssetWarning} onClose={() => setShowAssetWarning(false)} title="Backup your files" size="sm">
+        <div className="space-y-4">
+          <div className="text-sm text-[var(--text-primary)] leading-relaxed">
+            <p className="mb-3">Your Lance backup includes all your data — clients, projects, invoices, and everything else.</p>
+            <div className="flex items-start gap-2 p-3 rounded-[8px] bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+              <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">Not included: your attached files in Assets.</p>
+                <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                  To back up your files, also copy: <br />
+                  <code className="text-[11px] bg-amber-100 dark:bg-amber-900/40 px-1 py-0.5 rounded">~/Documents/Lance/Assets/</code>
+                </p>
+                <p className="text-xs text-amber-600 dark:text-amber-500 mt-1">
+                  This folder contains all files you've attached to clients and projects.
+                </p>
+              </div>
+            </div>
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              onChange={(e) => {
+                if (e.target.checked) {
+                  handleDismissAssetWarning(true);
+                  setShowAssetWarning(false);
+                }
+              }}
+              className="w-4 h-4 rounded border-[var(--border-color)] text-[var(--accent)] focus:ring-[var(--accent)]"
+            />
+            <span className="text-xs text-[var(--text-secondary)]">Got it, don't show again</span>
+          </label>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" onClick={() => setShowAssetWarning(false)} size="sm">Cancel</Button>
+            <Button variant="primary" onClick={handleAssetWarningContinue} size="sm">Continue export</Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Schema version warning modal */}
+      <Modal open={showSchemaWarnModal} onClose={() => { setShowSchemaWarnModal(false); setPendingImportEnvelope(null); }} title="Newer backup version" size="sm">
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 p-3 rounded-[8px] bg-amber-50 dark:bg-amber-900/20">
+            <AlertTriangle size={18} className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                This backup was made with a newer version of Lance.
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                Backup schema v{schemaWarnData?.from} &gt; app schema v{schemaWarnData?.to}. Some data may not import correctly.
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => { setShowSchemaWarnModal(false); setPendingImportEnvelope(null); }} size="sm">Cancel</Button>
+            <Button variant="primary" onClick={proceedWithSchemaWarning} size="sm">Import anyway</Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Import summary modal */}
+      <Modal open={showImportSummary} onClose={() => setShowImportSummary(false)} title="Import summary" size="md">
+        <div className="space-y-4">
+          <div className="text-sm text-[var(--text-primary)]">
+            <p className="mb-2">
+              Found:{' '}
+              <span className="font-medium">
+                {importSummaryData?.tableCounts ? formatTableCounts(importSummaryData.tableCounts) : '...'}
+              </span>
+            </p>
+          </div>
+
+          <div className="p-3 rounded-[8px] bg-[var(--bg-secondary)] border border-[var(--border-color)]">
+            <p className="text-xs text-[var(--text-secondary)]">
+              {importReplaceMode
+                ? 'REPLACE all existing data with the imported data. This cannot be undone.'
+                : 'This will ADD to your existing data. Duplicate records (same ID) will be skipped.'}
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={importReplaceMode}
+                  onChange={(e) => {
+                    setImportReplaceMode(e.target.checked);
+                    setImportReplaceConfirm('');
+                  }}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-[var(--border-color)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-500" />
+              </label>
+              <div>
+                <p className={`text-sm font-medium ${importReplaceMode ? 'text-[var(--danger)]' : 'text-[var(--text-primary)]'}`}>
+                  {importReplaceMode ? 'Replace all data' : 'Add to existing data'}
+                </p>
+                <p className="text-[10px] text-[var(--text-tertiary)]">
+                  {importReplaceMode ? 'Destructive — removes all current data first' : 'Default — safe'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {importReplaceMode && (
+            <div>
+              <label className="block text-xs font-medium text-[var(--danger)] mb-1">
+                Type REPLACE to confirm
+              </label>
+              <input
+                type="text"
+                value={importReplaceConfirm}
+                onChange={(e) => setImportReplaceConfirm(e.target.value)}
+                placeholder="REPLACE"
+                className="w-full px-3 py-2 text-sm border border-red-300 dark:border-red-700 rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-red-500 font-mono"
+              />
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" onClick={() => setShowImportSummary(false)} size="sm">Cancel</Button>
+            <Button
+              variant={importReplaceMode ? 'danger' : 'primary'}
+              onClick={handleConfirmImport}
+              loading={importPending}
+              disabled={importReplaceMode && importReplaceConfirm !== 'REPLACE'}
+              size="sm"
+            >
+              {importReplaceMode ? 'Replace & import' : 'Import'}
             </Button>
           </div>
         </div>

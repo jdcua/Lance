@@ -163,6 +163,7 @@ export type RecurringInvoice = {
   active: boolean;
   next_due: string;
   last_generated?: string;
+  last_catch_up_warning?: string;
   created_at: string;
 };
 
