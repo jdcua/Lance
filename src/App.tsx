@@ -275,6 +275,46 @@ export default function App() {
     return () => clearInterval(interval);
   }, [profileLoaded]);
 
+  // Proposal expiry engine — runs on startup + every hour
+  useEffect(() => {
+    if (!profileLoaded) return;
+
+    const checkExpiry = async () => {
+      try {
+        const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
+        const expired = await tauriInvoke<Array<{ id: string; client_id: string; title: string }>>('expire_sent_proposals', {});
+        if (expired.length === 0) return;
+
+        const state = useStore.getState();
+        await state.loadClients();
+        await state.loadProposals();
+        const settings = state.followUpSettings;
+
+        for (const ep of expired) {
+          const client = state.clients.find((c) => c.id === ep.client_id);
+          const clientName = client?.name || 'Unknown';
+
+          await state.addCommunication({
+            id: '',
+            client_id: ep.client_id,
+            type: 'note',
+            summary: `Proposal '${ep.title}' expired automatically`,
+            date: new Date().toISOString(),
+            created_at: new Date().toISOString(),
+          });
+
+          if (settings.enabled) {
+            addToast(`Proposal '${ep.title}' for ${clientName} has expired`, 'info');
+          }
+        }
+      } catch { /* expiry check is non-critical */ }
+    };
+
+    checkExpiry();
+    const interval = setInterval(checkExpiry, 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [profileLoaded]);
+
   useAutoUpdater();
 
   // Global drag-and-drop for import

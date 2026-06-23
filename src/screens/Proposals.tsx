@@ -8,18 +8,20 @@ import Badge from '../components/ui/Badge';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { exportProposalPDF, exportProposalDOCX } from '../export';
 import { formatCurrency } from '../utils/format';
+import { formatDate } from '../utils/format';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
-import { Plus, Trash2, Send, Eye, Download, FileText, Search, ArrowUpDown, Bell, Check, X, Copy } from 'lucide-react';
+import { Plus, Trash2, Send, Eye, Download, FileText, Search, ArrowUpDown, Bell, Check, X, Copy, Clock } from 'lucide-react';
 import { generateFollowUpDraft } from '../utils/followUpTemplates';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 
-const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
+const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'dark'> = {
   draft: 'warning',
   sent: 'info',
   accepted: 'success',
   declined: 'danger',
+  expired: 'dark',
 };
 
 function generateContractBody(
@@ -48,6 +50,7 @@ function generateContractBody(
 }
 
 type SortKey = 'title' | 'client' | 'status' | 'date';
+type StatusFilter = 'all' | 'draft' | 'sent' | 'accepted' | 'declined' | 'expired';
 
 export default function Proposals() {
   const { proposals, loadProposals, clients, loadClients, updateProposal, removeProposal, profile, loadProfile, addProposal, addContract, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings } = useStore();
@@ -63,6 +66,7 @@ export default function Proposals() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   useEffect(() => {
     Promise.all([loadProposals(), loadClients(), loadProfile()])
@@ -82,12 +86,40 @@ export default function Proposals() {
     return () => document.removeEventListener('mousedown', handler);
   }, [exportDropdown]);
 
+  const computeExpiry = (): { expiresAt: string | null } => {
+    if (!profile?.proposal_expiry_days) return { expiresAt: null };
+    const d = new Date();
+    d.setDate(d.getDate() + profile.proposal_expiry_days);
+    return { expiresAt: d.toISOString() };
+  };
+
   const handleSend = async (p: Proposal) => {
     try {
-      await updateProposal({ ...p, status: 'sent' as const });
+      const expiry = computeExpiry();
+      await updateProposal({
+        ...p,
+        status: 'sent' as const,
+        sent_at: new Date().toISOString(),
+        expires_at: expiry.expiresAt ?? undefined,
+      });
       checkAndNotify(useStore.getState(), addToast);
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to send', 'error');
+    }
+  };
+
+  const handleResend = async (p: Proposal) => {
+    try {
+      const expiry = computeExpiry();
+      await updateProposal({
+        ...p,
+        status: 'sent' as const,
+        sent_at: new Date().toISOString(),
+        expires_at: expiry.expiresAt ?? undefined,
+      });
+      addToast('Proposal resent', 'success');
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to resend', 'error');
     }
   };
 
@@ -178,7 +210,17 @@ export default function Proposals() {
     return `${formatted} flat`;
   };
 
+  const statusLabels: Record<StatusFilter, string> = {
+    all: 'All',
+    draft: 'Draft',
+    sent: 'Sent',
+    accepted: 'Accepted',
+    declined: 'Declined',
+    expired: 'Expired',
+  };
+
   const filtered = proposals.filter(p => {
+    if (statusFilter !== 'all' && p.status !== statusFilter) return false;
     if (!search) return true;
     const s = search.toLowerCase();
     return p.title.toLowerCase().includes(s) || getClientName(p.client_id).toLowerCase().includes(s);
@@ -226,13 +268,25 @@ export default function Proposals() {
         </Button>
       </div>
 
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
         <div className="relative flex-1 max-w-xs">
           <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
           <input
             type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search proposals..."
             className="w-full pl-8 pr-3 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]"
           />
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="text-[10px] text-[var(--text-tertiary)]">Status:</span>
+          {(Object.keys(statusLabels) as StatusFilter[]).map(k => (
+            <button
+              key={k}
+              onClick={() => setStatusFilter(k)}
+              className={`text-[10px] px-2 py-0.5 rounded-[4px] transition-colors capitalize ${statusFilter === k ? 'bg-[var(--accent-bg)] text-[var(--accent)] font-medium' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}
+            >
+              {statusLabels[k]}
+            </button>
+          ))}
         </div>
         <div className="flex items-center gap-1">
           <span className="text-[10px] text-[var(--text-tertiary)]">Sort:</span>
@@ -255,8 +309,8 @@ export default function Proposals() {
           <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Create your first proposal to start winning work.</p>
           <Button onClick={() => navigate('/proposals/new')} size="sm" variant="secondary">New Proposal</Button>
         </Card>
-      ) : filtered.length === 0 && search ? (
-        <Card className="text-center py-12"><p className="text-sm text-[var(--text-tertiary)]">No proposals match "{search}"</p></Card>
+      ) : filtered.length === 0 ? (
+        <Card className="text-center py-12"><p className="text-sm text-[var(--text-tertiary)]">No proposals match your filters.</p></Card>
       ) : (
         <div className="space-y-3">
           {sorted.map((p) => (
@@ -285,6 +339,18 @@ export default function Proposals() {
                       {convertingId === p.id ? 'Creating...' : 'Convert to contract'}
                     </button>
                   )}
+                  {p.status === 'expired' && p.expires_at && (
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
+                      <Clock size={11} />
+                      Expired on {formatDate(p.expires_at)}
+                    </p>
+                  )}
+                  {p.status === 'sent' && p.expires_at && (
+                    <p className="text-[10px] text-[var(--text-tertiary)] mt-1 flex items-center gap-1">
+                      <Clock size={11} />
+                      Expires {formatDate(p.expires_at)}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0 ml-3">
                   {p.status === 'draft' && (
@@ -294,6 +360,11 @@ export default function Proposals() {
                   )}
                   {p.status === 'sent' && (
                     <button onClick={() => handleAccept(p)} aria-label="Accept proposal" className="p-1.5 rounded-[8px] text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors" title="Accept">
+                      <Send size={14} />
+                    </button>
+                  )}
+                  {p.status === 'expired' && (
+                    <button onClick={() => handleResend(p)} aria-label="Resend proposal" className="p-1.5 rounded-[8px] text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors" title="Resend">
                       <Send size={14} />
                     </button>
                   )}
@@ -321,6 +392,11 @@ export default function Proposals() {
               </div>
               {expanded === p.id && (
                 <div className="mt-3 pt-3 border-t border-[var(--border-color)] space-y-3">
+                  <div className="flex items-center gap-3 text-[10px] text-[var(--text-tertiary)]">
+                    <span>Sent {p.sent_at ? formatDate(p.sent_at) : 'N/A'}</span>
+                    <span>·</span>
+                    <span>{p.expires_at ? `Expires ${formatDate(p.expires_at)}` : 'Never expires'}</span>
+                  </div>
                   {/* Follow-up banner */}
                   {(() => {
                     const fu = pendingFollowUps.find((f) => f.entity_type === 'proposal' && f.entity_id === p.id);

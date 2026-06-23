@@ -17,6 +17,7 @@ pub struct Invoice {
     pub due_date: Option<String>,
     pub paid_at: Option<String>,
     pub notes: Option<String>,
+    pub currency: Option<String>,
     pub created_at: String,
 }
 
@@ -32,6 +33,7 @@ pub struct CreateInvoicePayload {
     pub total: f64,
     pub due_date: Option<String>,
     pub notes: Option<String>,
+    pub currency: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -47,12 +49,13 @@ pub struct UpdateInvoicePayload {
     pub total: f64,
     pub due_date: Option<String>,
     pub notes: Option<String>,
+    pub currency: Option<String>,
 }
 
 #[tauri::command]
 pub fn get_invoices(app: AppHandle) -> Result<Vec<Invoice>, String> {
     let conn = db::get_connection(&app)?;
-    let mut stmt = conn.prepare("SELECT id, client_id, project_id, invoice_number, status, line_items, subtotal, tax_rate, total, due_date, paid_at, notes, created_at FROM invoices ORDER BY created_at DESC")
+    let mut stmt = conn.prepare("SELECT id, client_id, project_id, invoice_number, status, line_items, subtotal, tax_rate, total, due_date, paid_at, notes, currency, created_at FROM invoices ORDER BY created_at DESC")
         .map_err(|_| "Database operation failed".to_string())?;
     let invoices = stmt
         .query_map([], |row| {
@@ -69,7 +72,8 @@ pub fn get_invoices(app: AppHandle) -> Result<Vec<Invoice>, String> {
                 due_date: row.get(9)?,
                 paid_at: row.get(10)?,
                 notes: row.get(11)?,
-                created_at: row.get(12)?,
+                currency: row.get(12)?,
+                created_at: row.get(13)?,
             })
         })
         .map_err(|_| "Database operation failed".to_string())?
@@ -81,7 +85,7 @@ pub fn get_invoices(app: AppHandle) -> Result<Vec<Invoice>, String> {
 #[tauri::command]
 pub fn get_invoice(app: AppHandle, id: String) -> Result<Option<Invoice>, String> {
     let conn = db::get_connection(&app)?;
-    let mut stmt = conn.prepare("SELECT id, client_id, project_id, invoice_number, status, line_items, subtotal, tax_rate, total, due_date, paid_at, notes, created_at FROM invoices WHERE id = ?")
+    let mut stmt = conn.prepare("SELECT id, client_id, project_id, invoice_number, status, line_items, subtotal, tax_rate, total, due_date, paid_at, notes, currency, created_at FROM invoices WHERE id = ?")
         .map_err(|_| "Database operation failed".to_string())?;
     Ok(stmt
         .query_row([&id], |row| {
@@ -98,7 +102,8 @@ pub fn get_invoice(app: AppHandle, id: String) -> Result<Option<Invoice>, String
                 due_date: row.get(9)?,
                 paid_at: row.get(10)?,
                 notes: row.get(11)?,
-                created_at: row.get(12)?,
+                currency: row.get(12)?,
+                created_at: row.get(13)?,
             })
         })
         .ok())
@@ -110,8 +115,8 @@ pub fn create_invoice(app: AppHandle, payload: CreateInvoicePayload) -> Result<I
     let id = uuid::Uuid::new_v4().to_string();
     let created_at = super::clients::chrono_now();
     conn.execute(
-        "INSERT INTO invoices (id, client_id, project_id, invoice_number, status, line_items, subtotal, tax_rate, total, due_date, notes, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
-        rusqlite::params![id, payload.client_id, payload.project_id, payload.invoice_number, payload.status, payload.line_items, payload.subtotal, payload.tax_rate, payload.total, payload.due_date, payload.notes, created_at],
+        "INSERT INTO invoices (id, client_id, project_id, invoice_number, status, line_items, subtotal, tax_rate, total, due_date, notes, currency, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+        rusqlite::params![id, payload.client_id, payload.project_id, payload.invoice_number, payload.status, payload.line_items, payload.subtotal, payload.tax_rate, payload.total, payload.due_date, payload.notes, payload.currency, created_at],
     ).map_err(|_| "Database operation failed".to_string())?;
     Ok(Invoice {
         id,
@@ -126,6 +131,7 @@ pub fn create_invoice(app: AppHandle, payload: CreateInvoicePayload) -> Result<I
         due_date: payload.due_date,
         paid_at: None,
         notes: payload.notes,
+        currency: payload.currency,
         created_at,
     })
 }
@@ -135,8 +141,8 @@ pub fn update_invoice(app: AppHandle, payload: UpdateInvoicePayload) -> Result<(
     let conn = db::get_connection(&app)?;
     let now = super::clients::chrono_now();
     conn.execute(
-        "UPDATE invoices SET client_id = ?1, project_id = ?2, invoice_number = ?3, status = ?4, line_items = ?5, subtotal = ?6, tax_rate = ?7, total = ?8, due_date = ?9, paid_at = CASE WHEN status = 'paid' AND (SELECT status FROM invoices WHERE id = ?10) != 'paid' THEN ?11 ELSE paid_at END, notes = ?12 WHERE id = ?10",
-        rusqlite::params![payload.client_id, payload.project_id, payload.invoice_number, payload.status, payload.line_items, payload.subtotal, payload.tax_rate, payload.total, payload.due_date, payload.id, now, payload.notes],
+        "UPDATE invoices SET client_id = ?1, project_id = ?2, invoice_number = ?3, status = ?4, line_items = ?5, subtotal = ?6, tax_rate = ?7, total = ?8, due_date = ?9, paid_at = CASE WHEN status = 'paid' AND (SELECT status FROM invoices WHERE id = ?10) != 'paid' THEN ?11 ELSE paid_at END, notes = ?12, currency = ?13 WHERE id = ?10",
+        rusqlite::params![payload.client_id, payload.project_id, payload.invoice_number, payload.status, payload.line_items, payload.subtotal, payload.tax_rate, payload.total, payload.due_date, payload.id, now, payload.notes, payload.currency],
     ).map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }

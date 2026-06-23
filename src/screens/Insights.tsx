@@ -51,8 +51,9 @@ export default function Insights() {
   }).reduce((sum, t) => sum + (t.duration_minutes || 0), 0);
 
   const proposalsAccepted = proposals.filter((p) => p.status === 'accepted').length;
+  const proposalsResolved = proposals.filter((p) => p.status !== 'draft' && p.status !== 'sent' && p.status !== 'expired').length;
   const totalProposals = proposals.length;
-  const winRate = totalProposals > 0 ? Math.round((proposalsAccepted / totalProposals) * 100) : 0;
+  const winRate = proposalsResolved > 0 ? Math.round((proposalsAccepted / proposalsResolved) * 100) : 0;
 
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const profitMargin = totalPaid > 0 ? Math.round(((totalPaid - totalExpenses) / totalPaid) * 100) : 0;
@@ -120,7 +121,7 @@ export default function Insights() {
         <MetricCard label="Active Projects" value={activeProjects} subtext={`${completedProjects} completed`} color="gray" />
         <MetricCard label="Total Revenue" value={formatCurrency(totalPaid, profile?.currency)} subtext={`${invoices.filter((i) => i.status === 'paid').length} paid invoices`} trend="up" color="green" />
         <MetricCard label="Outstanding" value={formatCurrency(totalOutstanding, profile?.currency)} subtext={overdueInvoices > 0 ? `${overdueInvoices} overdue` : 'all current'} trend={overdueInvoices > 0 ? 'down' : 'neutral'} color={overdueInvoices > 0 ? 'red' : 'amber'} />
-        <MetricCard label="Win Rate" value={`${winRate}%`} subtext={`${proposalsAccepted}/${totalProposals} proposals`} trend={winRate >= 50 ? 'up' : 'down'} color={winRate >= 50 ? 'green' : 'gray'} />
+        <MetricCard label="Win Rate" value={`${winRate}%`} subtext={`${proposalsAccepted}/${proposalsResolved} resolved`} trend={winRate >= 50 ? 'up' : 'down'} color={winRate >= 50 ? 'green' : 'gray'} />
       </div>
 
       <div className="grid grid-cols-2 gap-6 mb-6">

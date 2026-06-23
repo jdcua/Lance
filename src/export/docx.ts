@@ -167,6 +167,7 @@ export async function exportInvoiceDOCX(
   profile: UserProfile
 ): Promise<void> {
   const profileName = getProfileName(profile);
+  const currency = invoice.currency || profile.currency;
   const showTax = invoice.tax_rate != null && invoice.tax_rate > 0;
   const taxAmount = invoice.subtotal * ((invoice.tax_rate || 0) / 100);
 
@@ -194,8 +195,8 @@ export async function exportInvoiceDOCX(
         children: [
           new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: item.description, size: 22 })] })] }),
           new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(item.quantity), size: 22 })], alignment: AlignmentType.RIGHT })] }),
-          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: formatCurrency(item.unit_price, profile.currency), size: 22 })], alignment: AlignmentType.RIGHT })] }),
-          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: formatCurrency(item.total, profile.currency), size: 22 })], alignment: AlignmentType.RIGHT })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: formatCurrency(item.unit_price, currency), size: 22 })], alignment: AlignmentType.RIGHT })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: formatCurrency(item.total, currency), size: 22 })], alignment: AlignmentType.RIGHT })] }),
         ],
       })
   );
@@ -204,7 +205,7 @@ export async function exportInvoiceDOCX(
     new Paragraph({
       children: [
         new TextRun({ text: `Subtotal:  `, size: 22, color: '#68675F' }),
-        new TextRun({ text: formatCurrency(invoice.subtotal, profile.currency), size: 22 }),
+        new TextRun({ text: formatCurrency(invoice.subtotal, currency), size: 22 }),
       ],
       alignment: AlignmentType.RIGHT,
       spacing: { before: 100 },
@@ -216,7 +217,7 @@ export async function exportInvoiceDOCX(
       new Paragraph({
         children: [
           new TextRun({ text: `Tax (${invoice.tax_rate}%):  `, size: 22, color: '#68675F' }),
-          new TextRun({ text: formatCurrency(taxAmount, profile.currency), size: 22 }),
+          new TextRun({ text: formatCurrency(taxAmount, currency), size: 22 }),
         ],
         alignment: AlignmentType.RIGHT,
       })
@@ -227,7 +228,7 @@ export async function exportInvoiceDOCX(
     new Paragraph({
       children: [
         new TextRun({ text: 'TOTAL:  ', size: 24, bold: true }),
-        new TextRun({ text: formatCurrency(invoice.total, profile.currency), size: 24, bold: true, color: accentColor }),
+        new TextRun({ text: formatCurrency(invoice.total, currency), size: 24, bold: true, color: accentColor }),
       ],
       alignment: AlignmentType.RIGHT,
       spacing: { before: 60 },

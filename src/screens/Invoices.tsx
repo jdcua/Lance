@@ -10,11 +10,14 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import ClientSelect from '../components/ui/ClientSelect';
 import { exportInvoicePDF, exportInvoiceDOCX } from '../export';
 import { formatCurrency, relativeDate } from '../utils/format';
+import { getCurrencySymbol } from '../lib/currency';
 import { generateInvoiceNumber } from '../utils/invoiceNumber';
 import { useToasts } from '../store/toastStore';
 import { Plus, Pencil, Trash2, Download, Clock, RotateCw, Receipt, Search, Bell, X, Copy, DollarSign, ChevronDown, ChevronRight } from 'lucide-react';
 import { generateFollowUpDraft } from '../utils/followUpTemplates';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
+
+const currencies = ['CAD', 'USD', 'EUR', 'GBP', 'AUD'];
 
 const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
   draft: 'warning',
@@ -57,7 +60,7 @@ export default function Invoices() {
   });
   const [riItems, setRiItems] = useState<Omit<LineItem, 'id'>[]>([{ description: '', quantity: 1, unit_price: 0, total: 0 }]);
   const [form, setForm] = useState({
-    client_id: '', project_id: '', invoice_number: '', due_date: '', notes: '', tax_rate: '', status: 'draft' as Invoice['status'],
+    client_id: '', project_id: '', invoice_number: '', due_date: '', notes: '', tax_rate: '', status: 'draft' as Invoice['status'], currency: '',
   });
   const [items, setItems] = useState<Omit<LineItem, 'id'>[]>([{ description: '', quantity: 1, unit_price: 0, total: 0 }]);
   const [loading, setLoading] = useState(true);
@@ -100,13 +103,18 @@ export default function Invoices() {
     return () => document.removeEventListener('mousedown', handler);
   }, [exportDropdown]);
 
+  const resolveDefaultCurrency = (clientId: string) => {
+    const client = clients.find((c) => c.id === clientId);
+    return client?.preferred_currency || '';
+  };
+
   const openNew = () => {
     const paymentTerms = profile?.payment_terms ?? 14;
     const defaultTax = profile?.tax_rate ? String(profile.tax_rate) : '';
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + paymentTerms);
     setEditing(null);
-    setForm({ client_id: '', project_id: '', invoice_number: generateInvoiceNumber(invoices), due_date: dueDate.toISOString().split('T')[0], notes: '', tax_rate: defaultTax, status: 'draft' });
+    setForm({ client_id: '', project_id: '', invoice_number: generateInvoiceNumber(invoices), due_date: dueDate.toISOString().split('T')[0], notes: '', tax_rate: defaultTax, status: 'draft', currency: '' });
     setItems([{ description: '', quantity: 1, unit_price: 0, total: 0 }]);
     setSelectedTimeIds(new Set());
     setShowModal(true);
@@ -114,9 +122,14 @@ export default function Invoices() {
 
   const openEdit = (inv: Invoice) => {
     setEditing(inv);
-    setForm({ client_id: inv.client_id, project_id: inv.project_id || '', invoice_number: inv.invoice_number, due_date: inv.due_date || '', notes: inv.notes || '', tax_rate: inv.tax_rate?.toString() || '', status: inv.status });
+    setForm({ client_id: inv.client_id, project_id: inv.project_id || '', invoice_number: inv.invoice_number, due_date: inv.due_date || '', notes: inv.notes || '', tax_rate: inv.tax_rate?.toString() || '', status: inv.status, currency: inv.currency || '' });
     setItems(inv.line_items.map((li) => ({ description: li.description, quantity: li.quantity, unit_price: li.unit_price, total: li.total })));
     setShowModal(true);
+  };
+
+  const handleClientChange = (clientId: string) => {
+    const prefCurrency = resolveDefaultCurrency(clientId);
+    setForm({ ...form, client_id: clientId, project_id: '', currency: form.currency || prefCurrency });
   };
 
   const updateItem = (index: number, field: keyof Omit<LineItem, 'id'>, value: string | number) => {
@@ -140,7 +153,7 @@ export default function Invoices() {
     setSaving(true);
     try {
       const lineItems: LineItem[] = items.map((i) => ({ ...i, id: crypto.randomUUID() }));
-      const invoiceData = { client_id: form.client_id, invoice_number: form.invoice_number, status: form.status, line_items: lineItems, subtotal, tax_rate: taxRate || undefined, total, due_date: form.due_date || undefined, notes: form.notes || undefined };
+      const invoiceData = { client_id: form.client_id, invoice_number: form.invoice_number, status: form.status, line_items: lineItems, subtotal, tax_rate: taxRate || undefined, total, due_date: form.due_date || undefined, notes: form.notes || undefined, currency: form.currency || undefined };
       if (editing) await updateInvoice({ ...editing, ...invoiceData });
       else await addInvoice(invoiceData);
       const ids = Array.from(selectedTimeIds);
@@ -283,6 +296,7 @@ export default function Invoices() {
         total: inv.total,
         due_date: dueDate.toISOString().split('T')[0],
         notes: inv.notes,
+        currency: inv.currency,
       });
       addToast(`Invoice duplicated — ${newNumber} created as draft`, 'success');
     } catch (err) {
@@ -292,6 +306,22 @@ export default function Invoices() {
 
   const getClient = (clientId: string) => clients.find((c) => c.id === clientId);
   const getClientName = (clientId: string) => getClient(clientId)?.name || 'Unknown';
+
+  const getInvoiceCurrency = (inv: Invoice) => inv.currency || profile?.currency || 'CAD';
+
+  const fmtInv = (amount: number, inv: Invoice) => {
+    const cur = getInvoiceCurrency(inv);
+    return formatCurrency(amount, cur);
+  };
+
+  const fmtInvDisplay = (inv: Invoice) => {
+    const cur = getInvoiceCurrency(inv);
+    const formatted = formatCurrency(inv.total, cur);
+    if (cur !== (profile?.currency || 'CAD')) {
+      return `${formatted} ${cur}`;
+    }
+    return formatted;
+  };
 
   const hourlyRate = profile?.hourly_rate || 0;
 
@@ -489,11 +519,11 @@ export default function Invoices() {
                         <Badge variant={statusBadge[inv.status]}>{inv.status}</Badge>
                       </div>
                       <div className="flex items-center gap-3 text-[10px] text-[var(--text-tertiary)]">
-                        <span>{formatCurrency(inv.total)}</span>
+                        <span>{fmtInvDisplay(inv)}</span>
                         {inv.due_date && <span>Due: {relativeDate(inv.due_date)}</span>}
                         {inv.paid_at && <span>Paid: {relativeDate(inv.paid_at)}</span>}
-                        {paidTotal > 0 && !inv.paid_at && <span className="text-[var(--warning-text)]">Paid: {formatCurrency(paidTotal)}</span>}
-                        {remaining > 0 && remaining < inv.total && <span className="text-[var(--warning-text)]">Remaining: {formatCurrency(remaining)}</span>}
+                        {paidTotal > 0 && !inv.paid_at && <span className="text-[var(--warning-text)]">Paid: {fmtInv(paidTotal, inv)}</span>}
+                        {remaining > 0 && remaining < inv.total && <span className="text-[var(--warning-text)]">Remaining: {fmtInv(remaining, inv)}</span>}
                         <span>{inv.line_items.length} item{inv.line_items.length !== 1 ? 's' : ''}</span>
                       </div>
                       {/* Follow-up indicator */}
@@ -573,9 +603,9 @@ export default function Invoices() {
                         <h4 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5"><DollarSign size={12} />Payments</h4>
                         <button onClick={() => openPaymentModal(inv)} className="text-[10px] text-[var(--accent)] hover:underline">+ Record Payment</button>
                       </div>
-                      <div className="flex items-center gap-4 mb-2 text-[10px]">
-                        <span className="text-[var(--text-secondary)]">Total paid: <span className="font-medium text-[var(--accent)]">{formatCurrency(paidTotal)}</span></span>
-                        <span className="text-[var(--text-secondary)]">Remaining: <span className={`font-medium ${remaining > 0 ? 'text-[var(--warning-text)]' : 'text-[var(--accent)]'}`}>{formatCurrency(remaining)}</span></span>
+                       <div className="flex items-center gap-4 mb-2 text-[10px]">
+                         <span className="text-[var(--text-secondary)]">Total paid: <span className="font-medium text-[var(--accent)]">{fmtInv(paidTotal, inv)}</span></span>
+                         <span className="text-[var(--text-secondary)]">Remaining: <span className={`font-medium ${remaining > 0 ? 'text-[var(--warning-text)]' : 'text-[var(--accent)]'}`}>{fmtInv(remaining, inv)}</span></span>
                       </div>
                       {invPayments.length === 0 ? (
                         <p className="text-[10px] text-[var(--text-tertiary)]">No payments recorded yet.</p>
@@ -584,7 +614,7 @@ export default function Invoices() {
                           {invPayments.map((p) => (
                             <div key={p.id} className="flex items-center justify-between px-2 py-1.5 rounded-[6px] bg-[var(--bg-card)]">
                               <div className="flex items-center gap-3 text-[10px]">
-                                <span className="text-[var(--text-primary)] font-medium">{formatCurrency(p.amount)}</span>
+                                <span className="text-[var(--text-primary)] font-medium">{fmtInv(p.amount, inv)}</span>
                                 <span className="text-[var(--text-secondary)]">{relativeDate(p.payment_date)}</span>
                                 <span className="text-[var(--text-tertiary)]">{p.payment_method}</span>
                                 {p.reference && <span className="text-[var(--text-tertiary)]">Ref: {p.reference}</span>}
@@ -651,7 +681,7 @@ export default function Invoices() {
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Client *</label>
-              <ClientSelect clients={clients} value={form.client_id} onChange={(clientId) => setForm({ ...form, client_id: clientId, project_id: '' })} placeholder="Select a client..." />
+              <ClientSelect clients={clients} value={form.client_id} onChange={handleClientChange} placeholder="Select a client..." />
             </div>
             <div>
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Project (optional)</label>
@@ -665,9 +695,20 @@ export default function Invoices() {
               <input type="text" value={form.invoice_number} onChange={(e) => setForm({ ...form, invoice_number: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]" />
             </div>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Due Date</label>
-            <input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]" />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Due Date</label>
+              <input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Currency</label>
+              <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]">
+                <option value="">{profile?.currency ? `${getCurrencySymbol(profile.currency)} (default)` : 'Default'}</option>
+                {currencies.map((c) => (
+                  <option key={c} value={c}>{getCurrencySymbol(c)} {c}</option>
+                ))}
+              </select>
+            </div>
           </div>
           {!editing && (
             <div>
@@ -801,7 +842,7 @@ export default function Invoices() {
           {paymentInv && (
             <div className="px-3 py-2 rounded-[8px] bg-[var(--bg-secondary)]">
               <p className="text-xs font-medium text-[var(--text-primary)]">{paymentInv.invoice_number}</p>
-              <p className="text-[10px] text-[var(--text-secondary)]">{getClientName(paymentInv.client_id)} &middot; {formatCurrency(paymentInv.total)}</p>
+              <p className="text-[10px] text-[var(--text-secondary)]">{getClientName(paymentInv.client_id)} &middot; {fmtInvDisplay(paymentInv)}</p>
             </div>
           )}
           <div>

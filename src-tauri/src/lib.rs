@@ -34,6 +34,7 @@ pub fn run() {
             commands::proposals::create_proposal,
             commands::proposals::update_proposal,
             commands::proposals::delete_proposal,
+            commands::proposals::expire_sent_proposals,
             commands::contracts::get_contracts,
             commands::contracts::get_contract,
             commands::contracts::create_contract,

@@ -101,6 +101,7 @@ export function ProposalPDF({ proposal, client, profile }: { proposal: Proposal;
 }
 
 export function InvoicePDF({ invoice, client, profile }: { invoice: Invoice; client: Client; profile: UserProfile }) {
+  const currency = invoice.currency || profile.currency;
   const taxAmount = invoice.subtotal * ((invoice.tax_rate || 0) / 100);
   const showTax = invoice.tax_rate != null && invoice.tax_rate > 0;
 
@@ -164,8 +165,8 @@ export function InvoicePDF({ invoice, client, profile }: { invoice: Invoice; cli
           >
             <Text style={[pdfStyles.value, pdfStyles.tableCellDesc]}>{item.description}</Text>
             <Text style={[pdfStyles.value, pdfStyles.tableCellQty]}>{item.quantity}</Text>
-            <Text style={[pdfStyles.value, pdfStyles.tableCellPrice]}>{formatCurrency(item.unit_price, profile.currency)}</Text>
-            <Text style={[pdfStyles.value, pdfStyles.tableCellTotal]}>{formatCurrency(item.total, profile.currency)}</Text>
+            <Text style={[pdfStyles.value, pdfStyles.tableCellPrice]}>{formatCurrency(item.unit_price, currency)}</Text>
+            <Text style={[pdfStyles.value, pdfStyles.tableCellTotal]}>{formatCurrency(item.total, currency)}</Text>
           </View>
         ))}
 
@@ -173,19 +174,19 @@ export function InvoicePDF({ invoice, client, profile }: { invoice: Invoice; cli
 
         <View style={[pdfStyles.totalRow]}>
           <Text style={pdfStyles.totalRowLabel}>Subtotal:  </Text>
-          <Text style={pdfStyles.value}>{formatCurrency(invoice.subtotal, profile.currency)}</Text>
+          <Text style={pdfStyles.value}>{formatCurrency(invoice.subtotal, currency)}</Text>
         </View>
 
         {showTax && (
           <View style={pdfStyles.totalRow}>
             <Text style={pdfStyles.totalRowLabel}>Tax ({invoice.tax_rate}%):  </Text>
-            <Text style={pdfStyles.value}>{formatCurrency(taxAmount, profile.currency)}</Text>
+            <Text style={pdfStyles.value}>{formatCurrency(taxAmount, currency)}</Text>
           </View>
         )}
 
         <View style={pdfStyles.totalRow}>
           <Text style={pdfStyles.totalLabel}>TOTAL:  </Text>
-          <Text style={pdfStyles.totalValue}>{formatCurrency(invoice.total, profile.currency)}</Text>
+          <Text style={pdfStyles.totalValue}>{formatCurrency(invoice.total, currency)}</Text>
         </View>
 
         {invoice.notes && (

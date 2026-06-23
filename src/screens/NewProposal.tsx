@@ -6,7 +6,8 @@ import Card from '../components/ui/Card';
 import RichEditor from '../components/ui/RichEditor';
 import ClientSelect from '../components/ui/ClientSelect';
 import { textToHtml } from '../utils/textToHtml';
-import { ArrowLeft, Sparkles, X, AlertTriangle } from 'lucide-react';
+import { formatDate } from '../utils/format';
+import { ArrowLeft, Sparkles, X, AlertTriangle, Clock } from 'lucide-react';
 import { generateProposalBody, checkScopeWarnings, type ScopeWarning } from '../ai/proposalGenerator';
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify } from '../achievements/notify';
@@ -90,10 +91,18 @@ export default function NewProposal() {
     setDismissedWarnings((prev) => new Set([...prev, pattern]));
   };
 
+  const computeExpiry = (): { expiresAt: string | undefined } => {
+    if (!profile?.proposal_expiry_days) return { expiresAt: undefined };
+    const d = new Date();
+    d.setDate(d.getDate() + profile.proposal_expiry_days);
+    return { expiresAt: d.toISOString() };
+  };
+
   const handleSave = async (status: 'draft' | 'sent') => {
     if (!form.title.trim() || !form.client_id) return;
     setSaving(true);
     try {
+      const expiry = status === 'sent' ? computeExpiry() : { expiresAt: undefined };
       await addProposal({
         client_id: form.client_id,
         title: form.title,
@@ -103,6 +112,7 @@ export default function NewProposal() {
         rate: form.rate ? parseFloat(form.rate) : undefined,
         rate_type: form.rate_type,
         body: form.body,
+        expires_at: expiry.expiresAt,
       });
       navigate('/proposals');
       checkAndNotify(useStore.getState(), addToast);
@@ -112,6 +122,14 @@ export default function NewProposal() {
       setSaving(false);
     }
   };
+
+  const expiryPreview = profile?.proposal_expiry_days
+    ? (() => {
+        const d = new Date();
+        d.setDate(d.getDate() + profile.proposal_expiry_days);
+        return `This proposal will expire on ${formatDate(d.toISOString())}`;
+      })()
+    : null;
 
   const activeWarnings = warnings.filter((w) => !dismissedWarnings.has(w.pattern));
 
@@ -269,7 +287,7 @@ export default function NewProposal() {
         </Card>
       )}
 
-      <div className="flex justify-end gap-2">
+      <div className="flex items-center justify-end gap-2">
         <Button variant="ghost" onClick={() => navigate('/proposals')} size="md">
           Cancel
         </Button>
@@ -285,6 +303,12 @@ export default function NewProposal() {
           Save &amp; Send
         </Button>
       </div>
+      {expiryPreview && (
+        <p className="text-right text-[10px] text-[var(--text-tertiary)] mt-1 flex items-center justify-end gap-1">
+          <Clock size={11} />
+          {expiryPreview}
+        </p>
+      )}
     </div>
   );
 }

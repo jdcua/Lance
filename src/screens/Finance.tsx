@@ -6,6 +6,7 @@ import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import Modal from '../components/ui/Modal';
 import { formatCurrency, formatDate, formatMonth } from '../utils/format';
+import { getCurrencySymbol } from '../lib/currency';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify } from '../achievements/notify';
@@ -173,6 +174,21 @@ export default function Finance() {
   const maxRevenue = Math.max(1, ...revenueForecast.map((d) => Math.max(d.confirmed, d.probable, d.projected, d.baseline)));
   const maxExpense = Math.max(1, ...expenseForecast.map((d) => Math.max(d.known, d.projected, d.baseline)));
 
+  const invoiceCurrencies = new Set(invoices.filter(i => i.status !== 'draft').map(i => i.currency || currency || 'CAD'));
+  const hasMixedCurrencies = invoiceCurrencies.size > 1;
+
+  const outstandingByCurrency: Record<string, number> = {};
+  invoices.filter(i => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').forEach(i => {
+    const cur = i.currency || currency || 'CAD';
+    outstandingByCurrency[cur] = (outstandingByCurrency[cur] || 0) + i.total;
+  });
+
+  const revenueByCurrency: Record<string, number> = {};
+  invoices.filter(i => i.status === 'paid').forEach(i => {
+    const cur = i.currency || currency || 'CAD';
+    revenueByCurrency[cur] = (revenueByCurrency[cur] || 0) + i.total;
+  });
+
   if (loading) return (
     <div className="p-6">
       <div className="grid grid-cols-4 gap-3 mb-6">
@@ -229,8 +245,20 @@ export default function Finance() {
 
       {tab === 'overview' ? (
         <>
+          {hasMixedCurrencies && (
+            <div className="mb-4 px-3 py-2 rounded-[8px] bg-[var(--info-bg)] border border-[var(--info)]/20 flex items-start gap-2 text-xs">
+              <span className="text-[var(--info)] mt-px flex-shrink-0">ⓘ</span>
+              <span className="text-[var(--text-secondary)]">
+                Your finances include invoices in multiple currencies. Amounts are shown in their original currency — totals may not reflect actual value.
+              </span>
+            </div>
+          )}
+
           <div className="grid grid-cols-4 gap-3 mb-6">
-            <MetricCard label="Revenue (Paid)" value={fmt(totalPaidRevenue)} color="green" />
+            <MetricCard label="Revenue (Paid)" value={hasMixedCurrencies
+              ? Object.entries(revenueByCurrency).map(([cur, amt]) => `${formatCurrency(amt, cur)} ${cur}`).join(' · ')
+              : fmt(totalPaidRevenue)
+            } color="green" />
             <MetricCard label="Expenses" value={fmt(totalExpenses)} color="red" />
             <MetricCard
               label="Profit"
@@ -239,12 +267,20 @@ export default function Finance() {
               subtext={profit >= 0 ? 'positive' : 'negative'}
               color={profit >= 0 ? 'green' : 'red'}
             />
-            <MetricCard label="Outstanding" value={fmt(totalOutstanding)} subtext="unpaid invoices" color="amber" />
+            <MetricCard
+              label="Outstanding"
+              value={hasMixedCurrencies
+                ? Object.entries(outstandingByCurrency).filter(([, amt]) => amt > 0).map(([cur, amt]) => `${formatCurrency(amt, cur)} ${cur}`).join(' · ')
+                : fmt(totalOutstanding)
+              }
+              subtext="unpaid invoices"
+              color="amber"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-6 mb-6">
             <Card>
-              <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Monthly Overview</h3>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Monthly Overview{hasMixedCurrencies ? ' (profile currency)' : ''}</h3>
               {allMonths.length === 0 ? (
                 <p className="text-xs text-[var(--text-tertiary)]">No data yet.</p>
               ) : (
@@ -268,6 +304,7 @@ export default function Finance() {
                   })}
                 </div>
               )}
+              {/* TODO(v1.5): add exchange rate API or manual rate input for finance rollups */}
             </Card>
 
             <Card>

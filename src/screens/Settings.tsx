@@ -108,6 +108,7 @@ export default function Settings() {
         license_key: profile.license_key,
         licensed_at: profile.licensed_at,
         ai_enabled: profile.ai_enabled ?? false,
+        proposal_expiry_days: profile.proposal_expiry_days,
       });
     }
   }, [profile]);
@@ -490,7 +491,7 @@ export default function Settings() {
             />
           </div>
           <div>
-            <label className={labelClass}>Currency</label>
+            <label className={labelClass}>Default currency</label>
             <select
               value={form.currency}
               onChange={(e) => autoSave({ currency: e.target.value }, 'Your profile')}
@@ -500,6 +501,7 @@ export default function Settings() {
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
+            <p className="text-[10px] text-[var(--text-tertiary)] mt-1">You can override this per-client or per-invoice.</p>
           </div>
         </div>
       </Card>
@@ -595,6 +597,32 @@ export default function Settings() {
               rows={3}
               className={`${inputClass} resize-none`}
             />
+          </div>
+        </div>
+      </Card>
+
+      {/* Section 3.1: Proposal defaults */}
+      <Card className="mb-6">
+        <SectionHead title="Proposal defaults" />
+        <div className="space-y-3">
+          <div>
+            <label className={labelClass}>Proposals expire after</label>
+            <select
+              value={form.proposal_expiry_days ?? ''}
+              onChange={(e) => {
+                const v = e.target.value ? parseInt(e.target.value) : undefined;
+                setForm({ ...form, proposal_expiry_days: v });
+                autoSave({ proposal_expiry_days: v }, 'Proposal defaults');
+              }}
+              className={inputClass}
+            >
+              <option value="7">7 days</option>
+              <option value="14">14 days</option>
+              <option value="30">30 days</option>
+              <option value="60">60 days</option>
+              <option value="">Never</option>
+            </select>
+            <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Sent proposals will automatically expire after this period.</p>
           </div>
         </div>
       </Card>

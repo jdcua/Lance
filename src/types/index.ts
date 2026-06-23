@@ -5,6 +5,7 @@ export type Client = {
   phone?: string;
   company?: string;
   notes?: string;
+  preferred_currency?: string;
   created_at: string;
 };
 
@@ -35,13 +36,14 @@ export type Proposal = {
   client_id: string;
   project_id?: string;
   title: string;
-  status: 'draft' | 'sent' | 'accepted' | 'declined';
+  status: 'draft' | 'sent' | 'accepted' | 'declined' | 'expired';
   scope?: string;
   timeline?: string;
   rate?: number;
   rate_type: 'flat' | 'hourly';
   body?: string;
   sent_at?: string;
+  expires_at?: string;
   created_at: string;
 };
 
@@ -82,6 +84,7 @@ export type Invoice = {
   due_date?: string;
   paid_at?: string;
   notes?: string;
+  currency?: string;
   created_at: string;
 };
 
@@ -134,6 +137,7 @@ export type UserProfile = {
   custom_archetype_config?: string;
   density?: string;
   accent_color?: string;
+  proposal_expiry_days?: number;
 };
 
 export type Communication = {

@@ -13,6 +13,7 @@ pub struct Client {
     pub phone: Option<String>,
     pub company: Option<String>,
     pub notes: Option<String>,
+    pub preferred_currency: Option<String>,
     pub created_at: String,
 }
 
@@ -23,6 +24,7 @@ pub struct CreateClientPayload {
     pub phone: Option<String>,
     pub company: Option<String>,
     pub notes: Option<String>,
+    pub preferred_currency: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -33,6 +35,7 @@ pub struct UpdateClientPayload {
     pub phone: Option<String>,
     pub company: Option<String>,
     pub notes: Option<String>,
+    pub preferred_currency: Option<String>,
 }
 
 #[tauri::command]
@@ -40,7 +43,7 @@ pub fn get_clients(app: tauri::AppHandle) -> Result<Vec<Client>, String> {
     let conn = db::get_connection(&app)?;
     let mut stmt = conn
         .prepare(
-            "SELECT id, name, email, phone, company, notes, created_at FROM clients ORDER BY name",
+            "SELECT id, name, email, phone, company, notes, preferred_currency, created_at FROM clients ORDER BY name",
         )
         .map_err(|_| "Database operation failed".to_string())?;
     let clients = stmt
@@ -52,7 +55,8 @@ pub fn get_clients(app: tauri::AppHandle) -> Result<Vec<Client>, String> {
                 phone: row.get(3)?,
                 company: row.get(4)?,
                 notes: row.get(5)?,
-                created_at: row.get(6)?,
+                preferred_currency: row.get(6)?,
+                created_at: row.get(7)?,
             })
         })
         .map_err(|_| "Database operation failed".to_string())?
@@ -66,7 +70,7 @@ pub fn get_client(app: tauri::AppHandle, id: String) -> Result<Option<Client>, S
     let conn = db::get_connection(&app)?;
     let mut stmt = conn
         .prepare(
-            "SELECT id, name, email, phone, company, notes, created_at FROM clients WHERE id = ?",
+            "SELECT id, name, email, phone, company, notes, preferred_currency, created_at FROM clients WHERE id = ?",
         )
         .map_err(|_| "Database operation failed".to_string())?;
     let client = stmt
@@ -78,7 +82,8 @@ pub fn get_client(app: tauri::AppHandle, id: String) -> Result<Option<Client>, S
                 phone: row.get(3)?,
                 company: row.get(4)?,
                 notes: row.get(5)?,
-                created_at: row.get(6)?,
+                preferred_currency: row.get(6)?,
+                created_at: row.get(7)?,
             })
         })
         .ok();
@@ -94,8 +99,8 @@ pub fn create_client(
     let id = uuid::Uuid::new_v4().to_string();
     let created_at = chrono_now();
     conn.execute(
-        "INSERT INTO clients (id, name, email, phone, company, notes, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-        rusqlite::params![id, payload.name, payload.email, payload.phone, payload.company, payload.notes, created_at],
+        "INSERT INTO clients (id, name, email, phone, company, notes, preferred_currency, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        rusqlite::params![id, payload.name, payload.email, payload.phone, payload.company, payload.notes, payload.preferred_currency, created_at],
     ).map_err(|_| "Database operation failed".to_string())?;
     Ok(Client {
         id,
@@ -104,6 +109,7 @@ pub fn create_client(
         phone: payload.phone,
         company: payload.company,
         notes: payload.notes,
+        preferred_currency: payload.preferred_currency,
         created_at,
     })
 }
@@ -112,8 +118,8 @@ pub fn create_client(
 pub fn update_client(app: tauri::AppHandle, payload: UpdateClientPayload) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
     conn.execute(
-        "UPDATE clients SET name = ?1, email = ?2, phone = ?3, company = ?4, notes = ?5 WHERE id = ?6",
-        rusqlite::params![payload.name, payload.email, payload.phone, payload.company, payload.notes, payload.id],
+        "UPDATE clients SET name = ?1, email = ?2, phone = ?3, company = ?4, notes = ?5, preferred_currency = ?6 WHERE id = ?7",
+        rusqlite::params![payload.name, payload.email, payload.phone, payload.company, payload.notes, payload.preferred_currency, payload.id],
     ).map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }

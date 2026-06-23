@@ -182,6 +182,10 @@ async function runMigrations(database: Database): Promise<void> {
     'ALTER TABLE recurring_invoices ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0',
     'ALTER TABLE expenses ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0',
     'ALTER TABLE project_templates ADD COLUMN is_default INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE proposals ADD COLUMN expires_at TEXT',
+    'ALTER TABLE invoices ADD COLUMN currency TEXT DEFAULT NULL',
+    'ALTER TABLE clients ADD COLUMN preferred_currency TEXT DEFAULT NULL',
+    'ALTER TABLE user_profile ADD COLUMN proposal_expiry_days INTEGER',
   ];
   for (const sql of newColumns) {
     try { await database.execute(sql); } catch { /* column already exists */ }

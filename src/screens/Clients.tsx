@@ -13,6 +13,7 @@ import { useToasts } from '../store/toastStore';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 import ClientImportModal from '../components/ui/ClientImportModal';
 import { formatCurrency, relativeDate } from '../utils/format';
+import { getCurrencySymbol, CURRENCIES } from '../lib/currency';
 import { checkAndNotify } from '../achievements/notify';
 
 const commIcons: Record<string, typeof MessageSquare> = {
@@ -49,7 +50,7 @@ export default function Clients() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ name: '', email: '', phone: '', company: '', notes: '' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', company: '', notes: '', preferred_currency: '' });
   const [formErrors, setFormErrors] = useState<{ email?: string }>({});
   const [showLogForm, setShowLogForm] = useState(false);
   const [logForm, setLogForm] = useState({ type: 'note' as Communication['type'], date: new Date().toISOString().split('T')[0], summary: '' });
@@ -126,7 +127,7 @@ export default function Clients() {
 
   const openNew = () => {
     setEditing(null);
-    setForm({ name: '', email: '', phone: '', company: '', notes: '' });
+    setForm({ name: '', email: '', phone: '', company: '', notes: '', preferred_currency: '' });
     setFormErrors({});
     setShowModal(true);
   };
@@ -139,6 +140,7 @@ export default function Clients() {
       phone: client.phone || '',
       company: client.company || '',
       notes: client.notes || '',
+      preferred_currency: client.preferred_currency || '',
     });
     setFormErrors({});
     setShowModal(true);
@@ -153,9 +155,9 @@ export default function Clients() {
     setSaving(true);
     try {
       if (editing) {
-        await updateClient({ ...editing, name: form.name, email: form.email || undefined, phone: form.phone || undefined, company: form.company || undefined, notes: form.notes || undefined });
+        await updateClient({ ...editing, name: form.name, email: form.email || undefined, phone: form.phone || undefined, company: form.company || undefined, notes: form.notes || undefined, preferred_currency: form.preferred_currency || undefined });
       } else {
-        const c = await addClient({ name: form.name, email: form.email || undefined, phone: form.phone || undefined, company: form.company || undefined, notes: form.notes || undefined });
+        const c = await addClient({ name: form.name, email: form.email || undefined, phone: form.phone || undefined, company: form.company || undefined, notes: form.notes || undefined, preferred_currency: form.preferred_currency || undefined });
         setSelectedId(c.id);
       }
       setShowModal(false);
@@ -898,6 +900,20 @@ export default function Clients() {
               placeholder="Company name"
               className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
             />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Preferred currency</label>
+            <select
+              value={form.preferred_currency}
+              onChange={(e) => setForm({ ...form, preferred_currency: e.target.value })}
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+            >
+              <option value="">Use profile default ({profile?.currency || 'CAD'})</option>
+              {[...CURRENCIES].map((c) => (
+                <option key={c} value={c}>{getCurrencySymbol(c)} {c}</option>
+              ))}
+            </select>
+            <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Used when creating invoices for this client</p>
           </div>
           <div>
             <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Notes</label>
