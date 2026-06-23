@@ -28,7 +28,7 @@ pub fn run() {
                 .ok_or("Invalid db path")?
                 .to_string();
 
-            let server_handle = server::start_server(db_path)
+            let server_handle = server::start_server(db_path, app.handle().clone())
                 .expect("Failed to start share server");
             let port = server_handle.port;
 

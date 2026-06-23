@@ -109,6 +109,47 @@ function resolveProps(feature: ArchetypeFeatureDef, context: Record<string, stri
     'StyleTagSystem', 'ReferenceBoard', 'ReferenceBoardWidget',
     'IncidentLog', 'AutomationTracker', 'InfraDashboard', 'SLATracker',
     'PhaseGateTracker',
+    // BrandVault injects into projects
+    'BrandVault', 'BrandVaultWidget',
+    // SpendPacingDashboard needs projectId
+    'SpendPacing', 'SpendPacingDashboard',
+    // Accountant
+    'LedgerLog', 'LedgerWidget', 'ReconciliationTracker',
+    // Advertiser
+    'CampaignBudgetTracker', 'BudgetPacingWidget',
+    'CreativeRotationLog', 'CreativeFatigueWidget', 'PerformanceSnapshot',
+    // Blockchain
+    'SmartContractRegistry', 'ContractRegistryWidget',
+    'AuditFindingLog', 'AuditTracker', 'AuditTrackerWidget',
+    'GasTracker', 'ChainLog',
+    // Copywriter
+    'CTALibrary', 'ABVariantLog',
+    // CX Strategist
+    'JourneyMapBuilder', 'JourneyMapWidget',
+    'ServiceBlueprint', 'ImpactMeasurement',
+    // Cybersecurity
+    'VulnerabilityLog', 'VulnerabilityLogWidget', 'RemediationTracker',
+    // Embedded
+    'BOMTracker', 'BOMTrackerWidget', 'FabricationTracker', 'ComponentInventory',
+    // Event Planner
+    'VendorDirectory', 'VendorDirectoryWidget', 'RunOfShowBuilder', 'RunOfShowWidget', 'GuestList', 'BudgetVsActualTracker',
+    // Fashion Designer
+    'CollectionTracker', 'CollectionTrackerWidget', 'SourcingLog', 'SourcingLogWidget', 'FittingLog',
+    // Growth
+    'FunnelTracker', 'FunnelMetricsWidget', 'MetricSnapshot', 'HypothesisBacklog',
+    // Product Manager
+    'RoadmapView', 'RoadmapWidget', 'FeaturePrioritization', 'FeaturePriorityWidget', 'StakeholderLog', 'ProductSpecBuilder',
+    // Project Manager
+    'DependencyTracker', 'ResourceAllocation', 'ResourceAllocationWidget',
+    // Real Estate
+    'ListingTracker', 'ListingTrackerWidget', 'ShowingLog', 'ComparableTracker',
+    // PrototypeLog alias
+    'PrototypeLog', 'PrototypeLogWidget',
+    // Other
+    'SubmissionTrackerWidget', 'LanguagePairWidget',
+    'PhaseGateWidget', 'InfraHealthWidget',
+    'TimelineView', 'TimelineWidget', 'StatusReportGenerator',
+    'CATToolLog',
   ];
   if (needsProjectId.includes(component)) {
     return { projectId: context.projectId || '' };
@@ -123,6 +164,35 @@ function resolveProps(feature: ArchetypeFeatureDef, context: Record<string, stri
     'ProgramBuilder', 'AssessmentLog', 'ClientProgressWidget', 'ProgramTrackerWidget',
     'TaskLog', 'SOPStore', 'Glossary', 'ContentCalendar', 'PlatformTracker',
     'CommissionTOS',
+    // Accountant
+    'TaxDeadlineCalendar', 'TaxDeadlineWidget', 'ClientFinancialSummary',
+    // Copywriter
+    'ContentTypeLibrary', 'ContentTypeWidget', 'BrandVoiceNotes',
+    // CX Strategist
+    'FeedbackAggregator', 'SatisfactionTrendWidget',
+    // Cybersecurity
+    'ComplianceFrameworkLog',
+    // Fashion Designer
+    'Lookbook',
+    // Legal
+    'CaseTracker', 'CaseTrackerWidget', 'FilingDeadlineCalendar', 'FilingDeadlineWidget',
+    'DocumentVersionLog', 'ConflictCheckLog',
+    // Nutritionist
+    'MealPlanBuilder', 'MealPlanWidget', 'BiomarkerTracker', 'BiomarkerTrackerWidget',
+    'DietaryAssessment', 'FoodDiaryReviews',
+    // Recruiter
+    'CandidatePipeline', 'PipelineWidget', 'PlacementLog', 'PlacementTrackerWidget',
+    'ClientSearchTracker',
+    // Voice Actor
+    'AuditionLog', 'AuditionLogWidget', 'BookingTracker', 'BookingTrackerWidget',
+    'EquipmentInventory',
+    // Social Media extras
+    'PostVolumeLog',
+    // Virtual Assistant extras
+    'RecurringTaskTemplates', 'ScopeAlert', 'SOPs',
+    // Widget aliases
+    'ContentCalendarWidget', 'PlatformTrackerWidget', 'GlossaryWidget',
+    'TaskLogWidget', 'ReportCadenceWidget',
   ];
   if (needsClientId.includes(component)) {
     return { clientId: context.clientId || '' };
@@ -131,6 +201,7 @@ function resolveProps(feature: ArchetypeFeatureDef, context: Record<string, stri
   const needsClientAndProject = [
     'SessionLog', 'SessionNoteLog', 'SessionNoteWidget', 'SessionPrepLog', 'SessionPrep',
     'CommissionQueue', 'CommissionQueueWidget', 'SyncLicenseLog', 'LicensingTracker',
+    'SessionRecorderLog', 'SessionLogWidget', 'SessionPrepWidget',
   ];
   if (needsClientAndProject.includes(component)) {
     return { clientId: context.clientId || '', projectId: context.projectId || '' };

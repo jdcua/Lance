@@ -5,11 +5,12 @@ use axum::{
     Json, Router,
 };
 use rusqlite::Connection;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::net::TcpListener;
 use std::sync::Arc;
 use std::time::Duration;
 use std::collections::HashMap;
+use tauri::{AppHandle, Emitter};
 use tokio::runtime::Runtime;
 use tokio::sync::Mutex;
 use tower_http::timeout::TimeoutLayer;
@@ -765,13 +766,25 @@ async fn handle_respond(
     Ok((axum::http::StatusCode::OK, security_headers(), html))
 }
 
-pub fn start_server(db_path: String) -> Result<ServerHandle, String> {
-    let listener =
-        TcpListener::bind("127.0.0.1:0").map_err(|e| format!("Failed to bind: {}", e))?;
-    let port = listener
-        .local_addr()
-        .map_err(|e| format!("Failed to get local addr: {}", e))?
-        .port();
+#[derive(Debug, Serialize, Clone)]
+struct PortalServerReadyPayload {
+    port: u16,
+}
+
+#[derive(Debug, Serialize, Clone)]
+struct PortalServerFailedPayload {
+    reason: String,
+}
+
+pub fn start_server(db_path: String, app_handle: AppHandle) -> Result<ServerHandle, String> {
+    let preferred_ports: Vec<u16> = (39821..=39830).collect();
+
+    let (listener, port) = try_bind_sequential(&preferred_ports)
+        .inspect_err(|_e| {
+            let _ = app_handle.emit("portal-server-failed", PortalServerFailedPayload {
+                reason: "Port conflict".to_string(),
+            });
+        })?;
 
     let state = AppState {
         db_path,
@@ -789,6 +802,8 @@ pub fn start_server(db_path: String) -> Result<ServerHandle, String> {
 
     let runtime = Runtime::new().map_err(|e| format!("Failed to create runtime: {}", e))?;
 
+    let _ = app_handle.emit("portal-server-ready", PortalServerReadyPayload { port });
+
     runtime.spawn(async move {
         let listener = tokio::net::TcpListener::from_std(listener)
             .expect("Failed to convert listener");
@@ -805,4 +820,18 @@ pub fn start_server(db_path: String) -> Result<ServerHandle, String> {
         shutdown_tx: Some(shutdown_tx),
         _runtime: runtime,
     })
+}
+
+fn try_bind_sequential(ports: &[u16]) -> Result<(TcpListener, u16), String> {
+    for &port in ports {
+        if let Ok(listener) = TcpListener::bind(format!("127.0.0.1:{}", port)) {
+            return Ok((listener, port));
+        }
+    }
+    TcpListener::bind("127.0.0.1:0")
+        .map(|listener| {
+            let port = listener.local_addr().unwrap().port();
+            (listener, port)
+        })
+        .map_err(|e| format!("Failed to bind to any port: {}", e))
 }

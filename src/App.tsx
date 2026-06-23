@@ -43,6 +43,7 @@ export default function App() {
     proposals, loadProposals,
     loadFollowUpSettings, loadPendingFollowUps,
     logFollowUp, followUpSettings, pendingFollowUps,
+    setPortalPort, setPortalFailed,
   } = useStore();
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
@@ -61,14 +62,27 @@ export default function App() {
   const [isDragOver, setIsDragOver] = useState(false);
   const dragCounter = useRef(0);
 
-  const APP_VERSION = '1.0.0';
+  const APP_VERSION = '1.1.0';
   const CHANGELOG = [
-    '7 themes: Default, Studio, Terminal, Craft, Motion, Lens, Scale',
-    'Onboarding asks what you do & picks your first theme',
-    'AI features — optional, off by default, runs locally',
-    'OS dark mode detection on first launch',
-    'Themes now apply in real-time across the entire app',
-    'Expanded project types: Photography, Video, Animation, SEO, Social',
+    'Archetype System 2.0 — 21 profession archetypes reshape your entire workspace',
+    'Client Portal — share proposals and contracts with a link, get signatures',
+    'Invoice Payment Recording — partial payments, methods, transaction IDs',
+    'Invoice Aging Report — see what\u2019s overdue and by how long',
+    'Follow-ups — dedicated screen, email integration via mailto:',
+    'Finance Forecasting — 6-month revenue projection with scenarios',
+    'Time Heatmap — see your year at a glance',
+    'Project Templates — 6 built-ins + save your own',
+    'Multi-currency — invoice in CAD, USD, EUR, GBP, or AUD per client',
+    'Client CSV Import — bulk import with deduplication',
+    'Proposal Expiry — sent proposals auto-expire after your chosen delay',
+    'Export Templates — customize your PDF and DOCX layouts (unlockable)',
+    'Contract Templates — 6 professional templates (unlockable)',
+    'Compact Layout — reduced padding mode (unlockable)',
+    'Accent Colors — 8 accent color options (unlockable)',
+    'Auto-backup — scheduled JSON backups to a folder you choose',
+    'Duplicate invoice or proposal in one click',
+    'Global search now includes time entries, expenses, and assets',
+    'Cmd+Shift+T and Cmd+Shift+L for timer and quick log from anywhere',
   ];
 
   // Changelog check on mount
@@ -83,6 +97,24 @@ export default function App() {
     localStorage.setItem('lance:changelog-seen', APP_VERSION);
     setShowChangelog(false);
   };
+
+  useEffect(() => {
+    const setupListeners = async () => {
+      const { listen } = await import('@tauri-apps/api/event');
+      const unlistenReady = await listen<{ port: number }>('portal-server-ready', (event) => {
+        setPortalPort(event.payload.port);
+      });
+      const unlistenFailed = await listen<{ reason: string }>('portal-server-failed', () => {
+        setPortalFailed();
+        addToast('Client portal unavailable \u2014 port conflict. Restart Lance to retry.', 'error', 8000);
+      });
+      return () => {
+        unlistenReady();
+        unlistenFailed();
+      };
+    };
+    setupListeners();
+  }, []);
 
   useEffect(() => {
     loadProfile();
@@ -590,9 +622,9 @@ export default function App() {
       )}
 
       {/* Changelog modal */}
-      <Modal open={showChangelog} onClose={dismissChangelog} title="What's new in Lance" size="sm">
+      <Modal open={showChangelog} onClose={dismissChangelog} title="What's new in Lance 1.1.0" size="md">
         <div className="space-y-3">
-          <p className="text-xs text-[var(--text-tertiary)]">Version {APP_VERSION}</p>
+          <p className="text-xs text-[var(--text-tertiary)] font-medium">Version {APP_VERSION}</p>
           <ul className="space-y-2">
             {CHANGELOG.map((item, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-primary)]">

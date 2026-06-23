@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
 import { useToasts } from '../store/toastStore';
+import { useStore } from '../store';
 import { Copy, Link, Trash2, Eye, Clock } from 'lucide-react';
 import type { ShareToken } from '../types';
 
@@ -20,6 +21,8 @@ const EXPIRY_OPTIONS = [
 
 export default function ShareModal({ open, onClose, entityType, entityId }: ShareModalProps) {
   const addToast = useToasts((s) => s.add);
+  const portalPort = useStore((s) => s.portalPort);
+  const portalFailed = useStore((s) => s.portalFailed);
   const [token, setToken] = useState<ShareToken | null>(null);
   const [loading, setLoading] = useState(false);
   const [revoking, setRevoking] = useState(false);
@@ -30,11 +33,18 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
     setLoading(true);
     try {
       const { invoke } = await import('@tauri-apps/api/core');
-      const [existing, serverPort] = await Promise.all([
-        invoke<ShareToken | null>('get_share_token_for_entity', { entityType, entityId }),
-        invoke<number>('get_share_server_port'),
-      ]);
-      setPort(serverPort);
+      const existing = await invoke<ShareToken | null>('get_share_token_for_entity', { entityType, entityId });
+
+      let serverPort = portalPort;
+      if (!serverPort) {
+        try {
+          serverPort = await invoke<number>('get_share_server_port');
+        } catch {
+          // server not ready yet, handled by empty state
+        }
+      }
+      if (serverPort) setPort(serverPort);
+
       if (existing) {
         setToken(existing);
       }
@@ -43,7 +53,7 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
     } finally {
       setLoading(false);
     }
-  }, [entityType, entityId, addToast]);
+  }, [entityType, entityId, addToast, portalPort]);
 
   useEffect(() => {
     if (!open) return;
@@ -107,6 +117,13 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
   const url = token && port ? `http://localhost:${port}/share/${token.token}` : null;
 
   const entityLabel = entityType === 'proposal' ? 'Proposal' : 'Contract';
+  const isServerReady = port > 0;
+  const shareDisabled = !isServerReady;
+  const shareTooltip = portalFailed
+    ? 'Portal unavailable \u2014 see Settings'
+    : !isServerReady
+    ? 'Portal starting...'
+    : undefined;
 
   return (
     <Modal open={open} onClose={onClose} title={`Share ${entityLabel}`} size="md">
@@ -137,10 +154,13 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
             </div>
 
             <div className="pt-2">
-              <Button onClick={handleCreate} loading={loading} size="sm">
+              <Button onClick={handleCreate} loading={loading} disabled={shareDisabled} size="sm" title={shareTooltip}>
                 <Link size={14} />
                 Generate Share Link
               </Button>
+              {shareTooltip && (
+                <p className="text-[10px] text-[var(--text-tertiary)] mt-1">{shareTooltip}</p>
+              )}
             </div>
           </>
         ) : (

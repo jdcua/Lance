@@ -203,6 +203,172 @@ const FeatureComponents: Record<string, ComponentType<any>> = {
   // ── Calendar / Social ──
   ContentCalendar: lazy(() => import('./ContentCalendar')),
   PlatformTracker: lazy(() => import('./PlatformTracker')),
+
+  // ── Accountant ──
+  LedgerLog: lazy(() => import('./LedgerLog')),
+  ReconciliationTracker: lazy(() => import('./ReconciliationTracker')),
+  TaxDeadlineCalendar: lazy(() => import('./TaxDeadlineCalendar')),
+  ClientFinancialSummary: lazy(() => import('./ClientFinancialSummary')),
+
+  // ── Advertiser ──
+  CampaignBudgetTracker: lazy(() => import('./CampaignBudgetTracker')),
+  CreativeRotationLog: lazy(() => import('./CreativeRotationLog')),
+  SpendPacing: lazy(() => import('./SpendPacing')),
+  PerformanceSnapshot: lazy(() => import('./PerformanceSnapshot')),
+
+  // ── Blockchain ──
+  SmartContractRegistry: lazy(() => import('./SmartContractRegistry')),
+  AuditFindingLog: lazy(() => import('./AuditFindingLog')),
+  GasTracker: lazy(() => import('./GasTracker')),
+  ChainLog: lazy(() => import('./ChainLog')),
+
+  // ── Copywriter ──
+  CTALibrary: lazy(() => import('./CTALibrary')),
+  ABVariantLog: lazy(() => import('./ABVariantLog')),
+  ContentTypeLibrary: lazy(() => import('./ContentTypeLibrary')),
+  BrandVoiceNotes: lazy(() => import('./BrandVoiceNotes')),
+
+  // ── CX Strategist ──
+  JourneyMapBuilder: lazy(() => import('./JourneyMapBuilder')),
+  FeedbackAggregator: lazy(() => import('./FeedbackAggregator')),
+  ServiceBlueprint: lazy(() => import('./ServiceBlueprint')),
+  ImpactMeasurement: lazy(() => import('./ImpactMeasurement')),
+
+  // ── Cybersecurity ──
+  VulnerabilityLog: lazy(() => import('./VulnerabilityLog')),
+  RemediationTracker: lazy(() => import('./RemediationTracker')),
+  ComplianceFrameworkLog: lazy(() => import('./ComplianceFrameworkLog')),
+  AuditTracker: lazy(() => import('./AuditFindingLog')),
+
+  // ── Embedded ──
+  BOMTracker: lazy(() => import('./BOMTracker')),
+  FabricationTracker: lazy(() => import('./FabricationTracker')),
+  ComponentInventory: lazy(() => import('./ComponentInventory')),
+
+  // ── Event Planner ──
+  VendorDirectory: lazy(() => import('./VendorDirectory')),
+  RunOfShowBuilder: lazy(() => import('./RunOfShowBuilder')),
+  GuestList: lazy(() => import('./GuestList')),
+  BudgetVsActualTracker: lazy(() => import('./BudgetVsActualTracker')),
+
+  // ── Fashion Designer ──
+  CollectionTracker: lazy(() => import('./CollectionTracker')),
+  SourcingLog: lazy(() => import('./SourcingLog')),
+  FittingLog: lazy(() => import('./FittingLog')),
+  Lookbook: lazy(() => import('./Lookbook')),
+
+  // ── Growth ──
+  FunnelTracker: lazy(() => import('./FunnelTracker')),
+  MetricSnapshot: lazy(() => import('./MetricSnapshot')),
+  HypothesisBacklog: lazy(() => import('./HypothesisBacklog')),
+
+  // ── Legal ──
+  CaseTracker: lazy(() => import('./CaseTracker')),
+  FilingDeadlineCalendar: lazy(() => import('./FilingDeadlineCalendar')),
+  DocumentVersionLog: lazy(() => import('./DocumentVersionLog')),
+  ConflictCheckLog: lazy(() => import('./ConflictCheckLog')),
+
+  // ── Nutritionist ──
+  MealPlanBuilder: lazy(() => import('./MealPlanBuilder')),
+  BiomarkerTracker: lazy(() => import('./BiomarkerTracker')),
+  DietaryAssessment: lazy(() => import('./DietaryAssessment')),
+  FoodDiaryReviews: lazy(() => import('./FoodDiaryReviews')),
+
+  // ── Product Manager ──
+  RoadmapView: lazy(() => import('./RoadmapView')),
+  FeaturePrioritization: lazy(() => import('./FeaturePrioritization')),
+  StakeholderLog: lazy(() => import('./StakeholderLog')),
+  ProductSpecBuilder: lazy(() => import('./ProductSpecBuilder')),
+
+  // ── Project Manager ──
+  DependencyTracker: lazy(() => import('./DependencyTracker')),
+  ResourceAllocation: lazy(() => import('./ResourceAllocation')),
+
+  // ── Real Estate ──
+  ListingTracker: lazy(() => import('./ListingTracker')),
+  ShowingLog: lazy(() => import('./ShowingLog')),
+  ComparableTracker: lazy(() => import('./ComparableTracker')),
+  CommissionCalculator: lazy(() => import('./CommissionCalculator')),
+
+  // ── Recruiter ──
+  CandidatePipeline: lazy(() => import('./CandidatePipeline')),
+  PlacementLog: lazy(() => import('./PlacementLog')),
+  ClientSearchTracker: lazy(() => import('./ClientSearchTracker')),
+
+  // ── Voice Actor ──
+  AuditionLog: lazy(() => import('./AuditionLog')),
+  BookingTracker: lazy(() => import('./BookingTracker')),
+  SessionRecorderLog: lazy(() => import('./SessionRecorderLog')),
+  EquipmentInventory: lazy(() => import('./EquipmentInventory')),
+
+  // ── Social Media extras ──
+  PostVolumeLog: lazy(() => import('./ContentCalendar')),
+  ContentTypeBreakdown: lazy(() => import('./ContentTypeBreakdown')),
+  PostingPerformanceNotes: lazy(() => import('./PostingPerformanceNotes')),
+
+  // ── Translator extras ──
+  CATToolLog: lazy(() => import('./ToolComputeLog')),
+
+  // ── Virtual Assistant extras ──
+  RecurringTaskTemplates: lazy(() => import('./SOPStore')),
+  ScopeAlert: lazy(() => import('./ScopeAlert')),
+  SOPs: lazy(() => import('./SOPStore')),
+
+  // ── Missing components ──
+  PrototypeLog: lazy(() => import('./PrototypeTracker')),
+  StatusReportGenerator: lazy(() => import('./StatusReportGenerator')),
+  TimelineView: lazy(() => import('./TimelineView')),
+
+  // ── Widget aliases ──
+  LedgerWidget: lazy(() => import('./LedgerLog')),
+  TaxDeadlineWidget: lazy(() => import('./TaxDeadlineCalendar')),
+  BudgetPacingWidget: lazy(() => import('./SpendPacing')),
+  CreativeFatigueWidget: lazy(() => import('./CreativeRotationLog')),
+  ContractRegistryWidget: lazy(() => import('./SmartContractRegistry')),
+  AuditTrackerWidget: lazy(() => import('./AuditFindingLog')),
+  ContentTypeWidget: lazy(() => import('./ContentTypeLibrary')),
+  JourneyMapWidget: lazy(() => import('./JourneyMapBuilder')),
+  SatisfactionTrendWidget: lazy(() => import('./SatisfactionTrendWidget')),
+  VulnerabilityLogWidget: lazy(() => import('./VulnerabilityLog')),
+  BOMTrackerWidget: lazy(() => import('./BOMTracker')),
+  PrototypeLogWidget: lazy(() => import('./PrototypeTracker')),
+  RunOfShowWidget: lazy(() => import('./RunOfShowBuilder')),
+  VendorDirectoryWidget: lazy(() => import('./VendorDirectory')),
+  CollectionTrackerWidget: lazy(() => import('./CollectionTracker')),
+  SourcingLogWidget: lazy(() => import('./SourcingLog')),
+  FunnelMetricsWidget: lazy(() => import('./FunnelTracker')),
+  CaseTrackerWidget: lazy(() => import('./CaseTracker')),
+  FilingDeadlineWidget: lazy(() => import('./FilingDeadlineCalendar')),
+  MealPlanWidget: lazy(() => import('./MealPlanBuilder')),
+  BiomarkerTrackerWidget: lazy(() => import('./BiomarkerTracker')),
+  RoadmapWidget: lazy(() => import('./RoadmapView')),
+  FeaturePriorityWidget: lazy(() => import('./FeaturePrioritization')),
+  TimelineWidget: lazy(() => import('./TimelineView')),
+  ResourceAllocationWidget: lazy(() => import('./ResourceAllocation')),
+  ListingTrackerWidget: lazy(() => import('./ListingTracker')),
+  PipelineWidget: lazy(() => import('./CandidatePipeline')),
+  PlacementTrackerWidget: lazy(() => import('./PlacementLog')),
+  AuditionLogWidget: lazy(() => import('./AuditionLog')),
+  BookingTrackerWidget: lazy(() => import('./BookingTracker')),
+  ContentCalendarWidget: lazy(() => import('./ContentCalendar')),
+  PlatformTrackerWidget: lazy(() => import('./PlatformTracker')),
+  LanguagePairWidget: lazy(() => import('./LanguagePairTracker')),
+  GlossaryWidget: lazy(() => import('./Glossary')),
+  ClientLoadWidget: lazy(() => import('./ClientLoadMonitor')),
+  TaskLogWidget: lazy(() => import('./TaskLog')),
+  SessionLogWidget: lazy(() => import('./SessionLog')),
+  SessionPrepWidget: lazy(() => import('./SessionLog')),
+  SubmissionTrackerWidget: lazy(() => import('./SubmissionTracker')),
+  SyncLicenseWidget: lazy(() => import('./SyncLicenseLog')),
+  ReportCadenceWidget: lazy(() => import('./ReportCadence')),
+  PhaseGateWidget: lazy(() => import('./PhaseGateTracker')),
+  InfraHealthWidget: lazy(() => import('./InfraDashboard')),
+  SpendPacingDashboard: lazy(() => import('./SpendPacing')),
+  CommissionCalculatorWidget: lazy(() => import('./CommissionCalculator')),
+
+  // ── Simple utility widgets ──
+  RecentTime: lazy(() => import('./RecentTimeWidget')),
+  RecentInvoices: lazy(() => import('./RecentInvoicesWidget')),
 };
 
 export function getFeatureComponent(name: string): ComponentType<any> | null {

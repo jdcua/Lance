@@ -541,14 +541,6 @@ async function runMigrations(database: Database): Promise<void> {
       FOREIGN KEY (project_id) REFERENCES projects(id)
     )
   `);
-  await database.execute(`
-    CREATE TABLE IF NOT EXISTS time_entry_phases (
-      id TEXT PRIMARY KEY,
-      time_entry_id TEXT NOT NULL,
-      phase_id TEXT NOT NULL,
-      FOREIGN KEY (phase_id) REFERENCES project_phases(id)
-    )
-  `);
   // ── Deliverables (Animator) ──
   await database.execute(`
     CREATE TABLE IF NOT EXISTS deliverables (
@@ -1534,6 +1526,794 @@ async function runMigrations(database: Database): Promise<void> {
       created_at TEXT NOT NULL
     )
   `);
+  // ── Ledger entries (Accountant) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS ledger_entries (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      description TEXT,
+      amount REAL,
+      entry_type TEXT,
+      date TEXT,
+      category TEXT
+    )
+  `);
+  // ── Reconciliations (Accountant) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS reconciliations (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      account_name TEXT,
+      expected REAL,
+      actual REAL,
+      date TEXT,
+      status TEXT
+    )
+  `);
+  // ── Tax deadlines (Accountant) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS tax_deadlines (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      title TEXT,
+      due_date TEXT,
+      tax_type TEXT,
+      amount REAL,
+      filed INTEGER
+    )
+  `);
+  // ── Client financials (Accountant) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS client_financials (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      statement_type TEXT,
+      period TEXT,
+      revenue REAL,
+      expenses REAL,
+      profit REAL,
+      notes TEXT
+    )
+  `);
+  // ── Smart contracts (Blockchain) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS smart_contracts (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      name TEXT,
+      network TEXT,
+      address TEXT,
+      status TEXT,
+      audit_date TEXT,
+      notes TEXT
+    )
+  `);
+  // ── Audit findings (Blockchain) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS audit_findings (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      title TEXT,
+      severity TEXT,
+      contract_id TEXT,
+      description TEXT,
+      resolved INTEGER,
+      created_at TEXT
+    )
+  `);
+  // ── Gas tracker (Blockchain) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS gas_tracker (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      network TEXT,
+      gas_used REAL,
+      cost_native REAL,
+      cost_usd REAL,
+      date TEXT
+    )
+  `);
+  // ── Chain logs (Blockchain) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS chain_logs (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      chain_name TEXT,
+      event_type TEXT,
+      tx_hash TEXT,
+      block_number TEXT,
+      notes TEXT,
+      created_at TEXT
+    )
+  `);
+  // ── Cases (Legal) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS cases (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      case_number TEXT,
+      title TEXT,
+      status TEXT,
+      filed_date TEXT,
+      court TEXT,
+      notes TEXT
+    )
+  `);
+  // ── Filing deadlines (Legal) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS filing_deadlines (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      case_id TEXT,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      title TEXT,
+      due_date TEXT,
+      filed INTEGER,
+      notes TEXT
+    )
+  `);
+  // ── Document versions (Legal) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS document_versions (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      doc_name TEXT,
+      version TEXT,
+      date TEXT,
+      file_ref TEXT,
+      notes TEXT
+    )
+  `);
+  // ── Conflict checks (Legal) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS conflict_checks (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      party_name TEXT,
+      check_date TEXT,
+      result TEXT,
+      notes TEXT
+    )
+  `);
+
+  // ── Campaign budgets ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS campaign_budgets (
+      id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      project_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      budget REAL,
+      spent REAL,
+      start_date TEXT,
+      end_date TEXT,
+      status TEXT
+    )
+  `);
+  // ── Creative rotations ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS creative_rotations (
+      id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      project_id TEXT NOT NULL,
+      creative_name TEXT NOT NULL,
+      platform TEXT,
+      impressions INTEGER,
+      clicks INTEGER,
+      ctr REAL,
+      start_date TEXT,
+      end_date TEXT
+    )
+  `);
+  // ── Spend pacing ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS spend_pacing (
+      id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      project_id TEXT NOT NULL,
+      period TEXT,
+      budget REAL,
+      actual REAL,
+      variance REAL
+    )
+  `);
+  // ── Performance snapshots ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS performance_snapshots (
+      id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      project_id TEXT NOT NULL,
+      date TEXT,
+      channel TEXT,
+      impressions INTEGER,
+      clicks INTEGER,
+      conversions INTEGER,
+      spend REAL,
+      revenue REAL,
+      roas REAL
+    )
+  `);
+  // ── Journey maps ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS journey_maps (
+      id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      project_id TEXT NOT NULL,
+      stage TEXT,
+      touchpoint TEXT,
+      pain_point TEXT,
+      opportunity TEXT,
+      priority TEXT
+    )
+  `);
+  // ── Feedback aggregations ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS feedback_aggregations (
+      id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      client_id TEXT NOT NULL,
+      source TEXT,
+      rating INTEGER,
+      comment TEXT,
+      date TEXT,
+      actioned INTEGER
+    )
+  `);
+  // ── Service blueprints ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS service_blueprints (
+      id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      project_id TEXT NOT NULL,
+      component TEXT,
+      frontstage TEXT,
+      backstage TEXT,
+      support_process TEXT,
+      notes TEXT
+    )
+  `);
+  // ── Impact measurements ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS impact_measurements (
+      id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      project_id TEXT NOT NULL,
+      metric_name TEXT,
+      baseline REAL,
+      target REAL,
+      actual REAL,
+      date TEXT
+    )
+  `);
+  // ── Vendors ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS vendors (
+      id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      project_id TEXT NOT NULL,
+      name TEXT,
+      service TEXT,
+      contact TEXT,
+      cost REAL,
+      status TEXT,
+      notes TEXT
+    )
+  `);
+  // ── Run of show ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS run_of_show (
+      id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      project_id TEXT NOT NULL,
+      time_slot TEXT,
+      activity TEXT,
+      owner TEXT,
+      duration_min INTEGER,
+      notes TEXT,
+      sort_order INTEGER
+    )
+  `);
+  // ── Guests ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS guests (
+      id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      project_id TEXT NOT NULL,
+      name TEXT,
+      rsvp TEXT,
+      table_assignment TEXT,
+      dietary TEXT,
+      notes TEXT
+    )
+  `);
+  // ── Budget vs actual ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS budget_vs_actual (
+      id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      project_id TEXT NOT NULL,
+      category TEXT,
+      budgeted REAL,
+      actual REAL,
+      notes TEXT
+    )
+  `);
+  // ── Funnels ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS funnels (
+      id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      project_id TEXT NOT NULL,
+      name TEXT,
+      stage TEXT,
+      entries INTEGER,
+      conversions INTEGER,
+      rate REAL,
+      date TEXT
+    )
+  `);
+  // ── Metric snapshots ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS metric_snapshots (
+      id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      project_id TEXT NOT NULL,
+      metric TEXT,
+      value REAL,
+      target REAL,
+      date TEXT
+    )
+  `);
+  // ── Hypotheses ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS hypotheses (
+      id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      project_id TEXT NOT NULL,
+      hypothesis TEXT,
+      test_design TEXT,
+      result TEXT,
+      status TEXT,
+      created_at TEXT
+    )
+  `);
+
+  // ── Vulnerability log (Cybersecurity) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS vulnerability_log (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      title TEXT,
+      severity TEXT,
+      cve TEXT,
+      description TEXT,
+      remediation TEXT,
+      status TEXT,
+      discovered_date TEXT,
+      resolved_date TEXT
+    )
+  `);
+  // ── Remediation tracker (Cybersecurity) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS remediation_tracker (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      title TEXT,
+      vulnerability_id TEXT,
+      action TEXT,
+      assigned_to TEXT,
+      due_date TEXT,
+      completed INTEGER
+    )
+  `);
+  // ── Compliance frameworks (Cybersecurity) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS compliance_frameworks (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      framework_name TEXT,
+      control_id TEXT,
+      description TEXT,
+      status TEXT,
+      evidence TEXT,
+      last_review TEXT
+    )
+  `);
+  // ── BOMs (Embedded) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS boms (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      part_name TEXT,
+      part_number TEXT,
+      quantity INTEGER,
+      supplier TEXT,
+      cost REAL,
+      lead_time_days INTEGER
+    )
+  `);
+  // ── Fabrication tracker (Embedded) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS fabrication_tracker (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      item_name TEXT,
+      status TEXT,
+      start_date TEXT,
+      completed_date TEXT,
+      fab_house TEXT,
+      cost REAL
+    )
+  `);
+  // ── Component inventory (Embedded) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS component_inventory (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      component_name TEXT,
+      footprint TEXT,
+      quantity INTEGER,
+      supplier TEXT,
+      unit_cost REAL,
+      notes TEXT
+    )
+  `);
+  // ── Collections (Fashion) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS collections (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      name TEXT,
+      season TEXT,
+      status TEXT,
+      pieces_count INTEGER,
+      launch_date TEXT,
+      notes TEXT
+    )
+  `);
+  // ── Sourcing logs (Fashion) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS sourcing_logs (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      material TEXT,
+      supplier TEXT,
+      cost REAL,
+      moq INTEGER,
+      lead_time_days INTEGER,
+      status TEXT
+    )
+  `);
+  // ── Fittings (Fashion) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS fittings (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      garment TEXT,
+      fit_model TEXT,
+      date TEXT,
+      adjustments TEXT,
+      status TEXT
+    )
+  `);
+  // ── Lookbooks (Fashion) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS lookbooks (
+      id TEXT PRIMARY KEY,
+      client_id TEXT,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      title TEXT,
+      description TEXT,
+      asset_ids TEXT,
+      created_at TEXT
+    )
+  `);
+  // ── Listings (Real Estate) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS listings (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      address TEXT,
+      property_type TEXT,
+      list_price REAL,
+      status TEXT,
+      list_date TEXT,
+      close_date TEXT,
+      notes TEXT
+    )
+  `);
+  // ── Showings (Real Estate) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS showings (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      date TEXT,
+      attendee_name TEXT,
+      attendee_contact TEXT,
+      feedback TEXT,
+      follow_up_date TEXT
+    )
+  `);
+  // ── Comparables (Real Estate) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS comparables (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      address TEXT,
+      sale_price REAL,
+      sale_date TEXT,
+      sqft INTEGER,
+      beds REAL,
+      baths REAL,
+      notes TEXT
+    )
+  `);
+  // ── Candidates (Recruiter) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS candidates (
+      id TEXT PRIMARY KEY,
+      client_id TEXT,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      name TEXT,
+      role TEXT,
+      status TEXT,
+      source TEXT,
+      contact TEXT,
+      notes TEXT,
+      created_at TEXT
+    )
+  `);
+  // ── Placements (Recruiter) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS placements (
+      id TEXT PRIMARY KEY,
+      client_id TEXT,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      candidate_name TEXT,
+      role TEXT,
+      company TEXT,
+      start_date TEXT,
+      fee REAL,
+      status TEXT
+    )
+  `);
+  // ── Client searches (Recruiter) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS client_searches (
+      id TEXT PRIMARY KEY,
+      client_id TEXT,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      search_name TEXT,
+      role TEXT,
+      requirements TEXT,
+      status TEXT,
+      created_at TEXT
+    )
+  `);
+
+  // ── Roadmap items (Product Manager) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS roadmap_items (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      title TEXT NOT NULL,
+      quarter TEXT,
+      status TEXT,
+      priority TEXT,
+      effort TEXT,
+      notes TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+  // ── Product specs (Product Manager) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS product_specs (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      title TEXT NOT NULL,
+      problem TEXT,
+      solution TEXT,
+      success_metrics TEXT,
+      status TEXT,
+      created_at TEXT NOT NULL
+    )
+  `);
+  // ── Stakeholder logs (Product Manager) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS stakeholder_logs (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      name TEXT,
+      role TEXT,
+      contact TEXT,
+      influence TEXT,
+      notes TEXT
+    )
+  `);
+  // ── CTAs (Copywriter) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS ctas (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      name TEXT NOT NULL,
+      type TEXT,
+      conversion_rate REAL,
+      impressions INTEGER,
+      clicks INTEGER,
+      notes TEXT
+    )
+  `);
+  // ── A/B variants (Copywriter) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS ab_variants (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      test_name TEXT,
+      variant_name TEXT,
+      is_control INTEGER,
+      results TEXT,
+      status TEXT
+    )
+  `);
+  // ── Content types (Copywriter) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS content_types (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      name TEXT NOT NULL,
+      category TEXT,
+      template TEXT,
+      notes TEXT
+    )
+  `);
+  // ── Brand voices (Copywriter) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS brand_voices (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      name TEXT,
+      attributes TEXT,
+      examples TEXT,
+      dos_donts TEXT
+    )
+  `);
+  // ── Meal plans (Nutritionist) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS meal_plans (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      title TEXT,
+      days INTEGER,
+      calories_per_day INTEGER,
+      plan_data TEXT,
+      created_at TEXT NOT NULL
+    )
+  `);
+  // ── Biomarkers (Nutritionist) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS biomarkers (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      name TEXT,
+      value REAL,
+      unit TEXT,
+      date TEXT,
+      reference_range TEXT,
+      notes TEXT
+    )
+  `);
+  // ── Dietary assessments (Nutritionist) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS dietary_assessments (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      date TEXT,
+      food_log TEXT,
+      analysis TEXT,
+      recommendations TEXT
+    )
+  `);
+  // ── Food diaries (Nutritionist) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS food_diaries (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      date TEXT,
+      meal TEXT,
+      foods TEXT,
+      notes TEXT
+    )
+  `);
+  // ── Auditions (Voice Actor) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS auditions (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      project_title TEXT,
+      role TEXT,
+      callback_date TEXT,
+      status TEXT,
+      notes TEXT
+    )
+  `);
+  // ── Bookings (Voice Actor) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS bookings (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      project_title TEXT,
+      role TEXT,
+      session_date TEXT,
+      rate REAL,
+      status TEXT,
+      notes TEXT
+    )
+  `);
+  // ── Session recordings (Voice Actor) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS session_recordings (
+      id TEXT PRIMARY KEY,
+      client_id TEXT,
+      project_id TEXT,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      title TEXT,
+      duration_min INTEGER,
+      file_path TEXT,
+      notes TEXT,
+      created_at TEXT NOT NULL
+    )
+  `);
+  // ── Equipment inventory (Voice Actor) ──
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS equipment_inventory (
+      id TEXT PRIMARY KEY,
+      client_id TEXT,
+      user_id INTEGER NOT NULL DEFAULT 1,
+      name TEXT,
+      equipment_type TEXT,
+      serial_number TEXT,
+      purchase_date TEXT,
+      value REAL,
+      notes TEXT
+    )
+  `);
+
   // ── User profile additions for Rate Calculator ──
   try { await database.execute('ALTER TABLE user_profile ADD COLUMN income_target REAL'); } catch { /* exists */ }
 
@@ -1671,6 +2451,68 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute('CREATE INDEX IF NOT EXISTS idx_programs_client ON programs(client_id)');
   await database.execute('CREATE INDEX IF NOT EXISTS idx_assessments_client ON assessments(client_id)');
   await database.execute('CREATE INDEX IF NOT EXISTS idx_client_progress_client ON client_progress(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_ledger_entries_project ON ledger_entries(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_reconciliations_project ON reconciliations(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_tax_deadlines_client ON tax_deadlines(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_client_financials_client ON client_financials(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_smart_contracts_project ON smart_contracts(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_audit_findings_project ON audit_findings(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_gas_tracker_project ON gas_tracker(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_chain_logs_project ON chain_logs(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_cases_client ON cases(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_filing_deadlines_client ON filing_deadlines(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_document_versions_client ON document_versions(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_conflict_checks_client ON conflict_checks(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_campaign_budgets_project ON campaign_budgets(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_creative_rotations_project ON creative_rotations(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_spend_pacing_project ON spend_pacing(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_performance_snapshots_project ON performance_snapshots(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_journey_maps_project ON journey_maps(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_feedback_aggregations_client ON feedback_aggregations(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_service_blueprints_project ON service_blueprints(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_impact_measurements_project ON impact_measurements(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_vendors_project ON vendors(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_run_of_show_project ON run_of_show(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_guests_project ON guests(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_budget_vs_actual_project ON budget_vs_actual(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_funnels_project ON funnels(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_metric_snapshots_project ON metric_snapshots(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_hypotheses_project ON hypotheses(project_id)');
+
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_vulnerability_log_project ON vulnerability_log(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_vulnerability_log_status ON vulnerability_log(status)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_remediation_tracker_project ON remediation_tracker(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_compliance_frameworks_project ON compliance_frameworks(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_boms_project ON boms(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_fabrication_tracker_project ON fabrication_tracker(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_component_inventory_project ON component_inventory(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_collections_project ON collections(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_sourcing_logs_project ON sourcing_logs(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_fittings_project ON fittings(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_lookbooks_client ON lookbooks(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_listings_project ON listings(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_listings_status ON listings(status)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_showings_project ON showings(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_comparables_project ON comparables(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_candidates_client ON candidates(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_candidates_status ON candidates(status)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_placements_client ON placements(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_client_searches_client ON client_searches(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_roadmap_items_project ON roadmap_items(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_product_specs_project ON product_specs(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_stakeholder_logs_project ON stakeholder_logs(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_ctas_project ON ctas(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_ab_variants_project ON ab_variants(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_content_types_client ON content_types(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_brand_voices_client ON brand_voices(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_meal_plans_client ON meal_plans(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_biomarkers_client ON biomarkers(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_dietary_assessments_client ON dietary_assessments(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_food_diaries_client ON food_diaries(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_auditions_client ON auditions(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_bookings_client ON bookings(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_session_recordings_project ON session_recordings(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_equipment_inventory_client ON equipment_inventory(client_id)');
 
   const row = await database.select<{ cnt: number }[]>('SELECT COUNT(*) as cnt FROM schema_version');
   if (!row || row.length === 0 || row[0].cnt === 0) {

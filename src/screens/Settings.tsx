@@ -55,7 +55,9 @@ export default function Settings() {
   const [licenseKey, setLicenseKey] = useState('');
   const [licenseError, setLicenseError] = useState('');
   const [licenseActivating, setLicenseActivating] = useState(false);
+  const [licenseSuccess, setLicenseSuccess] = useState(false);
   const [showRemoveLicenseConfirm, setShowRemoveLicenseConfirm] = useState(false);
+  const licenseInputRef = useRef<HTMLInputElement>(null);
   const [isSeeded, setIsSeeded] = useState(localStorage.getItem('lance:seeded') === 'true');
   const [showAssetWarning, setShowAssetWarning] = useState(false);
   const [showImportSummary, setShowImportSummary] = useState(false);
@@ -329,7 +331,7 @@ export default function Settings() {
       data.expenses = await tauriInvoke('get_expenses');
       data.user_profile = profile ? [profile] : [];
 
-      const APP_VERSION = '1.0.0';
+      const APP_VERSION = '1.1.0';
       const schemaVersion = getCurrentSchemaVersion();
       const envelope = createExportEnvelope(data, APP_VERSION, schemaVersion);
 
@@ -512,6 +514,7 @@ export default function Settings() {
     const key = licenseKey.trim().toUpperCase();
     if (!key) {
       setLicenseError('Enter a license key.');
+      licenseInputRef.current?.focus();
       return;
     }
     setLicenseActivating(true);
@@ -519,12 +522,17 @@ export default function Settings() {
     try {
       const success = await activateLicense(key);
       if (success) {
-        setShowLicenseModal(false);
-        setLicenseKey('');
-        addToast('Lance is now licensed. Thank you.', 'success');
+        setLicenseSuccess(true);
+        addToast('Lance is now licensed. All themes unlocked.', 'unlock');
         setUnlockedThemes(new Set(['default', 'studio', 'terminal', 'craft', 'motion', 'lens', 'scale']));
+        setTimeout(() => {
+          setShowLicenseModal(false);
+          setLicenseKey('');
+          setLicenseSuccess(false);
+        }, 1500);
       } else {
-        setLicenseError('Invalid license key — check for typos and try again.');
+        setLicenseError('Invalid license key. Check your key and try again.');
+        licenseInputRef.current?.focus();
       }
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to activate license', 'error');
@@ -575,15 +583,19 @@ export default function Settings() {
             <div className="flex items-center gap-2 mb-3">
               <Sparkles size={14} className="text-[var(--accent)]" />
               <span className="text-sm font-medium text-[var(--accent)]">Licensed</span>
+              <span className="text-[10px] text-[var(--accent)] bg-[var(--accent-bg)] px-1.5 py-0.5 rounded-full">Licensed</span>
             </div>
             <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-2">
-              Thank you for supporting Lance.
+              All themes unlocked \u2014 thank you for supporting Lance.
             </p>
             {form.licensed_at && (
-              <p className="text-xs text-[var(--text-tertiary)] mb-4">
-                Licensed on {new Date(form.licensed_at).toLocaleDateString()}.
+              <p className="text-xs text-[var(--text-tertiary)] mb-1">
+                Licensed since {new Date(form.licensed_at).toLocaleDateString()}.
               </p>
             )}
+            <p className="text-xs text-[var(--text-tertiary)] mb-4">
+              Studio, Terminal, Craft, Motion, Lens, and Scale themes are unlocked.
+            </p>
             <button
               onClick={() => setShowRemoveLicenseConfirm(true)}
               className="text-xs text-[var(--text-tertiary)] hover:text-[var(--danger)] underline transition-colors"
@@ -1294,26 +1306,59 @@ export default function Settings() {
         </div>
       </Modal>
 
-      <Modal open={showLicenseModal} onClose={() => setShowLicenseModal(false)} title="Enter your license key" size="sm">
+      <Modal open={showLicenseModal} onClose={() => { if (!licenseActivating) { setShowLicenseModal(false); setLicenseKey(''); setLicenseError(''); setLicenseSuccess(false); } }} title="Enter your license key" size="sm">
         <div className="space-y-4">
           <div>
-            <input
-              type="text"
-              value={licenseKey}
-              onChange={(e) => { setLicenseKey(e.target.value.toUpperCase()); setLicenseError(''); }}
-              placeholder="LANCE-XXXX-XXXX-XXXX-XXXX"
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)]    uppercase"
-              style={{ fontFamily: "'JetBrains Mono', monospace" }}
-              autoFocus
-            />
+            <div className="relative">
+              <input
+                ref={licenseInputRef}
+                type="text"
+                value={licenseKey}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+                  let formatted = 'LANCE';
+                  if (raw.length > 5) formatted += '-' + raw.slice(5, 9);
+                  if (raw.length > 9) formatted += '-' + raw.slice(9, 13);
+                  if (raw.length > 13) formatted += '-' + raw.slice(13, 17);
+                  if (raw.length > 17) formatted += '-' + raw.slice(17, 21);
+                  setLicenseKey(formatted);
+                  setLicenseError('');
+                  setLicenseSuccess(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !licenseActivating) handleActivateLicense();
+                }}
+                placeholder="LANCE-XXXX-XXXX-XXXX-XXXX"
+                maxLength={24}
+                disabled={licenseActivating || licenseSuccess}
+                className={`w-full px-3 py-2 text-sm rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 bg-[var(--bg-card)] font-mono tracking-wider ${
+                  licenseError
+                    ? 'border border-[var(--danger)] focus:border-[var(--danger)] focus:ring-[var(--danger)]/20'
+                    : licenseSuccess
+                    ? 'border border-green-500 focus:border-green-500 focus:ring-green-500/20'
+                    : 'border border-[var(--border-color)] focus:border-[var(--accent)] focus:ring-[var(--accent)]/20'
+                }`}
+                autoFocus
+              />
+              {licenseActivating && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-[var(--accent)] border-t-transparent" />
+                </div>
+              )}
+              {licenseSuccess && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Check size={16} className="text-green-500 animate-bounce" />
+                </div>
+              )}
+            </div>
             {licenseError && (
               <p className="text-xs text-[var(--danger)] mt-2">{licenseError}</p>
             )}
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => setShowLicenseModal(false)} size="sm">Cancel</Button>
-            <Button variant="primary" onClick={handleActivateLicense} loading={licenseActivating} disabled={!licenseKey.trim()} size="sm">
-              Activate
+            <Button variant="secondary" onClick={() => { setShowLicenseModal(false); setLicenseKey(''); setLicenseError(''); setLicenseSuccess(false); }} size="sm" disabled={licenseActivating}>Cancel</Button>
+            <Button variant="primary" onClick={handleActivateLicense} loading={licenseActivating} disabled={!licenseKey.trim() || licenseActivating || licenseSuccess} size="sm">
+              {licenseSuccess ? 'Activated' : 'Activate'}
             </Button>
           </div>
         </div>
@@ -1459,8 +1504,8 @@ export default function Settings() {
         onClose={() => setShowRemoveLicenseConfirm(false)}
         onConfirm={handleRemoveLicense}
         title="Remove License"
-        message="Remove your license? The splash screen will return on next launch."
-        confirmLabel="Remove"
+        message="Remove license key? The splash screen will return and theme locks will be re-applied. Your data is not affected."
+        confirmLabel="Remove license"
         variant="danger"
       />
     </div>

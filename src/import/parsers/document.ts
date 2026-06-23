@@ -185,7 +185,6 @@ export async function parseDocument(file: File): Promise<ImportDetection> {
   }
 
   if (!rawText || rawText.trim().length < 10) {
-    // Possibly a scanned PDF (image-only)
     return {
       file,
       fileType: 'document',
@@ -193,7 +192,7 @@ export async function parseDocument(file: File): Promise<ImportDetection> {
       confidence: 0,
       preview: {
         summary: ext === 'pdf'
-          ? 'This PDF appears to be scanned/image-based — text could not be extracted. You can import it as a file attachment instead.'
+          ? 'This PDF appears to be a scanned image. Lance can\u2019t read its contents \u2014 it will be imported as an attachment in Assets instead.'
           : 'Could not extract any meaningful text from this document.',
         rawText: '',
       },

@@ -24,6 +24,7 @@ import {
   Loader2,
   File,
   EyeOff,
+  Info,
 } from 'lucide-react';
 import type { ImportDetection, DetectedEntityType } from '../../types';
 import { processImportFiles, ACCEPTED_EXTENSIONS_STRING } from '../../import';
@@ -61,6 +62,9 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
   const [importedCount, setImportedCount] = useState(0);
   const [skipCount, setSkipCount] = useState(0);
   const [errorCount, setErrorCount] = useState(0);
+  const [classificationBannerDismissed, setClassificationBannerDismissed] = useState(
+    sessionStorage.getItem('lance:import-classification-banner') === 'true'
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -481,6 +485,28 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
         {/* Step 3 — Review */}
         {step === 3 && (
           <div className="space-y-4">
+            {!classificationBannerDismissed && (
+              <div className="flex items-start gap-2 px-3 py-2.5 rounded-[8px] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                <Info size={14} className="text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-blue-800 dark:text-blue-300 font-medium">Classification is a suggestion</p>
+                  <p className="text-[11px] text-blue-700 dark:text-blue-400 mt-0.5">
+                    Lance guessed the type of each file based on its content. Always review before importing, especially for financial documents.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setClassificationBannerDismissed(true);
+                    sessionStorage.setItem('lance:import-classification-banner', 'true');
+                  }}
+                  className="flex items-center gap-1 text-[10px] text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 flex-shrink-0 font-medium"
+                >
+                  Got it
+                  <X size={12} />
+                </button>
+              </div>
+            )}
+
             {/* File navigation tabs */}
             <div className="flex items-center gap-1 overflow-x-auto pb-1">
               {detections.map((d, i) => {
@@ -553,19 +579,33 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                   <>
                     {/* Entity type override */}
                     {currentDetection.fileType !== 'image' && (
-                      <div>
-                        <label className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1.5 block">
-                          Detected Type
-                        </label>
-                        <select
-                          value={currentDetection.userOverride || currentDetection.detectedEntity}
-                          onChange={(e) => handleOverrideType(reviewIndex, e.target.value as DetectedEntityType)}
-                          className="w-full px-3 py-1.5 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
-                        >
-                          {(['client_list', 'project_list', 'invoice', 'expense_list', 'contract', 'proposal', 'financial_data', 'attachment', 'unknown'] as DetectedEntityType[]).map(t => (
-                            <option key={t} value={t}>{entityTypeLabel(t)}</option>
-                          ))}
-                        </select>
+                      <div className="p-3 rounded-[8px] bg-[var(--bg-secondary)] border border-[var(--border-color)] space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Detected as:</span>
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                            currentDetection.confidence >= 0.7
+                              ? 'bg-[var(--accent-bg)] text-[var(--accent)]'
+                              : currentDetection.confidence >= 0.3
+                              ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300'
+                              : 'bg-[var(--danger-bg)] text-[var(--danger)]'
+                          }`}>
+                            {entityTypeLabel(currentDetection.detectedEntity)}
+                          </span>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-semibold text-[var(--text-accent)] uppercase tracking-wide mb-1.5 block">
+                            Change:
+                          </label>
+                          <select
+                            value={currentDetection.userOverride || currentDetection.detectedEntity}
+                            onChange={(e) => handleOverrideType(reviewIndex, e.target.value as DetectedEntityType)}
+                            className="w-full px-3 py-2 text-sm border-2 border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 font-medium"
+                          >
+                            {(['client_list', 'project_list', 'invoice', 'expense_list', 'contract', 'proposal', 'financial_data', 'attachment', 'unknown'] as DetectedEntityType[]).map(t => (
+                              <option key={t} value={t}>{entityTypeLabel(t)}</option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
                     )}
 
