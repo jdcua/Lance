@@ -1,23 +1,32 @@
 declare const __LANCE_LICENSE_HASH__: string;
 
-const LICENSE_SECRET_HASH = __LANCE_LICENSE_HASH__ || '';
+const LICENSE_PRIME = 999999937n;
 
-export function validateLicenseKey(key: string): boolean {
+async function hmacSha256(message: string, secret: string): Promise<ArrayBuffer> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secret);
+  const msgData = encoder.encode(message);
+  const key = await crypto.subtle.importKey(
+    'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  return crypto.subtle.sign('HMAC', key, msgData);
+}
+
+export async function validateLicenseKey(key: string): Promise<boolean> {
   if (!key || typeof key !== 'string') return false;
 
   const pattern = /^LANCE-[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/;
   if (!pattern.test(key)) return false;
 
   const stripped = key.replace('LANCE-', '').replace(/-/g, '');
-  const check = simpleHash(stripped + LICENSE_SECRET_HASH);
-  return check % 97 === 0;
+  const hash = await hmacSha256(stripped, __LANCE_LICENSE_HASH__ || '');
+  const view = new DataView(hash);
+  const check = view.getBigUint64(0, false);
+  return check % LICENSE_PRIME === 0n;
 }
 
-function simpleHash(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash);
+export function validateLicenseKeyFormat(key: string): boolean {
+  if (!key || typeof key !== 'string') return false;
+  const pattern = /^LANCE-[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/;
+  return pattern.test(key);
 }

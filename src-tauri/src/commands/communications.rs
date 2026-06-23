@@ -19,7 +19,7 @@ pub fn get_communications(app: AppHandle, client_id: String) -> Result<Vec<Commu
     let conn = db::get_connection(&app)?;
     let mut stmt = conn
         .prepare("SELECT id, client_id, type, summary, date, created_at FROM communications WHERE client_id = ?1 ORDER BY date DESC")
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     let comms = stmt
         .query_map([client_id], |row| {
             Ok(Communication {
@@ -31,7 +31,7 @@ pub fn get_communications(app: AppHandle, client_id: String) -> Result<Vec<Commu
                 created_at: row.get(5)?,
             })
         })
-        .map_err(|e| e.to_string())?
+        .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())
         .collect();
     Ok(comms)
@@ -49,7 +49,7 @@ pub fn create_communication(
         "INSERT INTO communications (id, client_id, type, summary, date, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
         rusqlite::params![id, payload.client_id, payload.comm_type, payload.summary, payload.date, created_at],
     )
-    .map_err(|e| e.to_string())?;
+    .map_err(|_| "Database operation failed".to_string())?;
     Ok(Communication {
         id,
         client_id: payload.client_id,
@@ -67,13 +67,13 @@ pub fn update_communication(app: AppHandle, id: String, summary: String) -> Resu
         "UPDATE communications SET summary = ?1 WHERE id = ?2",
         rusqlite::params![summary, id],
     )
-    .map_err(|e| e.to_string())?;
+    .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 
 #[tauri::command]
 pub fn delete_communication(app: AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM communications WHERE id = ?1", [id]).map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM communications WHERE id = ?1", [id]).map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }

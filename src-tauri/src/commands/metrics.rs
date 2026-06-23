@@ -65,7 +65,7 @@ pub fn create_metric_definition(
         "INSERT INTO metric_definitions (id, client_id, name, metric_type, unit_label, is_headline, sort_order, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
         rusqlite::params![id, payload.client_id, payload.name, payload.metric_type, payload.unit_label, is_headline, sort_order, created_at],
     )
-    .map_err(|e| e.to_string())?;
+    .map_err(|_| "Database operation failed".to_string())?;
     Ok(MetricDefinition {
         id,
         client_id: payload.client_id,
@@ -86,7 +86,7 @@ pub fn get_metric_definitions(
     let conn = db::get_connection(&app)?;
     let mut stmt = conn
         .prepare("SELECT id, client_id, name, metric_type, unit_label, is_headline, sort_order, created_at FROM metric_definitions WHERE client_id = ? ORDER BY sort_order ASC, created_at ASC")
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     let results = stmt
         .query_map([&client_id], |row| {
             Ok(MetricDefinition {
@@ -100,7 +100,7 @@ pub fn get_metric_definitions(
                 created_at: row.get(7)?,
             })
         })
-        .map_err(|e| e.to_string())?
+        .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())
         .collect();
     Ok(results)
@@ -117,7 +117,7 @@ pub fn update_metric_definition(
         "UPDATE metric_definitions SET name = ?, metric_type = ?, unit_label = ?, is_headline = ?, sort_order = ? WHERE id = ?",
         rusqlite::params![payload.name, payload.metric_type, payload.unit_label, is_headline, payload.sort_order, payload.id],
     )
-    .map_err(|e| e.to_string())?;
+    .map_err(|_| "Database operation failed".to_string())?;
     Ok(MetricDefinition {
         id: payload.id.clone(),
         client_id: String::new(),
@@ -134,7 +134,7 @@ pub fn update_metric_definition(
 pub fn delete_metric_definition(app: tauri::AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
     conn.execute("DELETE FROM metric_definitions WHERE id = ?", [&id])
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 
@@ -178,7 +178,7 @@ pub fn log_metric_value(
         "INSERT INTO metric_values (id, definition_id, client_id, value, period, notes, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
         rusqlite::params![id, payload.definition_id, payload.client_id, payload.value, payload.period, payload.notes, created_at],
     )
-    .map_err(|e| e.to_string())?;
+    .map_err(|_| "Database operation failed".to_string())?;
     Ok(MetricValue {
         id,
         definition_id: payload.definition_id,
@@ -202,7 +202,7 @@ pub fn get_metric_values(
     } else {
         "SELECT id, definition_id, client_id, value, period, notes, created_at FROM metric_values WHERE definition_id = ? ORDER BY period ASC"
     };
-    let mut stmt = conn.prepare(query).map_err(|e| e.to_string())?;
+    let mut stmt = conn.prepare(query).map_err(|_| "Database operation failed".to_string())?;
     let limit_val = limit.unwrap_or(i32::MAX);
     let results = stmt
         .query_map(rusqlite::params![&definition_id, limit_val], |row| {
@@ -216,7 +216,7 @@ pub fn get_metric_values(
                 created_at: row.get(6)?,
             })
         })
-        .map_err(|e| e.to_string())?
+        .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())
         .collect();
     Ok(results)
@@ -225,7 +225,7 @@ pub fn get_metric_values(
 #[tauri::command]
 pub fn delete_metric_value(app: tauri::AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM metric_values WHERE id = ?", [&id]).map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM metric_values WHERE id = ?", [&id]).map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 
@@ -257,7 +257,7 @@ pub fn get_all_headline_metrics(app: tauri::AppHandle) -> Result<Vec<HeadlineMet
              WHERE d.is_headline = 1
              ORDER BY d.client_id, d.sort_order, v.period ASC"
         )
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
 
     let rows: Vec<HeadlineMetricRow> = stmt
         .query_map([], |row| {
@@ -276,7 +276,7 @@ pub fn get_all_headline_metrics(app: tauri::AppHandle) -> Result<Vec<HeadlineMet
                 row.get(11)?,
             ))
         })
-        .map_err(|e| e.to_string())?
+        .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())
         .collect();
 
@@ -324,10 +324,10 @@ pub fn get_all_headline_metrics(app: tauri::AppHandle) -> Result<Vec<HeadlineMet
 
     // Get client names
     let client_names: std::collections::HashMap<String, String> = {
-        let mut stmt = conn.prepare("SELECT id, name FROM clients").map_err(|e| e.to_string())?;
+        let mut stmt = conn.prepare("SELECT id, name FROM clients").map_err(|_| "Database operation failed".to_string())?;
         let results: Vec<(String, String)> = stmt
             .query_map([], |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?)))
-            .map_err(|e| e.to_string())?
+            .map_err(|_| "Database operation failed".to_string())?
             .filter_map(|r| r.ok())
             .collect();
         results.into_iter().collect()
@@ -367,12 +367,12 @@ pub fn save_metric_template(
     let created_at = chrono_now();
     // Upsert by name
     conn.execute("DELETE FROM metric_templates WHERE name = ?", [&payload.name])
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     conn.execute(
         "INSERT INTO metric_templates (id, name, definitions_json, created_at) VALUES (?1, ?2, ?3, ?4)",
         rusqlite::params![id, payload.name, payload.definitions_json, created_at],
     )
-    .map_err(|e| e.to_string())?;
+    .map_err(|_| "Database operation failed".to_string())?;
     Ok(MetricTemplate {
         id,
         name: payload.name,
@@ -388,7 +388,7 @@ pub fn get_metric_templates(app: tauri::AppHandle) -> Result<Vec<MetricTemplate>
         .prepare(
             "SELECT id, name, definitions_json, created_at FROM metric_templates ORDER BY name ASC",
         )
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     let results = stmt
         .query_map([], |row| {
             Ok(MetricTemplate {
@@ -398,7 +398,7 @@ pub fn get_metric_templates(app: tauri::AppHandle) -> Result<Vec<MetricTemplate>
                 created_at: row.get(3)?,
             })
         })
-        .map_err(|e| e.to_string())?
+        .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())
         .collect();
     Ok(results)
@@ -407,6 +407,6 @@ pub fn get_metric_templates(app: tauri::AppHandle) -> Result<Vec<MetricTemplate>
 #[tauri::command]
 pub fn delete_metric_template(app: tauri::AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM metric_templates WHERE id = ?", [&id]).map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM metric_templates WHERE id = ?", [&id]).map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }

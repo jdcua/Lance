@@ -85,7 +85,7 @@ pub fn get_expenses(app: AppHandle) -> Result<Vec<Expense>, String> {
         .prepare(
             "SELECT id, category, description, amount, date, recurring, frequency FROM expenses ORDER BY date DESC",
         )
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     let expenses = stmt
         .query_map([], |row| {
             Ok(Expense {
@@ -98,7 +98,7 @@ pub fn get_expenses(app: AppHandle) -> Result<Vec<Expense>, String> {
                 frequency: row.get(6)?,
             })
         })
-        .map_err(|e| e.to_string())?
+        .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())
         .collect();
     Ok(expenses)
@@ -113,7 +113,7 @@ pub fn create_expense(app: AppHandle, payload: CreateExpensePayload) -> Result<E
         "INSERT INTO expenses (id, category, description, amount, date, recurring, frequency) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
         rusqlite::params![id, payload.category, payload.description, payload.amount, payload.date, recurring_int, payload.frequency],
     )
-    .map_err(|e| e.to_string())?;
+    .map_err(|_| "Database operation failed".to_string())?;
     Ok(Expense {
         id,
         category: payload.category,
@@ -133,14 +133,14 @@ pub fn update_expense(app: AppHandle, payload: UpdateExpensePayload) -> Result<(
         "UPDATE expenses SET category = ?1, description = ?2, amount = ?3, date = ?4, recurring = ?5, frequency = ?6 WHERE id = ?7",
         rusqlite::params![payload.category, payload.description, payload.amount, payload.date, recurring_int, payload.frequency, payload.id],
     )
-    .map_err(|e| e.to_string())?;
+    .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 
 #[tauri::command]
 pub fn delete_expense(app: AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM expenses WHERE id = ?", [&id]).map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM expenses WHERE id = ?", [&id]).map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 
@@ -148,7 +148,7 @@ pub fn delete_expense(app: AppHandle, id: String) -> Result<(), String> {
 pub fn get_user_profile(app: AppHandle) -> Result<Option<UserProfile>, String> {
     let conn = db::get_connection(&app)?;
     let mut stmt = conn.prepare("SELECT id, name, email, hourly_rate, currency, writing_voice, tax_rate, payment_terms, tagline, always_include, writing_style, theme, license_key, licensed_at, ai_enabled, profession FROM user_profile WHERE id = 1")
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     Ok(stmt
         .query_row([], |row| {
             Ok(UserProfile {
@@ -180,13 +180,13 @@ pub fn upsert_user_profile(app: AppHandle, payload: UpsertProfilePayload) -> Res
     conn.execute(
         "INSERT INTO user_profile (id, name, email, hourly_rate, currency, writing_voice, tax_rate, payment_terms, tagline, always_include, writing_style, theme, license_key, licensed_at, ai_enabled, profession) VALUES (1, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15) ON CONFLICT(id) DO UPDATE SET name = ?1, email = ?2, hourly_rate = ?3, currency = ?4, writing_voice = ?5, tax_rate = ?6, payment_terms = ?7, tagline = ?8, always_include = ?9, writing_style = ?10, theme = ?11, license_key = ?12, licensed_at = ?13, ai_enabled = ?14, profession = ?15",
         rusqlite::params![payload.name, payload.email, payload.hourly_rate, payload.currency, payload.writing_voice, payload.tax_rate, payload.payment_terms, payload.tagline, payload.always_include, payload.writing_style, payload.theme, payload.license_key, payload.licensed_at, ai_enabled_int, payload.profession],
-    ).map_err(|e| e.to_string())?;
+    ).map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 
 #[tauri::command]
 pub fn delete_user_profile(app: AppHandle) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM user_profile", []).map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM user_profile", []).map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }

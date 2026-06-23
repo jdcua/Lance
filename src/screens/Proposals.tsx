@@ -13,6 +13,7 @@ import { useToasts } from '../store/toastStore';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
 import { Plus, Trash2, Send, Eye, Download, FileText, Search, ArrowUpDown, Bell, Check, X } from 'lucide-react';
 import { generateFollowUpDraft } from '../utils/followUpTemplates';
+import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 
 const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
   draft: 'warning',
@@ -375,6 +376,7 @@ export default function Proposals() {
         variant="danger"
         loading={deleting}
       />
+      <ArchetypeFeatureTabs screen="proposals" />
     </div>
   );
 }

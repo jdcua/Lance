@@ -42,7 +42,7 @@ pub struct UpdateTimeEntryPayload {
 pub fn get_time_entries(app: AppHandle) -> Result<Vec<TimeEntry>, String> {
     let conn = db::get_connection(&app)?;
     let mut stmt = conn.prepare("SELECT id, project_id, client_id, description, start_time, end_time, duration_minutes, billable, invoiced FROM time_entries ORDER BY start_time DESC")
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     let entries = stmt
         .query_map([], |row| {
             Ok(TimeEntry {
@@ -57,7 +57,7 @@ pub fn get_time_entries(app: AppHandle) -> Result<Vec<TimeEntry>, String> {
                 invoiced: row.get::<_, i32>(8)? != 0,
             })
         })
-        .map_err(|e| e.to_string())?
+        .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())
         .collect();
     Ok(entries)
@@ -67,7 +67,7 @@ pub fn get_time_entries(app: AppHandle) -> Result<Vec<TimeEntry>, String> {
 pub fn get_time_entry(app: AppHandle, id: String) -> Result<Option<TimeEntry>, String> {
     let conn = db::get_connection(&app)?;
     let mut stmt = conn.prepare("SELECT id, project_id, client_id, description, start_time, end_time, duration_minutes, billable, invoiced FROM time_entries WHERE id = ?")
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     Ok(stmt
         .query_row([&id], |row| {
             Ok(TimeEntry {
@@ -95,7 +95,7 @@ pub fn create_time_entry(
     conn.execute(
         "INSERT INTO time_entries (id, project_id, client_id, description, start_time, billable, invoiced) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0)",
         rusqlite::params![id, payload.project_id, payload.client_id, payload.description, payload.start_time, payload.billable as i32],
-    ).map_err(|e| e.to_string())?;
+    ).map_err(|_| "Database operation failed".to_string())?;
     Ok(TimeEntry {
         id,
         project_id: payload.project_id,
@@ -115,13 +115,13 @@ pub fn update_time_entry(app: AppHandle, payload: UpdateTimeEntryPayload) -> Res
     conn.execute(
         "UPDATE time_entries SET project_id = ?1, client_id = ?2, description = ?3, start_time = ?4, end_time = ?5, duration_minutes = ?6, billable = ?7, invoiced = ?8 WHERE id = ?9",
         rusqlite::params![payload.project_id, payload.client_id, payload.description, payload.start_time, payload.end_time, payload.duration_minutes, payload.billable as i32, payload.invoiced as i32, payload.id],
-    ).map_err(|e| e.to_string())?;
+    ).map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 
 #[tauri::command]
 pub fn delete_time_entry(app: AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM time_entries WHERE id = ?", [&id]).map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM time_entries WHERE id = ?", [&id]).map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }

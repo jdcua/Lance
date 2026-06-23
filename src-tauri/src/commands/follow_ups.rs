@@ -42,13 +42,13 @@ pub fn log_follow_up(
         "UPDATE follow_up_log SET status = 'superseded', action = 'superseded' WHERE entity_type = ? AND entity_id = ? AND status = 'pending'",
         rusqlite::params![payload.entity_type, payload.entity_id],
     )
-    .map_err(|e| e.to_string())?;
+    .map_err(|_| "Database operation failed".to_string())?;
 
     conn.execute(
         "INSERT INTO follow_up_log (id, entity_type, entity_id, stage, status, drafted_at) VALUES (?1, ?2, ?3, ?4, 'pending', ?5)",
         rusqlite::params![id, payload.entity_type, payload.entity_id, payload.stage, drafted_at],
     )
-    .map_err(|e| e.to_string())?;
+    .map_err(|_| "Database operation failed".to_string())?;
 
     Ok(FollowUpLog {
         id,
@@ -71,7 +71,7 @@ pub fn get_follow_up_log(
     let conn = db::get_connection(&app)?;
     let mut stmt = conn
         .prepare("SELECT id, entity_type, entity_id, stage, status, drafted_at, actioned_at, action FROM follow_up_log WHERE entity_type = ? AND entity_id = ? ORDER BY stage DESC")
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     let results = stmt
         .query_map([&entity_type, &entity_id], |row| {
             Ok(FollowUpLog {
@@ -85,7 +85,7 @@ pub fn get_follow_up_log(
                 action: row.get(7)?,
             })
         })
-        .map_err(|e| e.to_string())?
+        .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())
         .collect();
     Ok(results)
@@ -102,7 +102,7 @@ pub fn update_follow_up_status(
         "UPDATE follow_up_log SET status = ?, action = ?, actioned_at = ? WHERE id = ?",
         rusqlite::params![payload.status, payload.action, actioned_at, payload.id],
     )
-    .map_err(|e| e.to_string())?;
+    .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 
@@ -111,7 +111,7 @@ pub fn get_all_pending_follow_ups(app: tauri::AppHandle) -> Result<Vec<FollowUpL
     let conn = db::get_connection(&app)?;
     let mut stmt = conn
         .prepare("SELECT id, entity_type, entity_id, stage, status, drafted_at, actioned_at, action FROM follow_up_log WHERE status = 'pending' ORDER BY drafted_at ASC")
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     let results = stmt
         .query_map([], |row| {
             Ok(FollowUpLog {
@@ -125,7 +125,7 @@ pub fn get_all_pending_follow_ups(app: tauri::AppHandle) -> Result<Vec<FollowUpL
                 action: row.get(7)?,
             })
         })
-        .map_err(|e| e.to_string())?
+        .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())
         .collect();
     Ok(results)

@@ -10,6 +10,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify } from '../achievements/notify';
 import { getUnlockedAchievementKeys } from '../achievements/checker';
+import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 import {
   getNextMonths,
   computeRevenueForecast,
@@ -648,6 +649,7 @@ export default function Finance() {
         message={`Are you sure you want to delete "${confirmDelete?.description}"? This cannot be undone.`}
         loading={deleting}
       />
+      <ArchetypeFeatureTabs screen="finance" />
     </div>
   );
 }

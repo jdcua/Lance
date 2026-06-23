@@ -39,7 +39,7 @@ export default function ArchetypeFeatureTabs({ screen, context = {} }: Props) {
 function FeaturePanel({ feature, context }: { feature: ArchetypeFeatureDef; context: Record<string, string> }) {
   const Component = getFeatureComponent(feature.component);
   if (!Component) return null;
-  const props = resolveProps(feature, context);
+  const props = { ...resolveProps(feature, context), title: feature.name, description: feature.description };
   return (
     <div className="p-3 bg-[var(--bg-card)] rounded-[8px] border border-[var(--border-color)]">
       <div className="mb-2 flex items-center gap-2">
@@ -75,7 +75,7 @@ function FeatureTabBar({ features, context }: { features: ArchetypeFeatureDef[];
       </div>
       {Component && (
         <Suspense fallback={<div className="h-16 bg-[var(--bg-secondary)] rounded skeleton-pulse" />}>
-          <Component {...resolveProps(activeFeature!, context)} />
+          <Component {...resolveProps(activeFeature!, context)} title={activeFeature!.name} description={activeFeature!.description} />
         </Suspense>
       )}
     </div>

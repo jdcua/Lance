@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useToasts } from '../store/toastStore';
 import { relativeDate } from '../utils/format';
+import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 
 type ViewMode = 'grid' | 'list';
 type EntityScope = 'library' | 'client' | 'project';
@@ -719,6 +720,7 @@ export default function Assets() {
           </button>
         </div>
       )}
+      <ArchetypeFeatureTabs screen="assets" context={{ projectId: scope.type === 'project' ? scope.id : '', clientId: scope.type === 'client' ? scope.id : '' }} />
     </div>
   );
 }

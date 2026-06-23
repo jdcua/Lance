@@ -42,7 +42,7 @@ pub fn get_clients(app: tauri::AppHandle) -> Result<Vec<Client>, String> {
         .prepare(
             "SELECT id, name, email, phone, company, notes, created_at FROM clients ORDER BY name",
         )
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     let clients = stmt
         .query_map([], |row| {
             Ok(Client {
@@ -55,7 +55,7 @@ pub fn get_clients(app: tauri::AppHandle) -> Result<Vec<Client>, String> {
                 created_at: row.get(6)?,
             })
         })
-        .map_err(|e| e.to_string())?
+        .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())
         .collect();
     Ok(clients)
@@ -68,7 +68,7 @@ pub fn get_client(app: tauri::AppHandle, id: String) -> Result<Option<Client>, S
         .prepare(
             "SELECT id, name, email, phone, company, notes, created_at FROM clients WHERE id = ?",
         )
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     let client = stmt
         .query_row([&id], |row| {
             Ok(Client {
@@ -96,7 +96,7 @@ pub fn create_client(
     conn.execute(
         "INSERT INTO clients (id, name, email, phone, company, notes, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
         rusqlite::params![id, payload.name, payload.email, payload.phone, payload.company, payload.notes, created_at],
-    ).map_err(|e| e.to_string())?;
+    ).map_err(|_| "Database operation failed".to_string())?;
     Ok(Client {
         id,
         name: payload.name,
@@ -114,14 +114,14 @@ pub fn update_client(app: tauri::AppHandle, payload: UpdateClientPayload) -> Res
     conn.execute(
         "UPDATE clients SET name = ?1, email = ?2, phone = ?3, company = ?4, notes = ?5 WHERE id = ?6",
         rusqlite::params![payload.name, payload.email, payload.phone, payload.company, payload.notes, payload.id],
-    ).map_err(|e| e.to_string())?;
+    ).map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 
 #[tauri::command]
 pub fn delete_client(app: tauri::AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM clients WHERE id = ?", [&id]).map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM clients WHERE id = ?", [&id]).map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 

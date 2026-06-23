@@ -64,20 +64,20 @@ pub struct CreateAttachmentPayload {
 fn get_imports_dir_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     use tauri::Manager;
     let documents_dir =
-        app.path().document_dir().map_err(|e| format!("Failed to get documents dir: {}", e))?;
+        app.path().document_dir().map_err(|_| "Failed to get documents dir".to_string())?;
     let imports_dir = documents_dir.join("Lance").join("imports");
     std::fs::create_dir_all(&imports_dir)
-        .map_err(|e| format!("Failed to create imports dir: {}", e))?;
+        .map_err(|_| "Failed to create imports dir".to_string())?;
     Ok(imports_dir)
 }
 
 fn get_assets_dir_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     use tauri::Manager;
     let documents_dir =
-        app.path().document_dir().map_err(|e| format!("Failed to get documents dir: {}", e))?;
+        app.path().document_dir().map_err(|_| "Failed to get documents dir".to_string())?;
     let assets_dir = documents_dir.join("Lance").join("Assets");
     std::fs::create_dir_all(&assets_dir)
-        .map_err(|e| format!("Failed to create assets dir: {}", e))?;
+        .map_err(|_| "Failed to create assets dir".to_string())?;
     Ok(assets_dir)
 }
 
@@ -104,7 +104,7 @@ pub fn save_import_file(
     let safe_name = sanitize_filename(&filename);
     let stored_name = format!("{}_{}", id, safe_name);
     let file_path = imports_dir.join(&stored_name);
-    std::fs::write(&file_path, &data).map_err(|e| format!("Failed to write import file: {}", e))?;
+    std::fs::write(&file_path, &data).map_err(|_| "Failed to write file".to_string())?;
     file_path.to_str().map(|s| s.to_string()).ok_or_else(|| "Invalid path encoding".to_string())
 }
 
@@ -119,15 +119,18 @@ pub fn save_asset_file(
     let safe_name = sanitize_filename(&filename);
     let stored_name = format!("{}_{}", id, safe_name);
     let file_path = assets_dir.join(&stored_name);
-    std::fs::write(&file_path, &data).map_err(|e| format!("Failed to write asset file: {}", e))?;
+    std::fs::write(&file_path, &data).map_err(|_| "Failed to write file".to_string())?;
     file_path.to_str().map(|s| s.to_string()).ok_or_else(|| "Invalid path encoding".to_string())
 }
 
 fn sanitize_filename(filename: &str) -> String {
-    filename
+    let sanitized: String = filename
         .chars()
         .map(|c| if c.is_alphanumeric() || c == '.' || c == '-' || c == '_' { c } else { '_' })
-        .collect::<String>()
+        .collect();
+    sanitized
+        .trim_start_matches('.')
+        .replace("..", "__")
 }
 
 // ── Import Log Commands ──
@@ -155,7 +158,7 @@ pub fn log_import(
             imported_at,
         ],
     )
-    .map_err(|e| e.to_string())?;
+    .map_err(|_| "Database operation failed".to_string())?;
     Ok(ImportLog {
         id,
         filename: payload.filename,
@@ -175,7 +178,7 @@ pub fn get_import_log(app: tauri::AppHandle) -> Result<Vec<ImportLog>, String> {
     let conn = db::get_connection(&app)?;
     let mut stmt = conn
         .prepare("SELECT id, filename, file_type, file_path, detected_type, target_entity, target_id, status, error_message, imported_at FROM import_log ORDER BY imported_at DESC")
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     let logs = stmt
         .query_map([], |row| {
             Ok(ImportLog {
@@ -191,7 +194,7 @@ pub fn get_import_log(app: tauri::AppHandle) -> Result<Vec<ImportLog>, String> {
                 imported_at: row.get(9)?,
             })
         })
-        .map_err(|e| e.to_string())?
+        .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())
         .collect();
     Ok(logs)
@@ -223,7 +226,7 @@ pub fn create_attachment(
             created_at,
         ],
     )
-    .map_err(|e| e.to_string())?;
+    .map_err(|_| "Database operation failed".to_string())?;
     Ok(Attachment {
         id,
         entity_type: payload.entity_type,
@@ -247,7 +250,7 @@ pub fn get_attachments(
     let conn = db::get_connection(&app)?;
     let mut stmt = conn
         .prepare("SELECT id, entity_type, entity_id, filename, file_path, mime_type, size_bytes, tags, notes, created_at FROM attachments WHERE entity_type = ? AND entity_id = ? ORDER BY created_at DESC")
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     let attachments = stmt
         .query_map([&entity_type, &entity_id], |row| {
             Ok(Attachment {
@@ -263,7 +266,7 @@ pub fn get_attachments(
                 created_at: row.get(9)?,
             })
         })
-        .map_err(|e| e.to_string())?
+        .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())
         .collect();
     Ok(attachments)
@@ -274,7 +277,7 @@ pub fn get_all_attachments(app: tauri::AppHandle) -> Result<Vec<Attachment>, Str
     let conn = db::get_connection(&app)?;
     let mut stmt = conn
         .prepare("SELECT id, entity_type, entity_id, filename, file_path, mime_type, size_bytes, tags, notes, created_at FROM attachments ORDER BY created_at DESC")
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     let attachments = stmt
         .query_map([], |row| {
             Ok(Attachment {
@@ -290,7 +293,7 @@ pub fn get_all_attachments(app: tauri::AppHandle) -> Result<Vec<Attachment>, Str
                 created_at: row.get(9)?,
             })
         })
-        .map_err(|e| e.to_string())?
+        .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())
         .collect();
     Ok(attachments)
@@ -303,7 +306,7 @@ pub fn delete_attachment(app: tauri::AppHandle, id: String) -> Result<(), String
     let file_path: Option<String> = conn
         .query_row("SELECT file_path FROM attachments WHERE id = ?", [&id], |row| row.get(0))
         .ok();
-    conn.execute("DELETE FROM attachments WHERE id = ?", [&id]).map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM attachments WHERE id = ?", [&id]).map_err(|_| "Database operation failed".to_string())?;
     // Best-effort file cleanup
     if let Some(path) = file_path {
         let _ = std::fs::remove_file(path);
@@ -329,11 +332,11 @@ pub fn rename_attachment(
         "UPDATE attachments SET filename = ? WHERE id = ?",
         rusqlite::params![payload.new_filename, payload.id],
     )
-    .map_err(|e| e.to_string())?;
+    .map_err(|_| "Database operation failed".to_string())?;
 
     let mut stmt = conn
         .prepare("SELECT id, entity_type, entity_id, filename, file_path, mime_type, size_bytes, tags, notes, created_at FROM attachments WHERE id = ?")
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     stmt.query_row([&payload.id], |row| {
         Ok(Attachment {
             id: row.get(0)?,
@@ -348,7 +351,7 @@ pub fn rename_attachment(
             created_at: row.get(9)?,
         })
     })
-    .map_err(|e| e.to_string())
+    .map_err(|_| "Database operation failed".to_string())
 }
 
 #[derive(Debug, Deserialize)]
@@ -368,11 +371,11 @@ pub fn move_attachment(
         "UPDATE attachments SET entity_type = ?, entity_id = ? WHERE id = ?",
         rusqlite::params![payload.entity_type, payload.entity_id, payload.id],
     )
-    .map_err(|e| e.to_string())?;
+    .map_err(|_| "Database operation failed".to_string())?;
 
     let mut stmt = conn
         .prepare("SELECT id, entity_type, entity_id, filename, file_path, mime_type, size_bytes, tags, notes, created_at FROM attachments WHERE id = ?")
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     stmt.query_row([&payload.id], |row| {
         Ok(Attachment {
             id: row.get(0)?,
@@ -387,7 +390,7 @@ pub fn move_attachment(
             created_at: row.get(9)?,
         })
     })
-    .map_err(|e| e.to_string())
+    .map_err(|_| "Database operation failed".to_string())
 }
 
 #[derive(Debug, Deserialize)]
@@ -408,19 +411,19 @@ pub fn update_attachment_meta(
             "UPDATE attachments SET tags = ? WHERE id = ?",
             rusqlite::params![tags, payload.id],
         )
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     }
     if let Some(ref notes) = payload.notes {
         conn.execute(
             "UPDATE attachments SET notes = ? WHERE id = ?",
             rusqlite::params![notes, payload.id],
         )
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     }
 
     let mut stmt = conn
         .prepare("SELECT id, entity_type, entity_id, filename, file_path, mime_type, size_bytes, tags, notes, created_at FROM attachments WHERE id = ?")
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     stmt.query_row([&payload.id], |row| {
         Ok(Attachment {
             id: row.get(0)?,
@@ -435,7 +438,7 @@ pub fn update_attachment_meta(
             created_at: row.get(9)?,
         })
     })
-    .map_err(|e| e.to_string())
+    .map_err(|_| "Database operation failed".to_string())
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -460,16 +463,16 @@ pub fn get_asset_stats(app: tauri::AppHandle) -> Result<AssetStats, String> {
         .query_row("SELECT COUNT(*), COALESCE(SUM(size_bytes), 0) FROM attachments", [], |row| {
             Ok((row.get(0)?, row.get(1)?))
         })
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
 
     let mut stmt = conn
         .prepare("SELECT entity_type, entity_id, COUNT(*) as cnt FROM attachments GROUP BY entity_type, entity_id ORDER BY cnt DESC")
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     let by_entity: Vec<EntityStat> = stmt
         .query_map([], |row| {
             Ok(EntityStat { entity_type: row.get(0)?, entity_id: row.get(1)?, count: row.get(2)? })
         })
-        .map_err(|e| e.to_string())?
+        .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())
         .collect();
 
@@ -482,7 +485,7 @@ pub fn search_assets(app: tauri::AppHandle, query: String) -> Result<Vec<Attachm
     let pattern = format!("%{}%", query);
     let mut stmt = conn
         .prepare("SELECT id, entity_type, entity_id, filename, file_path, mime_type, size_bytes, tags, notes, created_at FROM attachments WHERE filename LIKE ? OR tags LIKE ? OR notes LIKE ? ORDER BY created_at DESC")
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| "Database operation failed".to_string())?;
     let results = stmt
         .query_map(rusqlite::params![pattern, pattern, pattern], |row| {
             Ok(Attachment {
@@ -498,7 +501,7 @@ pub fn search_assets(app: tauri::AppHandle, query: String) -> Result<Vec<Attachm
                 created_at: row.get(9)?,
             })
         })
-        .map_err(|e| e.to_string())?
+        .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())
         .collect();
     Ok(results)
