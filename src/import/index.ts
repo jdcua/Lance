@@ -96,15 +96,4 @@ export async function processImportFiles(
   return results;
 }
 
-/**
- * Filter files from a drag event's DataTransfer.
- */
-function extractFilesFromDrop(e: DragEvent): File[] {
-  const files: File[] = [];
-  if (e.dataTransfer?.files) {
-    for (let i = 0; i < e.dataTransfer.files.length; i++) {
-      files.push(e.dataTransfer.files[i]);
-    }
-  }
-  return files;
-}
+

@@ -1,3 +1,4 @@
+pub mod archetypes;
 pub mod clients;
 pub mod communications;
 pub mod contracts;

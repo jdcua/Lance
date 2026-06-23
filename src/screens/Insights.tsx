@@ -166,20 +166,20 @@ export default function Insights() {
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-[var(--text-secondary)]">Expenses</span>
-                <span className="font-medium text-[#A32D2D]">{formatCurrency(totalExpenses, profile?.currency)}</span>
+                <span className="font-medium text-[var(--danger)]">{formatCurrency(totalExpenses, profile?.currency)}</span>
               </div>
               <div className="flex justify-between text-xs pt-3 border-t border-[var(--border-color)]">
                 <span className="text-[var(--text-secondary)]">Profit Margin</span>
-                <span className={`font-medium ${profitMargin >= 0 ? 'text-[var(--accent)]' : 'text-[#A32D2D]'}`}>{profitMargin}%</span>
+                <span className={`font-medium ${profitMargin >= 0 ? 'text-[var(--accent)]' : 'text-[var(--danger)]'}`}>{profitMargin}%</span>
               </div>
               <ProgressBar value={Math.max(profitMargin, 0)} max={100} label="Margin %" className="insight-bar-animate insight-bar-2" />
               <div className="flex justify-between text-xs pt-3 border-t border-[var(--border-color)]">
                 <span className="text-[var(--text-secondary)]">Outstanding</span>
-                <span className="font-medium text-[#854F0B]">{formatCurrency(totalOutstanding, profile?.currency)}</span>
+                <span className="font-medium text-[var(--warning-text)]">{formatCurrency(totalOutstanding, profile?.currency)}</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-[var(--text-secondary)]">Overdue Invoices</span>
-                <span className={`font-medium ${overdueInvoices > 0 ? 'text-[#A32D2D]' : 'text-[var(--text-secondary)]'}`}>{overdueInvoices}</span>
+                <span className={`font-medium ${overdueInvoices > 0 ? 'text-[var(--danger)]' : 'text-[var(--text-secondary)]'}`}>{overdueInvoices}</span>
               </div>
             </div>
           </Card>
@@ -286,7 +286,7 @@ export default function Insights() {
                       const isFlat = !isNaN(latest) && !isNaN(previous) && latest === previous;
 
                       const TrendIcon = isUp ? TrendingUp : isDown ? TrendingDown : Minus;
-                      const trendColor = isUp ? 'text-[var(--accent)]' : isDown ? 'text-[#A32D2D]' : 'text-[var(--text-tertiary)]';
+                      const trendColor = isUp ? 'text-[var(--accent)]' : isDown ? 'text-[var(--danger)]' : 'text-[var(--text-tertiary)]';
 
                       return (
                         <tr key={`${hm.client_id}:${hm.definition_id}`} className="border-t border-[var(--border-color)] hover:bg-[var(--bg-secondary)]/50 transition-colors">

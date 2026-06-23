@@ -12,7 +12,7 @@ export default function AchievementsPage() {
     import('../achievements/checker')
       .then(({ getUnlockedAchievementKeys }) => getUnlockedAchievementKeys())
       .then((keys) => setUnlocked(new Set(keys)))
-      .catch(() => {})
+      .catch(() => { /* achievement check is non-critical; silently fall back to empty set */ })
       .finally(() => setLoading(false));
   }, []);
 

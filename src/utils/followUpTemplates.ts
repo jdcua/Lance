@@ -68,8 +68,6 @@ export const TEMPLATE_LABELS: Record<string, string> = {
   invoice_day14: 'Invoice — Day 14 overdue (Final notice)',
 };
 
-const _TEMPLATE_KEYS = Object.keys(DEFAULT_TEMPLATES);
-
 function getDefaultTemplate(key: string): string {
   return DEFAULT_TEMPLATES[key] || '';
 }

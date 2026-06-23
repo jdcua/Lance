@@ -33,7 +33,7 @@ export default function Dashboard() {
     if (profile.profession === 'custom' && (profile as any).custom_archetype_config) {
       try {
         config = JSON.parse((profile as any).custom_archetype_config);
-      } catch {
+      } catch { /* invalid custom config JSON; fall back to profession archetype */
         config = getArchetype(profile.profession || 'default');
       }
     } else {
@@ -59,7 +59,7 @@ export default function Dashboard() {
               values[card.id] = '—';
             }
           }
-        } catch {
+        } catch { /* metric query failed; show em-dash as fallback */
           values[card.id] = '—';
         }
       }
@@ -270,7 +270,7 @@ export default function Dashboard() {
                     <p className="text-[10px] text-[var(--text-tertiary)]">{relativeDate(inv.created_at)}</p>
                   </div>
                   <div className="text-right">
-                    <p className={`text-xs font-medium ${inv.status === 'overdue' ? 'text-[#A32D2D]' : inv.status === 'paid' ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'}`}>
+                    <p className={`text-xs font-medium ${inv.status === 'overdue' ? 'text-[var(--danger)]' : inv.status === 'paid' ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'}`}>
                       {formatCurrency(inv.total, profile?.currency)}
                     </p>
                     <p className="text-[10px] text-[var(--text-tertiary)] capitalize">{inv.status}</p>

@@ -8,6 +8,7 @@ import MetricCard from '../components/ui/MetricCard';
 import { Play, Square, Plus, Trash2, Clock, Grid3X3, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify } from '../achievements/notify';
+import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 import { getUnlockedAchievementKeys } from '../achievements/checker';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { relativeDate } from '../utils/format';
@@ -343,7 +344,7 @@ export default function TimeScreen() {
                     type="checkbox"
                     checked={entryForm.billable}
                     onChange={(e) => setEntryForm({ ...entryForm, billable: e.target.checked })}
-                    className="w-4 h-4 rounded border-[#D4D4D2] text-[var(--accent)]"
+                    className="w-4 h-4 rounded border-[var(--neutral-border)] text-[var(--accent)]"
                     disabled={!!activeTimer}
                   />
                   <span className="text-xs text-[var(--text-secondary)]">Billable</span>
@@ -443,7 +444,7 @@ export default function TimeScreen() {
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <button
                       onClick={() => toggleEntryBillable(entry)}
-                      className={`text-[10px] px-1.5 py-0.5 rounded-full border ${entry.billable ? 'bg-[var(--accent-bg)] text-[var(--accent)] border-[var(--accent)]/20' : 'bg-[var(--bg-secondary)] text-[var(--text-tertiary)] border-[#D4D4D2]'}`}
+                      className={`text-[10px] px-1.5 py-0.5 rounded-full border ${entry.billable ? 'bg-[var(--accent-bg)] text-[var(--accent)] border-[var(--accent)]/20' : 'bg-[var(--bg-secondary)] text-[var(--text-tertiary)] border-[var(--neutral-border)]'}`}
                     >
                       {entry.billable ? 'billable' : 'non-billable'}
                     </button>
@@ -451,7 +452,7 @@ export default function TimeScreen() {
                     <button
                       onClick={() => setConfirmDelete({ id: entry.id, description: entry.description || 'No description' })}
                       aria-label="Delete time entry"
-                      className="p-1 text-[var(--text-tertiary)] hover:text-[#A32D2D]"
+                      className="p-1 text-[var(--text-tertiary)] hover:text-[var(--danger)]"
                     >
                       <Trash2 size={12} />
                     </button>
@@ -766,6 +767,7 @@ export default function TimeScreen() {
         message={`Are you sure you want to delete "${confirmDelete?.description}"? This cannot be undone.`}
         loading={deleting}
       />
+      <ArchetypeFeatureTabs screen="time" context={{ projectId: selectedProject !== '__all__' ? selectedProject : '' }} />
     </div>
   );
 }

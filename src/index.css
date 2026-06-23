@@ -70,16 +70,6 @@ html, body, #root {
   animation: fade-scale-in 0.18s ease-out forwards;
 }
 
-@keyframes pulse-scale {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-.animate-pulse-scale {
-  animation: pulse-scale 0.2s ease-out;
-}
-
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -87,14 +77,6 @@ html, body, #root {
 
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
-}
-
-@keyframes progress-fill {
-  from { width: 0%; }
-}
-
-.progress-animate {
-  animation: progress-fill 0.4s ease-out;
 }
 
 @keyframes insight-bar-in {
@@ -113,36 +95,9 @@ html, body, #root {
 .insight-bar-4 { animation-delay: 400ms; }
 
 /* ── Interactive base transition ── */
-button, a, input, textarea, select, .transition-base {
+button, a, input, textarea, select {
   transition: all 150ms ease;
 }
-
-/* ── Nav active border animation ── */
-.nav-active-line {
-  transform-origin: top;
-  animation: scaleY-in 0.15s ease-out;
-}
-
-@keyframes scaleY-in {
-  from { transform: scaleY(0); }
-  to { transform: scaleY(1); }
-}
-
-/* ── Loading dots animation ── */
-@keyframes loading-dot {
-  0%, 80%, 100% { opacity: 0; }
-  40% { opacity: 1; }
-}
-
-.loading-dot {
-  display: inline-block;
-  animation: loading-dot 1.4s infinite;
-  font-size: 20px;
-  color: #A3A39E;
-}
-
-.loading-dot:nth-child(2) { animation-delay: 0.2s; }
-.loading-dot:nth-child(3) { animation-delay: 0.4s; }
 
 /* ── Skeleton loading pulse ── */
 @keyframes skeleton-pulse {
@@ -224,35 +179,6 @@ html.dark * {
   animation: drop-zone-icon-pulse 2s ease-in-out infinite;
 }
 
-@keyframes check-in {
-  from { opacity: 0; transform: scale(0.5); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.check-mark-animate {
-  animation: check-in 0.4s ease-out forwards;
-}
-
-/* ── Asset grid animations ── */
-
-@keyframes asset-card-in {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.asset-card-enter {
-  animation: asset-card-in 0.2s ease-out;
-}
-
-@keyframes asset-preview-in {
-  from { opacity: 0; transform: scale(0.97); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.asset-preview-animate {
-  animation: asset-preview-in 0.15s ease-out;
-}
-
 /* ── Density system ── */
 :root {
   --row-height: 1;
@@ -261,6 +187,16 @@ html.dark * {
   --accent: #1EC98A;
   --accent-hover: #18B47C;
   --accent-bg: rgba(30,201,138,0.1);
+  --info: #3B82F6;
+  --info-border: #3B82F6;
+  --warning-text: #854F0B;
+  --danger-hover: #8B2525;
+  --accent-active: #159C65;
+  --neutral-border: #D4D4D2;
+  --medium-conf-bg: #FDF3E7;
+  --medium-conf-text: #B86E1C;
+  --metric-blue: #3B82F6;
+  --metric-purple: #8B5CF6;
 }
 
 .density-compact {
@@ -271,19 +207,6 @@ html.dark * {
 
 .density-compact table tr {
   height: calc(var(--row-height) * 100%);
-}
-
-.density-compact .list-item-pad {
-  padding-top: calc(var(--item-padding) * 1em);
-  padding-bottom: calc(var(--item-padding) * 1em);
-}
-
-.density-compact .sidebar-item-h {
-  height: calc(36px * var(--row-height));
-}
-
-.density-compact .card-pad {
-  padding: calc(var(--card-padding) * 20px) calc(var(--card-padding) * 24px);
 }
 
 /* ── Accent color system ── */

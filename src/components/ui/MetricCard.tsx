@@ -12,8 +12,8 @@ const topBorderColors: Record<string, string> = {
   amber: 'var(--warning)',
   red: 'var(--danger)',
   gray: 'var(--text-tertiary)',
-  blue: '#3B82F6',
-  purple: '#8B5CF6',
+  blue: 'var(--metric-blue)',
+  purple: 'var(--metric-purple)',
 };
 
 export default function MetricCard({ label, value, subtext, trend, color = 'gray', tooltip }: MetricCardProps) {

@@ -307,3 +307,79 @@ export type ContractTemplate = {
   created_at: string;
 };
 
+// ── Archetype domain tables ──
+
+export type ArchetypeRenderLog = {
+  id: string;
+  project_id: string;
+  pass_name?: string;
+  duration_minutes?: number;
+  software?: string;
+  frame_range?: string;
+  notes?: string;
+  created_at: string;
+};
+
+export type ArchetypeSession = {
+  id: string;
+  client_id: string;
+  project_id?: string;
+  session_type?: string;
+  duration_minutes?: number;
+  notes?: string;
+  action_items?: string;
+  next_session_date?: string;
+  created_at: string;
+};
+
+export type ArchetypeShoot = {
+  id: string;
+  project_id: string;
+  shoot_date?: string;
+  location?: string;
+  shoot_type?: string;
+  camera_system?: string;
+  hours_on_location?: number;
+  conditions_notes?: string;
+  created_at: string;
+};
+
+export type ArchetypeRevision = {
+  id: string;
+  project_id: string;
+  round_number: number;
+  change_summary?: string;
+  approved: boolean;
+  created_at: string;
+};
+
+export type ArchetypeBuild = {
+  id: string;
+  project_id: string;
+  version?: string;
+  platform?: string;
+  notes?: string;
+  created_at: string;
+};
+
+export type ArchetypeKeyword = {
+  id: string;
+  client_id: string;
+  keyword: string;
+  position_start?: number;
+  position_current?: number;
+  target_position?: number;
+  created_at: string;
+};
+
+export type ArchetypeDataset = {
+  id: string;
+  project_id: string;
+  dataset_name?: string;
+  source?: string;
+  size_bytes?: number;
+  format_type?: string;
+  license_type?: string;
+  created_at: string;
+};
+

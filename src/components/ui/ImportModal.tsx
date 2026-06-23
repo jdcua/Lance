@@ -533,8 +533,8 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                         currentDetection.confidence >= 0.7
                           ? 'bg-[var(--accent-bg)] text-[var(--accent)]'
                           : currentDetection.confidence >= 0.3
-                          ? 'bg-[#FDF3E7] text-[#B86E1C]'
-                          : 'bg-[#FCEBEB] text-[#A32D2D]'
+                          ? 'bg-[var(--medium-conf-bg)] text-[var(--medium-conf-text)]'
+                          : 'bg-[var(--danger-bg)] text-[var(--danger)]'
                       }`}>
                         {Math.round(currentDetection.confidence * 100)}% confidence
                       </span>
@@ -749,7 +749,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
               )}
               {errorCount > 0 && (
                 <div className="text-center">
-                  <span className="block text-lg font-bold text-[#A32D2D]">{errorCount}</span>
+                  <span className="block text-lg font-bold text-[var(--danger)]">{errorCount}</span>
                   <span className="text-[var(--text-tertiary)]">Failed</span>
                 </div>
               )}

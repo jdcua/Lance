@@ -237,8 +237,8 @@ export default function Finance() {
                         <span className="text-[var(--text-secondary)]">{formatMonth(month)}</span>
                         <div className="flex items-center gap-4">
                           <span className="text-[var(--accent)]">+{fmt(income)}</span>
-                          <span className="text-[#A32D2D]">-{fmt(expense)}</span>
-                          <span className={`font-medium ${net >= 0 ? 'text-[var(--accent)]' : 'text-[#A32D2D]'}`}>
+                          <span className="text-[var(--danger)]">-{fmt(expense)}</span>
+                          <span className={`font-medium ${net >= 0 ? 'text-[var(--accent)]' : 'text-[var(--danger)]'}`}>
                             {fmt(net)}
                           </span>
                         </div>
@@ -296,12 +296,12 @@ export default function Finance() {
                     </div>
                     <span className="text-[10px] text-[var(--text-tertiary)]">{formatDate(exp.date)}</span>
                   </div>
-                  <span className="text-xs font-medium text-[#A32D2D] flex-shrink-0">-{fmt(exp.amount)}</span>
+                  <span className="text-xs font-medium text-[var(--danger)] flex-shrink-0">-{fmt(exp.amount)}</span>
                   <div className="flex items-center gap-1 flex-shrink-0 ml-2">
                     <button onClick={() => openEdit(exp)} aria-label="Edit expense" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] rounded-[8px]">
                       <Pencil size={14} />
                     </button>
-                    <button onClick={() => setConfirmDelete({ id: exp.id, description: exp.description })} aria-label="Delete expense" className="p-1 text-[var(--text-tertiary)] hover:text-[#A32D2D] rounded-[8px]">
+                    <button onClick={() => setConfirmDelete({ id: exp.id, description: exp.description })} aria-label="Delete expense" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--danger)] rounded-[8px]">
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -390,12 +390,12 @@ export default function Finance() {
                   <div key={m.month.key} className="flex-1 flex flex-col items-center gap-1">
                     <div className="w-full flex items-end justify-center gap-[2px] h-[120px]">
                       <div
-                        className="w-[45%] rounded-t-[3px] bg-[#A32D2D]"
+                        className="w-[45%] rounded-t-[3px] bg-[var(--danger)]"
                         style={{ height: `${(m.known / maxExpense) * 100}%`, minHeight: m.known > 0 ? '3px' : 0 }}
                         title={`Known: ${fmt(m.known)}`}
                       />
                       <div
-                        className="w-[45%] rounded-t-[3px] bg-[#A32D2D]/30"
+                        className="w-[45%] rounded-t-[3px] bg-[var(--danger)]/30"
                         style={{ height: `${(m.projected / maxExpense) * 100}%`, minHeight: m.projected > 0 ? '3px' : 0 }}
                         title={`Projected: ${fmt(m.projected)}`}
                       />
@@ -405,8 +405,8 @@ export default function Finance() {
                 ))}
               </div>
               <div className="flex items-center gap-5 pt-3 mt-2 border-t border-[var(--border-color)]">
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-[#A32D2D]" /><span className="text-[10px] text-[var(--text-secondary)]">Known Recurring</span></div>
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-[#A32D2D]/30" /><span className="text-[10px] text-[var(--text-secondary)]">Trend Projection</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-[var(--danger)]" /><span className="text-[10px] text-[var(--text-secondary)]">Known Recurring</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-[var(--danger)]/30" /><span className="text-[10px] text-[var(--text-secondary)]">Trend Projection</span></div>
               </div>
             </Card>
           </div>
@@ -434,15 +434,15 @@ export default function Finance() {
                 <div key={cf.month.key} className="flex-1 flex flex-col items-center gap-1">
                   <div className="w-full flex flex-col items-center justify-end h-[110px]">
                     <div
-                      className={`w-full rounded-t-[3px] ${cf.net >= 0 ? 'bg-[var(--accent)]' : 'bg-[#A32D2D]'}`}
+                      className={`w-full rounded-t-[3px] ${cf.net >= 0 ? 'bg-[var(--accent)]' : 'bg-[var(--danger)]'}`}
                       style={{ height: `${Math.min(100, (Math.abs(cf.net) / Math.max(1, ...cashFlow.map((c) => Math.abs(c.net)))) * 100)}%`, minHeight: cf.net !== 0 ? '3px' : 0 }}
                       title={`Net: ${fmt(cf.net)}`}
                     />
                   </div>
                   <span className="text-[10px] text-[var(--text-secondary)] font-medium">{cf.month.label}</span>
-                  <span className={`text-[10px] font-medium ${cf.net >= 0 ? 'text-[var(--accent)]' : 'text-[#A32D2D]'}`}>{fmt(cf.net)}</span>
+                  <span className={`text-[10px] font-medium ${cf.net >= 0 ? 'text-[var(--accent)]' : 'text-[var(--danger)]'}`}>{fmt(cf.net)}</span>
                   {cf.runningBalance !== undefined && (
-                    <span className={`text-[9px] ${cf.runningBalance >= 0 ? 'text-[var(--text-secondary)]' : 'text-[#A32D2D]'}`}>Bal: {fmt(cf.runningBalance)}</span>
+                    <span className={`text-[9px] ${cf.runningBalance >= 0 ? 'text-[var(--text-secondary)]' : 'text-[var(--danger)]'}`}>Bal: {fmt(cf.runningBalance)}</span>
                   )}
                 </div>
               ))}

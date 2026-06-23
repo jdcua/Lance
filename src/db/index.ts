@@ -144,7 +144,14 @@ async function runMigrations(database: Database): Promise<void> {
       tagline TEXT,
       always_include TEXT,
       writing_style TEXT DEFAULT 'professional',
-      theme TEXT DEFAULT 'light'
+      theme TEXT DEFAULT 'light',
+      license_key TEXT,
+      licensed_at TEXT,
+      ai_enabled INTEGER DEFAULT 0,
+      profession TEXT,
+      custom_archetype_config TEXT,
+      density TEXT DEFAULT 'comfortable',
+      accent_color TEXT
     )
   `);
 
@@ -397,7 +404,7 @@ async function runMigrations(database: Database): Promise<void> {
     )
   `);
 
-  await database.execute(`
+   await database.execute(`
     CREATE TABLE IF NOT EXISTS contract_templates (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -407,4 +414,21 @@ async function runMigrations(database: Database): Promise<void> {
       created_at TEXT NOT NULL
     )
   `);
+
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_projects_client ON projects(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_milestones_project ON milestones(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_time_entries_project ON time_entries(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_invoices_client ON invoices(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_communications_client ON communications(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_proposals_client ON proposals(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_contracts_client ON contracts(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_recurring_invoices_client ON recurring_invoices(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_import_log_status ON import_log(status)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_attachments_entity ON attachments(entity_type, entity_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_attachments_mime ON attachments(mime_type)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_metric_defs_client ON metric_definitions(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_metric_values_def ON metric_values(definition_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_metric_values_client ON metric_values(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_metric_values_period ON metric_values(definition_id, period)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_follow_up_entity ON follow_up_log(entity_type, entity_id)');
 }

@@ -145,7 +145,7 @@ export default function Contracts() {
         variables: [],
       });
       addToast('Contract saved as template', 'success');
-    } catch {
+    } catch { /* template save is non-critical */
       addToast('Failed to save template', 'error');
     }
   };
@@ -183,7 +183,7 @@ export default function Contracts() {
     try {
       await removeContractTemplate(id);
       addToast('Template deleted', 'info');
-    } catch {
+    } catch { /* template delete is non-critical */
       addToast('Failed to delete template', 'error');
     }
   };
@@ -277,8 +277,8 @@ export default function Contracts() {
           )}
 
           {clients.length === 0 ? (
-            <Card className="mb-4 border-[#FAEEDA] bg-[#FAEEDA]/50">
-              <p className="text-sm text-[#854F0B]">
+            <Card className="mb-4 border-[var(--warning-bg)] bg-[var(--warning-bg)]/50">
+              <p className="text-sm text-[var(--warning-text)]">
                 Add at least one client before creating a contract.
               </p>
             </Card>
@@ -355,7 +355,7 @@ export default function Contracts() {
                       <button
                         onClick={() => setConfirmDelete({ id: c.id, title: c.title })}
                         aria-label="Delete contract"
-                        className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[#A32D2D] hover:bg-[#FCEBEB] transition-colors"
+                        className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -423,7 +423,7 @@ export default function Contracts() {
                       {!isPrebuilt && (
                         <button
                           onClick={() => handleDeleteTemplate(t.id)}
-                          className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[#A32D2D] hover:bg-[#FCEBEB] transition-colors"
+                          className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
                         >
                           <Trash2 size={14} />
                         </button>

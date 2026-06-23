@@ -225,8 +225,8 @@ export default function Proposals() {
       </div>
 
       {clients.length === 0 ? (
-        <Card className="mb-4 border-[#FAEEDA] bg-[#FAEEDA]/50">
-          <p className="text-sm text-[#854F0B]">Add at least one client before creating a proposal.</p>
+        <Card className="mb-4 border-[var(--warning-bg)] bg-[var(--warning-bg)]/50">
+          <p className="text-sm text-[var(--warning-text)]">Add at least one client before creating a proposal.</p>
         </Card>
       ) : proposals.length === 0 ? (
         <Card className="text-center py-16 flex flex-col items-center">
@@ -291,7 +291,7 @@ export default function Proposals() {
                   <button onClick={() => setExpanded(expanded === p.id ? null : p.id)} aria-label="View proposal body" className={`p-1.5 rounded-[8px] transition-colors ${expanded === p.id ? 'text-[var(--accent)] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`} title="View body">
                     <Eye size={14} />
                   </button>
-                  <button onClick={() => setConfirmDelete({ id: p.id, title: p.title })} aria-label="Delete proposal" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[#A32D2D] hover:bg-[#FCEBEB] transition-colors">
+                  <button onClick={() => setConfirmDelete({ id: p.id, title: p.title })} aria-label="Delete proposal" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors">
                     <Trash2 size={14} />
                   </button>
                 </div>

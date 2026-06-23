@@ -223,12 +223,16 @@ export async function openCommissionsCount(db: Database, _profileId: number): Pr
 }
 
 export async function revisionsRemaining(db: Database, _profileId: number): Promise<string | number> {
-  return '—';
+  const rows: any[] = await db.select(
+    "SELECT COUNT(*) as c FROM archetype_revisions WHERE approved = 0"
+  );
+  const count = rows[0]?.c ?? 0;
+  return count > 0 ? `${count} pending` : '—';
 }
 
 export async function daysUntilNextShoot(db: Database, _profileId: number): Promise<string | number> {
   const rows: any[] = await db.select(
-    "SELECT MIN(due_date) as d FROM milestones WHERE due_date >= $1 AND completed = 0",
+    "SELECT MIN(shoot_date) as d FROM archetype_shoots WHERE shoot_date >= $1",
     [new Date().toISOString().split('T')[0]]
   );
   if (!rows[0]?.d) return '—';
@@ -256,21 +260,38 @@ export async function profitMargin(db: Database, _profileId: number): Promise<st
 }
 
 export async function retainerVsProjectSplit(db: Database, _profileId: number): Promise<string | number> {
-  return '—';
+  const retainerRows: any[] = await db.select(
+    "SELECT COUNT(*) as c FROM projects WHERE status = 'active' AND notes LIKE '%retainer%'"
+  );
+  const projectRows: any[] = await db.select(
+    "SELECT COUNT(*) as c FROM projects WHERE status = 'active' AND (notes NOT LIKE '%retainer%' OR notes IS NULL)"
+  );
+  const r = retainerRows[0]?.c ?? 0;
+  const p = projectRows[0]?.c ?? 0;
+  if (r + p === 0) return '—';
+  return `${r} retainer / ${p} project`;
 }
 
 export async function clientRetentionRate(db: Database, _profileId: number): Promise<string | number> {
-  return '—';
+  const now = new Date();
+  const threeMonthsAgo = new Date(now.getTime() - 90 * 86400000).toISOString();
+  const totalRows: any[] = await db.select(
+    "SELECT COUNT(DISTINCT client_id) as c FROM invoices WHERE created_at >= $1",
+    [threeMonthsAgo]
+  );
+  const repeatRows: any[] = await db.select(
+    "SELECT COUNT(DISTINCT client_id) as c FROM invoices WHERE created_at >= $1 AND client_id IN (SELECT DISTINCT client_id FROM invoices WHERE created_at < $1)",
+    [threeMonthsAgo]
+  );
+  const total = totalRows[0]?.c ?? 0;
+  const repeat = repeatRows[0]?.c ?? 0;
+  if (total === 0) return '—';
+  return `${Math.round((repeat / total) * 100)}%`;
 }
 
 function formatCurrency(val: number, currency: string): string {
   const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 0 });
   try { return fmt.format(val); } catch { return `$${Math.round(val).toLocaleString()}`; }
-}
-
-export async function completedProjects(db: Database, _profileId: number): Promise<string | number> {
-  const rows: any[] = await db.select("SELECT COUNT(*) as c FROM projects WHERE status = 'completed'");
-  return rows[0]?.c ?? 0;
 }
 
 export async function blockedTasks(db: Database, _profileId: number): Promise<string | number> {
@@ -279,9 +300,19 @@ export async function blockedTasks(db: Database, _profileId: number): Promise<st
 }
 
 export async function cancellationRate(db: Database, _profileId: number): Promise<string | number> {
-  return '—';
+  const totalRows: any[] = await db.select("SELECT COUNT(*) as c FROM projects");
+  const cancelledRows: any[] = await db.select("SELECT COUNT(*) as c FROM projects WHERE status = 'cancelled'");
+  const total = totalRows[0]?.c ?? 0;
+  const cancelled = cancelledRows[0]?.c ?? 0;
+  if (total === 0) return '—';
+  return `${Math.round((cancelled / total) * 100)}%`;
 }
 
 export async function auditionConversion(db: Database, _profileId: number): Promise<string | number> {
-  return '—';
+  const totalRows: any[] = await db.select("SELECT COUNT(*) as c FROM proposals WHERE status IN ('sent', 'accepted', 'declined')");
+  const acceptedRows: any[] = await db.select("SELECT COUNT(*) as c FROM proposals WHERE status = 'accepted'");
+  const total = totalRows[0]?.c ?? 0;
+  const accepted = acceptedRows[0]?.c ?? 0;
+  if (total === 0) return '—';
+  return `${Math.round((accepted / total) * 100)}%`;
 }

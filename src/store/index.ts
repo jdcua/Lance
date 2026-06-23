@@ -23,6 +23,13 @@ import type {
   FollowUpSettings,
   ExportTemplate,
   ContractTemplate,
+  ArchetypeRenderLog,
+  ArchetypeSession,
+  ArchetypeShoot,
+  ArchetypeRevision,
+  ArchetypeBuild,
+  ArchetypeKeyword,
+  ArchetypeDataset,
 } from '../types';
 import { validateLicenseKey } from '../license';
 
@@ -32,6 +39,7 @@ interface ClientSlice {
   addClient: (data: Omit<Client, 'id' | 'created_at'>) => Promise<Client>;
   updateClient: (data: Client) => Promise<void>;
   removeClient: (id: string) => Promise<void>;
+  refreshClient: (id: string) => Promise<Client | null>;
 }
 
 interface ProjectSlice {
@@ -40,6 +48,7 @@ interface ProjectSlice {
   addProject: (data: Omit<Project, 'id' | 'created_at'>) => Promise<Project>;
   updateProject: (data: Project) => Promise<void>;
   removeProject: (id: string) => Promise<void>;
+  refreshProject: (id: string) => Promise<Project | null>;
 }
 
 interface MilestoneSlice {
@@ -56,6 +65,7 @@ interface ProposalSlice {
   addProposal: (data: Omit<Proposal, 'id' | 'created_at'>) => Promise<Proposal>;
   updateProposal: (data: Proposal) => Promise<void>;
   removeProposal: (id: string) => Promise<void>;
+  refreshProposal: (id: string) => Promise<Proposal | null>;
 }
 
 interface ContractSlice {
@@ -64,6 +74,7 @@ interface ContractSlice {
   addContract: (data: Omit<Contract, 'id' | 'created_at' | 'signed_at'>) => Promise<Contract>;
   updateContract: (data: Contract) => Promise<void>;
   removeContract: (id: string) => Promise<void>;
+  refreshContract: (id: string) => Promise<Contract | null>;
 }
 
 interface TimeSlice {
@@ -72,6 +83,7 @@ interface TimeSlice {
   addTimeEntry: (data: Omit<TimeEntry, 'id' | 'invoiced'>) => Promise<TimeEntry>;
   updateTimeEntry: (data: TimeEntry) => Promise<void>;
   removeTimeEntry: (id: string) => Promise<void>;
+  refreshTimeEntry: (id: string) => Promise<TimeEntry | null>;
 }
 
 interface InvoiceSlice {
@@ -80,6 +92,7 @@ interface InvoiceSlice {
   addInvoice: (data: Omit<Invoice, 'id' | 'created_at' | 'paid_at' | 'line_items'> & { line_items: LineItem[] }) => Promise<Invoice>;
   updateInvoice: (data: Invoice) => Promise<void>;
   removeInvoice: (id: string) => Promise<void>;
+  refreshInvoice: (id: string) => Promise<Invoice | null>;
 }
 
 interface ExpenseSlice {
@@ -188,7 +201,57 @@ interface ContractTemplateSlice {
   removeContractTemplate: (id: string) => Promise<void>;
 }
 
-export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & ExpenseSlice & ProfileSlice & CommunicationSlice & RecurringInvoiceSlice & ImportSlice & AttachmentSlice & MetricSlice & FollowUpSlice & ExportTemplateSlice & ContractTemplateSlice;
+interface ArchetypeRenderLogSlice {
+  renderLogs: Record<string, ArchetypeRenderLog[]>;
+  loadRenderLogs: (projectId: string) => Promise<void>;
+  addRenderLog: (data: Omit<ArchetypeRenderLog, 'id' | 'created_at'>) => Promise<ArchetypeRenderLog>;
+  removeRenderLog: (id: string, projectId: string) => Promise<void>;
+}
+
+interface ArchetypeSessionSlice {
+  sessions: ArchetypeSession[];
+  loadSessions: (clientId?: string, projectId?: string) => Promise<void>;
+  addSession: (data: Omit<ArchetypeSession, 'id' | 'created_at'>) => Promise<ArchetypeSession>;
+  removeSession: (id: string) => Promise<void>;
+}
+
+interface ArchetypeShootSlice {
+  shoots: Record<string, ArchetypeShoot[]>;
+  loadShoots: (projectId: string) => Promise<void>;
+  addShoot: (data: Omit<ArchetypeShoot, 'id' | 'created_at'>) => Promise<ArchetypeShoot>;
+  removeShoot: (id: string, projectId: string) => Promise<void>;
+}
+
+interface ArchetypeRevisionSlice {
+  revisions: Record<string, ArchetypeRevision[]>;
+  loadRevisions: (projectId: string) => Promise<void>;
+  addRevision: (data: Omit<ArchetypeRevision, 'id' | 'created_at'>) => Promise<ArchetypeRevision>;
+  removeRevision: (id: string, projectId: string) => Promise<void>;
+}
+
+interface ArchetypeBuildSlice {
+  builds: Record<string, ArchetypeBuild[]>;
+  loadBuilds: (projectId: string) => Promise<void>;
+  addBuild: (data: Omit<ArchetypeBuild, 'id' | 'created_at'>) => Promise<ArchetypeBuild>;
+  removeBuild: (id: string, projectId: string) => Promise<void>;
+}
+
+interface ArchetypeKeywordSlice {
+  keywords: Record<string, ArchetypeKeyword[]>;
+  loadKeywords: (clientId: string) => Promise<void>;
+  addKeyword: (data: Omit<ArchetypeKeyword, 'id' | 'created_at'>) => Promise<ArchetypeKeyword>;
+  updateKeyword: (id: string, clientId: string, positionCurrent?: number, targetPosition?: number) => Promise<void>;
+  removeKeyword: (id: string, clientId: string) => Promise<void>;
+}
+
+interface ArchetypeDatasetSlice {
+  datasets: Record<string, ArchetypeDataset[]>;
+  loadDatasets: (projectId: string) => Promise<void>;
+  addDataset: (data: Omit<ArchetypeDataset, 'id' | 'created_at'>) => Promise<ArchetypeDataset>;
+  removeDataset: (id: string, projectId: string) => Promise<void>;
+}
+
+export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & ExpenseSlice & ProfileSlice & CommunicationSlice & RecurringInvoiceSlice & ImportSlice & AttachmentSlice & MetricSlice & FollowUpSlice & ExportTemplateSlice & ContractTemplateSlice & ArchetypeRenderLogSlice & ArchetypeSessionSlice & ArchetypeShootSlice & ArchetypeRevisionSlice & ArchetypeBuildSlice & ArchetypeKeywordSlice & ArchetypeDatasetSlice;
 
 const invoke = async <T>(cmd: string, args?: Record<string, unknown>): Promise<T> => {
   const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
@@ -219,6 +282,13 @@ export const useStore = create<AppStore>((set, get) => ({
     await invoke('delete_client', { id });
     set({ clients: get().clients.filter((c) => c.id !== id) });
   },
+  refreshClient: async (id) => {
+    const client = await invoke<Client | null>('get_client', { id });
+    if (client) {
+      set({ clients: get().clients.map((c) => (c.id === id ? client : c)) });
+    }
+    return client;
+  },
 
   // Projects
   projects: [],
@@ -242,6 +312,13 @@ export const useStore = create<AppStore>((set, get) => ({
   removeProject: async (id) => {
     await invoke('delete_project', { id });
     set({ projects: get().projects.filter((p) => p.id !== id) });
+  },
+  refreshProject: async (id) => {
+    const project = await invoke<Project | null>('get_project', { id });
+    if (project) {
+      set({ projects: get().projects.map((p) => (p.id === id ? project : p)) });
+    }
+    return project;
   },
 
   // Milestones
@@ -296,6 +373,13 @@ export const useStore = create<AppStore>((set, get) => ({
     await invoke('delete_proposal', { id });
     set({ proposals: get().proposals.filter((p) => p.id !== id) });
   },
+  refreshProposal: async (id) => {
+    const proposal = await invoke<Proposal | null>('get_proposal', { id });
+    if (proposal) {
+      set({ proposals: get().proposals.map((p) => (p.id === id ? proposal : p)) });
+    }
+    return proposal;
+  },
 
   // Contracts
   contracts: [],
@@ -320,6 +404,13 @@ export const useStore = create<AppStore>((set, get) => ({
     await invoke('delete_contract', { id });
     set({ contracts: get().contracts.filter((c) => c.id !== id) });
   },
+  refreshContract: async (id) => {
+    const contract = await invoke<Contract | null>('get_contract', { id });
+    if (contract) {
+      set({ contracts: get().contracts.map((c) => (c.id === id ? contract : c)) });
+    }
+    return contract;
+  },
 
   // Time Entries
   timeEntries: [],
@@ -343,6 +434,13 @@ export const useStore = create<AppStore>((set, get) => ({
   removeTimeEntry: async (id) => {
     await invoke('delete_time_entry', { id });
     set({ timeEntries: get().timeEntries.filter((t) => t.id !== id) });
+  },
+  refreshTimeEntry: async (id) => {
+    const entry = await invoke<TimeEntry | null>('get_time_entry', { id });
+    if (entry) {
+      set({ timeEntries: get().timeEntries.map((t) => (t.id === id ? entry : t)) });
+    }
+    return entry;
   },
 
   // Invoices
@@ -374,6 +472,13 @@ export const useStore = create<AppStore>((set, get) => ({
   removeInvoice: async (id) => {
     await invoke('delete_invoice', { id });
     set({ invoices: get().invoices.filter((i) => i.id !== id) });
+  },
+  refreshInvoice: async (id) => {
+    const invoice = await invoke<Invoice | null>('get_invoice', { id });
+    if (invoice) {
+      set({ invoices: get().invoices.map((i) => (i.id === id ? invoice : i)) });
+    }
+    return invoice;
   },
 
   // Expenses
@@ -860,5 +965,171 @@ export const useStore = create<AppStore>((set, get) => ({
     const db = await getDb();
     await db.execute('DELETE FROM contract_templates WHERE id = ?', [id]);
     set({ contractTemplates: get().contractTemplates.filter((t) => t.id !== id) });
+  },
+
+  // ── Archetype: Render Log ──
+  renderLogs: {},
+  loadRenderLogs: async (projectId) => {
+    try {
+      const logs = await invoke<ArchetypeRenderLog[]>('get_render_logs', { projectId });
+      set({ renderLogs: { ...get().renderLogs, [projectId]: logs } });
+    } catch (e) {
+      console.error('[store] loadRenderLogs failed:', e);
+    }
+  },
+  addRenderLog: async (data) => {
+    const log = await invoke<ArchetypeRenderLog>('create_render_log', { payload: data });
+    const existing = get().renderLogs[log.project_id] || [];
+    set({ renderLogs: { ...get().renderLogs, [log.project_id]: [log, ...existing] } });
+    return log;
+  },
+  removeRenderLog: async (id, projectId) => {
+    await invoke('delete_render_log', { id });
+    const updated = { ...get().renderLogs };
+    updated[projectId] = (updated[projectId] || []).filter((l) => l.id !== id);
+    set({ renderLogs: updated });
+  },
+
+  // ── Archetype: Sessions ──
+  sessions: [],
+  loadSessions: async (clientId, projectId) => {
+    try {
+      const sessions = await invoke<ArchetypeSession[]>('get_sessions', { clientId: clientId ?? null, projectId: projectId ?? null });
+      set({ sessions });
+    } catch (e) {
+      console.error('[store] loadSessions failed:', e);
+    }
+  },
+  addSession: async (data) => {
+    const session = await invoke<ArchetypeSession>('create_session', { payload: data });
+    set({ sessions: [session, ...get().sessions] });
+    return session;
+  },
+  removeSession: async (id) => {
+    await invoke('delete_session', { id });
+    set({ sessions: get().sessions.filter((s) => s.id !== id) });
+  },
+
+  // ── Archetype: Shoots ──
+  shoots: {},
+  loadShoots: async (projectId) => {
+    try {
+      const shoots = await invoke<ArchetypeShoot[]>('get_shoots', { projectId });
+      set({ shoots: { ...get().shoots, [projectId]: shoots } });
+    } catch (e) {
+      console.error('[store] loadShoots failed:', e);
+    }
+  },
+  addShoot: async (data) => {
+    const shoot = await invoke<ArchetypeShoot>('create_shoot', { payload: data });
+    const existing = get().shoots[shoot.project_id] || [];
+    set({ shoots: { ...get().shoots, [shoot.project_id]: [shoot, ...existing] } });
+    return shoot;
+  },
+  removeShoot: async (id, projectId) => {
+    await invoke('delete_shoot', { id });
+    const updated = { ...get().shoots };
+    updated[projectId] = (updated[projectId] || []).filter((s) => s.id !== id);
+    set({ shoots: updated });
+  },
+
+  // ── Archetype: Revisions ──
+  revisions: {},
+  loadRevisions: async (projectId) => {
+    try {
+      const revisions = await invoke<ArchetypeRevision[]>('get_revisions', { projectId });
+      set({ revisions: { ...get().revisions, [projectId]: revisions } });
+    } catch (e) {
+      console.error('[store] loadRevisions failed:', e);
+    }
+  },
+  addRevision: async (data) => {
+    const revision = await invoke<ArchetypeRevision>('create_revision', { payload: data });
+    const existing = get().revisions[revision.project_id] || [];
+    set({ revisions: { ...get().revisions, [revision.project_id]: [revision, ...existing] } });
+    return revision;
+  },
+  removeRevision: async (id, projectId) => {
+    await invoke('delete_revision', { id });
+    const updated = { ...get().revisions };
+    updated[projectId] = (updated[projectId] || []).filter((r) => r.id !== id);
+    set({ revisions: updated });
+  },
+
+  // ── Archetype: Builds ──
+  builds: {},
+  loadBuilds: async (projectId) => {
+    try {
+      const builds = await invoke<ArchetypeBuild[]>('get_builds', { projectId });
+      set({ builds: { ...get().builds, [projectId]: builds } });
+    } catch (e) {
+      console.error('[store] loadBuilds failed:', e);
+    }
+  },
+  addBuild: async (data) => {
+    const build = await invoke<ArchetypeBuild>('create_build', { payload: data });
+    const existing = get().builds[build.project_id] || [];
+    set({ builds: { ...get().builds, [build.project_id]: [build, ...existing] } });
+    return build;
+  },
+  removeBuild: async (id, projectId) => {
+    await invoke('delete_build', { id });
+    const updated = { ...get().builds };
+    updated[projectId] = (updated[projectId] || []).filter((b) => b.id !== id);
+    set({ builds: updated });
+  },
+
+  // ── Archetype: Keywords ──
+  keywords: {},
+  loadKeywords: async (clientId) => {
+    try {
+      const keywords = await invoke<ArchetypeKeyword[]>('get_keywords', { clientId });
+      set({ keywords: { ...get().keywords, [clientId]: keywords } });
+    } catch (e) {
+      console.error('[store] loadKeywords failed:', e);
+    }
+  },
+  addKeyword: async (data) => {
+    const keyword = await invoke<ArchetypeKeyword>('create_keyword', { payload: data });
+    const existing = get().keywords[keyword.client_id] || [];
+    set({ keywords: { ...get().keywords, [keyword.client_id]: [keyword, ...existing] } });
+    return keyword;
+  },
+  updateKeyword: async (id, clientId, positionCurrent, targetPosition) => {
+    await invoke('update_keyword', { id, positionCurrent: positionCurrent ?? null, targetPosition: targetPosition ?? null });
+    const updated = { ...get().keywords };
+    updated[clientId] = (updated[clientId] || []).map((k) =>
+      k.id === id ? { ...k, position_current: positionCurrent ?? k.position_current, target_position: targetPosition ?? k.target_position } : k
+    );
+    set({ keywords: updated });
+  },
+  removeKeyword: async (id, clientId) => {
+    await invoke('delete_keyword', { id });
+    const updated = { ...get().keywords };
+    updated[clientId] = (updated[clientId] || []).filter((k) => k.id !== id);
+    set({ keywords: updated });
+  },
+
+  // ── Archetype: Datasets ──
+  datasets: {},
+  loadDatasets: async (projectId) => {
+    try {
+      const datasets = await invoke<ArchetypeDataset[]>('get_datasets', { projectId });
+      set({ datasets: { ...get().datasets, [projectId]: datasets } });
+    } catch (e) {
+      console.error('[store] loadDatasets failed:', e);
+    }
+  },
+  addDataset: async (data) => {
+    const dataset = await invoke<ArchetypeDataset>('create_dataset', { payload: data });
+    const existing = get().datasets[dataset.project_id] || [];
+    set({ datasets: { ...get().datasets, [dataset.project_id]: [dataset, ...existing] } });
+    return dataset;
+  },
+  removeDataset: async (id, projectId) => {
+    await invoke('delete_dataset', { id });
+    const updated = { ...get().datasets };
+    updated[projectId] = (updated[projectId] || []).filter((d) => d.id !== id);
+    set({ datasets: updated });
   },
 }));

@@ -151,11 +151,11 @@ export default function Sidebar() {
                     <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">New</span>
                   )}
                   {item.badge === 'alert' && badgeMap.unpaidInvoices > 0 && (
-                    <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#FCEBEB] text-[#A32D2D]">{badgeMap.unpaidInvoices}</span>
+                    <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--danger-bg)] text-[var(--danger)]">{badgeMap.unpaidInvoices}</span>
                   )}
                   {badgeKey && badgeMap[badgeKey] > 0 && (
                     <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
-                      badgeKey === 'unpaidInvoices' ? 'bg-[#FCEBEB] text-[#A32D2D]' : 'bg-[var(--accent-bg)] text-[var(--accent)]'
+                      badgeKey === 'unpaidInvoices' ? 'bg-[var(--danger-bg)] text-[var(--danger)]' : 'bg-[var(--accent-bg)] text-[var(--accent)]'
                     }`}>
                       {badgeMap[badgeKey]}
                     </span>

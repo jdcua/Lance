@@ -337,7 +337,7 @@ export default function Invoices() {
         ) : (
           <div className="space-y-2">
             {sortedInvoices.map((inv) => (
-              <div key={inv.id} className={`flex items-center gap-3 px-4 py-3 bg-[var(--bg-card)] border rounded-[8px] ${inv.status === 'overdue' ? 'border-l-[3px] border-l-[#A32D2D] border-[var(--border-color)]' : 'border-[var(--border-color)]'}`}>
+              <div key={inv.id} className={`flex items-center gap-3 px-4 py-3 bg-[var(--bg-card)] border rounded-[8px] ${inv.status === 'overdue' ? 'border-l-[3px] border-l-[var(--danger)] border-[var(--border-color)]' : 'border-[var(--border-color)]'}`}>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-xs font-semibold text-[var(--text-primary)]">{inv.invoice_number}</span>
@@ -419,7 +419,7 @@ export default function Invoices() {
                     )}
                   </div>
                   <button onClick={() => openEdit(inv)} aria-label="Edit invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]"><Pencil size={14} /></button>
-                  <button onClick={() => setConfirmDelete({ id: inv.id, label: inv.invoice_number, type: 'invoice' })} aria-label="Delete invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[#A32D2D] rounded-[8px]"><Trash2 size={14} /></button>
+                  <button onClick={() => setConfirmDelete({ id: inv.id, label: inv.invoice_number, type: 'invoice' })} aria-label="Delete invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--danger)] rounded-[8px]"><Trash2 size={14} /></button>
                 </div>
               </div>
             ))}
@@ -427,7 +427,7 @@ export default function Invoices() {
         )
       ) : recurringInvoices.length === 0 ? (
         <Card className="text-center py-12">
-          <RotateCw size={32} className="text-[#D4D4D2] mx-auto mb-3" />
+          <RotateCw size={32} className="text-[var(--neutral-border)] mx-auto mb-3" />
           <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-1">No recurring invoices</h3>
           <p className="text-xs text-[var(--text-tertiary)] mb-4">Set up a recurring invoice for retainer clients or subscriptions.</p>
           <Button onClick={openNewRecurring} size="sm" variant="secondary"><Plus size={14} />New recurring</Button>
@@ -450,13 +450,13 @@ export default function Invoices() {
                     {ri.last_generated && <span>Last: {relativeDate(ri.last_generated)}</span>}
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => handleToggleActive(ri)} className={`w-2 h-2 rounded-full ${ri.active ? 'bg-[var(--accent)]' : 'bg-[#D4D4D2]'}`} title={ri.active ? 'Active — click to pause' : 'Paused — click to resume'} />
+                    <button onClick={() => handleToggleActive(ri)} className={`w-2 h-2 rounded-full ${ri.active ? 'bg-[var(--accent)]' : 'bg-[var(--neutral-border)]'}`} title={ri.active ? 'Active — click to pause' : 'Paused — click to resume'} />
                     <span className={`text-[10px] ${ri.active ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)]'}`}>{ri.active ? 'Active' : 'Paused'}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0 ml-3">
                   <button onClick={() => openEditRecurring(ri)} aria-label="Edit recurring invoice" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"><Pencil size={14} /></button>
-                  <button onClick={() => setConfirmDelete({ id: ri.id, label: ri.title, type: 'recurring' })} aria-label="Delete recurring invoice" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[#A32D2D] hover:bg-[#FCEBEB]"><Trash2 size={14} /></button>
+                  <button onClick={() => setConfirmDelete({ id: ri.id, label: ri.title, type: 'recurring' })} aria-label="Delete recurring invoice" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)]"><Trash2 size={14} /></button>
                 </div>
               </div>
             </Card>
@@ -495,7 +495,7 @@ export default function Invoices() {
                 {selectedTimeIds.size > 0 && <button onClick={importSelectedTime} className="text-xs text-[var(--accent)] hover:underline">Import {selectedTimeIds.size} selected</button>}
               </div>
               {hourlyRate <= 0 ? (
-                <p className="text-xs text-[#854F0B] bg-[#FAEEDA] px-3 py-2 rounded-[6px]">Set your hourly rate in profile to use time import.</p>
+                <p className="text-xs text-[var(--warning-text)] bg-[var(--warning-bg)] px-3 py-2 rounded-[6px]">Set your hourly rate in profile to use time import.</p>
               ) : unbilledTime.length === 0 ? (
                 <p className="text-xs text-[var(--text-tertiary)]">No unbilled time entries to import.</p>
               ) : (
@@ -505,7 +505,7 @@ export default function Invoices() {
                     const amount = Math.round(hours * hourlyRate * 100) / 100;
                     return (
                       <label key={t.id} className={`flex items-center gap-2 px-2 py-1.5 rounded-[6px] cursor-pointer text-xs ${selectedTimeIds.has(t.id) ? 'bg-[var(--accent-bg)]' : 'hover:bg-[var(--bg-secondary)]'}`}>
-                        <input type="checkbox" checked={selectedTimeIds.has(t.id)} onChange={() => toggleTimeSelection(t.id)} className="w-3.5 h-3.5 rounded border-[#D4D4D2] text-[var(--accent)]" />
+                        <input type="checkbox" checked={selectedTimeIds.has(t.id)} onChange={() => toggleTimeSelection(t.id)} className="w-3.5 h-3.5 rounded border-[var(--neutral-border)] text-[var(--accent)]" />
                         <span className="flex-1 truncate">{t.description || 'No description'}</span>
                         <span className="text-[var(--text-secondary)] flex-shrink-0">{formatMinutes(t.duration_minutes || 0)}</span>
                         <span className="text-[var(--accent)] font-medium flex-shrink-0 w-16 text-right">{formatCurrency(amount)}</span>
@@ -528,7 +528,7 @@ export default function Invoices() {
                   <input type="number" value={item.quantity || ''} onChange={(e) => updateItem(i, 'quantity', parseFloat(e.target.value) || 0)} placeholder="Qty" className="w-16 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
                   <input type="number" value={item.unit_price || ''} onChange={(e) => updateItem(i, 'unit_price', parseFloat(e.target.value) || 0)} placeholder="Rate" className="w-24 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
                   <span className="text-xs text-[var(--text-secondary)] w-20 text-right font-medium tabular-nums">{formatCurrency(item.total)}</span>
-                  <button onClick={() => removeItem(i)} aria-label="Remove line item" className="text-[var(--text-tertiary)] hover:text-[#A32D2D]"><Trash2 size={14} /></button>
+                  <button onClick={() => removeItem(i)} aria-label="Remove line item" className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"><Trash2 size={14} /></button>
                 </div>
               ))}
             </div>
@@ -590,7 +590,7 @@ export default function Invoices() {
                   <input type="number" value={item.quantity || ''} onChange={(e) => updateRiItem(i, 'quantity', parseFloat(e.target.value) || 0)} placeholder="Qty" className="w-16 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
                   <input type="number" value={item.unit_price || ''} onChange={(e) => updateRiItem(i, 'unit_price', parseFloat(e.target.value) || 0)} placeholder="Rate" className="w-24 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
                   <span className="text-xs text-[var(--text-secondary)] w-20 text-right font-medium tabular-nums">{formatCurrency(item.total)}</span>
-                  <button onClick={() => removeRiItem(i)} aria-label="Remove line item" className="text-[var(--text-tertiary)] hover:text-[#A32D2D]"><Trash2 size={14} /></button>
+                  <button onClick={() => removeRiItem(i)} aria-label="Remove line item" className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"><Trash2 size={14} /></button>
                 </div>
               ))}
             </div>

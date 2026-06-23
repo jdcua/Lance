@@ -243,13 +243,13 @@ export default function NewProposal() {
           {activeWarnings.map((w) => (
             <div
               key={w.pattern}
-              className="flex items-start gap-2 px-3 py-2 rounded-[8px] bg-[#FAEEDA] text-[#854F0B] text-xs"
+              className="flex items-start gap-2 px-3 py-2 rounded-[8px] bg-[var(--warning-bg)] text-[var(--warning-text)] text-xs"
             >
               <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
               <span className="flex-1">{w.warning}</span>
               <button
                 onClick={() => dismissWarning(w.pattern)}
-                className="text-[#854F0B]/60 hover:text-[#854F0B] flex-shrink-0"
+                className="text-[var(--warning-text)]/60 hover:text-[var(--warning-text)] flex-shrink-0"
               >
                 <X size={14} />
               </button>

@@ -3,6 +3,7 @@ import { useStore } from '../store';
 import type { Project, Milestone } from '../types';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
+import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
 import ProgressBar from '../components/ui/ProgressBar';
@@ -289,8 +290,8 @@ export default function Projects() {
       </div>
 
       {clients.length === 0 && (
-        <Card className="mb-4 border-[#FAEEDA] bg-[#FAEEDA]/50">
-          <p className="text-sm text-[#854F0B]">
+        <Card className="mb-4 border-[var(--warning-bg)] bg-[var(--warning-bg)]/50">
+          <p className="text-sm text-[var(--warning-text)]">
             Add at least one client before creating a project.
           </p>
         </Card>
@@ -360,7 +361,7 @@ export default function Projects() {
                     <button
                       onClick={() => setConfirmDelete({ id: project.id, title: project.title })}
                       aria-label="Delete project"
-                      className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[#A32D2D] hover:bg-[#FCEBEB] transition-colors"
+                      className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -387,7 +388,7 @@ export default function Projects() {
                             {m.completed ? (
                               <CheckCircle2 size={16} className="text-[var(--accent)]" />
                             ) : (
-                              <Circle size={16} className="text-[#D4D4D2]" />
+                              <Circle size={16} className="text-[var(--neutral-border)]" />
                             )}
                           </button>
                           <span className={`text-xs flex-1 ${m.completed ? 'line-through text-[var(--text-tertiary)]' : 'text-[var(--text-primary)]'}`}>
@@ -405,7 +406,7 @@ export default function Projects() {
                               <button onClick={handleInvoicePromptNo} className="text-[10px] px-1.5 py-0.5 rounded-[6px] bg-[var(--bg-secondary)] text-[var(--text-secondary)] font-medium">Skip</button>
                             </div>
                           )}
-                          <button onClick={() => handleDeleteMilestone(m.id)} aria-label="Delete milestone" className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                          <button onClick={() => handleDeleteMilestone(m.id)} aria-label="Delete milestone" className="text-[var(--text-tertiary)] hover:text-[var(--danger)]">
                             <Trash2 size={12} />
                           </button>
                         </div>
@@ -413,7 +414,7 @@ export default function Projects() {
                     )}
                     {invoicePrompt && (
                       <div className="pl-2">
-                        <p className="text-xs text-[#854F0B]">Generate invoice for this milestone?</p>
+                        <p className="text-xs text-[var(--warning-text)]">Generate invoice for this milestone?</p>
                       </div>
                     )}
                   </div>
@@ -537,7 +538,7 @@ export default function Projects() {
               type="checkbox"
               checked={mform.invoice_on_completion}
               onChange={(e) => setMForm({ ...mform, invoice_on_completion: e.target.checked })}
-              className="w-4 h-4 rounded border-[#D4D4D2] text-[var(--accent)] focus:ring-[var(--accent)]"
+              className="w-4 h-4 rounded border-[var(--neutral-border)] text-[var(--accent)] focus:ring-[var(--accent)]"
             />
             <span className="text-xs text-[var(--text-secondary)]">Trigger invoice on completion</span>
           </label>
@@ -558,6 +559,9 @@ export default function Projects() {
         variant="danger"
         loading={deleting}
       />
+      {selectedProject && (
+        <ArchetypeFeatureTabs screen="projects" context={{ projectId: selectedProject }} />
+      )}
     </div>
   );
 }

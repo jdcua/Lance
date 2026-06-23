@@ -10,6 +10,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import Sparkline from '../components/ui/Sparkline';
 import { Plus, Pencil, Trash2, Mail, Phone, Building2, MessageSquare, PhoneCall, MailOpen, Users, X, Check, FileText, FolderKanban, Receipt, Clock, Search, BarChart3, Star, Copy } from 'lucide-react';
 import { useToasts } from '../store/toastStore';
+import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 import { formatCurrency, relativeDate } from '../utils/format';
 import { checkAndNotify } from '../achievements/notify';
 
@@ -101,8 +102,8 @@ export default function Clients() {
     const hasActive = projects.some((p) => p.client_id === clientId && p.status === 'active');
     const hasProposal = proposals.some((p) => p.client_id === clientId && (p.status === 'sent' || p.status === 'draft'));
     if (hasActive) return 'bg-[var(--accent)]';
-    if (hasProposal) return 'bg-[#854F0B]';
-    return 'bg-[#D4D4D2]';
+    if (hasProposal) return 'bg-[var(--warning-text)]';
+    return 'bg-[var(--neutral-border)]';
   };
 
   const getOverview = (clientId: string) => {
@@ -372,7 +373,7 @@ export default function Clients() {
         {!selectedClient ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <Users size={40} className="text-[#D4D4D2] mx-auto mb-3" />
+              <Users size={40} className="text-[var(--neutral-border)] mx-auto mb-3" />
               <p className="text-sm text-[var(--text-secondary)]">Select a client or add a new one.</p>
             </div>
           </div>
@@ -416,7 +417,7 @@ export default function Clients() {
                   <button
                     onClick={() => setConfirmDialog({ id: selectedClient.id, name: selectedClient.name })}
                     aria-label="Delete client"
-                    className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[#A32D2D] hover:bg-[#FCEBEB] transition-colors"
+                    className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
                     title="Delete client"
                   >
                     <Trash2 size={14} />
@@ -487,7 +488,7 @@ export default function Clients() {
                       </div>
                       {overview.outstanding > 0 && (
                         <div className="col-span-4 mt-1 pt-2 border-t border-[var(--border-color)]">
-                          <span className="text-xs text-[#854F0B]">{formatCurrency(overview.outstanding, profile?.currency)} outstanding</span>
+                          <span className="text-xs text-[var(--warning-text)]">{formatCurrency(overview.outstanding, profile?.currency)} outstanding</span>
                         </div>
                       )}
                     </div>
@@ -517,7 +518,7 @@ export default function Clients() {
                                   className={`flex items-center gap-1 px-3 py-1.5 rounded-[6px] text-xs transition-colors ${
                                     logForm.type === t
                                       ? 'bg-[var(--accent)] text-white'
-                                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[#E3E2DB]'
+                                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
                                   }`}
                                 >
                                   <Icon size={12} />
@@ -578,8 +579,8 @@ export default function Clients() {
                                 <div className="flex-shrink-0">
                                   {isConfirming ? (
                                     <div className="flex items-center gap-1">
-                                      <span className="text-[10px] text-[#A32D2D]">Delete?</span>
-                                      <button onClick={() => handleDeleteComm(comm.id)} aria-label="Confirm delete" className="text-[#A32D2D] hover:text-[#7A2222]">
+                                      <span className="text-[10px] text-[var(--danger)]">Delete?</span>
+                                      <button onClick={() => handleDeleteComm(comm.id)} aria-label="Confirm delete" className="text-[var(--danger)] hover:text-[var(--danger-hover)]">
                                         <Check size={14} />
                                       </button>
                                       <button onClick={() => setDeleteConfirm(null)} aria-label="Cancel delete" className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
@@ -587,7 +588,7 @@ export default function Clients() {
                                       </button>
                                     </div>
                                   ) : (
-                                    <button onClick={() => handleDeleteComm(comm.id)} aria-label="Delete communication" className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                                    <button onClick={() => handleDeleteComm(comm.id)} aria-label="Delete communication" className="text-[var(--text-tertiary)] hover:text-[var(--danger)]">
                                       <X size={13} />
                                     </button>
                                   )}
@@ -690,7 +691,7 @@ export default function Clients() {
                                 onClick={async () => {
                                   await removeMetricDef(def.id, selectedId);
                                 }}
-                                className="p-1 rounded-[6px] text-[var(--text-tertiary)] hover:text-[#A32D2D] hover:bg-[#FCEBEB] transition-colors"
+                                className="p-1 rounded-[6px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
                               >
                                 <Trash2 size={12} />
                               </button>
@@ -942,6 +943,9 @@ export default function Clients() {
         variant="danger"
         loading={deleting}
       />
+      {selectedId && (
+        <ArchetypeFeatureTabs screen="clients" context={{ clientId: selectedId }} />
+      )}
     </div>
   );
 }

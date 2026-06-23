@@ -10,7 +10,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
-// import AIBar from './components/layout/AIBar'; // v3 — AI features disabled for now
+import AIBar from './components/layout/AIBar';
 import Modal from './components/ui/Modal';
 import Button from './components/ui/Button';
 import ToastContainer from './components/ui/Toast';
@@ -400,7 +400,7 @@ export default function App() {
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
-        {/* <AIBar /> */}
+        <AIBar />
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
@@ -548,7 +548,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
             <div
               key={step}
               className={`w-2 h-2 rounded-full transition-all ${
-                step <= onboardingStep ? 'bg-[var(--accent)]' : 'bg-[#E3E2DB]'
+                step <= onboardingStep ? 'bg-[var(--accent)]' : 'bg-[var(--border-color)]'
               }`}
             />
           ))}

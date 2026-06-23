@@ -110,8 +110,8 @@ export default function RichEditor({ content, onChange, placeholder = 'Start wri
 
   if (!editor) {
     return (
-      <div className="border border-[var(--danger-border)] rounded-[8px] p-4 text-center">
-        <p className="text-sm text-[#A32D2D]">
+      <div className="border border-[var(--danger)] rounded-[8px] p-4 text-center">
+        <p className="text-sm text-[var(--danger)]">
           Failed to initialize editor. Please reload the page.
         </p>
       </div>

@@ -19,6 +19,7 @@ jobs:
       - run: npm ci
       - run: npx tsc --noEmit
       - run: npx eslint src/ --max-warnings 0
+      - run: npm test -- --passWithNoTests
 
   backend:
     name: Backend (Rust)
@@ -39,4 +40,7 @@ jobs:
         working-directory: src-tauri
       - name: Cargo check
         run: cargo check
+        working-directory: src-tauri
+      - name: Cargo test
+        run: cargo test --no-fail-fast
         working-directory: src-tauri

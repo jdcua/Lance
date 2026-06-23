@@ -34,7 +34,7 @@ function isImage(mime: string) { return mime.startsWith('image/'); }
 function isPDF(mime: string) { return mime === 'application/pdf'; }
 
 function parseTags(tags: string): string[] {
-  try { return JSON.parse(tags); } catch { return []; }
+  try { return JSON.parse(tags); } catch { /* malformed tags JSON; treat as empty */ return []; }
 }
 
 export default function Assets() {
@@ -139,7 +139,7 @@ export default function Assets() {
     try {
       const results = await searchAssets(q);
       setSearchResults(results);
-    } catch {
+    } catch { /* search is non-critical; show error toast */
       addToast('Search failed', 'error');
     }
   }, [searchAssets, addToast]);
@@ -150,7 +150,7 @@ export default function Assets() {
       await renameAttachment(renameTarget.id, renameValue.trim());
       setRenameTarget(null);
       addToast('Renamed', 'success');
-    } catch {
+    } catch { /* rename is best-effort; show error toast */
       addToast('Rename failed', 'error');
     }
   };
@@ -162,7 +162,7 @@ export default function Assets() {
       setDeleteConfirm(null);
       if (previewAsset?.id === deleteConfirm.id) setPreviewAsset(null);
       addToast('Deleted', 'success');
-    } catch {
+    } catch { /* delete is best-effort; show error toast */
       addToast('Delete failed', 'error');
     }
   };
@@ -187,7 +187,7 @@ export default function Assets() {
     try {
       await updateAttachmentMeta(asset.id, { tags: JSON.stringify(newTags) });
       setTagInput('');
-    } catch {
+    } catch { /* tag operations are best-effort; show error toast */
       addToast('Failed to add tag', 'error');
     }
   };
@@ -196,7 +196,7 @@ export default function Assets() {
     const tags = parseTags(asset.tags).filter(t => t !== tag);
     try {
       await updateAttachmentMeta(asset.id, { tags: JSON.stringify(tags) });
-    } catch {
+    } catch { /* tag operations are best-effort; show error toast */
       addToast('Failed to remove tag', 'error');
     }
   };
@@ -213,7 +213,7 @@ export default function Assets() {
             onClick={() => setPreviewAsset(asset)}
             onContextMenu={(e) => { e.preventDefault(); setContextMenu({ asset, x: e.clientX, y: e.clientY }); }}
             className={`group relative flex flex-col rounded-[12px] border overflow-hidden transition-all duration-150 hover:border-[var(--accent)]/40 hover:shadow-sm text-left ${
-              isUnclassified ? 'border-[#B86E1C]/30 bg-[#FDF3E7]/50' : 'border-[var(--border-color)] bg-[var(--bg-card)]'
+              isUnclassified ? 'border-[var(--medium-conf-text)]/30 bg-[var(--medium-conf-bg)]/50' : 'border-[var(--border-color)] bg-[var(--bg-card)]'
             }`}
           >
             {/* Thumbnail */}
@@ -239,7 +239,7 @@ export default function Assets() {
                 <div className="flex flex-wrap gap-1 mt-1">
                   {tags.slice(0, 3).map(tag => (
                     <span key={tag} className={`px-1.5 py-0.5 text-[9px] font-medium rounded-full ${
-                      tag === 'unclassified' ? 'bg-[#B86E1C]/10 text-[#B86E1C]' :
+                      tag === 'unclassified' ? 'bg-[var(--medium-conf-text)]/10 text-[var(--medium-conf-text)]' :
                       tag === 'imported' ? 'bg-[var(--accent-bg)] text-[var(--accent)]' :
                       'bg-[var(--bg-secondary)] text-[var(--text-tertiary)]'
                     }`}>
@@ -283,7 +283,7 @@ export default function Assets() {
             <div className="flex justify-end">
               <button
                 onClick={(e) => { e.stopPropagation(); setDeleteConfirm(asset); }}
-                className="p-1 rounded-[6px] text-[var(--text-tertiary)] hover:text-[#A32D2D] hover:bg-[#FCEBEB] opacity-0 group-hover:opacity-100 transition-all"
+                className="p-1 rounded-[6px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] opacity-0 group-hover:opacity-100 transition-all"
               >
                 <Trash2 size={14} />
               </button>
@@ -347,13 +347,13 @@ export default function Assets() {
 
       {/* Unclassified banner */}
       {showScopeSelector && scope.type === 'library' && unclassifiedAssets.length > 0 && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-[10px] bg-[#FDF3E7] border border-[#B86E1C]/20">
-          <AlertTriangle size={16} className="text-[#B86E1C] flex-shrink-0" />
+        <div className="flex items-center gap-3 px-4 py-3 rounded-[10px] bg-[var(--medium-conf-bg)] border border-[var(--medium-conf-text)]/20">
+          <AlertTriangle size={16} className="text-[var(--medium-conf-text)] flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-[#B86E1C]">
+            <p className="text-xs font-medium text-[var(--medium-conf-text)]">
               {unclassifiedAssets.length} file{unclassifiedAssets.length !== 1 ? 's' : ''} from import need review
             </p>
-            <p className="text-[10px] text-[#B86E1C]/70">
+            <p className="text-[10px] text-[var(--medium-conf-text)]/70">
               These files couldn't be automatically classified. Review and attach them to the right place.
             </p>
           </div>
@@ -550,7 +550,7 @@ export default function Assets() {
                 {parseTags(previewAsset.tags).map(tag => (
                   <span key={tag} className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded-full bg-[var(--bg-secondary)] text-[var(--text-primary)]">
                     {tag}
-                    <button onClick={() => handleRemoveTag(previewAsset, tag)} className="hover:text-[#A32D2D]">
+                    <button onClick={() => handleRemoveTag(previewAsset, tag)} className="hover:text-[var(--danger)]">
                       <X size={10} />
                     </button>
                   </span>
@@ -713,7 +713,7 @@ export default function Assets() {
           <div className="border-t border-[var(--border-color)] my-1" />
           <button
             onClick={() => { setDeleteConfirm(contextMenu.asset); setContextMenu(null); }}
-            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[#A32D2D] hover:bg-[#FCEBEB] transition-colors text-left"
+            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors text-left"
           >
             <Trash2 size={12} /> Delete
           </button>

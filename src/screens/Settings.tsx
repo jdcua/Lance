@@ -243,7 +243,7 @@ export default function Settings() {
       addToast('Data exported successfully', 'success');
     } catch {
       addToast('Export failed', 'error');
-    }
+    } /* file write errors surface as toast */
   };
 
   const handleImportData = async () => {
@@ -304,7 +304,7 @@ export default function Settings() {
       await loadProfile();
     } catch {
       addToast('Import failed — check file format', 'error');
-    }
+    } /* import errors surface as toast; no partial state left */
   };
 
   const handleResetData = async () => {
@@ -339,7 +339,7 @@ export default function Settings() {
       }, 500);
     } catch {
       addToast('Reset failed', 'error');
-    }
+    } /* reset is best-effort; errors surface as toast */
   };
 
   const handleActivateLicense = async () => {
@@ -420,7 +420,7 @@ export default function Settings() {
             )}
             <button
               onClick={() => setShowRemoveLicenseConfirm(true)}
-              className="text-xs text-[var(--text-tertiary)] hover:text-[#A32D2D] underline transition-colors"
+              className="text-xs text-[var(--text-tertiary)] hover:text-[var(--danger)] underline transition-colors"
             >
               Remove license
             </button>
@@ -594,7 +594,7 @@ export default function Settings() {
           <button
             onClick={() => autoSave({ ai_enabled: !form.ai_enabled }, 'AI features')}
             className={`relative w-10 h-6 rounded-full transition-colors ${
-              form.ai_enabled ? 'bg-[var(--accent)]' : 'bg-[#D4D4D2]'
+              form.ai_enabled ? 'bg-[var(--accent)]' : 'bg-[var(--neutral-border)]'
             }`}
           >
             <span
@@ -692,7 +692,7 @@ export default function Settings() {
                 disabled={!isUnlocked}
               >
                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                  isActive ? 'border-[var(--accent)]' : 'border-[#D4D4D2]'
+                  isActive ? 'border-[var(--accent)]' : 'border-[var(--neutral-border)]'
                 }`}>
                   {isActive && <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />}
                 </div>
@@ -784,7 +784,7 @@ export default function Settings() {
                     try {
                       await saveProfile({ ...profile, profession: archetype.id });
                       addToast(`Switched to ${archetype.label}`, 'success');
-                    } catch { addToast('Failed to switch', 'error'); }
+                    } catch { /* archetype switch is non-critical */ addToast('Failed to switch', 'error'); }
                   }
                 }}
                 className="flex items-center gap-2 px-3 py-2 rounded-[8px] text-xs text-left transition-colors hover:bg-[var(--bg-secondary)] border border-[var(--border-color)] bg-[var(--bg-card)]"
@@ -823,7 +823,7 @@ export default function Settings() {
           </div>
           <div className="border-t border-[var(--border-color)]  pt-3 flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#A32D2D]">Reset all data</p>
+              <p className="text-sm text-[var(--danger)]">Reset all data</p>
               <p className="text-xs text-[var(--text-tertiary)]">Delete all records permanently</p>
             </div>
             <Button variant="danger" onClick={() => setShowResetModal(true)} size="sm">
@@ -933,11 +933,11 @@ export default function Settings() {
 
       <Modal open={showResetModal} onClose={() => setShowResetModal(false)} title="Reset all data" size="sm">
         <div className="space-y-4">
-          <div className="flex items-start gap-3 p-3 rounded-[8px] bg-[#FCEBEB]">
-            <AlertTriangle size={18} className="text-[#A32D2D] flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 p-3 rounded-[8px] bg-[var(--danger-bg)]">
+            <AlertTriangle size={18} className="text-[var(--danger)] flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-[#A32D2D]">This cannot be undone.</p>
-              <p className="text-xs text-[#A32D2D]/80 mt-1">
+              <p className="text-sm font-medium text-[var(--danger)]">This cannot be undone.</p>
+              <p className="text-xs text-[var(--danger)]/80 mt-1">
                 All clients, projects, proposals, contracts, invoices, time entries, and expenses will be permanently deleted.
               </p>
             </div>
@@ -962,7 +962,7 @@ export default function Settings() {
               autoFocus
             />
             {licenseError && (
-              <p className="text-xs text-[#A32D2D] mt-2">{licenseError}</p>
+              <p className="text-xs text-[var(--danger)] mt-2">{licenseError}</p>
             )}
           </div>
           <div className="flex justify-end gap-2">
@@ -1053,7 +1053,7 @@ function ExportTemplatesSection() {
       addToast('Template saved', 'success');
     } catch {
       addToast('Failed to save template', 'error');
-    } finally {
+    } /* template save is best-effort */ finally {
       setSaving(false);
     }
   };
@@ -1064,7 +1064,7 @@ function ExportTemplatesSection() {
       addToast('Template deleted', 'info');
     } catch {
       addToast('Failed to delete', 'error');
-    }
+    } /* template delete is best-effort */
   };
 
   const toggleSection = (section: string) => {
@@ -1109,7 +1109,7 @@ function ExportTemplatesSection() {
                 </button>
                 <button
                   onClick={() => handleDelete(t.id)}
-                  className="px-2 py-1 text-[10px] text-[#A32D2D] hover:bg-[#FCEBEB] rounded-[6px]"
+                  className="px-2 py-1 text-[10px] text-[var(--danger)] hover:bg-[var(--danger-bg)] rounded-[6px]"
                 >
                   Delete
                 </button>
@@ -1191,7 +1191,7 @@ function ExportTemplatesSection() {
                     type="checkbox"
                     checked={form.sections.includes(section)}
                     onChange={() => toggleSection(section)}
-                    className="w-3.5 h-3.5 rounded border-[#D4D4D2] text-[var(--accent)]"
+                    className="w-3.5 h-3.5 rounded border-[var(--neutral-border)] text-[var(--accent)]"
                   />
                   <span className="text-xs text-[var(--text-primary)]">{section}</span>
                 </label>
