@@ -173,7 +173,7 @@ export default function Invoices() {
       id: crypto.randomUUID(),
     }));
     try {
-      const created = await addInvoice({
+      await addInvoice({
         client_id: inv.client_id,
         project_id: inv.project_id,
         invoice_number: newNumber,

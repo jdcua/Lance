@@ -11,7 +11,7 @@ type QuickTimeLogModalProps = {
 };
 
 export default function QuickTimeLogModal({ open, onClose }: QuickTimeLogModalProps) {
-  const { projects, loadProjects, clients, loadClients, addTimeEntry, updateTimeEntry } = useStore();
+  const { projects, loadProjects, loadClients, addTimeEntry, updateTimeEntry } = useStore();
   const addToast = useToasts((s) => s.add);
   const [projectId, setProjectId] = useState('');
   const [clientId, setClientId] = useState('');

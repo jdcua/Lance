@@ -43,28 +43,42 @@ export default function SearchScreen() {
   const [searchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
   const navigate = useNavigate();
-  const store = useStore();
   const [loading, setLoading] = useState(true);
+  const clients = useStore((s) => s.clients);
+  const proposals = useStore((s) => s.proposals);
+  const projects = useStore((s) => s.projects);
+  const invoices = useStore((s) => s.invoices);
+  const contracts = useStore((s) => s.contracts);
+  const timeEntries = useStore((s) => s.timeEntries);
+  const expenses = useStore((s) => s.expenses);
+  const allAttachments = useStore((s) => s.allAttachments);
+  const loadClients = useStore((s) => s.loadClients);
+  const loadProposals = useStore((s) => s.loadProposals);
+  const loadProjects = useStore((s) => s.loadProjects);
+  const loadInvoices = useStore((s) => s.loadInvoices);
+  const loadContracts = useStore((s) => s.loadContracts);
+  const loadTimeEntries = useStore((s) => s.loadTimeEntries);
+  const loadExpenses = useStore((s) => s.loadExpenses);
+  const loadAllAttachments = useStore((s) => s.loadAllAttachments);
 
   useEffect(() => {
     Promise.all([
-      store.loadClients(),
-      store.loadProposals(),
-      store.loadProjects(),
-      store.loadInvoices(),
-      store.loadContracts(),
-      store.loadTimeEntries(),
-      store.loadExpenses(),
-      store.loadAllAttachments(),
+      loadClients(),
+      loadProposals(),
+      loadProjects(),
+      loadInvoices(),
+      loadContracts(),
+      loadTimeEntries(),
+      loadExpenses(),
+      loadAllAttachments(),
     ])
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [loadClients, loadProposals, loadProjects, loadInvoices, loadContracts, loadTimeEntries, loadExpenses, loadAllAttachments]);
 
   const results = useMemo((): Record<string, SearchResult[]> => {
     if (!query.trim()) return {};
     const q = query.toLowerCase();
-    const { clients, proposals, projects, invoices, contracts, timeEntries, expenses, allAttachments } = store;
 
     const groups: Record<string, SearchResult[]> = {};
 
@@ -155,7 +169,7 @@ export default function SearchScreen() {
       }));
 
     return groups;
-  }, [query, store]);
+  }, [query, clients, proposals, projects, invoices, contracts, timeEntries, expenses, allAttachments]);
 
   const totalResults = Object.values(results).reduce((sum, items) => sum + items.length, 0);
 
