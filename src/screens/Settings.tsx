@@ -258,6 +258,14 @@ export default function Settings() {
       });
       if (!filePath) return;
       const content = await readTextFile(filePath);
+
+      // Reject files over 50MB
+      const bytes = new TextEncoder().encode(content);
+      if (bytes.length > 50 * 1024 * 1024) {
+        addToast('Import failed — file exceeds 50MB limit', 'error');
+        return;
+      }
+
       const data = JSON.parse(content);
 
       const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
@@ -472,25 +480,27 @@ export default function Settings() {
         <div className="space-y-4">
           <div>
             <label className={labelClass}>Full name</label>
-            <input
-              type="text"
-              value={form.name || ''}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              onBlur={() => autoSave({ name: form.name }, 'Your profile')}
-              placeholder="Your full name"
-              className={inputClass}
-            />
+              <input
+                type="text"
+                maxLength={100}
+                value={form.name || ''}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                onBlur={() => autoSave({ name: form.name }, 'Your profile')}
+                placeholder="Your full name"
+                className={inputClass}
+              />
           </div>
           <div>
             <label className={labelClass}>Email</label>
-            <input
-              type="email"
-              value={form.email || ''}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              onBlur={() => autoSave({ email: form.email }, 'Your profile')}
-              placeholder="you@example.com"
-              className={inputClass}
-            />
+              <input
+                type="email"
+                maxLength={254}
+                value={form.email || ''}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                onBlur={() => autoSave({ email: form.email }, 'Your profile')}
+                placeholder="you@example.com"
+                className={inputClass}
+              />
           </div>
           <div>
             <label className={labelClass}>Default currency</label>
@@ -568,37 +578,40 @@ export default function Settings() {
           </div>
           <div>
             <label className={labelClass}>Writing voice description</label>
-            <textarea
-              value={form.writing_voice || ''}
-              onChange={(e) => setForm({ ...form, writing_voice: e.target.value })}
-              onBlur={() => autoSave({ writing_voice: form.writing_voice }, 'Proposal voice')}
-              placeholder="e.g. I'm a senior full-stack developer who explains things clearly and avoids jargon"
-              rows={2}
-              className={`${inputClass} resize-none`}
-            />
+              <textarea
+                maxLength={1000}
+                value={form.writing_voice || ''}
+                onChange={(e) => setForm({ ...form, writing_voice: e.target.value })}
+                onBlur={() => autoSave({ writing_voice: form.writing_voice }, 'Proposal voice')}
+                placeholder="e.g. I'm a senior full-stack developer who explains things clearly and avoids jargon"
+                rows={2}
+                className={`${inputClass} resize-none`}
+              />
             <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Describe your voice and expertise. This helps the AI write proposals that sound like you.</p>
           </div>
           <div>
             <label className={labelClass}>Tagline / positioning</label>
-            <input
-              type="text"
-              value={form.tagline || ''}
-              onChange={(e) => setForm({ ...form, tagline: e.target.value })}
-              onBlur={() => autoSave({ tagline: form.tagline }, 'Proposal voice')}
-              placeholder="e.g. I help startups ship beautiful products fast."
-              className={inputClass}
-            />
+              <input
+                type="text"
+                maxLength={200}
+                value={form.tagline || ''}
+                onChange={(e) => setForm({ ...form, tagline: e.target.value })}
+                onBlur={() => autoSave({ tagline: form.tagline }, 'Proposal voice')}
+                placeholder="e.g. I help startups ship beautiful products fast."
+                className={inputClass}
+              />
           </div>
           <div>
             <label className={labelClass}>What I always include</label>
-            <textarea
-              value={form.always_include || ''}
-              onChange={(e) => setForm({ ...form, always_include: e.target.value })}
-              onBlur={() => autoSave({ always_include: form.always_include }, 'Proposal voice')}
-              placeholder="Anything you always want in proposals..."
-              rows={3}
-              className={`${inputClass} resize-none`}
-            />
+              <textarea
+                maxLength={2000}
+                value={form.always_include || ''}
+                onChange={(e) => setForm({ ...form, always_include: e.target.value })}
+                onBlur={() => autoSave({ always_include: form.always_include }, 'Proposal voice')}
+                placeholder="Anything you always want in proposals..."
+                rows={3}
+                className={`${inputClass} resize-none`}
+              />
           </div>
         </div>
       </Card>

@@ -153,6 +153,7 @@ pub fn run() {
             commands::sharing::get_portal_activity,
             commands::sharing::get_share_server_port,
             commands::sharing::get_all_share_tokens,
+            commands::license::validate_license,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

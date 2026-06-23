@@ -2,20 +2,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import { fileURLToPath } from "url";
-import crypto from "crypto";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-function hashSecret(secret: string): string {
-  return crypto.createHash("sha256").update(secret).digest("hex").slice(0, 32).toUpperCase();
-}
-
-const SECRET = process.env.LANCE_LICENSE_SECRET;
-if (!SECRET) {
-  console.error("LANCE_LICENSE_SECRET environment variable is required for production builds");
-  process.exit(1);
-}
-const LICENSE_HASH = hashSecret(SECRET);
 
 export default defineConfig({
   plugins: [react()],
@@ -24,9 +12,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  define: {
-    __LANCE_LICENSE_HASH__: JSON.stringify(LICENSE_HASH),
-  },
+  define: {},
   clearScreen: false,
   server: {
     port: 1420,

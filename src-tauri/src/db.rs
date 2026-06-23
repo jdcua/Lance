@@ -26,7 +26,9 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS clients (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            name TEXT NOT NULL,
+           -- SECURITY: encrypt with user key in v2 before cloud sync
            email TEXT,
            phone TEXT,
            company TEXT,
@@ -36,6 +38,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS projects (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            client_id TEXT NOT NULL,
            title TEXT NOT NULL,
            status TEXT NOT NULL DEFAULT 'active',
@@ -50,6 +53,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS milestones (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            project_id TEXT NOT NULL,
            title TEXT NOT NULL,
            due_date TEXT,
@@ -60,6 +64,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS proposals (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            client_id TEXT NOT NULL,
            project_id TEXT,
            title TEXT NOT NULL,
@@ -68,6 +73,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            timeline TEXT,
            rate REAL,
            rate_type TEXT NOT NULL DEFAULT 'flat',
+           -- SECURITY: encrypt with user key in v2 before cloud sync
            body TEXT,
            sent_at TEXT,
            created_at TEXT NOT NULL,
@@ -76,11 +82,13 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS contracts (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            client_id TEXT NOT NULL,
            project_id TEXT,
            proposal_id TEXT,
            title TEXT NOT NULL,
            status TEXT NOT NULL DEFAULT 'draft',
+           -- SECURITY: encrypt with user key in v2 before cloud sync
            body TEXT,
            signed_at TEXT,
            created_at TEXT NOT NULL,
@@ -89,6 +97,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS time_entries (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            project_id TEXT NOT NULL,
            client_id TEXT NOT NULL,
            description TEXT,
@@ -102,6 +111,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS invoices (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            client_id TEXT NOT NULL,
            project_id TEXT,
            invoice_number TEXT NOT NULL,
@@ -119,6 +129,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS expenses (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            category TEXT NOT NULL,
            description TEXT NOT NULL,
            amount REAL NOT NULL,
@@ -127,19 +138,21 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS user_profile (
            id INTEGER PRIMARY KEY DEFAULT 1,
-           name TEXT,
-           email TEXT,
+           name TEXT CHECK(length(name) <= 100),
+           -- SECURITY: encrypt with user key in v2 before cloud sync
+           email TEXT CHECK(length(email) <= 254),
            hourly_rate REAL,
            currency TEXT DEFAULT 'CAD',
-           writing_voice TEXT,
+           writing_voice TEXT CHECK(length(writing_voice) <= 1000),
            tax_rate REAL DEFAULT 0,
            payment_terms INTEGER DEFAULT 14,
-           tagline TEXT,
-           always_include TEXT,
+           tagline TEXT CHECK(length(tagline) <= 200),
+           always_include TEXT CHECK(length(always_include) <= 2000),
            writing_style TEXT DEFAULT 'professional',
            theme TEXT DEFAULT 'light',
-          license_key TEXT,                                     -- TODO(v2): encrypt at rest with app-specific key
-          licensed_at TEXT,
+           -- SECURITY: encrypt with user key in v2 before cloud sync
+           license_key TEXT,
+           licensed_at TEXT,
            ai_enabled INTEGER DEFAULT 0,
            profession TEXT,
            custom_archetype_config TEXT,
@@ -149,6 +162,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS communications (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            client_id TEXT NOT NULL,
            type TEXT NOT NULL,
            summary TEXT NOT NULL,
@@ -159,6 +173,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS recurring_invoices (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            client_id TEXT NOT NULL,
            project_id TEXT,
            title TEXT NOT NULL,
@@ -183,6 +198,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS import_log (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            filename TEXT NOT NULL,
            file_type TEXT NOT NULL,
            file_path TEXT NOT NULL,
@@ -196,6 +212,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS attachments (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            entity_type TEXT NOT NULL,
            entity_id TEXT NOT NULL,
            filename TEXT NOT NULL,
@@ -221,6 +238,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS metric_definitions (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            client_id TEXT NOT NULL,
            name TEXT NOT NULL,
            metric_type TEXT NOT NULL DEFAULT 'number',
@@ -233,6 +251,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS metric_values (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            definition_id TEXT NOT NULL,
            client_id TEXT NOT NULL,
            value TEXT NOT NULL,
@@ -257,6 +276,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS follow_up_log (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            entity_type TEXT NOT NULL,
            entity_id TEXT NOT NULL,
            stage INTEGER NOT NULL DEFAULT 1,
@@ -271,6 +291,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS archetype_render_log (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            project_id TEXT NOT NULL,
            pass_name TEXT,
            duration_minutes INTEGER,
@@ -283,6 +304,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS archetype_sessions (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            client_id TEXT NOT NULL,
            project_id TEXT,
            session_type TEXT,
@@ -295,6 +317,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS archetype_shoots (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            project_id TEXT NOT NULL,
            shoot_date TEXT,
            location TEXT,
@@ -308,6 +331,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS archetype_revisions (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            project_id TEXT NOT NULL,
            round_number INTEGER NOT NULL,
            change_summary TEXT,
@@ -318,6 +342,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS archetype_builds (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            project_id TEXT NOT NULL,
            version TEXT,
            platform TEXT,
@@ -328,6 +353,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS archetype_keywords (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            client_id TEXT NOT NULL,
            keyword TEXT NOT NULL,
            position_start REAL,
@@ -338,6 +364,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS archetype_datasets (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            project_id TEXT NOT NULL,
            dataset_name TEXT,
            source TEXT,
@@ -350,6 +377,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS export_templates (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            name TEXT NOT NULL,
            type TEXT NOT NULL,
            header TEXT,
@@ -370,10 +398,12 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
 
          CREATE TABLE IF NOT EXISTS invoice_payments (
            id TEXT PRIMARY KEY,
+           user_id INTEGER NOT NULL DEFAULT 1,
            invoice_id TEXT NOT NULL,
            amount REAL NOT NULL,
            payment_date TEXT NOT NULL,
            payment_method TEXT NOT NULL,
+           -- SECURITY: encrypt with user key in v2 before cloud sync
            reference TEXT,
            notes TEXT,
            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -408,7 +438,6 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
     )
     .map_err(|e| format!("Migration failed: {}", e))?;
 
-    // Add new columns that may not exist in older databases
     let _ = conn.execute("ALTER TABLE projects ADD COLUMN color TEXT", []);
     let _ =
         conn.execute("ALTER TABLE expenses ADD COLUMN recurring INTEGER NOT NULL DEFAULT 0", []);
@@ -422,9 +451,42 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
         [],
     );
 
+    // v2 user_id columns for row-level security
+    let user_id_columns = [
+        "ALTER TABLE clients ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE projects ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE milestones ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE proposals ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE contracts ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE time_entries ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE invoices ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE expenses ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE communications ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE recurring_invoices ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE import_log ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE attachments ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE metric_definitions ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE metric_values ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE follow_up_log ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE archetype_render_log ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE archetype_sessions ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE archetype_shoots ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE archetype_revisions ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE archetype_builds ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE archetype_keywords ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE archetype_datasets ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE export_templates ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE invoice_payments ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE share_tokens ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
+    ];
+    for sql in &user_id_columns {
+        let _ = conn.execute(sql, []);
+    }
+
     conn.execute_batch(
         "CREATE TABLE IF NOT EXISTS share_tokens (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL DEFAULT 1,
             token TEXT UNIQUE NOT NULL,
             entity_type TEXT NOT NULL CHECK(entity_type IN ('proposal','contract')),
             entity_id TEXT NOT NULL,
@@ -439,7 +501,15 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
             client_signed_at TEXT
          );
          CREATE INDEX IF NOT EXISTS idx_share_tokens_token ON share_tokens(token);
-         CREATE INDEX IF NOT EXISTS idx_share_tokens_entity ON share_tokens(entity_type, entity_id);",
+         CREATE INDEX IF NOT EXISTS idx_share_tokens_entity ON share_tokens(entity_type, entity_id);
+
+         CREATE TABLE IF NOT EXISTS app_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_type TEXT NOT NULL,
+            payload TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+         );
+         CREATE INDEX IF NOT EXISTS idx_app_events_type ON app_events(event_type);",
     )
     .map_err(|e| format!("Share tokens migration failed: {}", e))?;
 

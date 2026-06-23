@@ -3,6 +3,8 @@ use crate::db;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+const MAX_IMPORT_FILE_SIZE: u64 = 50 * 1024 * 1024;
+
 // ── Import Log ──
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -80,6 +82,21 @@ fn get_assets_dir_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     Ok(assets_dir)
 }
 
+fn validate_asset_path(app: &tauri::AppHandle, path: &str) -> Result<PathBuf, String> {
+    let assets_dir = get_assets_dir_path(app)?;
+    let canonical_assets = assets_dir
+        .canonicalize()
+        .map_err(|_| "Failed to resolve assets directory".to_string())?;
+    let target = PathBuf::from(path);
+    let canonical = target
+        .canonicalize()
+        .map_err(|_| format!("Invalid path: {}", path))?;
+    if !canonical.starts_with(&canonical_assets) {
+        return Err("Path traversal detected".to_string());
+    }
+    Ok(canonical)
+}
+
 #[tauri::command]
 pub fn get_imports_dir(app: tauri::AppHandle) -> Result<String, String> {
     let dir = get_imports_dir_path(&app)?;
@@ -98,11 +115,23 @@ pub fn save_import_file(
     filename: String,
     data: Vec<u8>,
 ) -> Result<String, String> {
+    if data.len() as u64 > MAX_IMPORT_FILE_SIZE {
+        return Err(format!(
+            "File too large: {} bytes exceeds maximum of {} bytes",
+            data.len(),
+            MAX_IMPORT_FILE_SIZE
+        ));
+    }
     let imports_dir = get_imports_dir_path(&app)?;
     let id = uuid::Uuid::new_v4().to_string();
     let safe_name = sanitize_filename(&filename);
     let stored_name = format!("{}_{}", id, safe_name);
     let file_path = imports_dir.join(&stored_name);
+    let canonical = file_path.canonicalize().unwrap_or(file_path.clone());
+    let canonical_imports = imports_dir.canonicalize().unwrap_or(imports_dir.clone());
+    if !canonical.starts_with(&canonical_imports) {
+        return Err("Path traversal detected".to_string());
+    }
     std::fs::write(&file_path, &data).map_err(|_| "Failed to write file".to_string())?;
     file_path.to_str().map(|s| s.to_string()).ok_or_else(|| "Invalid path encoding".to_string())
 }
@@ -113,11 +142,23 @@ pub fn save_asset_file(
     filename: String,
     data: Vec<u8>,
 ) -> Result<String, String> {
+    if data.len() as u64 > MAX_IMPORT_FILE_SIZE {
+        return Err(format!(
+            "File too large: {} bytes exceeds maximum of {} bytes",
+            data.len(),
+            MAX_IMPORT_FILE_SIZE
+        ));
+    }
     let assets_dir = get_assets_dir_path(&app)?;
     let id = uuid::Uuid::new_v4().to_string();
     let safe_name = sanitize_filename(&filename);
     let stored_name = format!("{}_{}", id, safe_name);
     let file_path = assets_dir.join(&stored_name);
+    let canonical = file_path.canonicalize().unwrap_or(file_path.clone());
+    let canonical_assets = assets_dir.canonicalize().unwrap_or(assets_dir.clone());
+    if !canonical.starts_with(&canonical_assets) {
+        return Err("Path traversal detected".to_string());
+    }
     std::fs::write(&file_path, &data).map_err(|_| "Failed to write file".to_string())?;
     file_path.to_str().map(|s| s.to_string()).ok_or_else(|| "Invalid path encoding".to_string())
 }
@@ -299,15 +340,16 @@ pub fn get_all_attachments(app: tauri::AppHandle) -> Result<Vec<Attachment>, Str
 #[tauri::command]
 pub fn delete_attachment(app: tauri::AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    // Get file path before deleting record
     let file_path: Option<String> = conn
         .query_row("SELECT file_path FROM attachments WHERE id = ?", [&id], |row| row.get(0))
         .ok();
     conn.execute("DELETE FROM attachments WHERE id = ?", [&id])
         .map_err(|_| "Database operation failed".to_string())?;
-    // Best-effort file cleanup
     if let Some(path) = file_path {
-        let _ = std::fs::remove_file(path);
+        let validated = validate_asset_path(&app, &path);
+        if let Ok(valid) = validated {
+            let _ = std::fs::remove_file(valid);
+        }
     }
     Ok(())
 }

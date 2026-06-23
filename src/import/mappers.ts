@@ -7,19 +7,25 @@ import type { ImportDetection } from '../types';
 /**
  * Map spreadsheet rows to client creation payloads.
  */
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function mapToClients(
   rows: Record<string, string>[],
   columnMapping: Record<string, string>
 ): Array<{ name: string; email?: string; phone?: string; company?: string; notes?: string }> {
   const reverseMap = buildReverseMap(columnMapping);
   return rows
-    .map(row => ({
-      name: getField(row, reverseMap, 'name')?.trim() || '',
-      email: getField(row, reverseMap, 'email')?.trim() || undefined,
-      phone: getField(row, reverseMap, 'phone')?.trim() || undefined,
-      company: getField(row, reverseMap, 'company')?.trim() || undefined,
-      notes: getField(row, reverseMap, 'notes')?.trim() || undefined,
-    }))
+    .map(row => {
+      const rawEmail = getField(row, reverseMap, 'email')?.trim();
+      const email = rawEmail && EMAIL_REGEX.test(rawEmail) ? rawEmail : undefined;
+      return {
+        name: getField(row, reverseMap, 'name')?.trim() || '',
+        email,
+        phone: getField(row, reverseMap, 'phone')?.trim() || undefined,
+        company: getField(row, reverseMap, 'company')?.trim() || undefined,
+        notes: getField(row, reverseMap, 'notes')?.trim() || undefined,
+      };
+    })
     .filter(c => c.name.length > 0);
 }
 

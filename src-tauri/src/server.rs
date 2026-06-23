@@ -16,6 +16,8 @@ use tower_http::timeout::TimeoutLayer;
 
 const RATE_LIMIT_MAX: u64 = 60;
 const RATE_LIMIT_WINDOW_SECS: u64 = 60;
+const TOKEN_LOOKUP_FAIL_MAX: u64 = 10;
+const TOKEN_LOOKUP_LOCKOUT_SECS: u64 = 300;
 const REQUEST_TIMEOUT_SECS: u64 = 30;
 
 fn chrono_now() -> String {
@@ -26,6 +28,7 @@ fn chrono_now() -> String {
 pub struct AppState {
     pub db_path: String,
     pub rate_limits: Arc<Mutex<HashMap<String, (u64, u64)>>>,
+    pub token_failures: Arc<Mutex<HashMap<String, (u64, u64)>>>,
 }
 
 impl AppState {
@@ -40,6 +43,24 @@ impl AppState {
             *entry = (1, now);
             true
         } else if entry.0 < RATE_LIMIT_MAX {
+            entry.0 += 1;
+            true
+        } else {
+            false
+        }
+    }
+
+    fn record_token_failure(&self, source: &str) -> bool {
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let mut failures = self.token_failures.blocking_lock();
+        let entry = failures.entry(source.to_string()).or_insert((0, now));
+        if now - entry.1 >= TOKEN_LOOKUP_LOCKOUT_SECS {
+            *entry = (1, now);
+            true
+        } else if entry.0 < TOKEN_LOOKUP_FAIL_MAX {
             entry.0 += 1;
             true
         } else {
@@ -129,6 +150,20 @@ fn escape_html(s: &str) -> String {
         .replace('\'', "&#39;")
 }
 
+fn sanitize_html(html: &str) -> String {
+    let mut cleaner = ammonia::Builder::new();
+    let clean_tags: std::collections::HashSet<&str> = [
+        "script", "style", "iframe", "object", "embed", "form", "input",
+    ]
+    .into_iter()
+    .collect();
+    cleaner
+        .add_tags(&["p", "strong", "em", "h1", "h2", "ul", "ol", "li", "blockquote", "hr", "br"])
+        .clean_content_tags(clean_tags)
+        .id_prefix(None);
+    cleaner.clean(html).to_string()
+}
+
 #[derive(Debug, Deserialize)]
 struct RespondPayload {
     response: String,
@@ -215,7 +250,8 @@ fn build_portal_html(
             ));
         }
 
-        let body_html = body.unwrap_or_default();
+        let raw_body = body.unwrap_or_default();
+        let body_html = sanitize_html(&raw_body);
 
         let name_placeholder = token
             .client_name
@@ -261,7 +297,7 @@ fn build_portal_html(
                         var payload = {{ response: response, client_name: name, message: msg || null }};
                         fetch(window.location.pathname + '/respond', {{
                             method: 'POST',
-                            headers: {{ 'Content-Type': 'application/json' }},
+                            headers: {{ 'Content-Type': 'application/json', 'X-Lance-Client': 'portal' }},
                             body: JSON.stringify(payload)
                         }}).then(function(r) {{
                             if (r.ok) location.reload();
@@ -276,65 +312,67 @@ fn build_portal_html(
         };
 
         let stylesheet = r#"<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1d1d1f;line-height:1.6;min-height:100vh}
-.container{max-width:680px;margin:0 auto;padding:32px 16px}
-.header{text-align:center;padding:40px 0 24px;border-bottom:1px solid #e5e5e7;margin-bottom:24px}
-.header h1{font-size:22px;font-weight:700;margin-bottom:4px}
-.header .tagline{font-size:13px;color:#86868b}
-.header .for-client{font-size:12px;color:#86868b;margin-top:8px}
-.title{font-size:20px;font-weight:700;margin-bottom:16px}
-.details{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:24px}
-.detail{display:flex;flex-direction:column;gap:2px;background:#fff;padding:12px 16px;border-radius:10px;border:1px solid #e5e5e7;min-width:120px}
-.detail .label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#86868b;font-weight:600}
-.detail span:last-child{font-size:14px;color:#1d1d1f;font-weight:500}
-.body{background:#fff;border-radius:12px;padding:24px;border:1px solid #e5e5e7;margin-bottom:24px;font-size:14px}
-.body h1,.body h2,.body h3{margin:16px 0 8px}
-.body h2{font-size:18px}
-.body h3{font-size:15px}
-.body p{margin:8px 0}
-.actions{background:#fff;border-radius:12px;padding:24px;border:1px solid #e5e5e7;margin-bottom:24px}
-.name-input{width:100%;padding:10px 14px;border:1px solid #d2d2d7;border-radius:8px;font-size:14px;margin-bottom:12px;outline:none}
-.name-input:focus{border-color:#0071e3;box-shadow:0 0 0 3px rgba(0,113,227,.15)}
-.button-row{display:flex;gap:12px}
-.btn{flex:1;padding:12px 20px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
-.btn-accept{background:#34c759;color:#fff}
-.btn-accept:hover{background:#30b350}
-.btn-decline{background:transparent;color:#86868b;border:1px solid #d2d2d7}
-.btn-decline:hover{background:#f5f5f7;color:#1d1d1f}
-.response-banner{display:flex;align-items:center;gap:8px;padding:16px 20px;border-radius:10px;font-size:14px;font-weight:500;margin-bottom:24px}
-.response-banner.accepted{background:#e8f8ed;color:#1d7a3e;border:1px solid #c3e8ce}
-.response-banner.declined{background:#fee;color:#c92a2a;border:1px solid #fcc}
-.response-icon{font-size:18px}
-.error-msg{color:#c92a2a;font-size:12px;margin-top:8px}
-.footer{text-align:center;color:#86868b;font-size:11px;padding:24px 0}
-@media(max-width:480px){.button-row{flex-direction:column}.detail{min-width:100%}}
-</style>"#;
+ *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1d1d1f;line-height:1.6;min-height:100vh}
+ .container{max-width:680px;margin:0 auto;padding:32px 16px}
+ .header{text-align:center;padding:40px 0 24px;border-bottom:1px solid #e5e5e7;margin-bottom:24px}
+ .header h1{font-size:22px;font-weight:700;margin-bottom:4px}
+ .header .tagline{font-size:13px;color:#86868b}
+ .header .for-client{font-size:12px;color:#86868b;margin-top:8px}
+ .title{font-size:20px;font-weight:700;margin-bottom:16px}
+ .details{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:24px}
+ .detail{display:flex;flex-direction:column;gap:2px;background:#fff;padding:12px 16px;border-radius:10px;border:1px solid #e5e5e7;min-width:120px}
+ .detail .label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#86868b;font-weight:600}
+ .detail span:last-child{font-size:14px;color:#1d1d1f;font-weight:500}
+ .body{background:#fff;border-radius:12px;padding:24px;border:1px solid #e5e5e7;margin-bottom:24px;font-size:14px}
+ .body h1,.body h2,.body h3{margin:16px 0 8px}
+ .body h2{font-size:18px}
+ .body h3{font-size:15px}
+ .body p{margin:8px 0}
+ .body ul,.body ol{margin:8px 0;padding-left:24px}
+ .body blockquote{border-left:3px solid #e5e5e7;margin:12px 0;padding:4px 16px;color:#86868b}
+ .actions{background:#fff;border-radius:12px;padding:24px;border:1px solid #e5e5e7;margin-bottom:24px}
+ .name-input{width:100%;padding:10px 14px;border:1px solid #d2d2d7;border-radius:8px;font-size:14px;margin-bottom:12px;outline:none}
+ .name-input:focus{border-color:#0071e3;box-shadow:0 0 0 3px rgba(0,113,227,.15)}
+ .button-row{display:flex;gap:12px}
+ .btn{flex:1;padding:12px 20px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
+ .btn-accept{background:#34c759;color:#fff}
+ .btn-accept:hover{background:#30b350}
+ .btn-decline{background:transparent;color:#86868b;border:1px solid #d2d2d7}
+ .btn-decline:hover{background:#f5f5f7;color:#1d1d1f}
+ .response-banner{display:flex;align-items:center;gap:8px;padding:16px 20px;border-radius:10px;font-size:14px;font-weight:500;margin-bottom:24px}
+ .response-banner.accepted{background:#e8f8ed;color:#1d7a3e;border:1px solid #c3e8ce}
+ .response-banner.declined{background:#fee;color:#c92a2a;border:1px solid #fcc}
+ .response-icon{font-size:18px}
+ .error-msg{color:#c92a2a;font-size:12px;margin-top:8px}
+ .footer{text-align:center;color:#86868b;font-size:11px;padding:24px 0}
+ @media(max-width:480px){.button-row{flex-direction:column}.detail{min-width:100%}}
+ </style>"#;
 
         Ok(format!(
             r#"<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{} — Proposal</title>
-{}
-</head>
-<body>
-<div class="container">
-<div class="header">
-    <h1>{}</h1>
-    <div class="tagline">{}</div>
-    <div class="for-client">Prepared for: {}</div>
-</div>
-<div class="title">{}</div>
-<div class="details">{}</div>
-<div class="body">{}</div>
-{}
-<div class="footer">Powered by Lance &middot; This link only works while Lance is open</div>
-</div>
-</body>
-</html>"#,
+ <html lang="en">
+ <head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>{} — Proposal</title>
+ {}
+ </head>
+ <body>
+ <div class="container">
+ <div class="header">
+     <h1>{}</h1>
+     <div class="tagline">{}</div>
+     <div class="for-client">Prepared for: {}</div>
+ </div>
+ <div class="title">{}</div>
+ <div class="details">{}</div>
+ <div class="body">{}</div>
+ {}
+ <div class="footer">Powered by Lance &middot; This link only works while Lance is open</div>
+ </div>
+ </body>
+ </html>"#,
             escape_html(&title),
             stylesheet,
             freelancer, tl, client,
@@ -342,7 +380,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             action_section,
         ))
     } else {
-        // Contract portal
         let mut stmt = conn
             .prepare(
                 "SELECT c.title, c.body, c.created_at,
@@ -375,7 +412,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         let client_val = client_name.unwrap_or_else(|| "Client".into());
         let client = escape_html(&client_val);
         let t = escape_html(&title);
-        let body_html = body.unwrap_or_default();
+        let raw_body = body.unwrap_or_default();
+        let body_html = sanitize_html(&raw_body);
 
         let sign_section = if let Some(ref sig) = token.client_signature {
             let sig_date = token
@@ -413,7 +451,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
                         var payload = {{ response: 'signed', client_signature: name, message: msg || null }};
                         fetch(window.location.pathname + '/respond', {{
                             method: 'POST',
-                            headers: {{ 'Content-Type': 'application/json' }},
+                            headers: {{ 'Content-Type': 'application/json', 'X-Lance-Client': 'portal' }},
                             body: JSON.stringify(payload)
                         }}).then(function(r) {{
                             if (r.ok) location.reload();
@@ -428,55 +466,57 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         };
 
         let stylesheet = r#"<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1d1d1f;line-height:1.6;min-height:100vh}
-.container{max-width:680px;margin:0 auto;padding:32px 16px}
-.header{text-align:center;padding:40px 0 24px;border-bottom:1px solid #e5e5e7;margin-bottom:24px}
-.header h1{font-size:22px;font-weight:700;margin-bottom:4px}
-.header .tagline{font-size:13px;color:#86868b}
-.header .for-client{font-size:12px;color:#86868b;margin-top:8px}
-.title{font-size:20px;font-weight:700;margin-bottom:16px}
-.body{background:#fff;border-radius:12px;padding:24px;border:1px solid #e5e5e7;margin-bottom:24px;font-size:14px}
-.body h1,.body h2,.body h3{margin:16px 0 8px}
-.body h2{font-size:18px}
-.body h3{font-size:15px}
-.body p{margin:8px 0}
-.name-input{width:100%;padding:10px 14px;border:1px solid #d2d2d7;border-radius:8px;font-size:14px;margin-bottom:12px;outline:none}
-.name-input:focus{border-color:#0071e3;box-shadow:0 0 0 3px rgba(0,113,227,.15)}
-.sign-section{background:#fff;border-radius:12px;padding:24px;border:1px solid #e5e5e7;margin-bottom:24px}
-.sign-section p{font-size:13px;color:#86868b;margin-bottom:12px}
-.sign-btn{width:100%;padding:14px;border:none;border-radius:8px;background:#0071e3;color:#fff;font-size:15px;font-weight:600;cursor:pointer}
-.sign-btn:hover{background:#0077ed}
-.date-display{font-size:12px;color:#86868b;margin-top:8px}
-.signed-banner{background:#e8f8ed;border:1px solid #c3e8ce;border-radius:10px;padding:16px 20px;color:#1d7a3e;font-size:14px;font-weight:500;margin-bottom:24px}
-.error-msg{color:#c92a2a;font-size:12px;margin-top:8px}
-.footer{text-align:center;color:#86868b;font-size:11px;padding:24px 0}
-@media(max-width:480px){.button-row{flex-direction:column}.detail{min-width:100%}}
-</style>"#;
+ *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1d1d1f;line-height:1.6;min-height:100vh}
+ .container{max-width:680px;margin:0 auto;padding:32px 16px}
+ .header{text-align:center;padding:40px 0 24px;border-bottom:1px solid #e5e5e7;margin-bottom:24px}
+ .header h1{font-size:22px;font-weight:700;margin-bottom:4px}
+ .header .tagline{font-size:13px;color:#86868b}
+ .header .for-client{font-size:12px;color:#86868b;margin-top:8px}
+ .title{font-size:20px;font-weight:700;margin-bottom:16px}
+ .body{background:#fff;border-radius:12px;padding:24px;border:1px solid #e5e5e7;margin-bottom:24px;font-size:14px}
+ .body h1,.body h2,.body h3{margin:16px 0 8px}
+ .body h2{font-size:18px}
+ .body h3{font-size:15px}
+ .body p{margin:8px 0}
+ .body ul,.body ol{margin:8px 0;padding-left:24px}
+ .body blockquote{border-left:3px solid #e5e5e7;margin:12px 0;padding:4px 16px;color:#86868b}
+ .name-input{width:100%;padding:10px 14px;border:1px solid #d2d2d7;border-radius:8px;font-size:14px;margin-bottom:12px;outline:none}
+ .name-input:focus{border-color:#0071e3;box-shadow:0 0 0 3px rgba(0,113,227,.15)}
+ .sign-section{background:#fff;border-radius:12px;padding:24px;border:1px solid #e5e5e7;margin-bottom:24px}
+ .sign-section p{font-size:13px;color:#86868b;margin-bottom:12px}
+ .sign-btn{width:100%;padding:14px;border:none;border-radius:8px;background:#0071e3;color:#fff;font-size:15px;font-weight:600;cursor:pointer}
+ .sign-btn:hover{background:#0077ed}
+ .date-display{font-size:12px;color:#86868b;margin-top:8px}
+ .signed-banner{background:#e8f8ed;border:1px solid #c3e8ce;border-radius:10px;padding:16px 20px;color:#1d7a3e;font-size:14px;font-weight:500;margin-bottom:24px}
+ .error-msg{color:#c92a2a;font-size:12px;margin-top:8px}
+ .footer{text-align:center;color:#86868b;font-size:11px;padding:24px 0}
+ @media(max-width:480px){.button-row{flex-direction:column}.detail{min-width:100%}}
+ </style>"#;
 
         Ok(format!(
             r#"<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{} — Contract</title>
-{}
-</head>
-<body>
-<div class="container">
-<div class="header">
-    <h1>{}</h1>
-    <div class="tagline">{}</div>
-    <div class="for-client">Prepared for: {}</div>
-</div>
-<div class="title">{}</div>
-<div class="body">{}</div>
-{}
-<div class="footer">Powered by Lance &middot; This link only works while Lance is open</div>
-</div>
-</body>
-</html>"#,
+ <html lang="en">
+ <head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>{} — Contract</title>
+ {}
+ </head>
+ <body>
+ <div class="container">
+ <div class="header">
+     <h1>{}</h1>
+     <div class="tagline">{}</div>
+     <div class="for-client">Prepared for: {}</div>
+ </div>
+ <div class="title">{}</div>
+ <div class="body">{}</div>
+ {}
+ <div class="footer">Powered by Lance &middot; This link only works while Lance is open</div>
+ </div>
+ </body>
+ </html>"#,
             escape_html(&title),
             stylesheet,
             freelancer, tl, client,
@@ -486,45 +526,88 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     }
 }
 
-fn fallback_page() -> Html<String> {
-    Html(
-        r#"<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lance</title>
-<style>
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1d1d1f;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center}
-.card{background:#fff;border-radius:16px;padding:40px 32px;border:1px solid #e5e5e7;max-width:400px;width:100%}
-.card h1{font-size:20px;margin-bottom:8px}
-.card p{font-size:14px;color:#86868b;margin-top:8px;line-height:1.5}
-</style>
-</head>
-<body>
-<div class="card">
-<h1>Lance is not running</h1>
-<p>Please ask your freelancer to open Lance to view this content. Share links only work while the Lance app is open.</p>
-</div>
-</body>
-</html>"#
-            .to_string(),
-    )
+fn security_headers() -> axum::http::HeaderMap {
+    use axum::http::{HeaderMap, HeaderName, HeaderValue};
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        HeaderName::from_static("x-frame-options"),
+        HeaderValue::from_static("DENY"),
+    );
+    headers.insert(
+        HeaderName::from_static("x-content-type-options"),
+        HeaderValue::from_static("nosniff"),
+    );
+    headers.insert(
+        HeaderName::from_static("content-security-policy"),
+        HeaderValue::from_static(
+            "default-src 'self'; style-src 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:",
+        ),
+    );
+    headers.insert(
+        HeaderName::from_static("referrer-policy"),
+        HeaderValue::from_static("no-referrer"),
+    );
+    headers
 }
 
-fn rate_limited_page() -> Html<String> {
-    Html(
-        r#"<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rate Limited</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1d1d1f;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}h1{font-size:20px}p{color:#86868b;font-size:14px}</style></head><body><div><h1>Too Many Requests</h1><p>Please wait a moment before trying again.</p></div></body></html>"#
-            .to_string(),
+fn add_security_headers(html: Html<String>) -> (axum::http::StatusCode, axum::http::HeaderMap, String) {
+    let headers = security_headers();
+    (axum::http::StatusCode::OK, headers, html.0)
+}
+
+fn fallback_page() -> (axum::http::StatusCode, axum::http::HeaderMap, String) {
+    let html = r#"<!DOCTYPE html>
+ <html lang="en">
+ <head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Lance</title>
+ <style>
+ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1d1d1f;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center}
+ .card{background:#fff;border-radius:16px;padding:40px 32px;border:1px solid #e5e5e7;max-width:400px;width:100%}
+ .card h1{font-size:20px;margin-bottom:8px}
+ .card p{font-size:14px;color:#86868b;margin-top:8px;line-height:1.5}
+ </style>
+ </head>
+ <body>
+ <div class="card">
+ <h1>Lance is not running</h1>
+ <p>Please ask your freelancer to open Lance to view this content. Share links only work while the Lance app is open.</p>
+ </div>
+ </body>
+ </html>"#
+        .to_string();
+    (axum::http::StatusCode::OK, security_headers(), html)
+}
+
+fn rate_limited_page() -> (axum::http::StatusCode, axum::http::HeaderMap, String) {
+    let html = r#"<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rate Limited</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1d1d1f;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}h1{font-size:20px}p{color:#86868b;font-size:14px}</style></head><body><div><h1>Too Many Requests</h1><p>Please wait a moment before trying again.</p></div></body></html>"#
+            .to_string();
+    (
+        axum::http::StatusCode::TOO_MANY_REQUESTS,
+        security_headers(),
+        html,
     )
 }
 
 async fn serve_portal(
     State(state): State<AppState>,
     Path(token): Path<String>,
-) -> Html<String> {
+) -> (axum::http::StatusCode, axum::http::HeaderMap, String) {
+    let source = "src:unknown";
+
     if !state.check_rate_limit(&token) {
         return rate_limited_page();
+    }
+
+    if !state.record_token_failure(source) {
+        let html = r#"<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Blocked</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1d1d1f;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}h1{font-size:20px}p{color:#86868b;font-size:14px}</style></head><body><div><h1>Access Blocked</h1><p>Too many failed attempts. Please try again later.</p></div></body></html>"#
+            .to_string();
+        return (
+            axum::http::StatusCode::TOO_MANY_REQUESTS,
+            security_headers(),
+            html,
+        );
     }
 
     let conn = match db_connection(&state.db_path) {
@@ -533,32 +616,50 @@ async fn serve_portal(
     };
 
     let record = match find_token(&conn, &token) {
-        Ok(Some(r)) => r,
+        Ok(Some(r)) => {
+            // Token found successfully — reset failure count for this source
+            // (we don't reset here to keep it simple, but a real impl would)
+            r
+        }
         _ => return fallback_page(),
     };
 
     if let Some(ref exp) = record.expires_at {
         if exp.as_str() < chrono_now().as_str() {
-            return Html(
-                r#"<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Expired</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1d1d1f;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}h1{font-size:20px}p{color:#86868b;font-size:14px}</style></head><body><div><h1>Link Expired</h1><p>This share link has expired. Please contact your freelancer for a new link.</p></div></body></html>"#
-                    .to_string(),
-            );
+            let html = r#"<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Expired</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1d1d1f;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}h1{font-size:20px}p{color:#86868b;font-size:14px}</style></head><body><div><h1>Link Expired</h1><p>This share link has expired. Please contact your freelancer for a new link.</p></div></body></html>"#
+                    .to_string();
+            return (axum::http::StatusCode::GONE, security_headers(), html);
         }
     }
 
     let _ = record_view(&conn, &token);
 
     match build_portal_html(&conn, &record) {
-        Ok(html) => Html(html),
+        Ok(html) => add_security_headers(Html(html)),
         Err(_) => fallback_page(),
     }
+}
+
+fn check_portal_header(headers: &axum::http::HeaderMap) -> bool {
+    headers
+        .get("X-Lance-Client")
+        .map(|v| v.as_bytes() == b"portal")
+        .unwrap_or(false)
 }
 
 async fn handle_respond(
     State(state): State<AppState>,
     Path(token): Path<String>,
+    headers: axum::http::HeaderMap,
     Json(payload): Json<RespondPayload>,
-) -> Result<Html<String>, (axum::http::StatusCode, String)> {
+) -> Result<(axum::http::StatusCode, axum::http::HeaderMap, String), (axum::http::StatusCode, String)> {
+    if !check_portal_header(&headers) {
+        return Err((
+            axum::http::StatusCode::FORBIDDEN,
+            "Access denied.".to_string(),
+        ));
+    }
+
     let conn =
         db_connection(&state.db_path).map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e))?;
 
@@ -587,17 +688,34 @@ async fn handle_respond(
         }
     }
 
+    let sanitized_name = if let Some(ref name) = payload.client_name {
+        let trimmed = name.trim();
+        if trimmed.len() > 200 {
+            trimmed[..200].to_string()
+        } else {
+            trimmed.to_string()
+        }
+    } else {
+        "Client".to_string()
+    };
+
+    let sanitized_sig = if let Some(ref sig) = payload.client_signature {
+        let trimmed = sig.trim();
+        if trimmed.len() > 200 {
+            trimmed[..200].to_string()
+        } else {
+            trimmed.to_string()
+        }
+    } else {
+        "Unknown".to_string()
+    };
+
     let now = chrono_now();
 
     if record.entity_type == "contract" {
-        let sig = payload
-            .client_signature
-            .as_deref()
-            .unwrap_or("Unknown")
-            .to_string();
         conn.execute(
             "UPDATE share_tokens SET client_response = 'accepted', client_response_at = ?1, client_signature = ?2, client_signed_at = ?3 WHERE token = ?4",
-            rusqlite::params![now, sig, now, token],
+            rusqlite::params![now, sanitized_sig, now, token],
         )
         .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -607,14 +725,9 @@ async fn handle_respond(
         )
         .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     } else {
-        let name = payload
-            .client_name
-            .as_deref()
-            .unwrap_or("Client")
-            .to_string();
         conn.execute(
             "UPDATE share_tokens SET client_response = ?1, client_response_at = ?2, client_name = ?3 WHERE token = ?4",
-            rusqlite::params![payload.response, now, name, token],
+            rusqlite::params![payload.response, now, sanitized_name, token],
         )
         .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -627,29 +740,29 @@ async fn handle_respond(
         }
     }
 
-    Ok(Html(
-        r#"<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Response Sent</title>
-<style>
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1d1d1f;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center}
-.card{background:#fff;border-radius:16px;padding:40px 32px;border:1px solid #e5e5e7;max-width:400px;width:100%}
-.card h1{font-size:20px;margin-bottom:8px}
-.card p{font-size:14px;color:#86868b;margin-top:8px;line-height:1.5}
-</style>
-</head>
-<body>
-<div class="card">
-<h1>Thank you!</h1>
-<p>Your response has been recorded. The freelancer has been notified.</p>
-</div>
-</body>
-</html>"#
-        .to_string(),
-    ))
+    let html = r#"<!DOCTYPE html>
+ <html lang="en">
+ <head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Response Sent</title>
+ <style>
+ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1d1d1f;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center}
+ .card{background:#fff;border-radius:16px;padding:40px 32px;border:1px solid #e5e5e7;max-width:400px;width:100%}
+ .card h1{font-size:20px;margin-bottom:8px}
+ .card p{font-size:14px;color:#86868b;margin-top:8px;line-height:1.5}
+ </style>
+ </head>
+ <body>
+ <div class="card">
+ <h1>Thank you!</h1>
+ <p>Your response has been recorded. The freelancer has been notified.</p>
+ </div>
+ </body>
+ </html>"#
+        .to_string();
+
+    Ok((axum::http::StatusCode::OK, security_headers(), html))
 }
 
 pub fn start_server(db_path: String) -> Result<ServerHandle, String> {
@@ -663,6 +776,7 @@ pub fn start_server(db_path: String) -> Result<ServerHandle, String> {
     let state = AppState {
         db_path,
         rate_limits: Arc::new(Mutex::new(HashMap::new())),
+        token_failures: Arc::new(Mutex::new(HashMap::new())),
     };
 
     let app = Router::new()

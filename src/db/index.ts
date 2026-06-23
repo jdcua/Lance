@@ -16,6 +16,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS clients (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       name TEXT NOT NULL,
       email TEXT,
       phone TEXT,
@@ -28,6 +29,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS projects (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       client_id TEXT NOT NULL,
       title TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'active',
@@ -43,6 +45,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS milestones (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       project_id TEXT NOT NULL,
       title TEXT NOT NULL,
       due_date TEXT,
@@ -55,6 +58,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS proposals (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       client_id TEXT NOT NULL,
       project_id TEXT,
       title TEXT NOT NULL,
@@ -73,6 +77,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS contracts (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       client_id TEXT NOT NULL,
       project_id TEXT,
       proposal_id TEXT,
@@ -88,6 +93,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS time_entries (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       project_id TEXT NOT NULL,
       client_id TEXT NOT NULL,
       description TEXT,
@@ -103,6 +109,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS invoices (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       client_id TEXT NOT NULL,
       project_id TEXT,
       invoice_number TEXT NOT NULL,
@@ -122,6 +129,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS expenses (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       category TEXT NOT NULL,
       description TEXT NOT NULL,
       amount REAL NOT NULL,
@@ -134,15 +142,15 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS user_profile (
       id INTEGER PRIMARY KEY DEFAULT 1,
-      name TEXT,
-      email TEXT,
+      name TEXT CHECK(length(name) <= 100),
+      email TEXT CHECK(length(email) <= 254),
       hourly_rate REAL,
       currency TEXT DEFAULT 'CAD',
-      writing_voice TEXT,
+      writing_voice TEXT CHECK(length(writing_voice) <= 1000),
       tax_rate REAL DEFAULT 0,
       payment_terms INTEGER DEFAULT 14,
-      tagline TEXT,
-      always_include TEXT,
+      tagline TEXT CHECK(length(tagline) <= 200),
+      always_include TEXT CHECK(length(always_include) <= 2000),
       writing_style TEXT DEFAULT 'professional',
       theme TEXT DEFAULT 'light',
       license_key TEXT,
@@ -155,7 +163,6 @@ async function runMigrations(database: Database): Promise<void> {
     )
   `);
 
-  // Add new columns (SQLite does not support IF NOT EXISTS on ALTER TABLE)
   const newColumns = [
     'ALTER TABLE user_profile ADD COLUMN tax_rate REAL DEFAULT 0',
     'ALTER TABLE user_profile ADD COLUMN payment_terms INTEGER DEFAULT 14',
@@ -191,9 +198,25 @@ async function runMigrations(database: Database): Promise<void> {
     try { await database.execute(sql); } catch { /* column already exists */ }
   }
 
+  // v2 user_id columns for row-level security
+  const user_id_columns = [
+    'ALTER TABLE clients ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1',
+    'ALTER TABLE projects ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1',
+    'ALTER TABLE milestones ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1',
+    'ALTER TABLE proposals ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1',
+    'ALTER TABLE contracts ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1',
+    'ALTER TABLE time_entries ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1',
+    'ALTER TABLE invoices ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1',
+    'ALTER TABLE expenses ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1',
+  ];
+  for (const sql of user_id_columns) {
+    try { await database.execute(sql); } catch { /* column already exists */ }
+  }
+
   await database.execute(`
     CREATE TABLE IF NOT EXISTS communications (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       client_id TEXT NOT NULL,
       type TEXT NOT NULL,
       summary TEXT NOT NULL,
@@ -206,6 +229,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS recurring_invoices (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       client_id TEXT NOT NULL,
       project_id TEXT,
       title TEXT NOT NULL,
@@ -234,6 +258,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS import_log (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       filename TEXT NOT NULL,
       file_type TEXT NOT NULL,
       file_path TEXT NOT NULL,
@@ -249,6 +274,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS attachments (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       entity_type TEXT NOT NULL,
       entity_id TEXT NOT NULL,
       filename TEXT NOT NULL,
@@ -264,6 +290,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS metric_definitions (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       client_id TEXT NOT NULL,
       name TEXT NOT NULL,
       metric_type TEXT NOT NULL DEFAULT 'number',
@@ -278,6 +305,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS metric_values (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       definition_id TEXT NOT NULL,
       client_id TEXT NOT NULL,
       value TEXT NOT NULL,
@@ -301,6 +329,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS follow_up_log (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       entity_type TEXT NOT NULL,
       entity_id TEXT NOT NULL,
       stage INTEGER NOT NULL DEFAULT 1,
@@ -314,6 +343,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS archetype_render_log (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       project_id TEXT NOT NULL,
       pass_name TEXT,
       duration_minutes INTEGER,
@@ -328,6 +358,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS archetype_sessions (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       client_id TEXT NOT NULL,
       project_id TEXT,
       session_type TEXT,
@@ -342,6 +373,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS archetype_shoots (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       project_id TEXT NOT NULL,
       shoot_date TEXT,
       location TEXT,
@@ -357,6 +389,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS archetype_revisions (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       project_id TEXT NOT NULL,
       round_number INTEGER NOT NULL,
       change_summary TEXT,
@@ -369,6 +402,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS archetype_builds (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       project_id TEXT NOT NULL,
       version TEXT,
       platform TEXT,
@@ -381,6 +415,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS archetype_keywords (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       client_id TEXT NOT NULL,
       keyword TEXT NOT NULL,
       position_start REAL,
@@ -393,6 +428,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS archetype_datasets (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       project_id TEXT NOT NULL,
       dataset_name TEXT,
       source TEXT,
@@ -430,6 +466,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS export_templates (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       name TEXT NOT NULL,
       type TEXT NOT NULL,
       header TEXT,
@@ -454,6 +491,7 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS invoice_payments (
       id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL DEFAULT 1,
       invoice_id TEXT NOT NULL,
       amount REAL NOT NULL,
       payment_date TEXT NOT NULL,
@@ -462,6 +500,15 @@ async function runMigrations(database: Database): Promise<void> {
       notes TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS app_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_type TEXT NOT NULL,
+      payload TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
@@ -514,4 +561,6 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute('CREATE INDEX IF NOT EXISTS idx_archetype_datasets_created ON archetype_datasets(created_at)');
 
   await database.execute('CREATE INDEX IF NOT EXISTS idx_metrics_values_client_period ON metric_values(client_id, period)');
+
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_app_events_type ON app_events(event_type)');
 }

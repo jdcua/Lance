@@ -1,18 +1,37 @@
-/**
- * Spreadsheet parser — handles .xlsx and .csv files using SheetJS.
- * Extracts headers, rows, classifies content, and suggests column mappings.
- */
-
 import type { ImportDetection } from '../../types';
 import { classifySpreadsheet, suggestColumnMapping, entityTypeLabel } from '../classifier';
 import { MAX_PREVIEW_ROWS } from '../../lib/constants';
+
+const MAX_ROWS = 500;
+const MAX_CELL_LENGTH = 1000;
+
+function stripFormulaInjection(value: string): string {
+  let trimmed = value.trimStart();
+  while (
+    trimmed.startsWith('=') ||
+    trimmed.startsWith('+') ||
+    trimmed.startsWith('-') ||
+    trimmed.startsWith('@')
+  ) {
+    trimmed = trimmed.slice(1).trimStart();
+  }
+  return trimmed;
+}
+
+function sanitizeCell(value: unknown): string {
+  const str = String(value ?? '');
+  const stripped = stripFormulaInjection(str);
+  if (stripped.length > MAX_CELL_LENGTH) {
+    return stripped.slice(0, MAX_CELL_LENGTH);
+  }
+  return stripped;
+}
 
 export async function parseSpreadsheet(file: File): Promise<ImportDetection> {
   const XLSX = await import('xlsx');
   const arrayBuffer = await file.arrayBuffer();
   const workbook = XLSX.read(arrayBuffer, { type: 'array' });
 
-  // Use the first sheet
   const sheetName = workbook.SheetNames[0];
   if (!sheetName) {
     return {
@@ -37,27 +56,29 @@ export async function parseSpreadsheet(file: File): Promise<ImportDetection> {
     };
   }
 
-  // Extract headers from first row keys
-  const headers = Object.keys(jsonData[0]);
+  const truncated = jsonData.length > MAX_ROWS;
+  const limitedData = jsonData.slice(0, MAX_ROWS);
 
-  // Convert all values to strings for the preview
-  const rows = jsonData.slice(0, MAX_PREVIEW_ROWS).map(row => {
+  const headers = Object.keys(limitedData[0]);
+
+  const rows = limitedData.slice(0, MAX_PREVIEW_ROWS).map(row => {
     const stringRow: Record<string, string> = {};
     for (const key of headers) {
-      stringRow[key] = String(row[key] ?? '');
+      stringRow[key] = sanitizeCell(row[key]);
     }
     return stringRow;
   });
 
-  // Classify
   const { type: detectedEntity, confidence } = classifySpreadsheet(headers);
-
-  // Suggest column mapping
   const columnMapping = suggestColumnMapping(headers, detectedEntity);
 
-  const summary = confidence >= 0.25
-    ? `Detected: ${entityTypeLabel(detectedEntity)} — ${jsonData.length} row${jsonData.length !== 1 ? 's' : ''} found with ${headers.length} columns`
-    : `${jsonData.length} row${jsonData.length !== 1 ? 's' : ''} with ${headers.length} columns — could not confidently classify`;
+  let summary = confidence >= 0.25
+    ? `Detected: ${entityTypeLabel(detectedEntity)} — ${limitedData.length} row${limitedData.length !== 1 ? 's' : ''} found with ${headers.length} columns`
+    : `${limitedData.length} row${limitedData.length !== 1 ? 's' : ''} with ${headers.length} columns — could not confidently classify`;
+
+  if (truncated) {
+    summary += ` (import limited to ${MAX_ROWS} rows)`;
+  }
 
   return {
     file,
@@ -68,7 +89,7 @@ export async function parseSpreadsheet(file: File): Promise<ImportDetection> {
       headers,
       rows,
       summary,
-      rowCount: jsonData.length,
+      rowCount: limitedData.length,
     },
     columnMapping,
   };
