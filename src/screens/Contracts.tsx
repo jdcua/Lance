@@ -315,7 +315,7 @@ export default function Contracts() {
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="text-sm font-semibold text-[var(--text-primary)]">{c.title}</h3>
                         {shareTokenIds.has(c.id) && (
-                          <Link size={12} className="text-[var(--accent)] flex-shrink-0" title="Shared via portal" />
+                          <Link size={12} className="text-[var(--accent)] flex-shrink-0" />
                         )}
                         <Badge variant={statusBadge[c.status]}>{c.status}</Badge>
                       </div>

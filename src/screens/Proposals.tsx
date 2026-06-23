@@ -332,7 +332,7 @@ export default function Proposals() {
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="text-sm font-semibold text-[var(--text-primary)]">{p.title}</h3>
                       {shareTokenIds.has(p.id) && (
-                        <Link size={12} className="text-[var(--accent)] flex-shrink-0" title="Shared via portal" />
+                        <Link size={12} className="text-[var(--accent)] flex-shrink-0" />
                       )}
                       <Badge variant={statusBadge[p.status]}>{p.status}</Badge>
                     </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
 import { useToasts } from '../store/toastStore';
@@ -26,12 +26,7 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
   const [expiry, setExpiry] = useState<string>('never');
   const [port, setPort] = useState<number>(0);
 
-  useEffect(() => {
-    if (!open) return;
-    loadToken();
-  }, [open, entityType, entityId]);
-
-  const loadToken = async () => {
+  const loadToken = useCallback(async () => {
     setLoading(true);
     try {
       const { invoke } = await import('@tauri-apps/api/core');
@@ -48,7 +43,12 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
     } finally {
       setLoading(false);
     }
-  };
+  }, [entityType, entityId, addToast]);
+
+  useEffect(() => {
+    if (!open) return;
+    loadToken();
+  }, [open, loadToken]);
 
   const handleCreate = async () => {
     setLoading(true);

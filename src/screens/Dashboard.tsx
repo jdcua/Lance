@@ -1,4 +1,4 @@
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import type { PortalActivity } from '../types';
@@ -16,7 +16,7 @@ import * as queries from '../archetypes/queries';
 import { getFeatureComponent } from '../components/features/registry';
 
 export default function Dashboard() {
-  const { invoices, loadInvoices, proposals, loadProposals, projects, loadProjects, clients, loadClients, timeEntries, loadTimeEntries, profile, loadProfile, expenses, loadExpenses, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings } = useStore();
+  const { invoices, loadInvoices, proposals, loadProposals, projects, loadProjects, clients, loadClients, timeEntries, loadTimeEntries, profile, loadProfile, expenses, loadExpenses, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings, loadContracts } = useStore();
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -43,9 +43,30 @@ export default function Dashboard() {
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       const activity = await invoke<PortalActivity[]>('get_portal_activity');
-      setPortalActivity(activity);
+      setPortalActivity(prev => {
+        if (prev.length === 0 && activity.length > 0) {
+          return activity;
+        }
+        const newItems = activity.filter(a => !prev.some(p => p.token === a.token && p.timestamp === a.timestamp));
+        for (const item of newItems) {
+          if (item.activity.includes('accepted') || item.activity.includes('signed') || item.activity.includes('declined')) {
+            addToast(item.activity, 'info');
+            loadProposals();
+            loadContracts();
+          }
+        }
+        return activity;
+      });
     } catch { /* server may not be ready or no tokens exist */ }
   };
+
+  const portalPollRef = useRef<() => Promise<void>>();
+  portalPollRef.current = loadPortalActivity;
+
+  useEffect(() => {
+    const interval = setInterval(() => portalPollRef.current?.(), 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (!profile) return;

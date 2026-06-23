@@ -36,6 +36,7 @@ fn db_connection(db_path: &str) -> Result<Connection, String> {
     Connection::open(db_path).map_err(|e| format!("DB open failed: {}", e))
 }
 
+#[allow(dead_code)]
 struct TokenRecord {
     token: String,
     entity_type: String,
