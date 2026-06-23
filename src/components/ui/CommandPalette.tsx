@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
-import { Search, FileText, FolderKanban, Receipt, PenLine, Users, Sparkles } from 'lucide-react';
+import { Search, FileText, FolderKanban, Receipt, PenLine, Users, Sparkles, Clock, DollarSign, Paperclip, ArrowRight } from 'lucide-react';
+import { formatCurrency } from '../../utils/format';
 
 type ResultItem = {
   id: string;
   label: string;
   sublabel: string;
-  type: 'client' | 'proposal' | 'project' | 'invoice' | 'contract' | 'action';
+  type: 'client' | 'proposal' | 'project' | 'invoice' | 'contract' | 'action' | 'time_entry' | 'expense' | 'asset' | 'footer';
   path: string;
   action?: () => void;
 };
@@ -19,6 +20,10 @@ const typeIcons: Record<string, typeof Users> = {
   invoice: Receipt,
   contract: PenLine,
   action: Sparkles,
+  time_entry: Clock,
+  expense: DollarSign,
+  asset: Paperclip,
+  footer: ArrowRight,
 };
 
 const typeLabels: Record<string, string> = {
@@ -27,31 +32,74 @@ const typeLabels: Record<string, string> = {
   project: 'PROJECTS',
   invoice: 'INVOICES',
   contract: 'CONTRACTS',
+  time_entry: 'TIME ENTRIES',
+  expense: 'EXPENSES',
+  asset: 'ASSETS',
   action: 'ACTIONS',
 };
 
+const MAX_PER_GROUP: Record<string, number> = {
+  client: 4,
+  proposal: 4,
+  project: 4,
+  invoice: 4,
+  contract: 4,
+  time_entry: 3,
+  expense: 3,
+  asset: 3,
+};
+
+function formatDateShort(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' });
+}
+
+function formatDuration(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function parseTags(tags: string): string[] {
+  try { return JSON.parse(tags); } catch { return []; }
+}
+
 export default function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { clients, proposals, projects, invoices, contracts, profile } = useStore();
+  const timeEntries = useStore((s) => s.timeEntries);
+  const expenses = useStore((s) => s.expenses);
+  const allAttachments = useStore((s) => s.allAttachments);
+  const loadTimeEntries = useStore((s) => s.loadTimeEntries);
+  const loadExpenses = useStore((s) => s.loadExpenses);
+  const loadAllAttachments = useStore((s) => s.loadAllAttachments);
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const aiEnabled = profile?.ai_enabled ?? false;
+  const [debouncedQuery, setDebouncedQuery] = useState('');
 
   useEffect(() => {
     if (open) {
       setQuery('');
+      setDebouncedQuery('');
       setSelectedIndex(0);
       setTimeout(() => inputRef.current?.focus(), 50);
+      Promise.all([loadTimeEntries(), loadExpenses(), loadAllAttachments()]).catch(() => {});
     }
-  }, [open]);
+  }, [open, loadTimeEntries, loadExpenses, loadAllAttachments]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query), 150);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   const results = useMemo((): ResultItem[] => {
-    if (!query.trim()) return [];
-    const q = query.toLowerCase();
+    if (!debouncedQuery.trim()) return [];
+    const q = debouncedQuery.toLowerCase();
 
-    // AI actions first if AI is enabled
     const items: ResultItem[] = [];
+
     if (aiEnabled) {
       if (q.includes('generate proposal') || q.includes('new proposal') || q.includes('proposal')) {
         items.push({
@@ -95,14 +143,69 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
       }
     });
 
-    // Max 4 per group
+    timeEntries.forEach((t) => {
+      if ((t.description || '').toLowerCase().includes(q)) {
+        const project = projects.find((p) => p.id === t.project_id);
+        const projectName = project?.title || 'Unknown';
+        items.push({
+          id: t.id,
+          label: t.description || 'No description',
+          sublabel: `${projectName} — ${formatDateShort(t.start_time)} · ${t.duration_minutes ? formatDuration(t.duration_minutes) : 'In progress'}`,
+          type: 'time_entry',
+          path: '/time',
+        });
+      }
+    });
+
+    expenses.forEach((e) => {
+      if (e.description.toLowerCase().includes(q)) {
+        items.push({
+          id: e.id,
+          label: e.description,
+          sublabel: `${e.category} · ${formatCurrency(e.amount)} on ${formatDateShort(e.date)}`,
+          type: 'expense',
+          path: '/finance',
+        });
+      }
+    });
+
+    allAttachments.forEach((a) => {
+      const tags = parseTags(a.tags);
+      const nameMatch = a.filename.toLowerCase().includes(q);
+      const tagMatch = tags.some((t: string) => t.toLowerCase().includes(q));
+      if (nameMatch || tagMatch) {
+        const locationLabel = a.entity_type === 'library' ? 'Library' : a.entity_type;
+        items.push({
+          id: a.id,
+          label: a.filename,
+          sublabel: `${a.mime_type} · ${locationLabel}`,
+          type: 'asset',
+          path: `/assets?highlight=${a.id}`,
+        });
+      }
+    });
+
     const grouped: Record<string, ResultItem[]> = {};
     items.forEach((i) => {
       if (!grouped[i.type]) grouped[i.type] = [];
-      if (grouped[i.type].length < 4) grouped[i.type].push(i);
+      const max = MAX_PER_GROUP[i.type] || 4;
+      if (grouped[i.type].length < max) grouped[i.type].push(i);
     });
-    return Object.values(grouped).flat();
-  }, [query, clients, proposals, projects, invoices, contracts, aiEnabled]);
+
+    const flat = Object.values(grouped).flat();
+
+    if (flat.length > 0) {
+      flat.push({
+        id: 'search-all',
+        label: `Search all results for '${debouncedQuery}'`,
+        sublabel: '',
+        type: 'footer',
+        path: `/search?q=${encodeURIComponent(debouncedQuery)}`,
+      });
+    }
+
+    return flat;
+  }, [debouncedQuery, clients, proposals, projects, invoices, contracts, timeEntries, expenses, allAttachments, aiEnabled]);
 
   const grouped = useMemo(() => {
     const groups: Record<string, ResultItem[]> = {};
@@ -157,7 +260,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
           <kbd className="text-[10px] text-[var(--text-tertiary)] border border-[var(--border-color)] rounded-[4px] px-1.5 py-0.5">⌘K</kbd>
         </div>
         <div className="flex-1 overflow-y-auto py-2">
-          {!query ? (
+          {!debouncedQuery ? (
             <div className="px-4 py-4 space-y-4">
               <div>
                 <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider mb-2">Keyboard shortcuts</p>
@@ -167,6 +270,8 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
                     ['⌘1–8', 'Navigate sections'],
                     ['⌘N', 'New in current section'],
                     ['⌘,', 'Open Settings'],
+                    ['⌘⇧T', 'Start/Stop timer'],
+                    ['⌘⇧L', 'Quick log time'],
                     ['⌘⇧P', 'Toggle AI sidebar (if on)'],
                     ['Esc', 'Close this panel'],
                   ].map(([key, desc]) => (
@@ -179,7 +284,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
               </div>
               <div>
                 <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider mb-1.5">Quick search</p>
-                <p className="text-xs text-[var(--text-tertiary)]">Type to search clients, proposals, projects, invoices, contracts&hellip;</p>
+                <p className="text-xs text-[var(--text-tertiary)]">Type to search clients, proposals, projects, invoices, contracts, time entries, expenses, assets&hellip;</p>
               </div>
             </div>
           ) : flatResults.length === 0 ? (
@@ -187,28 +292,39 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
               <p className="text-xs text-[var(--text-tertiary)]">No results found.</p>
             </div>
           ) : (
-            Object.entries(grouped).map(([type, items]) => (
-              <div key={type} className="mb-3 last:mb-0">
-                <p className="px-4 mb-1 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">{typeLabels[type]}</p>
-                {items.map((item) => {
-                  const Icon = typeIcons[item.type] || Users;
-                  const idx = flatResults.indexOf(item);
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => handleSelect(item)}
-                      className={`w-full flex items-center gap-3 px-4 py-2 text-left text-sm ${
-                        idx === selectedIndex ? 'bg-[var(--accent-bg)]' : 'hover:bg-[var(--bg-secondary)]'
-                      }`}
-                    >
-                      <Icon size={14} className="text-[var(--text-tertiary)] flex-shrink-0" />
-                      <span className="flex-1 text-[var(--text-primary)]">{item.label}</span>
-                      <span className="text-xs text-[var(--text-tertiary)]">{item.sublabel}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            ))
+            <>
+              {Object.entries(grouped).map(([type, items]) => {
+                const isFooterGroup = type === 'footer';
+                return (
+                  <div key={type} className="mb-3 last:mb-0">
+                    {isFooterGroup && <div className="px-4 mb-1"><div className="border-t border-[var(--border-color)] pt-2" /></div>}
+                    {!isFooterGroup && (
+                      <p className="px-4 mb-1 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">{typeLabels[type] || type}</p>
+                    )}
+                    {items.map((item) => {
+                      const Icon = typeIcons[item.type] || Users;
+                      const idx = flatResults.indexOf(item);
+                      const isFooter = item.type === 'footer';
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => handleSelect(item)}
+                          className={`w-full flex items-center gap-3 px-4 py-2 text-left text-sm ${
+                            isFooter
+                              ? idx === selectedIndex ? 'bg-[var(--accent-bg)]' : 'hover:bg-[var(--bg-secondary)]'
+                              : idx === selectedIndex ? 'bg-[var(--accent-bg)]' : 'hover:bg-[var(--bg-secondary)]'
+                          }`}
+                        >
+                          <Icon size={14} className={`flex-shrink-0 ${isFooter ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)]'}`} />
+                          <span className="flex-1 text-[var(--text-primary)]">{item.label}</span>
+                          {!isFooter && <span className="text-xs text-[var(--text-tertiary)]">{item.sublabel}</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </>
           )}
         </div>
       </div>

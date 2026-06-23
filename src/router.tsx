@@ -15,6 +15,7 @@ const Insights = lazy(() => import('./screens/Insights'));
 const SettingsView = lazy(() => import('./screens/Settings'));
 const AchievementsPage = lazy(() => import('./screens/Achievements'));
 const Assets = lazy(() => import('./screens/Assets'));
+const SearchScreen = lazy(() => import('./screens/Search'));
 const ArchetypePicker = lazy(() => import('./screens/ArchetypePicker'));
 const NotFound = lazy(() => import('./screens/NotFound'));
 
@@ -52,6 +53,7 @@ export const router = createBrowserRouter([
       { path: 'settings', element: <LazyRoute><SettingsView /></LazyRoute> },
       { path: 'achievements', element: <LazyRoute><AchievementsPage /></LazyRoute> },
       { path: 'assets', element: <LazyRoute><Assets /></LazyRoute> },
+      { path: 'search', element: <LazyRoute><SearchScreen /></LazyRoute> },
       { path: '*', element: <LazyRoute><NotFound /></LazyRoute> },
     ],
   },

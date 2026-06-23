@@ -12,7 +12,7 @@ import { exportInvoicePDF, exportInvoiceDOCX } from '../export';
 import { formatCurrency, relativeDate } from '../utils/format';
 import { generateInvoiceNumber } from '../utils/invoiceNumber';
 import { useToasts } from '../store/toastStore';
-import { Plus, Pencil, Trash2, Download, Clock, RotateCw, Receipt, Search, ArrowUpDown, Bell, Send, Check, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download, Clock, RotateCw, Receipt, Search, ArrowUpDown, Bell, Send, Check, X, Copy } from 'lucide-react';
 import { generateFollowUpDraft } from '../utils/followUpTemplates';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
 
@@ -161,6 +161,34 @@ export default function Invoices() {
   const handleMarkSent = async (inv: Invoice) => {
     try { await updateInvoice({ ...inv, status: 'sent' as const }); }
     catch (err) { addToast(err?.toString?.() || 'Failed to mark as sent', 'error'); }
+  };
+
+  const handleDuplicate = async (inv: Invoice) => {
+    const paymentTerms = profile?.payment_terms ?? 14;
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + paymentTerms);
+    const newNumber = generateInvoiceNumber(invoices);
+    const newItems = inv.line_items.map((li) => ({
+      ...li,
+      id: crypto.randomUUID(),
+    }));
+    try {
+      const created = await addInvoice({
+        client_id: inv.client_id,
+        project_id: inv.project_id,
+        invoice_number: newNumber,
+        status: 'draft',
+        line_items: newItems,
+        subtotal: inv.subtotal,
+        tax_rate: inv.tax_rate,
+        total: inv.total,
+        due_date: dueDate.toISOString().split('T')[0],
+        notes: inv.notes,
+      });
+      addToast(`Invoice duplicated — ${newNumber} created as draft`, 'success');
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to duplicate invoice', 'error');
+    }
   };
 
   const getClient = (clientId: string) => clients.find((c) => c.id === clientId);
@@ -418,6 +446,7 @@ export default function Invoices() {
                       </div>
                     )}
                   </div>
+                  <button onClick={() => handleDuplicate(inv)} aria-label="Duplicate invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]" title="Duplicate"><Copy size={14} /></button>
                   <button onClick={() => openEdit(inv)} aria-label="Edit invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]"><Pencil size={14} /></button>
                   <button onClick={() => setConfirmDelete({ id: inv.id, label: inv.invoice_number, type: 'invoice' })} aria-label="Delete invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--danger)] rounded-[8px]"><Trash2 size={14} /></button>
                 </div>

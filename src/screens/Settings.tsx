@@ -16,6 +16,7 @@ import { PROFESSION_THEME, type Profession } from '../themes';
 import { getArchetype, ARCHETYPE_LIST } from '../archetypes';
 import { getUnlockedThemes, getUnlockedAchievementKeys } from '../achievements/checker';
 import { TEMPLATE_LABELS } from '../utils/followUpTemplates';
+import { clearSampleData } from '../utils/seedData';
 
 const currencies = ['CAD', 'USD', 'GBP', 'EUR', 'AUD'];
 const writingStyles = ['professional', 'warm', 'direct', 'bold'];
@@ -52,6 +53,7 @@ export default function Settings() {
   const [licenseError, setLicenseError] = useState('');
   const [licenseActivating, setLicenseActivating] = useState(false);
   const [showRemoveLicenseConfirm, setShowRemoveLicenseConfirm] = useState(false);
+  const [isSeeded, setIsSeeded] = useState(localStorage.getItem('lance:seeded') === 'true');
   const [activeTheme, setActiveTheme] = useState<ThemeId>('default');
   const [unlockedThemes, setUnlockedThemes] = useState<Set<string>>(new Set(['default']));
   const [fuEnabled, setFuEnabled] = useState(true);
@@ -305,6 +307,19 @@ export default function Settings() {
     } catch {
       addToast('Import failed — check file format', 'error');
     } /* import errors surface as toast; no partial state left */
+  };
+
+  const handleClearSampleData = async () => {
+    try {
+      await clearSampleData();
+      setIsSeeded(false);
+      addToast('Sample data cleared.', 'info');
+      setTimeout(() => {
+        window.location.reload();
+      }, 300);
+    } catch {
+      addToast('Failed to clear sample data', 'error');
+    }
   };
 
   const handleResetData = async () => {
@@ -821,6 +836,18 @@ export default function Settings() {
               Import
             </Button>
           </div>
+          {isSeeded && (
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-[var(--text-primary)]">Clear sample data</p>
+                <p className="text-xs text-[var(--text-tertiary)]">Remove all records tagged as sample data</p>
+              </div>
+              <Button variant="secondary" onClick={handleClearSampleData} size="sm">
+                <Trash2 size={14} />
+                Clear
+              </Button>
+            </div>
+          )}
           <div className="border-t border-[var(--border-color)]  pt-3 flex items-center justify-between">
             <div>
               <p className="text-sm text-[var(--danger)]">Reset all data</p>

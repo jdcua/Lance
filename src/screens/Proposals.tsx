@@ -11,7 +11,7 @@ import { formatCurrency } from '../utils/format';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
-import { Plus, Trash2, Send, Eye, Download, FileText, Search, ArrowUpDown, Bell, Check, X } from 'lucide-react';
+import { Plus, Trash2, Send, Eye, Download, FileText, Search, ArrowUpDown, Bell, Check, X, Copy } from 'lucide-react';
 import { generateFollowUpDraft } from '../utils/followUpTemplates';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 
@@ -50,7 +50,7 @@ function generateContractBody(
 type SortKey = 'title' | 'client' | 'status' | 'date';
 
 export default function Proposals() {
-  const { proposals, loadProposals, clients, loadClients, updateProposal, removeProposal, profile, loadProfile, addContract, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings } = useStore();
+  const { proposals, loadProposals, clients, loadClients, updateProposal, removeProposal, profile, loadProfile, addProposal, addContract, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings } = useStore();
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -110,6 +110,25 @@ export default function Proposals() {
       addToast(err?.toString?.() || 'Failed to delete', 'error');
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleDuplicate = async (p: Proposal) => {
+    try {
+      await addProposal({
+        client_id: p.client_id,
+        project_id: p.project_id,
+        title: `Copy of ${p.title}`,
+        status: 'draft',
+        scope: p.scope,
+        timeline: p.timeline,
+        rate: p.rate,
+        rate_type: p.rate_type,
+        body: p.body,
+      });
+      addToast('Proposal duplicated — saved as draft', 'success');
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to duplicate proposal', 'error');
     }
   };
 
@@ -291,6 +310,9 @@ export default function Proposals() {
                   </div>
                   <button onClick={() => setExpanded(expanded === p.id ? null : p.id)} aria-label="View proposal body" className={`p-1.5 rounded-[8px] transition-colors ${expanded === p.id ? 'text-[var(--accent)] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`} title="View body">
                     <Eye size={14} />
+                  </button>
+                  <button onClick={() => handleDuplicate(p)} aria-label="Duplicate proposal" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors" title="Duplicate">
+                    <Copy size={14} />
                   </button>
                   <button onClick={() => setConfirmDelete({ id: p.id, title: p.title })} aria-label="Delete proposal" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors">
                     <Trash2 size={14} />

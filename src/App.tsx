@@ -15,6 +15,7 @@ import Modal from './components/ui/Modal';
 import Button from './components/ui/Button';
 import ToastContainer from './components/ui/Toast';
 import CommandPalette from './components/ui/CommandPalette';
+import QuickTimeLogModal from './components/ui/QuickTimeLogModal';
 import Walkthrough from './components/ui/Walkthrough';
 import SplashScreen from './components/ui/SplashScreen';
 import ErrorBoundary from './components/ui/ErrorBoundary';
@@ -31,6 +32,7 @@ import { PROFESSION_THEME } from './themes';
 import { getArchetype, ARCHETYPE_LIST } from './archetypes';
 import { checkAchievements } from './achievements/checker';
 import { ACHIEVEMENTS } from './achievements';
+import { seedSampleData } from './utils/seedData';
 
 export default function App() {
   const {
@@ -50,6 +52,7 @@ export default function App() {
 
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showQuickLogModal, setShowQuickLogModal] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [showChangelog, setShowChangelog] = useState(false);
   const [showWalkthrough, setShowWalkthrough] = useState(false);
@@ -335,6 +338,53 @@ export default function App() {
     return () => document.removeEventListener('lance:open-archetype-picker', handler);
   }, [navigate]);
 
+  const toggleTimer = useCallback(async () => {
+    const state = useStore.getState();
+    await state.loadTimeEntries();
+    await state.loadProjects();
+
+    const activeEntry = state.timeEntries.find((t) => !t.end_time);
+
+    if (activeEntry) {
+      const endTime = new Date().toISOString();
+      const duration = Math.floor((Date.now() - new Date(activeEntry.start_time).getTime()) / 60000);
+      await state.updateTimeEntry({ ...activeEntry, end_time: endTime, duration_minutes: duration });
+      const h = Math.floor(duration / 60);
+      const m = duration % 60;
+      addToast(`Timer stopped — ${h > 0 ? `${h}h ` : ''}${m}m`, 'success');
+    } else {
+      let projectId = '';
+      let clientId = '';
+      const lastConfig = localStorage.getItem('lance:last-timer-config');
+      if (lastConfig) {
+        try {
+          const cfg = JSON.parse(lastConfig);
+          projectId = cfg.projectId || '';
+          clientId = cfg.clientId || '';
+        } catch { /* ignore */ }
+      }
+      if (!projectId || !clientId) {
+        const firstProject = state.projects.find((p) => p.status === 'active');
+        if (firstProject) {
+          projectId = firstProject.id;
+          clientId = firstProject.client_id;
+        } else {
+          addToast('No active project available to start timer', 'error');
+          return;
+        }
+      }
+      const entry = await state.addTimeEntry({
+        project_id: projectId,
+        client_id: clientId,
+        start_time: new Date().toISOString(),
+        billable: true,
+      });
+      localStorage.setItem('lance:last-timer-config', JSON.stringify({ projectId: entry.project_id, clientId: entry.client_id }));
+      const project = state.projects.find((p) => p.id === projectId);
+      addToast(`Timer started — ${project?.title || 'Unknown'}`, 'success');
+    }
+  }, [addToast]);
+
   // Keyboard shortcuts
   const isEditing = useCallback((): boolean => {
     const tag = (document.activeElement?.tagName || '').toLowerCase();
@@ -354,6 +404,17 @@ export default function App() {
       if (e.key === ',' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         if (!isEditing()) navigate('/settings');
+        return;
+      }
+      const modShift = (e.metaKey || e.ctrlKey) && e.shiftKey;
+      if (modShift && (e.key === 'T' || e.key === 't')) {
+        e.preventDefault();
+        toggleTimer();
+        return;
+      }
+      if (modShift && (e.key === 'L' || e.key === 'l')) {
+        e.preventDefault();
+        setShowQuickLogModal(true);
         return;
       }
       if (isEditing()) return;
@@ -444,6 +505,7 @@ export default function App() {
       <DropZoneOverlay visible={dragOver} />
 
       <CommandPalette open={showCommandPalette} onClose={() => setShowCommandPalette(false)} />
+      <QuickTimeLogModal open={showQuickLogModal} onClose={() => setShowQuickLogModal(false)} />
 
       {/* Keyboard shortcuts cheat sheet */}
       <Modal open={showShortcuts} onClose={() => setShowShortcuts(false)} title="Keyboard Shortcuts" size="sm">
@@ -455,6 +517,8 @@ export default function App() {
               ['⌘/Ctrl + ,', 'Settings'],
               ['⌘/Ctrl + /', 'Shortcuts'],
               ['⌘/Ctrl + 1–8', 'Jump to section'],
+              ['⌘/Ctrl + Shift + T', 'Start/Stop timer'],
+              ['⌘/Ctrl + Shift + L', 'Quick log time'],
               ['Escape', 'Close modal / palette'],
             ].map(([key, desc]) => (
               <div key={key} className="flex items-center justify-between col-span-2 px-3 py-1.5 rounded-[6px] hover:bg-[var(--bg-secondary)]">
@@ -488,6 +552,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
     ai_enabled: false,
   });
   const [saving, setSaving] = useState(false);
+  const seedDataRef = useRef(false);
   const [activeThemeId, setActiveThemeId] = useState<string>(localStorage.getItem('lance:theme') || 'default');
   const [validationErrors, setValidationErrors] = useState<{ email?: string }>({});
 
@@ -528,6 +593,9 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
           applyTheme(getTheme(themeId));
           localStorage.setItem('lance:theme', themeId);
         }
+      }
+      if (seedDataRef.current) {
+        await seedSampleData();
       }
       setShowOnboarding(false);
       localStorage.setItem('lance:tour-pending', 'true');
@@ -795,11 +863,42 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
                 </select>
               </div>
             </div>
+            <div className="p-3 rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-card)] space-y-3">
+              <div className="flex items-start gap-2.5">
+                <span className="text-lg flex-shrink-0">🗂</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-[var(--text-primary)]">Start with sample data?</p>
+                  <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed mt-0.5">
+                    See Lance fully populated so you know what to expect. Easy to clear anytime in Settings → Data.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleOnboardingFinish}
+                  disabled={saving || !onboardingForm.name.trim()}
+                  className="flex-1"
+                >
+                  Skip — start fresh
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    seedDataRef.current = true;
+                    handleOnboardingFinish();
+                  }}
+                  disabled={saving || !onboardingForm.name.trim()}
+                  className="flex-1"
+                >
+                  Yes, show me around
+                </Button>
+              </div>
+            </div>
             <div className="flex justify-between pt-4">
               <Button variant="secondary" onClick={handleOnboardingBack} size="sm" disabled={saving}>&larr; Back</Button>
-              <Button onClick={handleOnboardingFinish} size="sm" disabled={saving || !onboardingForm.name.trim()}>
-                {saving ? 'Saving...' : 'Get Started'}
-              </Button>
+              <span className="text-[10px] text-[var(--text-tertiary)] self-center">Step 4 of 4</span>
             </div>
           </>
         )}

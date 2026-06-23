@@ -29,6 +29,14 @@ export default function Dashboard() {
   }, [loadInvoices, loadProposals, loadProjects, loadClients, loadTimeEntries, loadExpenses, loadProfile, loadPendingFollowUps]);
 
   useEffect(() => {
+    if (loading) return;
+    if (localStorage.getItem('lance:seeded') === 'true' && localStorage.getItem('lance:seeded-toast-shown') !== 'true') {
+      addToast('Sample data loaded — explore freely. Clear it anytime in Settings → Data.', 'info');
+      localStorage.setItem('lance:seeded-toast-shown', 'true');
+    }
+  }, [loading]);
+
+  useEffect(() => {
     if (!profile) return;
     let config: ArchetypeConfig;
     if (profile.profession === 'custom' && (profile as any).custom_archetype_config) {
