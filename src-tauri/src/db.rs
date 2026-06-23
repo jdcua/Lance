@@ -45,6 +45,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            end_date TEXT,
            budget REAL,
            notes TEXT,
+           color TEXT,
            created_at TEXT NOT NULL,
            FOREIGN KEY (client_id) REFERENCES clients(id)
          );
@@ -267,6 +268,11 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
          CREATE INDEX IF NOT EXISTS idx_follow_up_entity ON follow_up_log(entity_type, entity_id);",
     )
     .map_err(|e| format!("Migration failed: {}", e))?;
+
+    // Add new columns that may not exist in older databases
+    let _ = conn.execute("ALTER TABLE projects ADD COLUMN color TEXT", []);
+    let _ = conn.execute("ALTER TABLE expenses ADD COLUMN recurring INTEGER NOT NULL DEFAULT 0", []);
+    let _ = conn.execute("ALTER TABLE expenses ADD COLUMN frequency TEXT DEFAULT 'monthly'", []);
 
     Ok(())
 }

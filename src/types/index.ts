@@ -17,6 +17,7 @@ export type Project = {
   end_date?: string;
   budget?: number;
   notes?: string;
+  color?: string;
   created_at: string;
 };
 

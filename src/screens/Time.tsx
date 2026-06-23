@@ -1,24 +1,36 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useStore } from '../store';
 import type { TimeEntry } from '../types';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import MetricCard from '../components/ui/MetricCard';
-import { Play, Square, Plus, Trash2, Clock, Grid3X3 } from 'lucide-react';
+import { Play, Square, Plus, Trash2, Clock, Grid3X3, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify } from '../achievements/notify';
 import { getUnlockedAchievementKeys } from '../achievements/checker';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { relativeDate } from '../utils/format';
+import {
+  computeHeatmapGrid,
+  computeStreakStats,
+  computeDayOfWeekBreakdown,
+  computeHourOfDayHeatmap,
+  computeMonthLabels,
+  getIntensityColor,
+  formatTooltip,
+  getHoursLabel,
+  formatHourLabel,
+  getMaxHourCount,
+  INTENSITY_LEVELS,
+  DOW_LABELS_SPARSE,
+  type HeatmapCell,
+} from '../lib/heatmap';
 
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAY_NAMES_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-function getDateKey(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_ABBREV = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export default function TimeScreen() {
   const { timeEntries, loadTimeEntries, addTimeEntry, updateTimeEntry, removeTimeEntry, projects, loadProjects, clients, loadClients } = useStore();
@@ -182,97 +194,61 @@ export default function TimeScreen() {
   const weekMinutes = weekEntries.reduce((acc, t) => acc + (t.duration_minutes || 0), 0);
   const unbilledMinutes = timeEntries.filter((t) => t.billable && !t.invoiced).reduce((acc, t) => acc + (t.duration_minutes || 0), 0);
 
-  // ── Heatmap data ──
+  // ── Heatmap state ──
   const now = new Date();
-  const startDate = new Date(now);
-  startDate.setDate(startDate.getDate() - 364);
-  startDate.setHours(0, 0, 0, 0);
+  const [heatmapYear, setHeatmapYear] = useState(now.getFullYear());
+  const [selectedProject, setSelectedProject] = useState('__all__');
+  const [selectedCell, setSelectedCell] = useState<HeatmapCell | null>(null);
+  const [selectedCellPos, setSelectedCellPos] = useState<{ x: number; y: number } | null>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
 
-  const hoursByDay: Record<string, number> = {};
-  for (const t of timeEntries) {
-    const d = t.start_time.substring(0, 10);
-    hoursByDay[d] = (hoursByDay[d] || 0) + ((t.duration_minutes || 0) / 60);
-  }
+  const heatmapGrid = useMemo(
+    () => computeHeatmapGrid(timeEntries, heatmapYear, selectedProject !== '__all__' ? selectedProject : undefined),
+    [timeEntries, heatmapYear, selectedProject],
+  );
 
-  // Build 52×7 grid
-  const heatmapGrid: { date: Date; hours: number }[][] = [];
-  let weekStart = new Date(startDate);
-  const endOfWeekDay = weekStart.getDay();
-  if (endOfWeekDay !== 0) {
-    weekStart.setDate(weekStart.getDate() - endOfWeekDay);
-  }
+  const streakStats = useMemo(
+    () => computeStreakStats(timeEntries, heatmapYear),
+    [timeEntries, heatmapYear],
+  );
 
-  const gridWeeks = 53;
-  for (let w = 0; w < gridWeeks; w++) {
-    const week: { date: Date; hours: number }[] = [];
-    for (let d = 0; d < 7; d++) {
-      const cellDate = new Date(weekStart);
-      cellDate.setDate(cellDate.getDate() + w * 7 + d);
-      const key = getDateKey(cellDate);
-      week.push({ date: cellDate, hours: hoursByDay[key] || 0 });
-    }
-    heatmapGrid.push(week);
-  }
+  const dowBreakdown = useMemo(
+    () => computeDayOfWeekBreakdown(timeEntries, selectedProject !== '__all__' ? selectedProject : undefined),
+    [timeEntries, selectedProject],
+  );
 
-  // Summary stats
-  const yearStart = new Date(now.getFullYear(), 0, 1);
-  let hoursThisYear = 0;
-  for (const t of timeEntries) {
-    if (new Date(t.start_time) >= yearStart) {
-      hoursThisYear += (t.duration_minutes || 0) / 60;
-    }
-  }
+  const hourGrid = useMemo(
+    () => computeHourOfDayHeatmap(timeEntries, selectedProject !== '__all__' ? selectedProject : undefined),
+    [timeEntries, selectedProject],
+  );
 
-  const sortedDays = Object.entries(hoursByDay)
-    .filter(([, h]) => h > 0)
-    .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime());
+  const monthLabels = useMemo(() => computeMonthLabels(heatmapGrid), [heatmapGrid]);
+  const maxHourCount = useMemo(() => getMaxHourCount(hourGrid), [hourGrid]);
 
-  let longestStreak = 0;
-  let currentStreak = 0;
-  let bestDayHours = 0;
-  let bestDayDate = '';
+  const maxDOW = useMemo(() => Math.max(...dowBreakdown.map((d) => d.avgHours), 0.1), [dowBreakdown]);
 
-  const allDates = new Set(Object.keys(hoursByDay).filter((k) => hoursByDay[k] > 0));
-  const datesArr = [...allDates].sort();
+  const projectColor = useMemo(() => {
+    if (selectedProject === '__all__') return 'var(--color-accent, var(--accent))';
+    const project = projects.find((p) => p.id === selectedProject);
+    return project?.color || 'var(--color-accent, var(--accent))';
+  }, [selectedProject, projects]);
 
-  for (const [dateStr, hours] of sortedDays) {
-    if (hours > bestDayHours) {
-      bestDayHours = hours;
-      bestDayDate = dateStr;
-    }
-  }
+  const hasEnoughData = timeEntries.length >= 7;
 
-  let streak = 0;
-  for (let i = 0; i < datesArr.length; i++) {
-    if (i === 0) {
-      streak = 1;
+  const handleCellClick = (cell: HeatmapCell, event: React.MouseEvent) => {
+    if (cell.entries.length === 0) return;
+    const rect = (event.target as HTMLElement).getBoundingClientRect();
+    const containerRect = gridRef.current?.getBoundingClientRect();
+    if (containerRect) {
+      setSelectedCellPos({
+        x: rect.left - containerRect.left + rect.width / 2,
+        y: rect.top - containerRect.top,
+      });
     } else {
-      const prev = new Date(datesArr[i - 1]);
-      const curr = new Date(datesArr[i]);
-      const diff = (curr.getTime() - prev.getTime()) / 86400000;
-      if (diff <= 1.1) {
-        streak++;
-      } else {
-        if (streak > longestStreak) longestStreak = streak;
-        streak = 1;
-      }
+      setSelectedCellPos({ x: rect.left + rect.width / 2, y: rect.top });
     }
-    if (streak > longestStreak) longestStreak = streak;
-  }
-
-  // Current streak
-  let cs = 0;
-  const checkDate = new Date(now);
-  for (let i = 0; i < 365; i++) {
-    const key = getDateKey(checkDate);
-    if (hoursByDay[key] && hoursByDay[key] > 0) {
-      cs++;
-    } else {
-      break;
-    }
-    checkDate.setDate(checkDate.getDate() - 1);
-  }
-  currentStreak = cs;
+    setSelectedCell(cell);
+  };
 
   if (loading) return (
     <div className="p-6">
@@ -488,109 +464,267 @@ export default function TimeScreen() {
       ) : (
         /* ── Heatmap tab ── */
         <>
-          <div className="grid grid-cols-4 gap-3 mb-6">
-            <MetricCard label="Total This Year" value={`${Math.round(hoursThisYear)}h`} color="gray" />
-            <MetricCard label="Longest Streak" value={`${longestStreak} days`} color="green" />
-            <MetricCard label="Current Streak" value={`${currentStreak} days`} color={currentStreak > 0 ? 'green' : 'gray'} />
+          {/* SECTION 2 — Streak Stats + SECTION 5 — Project Filter */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setHeatmapYear((y) => y - 1)}
+                className="p-0.5 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <span className="text-sm font-semibold text-[var(--text-primary)]">{heatmapYear}</span>
+              <button
+                onClick={() => setHeatmapYear((y) => Math.min(y + 1, now.getFullYear()))}
+                className="p-0.5 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                disabled={heatmapYear >= now.getFullYear()}
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+            <select
+              value={selectedProject}
+              onChange={(e) => setSelectedProject(e.target.value)}
+              className="px-3 py-1.5 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+            >
+              <option value="__all__">All Projects</option>
+              {projects.filter((p) => p.status === 'active').map((p) => (
+                <option key={p.id} value={p.id}>{p.title}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-5 gap-3 mb-6">
+            <MetricCard
+              label="Current Streak"
+              value={`${streakStats.currentStreak} day${streakStats.currentStreak !== 1 ? 's' : ''}`}
+              color={streakStats.currentStreak > 0 ? 'green' : 'gray'}
+            />
+            <MetricCard
+              label="Longest Streak"
+              value={`${streakStats.longestStreak} day${streakStats.longestStreak !== 1 ? 's' : ''}`}
+              color={streakStats.longestStreak > 0 ? 'green' : 'gray'}
+            />
+            <MetricCard
+              label={`${heatmapYear} Total`}
+              value={`${Math.round(streakStats.totalHoursThisYear)}h`}
+              color="gray"
+            />
             <MetricCard
               label="Best Day"
-              value={bestDayHours > 0 ? `${bestDayHours.toFixed(1)}h` : '—'}
-              subtext={bestDayHours > 0 ? new Date(bestDayDate).toLocaleDateString() : undefined}
-              color={bestDayHours > 0 ? 'purple' : 'gray'}
+              value={streakStats.bestDayHours > 0 ? `${streakStats.bestDayHours.toFixed(1)}h` : '—'}
+              subtext={streakStats.bestDayHours > 0 ? new Date(streakStats.bestDayDate).toLocaleDateString() : undefined}
+              color={streakStats.bestDayHours > 0 ? 'purple' : 'gray'}
+            />
+            <MetricCard
+              label="Top Month"
+              value={streakStats.mostActiveMonth || '—'}
+              subtext={streakStats.mostActiveMonth ? `${Math.round(streakStats.mostActiveMonthHours)}h` : undefined}
+              color={streakStats.mostActiveMonth ? 'blue' : 'gray'}
             />
           </div>
 
-          <Card>
+          {/* SECTION 1 — Annual Heatmap */}
+          <Card className="mb-6">
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Activity Heatmap</h3>
-            <p className="text-xs text-[var(--text-tertiary)] mb-4">Each cell represents a day. Hover to see hours logged.</p>
+            <p className="text-xs text-[var(--text-tertiary)] mb-4">{streakStats.totalDays} day{streakStats.totalDays !== 1 ? 's' : ''} with logged time</p>
 
+            {!hasEnoughData ? (
+              <div className="text-center py-12 flex flex-col items-center">
+                <Grid3X3 size={32} className="text-[var(--text-tertiary)] mb-3" />
+                <p className="text-sm font-medium text-[var(--text-secondary)] mb-1">Not enough data yet</p>
+                <p className="text-xs text-[var(--text-tertiary)] max-w-xs">
+                  Start tracking time and check back after logging at least 7 days to see your patterns emerge.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto" ref={gridRef} style={{ position: 'relative' }}>
+                <div className="flex" style={{ minWidth: 'fit-content' }}>
+                  {/* Day labels */}
+                  <div className="flex flex-col mr-2 pt-[18px]">
+                    {DOW_LABELS_SPARSE.map((label, i) => (
+                      <span
+                        key={i}
+                        className="text-[9px] text-[var(--text-tertiary)]"
+                        style={{ height: '13px', lineHeight: '13px', marginBottom: '3px' }}
+                      >
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div>
+                    {/* Month labels */}
+                    <div className="flex mb-1" style={{ gap: '3px' }}>
+                      {monthLabels.map((l, i) => (
+                        <span
+                          key={i}
+                          className="text-[9px] text-[var(--text-tertiary)] overflow-hidden whitespace-nowrap"
+                          style={{ width: `${l.spans * 13 + (l.spans - 1) * 3}px`, flexShrink: 0 }}
+                        >
+                          {l.month}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Grid */}
+                    <div className="mt-1">
+                      {heatmapGrid.map((week, wi) => (
+                        <div key={wi} className="flex" style={{ gap: '3px', marginBottom: '3px' }}>
+                          {week.map((cell, di) => (
+                            <div
+                              key={di}
+                              onClick={(e) => handleCellClick(cell, e)}
+                              className="rounded-sm transition-colors hover:ring-1 hover:ring-[var(--text-primary)]/30"
+                              style={{
+                                width: '13px',
+                                height: '13px',
+                                backgroundColor: getIntensityColor(cell.hours),
+                                cursor: cell.entries.length > 0 ? 'pointer' : 'default',
+                              }}
+                              title={cell.entries.length > 0 ? formatTooltip(cell) : undefined}
+                            />
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cell popover */}
+                {selectedCell && selectedCellPos && (
+                  <div
+                    className="absolute z-20 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[10px] shadow-lg p-3 min-w-[220px]"
+                    style={{
+                      left: `${selectedCellPos.x}px`,
+                      top: `${selectedCellPos.y + 20}px`,
+                      transform: 'translateX(-50%)',
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold text-[var(--text-primary)]">
+                        {DAY_NAMES_FULL[selectedCell.date.getDay()]}, {MONTHS_SHORT[selectedCell.date.getMonth()]} {selectedCell.date.getDate()}
+                      </span>
+                      <button
+                        onClick={() => { setSelectedCell(null); setSelectedCellPos(null); }}
+                        className="p-0.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-[var(--text-secondary)] mb-2">
+                      {selectedCell.hours.toFixed(1)}h logged · {selectedCell.billableHours.toFixed(1)}h billable
+                    </p>
+                    {selectedCell.entries.length > 0 && (
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                        {selectedCell.entries.map((entry) => (
+                          <div key={entry.id} className="text-[11px] text-[var(--text-secondary)] flex items-center justify-between">
+                            <span className="truncate mr-2">{getProjectName(entry.project_id)}</span>
+                            <span className="text-[var(--text-primary)] font-medium flex-shrink-0">
+                              {entry.duration_minutes ? formatDuration(entry.duration_minutes) : '—'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Legend */}
+            <div className="flex items-center gap-2 mt-4 pt-3 border-t border-[var(--border-color)]">
+              <span className="text-[9px] text-[var(--text-tertiary)]">Less</span>
+              {INTENSITY_LEVELS.map((h) => (
+                <div
+                  key={h}
+                  className="rounded-sm"
+                  title={getHoursLabel(h)}
+                  style={{
+                    width: '13px',
+                    height: '13px',
+                    backgroundColor: getIntensityColor(h),
+                  }}
+                />
+              ))}
+              <span className="text-[9px] text-[var(--text-tertiary)]">More</span>
+            </div>
+          </Card>
+
+          {/* SECTION 3 — Day of Week Breakdown */}
+          <Card className="mb-6">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Day of Week</h3>
+            <p className="text-xs text-[var(--text-tertiary)] mb-4">Average hours per day of the week</p>
+            <div className="flex items-end gap-3" style={{ height: '120px' }}>
+              {dowBreakdown.map((bar) => (
+                <div key={bar.dayIndex} className="flex-1 flex flex-col items-center gap-1">
+                  <span className="text-[9px] text-[var(--text-primary)] font-medium">
+                    {bar.avgHours > 0 ? `${bar.avgHours.toFixed(1)}h` : '—'}
+                  </span>
+                  <div className="w-full flex-1 flex flex-col justify-end">
+                    <div
+                      className="w-full rounded-t-sm transition-all duration-300"
+                      style={{
+                        height: `${maxDOW > 0 ? (bar.avgHours / maxDOW) * 100 : 0}%`,
+                        minHeight: bar.avgHours > 0 ? '2px' : '0',
+                        backgroundColor: projectColor,
+                      }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-[var(--text-tertiary)]">{bar.day}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* SECTION 4 — Hour of Day Heatmap */}
+          <Card>
+            <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Hour of Day</h3>
+            <p className="text-xs text-[var(--text-tertiary)] mb-4">When you clock in across the week</p>
             <div className="overflow-x-auto">
               <div className="flex" style={{ minWidth: 'fit-content' }}>
-                {/* Day labels */}
-                <div className="flex flex-col gap-[3px] mr-2 pt-[18px]">
-                  {DAYS.map((day, i) => (
-                    <span key={i} className="text-[9px] text-[var(--text-tertiary)] h-[13px] leading-[13px]">
-                      {i % 2 === 0 ? day : ''}
+                {/* Hour labels */}
+                <div className="flex flex-col mr-2 gap-[2px]">
+                  <div style={{ height: '10px' }} />
+                  {DAY_ABBREV.map((day, i) => (
+                    <span key={i} className="text-[9px] text-[var(--text-tertiary)]" style={{ height: '14px', lineHeight: '14px' }}>
+                      {day}
                     </span>
                   ))}
                 </div>
 
-                {/* Month labels and grid */}
                 <div>
-                  <div className="flex mb-1" style={{ paddingLeft: '0' }}>
-                    {(() => {
-                      const labels: { month: string; col: number }[] = [];
-                      let lastMonth = -1;
-                      for (let w = 0; w < gridWeeks; w++) {
-                        const cellDate = heatmapGrid[w]?.[0]?.date;
-                        if (cellDate && cellDate.getMonth() !== lastMonth) {
-                          lastMonth = cellDate.getMonth();
-                          labels.push({ month: MONTHS_SHORT[cellDate.getMonth()], col: w });
-                        }
-                      }
-                      return labels.map((l, i) => (
-                        <span
-                          key={i}
-                          className="text-[9px] text-[var(--text-tertiary)]"
-                          style={{
-                            position: 'absolute',
-                            left: `${l.col * 16}px`,
-                            marginLeft: 0,
-                          }}
-                        />
-                      ));
-                    })()}
-                  </div>
-                  <div className="flex gap-[3px] ml-0">
-                    {/* Simple month label row */}
-                    {(() => {
-                      let lastMonth = -1;
-                      const labels: { month: string; spans: number }[] = [];
-                      for (let w = 0; w < gridWeeks; w++) {
-                        const cellDate = heatmapGrid[w]?.[0]?.date;
-                        if (cellDate) {
-                          if (cellDate.getMonth() !== lastMonth) {
-                            lastMonth = cellDate.getMonth();
-                            labels.push({ month: MONTHS_SHORT[cellDate.getMonth()], spans: 1 });
-                          } else if (labels.length > 0) {
-                            labels[labels.length - 1].spans++;
-                          }
-                        }
-                      }
-                      return (
-                        <>
-                          {labels.map((l, i) => (
-                            <span
-                              key={i}
-                              className="text-[9px] text-[var(--text-tertiary)]"
-                              style={{ minWidth: `${l.spans * 16}px` }}
-                            >
-                              {l.month}
-                            </span>
-                          ))}
-                        </>
-                      );
-                    })()}
+                  {/* Hour header labels */}
+                  <div className="flex mb-1" style={{ gap: '2px' }}>
+                    {Array.from({ length: 24 }, (_, h) => (
+                      <span
+                        key={h}
+                        className="text-[8px] text-[var(--text-tertiary)] text-center"
+                        style={{ width: '18px' }}
+                      >
+                        {h % 3 === 0 ? formatHourLabel(h) : ''}
+                      </span>
+                    ))}
                   </div>
 
-                  <div className="mt-1">
-                    {heatmapGrid.map((week, wi) => (
-                      <div key={wi} className="flex" style={{ gap: '3px', marginRight: wi < gridWeeks - 1 ? '3px' : '0' }}>
-                        {week.map((cell, di) => {
-                          const h = cell.hours;
-                          return (
-                            <div
-                              key={di}
-                              className={`rounded-sm cursor-default transition-colors`}
-                              style={{
-                                width: '13px',
-                                height: '13px',
-                                backgroundColor: `color-mix(in srgb, var(--color-accent, var(--accent)) ${h === 0 ? 5 : h <= 2 ? 15 : h <= 4 ? 35 : h <= 6 ? 60 : 85}%, var(--bg-secondary))`,
-                              }}
-                              title={`${DAY_NAMES_FULL[cell.date.getDay()]} ${MONTHS_SHORT[cell.date.getMonth()]} ${cell.date.getDate()} — ${h.toFixed(1)}h logged`}
-                            />
-                          );
-                        })}
+                  {/* Grid */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    {hourGrid.map((row, dayIdx) => (
+                      <div key={dayIdx} className="flex" style={{ gap: '2px' }}>
+                        {row.map((cell, hourIdx) => (
+                          <div
+                            key={hourIdx}
+                            className="rounded-sm"
+                            title={`${DAY_NAMES[cell.dayOfWeek]} ${formatHourLabel(cell.hour)} — ${cell.count} entr${cell.count !== 1 ? 'ies' : 'y'}`}
+                            style={{
+                              width: '18px',
+                              height: '14px',
+                              backgroundColor: maxHourCount > 0
+                                ? `color-mix(in srgb, ${projectColor} ${Math.max(5, Math.round((cell.count / maxHourCount) * 100))}%, var(--color-surface-2, var(--bg-secondary)))`
+                                : 'var(--color-surface-2, var(--bg-secondary))',
+                            }}
+                          />
+                        ))}
                       </div>
                     ))}
                   </div>
@@ -599,19 +733,25 @@ export default function TimeScreen() {
             </div>
 
             {/* Legend */}
-            <div className="flex items-center gap-3 mt-4 pt-3 border-t border-[var(--border-color)]">
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--border-color)]">
               <span className="text-[9px] text-[var(--text-tertiary)]">Less</span>
-              {[0, 2, 4, 6, 8].map((h) => (
-                <div
-                  key={h}
-                  className="rounded-sm"
-                  style={{
-                    width: '13px',
-                    height: '13px',
-                    backgroundColor: `color-mix(in srgb, var(--color-accent, var(--accent)) ${h === 0 ? 5 : 15}%, var(--bg-secondary))`,
-                  }}
-                />
-              ))}
+              {[0, 0.25, 0.5, 0.75, 1].map((pct) => {
+                const count = Math.max(0, Math.round(maxHourCount * pct));
+                return (
+                  <div
+                    key={pct}
+                    className="rounded-sm"
+                    title={count > 0 ? `${count} entries` : '0 entries'}
+                    style={{
+                      width: '18px',
+                      height: '14px',
+                      backgroundColor: maxHourCount > 0
+                        ? `color-mix(in srgb, ${projectColor} ${Math.max(5, Math.round(pct * 100))}%, var(--color-surface-2, var(--bg-secondary)))`
+                        : 'var(--color-surface-2, var(--bg-secondary))',
+                    }}
+                  />
+                );
+              })}
               <span className="text-[9px] text-[var(--text-tertiary)]">More</span>
             </div>
           </Card>

@@ -13,6 +13,7 @@ pub struct Project {
     pub end_date: Option<String>,
     pub budget: Option<f64>,
     pub notes: Option<String>,
+    pub color: Option<String>,
     pub created_at: String,
 }
 
@@ -35,6 +36,7 @@ pub struct CreateProjectPayload {
     pub end_date: Option<String>,
     pub budget: Option<f64>,
     pub notes: Option<String>,
+    pub color: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -47,6 +49,7 @@ pub struct UpdateProjectPayload {
     pub end_date: Option<String>,
     pub budget: Option<f64>,
     pub notes: Option<String>,
+    pub color: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -70,7 +73,7 @@ pub struct UpdateMilestonePayload {
 #[tauri::command]
 pub fn get_projects(app: AppHandle) -> Result<Vec<Project>, String> {
     let conn = db::get_connection(&app)?;
-    let mut stmt = conn.prepare("SELECT id, client_id, title, status, start_date, end_date, budget, notes, created_at FROM projects ORDER BY created_at DESC")
+    let mut stmt = conn.prepare("SELECT id, client_id, title, status, start_date, end_date, budget, notes, color, created_at FROM projects ORDER BY created_at DESC")
         .map_err(|e| e.to_string())?;
     let projects = stmt
         .query_map([], |row| {
@@ -83,7 +86,8 @@ pub fn get_projects(app: AppHandle) -> Result<Vec<Project>, String> {
                 end_date: row.get(5)?,
                 budget: row.get(6)?,
                 notes: row.get(7)?,
-                created_at: row.get(8)?,
+                color: row.get(8)?,
+                created_at: row.get(9)?,
             })
         })
         .map_err(|e| e.to_string())?
@@ -95,7 +99,7 @@ pub fn get_projects(app: AppHandle) -> Result<Vec<Project>, String> {
 #[tauri::command]
 pub fn get_project(app: AppHandle, id: String) -> Result<Option<Project>, String> {
     let conn = db::get_connection(&app)?;
-    let mut stmt = conn.prepare("SELECT id, client_id, title, status, start_date, end_date, budget, notes, created_at FROM projects WHERE id = ?")
+    let mut stmt = conn.prepare("SELECT id, client_id, title, status, start_date, end_date, budget, notes, color, created_at FROM projects WHERE id = ?")
         .map_err(|e| e.to_string())?;
     Ok(stmt
         .query_row([&id], |row| {
@@ -108,7 +112,8 @@ pub fn get_project(app: AppHandle, id: String) -> Result<Option<Project>, String
                 end_date: row.get(5)?,
                 budget: row.get(6)?,
                 notes: row.get(7)?,
-                created_at: row.get(8)?,
+                color: row.get(8)?,
+                created_at: row.get(9)?,
             })
         })
         .ok())
@@ -120,8 +125,8 @@ pub fn create_project(app: AppHandle, payload: CreateProjectPayload) -> Result<P
     let id = uuid::Uuid::new_v4().to_string();
     let created_at = super::clients::chrono_now();
     conn.execute(
-        "INSERT INTO projects (id, client_id, title, status, start_date, end_date, budget, notes, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-        rusqlite::params![id, payload.client_id, payload.title, payload.status, payload.start_date, payload.end_date, payload.budget, payload.notes, created_at],
+        "INSERT INTO projects (id, client_id, title, status, start_date, end_date, budget, notes, color, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+        rusqlite::params![id, payload.client_id, payload.title, payload.status, payload.start_date, payload.end_date, payload.budget, payload.notes, payload.color, created_at],
     ).map_err(|e| e.to_string())?;
     Ok(Project {
         id,
@@ -132,6 +137,7 @@ pub fn create_project(app: AppHandle, payload: CreateProjectPayload) -> Result<P
         end_date: payload.end_date,
         budget: payload.budget,
         notes: payload.notes,
+        color: payload.color,
         created_at,
     })
 }
@@ -140,8 +146,8 @@ pub fn create_project(app: AppHandle, payload: CreateProjectPayload) -> Result<P
 pub fn update_project(app: AppHandle, payload: UpdateProjectPayload) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
     conn.execute(
-        "UPDATE projects SET client_id = ?1, title = ?2, status = ?3, start_date = ?4, end_date = ?5, budget = ?6, notes = ?7 WHERE id = ?8",
-        rusqlite::params![payload.client_id, payload.title, payload.status, payload.start_date, payload.end_date, payload.budget, payload.notes, payload.id],
+        "UPDATE projects SET client_id = ?1, title = ?2, status = ?3, start_date = ?4, end_date = ?5, budget = ?6, notes = ?7, color = ?8 WHERE id = ?9",
+        rusqlite::params![payload.client_id, payload.title, payload.status, payload.start_date, payload.end_date, payload.budget, payload.notes, payload.color, payload.id],
     ).map_err(|e| e.to_string())?;
     Ok(())
 }

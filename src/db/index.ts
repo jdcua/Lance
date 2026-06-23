@@ -156,6 +156,7 @@ async function runMigrations(database: Database): Promise<void> {
     'ALTER TABLE user_profile ADD COLUMN always_include TEXT',
     'ALTER TABLE user_profile ADD COLUMN writing_style TEXT DEFAULT \'professional\'',
     'ALTER TABLE user_profile ADD COLUMN theme TEXT DEFAULT \'light\'',
+    'ALTER TABLE projects ADD COLUMN color TEXT',
     'ALTER TABLE user_profile ADD COLUMN license_key TEXT',
     'ALTER TABLE user_profile ADD COLUMN licensed_at TEXT',
     'ALTER TABLE user_profile ADD COLUMN profession TEXT',
