@@ -28,16 +28,31 @@ export default function ToastContainer() {
           aria-live="polite"
           onMouseEnter={() => pause(toast.id)}
           onMouseLeave={() => resume(toast.id)}
-          className={`pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-[8px] border shadow-lg text-sm max-w-sm animate-slide-in ${colors[toast.type]}`}
+          className={`pointer-events-auto flex flex-col gap-2 px-4 py-3 rounded-[8px] border shadow-lg text-sm max-w-sm animate-slide-in ${colors[toast.type]}`}
         >
-          {(() => {
-            const Icon = icons[toast.type];
-            return <Icon size={16} className="flex-shrink-0" />;
-          })()}
-          <span className="flex-1">{toast.message}</span>
-          <button onClick={() => remove(toast.id)} className="opacity-50 hover:opacity-100">
-            <X size={14} />
-          </button>
+          <div className="flex items-center gap-2">
+            {(() => {
+              const Icon = icons[toast.type];
+              return <Icon size={16} className="flex-shrink-0" />;
+            })()}
+            <span className="flex-1">{toast.message}</span>
+            <button onClick={() => remove(toast.id)} className="opacity-50 hover:opacity-100">
+              <X size={14} />
+            </button>
+          </div>
+          {toast.actions && toast.actions.length > 0 && (
+            <div className="flex gap-2 justify-end">
+              {toast.actions.map((action) => (
+                <button
+                  key={action.label}
+                  onClick={() => { remove(toast.id); action.onClick(); }}
+                  className="px-3 py-1 rounded-[4px] border border-current/20 hover:bg-current/10 text-xs font-medium"
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       ))}
     </div>

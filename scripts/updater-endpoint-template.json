@@ -1,0 +1,12 @@
+{
+  "_comment": "Generate signatures with: npx tauri signer generate -k ~/.tauri/updater.key -p ~/.tauri/updater.pub --json",
+  "version": "v1.1.0",
+  "notes": "Bug fixes and improvements",
+  "pub_date": "2026-01-01T00:00:00Z",
+  "platforms": {
+    "darwin-x86_64": { "signature": "", "url": "" },
+    "darwin-aarch64": { "signature": "", "url": "" },
+    "linux-x86_64": { "signature": "", "url": "" },
+    "windows-x86_64": { "signature": "", "url": "" }
+  }
+}

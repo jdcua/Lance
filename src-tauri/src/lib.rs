@@ -7,8 +7,8 @@ pub fn run() {
         .plugin(tauri_plugin_sql::Builder::default().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        // TODO: Re-enable updater when endpoint is live
-        // .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .setup(|app| {
             let conn = db::get_connection(app.handle())?;
             db::run_migrations(&conn).expect("Failed to run migrations");

@@ -22,6 +22,7 @@ import ImportModal from './components/ui/ImportModal';
 import DropZoneOverlay from './components/ui/DropZoneOverlay';
 import { useStore } from './store';
 import { useToasts } from './store/toastStore';
+import { useAutoUpdater } from './hooks/useAutoUpdater';
 import { shouldGenerate, getNextDueDate } from './utils/recurringEngine';
 import { generateInvoiceNumber } from './utils/invoiceNumber';
 import { applyTheme, getTheme, THEMES } from './themes/themes';
@@ -258,24 +259,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, [profileLoaded]);
 
-  // TODO: Re-enable auto-updater when endpoint is live
-  // useEffect(() => {
-  //   const checkUpdate = async () => {
-  //     try {
-  //       const { check } = await import('@tauri-apps/plugin-updater');
-  //       const update = await check();
-  //       if (update?.available) {
-  //         addToast(`Lance ${update.version} is available — updating in background`, 'info');
-  //         await update.downloadAndInstall();
-  //         addToast('Update installed — restart Lance to apply', 'success');
-  //       }
-  //     } catch {
-  //       // Silent fail — updates are best-effort
-  //     }
-  //   };
-  //   const timer = setTimeout(checkUpdate, 3000);
-  //   return () => clearTimeout(timer);
-  // }, []);
+  useAutoUpdater();
 
   // Global drag-and-drop for import
   useEffect(() => {

@@ -13,13 +13,15 @@
     "build:linux": "tauri build --target x86_64-unknown-linux-gnu",
     "build:all": "npm run build:win && npm run build:mac && npm run build:linux",
     "release": "npm run build:all",
-    "gen-license": "node scripts/generate-license.cjs"
+    "gen-license": "node scripts/generate-license.cjs",
+    "scripts:sign-update": "echo 'Use: npx tauri signer generate -k ~/.tauri/updater.key -p ~/.tauri/updater.pub --json > scripts/updater-endpoint-template.json'"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.5.1",
     "@tauri-apps/api": "^2.0.0",
     "@tauri-apps/plugin-dialog": "^2.7.1",
     "@tauri-apps/plugin-fs": "^2.5.1",
+    "@tauri-apps/plugin-process": "^2.0.0",
     "@tauri-apps/plugin-sql": "^2.0.0",
     "@tauri-apps/plugin-updater": "^2.0.0",
     "@tiptap/extension-placeholder": "^3.25.0",
