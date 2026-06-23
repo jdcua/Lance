@@ -4,6 +4,10 @@ import { Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { queryLocalAI } from '../../ai';
 import { useStore } from '../../store';
 
+// TODO v1.1: Set AI_ENABLED = true when queryLocalAI() is implemented
+// The AIBar shows contextual AI insights per screen. Currently a stub.
+const AI_ENABLED = false;
+
 const screenPrompts: Record<string, string> = {
   '/proposals': 'Summarize the current state of proposals. Highlight any that need follow-up.',
   '/contracts': 'Summarize active contracts and any approaching deadlines.',
@@ -24,6 +28,7 @@ export default function AIBar() {
   const prompt = screenPrompts[location.pathname];
 
   useEffect(() => {
+    if (!AI_ENABLED) return;
     setInsight('');
     setExpanded(false);
     if (!aiEnabled) return;
@@ -36,6 +41,7 @@ export default function AIBar() {
     }
   }, [prompt, location.pathname, aiEnabled]);
 
+  if (!AI_ENABLED) return null;
   if (!aiEnabled || !insight) return null;
 
   return (

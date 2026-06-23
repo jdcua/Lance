@@ -495,6 +495,7 @@ export default function Settings() {
       await tauriInvoke('delete_user_profile');
       
       localStorage.clear();
+      localStorage.setItem('lance:onboarding-step', 'complete');
       setShowResetModal(false);
       addToast('All data has been reset', 'info');
       

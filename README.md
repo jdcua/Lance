@@ -1,128 +1,63 @@
 # Lance — Freelancer OS
 
-Win work. Run projects. Get paid. Run your business.
+Lance is a desktop app that runs your entire freelance business — clients, projects, proposals, contracts, time tracking, invoices, expenses, and financial insights — all in one place. Everything lives on your machine. No cloud, no subscription, no vendor lock-in. Built for freelancers who want to own their data and their tools.
 
-Lance is a desktop application built by [Decentra](https://decentra.co) that puts all your freelance business operations in one place. Clients, projects, proposals, contracts, time tracking, invoices, expenses, and insights — all running locally on your machine.
+Built by [Decentra](https://decentra.co).
 
-## Tech Stack
+## What's inside
 
-- **Frontend**: React 18 + TypeScript + Tailwind CSS + Vite
-- **Backend**: Rust (Tauri v2) + SQLite
-- **Icons**: Lucide React
-- **State**: Zustand
+**Pick your archetype.** Lance knows that a photographer, a developer, and a consultant run their businesses differently. Choose from 44 profession profiles and Lance customizes your sidebar, dashboard metrics, and insight panels to match how you work. You can switch anytime — your data stays the same.
 
-## Development
+**Clients.** A full CRM with contact details, communication history, custom metrics, and file attachments. Add headline KPIs per client (like MRR or follower count) and track them over time.
 
-### Prerequisites
+**Projects.** Create projects from templates with built-in milestones. Assign clients, set budgets, track status. Each archetype adds its own project tracking — render logs for 3D artists, shoot logs for photographers, revision rounds for designers, build versions for developers.
 
-- Node.js 18+
-- Rust (stable, 2021 edition)
-- Tauri CLI v2 (`cargo install tauri-cli`)
+**Proposals.** Write and send proposals directly from Lance. Pick a template, fill in scope and pricing, and export as a polished PDF. Lance tracks sent status and can draft follow-up messages when a client goes quiet.
 
-### Setup
+**Contracts.** Generate contracts from templates with variable placeholders. Send them alongside proposals or standalone. Track signing status.
 
-```bash
-npm install
-```
+**Time tracking.** Start a timer from anywhere with a keyboard shortcut. Log time manually or let the timer run. Mark hours as billable and tie them to projects. Lance shows you what's unbilled so nothing slips through.
 
-### Run (dev)
+**Invoices.** Create one-off or recurring invoices. Recurring invoices auto-generate on schedule so you don't have to remember. Track payments, partial payments, and overdue status. Export as PDF.
 
-```bash
-npm run tauri dev
-```
+**Expenses.** Log business expenses with categories and receipts. See profit trends and tax summaries.
 
-This starts Vite on port 1420 and launches the Tauri window.
+**Finance dashboard.** Income, expenses, profit, outstanding invoices, unbilled hours — all in one view. Filter by date range and see where your money is going.
 
-### Build
+**Follow-ups.** Lance watches your sent proposals and overdue invoices and drafts friendly reminder emails when they need attention. You review and send — nothing goes out automatically. Full template customization with variables.
 
-```bash
-npm run tauri build        # current platform
-npm run build:win          # Windows (cross-compile)
-npm run build:mac          # macOS (cross-compile)
-npm run build:linux        # Linux
-```
+**Achievements.** A lightweight gamification system that tracks milestones like your first client, first invoice, hitting project counts, and export milestones. Unlock themes and accent colors as you go.
 
-### TypeScript Check
+**Client portal.** Give clients a read-only view of their projects, invoices, and communications. Self-contained, no account system needed.
 
-```bash
-npx tsc --noEmit
-```
+**AI proposals.** Optional local AI that drafts proposal sections in your writing voice. Runs on your machine — nothing leaves your computer. Currently disabled for v1.0, shipping in v1.1.
 
-### Rust Check
+**Import & export.** Drag and drop spreadsheets, documents, and images to import data. Full backup and restore as JSON. Auto-backup on a schedule you set. Export anything as PDF or DOCX.
 
-```bash
-cargo check --manifest-path src-tauri/Cargo.toml
-```
+**Themes.** 7 color themes (Default, Studio, Terminal, Craft, Motion, Lens, Scale) with 8 accent colors. Light and dark mode. Compact layout option for dense screens.
 
-## Project Structure
+**Privacy.** No telemetry. No analytics. No crash reporting. No sign-up required. Lance is a desktop app — your SQLite database stays on your machine. The only outbound request it ever makes is the auto-updater version check.
 
-```
-src/                  # React frontend
-  components/         # UI components
-    ui/               # Shared UI (Button, Card, Modal, etc.)
-    layout/           # Layout (Sidebar, Topbar)
-  screens/            # Route screens (Dashboard, Proposals, etc.)
-  store/              # Zustand state management
-  types/              # TypeScript type definitions
-  utils/              # Utility functions
-  themes/             # Theme definitions
-  archetypes/         # 44 freelancer profession profiles
-  achievements/       # Gamification system
-  export/             # PDF & DOCX export
-  import/             # File import & parsing
-  ai/                 # Local AI (v3 — disabled for now)
-  db/                 # Frontend database migration
-src-tauri/            # Rust backend (Tauri)
-  src/
-    commands/         # 11 command modules (73 Tauri commands)
-    db.rs             # SQLite schema & migrations
-    lib.rs            # App bootstrap & command registration
-    main.rs           # Entry point
-```
+## Download
 
-### Import Path Alias
+[Download the latest release](https://github.com/jdcua/lance/releases)
 
-`@/` maps to `src/`. Example:
-
-```ts
-import Button from '@/components/ui/Button';
-import { useStore } from '@/store';
-import type { Client } from '@/types';
-```
-
-Relative imports also work everywhere.
-
-## Database
-
-SQLite via `rusqlite` (bundled). The database file is stored in the platform's app-data directory as `lance.db`. Schema is defined in both:
-
-- `src-tauri/src/db.rs` (Rust — primary, runs on app start)
-- `src/db/index.ts` (TypeScript — secondary, runs on frontend load)
-
-Both migrations use `CREATE TABLE IF NOT EXISTS` and `ALTER TABLE` with silent error handling, so they are idempotent and safe to run multiple times.
-
-## Key Features
-
-- 44 freelancer archetypes (profession profiles)
-- 7 themes (Default, Studio, Terminal, Craft, Motion, Lens, Scale)
-- 8 accent colors
-- Command palette (Ctrl+K)
-- Keyboard shortcuts (Ctrl+1–8, Ctrl+N, Ctrl+,)
-- Drag-and-drop file import (spreadsheets, documents, images)
-- PDF & DOCX export with templates
-- Recurring invoices with auto-generation
-- Follow-up reminders for proposals & invoices
-- Client metrics & headline tracking
-- Gamified achievements system
-- Layout density (comfortable / compact)
-- Light / dark mode
+- **macOS** — Apple Silicon and Intel (DMG)
+- **Windows** — 10 and 11 (MSI and NSIS installer)
+- **Linux** — AppImage and .deb
 
 ## License
 
-Proprietary software. Copyright 2026 Decentra. See [LICENSE.md](LICENSE.md).
+Lance costs **$59** one time. No subscription, no recurring fees, no cloud dependency. You own your copy forever.
 
-Free for personal and commercial use. A paid license ($59) removes the launch screen and unlocks all themes immediately.
+Free to use without a license. A license removes the launch screen and unlocks all themes instantly.
 
-## Privacy
+[Buy a license](https://decentra.co/lance)
 
-No telemetry. No analytics. No crash reporting. All data stays local in your SQLite database. The only outbound request is the auto-updater version check. See [PRIVACY.md](PRIVACY.md).
+## Built with
+
+Tauri · React · TypeScript · SQLite · Rust
+
+## From Decentra
+
+Decentra builds decentralized software tools that run on your machine, not someone else's server. [decentra.co](https://decentra.co)

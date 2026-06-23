@@ -136,8 +136,13 @@ export default function App() {
   }, [isLicensed]);
 
   useEffect(() => {
-    if (profileLoaded && !profile) {
-      setShowOnboarding(true);
+    if (profileLoaded) {
+      const step = localStorage.getItem('lance:onboarding-step');
+      if (step && step !== 'complete') {
+        setShowOnboarding(true);
+      } else if (!step && !profile) {
+        setShowOnboarding(true);
+      }
     }
   }, [profileLoaded, profile]);
 
@@ -676,7 +681,7 @@ function DynamicShortcutLegend() {
 }
 
 function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding: boolean, setShowOnboarding: (s: boolean) => void }) {
-  const { saveProfile } = useStore();
+  const { saveProfile, profile } = useStore();
   const [onboardingStep, setOnboardingStep] = useState(1);
   const [onboardingForm, setOnboardingForm] = useState({
     name: '', email: '', currency: 'CAD' as string, hourly_rate: '', payment_terms: '14',
@@ -685,20 +690,60 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
     ai_enabled: false,
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [isResuming, setIsResuming] = useState(false);
   const seedDataRef = useRef(false);
   const [activeThemeId, setActiveThemeId] = useState<string>(localStorage.getItem('lance:theme') || 'default');
   const [validationErrors, setValidationErrors] = useState<{ email?: string }>({});
 
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  // Reset step to 1 when modal opens
   useEffect(() => {
     if (showOnboarding) {
-      setOnboardingStep(1);
+      const storedStep = localStorage.getItem('lance:onboarding-step');
+      const parsedStep = storedStep && storedStep !== 'complete' ? parseInt(storedStep) : NaN;
+      if (parsedStep >= 1 && parsedStep <= 5) {
+        setOnboardingStep(parsedStep);
+        setIsResuming(true);
+        if (profile) {
+          setOnboardingForm({
+            name: profile.name || '',
+            email: profile.email || '',
+            currency: profile.currency || 'CAD',
+            hourly_rate: profile.hourly_rate?.toString() || '',
+            payment_terms: (profile.payment_terms ?? 14).toString(),
+            profession: (profile.profession as Profession) || '',
+            writing_style: profile.writing_style || 'professional',
+            ai_enabled: profile.ai_enabled ?? false,
+          });
+        }
+      } else {
+        setOnboardingStep(1);
+        setIsResuming(false);
+      }
     }
   }, [showOnboarding]);
 
-  const handleOnboardingNext = () => setOnboardingStep((s) => s + 1);
+  const persistStep = async (step: number) => {
+    localStorage.setItem('lance:onboarding-step', step.toString());
+    try {
+      await saveProfile({
+        name: onboardingForm.name || undefined,
+        email: onboardingForm.email || undefined,
+        currency: onboardingForm.currency,
+        hourly_rate: onboardingForm.hourly_rate ? parseFloat(onboardingForm.hourly_rate) : undefined,
+        payment_terms: parseInt(onboardingForm.payment_terms) || 14,
+        profession: onboardingForm.profession || undefined,
+        writing_style: onboardingForm.writing_style,
+        ai_enabled: onboardingForm.ai_enabled,
+      });
+    } catch { /* save is best-effort during onboarding */ }
+  };
+
+  const handleOnboardingNext = () => {
+    const next = onboardingStep + 1;
+    persistStep(next);
+    setOnboardingStep(next);
+  };
   const handleOnboardingBack = () => setOnboardingStep((s) => s - 1);
   const handleOnboardingClose = useCallback(() => {
     setShowOnboarding(false);
@@ -730,6 +775,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
       if (seedDataRef.current) {
         await seedSampleData();
       }
+      localStorage.setItem('lance:onboarding-step', 'complete');
       setShowOnboarding(false);
       localStorage.setItem('lance:tour-pending', 'true');
     } finally {
@@ -743,6 +789,11 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
   return (
     <Modal open={showOnboarding} onClose={handleOnboardingClose} title="" size="sm">
       <div className="space-y-5">
+        {isResuming && (
+          <div className="text-center text-xs text-[var(--text-secondary)] bg-[var(--accent-bg)] py-1.5 px-3 rounded-[6px]">
+            Welcome back &mdash; pick up where you left off.
+          </div>
+        )}
         <div className="flex justify-center gap-2 mb-1">
           {/* [1, 2, 3, 4, 5] -> AI disabled for v1.0.0 */}
           {[1, 2, 3, 4].map((step) => (
