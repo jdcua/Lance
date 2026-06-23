@@ -10,4 +10,5 @@ pub mod mailto;
 pub mod metrics;
 pub mod projects;
 pub mod proposals;
+pub mod sharing;
 pub mod time;

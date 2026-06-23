@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
-import type { Proposal } from '../types';
+import type { Proposal, ShareToken } from '../types';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
@@ -12,7 +12,8 @@ import { formatDate } from '../utils/format';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
-import { Plus, Trash2, Send, Eye, Download, FileText, Search, ArrowUpDown, Bell, Check, X, Copy, Clock, Mail } from 'lucide-react';
+import { Plus, Trash2, Send, Eye, Download, FileText, Search, ArrowUpDown, Bell, Check, X, Copy, Clock, Mail, Share2, Link } from 'lucide-react';
+import ShareModal from '../components/ShareModal';
 import { generateFollowUpDraft, generateSubjectLine, openMailTo } from '../utils/followUpTemplates';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 
@@ -67,13 +68,24 @@ export default function Proposals() {
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [shareModal, setShareModal] = useState<{ entityType: 'proposal'; entityId: string } | null>(null);
+  const [shareTokenIds, setShareTokenIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    Promise.all([loadProposals(), loadClients(), loadProfile()])
+    Promise.all([loadProposals(), loadClients(), loadProfile(), loadShareTokens()])
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
     loadPendingFollowUps();
   }, [loadProposals, loadClients, loadProfile, loadPendingFollowUps]);
+
+  const loadShareTokens = async () => {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const tokens = await invoke<ShareToken[]>('get_all_share_tokens');
+      const ids = new Set(tokens.filter(t => t.entity_type === 'proposal').map(t => t.entity_id));
+      setShareTokenIds(ids);
+    } catch { /* ignore */ }
+  };
 
   useEffect(() => {
     if (!exportDropdown) return;
@@ -317,10 +329,13 @@ export default function Proposals() {
             <Card key={p.id}>
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-sm font-semibold text-[var(--text-primary)]">{p.title}</h3>
-                    <Badge variant={statusBadge[p.status]}>{p.status}</Badge>
-                  </div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-sm font-semibold text-[var(--text-primary)]">{p.title}</h3>
+                      {shareTokenIds.has(p.id) && (
+                        <Link size={12} className="text-[var(--accent)] flex-shrink-0" title="Shared via portal" />
+                      )}
+                      <Badge variant={statusBadge[p.status]}>{p.status}</Badge>
+                    </div>
                   <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)] mb-2">
                     <span>{getClientName(p.client_id)}</span>
                     {formatRate(p) && <span>{formatRate(p)}</span>}
@@ -359,9 +374,14 @@ export default function Proposals() {
                     </button>
                   )}
                   {p.status === 'sent' && (
-                    <button onClick={() => handleAccept(p)} aria-label="Accept proposal" className="p-1.5 rounded-[8px] text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors" title="Accept">
-                      <Send size={14} />
-                    </button>
+                    <>
+                      <button onClick={() => handleAccept(p)} aria-label="Accept proposal" className="p-1.5 rounded-[8px] text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors" title="Accept">
+                        <Send size={14} />
+                      </button>
+                      <button onClick={() => setShareModal({ entityType: 'proposal', entityId: p.id })} aria-label="Share proposal" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors" title="Share">
+                        <Share2 size={14} />
+                      </button>
+                    </>
                   )}
                   {p.status === 'expired' && (
                     <button onClick={() => handleResend(p)} aria-label="Resend proposal" className="p-1.5 rounded-[8px] text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors" title="Resend">
@@ -505,6 +525,14 @@ export default function Proposals() {
         variant="danger"
         loading={deleting}
       />
+      {shareModal && (
+        <ShareModal
+          open={!!shareModal}
+          onClose={() => setShareModal(null)}
+          entityType={shareModal.entityType}
+          entityId={shareModal.entityId}
+        />
+      )}
       <ArchetypeFeatureTabs screen="proposals" />
     </div>
   );

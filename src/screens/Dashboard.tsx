@@ -1,12 +1,13 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
+import type { PortalActivity } from '../types';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import Button from '../components/ui/Button';
 import { relativeDate, formatCurrency } from '../utils/format';
 import { useToasts } from '../store/toastStore';
-import { Play, Receipt, FileText, Users, FolderKanban, Clock, Plus, ArrowRight, CheckCircle2, Circle, Bell, Send, Check, X } from 'lucide-react';
+import { Play, Receipt, FileText, Users, FolderKanban, Clock, Plus, ArrowRight, CheckCircle2, Circle, Bell, Send, Check, X, Link } from 'lucide-react';
 import { generateFollowUpDraft } from '../utils/followUpTemplates';
 import { getArchetype } from '../archetypes';
 import type { ArchetypeConfig } from '../archetypes';
@@ -21,6 +22,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [archetype, setArchetype] = useState<ArchetypeConfig | null>(null);
   const [metricValues, setMetricValues] = useState<Record<string, string | number>>({});
+  const [portalActivity, setPortalActivity] = useState<PortalActivity[]>([]);
 
   useEffect(() => {
     Promise.all([loadInvoices(), loadProposals(), loadProjects(), loadClients(), loadTimeEntries(), loadExpenses(), loadProfile(), loadPendingFollowUps()])
@@ -34,7 +36,16 @@ export default function Dashboard() {
       addToast('Sample data loaded — explore freely. Clear it anytime in Settings → Data.', 'info');
       localStorage.setItem('lance:seeded-toast-shown', 'true');
     }
+    loadPortalActivity();
   }, [loading]);
+
+  const loadPortalActivity = async () => {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const activity = await invoke<PortalActivity[]>('get_portal_activity');
+      setPortalActivity(activity);
+    } catch { /* server may not be ready or no tokens exist */ }
+  };
 
   useEffect(() => {
     if (!profile) return;
@@ -179,6 +190,24 @@ export default function Dashboard() {
           />
         ))}
       </div>
+
+      {/* Portal Activity */}
+      {portalActivity.length > 0 && (
+        <Card className="mb-6 border-[var(--accent)]/20">
+          <div className="flex items-center gap-2 mb-3">
+            <Link size={14} className="text-[var(--accent)]" />
+            <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Portal Activity</h3>
+          </div>
+          <div className="space-y-1.5">
+            {portalActivity.slice(0, 5).map((act, i) => (
+              <div key={i} className="flex items-center justify-between px-3 py-1.5 rounded-[6px] text-xs">
+                <span className="text-[var(--text-primary)]">{act.activity}</span>
+                <span className="text-[10px] text-[var(--text-tertiary)] flex-shrink-0 ml-3">{relativeDate(act.timestamp)}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Needs Attention — Follow-ups */}
       {pendingFollowUps.length > 0 && (

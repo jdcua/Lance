@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../store';
-import type { Contract, ContractTemplate } from '../types';
+import type { Contract, ContractTemplate, ShareToken } from '../types';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
@@ -14,7 +14,8 @@ import { useToasts } from '../store/toastStore';
 import { checkAndNotify } from '../achievements/notify';
 import { getUnlockedAchievementKeys } from '../achievements/checker';
 import { relativeDate } from '../utils/format';
-import { Plus, Pencil, Trash2, Eye, PenLine, Search, Copy, FileText } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, PenLine, Search, Copy, FileText, Share2, Link } from 'lucide-react';
+import ShareModal from '../components/ShareModal';
 
 const statusBadge: Record<string, 'success' | 'warning' | 'info' | 'danger'> = {
   draft: 'warning',
@@ -80,6 +81,8 @@ export default function Contracts() {
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [search, setSearch] = useState('');
+  const [shareModal, setShareModal] = useState<{ entityType: 'contract'; entityId: string } | null>(null);
+  const [shareTokenIds, setShareTokenIds] = useState<Set<string>>(new Set());
   const [form, setForm] = useState({ client_id: '', title: '', body: '' });
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'contracts' | 'templates'>('contracts');
@@ -87,10 +90,19 @@ export default function Contracts() {
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
 
   useEffect(() => {
-    Promise.all([loadContracts(), loadClients(), loadContractTemplates()])
+    Promise.all([loadContracts(), loadClients(), loadContractTemplates(), loadShareTokens()])
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
   }, [loadContracts, loadClients, loadContractTemplates]);
+
+  const loadShareTokens = async () => {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const tokens = await invoke<ShareToken[]>('get_all_share_tokens');
+      const ids = new Set(tokens.filter(t => t.entity_type === 'contract').map(t => t.entity_id));
+      setShareTokenIds(ids);
+    } catch { /* ignore */ }
+  };
 
   useEffect(() => {
     getUnlockedAchievementKeys().then((keys) => {
@@ -302,6 +314,9 @@ export default function Contracts() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="text-sm font-semibold text-[var(--text-primary)]">{c.title}</h3>
+                        {shareTokenIds.has(c.id) && (
+                          <Link size={12} className="text-[var(--accent)] flex-shrink-0" title="Shared via portal" />
+                        )}
                         <Badge variant={statusBadge[c.status]}>{c.status}</Badge>
                       </div>
                       <p className="text-xs text-[var(--text-secondary)] mb-1">{getClientName(c.client_id)}</p>
@@ -312,6 +327,16 @@ export default function Contracts() {
                       )}
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0 ml-3">
+                      {(c.status === 'draft' || c.status === 'active') && (
+                        <button
+                          onClick={() => setShareModal({ entityType: 'contract', entityId: c.id })}
+                          aria-label="Share contract"
+                          className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors"
+                          title="Share"
+                        >
+                          <Share2 size={14} />
+                        </button>
+                      )}
                       {c.status === 'draft' && (
                         <button
                           onClick={() => handleActivate(c)}
@@ -512,6 +537,14 @@ export default function Contracts() {
         message={`Are you sure you want to delete "${confirmDelete?.title}"? This cannot be undone.`}
         loading={deleting}
       />
+      {shareModal && (
+        <ShareModal
+          open={!!shareModal}
+          onClose={() => setShareModal(null)}
+          entityType={shareModal.entityType}
+          entityId={shareModal.entityId}
+        />
+      )}
     </div>
   );
 }

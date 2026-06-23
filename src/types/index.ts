@@ -417,3 +417,27 @@ export type ProjectTemplateMilestone = {
   invoice_on_completion: boolean;
 };
 
+export type ShareToken = {
+  id: number;
+  token: string;
+  entity_type: 'proposal' | 'contract';
+  entity_id: string;
+  created_at: string;
+  expires_at?: string;
+  viewed_at?: string;
+  view_count: number;
+  client_response?: 'accepted' | 'declined';
+  client_response_at?: string;
+  client_name?: string;
+  client_signature?: string;
+  client_signed_at?: string;
+};
+
+export type PortalActivity = {
+  entity_type: string;
+  entity_id: string;
+  token: string;
+  activity: string;
+  timestamp: string;
+};
+

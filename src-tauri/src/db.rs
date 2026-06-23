@@ -396,5 +396,26 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
         [],
     );
 
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS share_tokens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            token TEXT UNIQUE NOT NULL,
+            entity_type TEXT NOT NULL CHECK(entity_type IN ('proposal','contract')),
+            entity_id TEXT NOT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            expires_at TEXT,
+            viewed_at TEXT,
+            view_count INTEGER DEFAULT 0,
+            client_response TEXT CHECK(client_response IN ('accepted','declined')),
+            client_response_at TEXT,
+            client_name TEXT,
+            client_signature TEXT,
+            client_signed_at TEXT
+         );
+         CREATE INDEX IF NOT EXISTS idx_share_tokens_token ON share_tokens(token);
+         CREATE INDEX IF NOT EXISTS idx_share_tokens_entity ON share_tokens(entity_type, entity_id);",
+    )
+    .map_err(|e| format!("Share tokens migration failed: {}", e))?;
+
     Ok(())
 }

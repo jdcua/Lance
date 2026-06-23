@@ -1,5 +1,12 @@
+use tauri::Manager;
+
 pub mod commands;
 pub mod db;
+pub mod server;
+
+pub struct SharedServerPort {
+    pub port: u16,
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -13,6 +20,21 @@ pub fn run() {
         .setup(|app| {
             let conn = db::get_connection(app.handle())?;
             db::run_migrations(&conn).expect("Failed to run migrations");
+
+            let db_path = db::get_db_path(app.handle())
+                .expect("Failed to get db path")
+                .to_str()
+                .ok_or("Invalid db path")?
+                .to_string();
+
+            let server_handle = server::start_server(db_path)
+                .expect("Failed to start share server");
+            let port = server_handle.port;
+
+            app.manage(SharedServerPort { port });
+            // Leak the handle to keep the server running for the app lifetime
+            std::mem::forget(server_handle);
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -123,6 +145,13 @@ pub fn run() {
             commands::archetypes::get_datasets,
             commands::archetypes::create_dataset,
             commands::archetypes::delete_dataset,
+            commands::sharing::create_share_token,
+            commands::sharing::get_share_token,
+            commands::sharing::get_share_token_for_entity,
+            commands::sharing::revoke_share_token,
+            commands::sharing::get_portal_activity,
+            commands::sharing::get_share_server_port,
+            commands::sharing::get_all_share_tokens,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
