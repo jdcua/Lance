@@ -30,6 +30,8 @@ import type {
   ArchetypeBuild,
   ArchetypeKeyword,
   ArchetypeDataset,
+  ProjectTemplate,
+  ProjectTemplateMilestone,
 } from '../types';
 import { validateLicenseKey } from '../license';
 
@@ -201,6 +203,16 @@ interface ContractTemplateSlice {
   removeContractTemplate: (id: string) => Promise<void>;
 }
 
+interface ProjectTemplateSlice {
+  projectTemplates: ProjectTemplate[];
+  projectTemplateMilestones: Record<string, ProjectTemplateMilestone[]>;
+  loadProjectTemplates: () => Promise<void>;
+  loadTemplateMilestones: (templateId: string) => Promise<void>;
+  addProjectTemplate: (data: { name: string; description?: string; default_budget?: number; default_status?: string }, milestones: { title: string; days_from_start: number; invoice_on_completion: boolean }[]) => Promise<ProjectTemplate>;
+  updateProjectTemplate: (id: string, data: { name?: string; description?: string; default_budget?: number; default_status?: string }) => Promise<void>;
+  removeProjectTemplate: (id: string) => Promise<void>;
+}
+
 interface ArchetypeRenderLogSlice {
   renderLogs: Record<string, ArchetypeRenderLog[]>;
   loadRenderLogs: (projectId: string) => Promise<void>;
@@ -251,7 +263,7 @@ interface ArchetypeDatasetSlice {
   removeDataset: (id: string, projectId: string) => Promise<void>;
 }
 
-export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & ExpenseSlice & ProfileSlice & CommunicationSlice & RecurringInvoiceSlice & ImportSlice & AttachmentSlice & MetricSlice & FollowUpSlice & ExportTemplateSlice & ContractTemplateSlice & ArchetypeRenderLogSlice & ArchetypeSessionSlice & ArchetypeShootSlice & ArchetypeRevisionSlice & ArchetypeBuildSlice & ArchetypeKeywordSlice & ArchetypeDatasetSlice;
+export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & ExpenseSlice & ProfileSlice & CommunicationSlice & RecurringInvoiceSlice & ImportSlice & AttachmentSlice & MetricSlice & FollowUpSlice & ExportTemplateSlice & ContractTemplateSlice & ProjectTemplateSlice & ArchetypeRenderLogSlice & ArchetypeSessionSlice & ArchetypeShootSlice & ArchetypeRevisionSlice & ArchetypeBuildSlice & ArchetypeKeywordSlice & ArchetypeDatasetSlice;
 
 const invoke = async <T>(cmd: string, args?: Record<string, unknown>): Promise<T> => {
   const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
@@ -965,6 +977,74 @@ export const useStore = create<AppStore>((set, get) => ({
     const db = await getDb();
     await db.execute('DELETE FROM contract_templates WHERE id = ?', [id]);
     set({ contractTemplates: get().contractTemplates.filter((t) => t.id !== id) });
+  },
+
+  // ── Project Templates ──
+  projectTemplates: [],
+  projectTemplateMilestones: {},
+  loadProjectTemplates: async () => {
+    try {
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      const rows = await db.select<ProjectTemplate[]>('SELECT * FROM project_templates ORDER BY created_at DESC');
+      const parsed = rows.map((r: ProjectTemplate) => ({
+        ...r,
+        is_default: !!(r as Record<string, unknown>).is_default,
+      }));
+      set({ projectTemplates: parsed });
+    } catch (e) {
+      console.error('[store] loadProjectTemplates failed:', e);
+    }
+  },
+  loadTemplateMilestones: async (templateId) => {
+    try {
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      const rows = await db.select<ProjectTemplateMilestone[]>('SELECT * FROM project_template_milestones WHERE template_id = ? ORDER BY days_from_start ASC', [templateId]);
+      set({ projectTemplateMilestones: { ...get().projectTemplateMilestones, [templateId]: rows } });
+    } catch (e) {
+      console.error('[store] loadTemplateMilestones failed:', e);
+    }
+  },
+  addProjectTemplate: async (data, milestones) => {
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const { getDb } = await import('../db');
+    const db = await getDb();
+    await db.execute(
+      'INSERT INTO project_templates (id, name, description, default_budget, default_status, is_default, created_at) VALUES (?, ?, ?, ?, ?, 0, ?)',
+      [id, data.name, data.description || null, data.default_budget ?? null, data.default_status || 'Active', now]
+    );
+    for (const m of milestones) {
+      await db.execute(
+        'INSERT INTO project_template_milestones (id, template_id, title, days_from_start, invoice_on_completion) VALUES (?, ?, ?, ?, ?)',
+        [crypto.randomUUID(), id, m.title, m.days_from_start, m.invoice_on_completion ? 1 : 0]
+      );
+    }
+    const template: ProjectTemplate = { id, name: data.name, description: data.description, default_budget: data.default_budget, default_status: data.default_status || 'Active', is_default: false, created_at: now };
+    set({ projectTemplates: [template, ...get().projectTemplates] });
+    return template;
+  },
+  updateProjectTemplate: async (id, data) => {
+    const { getDb } = await import('../db');
+    const db = await getDb();
+    const sets: string[] = [];
+    const vals: (string | number | null)[] = [];
+    if (data.name !== undefined) { sets.push('name = ?'); vals.push(data.name); }
+    if (data.description !== undefined) { sets.push('description = ?'); vals.push(data.description || null); }
+    if (data.default_budget !== undefined) { sets.push('default_budget = ?'); vals.push(data.default_budget ?? null); }
+    if (data.default_status !== undefined) { sets.push('default_status = ?'); vals.push(data.default_status); }
+    if (sets.length === 0) return;
+    vals.push(id);
+    await db.execute(`UPDATE project_templates SET ${sets.join(', ')} WHERE id = ?`, vals);
+    set({ projectTemplates: get().projectTemplates.map((t) => (t.id === id ? { ...t, ...data } : t)) });
+  },
+  removeProjectTemplate: async (id) => {
+    const { getDb } = await import('../db');
+    const db = await getDb();
+    await db.execute('DELETE FROM project_template_milestones WHERE template_id = ?', [id]);
+    await db.execute('DELETE FROM project_templates WHERE id = ?', [id]);
+    set({ projectTemplates: get().projectTemplates.filter((t) => t.id !== id) });
   },
 
   // ── Archetype: Render Log ──

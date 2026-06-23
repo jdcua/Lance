@@ -858,6 +858,10 @@ export default function Settings() {
               Reset
             </Button>
           </div>
+
+          <div className="border-t border-[var(--border-color)] pt-3">
+            <ProjectTemplatesSection />
+          </div>
         </div>
       </Card>
 
@@ -1231,6 +1235,168 @@ function ExportTemplatesSection() {
               {editing ? 'Update' : 'Create'}
             </Button>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProjectTemplatesSection() {
+  const { projectTemplates, loadProjectTemplates, loadTemplateMilestones, projectTemplateMilestones, updateProjectTemplate, removeProjectTemplate } = useStore();
+  const addToast = useToasts((s) => s.add);
+  const [loaded, setLoaded] = useState(false);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadProjectTemplates().finally(() => setLoaded(true));
+  }, []);
+
+  const handleExpand = async (id: string) => {
+    if (expanded === id) {
+      setExpanded(null);
+    } else {
+      setExpanded(id);
+      await loadTemplateMilestones(id);
+    }
+  };
+
+  const handleEdit = (id: string, name: string, description?: string) => {
+    setEditing(id);
+    setEditName(name);
+    setEditDescription(description || '');
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    if (!editName.trim()) return;
+    try {
+      await updateProjectTemplate(id, { name: editName, description: editDescription || undefined });
+      setEditing(null);
+      addToast('Template updated', 'success');
+    } catch {
+      addToast('Failed to update template', 'error');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await removeProjectTemplate(id);
+      setDeleteConfirm(null);
+      addToast('Template deleted', 'info');
+    } catch {
+      addToast('Failed to delete template', 'error');
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-sm font-medium text-[var(--text-primary)]">Project Templates</p>
+      </div>
+      {!loaded ? (
+        <div className="h-8 bg-[var(--bg-secondary)] rounded skeleton-pulse" />
+      ) : projectTemplates.length === 0 ? (
+        <p className="text-xs text-[var(--text-tertiary)]">No project templates yet. Save one from a project.</p>
+      ) : (
+        <div className="space-y-2">
+          {projectTemplates.map((tpl) => {
+            const ms = projectTemplateMilestones[tpl.id] || [];
+            const isEditing = editing === tpl.id;
+            return (
+              <div key={tpl.id} className="bg-[var(--bg-secondary)] rounded-[8px] overflow-hidden">
+                <div className="flex items-center justify-between px-3 py-2">
+                  {isEditing ? (
+                    <div className="flex-1 space-y-2 mr-2">
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="w-full px-2 py-1 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                        autoFocus
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(tpl.id); if (e.key === 'Escape') setEditing(null); }}
+                      />
+                      <input
+                        type="text"
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        placeholder="Description (optional)"
+                        className="w-full px-2 py-1 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+                      />
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => handleSaveEdit(tpl.id)} className="text-[10px] text-[var(--accent)] hover:underline">Save</button>
+                        <button onClick={() => setEditing(null)} className="text-[10px] text-[var(--text-tertiary)] hover:underline">Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-[var(--text-primary)]">{tpl.name}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-[10px] text-[var(--text-tertiary)]">{ms.length} milestones</p>
+                        {tpl.default_budget && (
+                          <p className="text-[10px] text-[var(--text-tertiary)]">${tpl.default_budget}</p>
+                        )}
+                        {tpl.is_default && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">Built-in</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {!isEditing && (
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => handleExpand(tpl.id)}
+                        className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] px-1.5 py-0.5 rounded-[4px]"
+                      >
+                        {expanded === tpl.id ? 'Hide' : 'View'}
+                      </button>
+                      <button
+                        onClick={() => handleEdit(tpl.id, tpl.name, tpl.description)}
+                        className="text-[10px] text-[var(--accent)] hover:underline px-1"
+                      >
+                        Edit
+                      </button>
+                      {deleteConfirm === tpl.id ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] text-[var(--danger)]">Delete?</span>
+                          <button onClick={() => handleDelete(tpl.id)} className="text-[10px] px-1 py-0.5 bg-[var(--danger)] text-white rounded-[4px]">Yes</button>
+                          <button onClick={() => setDeleteConfirm(null)} className="text-[10px] px-1 py-0.5 bg-[var(--bg-card)] text-[var(--text-secondary)] rounded-[4px]">No</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setDeleteConfirm(tpl.id)}
+                          className="text-[10px] text-[var(--danger)] hover:underline px-1"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {expanded === tpl.id && (
+                  <div className="border-t border-[var(--border-color)] px-3 py-2">
+                    {ms.length === 0 ? (
+                      <p className="text-[10px] text-[var(--text-tertiary)]">No milestones defined.</p>
+                    ) : (
+                      <div className="space-y-1">
+                        {ms.map((m) => (
+                          <div key={m.id} className="flex items-center gap-2 text-xs">
+                            <span className="text-[var(--text-tertiary)] w-5 text-right">{m.days_from_start}d</span>
+                            <span className="text-[var(--text-primary)]">{m.title}</span>
+                            {m.invoice_on_completion && (
+                              <span className="text-[9px] px-1 py-0.5 bg-[var(--accent-bg)] text-[var(--accent)] rounded-[3px]">invoice</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

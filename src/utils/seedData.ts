@@ -14,11 +14,116 @@ function isoNow(): string {
   return new Date().toISOString();
 }
 
+const BUILT_IN_TEMPLATES = [
+  {
+    name: 'Web Design Project',
+    description: 'A standard web design project from discovery to delivery.',
+    default_budget: 5000,
+    default_status: 'active',
+    milestones: [
+      { title: 'Discovery', days_from_start: 0, invoice_on_completion: false },
+      { title: 'Wireframes', days_from_start: 14, invoice_on_completion: false },
+      { title: 'Design', days_from_start: 28, invoice_on_completion: false },
+      { title: 'Revisions', days_from_start: 42, invoice_on_completion: false },
+      { title: 'Delivery', days_from_start: 56, invoice_on_completion: false },
+    ],
+  },
+  {
+    name: 'Brand Identity',
+    description: 'Complete brand identity package including research, concepts, and final delivery.',
+    default_budget: 4000,
+    default_status: 'active',
+    milestones: [
+      { title: 'Brief & Research', days_from_start: 0, invoice_on_completion: false },
+      { title: 'Concepts', days_from_start: 21, invoice_on_completion: false },
+      { title: 'Refinement', days_from_start: 42, invoice_on_completion: false },
+      { title: 'Final Delivery', days_from_start: 56, invoice_on_completion: false },
+    ],
+  },
+  {
+    name: 'Copywriting Project',
+    description: 'A copywriting project from brief through final delivery.',
+    default_budget: 2000,
+    default_status: 'active',
+    milestones: [
+      { title: 'Brief', days_from_start: 0, invoice_on_completion: false },
+      { title: 'First Draft', days_from_start: 14, invoice_on_completion: false },
+      { title: 'Revisions', days_from_start: 21, invoice_on_completion: false },
+      { title: 'Final Copy', days_from_start: 28, invoice_on_completion: false },
+    ],
+  },
+  {
+    name: 'Monthly Retainer',
+    description: 'Ongoing monthly retainer work with invoicing at each milestone.',
+    default_budget: 2400,
+    default_status: 'active',
+    milestones: [
+      { title: 'Month 1', days_from_start: 0, invoice_on_completion: true },
+      { title: 'Month 2', days_from_start: 30, invoice_on_completion: true },
+      { title: 'Month 3', days_from_start: 60, invoice_on_completion: true },
+    ],
+  },
+  {
+    name: 'Photography Package',
+    description: 'A photography project from shoot day through gallery delivery.',
+    default_budget: 3000,
+    default_status: 'active',
+    milestones: [
+      { title: 'Shoot Day', days_from_start: 0, invoice_on_completion: false },
+      { title: 'Culling & Editing', days_from_start: 14, invoice_on_completion: false },
+      { title: 'Gallery Delivery', days_from_start: 21, invoice_on_completion: false },
+    ],
+  },
+  {
+    name: 'Development Sprint',
+    description: 'A software development sprint from planning through deployment.',
+    default_budget: 8000,
+    default_status: 'active',
+    milestones: [
+      { title: 'Spec & Planning', days_from_start: 0, invoice_on_completion: false },
+      { title: 'Development', days_from_start: 21, invoice_on_completion: false },
+      { title: 'Testing & QA', days_from_start: 35, invoice_on_completion: false },
+      { title: 'Deployment', days_from_start: 42, invoice_on_completion: false },
+    ],
+  },
+];
+
+export async function seedBuiltInTemplates(): Promise<void> {
+  if (localStorage.getItem('lance:templates-seeded') === 'true') return;
+
+  const db = await getDb();
+  const now = isoNow();
+
+  const existing = await db.select<{ count: number }[]>('SELECT COUNT(*) as count FROM project_templates WHERE is_default = 1');
+  if (existing[0] && (existing[0] as unknown as { count: number }).count > 0) {
+    localStorage.setItem('lance:templates-seeded', 'true');
+    return;
+  }
+
+  for (const tpl of BUILT_IN_TEMPLATES) {
+    const templateId = crypto.randomUUID();
+    await db.execute(
+      'INSERT INTO project_templates (id, name, description, default_budget, default_status, is_default, created_at) VALUES (?, ?, ?, ?, ?, 1, ?)',
+      [templateId, tpl.name, tpl.description, tpl.default_budget, tpl.default_status, now]
+    );
+    for (const ms of tpl.milestones) {
+      await db.execute(
+        'INSERT INTO project_template_milestones (id, template_id, title, days_from_start, invoice_on_completion) VALUES (?, ?, ?, ?, ?)',
+        [crypto.randomUUID(), templateId, ms.title, ms.days_from_start, ms.invoice_on_completion ? 1 : 0]
+      );
+    }
+  }
+
+  localStorage.setItem('lance:templates-seeded', 'true');
+}
+
 export async function seedSampleData(): Promise<void> {
   if (localStorage.getItem('lance:seeded') === 'true') return;
 
   const db = await getDb();
   const now = isoNow();
+
+  await seedBuiltInTemplates();
 
   // --- CLIENTS ---
   const client1Id = crypto.randomUUID();

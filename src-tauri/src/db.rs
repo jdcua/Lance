@@ -365,6 +365,18 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            body TEXT NOT NULL,
            variables TEXT NOT NULL DEFAULT '[]',
            created_at TEXT NOT NULL
+         );
+
+         CREATE TABLE IF NOT EXISTS invoice_payments (
+           id TEXT PRIMARY KEY,
+           invoice_id TEXT NOT NULL,
+           amount REAL NOT NULL,
+           payment_date TEXT NOT NULL,
+           payment_method TEXT NOT NULL,
+           reference TEXT,
+           notes TEXT,
+           created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+           FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
          );",
     )
     .map_err(|e| format!("Migration failed: {}", e))?;

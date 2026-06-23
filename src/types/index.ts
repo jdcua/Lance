@@ -383,3 +383,21 @@ export type ArchetypeDataset = {
   created_at: string;
 };
 
+export type ProjectTemplate = {
+  id: string;
+  name: string;
+  description?: string;
+  default_budget?: number;
+  default_status: string;
+  is_default: boolean;
+  created_at: string;
+};
+
+export type ProjectTemplateMilestone = {
+  id: string;
+  template_id: string;
+  title: string;
+  days_from_start: number;
+  invoice_on_completion: boolean;
+};
+

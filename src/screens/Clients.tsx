@@ -8,9 +8,10 @@ import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import Sparkline from '../components/ui/Sparkline';
-import { Plus, Pencil, Trash2, Mail, Phone, Building2, MessageSquare, PhoneCall, MailOpen, Users, X, Check, FileText, FolderKanban, Receipt, Clock, Search, BarChart3, Star, Copy } from 'lucide-react';
+import { Plus, Pencil, Trash2, Mail, Phone, Building2, MessageSquare, PhoneCall, MailOpen, Users, X, Check, FileText, FolderKanban, Receipt, Clock, Search, BarChart3, Star, Copy, Upload } from 'lucide-react';
 import { useToasts } from '../store/toastStore';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
+import ClientImportModal from '../components/ui/ClientImportModal';
 import { formatCurrency, relativeDate } from '../utils/format';
 import { checkAndNotify } from '../achievements/notify';
 
@@ -67,6 +68,7 @@ export default function Clients() {
   const [showTemplatePrompt, setShowTemplatePrompt] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [templateName, setTemplateName] = useState('');
+  const [showImportModal, setShowImportModal] = useState(false);
 
   useEffect(() => {
     Promise.all([loadClients(), loadProjects(), loadProposals(), loadInvoices(), loadProfile()])
@@ -364,6 +366,13 @@ export default function Clients() {
           >
             <Plus size={12} />
             Add client
+          </button>
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="w-full text-left px-4 py-2.5 flex items-center gap-2.5 text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] transition-colors"
+          >
+            <Upload size={12} />
+            Import
           </button>
         </div>
       </div>
@@ -946,6 +955,10 @@ export default function Clients() {
       {selectedId && (
         <ArchetypeFeatureTabs screen="clients" context={{ clientId: selectedId }} />
       )}
+      <ClientImportModal
+        open={showImportModal}
+        onClose={() => setShowImportModal(false)}
+      />
     </div>
   );
 }

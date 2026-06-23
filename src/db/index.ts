@@ -181,6 +181,7 @@ async function runMigrations(database: Database): Promise<void> {
     'ALTER TABLE invoices ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0',
     'ALTER TABLE recurring_invoices ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0',
     'ALTER TABLE expenses ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE project_templates ADD COLUMN is_default INTEGER NOT NULL DEFAULT 0',
   ];
   for (const sql of newColumns) {
     try { await database.execute(sql); } catch { /* column already exists */ }
@@ -396,6 +397,29 @@ async function runMigrations(database: Database): Promise<void> {
       license_type TEXT,
       created_at TEXT NOT NULL,
       FOREIGN KEY (project_id) REFERENCES projects(id)
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS project_templates (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT,
+      default_budget REAL,
+      default_status TEXT NOT NULL DEFAULT 'Active',
+      is_default INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL
+    )
+  `);
+
+  await database.execute(`
+    CREATE TABLE IF NOT EXISTS project_template_milestones (
+      id TEXT PRIMARY KEY,
+      template_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      days_from_start INTEGER NOT NULL DEFAULT 0,
+      invoice_on_completion INTEGER NOT NULL DEFAULT 0,
+      FOREIGN KEY (template_id) REFERENCES project_templates(id) ON DELETE CASCADE
     )
   `);
 

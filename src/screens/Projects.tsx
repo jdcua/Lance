@@ -12,7 +12,7 @@ import ClientSelect from '../components/ui/ClientSelect';
 import { useToasts } from '../store/toastStore';
 import { generateInvoiceNumber } from '../utils/invoiceNumber';
 import { formatCurrency, relativeDate } from '../utils/format';
-import { Plus, Pencil, Trash2, CheckCircle2, Circle, Calendar, DollarSign, ChevronRight, FolderKanban, Search, ArrowUpDown } from 'lucide-react';
+import { Plus, Pencil, Trash2, CheckCircle2, Circle, Calendar, DollarSign, ChevronRight, FolderKanban, Search, Copy } from 'lucide-react';
 
 const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
   active: 'success',
@@ -24,7 +24,7 @@ const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
 type SortKey = 'title' | 'client' | 'status' | 'budget' | 'date';
 
 export default function Projects() {
-  const { projects, loadProjects, addProject, updateProject, removeProject, clients, loadClients, milestones, loadMilestones, addMilestone, updateMilestone, removeMilestone, invoices, loadInvoices, addInvoice, profile, loadProfile } = useStore();
+  const { projects, loadProjects, addProject, updateProject, removeProject, clients, loadClients, milestones, loadMilestones, addMilestone, updateMilestone, removeMilestone, loadInvoices, addInvoice, profile, loadProfile, projectTemplates, loadProjectTemplates, loadTemplateMilestones, projectTemplateMilestones, addProjectTemplate } = useStore();
   const addToast = useToasts((s) => s.add);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
@@ -40,9 +40,13 @@ export default function Projects() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showTemplateSaveModal, setShowTemplateSaveModal] = useState(false);
+  const [templateName, setTemplateName] = useState('');
+  const [templateDescription, setTemplateDescription] = useState('');
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
 
   useEffect(() => {
-    Promise.all([loadProjects(), loadClients(), loadProfile()])
+    Promise.all([loadProjects(), loadClients(), loadProfile(), loadProjectTemplates()])
       .catch(err => addToast(err?.toString?.() || 'Failed to load data', 'error'))
       .finally(() => setLoading(false));
   }, []);
@@ -50,6 +54,7 @@ export default function Projects() {
   const openNewProject = () => {
     setEditingProject(null);
     setPForm({ client_id: '', title: '', status: 'active', start_date: '', end_date: '', budget: '', notes: '' });
+    setSelectedTemplateId('');
     setShowProjectModal(true);
   };
 
@@ -83,7 +88,30 @@ export default function Projects() {
       if (editingProject) {
         await updateProject({ ...editingProject, ...data, status: data.status });
       } else {
-        await addProject(data);
+        const created = await addProject(data);
+        if (selectedTemplateId) {
+          const template = projectTemplates.find((t) => t.id === selectedTemplateId);
+          if (template) {
+            let tplMilestones = projectTemplateMilestones[template.id];
+            if (!tplMilestones) {
+              await loadTemplateMilestones(template.id);
+              tplMilestones = useStore.getState().projectTemplateMilestones[template.id] || [];
+            }
+            for (const tplMs of tplMilestones) {
+              const dueDate = pform.start_date
+                ? new Date(new Date(pform.start_date).getTime() + tplMs.days_from_start * 86400000).toISOString().split('T')[0]
+                : undefined;
+              await addMilestone({
+                project_id: created.id,
+                title: tplMs.title,
+                due_date: dueDate,
+                completed: false,
+                invoice_on_completion: tplMs.invoice_on_completion,
+              });
+            }
+          }
+          setSelectedTemplateId('');
+        }
       }
       setShowProjectModal(false);
     } catch (err) {
@@ -103,6 +131,56 @@ export default function Projects() {
       addToast(err?.toString?.() || 'Failed to delete project', 'error');
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleSaveAsTemplate = async () => {
+    if (!editingProject || !templateName.trim()) return;
+    setSaving(true);
+    try {
+      const ms = milestones[editingProject.id] || [];
+      if (ms.length === 0) {
+        addToast('Project has no milestones to save as template', 'info');
+        setSaving(false);
+        return;
+      }
+      const startDate = editingProject.start_date ? new Date(editingProject.start_date) : null;
+      const templateMilestones = ms.map((m, i) => ({
+        title: m.title,
+        days_from_start: startDate && m.due_date
+          ? Math.round((new Date(m.due_date).getTime() - startDate.getTime()) / 86400000)
+          : i * 14,
+        invoice_on_completion: m.invoice_on_completion,
+      }));
+      await addProjectTemplate(
+        { name: templateName, description: templateDescription || undefined, default_budget: editingProject.budget, default_status: editingProject.status },
+        templateMilestones
+      );
+      setShowTemplateSaveModal(false);
+      setTemplateName('');
+      setTemplateDescription('');
+      addToast('Template saved — use it when creating future projects.', 'success');
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to save template', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleTemplateSelect = async (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    if (!templateId) return;
+    const template = projectTemplates.find((t) => t.id === templateId);
+    if (!template) return;
+    setPForm((prev) => ({
+      ...prev,
+      budget: template.default_budget?.toString() || prev.budget,
+      status: template.default_status || prev.status,
+    }));
+    let tplMilestones = projectTemplateMilestones[template.id];
+    if (!tplMilestones) {
+      await loadTemplateMilestones(template.id);
+      tplMilestones = useStore.getState().projectTemplateMilestones[template.id] || [];
     }
   };
 
@@ -427,6 +505,21 @@ export default function Projects() {
 
       <Modal open={showProjectModal} onClose={() => setShowProjectModal(false)} title={editingProject ? 'Edit Project' : 'New Project'} size="md">
         <div className="space-y-4">
+          {!editingProject && projectTemplates.length > 0 && (
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Start from template</label>
+              <select
+                value={selectedTemplateId}
+                onChange={(e) => handleTemplateSelect(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+              >
+                <option value="">No template — start fresh</option>
+                {projectTemplates.map((tpl) => (
+                  <option key={tpl.id} value={tpl.id}>{tpl.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div>
             <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Client *</label>
             <ClientSelect
@@ -503,6 +596,21 @@ export default function Projects() {
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
+            {editingProject && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowTemplateSaveModal(true);
+                  setTemplateName('');
+                  setTemplateDescription('');
+                }}
+              >
+                <Copy size={14} />
+                Save as template
+              </Button>
+            )}
+            <div className="flex-1" />
             <Button variant="secondary" onClick={() => setShowProjectModal(false)} size="sm">Cancel</Button>
             <Button onClick={handleSaveProject} loading={saving} disabled={!pform.title.trim() || !pform.client_id} size="sm">
               {editingProject ? 'Save Changes' : 'Create Project'}
@@ -545,6 +653,40 @@ export default function Projects() {
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="secondary" onClick={() => setShowMilestoneModal(false)} size="sm">Cancel</Button>
             <Button onClick={handleAddMilestone} loading={saving} disabled={!mform.title.trim()} size="sm">Add Milestone</Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={showTemplateSaveModal} onClose={() => setShowTemplateSaveModal(false)} title="Save as Template" size="sm">
+        <div className="space-y-3">
+          <p className="text-xs text-[var(--text-secondary)]">
+            Save this project's milestones as a reusable template for future projects.
+          </p>
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Template name *</label>
+            <input
+              type="text"
+              value={templateName}
+              onChange={(e) => setTemplateName(e.target.value)}
+              placeholder="e.g. Web Design Project"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+              autoFocus
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSaveAsTemplate(); }}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Description (optional)</label>
+            <textarea
+              value={templateDescription}
+              onChange={(e) => setTemplateDescription(e.target.value)}
+              placeholder="Brief description of this template..."
+              rows={2}
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 resize-none"
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" onClick={() => setShowTemplateSaveModal(false)} size="sm">Cancel</Button>
+            <Button onClick={handleSaveAsTemplate} loading={saving} disabled={!templateName.trim()} size="sm">Save Template</Button>
           </div>
         </div>
       </Modal>
