@@ -1,5 +1,5 @@
-use crate::db;
 use crate::commands::clients::chrono_now;
+use crate::db;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -63,10 +63,8 @@ pub struct CreateAttachmentPayload {
 
 fn get_imports_dir_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     use tauri::Manager;
-    let documents_dir = app
-        .path()
-        .document_dir()
-        .map_err(|e| format!("Failed to get documents dir: {}", e))?;
+    let documents_dir =
+        app.path().document_dir().map_err(|e| format!("Failed to get documents dir: {}", e))?;
     let imports_dir = documents_dir.join("Lance").join("imports");
     std::fs::create_dir_all(&imports_dir)
         .map_err(|e| format!("Failed to create imports dir: {}", e))?;
@@ -75,10 +73,8 @@ fn get_imports_dir_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
 
 fn get_assets_dir_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     use tauri::Manager;
-    let documents_dir = app
-        .path()
-        .document_dir()
-        .map_err(|e| format!("Failed to get documents dir: {}", e))?;
+    let documents_dir =
+        app.path().document_dir().map_err(|e| format!("Failed to get documents dir: {}", e))?;
     let assets_dir = documents_dir.join("Lance").join("Assets");
     std::fs::create_dir_all(&assets_dir)
         .map_err(|e| format!("Failed to create assets dir: {}", e))?;
@@ -88,17 +84,13 @@ fn get_assets_dir_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
 #[tauri::command]
 pub fn get_imports_dir(app: tauri::AppHandle) -> Result<String, String> {
     let dir = get_imports_dir_path(&app)?;
-    dir.to_str()
-        .map(|s| s.to_string())
-        .ok_or_else(|| "Invalid path encoding".to_string())
+    dir.to_str().map(|s| s.to_string()).ok_or_else(|| "Invalid path encoding".to_string())
 }
 
 #[tauri::command]
 pub fn get_assets_dir(app: tauri::AppHandle) -> Result<String, String> {
     let dir = get_assets_dir_path(&app)?;
-    dir.to_str()
-        .map(|s| s.to_string())
-        .ok_or_else(|| "Invalid path encoding".to_string())
+    dir.to_str().map(|s| s.to_string()).ok_or_else(|| "Invalid path encoding".to_string())
 }
 
 #[tauri::command]
@@ -112,12 +104,8 @@ pub fn save_import_file(
     let safe_name = sanitize_filename(&filename);
     let stored_name = format!("{}_{}", id, safe_name);
     let file_path = imports_dir.join(&stored_name);
-    std::fs::write(&file_path, &data)
-        .map_err(|e| format!("Failed to write import file: {}", e))?;
-    file_path
-        .to_str()
-        .map(|s| s.to_string())
-        .ok_or_else(|| "Invalid path encoding".to_string())
+    std::fs::write(&file_path, &data).map_err(|e| format!("Failed to write import file: {}", e))?;
+    file_path.to_str().map(|s| s.to_string()).ok_or_else(|| "Invalid path encoding".to_string())
 }
 
 #[tauri::command]
@@ -131,12 +119,8 @@ pub fn save_asset_file(
     let safe_name = sanitize_filename(&filename);
     let stored_name = format!("{}_{}", id, safe_name);
     let file_path = assets_dir.join(&stored_name);
-    std::fs::write(&file_path, &data)
-        .map_err(|e| format!("Failed to write asset file: {}", e))?;
-    file_path
-        .to_str()
-        .map(|s| s.to_string())
-        .ok_or_else(|| "Invalid path encoding".to_string())
+    std::fs::write(&file_path, &data).map_err(|e| format!("Failed to write asset file: {}", e))?;
+    file_path.to_str().map(|s| s.to_string()).ok_or_else(|| "Invalid path encoding".to_string())
 }
 
 fn sanitize_filename(filename: &str) -> String {
@@ -317,14 +301,9 @@ pub fn delete_attachment(app: tauri::AppHandle, id: String) -> Result<(), String
     let conn = db::get_connection(&app)?;
     // Get file path before deleting record
     let file_path: Option<String> = conn
-        .query_row(
-            "SELECT file_path FROM attachments WHERE id = ?",
-            [&id],
-            |row| row.get(0),
-        )
+        .query_row("SELECT file_path FROM attachments WHERE id = ?", [&id], |row| row.get(0))
         .ok();
-    conn.execute("DELETE FROM attachments WHERE id = ?", [&id])
-        .map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM attachments WHERE id = ?", [&id]).map_err(|e| e.to_string())?;
     // Best-effort file cleanup
     if let Some(path) = file_path {
         let _ = std::fs::remove_file(path);
@@ -478,11 +457,9 @@ pub fn get_asset_stats(app: tauri::AppHandle) -> Result<AssetStats, String> {
     let conn = db::get_connection(&app)?;
 
     let (total_files, total_size): (i64, i64) = conn
-        .query_row(
-            "SELECT COUNT(*), COALESCE(SUM(size_bytes), 0) FROM attachments",
-            [],
-            |row| Ok((row.get(0)?, row.get(1)?)),
-        )
+        .query_row("SELECT COUNT(*), COALESCE(SUM(size_bytes), 0) FROM attachments", [], |row| {
+            Ok((row.get(0)?, row.get(1)?))
+        })
         .map_err(|e| e.to_string())?;
 
     let mut stmt = conn
@@ -490,28 +467,17 @@ pub fn get_asset_stats(app: tauri::AppHandle) -> Result<AssetStats, String> {
         .map_err(|e| e.to_string())?;
     let by_entity: Vec<EntityStat> = stmt
         .query_map([], |row| {
-            Ok(EntityStat {
-                entity_type: row.get(0)?,
-                entity_id: row.get(1)?,
-                count: row.get(2)?,
-            })
+            Ok(EntityStat { entity_type: row.get(0)?, entity_id: row.get(1)?, count: row.get(2)? })
         })
         .map_err(|e| e.to_string())?
         .filter_map(|r| r.ok())
         .collect();
 
-    Ok(AssetStats {
-        total_files,
-        total_size_bytes: total_size,
-        by_entity,
-    })
+    Ok(AssetStats { total_files, total_size_bytes: total_size, by_entity })
 }
 
 #[tauri::command]
-pub fn search_assets(
-    app: tauri::AppHandle,
-    query: String,
-) -> Result<Vec<Attachment>, String> {
+pub fn search_assets(app: tauri::AppHandle, query: String) -> Result<Vec<Attachment>, String> {
     let conn = db::get_connection(&app)?;
     let pattern = format!("%{}%", query);
     let mut stmt = conn

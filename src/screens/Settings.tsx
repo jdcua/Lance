@@ -204,7 +204,7 @@ export default function Settings() {
     });
     document.body.classList.add(`accent-${colorId}`);
     const root = document.documentElement;
-    root.style.setProperty('--color-accent', acc.hex);
+    root.style.setProperty('--accent', acc.hex);
   };
 
   const handleDensityChange = (newDensity: string) => {
@@ -262,27 +262,27 @@ export default function Settings() {
       }
       if (Array.isArray(data.clients)) {
         for (const c of data.clients) {
-          try { await tauriInvoke('create_client', { payload: c }); } catch {}
+          try { await tauriInvoke('create_client', { payload: c }); } catch { /* skip duplicate */ }
         }
       }
       if (Array.isArray(data.projects)) {
         for (const p of data.projects) {
-          try { await tauriInvoke('create_project', { payload: p }); } catch {}
+          try { await tauriInvoke('create_project', { payload: p }); } catch { /* skip duplicate */ }
         }
       }
       if (Array.isArray(data.proposals)) {
         for (const p of data.proposals) {
-          try { await tauriInvoke('create_proposal', { payload: p }); } catch {}
+          try { await tauriInvoke('create_proposal', { payload: p }); } catch { /* skip duplicate */ }
         }
       }
       if (Array.isArray(data.contracts)) {
         for (const p of data.contracts) {
-          try { await tauriInvoke('create_contract', { payload: p }); } catch {}
+          try { await tauriInvoke('create_contract', { payload: p }); } catch { /* skip duplicate */ }
         }
       }
       if (Array.isArray(data.time_entries)) {
         for (const t of data.time_entries) {
-          try { await tauriInvoke('create_time_entry', { payload: t }); } catch {}
+          try { await tauriInvoke('create_time_entry', { payload: t }); } catch { /* skip duplicate */ }
         }
       }
       if (Array.isArray(data.invoices)) {
@@ -291,12 +291,12 @@ export default function Settings() {
             await tauriInvoke('create_invoice', {
               payload: { ...inv, line_items: typeof inv.line_items === 'string' ? inv.line_items : JSON.stringify(inv.line_items) },
             });
-          } catch {}
+          } catch { /* skip duplicate */ }
         }
       }
       if (Array.isArray(data.expenses)) {
         for (const e of data.expenses) {
-          try { await tauriInvoke('create_expense', { payload: e }); } catch {}
+          try { await tauriInvoke('create_expense', { payload: e }); } catch { /* skip duplicate */ }
         }
       }
 

@@ -144,8 +144,7 @@ pub fn update_invoice(app: AppHandle, payload: UpdateInvoicePayload) -> Result<(
 #[tauri::command]
 pub fn delete_invoice(app: AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM invoices WHERE id = ?", [&id])
-        .map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM invoices WHERE id = ?", [&id]).map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -216,7 +215,10 @@ pub struct CreateRecurringInvoicePayload {
 }
 
 #[tauri::command]
-pub fn create_recurring_invoice(app: AppHandle, payload: CreateRecurringInvoicePayload) -> Result<RecurringInvoice, String> {
+pub fn create_recurring_invoice(
+    app: AppHandle,
+    payload: CreateRecurringInvoicePayload,
+) -> Result<RecurringInvoice, String> {
     let conn = db::get_connection(&app)?;
     let id = uuid::Uuid::new_v4().to_string();
     let created_at = super::clients::chrono_now();

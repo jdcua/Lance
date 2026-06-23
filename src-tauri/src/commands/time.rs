@@ -122,7 +122,6 @@ pub fn update_time_entry(app: AppHandle, payload: UpdateTimeEntryPayload) -> Res
 #[tauri::command]
 pub fn delete_time_entry(app: AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM time_entries WHERE id = ?", [&id])
-        .map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM time_entries WHERE id = ?", [&id]).map_err(|e| e.to_string())?;
     Ok(())
 }

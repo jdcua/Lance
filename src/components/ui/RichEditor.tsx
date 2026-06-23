@@ -46,6 +46,35 @@ export default function RichEditor({ content, onChange, placeholder = 'Start wri
     [onChange]
   );
 
+  const editorStyles = useMemo(() => `
+    .tiptap {
+      min-height: ${minHeight}px;
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text-primary);
+      outline: none;
+    }
+    .tiptap h1 { font-size: 18px; font-weight: 600; margin: 16px 0 8px; }
+    .tiptap h2 { font-size: 15px; font-weight: 600; margin: 14px 0 6px; }
+    .tiptap h3 { font-size: 14px; font-weight: 600; margin: 12px 0 6px; }
+    .tiptap p { margin: 0 0 10px; }
+    .tiptap p.is-editor-empty:first-child::before {
+      content: attr(data-placeholder);
+      color: var(--text-tertiary);
+      float: left;
+      height: 0;
+      pointer-events: none;
+    }
+    .tiptap ul, .tiptap ol { padding-left: 20px; margin-bottom: 10px; }
+    .tiptap blockquote { border-left: 3px solid var(--accent); padding-left: 12px; color: var(--text-secondary); }
+    .tiptap hr { border: none; border-top: 1px solid var(--border-color); margin: 16px 0; }
+    .tiptap code { background: var(--bg-secondary); padding: 1px 4px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+    .tiptap pre { background: var(--bg-secondary); padding: 12px; border-radius: 6px; margin: 12px 0; }
+    .tiptap pre code { background: none; padding: 0; }
+    .tiptap img { max-width: 100%; border-radius: 6px; }
+  `, [minHeight]);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -88,35 +117,6 @@ export default function RichEditor({ content, onChange, placeholder = 'Start wri
       </div>
     );
   }
-
-  const editorStyles = useMemo(() => `
-    .tiptap {
-      min-height: ${minHeight}px;
-      padding: 12px 14px;
-      font-size: 13px;
-      line-height: 1.7;
-      color: var(--text-primary);
-      outline: none;
-    }
-    .tiptap h1 { font-size: 18px; font-weight: 600; margin: 16px 0 8px; }
-    .tiptap h2 { font-size: 15px; font-weight: 600; margin: 14px 0 6px; }
-    .tiptap h3 { font-size: 14px; font-weight: 600; margin: 12px 0 6px; }
-    .tiptap p { margin: 0 0 10px; }
-    .tiptap p.is-editor-empty:first-child::before {
-      content: attr(data-placeholder);
-      color: var(--text-tertiary);
-      float: left;
-      height: 0;
-      pointer-events: none;
-    }
-    .tiptap ul, .tiptap ol { padding-left: 20px; margin-bottom: 10px; }
-    .tiptap blockquote { border-left: 3px solid var(--accent); padding-left: 12px; color: var(--text-secondary); }
-    .tiptap hr { border: none; border-top: 1px solid var(--border-color); margin: 16px 0; }
-    .tiptap code { background: var(--bg-secondary); padding: 2px 5px; border-radius: 3px; font-size: 12px; }
-    .tiptap ul[data-type="taskList"] { list-style: none; padding-left: 0; }
-    .tiptap ul[data-type="taskList"] li { display: flex; align-items: flex-start; }
-    .tiptap ul[data-type="taskList"] li > label { margin-right: 8px; margin-top: 2px; }
-  `, [minHeight]);
 
   return (
     <div className="border border-[var(--border-color)] rounded-[8px] focus-within:border-[var(--accent)] focus-within:ring-1 focus-within:ring-[var(--accent)]/20 overflow-hidden">

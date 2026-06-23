@@ -1,5 +1,5 @@
-use crate::db;
 use crate::commands::clients::chrono_now;
+use crate::db;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -107,9 +107,7 @@ pub fn update_follow_up_status(
 }
 
 #[tauri::command]
-pub fn get_all_pending_follow_ups(
-    app: tauri::AppHandle,
-) -> Result<Vec<FollowUpLog>, String> {
+pub fn get_all_pending_follow_ups(app: tauri::AppHandle) -> Result<Vec<FollowUpLog>, String> {
     let conn = db::get_connection(&app)?;
     let mut stmt = conn
         .prepare("SELECT id, entity_type, entity_id, stage, status, drafted_at, actioned_at, action FROM follow_up_log WHERE status = 'pending' ORDER BY drafted_at ASC")

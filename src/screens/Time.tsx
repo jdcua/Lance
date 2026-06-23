@@ -228,9 +228,9 @@ export default function TimeScreen() {
   const maxDOW = useMemo(() => Math.max(...dowBreakdown.map((d) => d.avgHours), 0.1), [dowBreakdown]);
 
   const projectColor = useMemo(() => {
-    if (selectedProject === '__all__') return 'var(--color-accent, var(--accent))';
+    if (selectedProject === '__all__') return 'var(--accent)';
     const project = projects.find((p) => p.id === selectedProject);
-    return project?.color || 'var(--color-accent, var(--accent))';
+    return project?.color || 'var(--accent)';
   }, [selectedProject, projects]);
 
   const hasEnoughData = timeEntries.length >= 7;

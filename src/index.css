@@ -80,6 +80,15 @@ html, body, #root {
   animation: pulse-scale 0.2s ease-out;
 }
 
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
 @keyframes progress-fill {
   from { width: 0%; }
 }
@@ -249,6 +258,9 @@ html.dark * {
   --row-height: 1;
   --item-padding: 1;
   --card-padding: 1;
+  --accent: #1EC98A;
+  --accent-hover: #18B47C;
+  --accent-bg: rgba(30,201,138,0.1);
 }
 
 .density-compact {
@@ -275,11 +287,11 @@ html.dark * {
 }
 
 /* ── Accent color system ── */
-.accent-sage    { --color-accent: #1EC98A; --color-accent-hover: #18B47C; --color-accent-bg: rgba(30,201,138,0.1); }
-.accent-amber   { --color-accent: #F59E0B; --color-accent-hover: #D97706; --color-accent-bg: rgba(245,158,11,0.1); }
-.accent-rose    { --color-accent: #E11D48; --color-accent-hover: #BE123C; --color-accent-bg: rgba(225,29,72,0.1); }
-.accent-sky     { --color-accent: #0EA5E9; --color-accent-hover: #0284C7; --color-accent-bg: rgba(14,165,233,0.1); }
-.accent-violet  { --color-accent: #8B5CF6; --color-accent-hover: #7C3AED; --color-accent-bg: rgba(139,92,246,0.1); }
-.accent-teal    { --color-accent: #14B8A6; --color-accent-hover: #0D9488; --color-accent-bg: rgba(20,184,166,0.1); }
-.accent-orange  { --color-accent: #F97316; --color-accent-hover: #EA580C; --color-accent-bg: rgba(249,115,22,0.1); }
-.accent-slate   { --color-accent: #64748B; --color-accent-hover: #475569; --color-accent-bg: rgba(100,116,139,0.1); }
+.accent-sage    { --accent: #1EC98A; --accent-hover: #18B47C; --accent-bg: rgba(30,201,138,0.1); }
+.accent-amber   { --accent: #F59E0B; --accent-hover: #D97706; --accent-bg: rgba(245,158,11,0.1); }
+.accent-rose    { --accent: #E11D48; --accent-hover: #BE123C; --accent-bg: rgba(225,29,72,0.1); }
+.accent-sky     { --accent: #0EA5E9; --accent-hover: #0284C7; --accent-bg: rgba(14,165,233,0.1); }
+.accent-violet  { --accent: #8B5CF6; --accent-hover: #7C3AED; --accent-bg: rgba(139,92,246,0.1); }
+.accent-teal    { --accent: #14B8A6; --accent-hover: #0D9488; --accent-bg: rgba(20,184,166,0.1); }
+.accent-orange  { --accent: #F97316; --accent-hover: #EA580C; --accent-bg: rgba(249,115,22,0.1); }
+.accent-slate   { --accent: #64748B; --accent-hover: #475569; --accent-bg: rgba(100,116,139,0.1); }

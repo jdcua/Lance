@@ -176,7 +176,7 @@ export default function Invoices() {
     return true;
   });
 
-  const toggleTimeSelection = (id: string) => setSelectedTimeIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleTimeSelection = (id: string) => setSelectedTimeIds(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
   const importSelectedTime = () => {
     if (hourlyRate <= 0) { addToast('Set your hourly rate in profile to use time import.', 'error'); return; }

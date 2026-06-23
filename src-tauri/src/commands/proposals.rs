@@ -138,7 +138,6 @@ pub fn update_proposal(app: AppHandle, payload: UpdateProposalPayload) -> Result
 #[tauri::command]
 pub fn delete_proposal(app: AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM proposals WHERE id = ?", [&id])
-        .map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM proposals WHERE id = ?", [&id]).map_err(|e| e.to_string())?;
     Ok(())
 }

@@ -38,7 +38,10 @@ pub fn get_communications(app: AppHandle, client_id: String) -> Result<Vec<Commu
 }
 
 #[tauri::command]
-pub fn create_communication(app: AppHandle, payload: Communication) -> Result<Communication, String> {
+pub fn create_communication(
+    app: AppHandle,
+    payload: Communication,
+) -> Result<Communication, String> {
     let conn = db::get_connection(&app)?;
     let id = uuid::Uuid::new_v4().to_string();
     let created_at = super::clients::chrono_now();
@@ -71,7 +74,6 @@ pub fn update_communication(app: AppHandle, id: String, summary: String) -> Resu
 #[tauri::command]
 pub fn delete_communication(app: AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM communications WHERE id = ?1", [id])
-        .map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM communications WHERE id = ?1", [id]).map_err(|e| e.to_string())?;
     Ok(())
 }

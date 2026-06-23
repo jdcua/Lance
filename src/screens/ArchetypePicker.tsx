@@ -9,8 +9,6 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import { Search, Check, Sparkles, ArrowRight } from 'lucide-react';
 
-const ICON_KEYS: Record<string, string> = {};
-
 interface ArchetypePickerProps {
   onSelect?: (id: ArchetypeId) => void;
   onClose?: () => void;

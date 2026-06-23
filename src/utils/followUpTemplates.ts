@@ -3,8 +3,6 @@
  * with variable substitution. No AI, no API calls.
  */
 
-import type { Client, Proposal, Invoice } from '../types';
-
 export const DEFAULT_TEMPLATES: Record<string, string> = {
   proposal_day3: `Hi {client_name},
 
@@ -70,7 +68,7 @@ export const TEMPLATE_LABELS: Record<string, string> = {
   invoice_day14: 'Invoice — Day 14 overdue (Final notice)',
 };
 
-const TEMPLATE_KEYS = Object.keys(DEFAULT_TEMPLATES);
+const _TEMPLATE_KEYS = Object.keys(DEFAULT_TEMPLATES);
 
 function getDefaultTemplate(key: string): string {
   return DEFAULT_TEMPLATES[key] || '';
@@ -157,20 +155,4 @@ export function generateFollowUpDraft(
   return result;
 }
 
-export function getDefaultTemplateKeys(): string[] {
-  return TEMPLATE_KEYS;
-}
-
-export function getDefaultSettings(): {
-  enabled: boolean;
-  proposal_delay_days: number;
-  invoice_delay_days: number;
-  templates: Record<string, string>;
-} {
-  return {
-    enabled: true,
-    proposal_delay_days: 3,
-    invoice_delay_days: 0,
-    templates: { ...DEFAULT_TEMPLATES },
-  };
-}
+// Removed unused exports: getDefaultTemplateKeys(), getDefaultSettings()

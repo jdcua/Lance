@@ -163,6 +163,7 @@ async function runMigrations(database: Database): Promise<void> {
     'ALTER TABLE user_profile ADD COLUMN custom_archetype_config TEXT',
     'ALTER TABLE user_profile ADD COLUMN density TEXT DEFAULT \'comfortable\'',
     'ALTER TABLE user_profile ADD COLUMN accent_color TEXT',
+    'ALTER TABLE user_profile ADD COLUMN ai_enabled INTEGER DEFAULT 0',
     'ALTER TABLE expenses ADD COLUMN recurring INTEGER NOT NULL DEFAULT 0',
     'ALTER TABLE expenses ADD COLUMN frequency TEXT DEFAULT \'monthly\'',
   ];

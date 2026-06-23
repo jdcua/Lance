@@ -14,7 +14,7 @@ const IMAGE_EXTS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'];
 
 const ACCEPTED_EXTENSIONS = [...SPREADSHEET_EXTS, ...DOCUMENT_EXTS, ...IMAGE_EXTS];
 
-export const ACCEPTED_MIME_TYPES = [
+const ACCEPTED_MIME_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'application/vnd.ms-excel',
   'text/csv',
@@ -99,7 +99,7 @@ export async function processImportFiles(
 /**
  * Filter files from a drag event's DataTransfer.
  */
-export function extractFilesFromDrop(e: DragEvent): File[] {
+function extractFilesFromDrop(e: DragEvent): File[] {
   const files: File[] = [];
   if (e.dataTransfer?.files) {
     for (let i = 0; i < e.dataTransfer.files.length; i++) {

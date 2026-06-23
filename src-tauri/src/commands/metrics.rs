@@ -1,6 +1,21 @@
-use crate::db;
 use crate::commands::clients::chrono_now;
+use crate::db;
 use serde::{Deserialize, Serialize};
+
+type HeadlineMetricRow = (
+    String,
+    String,
+    String,
+    String,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+);
 
 // ── Metric Definition ──
 
@@ -116,10 +131,7 @@ pub fn update_metric_definition(
 }
 
 #[tauri::command]
-pub fn delete_metric_definition(
-    app: tauri::AppHandle,
-    id: String,
-) -> Result<(), String> {
+pub fn delete_metric_definition(app: tauri::AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
     conn.execute("DELETE FROM metric_definitions WHERE id = ?", [&id])
         .map_err(|e| e.to_string())?;
@@ -211,13 +223,9 @@ pub fn get_metric_values(
 }
 
 #[tauri::command]
-pub fn delete_metric_value(
-    app: tauri::AppHandle,
-    id: String,
-) -> Result<(), String> {
+pub fn delete_metric_value(app: tauri::AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM metric_values WHERE id = ?", [&id])
-        .map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM metric_values WHERE id = ?", [&id]).map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -237,9 +245,7 @@ pub struct HeadlineMetric {
 }
 
 #[tauri::command]
-pub fn get_all_headline_metrics(
-    app: tauri::AppHandle,
-) -> Result<Vec<HeadlineMetric>, String> {
+pub fn get_all_headline_metrics(app: tauri::AppHandle) -> Result<Vec<HeadlineMetric>, String> {
     let conn = db::get_connection(&app)?;
     // Get the last 20 values for each headline definition
     let mut stmt = conn
@@ -253,12 +259,21 @@ pub fn get_all_headline_metrics(
         )
         .map_err(|e| e.to_string())?;
 
-    let rows: Vec<(String, String, String, String, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>)> = stmt
+    let rows: Vec<HeadlineMetricRow> = stmt
         .query_map([], |row| {
             Ok((
-                row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?,
-                row.get(5)?, row.get(6)?, row.get(7)?, row.get(8)?, row.get(9)?,
-                row.get(10)?, row.get(11)?,
+                row.get(0)?,
+                row.get(1)?,
+                row.get(2)?,
+                row.get(3)?,
+                row.get(4)?,
+                row.get(5)?,
+                row.get(6)?,
+                row.get(7)?,
+                row.get(8)?,
+                row.get(9)?,
+                row.get(10)?,
+                row.get(11)?,
             ))
         })
         .map_err(|e| e.to_string())?
@@ -266,7 +281,8 @@ pub fn get_all_headline_metrics(
         .collect();
 
     // Group values by definition
-    let mut grouped: std::collections::BTreeMap<String, HeadlineMetric> = std::collections::BTreeMap::new();
+    let mut grouped: std::collections::BTreeMap<String, HeadlineMetric> =
+        std::collections::BTreeMap::new();
     for row in &rows {
         let def_id = &row.0;
         let entry = grouped.entry(def_id.clone()).or_insert_with(|| HeadlineMetric {
@@ -308,9 +324,7 @@ pub fn get_all_headline_metrics(
 
     // Get client names
     let client_names: std::collections::HashMap<String, String> = {
-        let mut stmt = conn
-            .prepare("SELECT id, name FROM clients")
-            .map_err(|e| e.to_string())?;
+        let mut stmt = conn.prepare("SELECT id, name FROM clients").map_err(|e| e.to_string())?;
         let results: Vec<(String, String)> = stmt
             .query_map([], |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?)))
             .map_err(|e| e.to_string())?
@@ -320,7 +334,8 @@ pub fn get_all_headline_metrics(
     };
 
     for entry in grouped.values_mut() {
-        entry.client_name = client_names.get(&entry.client_id).cloned().unwrap_or_else(|| entry.client_id.clone());
+        entry.client_name =
+            client_names.get(&entry.client_id).cloned().unwrap_or_else(|| entry.client_id.clone());
     }
 
     Ok(grouped.into_values().collect())
@@ -351,11 +366,8 @@ pub fn save_metric_template(
     let id = uuid::Uuid::new_v4().to_string();
     let created_at = chrono_now();
     // Upsert by name
-    conn.execute(
-        "DELETE FROM metric_templates WHERE name = ?",
-        [&payload.name],
-    )
-    .map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM metric_templates WHERE name = ?", [&payload.name])
+        .map_err(|e| e.to_string())?;
     conn.execute(
         "INSERT INTO metric_templates (id, name, definitions_json, created_at) VALUES (?1, ?2, ?3, ?4)",
         rusqlite::params![id, payload.name, payload.definitions_json, created_at],
@@ -373,7 +385,9 @@ pub fn save_metric_template(
 pub fn get_metric_templates(app: tauri::AppHandle) -> Result<Vec<MetricTemplate>, String> {
     let conn = db::get_connection(&app)?;
     let mut stmt = conn
-        .prepare("SELECT id, name, definitions_json, created_at FROM metric_templates ORDER BY name ASC")
+        .prepare(
+            "SELECT id, name, definitions_json, created_at FROM metric_templates ORDER BY name ASC",
+        )
         .map_err(|e| e.to_string())?;
     let results = stmt
         .query_map([], |row| {
@@ -393,7 +407,6 @@ pub fn get_metric_templates(app: tauri::AppHandle) -> Result<Vec<MetricTemplate>
 #[tauri::command]
 pub fn delete_metric_template(app: tauri::AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM metric_templates WHERE id = ?", [&id])
-        .map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM metric_templates WHERE id = ?", [&id]).map_err(|e| e.to_string())?;
     Ok(())
 }

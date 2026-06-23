@@ -155,8 +155,7 @@ pub fn update_project(app: AppHandle, payload: UpdateProjectPayload) -> Result<(
 #[tauri::command]
 pub fn delete_project(app: AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM projects WHERE id = ?", [&id])
-        .map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM projects WHERE id = ?", [&id]).map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -216,7 +215,6 @@ pub fn update_milestone(app: AppHandle, payload: UpdateMilestonePayload) -> Resu
 #[tauri::command]
 pub fn delete_milestone(app: AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM milestones WHERE id = ?", [&id])
-        .map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM milestones WHERE id = ?", [&id]).map_err(|e| e.to_string())?;
     Ok(())
 }

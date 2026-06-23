@@ -1,10 +1,28 @@
+# Dependencies
 node_modules/
 dist/
 src-tauri/target/
+
+# Environment
 .env
 .env.*
+.env.local
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Sensitive
 scripts/generate-license.cjs
 src-tauri/signing/*
 !src-tauri/signing/.gitkeep
 !src-tauri/signing/README.md
+
+# Lint/formatter cache
+.eslintcache

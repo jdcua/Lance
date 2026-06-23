@@ -10,7 +10,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
-import AIBar from './components/layout/AIBar';
+// import AIBar from './components/layout/AIBar'; // v3 — AI features disabled for now
 import Modal from './components/ui/Modal';
 import Button from './components/ui/Button';
 import ToastContainer from './components/ui/Toast';

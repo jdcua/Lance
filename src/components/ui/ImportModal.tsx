@@ -145,7 +145,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
     setStep(4);
     setImporting(true);
     let imported = 0;
-    let skipped = skipCount;
+    const skipped = skipCount;
     let errors = 0;
 
     const active = detections.filter(d => !d.skipped);

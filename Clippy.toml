@@ -1,0 +1,4 @@
+# Clippy lint configuration for Lance
+allow-unwrap-used = false
+allow-expect-used = false
+cognitive-complexity-threshold = 30

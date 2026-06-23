@@ -55,7 +55,7 @@ function extractFields(text: string): Record<string, string> {
 
   // Extract dates (various formats)
   const datePatterns = [
-    /(?:date|dated|issued|due)[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/gi,
+    /(?:date|dated|issued|due)[:\s]*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/gi,
     /(?:date|dated|issued|due)[:\s]*(\w+ \d{1,2},?\s*\d{4})/gi,
     /(\d{4}-\d{2}-\d{2})/g,
   ];
@@ -99,7 +99,7 @@ function extractFields(text: string): Record<string, string> {
   for (const pattern of clientPatterns) {
     const match = pattern.exec(text);
     if (match) {
-      const name = match[1].trim().replace(/[:\-]/g, '').trim();
+      const name = match[1].trim().replace(/[:-]/g, '').trim();
       if (name.length >= 2 && name.length <= 80) {
         fields.client_name = name;
         break;
@@ -108,7 +108,7 @@ function extractFields(text: string): Record<string, string> {
   }
 
   // Extract invoice number
-  const invoiceNumMatch = /(?:invoice\s*(?:#|no\.?|number)[:\s]*)([A-Za-z0-9\-]+)/i.exec(text);
+  const invoiceNumMatch = /(?:invoice\s*(?:#|no\.?|number)[:\s]*)([A-Za-z0-9-]+)/i.exec(text);
   if (invoiceNumMatch) fields.invoice_number = invoiceNumMatch[1].trim();
 
   // Extract title for proposals/contracts

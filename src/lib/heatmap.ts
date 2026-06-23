@@ -58,7 +58,7 @@ export function getIntensity(hours: number): number {
 
 export function getIntensityColor(hours: number): string {
   const level = getIntensity(hours);
-  const accentVar = 'var(--color-accent, var(--accent))';
+  const accentVar = 'var(--accent)';
   const surfaceVar = 'var(--color-surface-2, var(--bg-secondary))';
   const opacity = [5, 20, 40, 60, 80, 100][level];
   return `color-mix(in srgb, ${accentVar} ${opacity}%, ${surfaceVar})`;
@@ -319,7 +319,7 @@ export function computeMonthLabels(
 export function computeProjectColor(
   projectId: string | undefined,
   projects: { id: string; color?: string }[],
-  defaultColor: string = 'var(--color-accent, var(--accent))',
+  defaultColor: string = 'var(--accent)',
 ): string {
   if (!projectId) return defaultColor;
   const project = projects.find((p) => p.id === projectId);

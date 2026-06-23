@@ -120,7 +120,6 @@ pub fn update_contract(app: AppHandle, payload: UpdateContractPayload) -> Result
 #[tauri::command]
 pub fn delete_contract(app: AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM contracts WHERE id = ?", [&id])
-        .map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM contracts WHERE id = ?", [&id]).map_err(|e| e.to_string())?;
     Ok(())
 }

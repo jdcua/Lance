@@ -140,8 +140,7 @@ pub fn update_expense(app: AppHandle, payload: UpdateExpensePayload) -> Result<(
 #[tauri::command]
 pub fn delete_expense(app: AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM expenses WHERE id = ?", [&id])
-        .map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM expenses WHERE id = ?", [&id]).map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -188,7 +187,6 @@ pub fn upsert_user_profile(app: AppHandle, payload: UpsertProfilePayload) -> Res
 #[tauri::command]
 pub fn delete_user_profile(app: AppHandle) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM user_profile", [])
-        .map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM user_profile", []).map_err(|e| e.to_string())?;
     Ok(())
 }

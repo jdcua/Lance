@@ -121,27 +121,20 @@ pub fn update_client(app: tauri::AppHandle, payload: UpdateClientPayload) -> Res
 #[tauri::command]
 pub fn delete_client(app: tauri::AppHandle, id: String) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM clients WHERE id = ?", [&id])
-        .map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM clients WHERE id = ?", [&id]).map_err(|e| e.to_string())?;
     Ok(())
 }
 
 pub fn chrono_now() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs() as i64;
+    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs() as i64;
     let days = now / 86400;
     let secs = now % 86400;
     let hours = secs / 3600;
     let mins = (secs % 3600) / 60;
     let secs = secs % 60;
     let (year, month, day) = days_since_epoch_to_date(days);
-    format!(
-        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z",
-        year, month, day, hours, mins, secs
-    )
+    format!("{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z", year, month, day, hours, mins, secs)
 }
 
 fn days_since_epoch_to_date(days: i64) -> (i64, i64, i64) {
