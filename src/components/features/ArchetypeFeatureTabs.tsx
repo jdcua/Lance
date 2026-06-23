@@ -84,15 +84,67 @@ function FeatureTabBar({ features, context }: { features: ArchetypeFeatureDef[];
 
 function resolveProps(feature: ArchetypeFeatureDef, context: Record<string, string>): Record<string, string> {
   const component = feature.component;
-  // Map component types to their expected prop keys
-  if (['RenderLog', 'RenderLogWidget', 'BuildLog', 'BuildLogWidget', 'ShootLog', 'ShootLogWidget', 'RevisionTracker', 'RevisionTrackerWidget', 'RevisionCounter', 'DatasetLog', 'DatasetLogWidget'].includes(component)) {
+
+  const needsProjectId = [
+    'RenderLog', 'RenderLogWidget', 'BuildLog', 'BuildLogWidget', 'BuildDeliveryLog',
+    'ShootLog', 'ShootLogWidget', 'RevisionTracker', 'RevisionTrackerWidget', 'RevisionCounter',
+    'DatasetLog', 'DatasetLogWidget', 'PhaseTracker', 'ProjectPhasesWidget', 'DeliverableLog',
+    'ProductionPhaseTracker', 'ProductionPhaseWidget', 'ShotList', 'ShotListWidget',
+    'CutTracker', 'DeliverableSpecs', 'AssetComplexityLog', 'AssetComplexityWidget',
+    'DeliverableFormatLog', 'MoodBoard', 'CullingTracker', 'DeliveryTracker',
+    'EquipmentLog', 'StorageTracker', 'StorageTrackerWidget', 'PublicationLog',
+    'OutcomeNotes', 'SprintBoard', 'SprintBoardWidget', 'StackLogger', 'BugLog',
+    'FeatureScopeBoard', 'FeatureScopeWidget', 'PlatformLog', 'QALog',
+    'ResearchLog', 'PrototypeTracker', 'PrototypeTrackerWidget', 'UsabilityTestLog',
+    'HandoffChecklist', 'HandoffChecklistWidget', 'ComponentCount',
+    'CampaignTracker', 'ChannelLog', 'CrewEquipmentLog',
+    'AnalysisPhaseTracker', 'AnalysisPhaseWidget', 'ToolComputeLog', 'ComplexityTagger',
+    'ExperimentTracker', 'ExperimentTrackerWidget', 'ModelRegistry', 'ModelRegistryWidget',
+    'ComputeCostLog', 'DatasetVersioning',
+    'CurriculumTracker', 'CurriculumProgressWidget', 'ProgressReports',
+    'StemTracker', 'CreditLog', 'ConsultantLog',
+    'SubmissionTracker', 'RevisionSetLog', 'SiteVisitLog',
+    'LanguagePairTracker', 'QualityLevelLog',
+    'AnalysisDeliverableLog', 'DeliverableLogAnalyst',
+    'StyleTagSystem', 'ReferenceBoard', 'ReferenceBoardWidget',
+    'IncidentLog', 'AutomationTracker', 'InfraDashboard', 'SLATracker',
+    'PhaseGateTracker',
+  ];
+  if (needsProjectId.includes(component)) {
     return { projectId: context.projectId || '' };
   }
-  if (['KeywordTracker', 'KeywordTrackerWidget'].includes(component)) {
+
+  const needsClientId = [
+    'KeywordTracker', 'KeywordTrackerWidget', 'FeedbackLog', 'StyleGuide',
+    'RetainerManager', 'ActionItemTracker', 'DeliverableTracker', 'DeliverableTrackerWidget',
+    'ReportLog', 'RetainerHealthScore', 'RetainerHealthWidget',
+    'ReportCadenceTracker', 'StudentRoster', 'StudentRosterWidget',
+    'CancellationMonitor', 'IntakeFormStorage', 'ProgressTracker', 'ProgressTrackerWidget',
+    'ProgramBuilder', 'AssessmentLog', 'ClientProgressWidget', 'ProgramTrackerWidget',
+    'TaskLog', 'SOPStore', 'Glossary', 'ContentCalendar', 'PlatformTracker',
+    'CommissionTOS',
+  ];
+  if (needsClientId.includes(component)) {
     return { clientId: context.clientId || '' };
   }
-  if (['SessionLog', 'SessionNoteLog', 'SessionNoteWidget', 'SessionPrepLog', 'SessionPrep'].includes(component)) {
+
+  const needsClientAndProject = [
+    'SessionLog', 'SessionNoteLog', 'SessionNoteWidget', 'SessionPrepLog', 'SessionPrep',
+    'CommissionQueue', 'CommissionQueueWidget', 'SyncLicenseLog', 'LicensingTracker',
+  ];
+  if (needsClientAndProject.includes(component)) {
     return { clientId: context.clientId || '', projectId: context.projectId || '' };
   }
+
+  const needsClientOrNothing = [
+    'WordTracker', 'WordCharacterCounter',
+  ];
+  if (needsClientOrNothing.includes(component)) {
+    const base: Record<string, string> = {};
+    if (context.clientId) base.clientId = context.clientId;
+    if (context.projectId) base.projectId = context.projectId;
+    return base;
+  }
+
   return {};
 }

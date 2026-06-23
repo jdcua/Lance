@@ -31,6 +31,82 @@ import type {
   ArchetypeBuild,
   ArchetypeKeyword,
   ArchetypeDataset,
+  ProjectPhase,
+  TimeEntryPhase,
+  Deliverable,
+  SprintTask,
+  ProjectStack,
+  Bug,
+  MoodBoardItem,
+  ClientFeedback,
+  CullingSession,
+  ProjectDelivery,
+  EquipmentUsage,
+  StorageLog,
+  TimeEntryWords,
+  Publication,
+  ClientStyleGuide,
+  Retainer,
+  ActionItem,
+  Outcome,
+  Shot,
+  Cut,
+  DeliverableSpec,
+  Commission,
+  ProjectStyleTag,
+  AssetLicense,
+  ProjectComplexity,
+  FormatDeliverable,
+  GameFeature,
+  ProjectPlatform,
+  QASession,
+  BuildDelivery,
+  ResearchActivity,
+  Prototype,
+  UsabilityTest,
+  HandoffItem,
+  ComponentCountEntry,
+  Campaign,
+  ClientReportCadence,
+  ProjectChannel,
+  ContentPost,
+  ClientPlatform,
+  Stem,
+  SyncLicense,
+  Credit,
+  ArchPhase,
+  ArchConsultant,
+  Submission,
+  RevisionSet,
+  SiteVisit,
+  VATask,
+  SOP,
+  TranslationCount,
+  ProjectLanguagePair,
+  ProjectQuality,
+  GlossaryTerm,
+  SEODeliverable,
+  ClientReport,
+  AnalysisDeliverable,
+  AnalysisComplexity,
+  Incident,
+  Automation,
+  InfrastructureItem,
+  SLA,
+  Experiment,
+  AIModel,
+  ComputeCost,
+  DatasetVersion,
+  Student,
+  CurriculumItem,
+  ProgressReport,
+  Cancellation,
+  IntakeForm,
+  ProgressNote,
+  Program,
+  Assessment,
+  ClientProgress,
+  CommissionTOS,
   ProjectTemplate,
   ProjectTemplateMilestone,
 } from '../types';
@@ -272,7 +348,476 @@ interface ArchetypeDatasetSlice {
   removeDataset: (id: string, projectId: string) => Promise<void>;
 }
 
-export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & InvoicePaymentSlice & ExpenseSlice & ProfileSlice & CommunicationSlice & RecurringInvoiceSlice & ImportSlice & AttachmentSlice & MetricSlice & FollowUpSlice & ExportTemplateSlice & ContractTemplateSlice & ProjectTemplateSlice & ArchetypeRenderLogSlice & ArchetypeSessionSlice & ArchetypeShootSlice & ArchetypeRevisionSlice & ArchetypeBuildSlice & ArchetypeKeywordSlice & ArchetypeDatasetSlice;
+// ── Phase tracker ──
+interface PhaseTrackerSlice {
+  projectPhases: Record<string, ProjectPhase[]>;
+  loadProjectPhases: (projectId: string) => Promise<void>;
+  addProjectPhase: (data: Omit<ProjectPhase, 'id'>) => Promise<ProjectPhase>;
+  updateProjectPhase: (id: string, projectId: string, data: Partial<Pick<ProjectPhase, 'phase_name' | 'status' | 'color'>>) => Promise<void>;
+  removeProjectPhase: (id: string, projectId: string) => Promise<void>;
+}
+interface DeliverableSlice {
+  deliverables: Record<string, Deliverable[]>;
+  loadDeliverables: (projectId: string) => Promise<void>;
+  addDeliverable: (data: Omit<Deliverable, 'id'>) => Promise<Deliverable>;
+  updateDeliverable: (id: string, projectId: string, data: Partial<Pick<Deliverable, 'client_approved'>>) => Promise<void>;
+  removeDeliverable: (id: string, projectId: string) => Promise<void>;
+}
+interface SprintSlice {
+  sprintTasks: Record<string, SprintTask[]>;
+  loadSprintTasks: (projectId: string) => Promise<void>;
+  addSprintTask: (data: Omit<SprintTask, 'id'>) => Promise<SprintTask>;
+  updateSprintTask: (id: string, projectId: string, data: Partial<Pick<SprintTask, 'title' | 'status' | 'priority' | 'hours_estimated' | 'hours_actual' | 'sort_order'>>) => Promise<void>;
+  removeSprintTask: (id: string, projectId: string) => Promise<void>;
+}
+interface ProjectStackSlice {
+  projectStacks: Record<string, ProjectStack[]>;
+  loadProjectStacks: (projectId: string) => Promise<void>;
+  addProjectStack: (data: Omit<ProjectStack, 'id'>) => Promise<ProjectStack>;
+  removeProjectStack: (id: string, projectId: string) => Promise<void>;
+}
+interface BugSlice {
+  bugs: Record<string, Bug[]>;
+  loadBugs: (projectId: string) => Promise<void>;
+  addBug: (data: Omit<Bug, 'id'>) => Promise<Bug>;
+  updateBug: (id: string, projectId: string, data: Partial<Pick<Bug, 'status' | 'priority' | 'hours_spent' | 'resolved_at'>>) => Promise<void>;
+  removeBug: (id: string, projectId: string) => Promise<void>;
+}
+interface MoodBoardSlice {
+  moodBoardItems: Record<string, MoodBoardItem[]>;
+  loadMoodBoardItems: (projectId: string) => Promise<void>;
+  addMoodBoardItem: (data: Omit<MoodBoardItem, 'id'>) => Promise<MoodBoardItem>;
+  updateMoodBoardItem: (id: string, projectId: string, data: Partial<Pick<MoodBoardItem, 'notes' | 'sort_order'>>) => Promise<void>;
+  removeMoodBoardItem: (id: string, projectId: string) => Promise<void>;
+}
+interface ClientFeedbackSlice {
+  clientFeedbacks: Record<string, ClientFeedback[]>;
+  loadClientFeedbacks: (clientId: string) => Promise<void>;
+  addClientFeedback: (data: Omit<ClientFeedback, 'id'>) => Promise<ClientFeedback>;
+  updateClientFeedback: (id: string, clientId: string, data: Partial<Pick<ClientFeedback, 'summary' | 'actioned'>>) => Promise<void>;
+  removeClientFeedback: (id: string, clientId: string) => Promise<void>;
+}
+interface CullingSessionSlice {
+  cullingSessions: Record<string, CullingSession[]>;
+  loadCullingSessions: (projectId: string) => Promise<void>;
+  addCullingSession: (data: Omit<CullingSession, 'id'>) => Promise<CullingSession>;
+  removeCullingSession: (id: string, projectId: string) => Promise<void>;
+}
+interface ProjectDeliverySlice {
+  projectDeliveries: Record<string, ProjectDelivery[]>;
+  loadProjectDeliveries: (projectId: string) => Promise<void>;
+  addProjectDelivery: (data: Omit<ProjectDelivery, 'id'>) => Promise<ProjectDelivery>;
+  updateProjectDelivery: (id: string, projectId: string, data: Partial<Pick<ProjectDelivery, 'selects_count' | 'delivered_count' | 'gallery_link' | 'delivery_date' | 'notes'>>) => Promise<void>;
+  removeProjectDelivery: (id: string, projectId: string) => Promise<void>;
+}
+interface EquipmentSlice {
+  equipmentUsage: Record<string, EquipmentUsage[]>;
+  loadEquipmentUsage: (projectId: string) => Promise<void>;
+  addEquipmentUsage: (data: Omit<EquipmentUsage, 'id'>) => Promise<EquipmentUsage>;
+  removeEquipmentUsage: (id: string, projectId: string) => Promise<void>;
+}
+interface StorageTrackerSlice {
+  storageLogs: Record<string, StorageLog[]>;
+  loadStorageLogs: (projectId: string) => Promise<void>;
+  addStorageLog: (data: Omit<StorageLog, 'id'>) => Promise<StorageLog>;
+  removeStorageLog: (id: string, projectId: string) => Promise<void>;
+}
+interface PublicationSlice {
+  publications: Record<string, Publication[]>;
+  loadPublications: (projectId: string) => Promise<void>;
+  addPublication: (data: Omit<Publication, 'id'>) => Promise<Publication>;
+  removePublication: (id: string, projectId: string) => Promise<void>;
+}
+interface StyleGuideSlice {
+  styleGuides: Record<string, ClientStyleGuide[]>;
+  loadStyleGuides: (clientId: string) => Promise<void>;
+  saveStyleGuide: (data: Omit<ClientStyleGuide, 'id'>) => Promise<ClientStyleGuide>;
+}
+interface RetainerSlice {
+  retainers: Record<string, Retainer[]>;
+  loadRetainers: (clientId: string) => Promise<void>;
+  addRetainer: (data: Omit<Retainer, 'id'>) => Promise<Retainer>;
+  updateRetainer: (id: string, clientId: string, data: Partial<Pick<Retainer, 'monthly_hours' | 'rate' | 'renewal_date' | 'active'>>) => Promise<void>;
+  removeRetainer: (id: string, clientId: string) => Promise<void>;
+}
+interface ActionItemSlice {
+  actionItems: Record<string, ActionItem[]>;
+  loadActionItems: (clientId: string) => Promise<void>;
+  addActionItem: (data: Omit<ActionItem, 'id'>) => Promise<ActionItem>;
+  updateActionItem: (id: string, clientId: string, data: Partial<Pick<ActionItem, 'title' | 'owner' | 'due_date' | 'completed'>>) => Promise<void>;
+  removeActionItem: (id: string, clientId: string) => Promise<void>;
+}
+interface OutcomeSlice {
+  outcomes: Record<string, Outcome[]>;
+  loadOutcomes: (projectId: string) => Promise<void>;
+  saveOutcome: (data: Omit<Outcome, 'id'>) => Promise<Outcome>;
+}
+interface ShotSlice {
+  shots: Record<string, Shot[]>;
+  loadShots: (projectId: string) => Promise<void>;
+  addShot: (data: Omit<Shot, 'id'>) => Promise<Shot>;
+  updateShot: (id: string, projectId: string, data: Partial<Pick<Shot, 'scene' | 'description' | 'status' | 'sort_order'>>) => Promise<void>;
+  removeShot: (id: string, projectId: string) => Promise<void>;
+}
+interface CutSlice {
+  cuts: Record<string, Cut[]>;
+  loadCuts: (projectId: string) => Promise<void>;
+  addCut: (data: Omit<Cut, 'id'>) => Promise<Cut>;
+  updateCut: (id: string, projectId: string, data: Partial<Pick<Cut, 'client_approved' | 'duration_seconds'>>) => Promise<void>;
+  removeCut: (id: string, projectId: string) => Promise<void>;
+}
+interface DeliverableSpecSlice {
+  deliverableSpecs: Record<string, DeliverableSpec[]>;
+  loadDeliverableSpecs: (projectId: string) => Promise<void>;
+  saveDeliverableSpec: (data: Omit<DeliverableSpec, 'id'>) => Promise<DeliverableSpec>;
+}
+interface CommissionSlice {
+  commissions: Record<string, Commission[]>;
+  loadCommissions: (clientId: string) => Promise<void>;
+  addCommission: (data: Omit<Commission, 'id'>) => Promise<Commission>;
+  updateCommission: (id: string, clientId: string, data: Partial<Pick<Commission, 'title' | 'status' | 'brief' | 'deadline' | 'payment_status' | 'sort_order'>>) => Promise<void>;
+  removeCommission: (id: string, clientId: string) => Promise<void>;
+}
+interface StyleTagSlice {
+  styleTags: Record<string, ProjectStyleTag[]>;
+  loadStyleTags: (projectId: string) => Promise<void>;
+  addStyleTag: (data: Omit<ProjectStyleTag, 'id'>) => Promise<ProjectStyleTag>;
+  removeStyleTag: (id: string, projectId: string) => Promise<void>;
+}
+interface AssetLicenseSlice {
+  assetLicenses: Record<string, AssetLicense[]>;
+  loadAssetLicenses: (assetId: string) => Promise<void>;
+  addAssetLicense: (data: Omit<AssetLicense, 'id'>) => Promise<AssetLicense>;
+  removeAssetLicense: (id: string, assetId: string) => Promise<void>;
+}
+interface ComplexitySlice {
+  complexities: Record<string, ProjectComplexity[]>;
+  loadComplexities: (projectId: string) => Promise<void>;
+  saveComplexity: (data: Omit<ProjectComplexity, 'id'>) => Promise<ProjectComplexity>;
+}
+interface FormatDeliverableSlice {
+  formatDeliverables: Record<string, FormatDeliverable[]>;
+  loadFormatDeliverables: (projectId: string) => Promise<void>;
+  addFormatDeliverable: (data: Omit<FormatDeliverable, 'id'>) => Promise<FormatDeliverable>;
+  updateFormatDeliverable: (id: string, projectId: string, data: Partial<Pick<FormatDeliverable, 'delivered'>>) => Promise<void>;
+  removeFormatDeliverable: (id: string, projectId: string) => Promise<void>;
+}
+interface GameFeatureSlice {
+  gameFeatures: Record<string, GameFeature[]>;
+  loadGameFeatures: (projectId: string) => Promise<void>;
+  addGameFeature: (data: Omit<GameFeature, 'id'>) => Promise<GameFeature>;
+  updateGameFeature: (id: string, projectId: string, data: Partial<Pick<GameFeature, 'title' | 'priority' | 'status' | 'hours_estimated' | 'hours_actual' | 'sort_order'>>) => Promise<void>;
+  removeGameFeature: (id: string, projectId: string) => Promise<void>;
+}
+interface ProjectPlatformSlice {
+  projectPlatforms: Record<string, ProjectPlatform[]>;
+  loadProjectPlatforms: (projectId: string) => Promise<void>;
+  addProjectPlatform: (data: Omit<ProjectPlatform, 'id'>) => Promise<ProjectPlatform>;
+  removeProjectPlatform: (id: string, projectId: string) => Promise<void>;
+}
+interface QASessionSlice {
+  qaSessions: Record<string, QASession[]>;
+  loadQASessions: (projectId: string) => Promise<void>;
+  addQASession: (data: Omit<QASession, 'id'>) => Promise<QASession>;
+  removeQASession: (id: string, projectId: string) => Promise<void>;
+}
+interface BuildDeliverySlice {
+  buildDeliveries: Record<string, BuildDelivery[]>;
+  loadBuildDeliveries: (projectId: string) => Promise<void>;
+  addBuildDelivery: (data: Omit<BuildDelivery, 'id'>) => Promise<BuildDelivery>;
+  removeBuildDelivery: (id: string, projectId: string) => Promise<void>;
+}
+interface ResearchActivitySlice {
+  researchActivities: Record<string, ResearchActivity[]>;
+  loadResearchActivities: (projectId: string) => Promise<void>;
+  addResearchActivity: (data: Omit<ResearchActivity, 'id'>) => Promise<ResearchActivity>;
+  removeResearchActivity: (id: string, projectId: string) => Promise<void>;
+}
+interface PrototypeSlice {
+  prototypes: Record<string, Prototype[]>;
+  loadPrototypes: (projectId: string) => Promise<void>;
+  addPrototype: (data: Omit<Prototype, 'id'>) => Promise<Prototype>;
+  removePrototype: (id: string, projectId: string) => Promise<void>;
+}
+interface UsabilityTestSlice {
+  usabilityTests: Record<string, UsabilityTest[]>;
+  loadUsabilityTests: (projectId: string) => Promise<void>;
+  addUsabilityTest: (data: Omit<UsabilityTest, 'id'>) => Promise<UsabilityTest>;
+  removeUsabilityTest: (id: string, projectId: string) => Promise<void>;
+}
+interface HandoffItemSlice {
+  handoffItems: Record<string, HandoffItem[]>;
+  loadHandoffItems: (projectId: string) => Promise<void>;
+  addHandoffItem: (data: Omit<HandoffItem, 'id'>) => Promise<HandoffItem>;
+  updateHandoffItem: (id: string, projectId: string, data: Partial<Pick<HandoffItem, 'completed'>>) => Promise<void>;
+  removeHandoffItem: (id: string, projectId: string) => Promise<void>;
+}
+interface ComponentCountSlice {
+  componentCounts: Record<string, ComponentCountEntry[]>;
+  loadComponentCounts: (projectId: string) => Promise<void>;
+  addComponentCount: (data: Omit<ComponentCountEntry, 'id'>) => Promise<ComponentCountEntry>;
+  updateComponentCount: (id: string, projectId: string, data: Partial<Pick<ComponentCountEntry, 'component_name' | 'count'>>) => Promise<void>;
+  removeComponentCount: (id: string, projectId: string) => Promise<void>;
+}
+interface CampaignSlice {
+  campaigns: Record<string, Campaign[]>;
+  loadCampaigns: (projectId: string) => Promise<void>;
+  addCampaign: (data: Omit<Campaign, 'id'>) => Promise<Campaign>;
+  updateCampaign: (id: string, projectId: string, data: Partial<Pick<Campaign, 'kpi_result'>>) => Promise<void>;
+  removeCampaign: (id: string, projectId: string) => Promise<void>;
+}
+interface ReportCadenceSlice {
+  reportCadences: Record<string, ClientReportCadence[]>;
+  loadReportCadences: (clientId: string) => Promise<void>;
+  saveReportCadence: (data: Omit<ClientReportCadence, 'id'>) => Promise<ClientReportCadence>;
+  updateReportCadenceLastSent: (id: string, clientId: string) => Promise<void>;
+}
+interface ProjectChannelSlice {
+  projectChannels: Record<string, ProjectChannel[]>;
+  loadProjectChannels: (projectId: string) => Promise<void>;
+  addProjectChannel: (data: Omit<ProjectChannel, 'id'>) => Promise<ProjectChannel>;
+  removeProjectChannel: (id: string, projectId: string) => Promise<void>;
+}
+interface ContentPostSlice {
+  contentPosts: Record<string, ContentPost[]>;
+  loadContentPosts: (clientId: string) => Promise<void>;
+  addContentPost: (data: Omit<ContentPost, 'id'>) => Promise<ContentPost>;
+  updateContentPost: (id: string, clientId: string, data: Partial<Pick<ContentPost, 'status' | 'notes'>>) => Promise<void>;
+  removeContentPost: (id: string, clientId: string) => Promise<void>;
+}
+interface ClientPlatformSlice {
+  clientPlatforms: Record<string, ClientPlatform[]>;
+  loadClientPlatforms: (clientId: string) => Promise<void>;
+  addClientPlatform: (data: Omit<ClientPlatform, 'id'>) => Promise<ClientPlatform>;
+  updateClientPlatform: (id: string, clientId: string, data: Partial<Pick<ClientPlatform, 'handle' | 'active'>>) => Promise<void>;
+  removeClientPlatform: (id: string, clientId: string) => Promise<void>;
+}
+interface StemSlice {
+  stems: Record<string, Stem[]>;
+  loadStems: (projectId: string) => Promise<void>;
+  addStem: (data: Omit<Stem, 'id'>) => Promise<Stem>;
+  updateStem: (id: string, projectId: string, data: Partial<Pick<Stem, 'delivered'>>) => Promise<void>;
+  removeStem: (id: string, projectId: string) => Promise<void>;
+}
+interface SyncLicenseSlice {
+  syncLicenses: SyncLicense[];
+  loadSyncLicenses: () => Promise<void>;
+  addSyncLicense: (data: Omit<SyncLicense, 'id'>) => Promise<SyncLicense>;
+  removeSyncLicense: (id: string) => Promise<void>;
+}
+interface CreditSlice {
+  credits: Record<string, Credit[]>;
+  loadCredits: (projectId: string) => Promise<void>;
+  addCredit: (data: Omit<Credit, 'id'>) => Promise<Credit>;
+  removeCredit: (id: string, projectId: string) => Promise<void>;
+}
+interface ArchPhaseSlice {
+  archPhases: Record<string, ArchPhase[]>;
+  loadArchPhases: (projectId: string) => Promise<void>;
+  addArchPhase: (data: Omit<ArchPhase, 'id'>) => Promise<ArchPhase>;
+  updateArchPhase: (id: string, projectId: string, data: Partial<Pick<ArchPhase, 'phase_name' | 'completion_percent' | 'invoice_trigger' | 'completed'>>) => Promise<void>;
+  removeArchPhase: (id: string, projectId: string) => Promise<void>;
+}
+interface ArchConsultantSlice {
+  archConsultants: Record<string, ArchConsultant[]>;
+  loadArchConsultants: (projectId: string) => Promise<void>;
+  addArchConsultant: (data: Omit<ArchConsultant, 'id'>) => Promise<ArchConsultant>;
+  removeArchConsultant: (id: string, projectId: string) => Promise<void>;
+}
+interface SubmissionSlice {
+  submissions: Record<string, Submission[]>;
+  loadSubmissions: (projectId: string) => Promise<void>;
+  addSubmission: (data: Omit<Submission, 'id'>) => Promise<Submission>;
+  updateSubmission: (id: string, projectId: string, data: Partial<Pick<Submission, 'status' | 'response_date'>>) => Promise<void>;
+  removeSubmission: (id: string, projectId: string) => Promise<void>;
+}
+interface RevisionSetSlice {
+  revisionSets: Record<string, RevisionSet[]>;
+  loadRevisionSets: (projectId: string) => Promise<void>;
+  addRevisionSet: (data: Omit<RevisionSet, 'id'>) => Promise<RevisionSet>;
+  removeRevisionSet: (id: string, projectId: string) => Promise<void>;
+}
+interface SiteVisitSlice {
+  siteVisits: Record<string, SiteVisit[]>;
+  loadSiteVisits: (projectId: string) => Promise<void>;
+  addSiteVisit: (data: Omit<SiteVisit, 'id'>) => Promise<SiteVisit>;
+  removeSiteVisit: (id: string, projectId: string) => Promise<void>;
+}
+interface VATaskSlice {
+  vaTasks: Record<string, VATask[]>;
+  loadVATasks: (clientId: string) => Promise<void>;
+  addVATask: (data: Omit<VATask, 'id'>) => Promise<VATask>;
+  removeVATask: (id: string, clientId: string) => Promise<void>;
+}
+interface SOPSlice {
+  sops: Record<string, SOP[]>;
+  loadSOPs: (clientId: string) => Promise<void>;
+  addSOP: (data: Omit<SOP, 'id'>) => Promise<SOP>;
+  updateSOP: (id: string, clientId: string, data: Partial<Pick<SOP, 'title' | 'content' | 'sort_order'>>) => Promise<void>;
+  removeSOP: (id: string, clientId: string) => Promise<void>;
+}
+interface TranslationCountSlice {
+  translationCounts: Record<string, TranslationCount[]>;
+  loadTranslationCounts: (timeEntryId: string) => Promise<void>;
+  saveTranslationCount: (data: Omit<TranslationCount, 'id'>) => Promise<TranslationCount>;
+}
+interface LanguagePairSlice {
+  languagePairs: Record<string, ProjectLanguagePair[]>;
+  loadLanguagePairs: (projectId: string) => Promise<void>;
+  addLanguagePair: (data: Omit<ProjectLanguagePair, 'id'>) => Promise<ProjectLanguagePair>;
+  removeLanguagePair: (id: string, projectId: string) => Promise<void>;
+}
+interface ProjectQualitySlice {
+  projectQualities: Record<string, ProjectQuality[]>;
+  loadProjectQualities: (projectId: string) => Promise<void>;
+  saveProjectQuality: (data: Omit<ProjectQuality, 'id'>) => Promise<ProjectQuality>;
+}
+interface GlossarySlice {
+  glossaryTerms: Record<string, GlossaryTerm[]>;
+  loadGlossaryTerms: (clientId: string) => Promise<void>;
+  addGlossaryTerm: (data: Omit<GlossaryTerm, 'id'>) => Promise<GlossaryTerm>;
+  updateGlossaryTerm: (id: string, clientId: string, data: Partial<Pick<GlossaryTerm, 'term' | 'approved_translation' | 'notes'>>) => Promise<void>;
+  removeGlossaryTerm: (id: string, clientId: string) => Promise<void>;
+}
+interface SEODeliverableSlice {
+  seoDeliverables: Record<string, SEODeliverable[]>;
+  loadSEODeliverables: (clientId: string) => Promise<void>;
+  addSEODeliverable: (data: Omit<SEODeliverable, 'id'>) => Promise<SEODeliverable>;
+  updateSEODeliverable: (id: string, clientId: string, data: Partial<Pick<SEODeliverable, 'completed'>>) => Promise<void>;
+  removeSEODeliverable: (id: string, clientId: string) => Promise<void>;
+}
+interface ClientReportSlice {
+  clientReports: Record<string, ClientReport[]>;
+  loadClientReports: (clientId: string) => Promise<void>;
+  addClientReport: (data: Omit<ClientReport, 'id'>) => Promise<ClientReport>;
+  removeClientReport: (id: string, clientId: string) => Promise<void>;
+}
+interface AnalysisDeliverableSlice {
+  analysisDeliverables: Record<string, AnalysisDeliverable[]>;
+  loadAnalysisDeliverables: (projectId: string) => Promise<void>;
+  addAnalysisDeliverable: (data: Omit<AnalysisDeliverable, 'id'>) => Promise<AnalysisDeliverable>;
+  removeAnalysisDeliverable: (id: string, projectId: string) => Promise<void>;
+}
+interface AnalysisComplexitySlice {
+  analysisComplexities: Record<string, AnalysisComplexity[]>;
+  loadAnalysisComplexities: (projectId: string) => Promise<void>;
+  saveAnalysisComplexity: (data: Omit<AnalysisComplexity, 'id'>) => Promise<AnalysisComplexity>;
+}
+interface IncidentSlice {
+  incidents: Record<string, Incident[]>;
+  loadIncidents: (projectId: string) => Promise<void>;
+  addIncident: (data: Omit<Incident, 'id'>) => Promise<Incident>;
+  updateIncident: (id: string, projectId: string, data: Partial<Pick<Incident, 'status' | 'severity' | 'resolved_at'>>) => Promise<void>;
+  removeIncident: (id: string, projectId: string) => Promise<void>;
+}
+interface AutomationSlice {
+  automations: Record<string, Automation[]>;
+  loadAutomations: (projectId: string) => Promise<void>;
+  addAutomation: (data: Omit<Automation, 'id'>) => Promise<Automation>;
+  removeAutomation: (id: string, projectId: string) => Promise<void>;
+}
+interface InfrastructureSlice {
+  infrastructure: Record<string, InfrastructureItem[]>;
+  loadInfrastructure: (projectId: string) => Promise<void>;
+  addInfrastructure: (data: Omit<InfrastructureItem, 'id'>) => Promise<InfrastructureItem>;
+  removeInfrastructure: (id: string, projectId: string) => Promise<void>;
+}
+interface SLASlice {
+  slas: Record<string, SLA[]>;
+  loadSLAs: (projectId: string) => Promise<void>;
+  addSLA: (data: Omit<SLA, 'id'>) => Promise<SLA>;
+  removeSLA: (id: string, projectId: string) => Promise<void>;
+}
+interface ExperimentSlice {
+  experiments: Record<string, Experiment[]>;
+  loadExperiments: (projectId: string) => Promise<void>;
+  addExperiment: (data: Omit<Experiment, 'id'>) => Promise<Experiment>;
+  updateExperiment: (id: string, projectId: string, data: Partial<Pick<Experiment, 'status' | 'metrics'>>) => Promise<void>;
+  removeExperiment: (id: string, projectId: string) => Promise<void>;
+}
+interface AIModelSlice {
+  aiModels: Record<string, AIModel[]>;
+  loadAIModels: (projectId: string) => Promise<void>;
+  addAIModel: (data: Omit<AIModel, 'id'>) => Promise<AIModel>;
+  updateAIModel: (id: string, projectId: string, data: Partial<Pick<AIModel, 'status' | 'metrics'>>) => Promise<void>;
+  removeAIModel: (id: string, projectId: string) => Promise<void>;
+}
+interface ComputeCostSlice {
+  computeCosts: Record<string, ComputeCost[]>;
+  loadComputeCosts: (projectId: string) => Promise<void>;
+  addComputeCost: (data: Omit<ComputeCost, 'id'>) => Promise<ComputeCost>;
+  removeComputeCost: (id: string, projectId: string) => Promise<void>;
+}
+interface DatasetVersionSlice {
+  datasetVersions: Record<string, DatasetVersion[]>;
+  loadDatasetVersions: (projectId: string) => Promise<void>;
+  addDatasetVersion: (data: Omit<DatasetVersion, 'id'>) => Promise<DatasetVersion>;
+  removeDatasetVersion: (id: string, projectId: string) => Promise<void>;
+}
+interface StudentSlice {
+  students: Record<string, Student[]>;
+  loadStudents: (clientId: string) => Promise<void>;
+  addStudent: (data: Omit<Student, 'id'>) => Promise<Student>;
+  updateStudent: (id: string, clientId: string, data: Partial<Pick<Student, 'grade_level' | 'subject' | 'hourly_rate' | 'status'>>) => Promise<void>;
+  removeStudent: (id: string, clientId: string) => Promise<void>;
+}
+interface CurriculumSlice {
+  curriculumItems: Record<string, CurriculumItem[]>;
+  loadCurriculumItems: (projectId: string) => Promise<void>;
+  addCurriculumItem: (data: Omit<CurriculumItem, 'id'>) => Promise<CurriculumItem>;
+  updateCurriculumItem: (id: string, projectId: string, data: Partial<Pick<CurriculumItem, 'title' | 'status' | 'notes'>>) => Promise<void>;
+  removeCurriculumItem: (id: string, projectId: string) => Promise<void>;
+}
+interface ProgressReportSlice {
+  progressReports: Record<string, ProgressReport[]>;
+  loadProgressReports: (projectId: string) => Promise<void>;
+  addProgressReport: (data: Omit<ProgressReport, 'id'>) => Promise<ProgressReport>;
+  removeProgressReport: (id: string, projectId: string) => Promise<void>;
+}
+interface CancellationSlice {
+  cancellations: Record<string, Cancellation[]>;
+  loadCancellations: (clientId: string) => Promise<void>;
+  addCancellation: (data: Omit<Cancellation, 'id'>) => Promise<Cancellation>;
+  removeCancellation: (id: string, clientId: string) => Promise<void>;
+}
+interface IntakeFormSlice {
+  intakeForms: Record<string, IntakeForm[]>;
+  loadIntakeForms: (clientId: string) => Promise<void>;
+  saveIntakeForm: (data: Omit<IntakeForm, 'id'>) => Promise<IntakeForm>;
+}
+interface ProgressNoteSlice {
+  progressNotes: Record<string, ProgressNote[]>;
+  loadProgressNotes: (clientId: string) => Promise<void>;
+  addProgressNote: (data: Omit<ProgressNote, 'id'>) => Promise<ProgressNote>;
+  removeProgressNote: (id: string, clientId: string) => Promise<void>;
+}
+interface ProgramSlice {
+  programs: Record<string, Program[]>;
+  loadPrograms: (clientId: string) => Promise<void>;
+  addProgram: (data: Omit<Program, 'id'>) => Promise<Program>;
+  updateProgram: (id: string, clientId: string, data: Partial<Pick<Program, 'name' | 'duration_weeks' | 'sessions_per_week' | 'notes'>>) => Promise<void>;
+  removeProgram: (id: string, clientId: string) => Promise<void>;
+}
+interface AssessmentSlice {
+  assessments: Record<string, Assessment[]>;
+  loadAssessments: (clientId: string) => Promise<void>;
+  addAssessment: (data: Omit<Assessment, 'id'>) => Promise<Assessment>;
+  removeAssessment: (id: string, clientId: string) => Promise<void>;
+}
+interface ClientProgressSlice {
+  clientProgresses: Record<string, ClientProgress[]>;
+  loadClientProgresses: (clientId: string) => Promise<void>;
+  addClientProgress: (data: Omit<ClientProgress, 'id'>) => Promise<ClientProgress>;
+  removeClientProgress: (id: string, clientId: string) => Promise<void>;
+}
+interface CommissionTOSSlice {
+  commissionTOS: CommissionTOS[];
+  loadCommissionTOSList: () => Promise<void>;
+  addCommissionTOSItem: (data: Omit<CommissionTOS, 'id'>) => Promise<CommissionTOS>;
+  removeCommissionTOSItem: (id: string) => Promise<void>;
+}
+
+export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & InvoicePaymentSlice & ExpenseSlice & ProfileSlice & CommunicationSlice & RecurringInvoiceSlice & ImportSlice & AttachmentSlice & MetricSlice & FollowUpSlice & ExportTemplateSlice & ContractTemplateSlice & ProjectTemplateSlice & ArchetypeRenderLogSlice & ArchetypeSessionSlice & ArchetypeShootSlice & ArchetypeRevisionSlice & ArchetypeBuildSlice & ArchetypeKeywordSlice & ArchetypeDatasetSlice & PhaseTrackerSlice;
 
 const invoke = async <T>(cmd: string, args?: Record<string, unknown>): Promise<T> => {
   const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
@@ -1255,5 +1800,42 @@ export const useStore = create<AppStore>((set, get) => ({
     const updated = { ...get().datasets };
     updated[projectId] = (updated[projectId] || []).filter((d) => d.id !== id);
     set({ datasets: updated });
+  },
+
+  // ── Phase Tracker ──
+  projectPhases: {},
+  loadProjectPhases: async (projectId) => {
+    const { getDb } = await import('../db');
+    const db = await getDb();
+    const rows = await db.select<(ProjectPhase & Record<string, unknown>)[]>('SELECT id, project_id, phase_name, status, color FROM project_phases WHERE project_id = ? ORDER BY id ASC', [projectId]);
+    set({ projectPhases: { ...get().projectPhases, [projectId]: rows.map(r => ({ id: r.id as string, project_id: r.project_id as string, phase_name: r.phase_name as string, status: r.status as string, color: r.color as string | undefined })) } });
+  },
+  addProjectPhase: async (data) => {
+    const id = crypto.randomUUID();
+    const { getDb } = await import('../db');
+    const db = await getDb();
+    await db.execute('INSERT INTO project_phases (id, project_id, phase_name, status, color) VALUES (?, ?, ?, ?, ?)', [id, data.project_id, data.phase_name, data.status || 'pending', data.color || null]);
+    const item: ProjectPhase = { id, ...data, status: data.status || 'pending' };
+    const existing = get().projectPhases[data.project_id] || [];
+    set({ projectPhases: { ...get().projectPhases, [data.project_id]: [item, ...existing] } });
+    return item;
+  },
+  updateProjectPhase: async (id, projectId, pdata) => {
+    const { getDb } = await import('../db');
+    const db = await getDb();
+    if (pdata.phase_name !== undefined) await db.execute('UPDATE project_phases SET phase_name = ? WHERE id = ?', [pdata.phase_name, id]);
+    if (pdata.status !== undefined) await db.execute('UPDATE project_phases SET status = ? WHERE id = ?', [pdata.status, id]);
+    if (pdata.color !== undefined) await db.execute('UPDATE project_phases SET color = ? WHERE id = ?', [pdata.color, id]);
+    const updated = { ...get().projectPhases };
+    updated[projectId] = (updated[projectId] || []).map((p) => p.id === id ? { ...p, ...pdata } : p);
+    set({ projectPhases: updated });
+  },
+  removeProjectPhase: async (id, projectId) => {
+    const { getDb } = await import('../db');
+    const db = await getDb();
+    await db.execute('DELETE FROM project_phases WHERE id = ?', [id]);
+    const updated = { ...get().projectPhases };
+    updated[projectId] = (updated[projectId] || []).filter((p) => p.id !== id);
+    set({ projectPhases: updated });
   },
 }));
