@@ -15,7 +15,7 @@ import type { ThemeId } from '../themes';
 import { PROFESSION_THEME, type Profession } from '../themes';
 import { getArchetype, ARCHETYPE_LIST } from '../archetypes';
 import { getUnlockedThemes, getUnlockedAchievementKeys } from '../achievements/checker';
-import { TEMPLATE_LABELS } from '../utils/followUpTemplates';
+import { TEMPLATE_LABELS, DEFAULT_SUBJECT_TEMPLATES } from '../utils/followUpTemplates';
 import { clearSampleData } from '../utils/seedData';
 
 const currencies = ['CAD', 'USD', 'GBP', 'EUR', 'AUD'];
@@ -60,6 +60,7 @@ export default function Settings() {
   const [fuProposalDelay, setFuProposalDelay] = useState(3);
   const [fuInvoiceDelay, setFuInvoiceDelay] = useState(0);
   const [fuTemplates, setFuTemplates] = useState<Record<string, string>>({});
+  const [fuSubjectTemplates, setFuSubjectTemplates] = useState<Record<string, string>>({});
   const [fuPreview, setFuPreview] = useState<string | null>(null);
   const fuInitRef = useRef(false);
   const [density, setDensity] = useState<string>('comfortable');
@@ -166,6 +167,7 @@ export default function Settings() {
       setFuProposalDelay(followUpSettings.proposal_delay_days);
       setFuInvoiceDelay(followUpSettings.invoice_delay_days);
       setFuTemplates({ ...followUpSettings.templates });
+      setFuSubjectTemplates({ ...(followUpSettings.subject_templates || {}) });
     }
   }, [followUpSettings]);
 
@@ -906,6 +908,11 @@ export default function Settings() {
         <SectionHead title="Follow-ups" />
         <div className="space-y-4">
           <p className="text-xs text-[var(--text-tertiary)]">Lance monitors sent proposals and invoices and drafts friendly follow-up messages when they need attention. You control everything — messages are never sent automatically.</p>
+          {/* TODO v1.5: SMTP integration
+              Allow users to configure SMTP credentials (host, port, user, password, from address)
+              stored encrypted in SQLite. Use lettre (Rust SMTP crate) in lib.rs to send directly.
+              Remove mailto: approach, replace with Tauri command: send_email(to, subject, body)
+              This enables true auto-send without opening the mail client. */}
 
           {/* Toggle */}
           <div className="flex items-center justify-between">
@@ -982,6 +989,31 @@ export default function Settings() {
                     }}
                     rows={5}
                     className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none leading-relaxed font-mono"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Subject Templates */}
+          <div className="pt-2 border-t border-[var(--border-color)]">
+            <p className="text-sm font-medium text-[var(--text-primary)] mb-3">Email Subject Templates</p>
+            <p className="text-xs text-[var(--text-tertiary)] mb-4">
+              Same variables as message templates. These appear in the email subject line when you click "Open in Email".
+            </p>
+            <div className="space-y-3">
+              {Object.entries(TEMPLATE_LABELS).map(([key, label]) => (
+                <div key={`subj-${key}`}>
+                  <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1">{label}</label>
+                  <input
+                    type="text"
+                    value={fuSubjectTemplates[key] || DEFAULT_SUBJECT_TEMPLATES[key] || ''}
+                    onChange={(e) => {
+                      const updated = { ...fuSubjectTemplates, [key]: e.target.value };
+                      setFuSubjectTemplates(updated);
+                      saveFollowUpSettings({ subject_templates: updated });
+                    }}
+                    className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
                   />
                 </div>
               ))}

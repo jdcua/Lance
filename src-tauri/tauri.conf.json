@@ -41,6 +41,9 @@
     "sql": {
       "preload": ["sqlite:lance.db"]
     },
+    "shell": {
+      "open": true
+    },
     "updater": {
       "active": true,
       "endpoints": ["https://releases.decentra.co/lance/{{target}}/{{arch}}/{{current_version}}"],

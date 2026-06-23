@@ -1,6 +1,12 @@
 /**
  * Follow-up template engine — generates draft messages from templates
  * with variable substitution. No AI, no API calls.
+ *
+ * TODO v1.5: SMTP integration
+ * Allow users to configure SMTP credentials (host, port, user, password, from address)
+ * stored encrypted in SQLite. Use lettre (Rust SMTP crate) in lib.rs to send directly.
+ * Remove mailto: approach, replace with Tauri command: send_email(to, subject, body)
+ * This enables true auto-send without opening the mail client.
  */
 
 export const DEFAULT_TEMPLATES: Record<string, string> = {
@@ -66,6 +72,15 @@ export const TEMPLATE_LABELS: Record<string, string> = {
   invoice_day1: 'Invoice — Day 1 overdue (Polite reminder)',
   invoice_day7: 'Invoice — Day 7 overdue (Firm reminder)',
   invoice_day14: 'Invoice — Day 14 overdue (Final notice)',
+};
+
+export const DEFAULT_SUBJECT_TEMPLATES: Record<string, string> = {
+  proposal_day3: 'Following up — {proposal_title}',
+  proposal_day7: 'Checking in — {proposal_title}',
+  proposal_day14: 'Closing the loop on {proposal_title}',
+  invoice_day1: 'Invoice {invoice_number} — Friendly Reminder',
+  invoice_day7: 'Invoice {invoice_number} — Reminder ({days_elapsed} days past due)',
+  invoice_day14: 'Invoice {invoice_number} — Final Notice ({days_elapsed} days overdue)',
 };
 
 function getDefaultTemplate(key: string): string {
@@ -153,4 +168,56 @@ export function generateFollowUpDraft(
   return result;
 }
 
-// Removed unused exports: getDefaultTemplateKeys(), getDefaultSettings()
+function getSubjectTemplate(key: string, customSubjectTemplates?: Record<string, string>): string {
+  if (customSubjectTemplates && customSubjectTemplates[key]) return customSubjectTemplates[key];
+  return DEFAULT_SUBJECT_TEMPLATES[key] || '';
+}
+
+export function generateSubjectLine(
+  templateKey: string,
+  data: {
+    clientName: string;
+    proposalTitle?: string;
+    invoiceNumber?: string;
+    amount?: string;
+    dueDate?: string;
+    daysElapsed: number;
+    projectName?: string;
+    freelancerName: string;
+  },
+  customSubjectTemplates?: Record<string, string>
+): string {
+  const template = getSubjectTemplate(templateKey, customSubjectTemplates);
+  let result = template;
+
+  const vars: Record<string, string> = {
+    '{client_name}': data.clientName,
+    '{proposal_title}': data.proposalTitle || '',
+    '{invoice_number}': data.invoiceNumber || '',
+    '{amount}': data.amount || '',
+    '{due_date}': data.dueDate || '',
+    '{days_elapsed}': String(data.daysElapsed),
+    '{project_name}': data.projectName || '',
+    '{freelancer_name}': data.freelancerName,
+  };
+
+  for (const [key, value] of Object.entries(vars)) {
+    result = result.replace(new RegExp(key.replace(/[{}]/g, '\\$&'), 'g'), value);
+  }
+
+  return result;
+}
+
+export function truncateForMailTo(body: string, maxLen = 1900): string {
+  if (body.length <= maxLen) return body;
+  return body.slice(0, maxLen - 30) + '\n\n(see full message below)';
+}
+
+export async function openMailTo(email: string, subject: string, body: string): Promise<void> {
+  const truncated = truncateForMailTo(body);
+  const encodedSubject = encodeURIComponent(subject);
+  const encodedBody = encodeURIComponent(truncated);
+  const mailtoUrl = `mailto:${encodeURIComponent(email)}?subject=${encodedSubject}&body=${encodedBody}`;
+  const { invoke } = await import('@tauri-apps/api/core');
+  await invoke('open_mailto', { mailtoUrl });
+}

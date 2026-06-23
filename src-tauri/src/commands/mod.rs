@@ -6,6 +6,7 @@ pub mod finance;
 pub mod follow_ups;
 pub mod imports;
 pub mod invoices;
+pub mod mailto;
 pub mod metrics;
 pub mod projects;
 pub mod proposals;

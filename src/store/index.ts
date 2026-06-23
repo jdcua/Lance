@@ -879,12 +879,12 @@ export const useStore = create<AppStore>((set, get) => ({
   // Follow-ups
   followUpLogs: {},
   pendingFollowUps: [],
-  followUpSettings: { enabled: true, proposal_delay_days: 3, invoice_delay_days: 0, templates: {} },
+  followUpSettings: { enabled: true, proposal_delay_days: 3, invoice_delay_days: 0, templates: {}, subject_templates: {} },
   loadFollowUpSettings: () => {
     try {
       const stored = localStorage.getItem('lance:follow-up-settings');
       if (stored) {
-        const defaults = { enabled: true, proposal_delay_days: 3, invoice_delay_days: 0, templates: {} };
+        const defaults = { enabled: true, proposal_delay_days: 3, invoice_delay_days: 0, templates: {}, subject_templates: {} };
         set({ followUpSettings: { ...defaults, ...JSON.parse(stored) } });
       }
     } catch { /* use defaults */ }

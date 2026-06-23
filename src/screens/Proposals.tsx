@@ -12,8 +12,8 @@ import { formatDate } from '../utils/format';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
-import { Plus, Trash2, Send, Eye, Download, FileText, Search, ArrowUpDown, Bell, Check, X, Copy, Clock } from 'lucide-react';
-import { generateFollowUpDraft } from '../utils/followUpTemplates';
+import { Plus, Trash2, Send, Eye, Download, FileText, Search, ArrowUpDown, Bell, Check, X, Copy, Clock, Mail } from 'lucide-react';
+import { generateFollowUpDraft, generateSubjectLine, openMailTo } from '../utils/followUpTemplates';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 
 const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'dark'> = {
@@ -412,12 +412,23 @@ export default function Proposals() {
                         projectName: p.title,
                         freelancerName: profile?.name || 'Freelancer',
                       }, followUpSettings.templates);
+                      const subject = generateSubjectLine(templateKey, {
+                        clientName: client?.name || 'Unknown',
+                        proposalTitle: p.title,
+                        daysElapsed,
+                        projectName: p.title,
+                        freelancerName: profile?.name || 'Freelancer',
+                      }, followUpSettings.subject_templates);
+                      const hasEmail = !!client?.email;
                       return (
                         <div className="px-3 py-2.5 rounded-[8px] bg-[var(--accent-bg)]/30 border border-[var(--accent)]/20">
                           <div className="flex items-center gap-1.5 mb-1.5">
                             <Bell size={12} className="text-[var(--accent)]" />
                             <span className="text-[10px] font-semibold text-[var(--accent)] uppercase tracking-wide">Follow-up Draft — Stage {fu.stage}</span>
                             <span className="text-[10px] text-[var(--text-tertiary)]">{daysElapsed}d since sent</span>
+                            {!hasEmail && (
+                              <span className="text-[10px] text-[var(--warning-text)]">No email</span>
+                            )}
                           </div>
                           <textarea
                             value={draft}
@@ -428,13 +439,33 @@ export default function Proposals() {
                           <div className="flex items-center gap-1.5">
                             <button
                               onClick={async () => {
-                                await navigator.clipboard.writeText(draft);
-                                await updateFollowUpStatus(fu.id, 'sent', 'sent');
-                                addToast('Copied to clipboard', 'success');
+                                if (!client?.email) {
+                                  addToast('No email on file for this client', 'error');
+                                  return;
+                                }
+                                try {
+                                  await openMailTo(client.email, subject, draft);
+                                  addToast('Email opened in your default mail client', 'success');
+                                } catch { addToast('Failed to open email client', 'error'); }
                               }}
                               className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] rounded-[6px] transition-colors"
                             >
-                              <Send size={10} /> Send
+                              <Mail size={10} /> Open in Email
+                            </button>
+                            <button
+                              onClick={async () => {
+                                await navigator.clipboard.writeText(draft);
+                                addToast('Copied to clipboard', 'success');
+                              }}
+                              className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-[6px] hover:bg-[var(--bg-secondary)] transition-colors"
+                            >
+                              <Copy size={10} /> Copy
+                            </button>
+                            <button
+                              onClick={async () => { await updateFollowUpStatus(fu.id, 'sent', 'sent'); addToast('Marked as sent', 'success'); }}
+                              className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-[6px] hover:bg-[var(--bg-secondary)] transition-colors"
+                            >
+                              <Check size={10} /> Mark Sent
                             </button>
                             <button
                               onClick={async () => { await updateFollowUpStatus(fu.id, 'dismissed', 'dismissed'); addToast('Follow-up dismissed', 'info'); }}

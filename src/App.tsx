@@ -211,6 +211,11 @@ export default function App() {
   }, [ranAutoGen, recurringInvoices.length, invoices.length]);
 
   // Follow-up checker — runs on startup + every 30 minutes
+  // TODO v1.5: SMTP integration
+  // Allow users to configure SMTP credentials (host, port, user, password, from address)
+  // stored encrypted in SQLite. Use lettre (Rust SMTP crate) in lib.rs to send directly.
+  // Remove mailto: approach, replace with Tauri command: send_email(to, subject, body)
+  // This enables true auto-send without opening the mail client.
   useEffect(() => {
     if (!profileLoaded) return;
     loadFollowUpSettings();
@@ -224,6 +229,7 @@ export default function App() {
 
         await state.loadProposals();
         await state.loadInvoices();
+        await state.loadClients();
         await state.loadPendingFollowUps();
         const currentPending = useStore.getState().pendingFollowUps;
 
@@ -232,6 +238,13 @@ export default function App() {
         // Check proposals
         for (const p of useStore.getState().proposals) {
           if (p.status !== 'sent') continue;
+
+          const client = useStore.getState().clients.find((c) => c.id === p.client_id);
+          if (!client?.email) {
+            console.warn(`Skipping proposal follow-up for "${p.title}" — client has no email`);
+            continue;
+          }
+
           const sentDate = p.sent_at ? new Date(p.sent_at) : new Date(p.created_at);
           const daysElapsed = Math.floor((now.getTime() - sentDate.getTime()) / 86400000);
           if (daysElapsed < settings.proposal_delay_days) continue;
@@ -252,6 +265,13 @@ export default function App() {
         for (const inv of useStore.getState().invoices) {
           if (inv.status !== 'sent' && inv.status !== 'overdue') continue;
           if (!inv.due_date) continue;
+
+          const client = useStore.getState().clients.find((c) => c.id === inv.client_id);
+          if (!client?.email) {
+            console.warn(`Skipping invoice follow-up for "${inv.invoice_number}" — client has no email`);
+            continue;
+          }
+
           const dueDate = new Date(inv.due_date);
           const daysElapsed = Math.floor((now.getTime() - dueDate.getTime()) / 86400000);
           if (daysElapsed < settings.invoice_delay_days) continue;

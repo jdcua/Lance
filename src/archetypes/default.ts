@@ -36,6 +36,7 @@ const defaultArchetype: ArchetypeConfig = {
     { id: 'projects', label: 'Projects', icon: 'FolderKanban', path: '/projects' },
     { id: 'time', label: 'Time', icon: 'Clock', path: '/time' },
     { id: 'invoices', label: 'Invoices', icon: 'Receipt', path: '/invoices' },
+    { id: 'follow-ups', label: 'Follow-ups', icon: 'Bell', path: '/follow-ups' },
     { id: 'clients', label: 'Clients', icon: 'Users', path: '/clients' },
     { id: 'finance', label: 'Finance', icon: 'BarChart3', path: '/finance' },
     { id: 'insights', label: 'Insights', icon: 'Lightbulb', path: '/insights' },

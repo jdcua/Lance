@@ -9,6 +9,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             let conn = db::get_connection(app.handle())?;
             db::run_migrations(&conn).expect("Failed to run migrations");
@@ -99,6 +100,7 @@ pub fn run() {
             commands::follow_ups::get_follow_up_log,
             commands::follow_ups::update_follow_up_status,
             commands::follow_ups::get_all_pending_follow_ups,
+            commands::mailto::open_mailto,
             commands::archetypes::get_render_logs,
             commands::archetypes::create_render_log,
             commands::archetypes::delete_render_log,

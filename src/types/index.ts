@@ -258,6 +258,7 @@ export type FollowUpSettings = {
   proposal_delay_days: number;
   invoice_delay_days: number;
   templates: Record<string, string>;
+  subject_templates: Record<string, string>;
 };
 
 export type DetectedEntityType =

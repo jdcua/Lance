@@ -43,6 +43,7 @@ import {
   Calendar,
   Calculator,
   Pen,
+  Bell,
 } from 'lucide-react';
 import { useStore } from '../../store';
 import { getArchetype } from '../../archetypes';
@@ -54,7 +55,7 @@ const ICON_MAP: Record<string, any> = {
   Clapperboard, Code2, Palette, Brain, Film, Paintbrush, Box, Gamepad2,
   Layers, Target, MessageCircle, FileEdit, Music, FileAudio, Building2,
   ClipboardList, Languages, Search, BarChart4, Settings2, Briefcase,
-  CheckSquare, Calendar, Calculator, Pen, Sparkles,
+  CheckSquare, Calendar, Calculator, Pen, Sparkles, Bell,
 };
 
 export default function Sidebar() {
@@ -179,6 +180,25 @@ export default function Sidebar() {
             <Upload size={16} />
             Import
           </button>
+          <NavLink
+            to="/follow-ups"
+            className={({ isActive }) =>
+              `flex items-center gap-2.5 px-4 h-[36px] text-sm transition-colors ${
+                isActive
+                  ? 'border-l-[3px] border-[var(--accent)] text-[var(--accent)] font-medium pl-[13px] bg-[var(--accent-bg)]'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] border-l-[3px] border-transparent'
+              }`
+            }
+            style={{ fontFamily: "'Syne', sans-serif" }}
+          >
+            <Bell size={16} />
+            <span className="flex-1">Follow-ups</span>
+            {pendingFollowUps.length > 0 && (
+              <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
+                {pendingFollowUps.length}
+              </span>
+            )}
+          </NavLink>
           <NavLink
             to="/achievements"
             className={({ isActive }) =>

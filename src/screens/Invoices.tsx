@@ -13,8 +13,8 @@ import { formatCurrency, relativeDate } from '../utils/format';
 import { getCurrencySymbol } from '../lib/currency';
 import { generateInvoiceNumber } from '../utils/invoiceNumber';
 import { useToasts } from '../store/toastStore';
-import { Plus, Pencil, Trash2, Download, Clock, RotateCw, Receipt, Search, Bell, X, Copy, DollarSign, ChevronDown, ChevronRight } from 'lucide-react';
-import { generateFollowUpDraft } from '../utils/followUpTemplates';
+import { Plus, Pencil, Trash2, Download, Clock, RotateCw, Receipt, Search, Bell, X, Copy, DollarSign, ChevronDown, ChevronRight, Mail, AlertTriangle, Check } from 'lucide-react';
+import { generateFollowUpDraft, generateSubjectLine, openMailTo } from '../utils/followUpTemplates';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
 
 const currencies = ['CAD', 'USD', 'EUR', 'GBP', 'AUD'];
@@ -43,6 +43,7 @@ export default function Invoices() {
     recurringInvoices, loadRecurringInvoices, addRecurringInvoice, updateRecurringInvoice, removeRecurringInvoice,
     pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings,
     payments, loadPayments, addPayment, removePayment,
+    addCommunication,
   } = useStore();
   const addToast = useToasts((s) => s.add);
   const [showModal, setShowModal] = useState(false);
@@ -82,6 +83,8 @@ export default function Invoices() {
   const [expandedInv, setExpandedInv] = useState<string | null>(null);
   const [confirmDeletePayment, setConfirmDeletePayment] = useState<{ id: string; invoiceId: string } | null>(null);
   const [deletingPayment, setDeletingPayment] = useState(false);
+  const [reminderInv, setReminderInv] = useState<Invoice | null>(null);
+  const [reminderForm, setReminderForm] = useState({ to: '', subject: '', body: '', markFollowedUp: false });
 
   useEffect(() => {
     Promise.all([loadInvoices(), loadClients(), loadProfile(), loadProjects()])
@@ -191,6 +194,65 @@ export default function Invoices() {
       notes: '',
     });
     setShowPaymentModal(true);
+  };
+
+  const openReminderModal = (inv: Invoice) => {
+    const client = getClient(inv.client_id);
+    const dueDate = inv.due_date ? new Date(inv.due_date) : null;
+    const daysElapsed = dueDate ? Math.floor((Date.now() - dueDate.getTime()) / 86400000) : 0;
+    const templateKey = daysElapsed >= 10 ? 'invoice_day14' : daysElapsed >= 4 ? 'invoice_day7' : 'invoice_day1';
+    const draft = generateFollowUpDraft(templateKey, {
+      clientName: client?.name || 'Unknown',
+      invoiceNumber: inv.invoice_number,
+      amount: formatCurrency(inv.total),
+      dueDate: inv.due_date,
+      daysElapsed,
+      freelancerName: profile?.name || 'Freelancer',
+    }, followUpSettings.templates);
+    const subject = generateSubjectLine(templateKey, {
+      clientName: client?.name || 'Unknown',
+      invoiceNumber: inv.invoice_number,
+      amount: formatCurrency(inv.total),
+      dueDate: inv.due_date,
+      daysElapsed,
+      freelancerName: profile?.name || 'Freelancer',
+    }, followUpSettings.subject_templates);
+    setReminderInv(inv);
+    setReminderForm({
+      to: client?.email || '',
+      subject: subject || `Friendly reminder — Invoice ${inv.invoice_number} due ${inv.due_date || 'now'}`,
+      body: draft,
+      markFollowedUp: false,
+    });
+  };
+
+  const handleSendReminder = async () => {
+    if (!reminderInv || !reminderForm.to) {
+      addToast('No email address provided', 'error');
+      return;
+    }
+    try {
+      await openMailTo(reminderForm.to, reminderForm.subject, reminderForm.body);
+      addToast('Email opened in your default mail client', 'success');
+      if (reminderForm.markFollowedUp && reminderInv) {
+        const client = getClient(reminderInv.client_id);
+        if (client) {
+          await addCommunication({
+            id: '',
+            client_id: client.id,
+            type: 'email',
+            summary: `Invoice reminder sent for ${reminderInv.invoice_number}`,
+            date: new Date().toISOString(),
+            created_at: new Date().toISOString(),
+          });
+        }
+        const fu = pendingFollowUps.find((f) => f.entity_type === 'invoice' && f.entity_id === reminderInv.id);
+        if (fu) {
+          await updateFollowUpStatus(fu.id, 'sent', 'sent');
+        }
+      }
+      setReminderInv(null);
+    } catch { addToast('Failed to open email client', 'error'); }
   };
 
   const getPaidTotal = (invId: string) => {
@@ -542,20 +604,49 @@ export default function Invoices() {
                           daysElapsed,
                           freelancerName: profile?.name || 'Freelancer',
                         }, followUpSettings.templates);
+                        const subject = generateSubjectLine(templateKey, {
+                          clientName: client?.name || 'Unknown',
+                          invoiceNumber: inv.invoice_number,
+                          amount: formatCurrency(inv.total),
+                          dueDate: inv.due_date,
+                          daysElapsed,
+                          freelancerName: profile?.name || 'Freelancer',
+                        }, followUpSettings.subject_templates);
+                        const hasEmail = !!client?.email;
                         return (
                           <div className="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-[var(--border-color)]/50">
                             <Bell size={10} className="text-[var(--accent)]" />
                             <span className="text-[10px] text-[var(--accent)]">Follow-up ready — {daysElapsed}d overdue</span>
+                            {!hasEmail && (
+                              <span className="flex items-center gap-0.5 text-[10px] text-[var(--warning-text)]">
+                                <AlertTriangle size={9} /> No email
+                              </span>
+                            )}
                             <button
                               onClick={async (e) => {
                                 e.stopPropagation();
-                                await navigator.clipboard.writeText(draft);
-                                await updateFollowUpStatus(fu.id, 'sent', 'sent');
-                                addToast('Copied to clipboard', 'success');
+                                if (!client?.email) {
+                                  addToast('No email on file for this client', 'error');
+                                  return;
+                                }
+                                try {
+                                  await openMailTo(client.email, subject, draft);
+                                  addToast('Email opened in your default mail client', 'success');
+                                } catch { addToast('Failed to open email client', 'error'); }
                               }}
                               className="text-[10px] text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] px-1.5 py-0.5 rounded-[4px] transition-colors flex-shrink-0"
                             >
-                              Copy
+                              <Mail size={10} className="inline mr-0.5" /> Email
+                            </button>
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                await updateFollowUpStatus(fu.id, 'sent', 'sent');
+                                addToast('Marked as sent', 'success');
+                              }}
+                              className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] px-1 flex-shrink-0"
+                            >
+                              <Check size={10} />
                             </button>
                             <button
                               onClick={async (e) => {
@@ -582,7 +673,12 @@ export default function Invoices() {
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       {inv.status === 'draft' && <button onClick={() => handleMarkSent(inv)} className="text-[10px] text-[var(--accent)] hover:underline px-1">Mark Sent</button>}
-                      {(inv.status === 'sent' || inv.status === 'overdue' || inv.status === 'partial') && <button onClick={() => openPaymentModal(inv)} className="text-[10px] text-[var(--accent)] hover:underline px-1">Record Payment</button>}
+                      {(inv.status === 'sent' || inv.status === 'overdue' || inv.status === 'partial') && (
+                        <>
+                          <button onClick={() => openReminderModal(inv)} className="text-[10px] text-[var(--accent)] hover:underline px-1 flex items-center gap-0.5"><Mail size={10} /> Remind</button>
+                          <button onClick={() => openPaymentModal(inv)} className="text-[10px] text-[var(--accent)] hover:underline px-1">Record Payment</button>
+                        </>
+                      )}
                       <div className="relative" ref={exportDropdown === inv.id ? dropdownRef : undefined}>
                         <button onClick={() => setExportDropdown(exportDropdown === inv.id ? null : inv.id)} aria-label="Export invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]" title="Export"><Download size={13} /></button>
                         {exportDropdown === inv.id && (
@@ -874,6 +970,70 @@ export default function Invoices() {
             <Button onClick={handleRecordPayment} loading={paymentSaving} disabled={!paymentForm.amount} size="sm">Record Payment</Button>
           </div>
         </div>
+      </Modal>
+
+      <Modal open={!!reminderInv} onClose={() => setReminderInv(null)} title="Send Invoice Reminder" size="md">
+        {reminderInv && (
+          <div className="space-y-3">
+            {!reminderForm.to && (
+              <div className="flex items-center gap-2 p-2.5 rounded-[8px] bg-[var(--warning-bg)] text-[var(--warning-text)] text-xs">
+                <AlertTriangle size={14} className="flex-shrink-0" />
+                <span>No email on file for this client. Enter one below or add it in Clients.</span>
+              </div>
+            )}
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">To</label>
+              <input
+                type="email"
+                value={reminderForm.to}
+                onChange={(e) => setReminderForm({ ...reminderForm, to: e.target.value })}
+                placeholder="client@example.com"
+                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Subject</label>
+              <input
+                type="text"
+                value={reminderForm.subject}
+                onChange={(e) => setReminderForm({ ...reminderForm, subject: e.target.value })}
+                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Body</label>
+              <textarea
+                value={reminderForm.body}
+                onChange={(e) => setReminderForm({ ...reminderForm, body: e.target.value })}
+                rows={8}
+                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] resize-none leading-relaxed"
+              />
+            </div>
+            <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)] cursor-pointer">
+              <input
+                type="checkbox"
+                checked={reminderForm.markFollowedUp}
+                onChange={(e) => setReminderForm({ ...reminderForm, markFollowedUp: e.target.checked })}
+                className="w-3.5 h-3.5 rounded border-[var(--border-color)] text-[var(--accent)] focus:ring-[var(--accent)]"
+              />
+              Mark as followed up (logs a communication entry)
+            </label>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="secondary" size="sm" onClick={() => {
+                if (reminderForm.to && reminderForm.subject && reminderForm.body) {
+                  navigator.clipboard.writeText(`To: ${reminderForm.to}\nSubject: ${reminderForm.subject}\n\n${reminderForm.body}`);
+                  addToast('Copied to clipboard', 'success');
+                }
+              }}>
+                <Copy size={12} className="mr-1" /> Copy
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => setReminderInv(null)}>Cancel</Button>
+              <Button size="sm" onClick={handleSendReminder}>
+                <Mail size={12} className="mr-1" /> Open in Email
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       <ConfirmDialog
