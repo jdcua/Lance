@@ -939,7 +939,7 @@ export const useStore = create<AppStore>((set, get) => ({
     try {
       const { getDb } = await import('../db');
       const db = await getDb();
-      const rows = await db.select<ExportTemplate[]>('SELECT * FROM export_templates ORDER BY created_at DESC');
+      const rows = await db.select<ExportTemplate[]>('SELECT id, name, type, header, footer, sections, color_scheme, created_at FROM export_templates ORDER BY created_at DESC');
       const parsed = rows.map((r: ExportTemplate) => ({
         ...r,
         sections: typeof r.sections === 'string' ? JSON.parse(r.sections as string) : r.sections,
@@ -984,7 +984,7 @@ export const useStore = create<AppStore>((set, get) => ({
     try {
       const { getDb } = await import('../db');
       const db = await getDb();
-      const rows = await db.select<ContractTemplate[]>('SELECT * FROM contract_templates ORDER BY created_at DESC');
+      const rows = await db.select<ContractTemplate[]>('SELECT id, name, category, body, variables, created_at FROM contract_templates ORDER BY created_at DESC');
       const parsed = rows.map((r: ContractTemplate) => ({
         ...r,
         variables: typeof r.variables === 'string' ? JSON.parse(r.variables as string) : r.variables,
@@ -1030,7 +1030,7 @@ export const useStore = create<AppStore>((set, get) => ({
     try {
       const { getDb } = await import('../db');
       const db = await getDb();
-      const rows = await db.select<ProjectTemplate[]>('SELECT * FROM project_templates ORDER BY created_at DESC');
+      const rows = await db.select<ProjectTemplate[]>('SELECT id, name, description, default_budget, default_status, is_default, created_at FROM project_templates ORDER BY created_at DESC');
       const parsed = rows.map((r: ProjectTemplate) => ({
         ...r,
         is_default: !!(r as Record<string, unknown>).is_default,
@@ -1044,7 +1044,7 @@ export const useStore = create<AppStore>((set, get) => ({
     try {
       const { getDb } = await import('../db');
       const db = await getDb();
-      const rows = await db.select<ProjectTemplateMilestone[]>('SELECT * FROM project_template_milestones WHERE template_id = ? ORDER BY days_from_start ASC', [templateId]);
+      const rows = await db.select<ProjectTemplateMilestone[]>('SELECT id, template_id, title, days_from_start, invoice_on_completion FROM project_template_milestones WHERE template_id = ? ORDER BY days_from_start ASC', [templateId]);
       set({ projectTemplateMilestones: { ...get().projectTemplateMilestones, [templateId]: rows } });
     } catch (e) {
       console.error('[store] loadTemplateMilestones failed:', e);

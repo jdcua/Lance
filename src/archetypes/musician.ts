@@ -14,10 +14,10 @@ const musician: ArchetypeConfig = {
     greeting: "What's playing today?",
     subgreeting: 'Your sessions, stems, and licensing at a glance.',
     metricCards: [
-      { id: 'sessionsThisWeek', label: 'Sessions this week', query: null as any, format: 'count', color: 'blue' },
-      { id: 'activeProjectsCount', label: 'Active projects', query: null as any, format: 'count', color: 'purple' },
-      { id: 'totalPaidRevenue', label: 'Revenue this month', query: null as any, format: 'currency', color: 'green' },
-      { id: 'expensesTotal', label: 'Studio costs this month', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'sessionsThisWeek', label: 'Sessions this week', query: null, format: 'count', color: 'blue' },
+      { id: 'activeProjectsCount', label: 'Active projects', query: null, format: 'count', color: 'purple' },
+      { id: 'totalPaidRevenue', label: 'Revenue this month', query: null, format: 'currency', color: 'green' },
+      { id: 'expensesTotal', label: 'Studio costs this month', query: null, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'session-log-widget', component: 'SessionLogWidget', priority: 1 },

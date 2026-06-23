@@ -14,10 +14,10 @@ const animator: ArchetypeConfig = {
     greeting: "What's in the pipeline?",
     subgreeting: 'Your projects, phases, and render time at a glance.',
     metricCards: [
-      { id: 'thisWeeksHours', label: 'Hours on active projects this week', query: null as any, format: 'hours', color: 'green' },
-      { id: 'activeProjectsWithHours', label: 'Most time-heavy project', query: null as any, format: 'text', color: 'blue' },
-      { id: 'unbilledRenderHours', label: 'Unbilled render hours', query: null as any, format: 'hours', color: 'amber' },
-      { id: 'upcomingMilestones', label: 'Upcoming milestones', query: null as any, format: 'count', color: 'purple' },
+      { id: 'thisWeeksHours', label: 'Hours on active projects this week', query: null, format: 'hours', color: 'green' },
+      { id: 'activeProjectsWithHours', label: 'Most time-heavy project', query: null, format: 'text', color: 'blue' },
+      { id: 'unbilledRenderHours', label: 'Unbilled render hours', query: null, format: 'hours', color: 'amber' },
+      { id: 'upcomingMilestones', label: 'Upcoming milestones', query: null, format: 'count', color: 'purple' },
     ],
     widgets: [
       { id: 'project-phases', component: 'ProjectPhasesWidget', priority: 1 },

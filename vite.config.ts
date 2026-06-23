@@ -58,6 +58,8 @@ export default defineConfig({
           tiptap: ['@tiptap/react', '@tiptap/starter-kit', '@tiptap/extension-placeholder', '@tiptap/extension-typography'],
           pdf: ['@react-pdf/renderer', 'pdfjs-dist'],
           tauri: ['@tauri-apps/api', '@tauri-apps/plugin-sql', '@tauri-apps/plugin-fs', '@tauri-apps/plugin-dialog', '@tauri-apps/plugin-process', '@tauri-apps/plugin-updater'],
+          import: ['mammoth', 'xlsx'],
+          export: ['docx'],
         }
       },
     },

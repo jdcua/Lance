@@ -14,10 +14,10 @@ const blockchain: ArchetypeConfig = {
     greeting: "What's deploying?",
     subgreeting: 'Your contracts, audits, and gas at a glance.',
     metricCards: [
-      { id: 'activeProjectsCount', label: 'Active contracts', query: null as any, format: 'count', color: 'blue' },
-      { id: 'upcomingMilestones', label: 'Audits in progress', query: null as any, format: 'count', color: 'purple' },
-      { id: 'thisWeeksHours', label: 'Hours this week', query: null as any, format: 'hours', color: 'green' },
-      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active contracts', query: null, format: 'count', color: 'blue' },
+      { id: 'upcomingMilestones', label: 'Audits in progress', query: null, format: 'count', color: 'purple' },
+      { id: 'thisWeeksHours', label: 'Hours this week', query: null, format: 'hours', color: 'green' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'contract-registry-widget', component: 'ContractRegistryWidget', priority: 1 },

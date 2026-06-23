@@ -9,6 +9,7 @@ use tauri_plugin_shell::ShellExt;
 /// Remove mailto: approach, replace with Tauri command: send_email(to, subject, body)
 /// This enables true auto-send without opening the mail client.
 #[tauri::command]
+#[allow(deprecated)]
 pub fn open_mailto(app: AppHandle, mailto_url: String) -> Result<(), String> {
     app.shell()
         .open(mailto_url, None)

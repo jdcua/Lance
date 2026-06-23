@@ -3,13 +3,12 @@
  * Extracts headers, rows, classifies content, and suggests column mappings.
  */
 
-import * as XLSX from 'xlsx';
 import type { ImportDetection } from '../../types';
 import { classifySpreadsheet, suggestColumnMapping, entityTypeLabel } from '../classifier';
-
-const MAX_PREVIEW_ROWS = 50;
+import { MAX_PREVIEW_ROWS } from '../../lib/constants';
 
 export async function parseSpreadsheet(file: File): Promise<ImportDetection> {
+  const XLSX = await import('xlsx');
   const arrayBuffer = await file.arrayBuffer();
   const workbook = XLSX.read(arrayBuffer, { type: 'array' });
 

@@ -48,7 +48,7 @@ export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [ranAutoGen, setRanAutoGen] = useState(false);
+  const [hasRanAutoGen, setHasRanAutoGen] = useState(false);
 
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
@@ -58,7 +58,7 @@ export default function App() {
   const [showWalkthrough, setShowWalkthrough] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importFiles, setImportFiles] = useState<File[] | undefined>(undefined);
-  const [dragOver, setDragOver] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const dragCounter = useRef(0);
 
   const APP_VERSION = '1.0.0';
@@ -148,36 +148,38 @@ export default function App() {
     }
   }, [showOnboarding]);
 
-  // Auto-generate recurring invoices on startup
+  // Auto-generate recurring invoices on startup (deferred after first render)
   useEffect(() => {
-    if (!profileLoaded || ranAutoGen) return;
-    const run = async () => {
-      setRanAutoGen(true);
-      await loadRecurringInvoices();
-      await loadInvoices();
-      await loadClients();
+    if (!profileLoaded || hasRanAutoGen) return;
+    const handle = requestIdleCallback(() => {
+      setHasRanAutoGen(true);
+      loadRecurringInvoices();
+      loadInvoices();
+      loadClients();
       // Check achievements after initial data load
       try {
         const state = useStore.getState();
-        const newAchievements = await checkAchievements(state);
-        for (const key of newAchievements) {
-          const ach = ACHIEVEMENTS.find((a) => a.key === key);
-          if (ach) {
-            addToast(`${ach.title} — ${ach.reward}`, 'unlock');
+        checkAchievements(state).then((newAchievements) => {
+          for (const key of newAchievements) {
+            const ach = ACHIEVEMENTS.find((a) => a.key === key);
+            if (ach) {
+              addToast(`${ach.title} — ${ach.reward}`, 'unlock');
+            }
           }
-        }
+        });
       } catch { /* achievement check is non-critical */ }
-    };
-    run();
-  }, [profileLoaded, ranAutoGen, loadRecurringInvoices, loadInvoices, loadClients]);
+    });
+    return () => cancelIdleCallback(handle);
+  }, [profileLoaded, hasRanAutoGen, loadRecurringInvoices, loadInvoices, loadClients]);
 
+  // Deferred recurring invoice check — runs after first render via idle callback
   useEffect(() => {
-    if (!ranAutoGen || recurringInvoices.length === 0) return;
-    if (invoices.length === 0 && ranAutoGen) {
+    if (!hasRanAutoGen || recurringInvoices.length === 0) return;
+    if (invoices.length === 0 && hasRanAutoGen) {
       loadInvoices();
       return;
     }
-    const generate = async () => {
+    const handle = requestIdleCallback(() => {
       const paymentTerms = profile?.payment_terms ?? 14;
       const due = recurringInvoices.filter(shouldGenerate);
       for (const ri of due) {
@@ -185,7 +187,7 @@ export default function App() {
         const invNumber = generateInvoiceNumber(currentInvoices);
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + paymentTerms);
-        await addInvoice({
+        addInvoice({
           client_id: ri.client_id,
           project_id: ri.project_id,
           invoice_number: invNumber,
@@ -196,26 +198,23 @@ export default function App() {
           total: ri.total,
           due_date: dueDate.toISOString().split('T')[0],
           notes: ri.notes,
-        });
-        const now = new Date();
-        await updateRecurringInvoice({
-          ...ri,
-          next_due: getNextDueDate(ri.frequency, new Date(ri.next_due)).toISOString(),
-          last_generated: now.toISOString(),
-        });
-        const client = useStore.getState().clients.find((c) => c.id === ri.client_id);
-        addToast(`Invoice generated for ${client?.name || ri.client_id}`, 'success');
+        }).then(() => {
+          const now = new Date();
+          return updateRecurringInvoice({
+            ...ri,
+            next_due: getNextDueDate(ri.frequency, new Date(ri.next_due)).toISOString(),
+            last_generated: now.toISOString(),
+          });
+        }).then(() => {
+          const client = useStore.getState().clients.find((c) => c.id === ri.client_id);
+          addToast(`Invoice generated for ${client?.name || ri.client_id}`, 'success');
+        }).catch(() => { /* non-critical */ });
       }
-    };
-    generate();
-  }, [ranAutoGen, recurringInvoices.length, invoices.length]);
+    });
+    return () => cancelIdleCallback(handle);
+  }, [hasRanAutoGen, recurringInvoices.length, invoices.length]);
 
-  // Follow-up checker — runs on startup + every 30 minutes
-  // TODO v1.5: SMTP integration
-  // Allow users to configure SMTP credentials (host, port, user, password, from address)
-  // stored encrypted in SQLite. Use lettre (Rust SMTP crate) in lib.rs to send directly.
-  // Remove mailto: approach, replace with Tauri command: send_email(to, subject, body)
-  // This enables true auto-send without opening the mail client.
+  // Follow-up checker — deferred after first render, runs every 30 minutes
   useEffect(() => {
     if (!profileLoaded) return;
     loadFollowUpSettings();
@@ -290,12 +289,15 @@ export default function App() {
       } catch { /* follow-up check is non-critical */ }
     };
 
-    checkFollowUps();
+    const initialHandle = requestIdleCallback(() => checkFollowUps());
     const interval = setInterval(checkFollowUps, 30 * 60 * 1000);
-    return () => clearInterval(interval);
+    return () => {
+      cancelIdleCallback(initialHandle);
+      clearInterval(interval);
+    };
   }, [profileLoaded]);
 
-  // Proposal expiry engine — runs on startup + every hour
+  // Proposal expiry engine — deferred after first render, runs every hour
   useEffect(() => {
     if (!profileLoaded) return;
 
@@ -334,9 +336,12 @@ export default function App() {
       } catch { /* expiry check is non-critical */ }
     };
 
-    checkExpiry();
+    const initialHandle = requestIdleCallback(() => checkExpiry());
     const interval = setInterval(checkExpiry, 60 * 60 * 1000);
-    return () => clearInterval(interval);
+    return () => {
+      cancelIdleCallback(initialHandle);
+      clearInterval(interval);
+    };
   }, [profileLoaded]);
 
   useAutoUpdater();
@@ -347,14 +352,14 @@ export default function App() {
       e.preventDefault();
       dragCounter.current++;
       if (dragCounter.current === 1) {
-        setDragOver(true);
+        setIsDragOver(true);
       }
     };
     const handleDragLeave = (e: DragEvent) => {
       e.preventDefault();
       dragCounter.current--;
       if (dragCounter.current === 0) {
-        setDragOver(false);
+        setIsDragOver(false);
       }
     };
     const handleDragOver = (e: DragEvent) => {
@@ -363,7 +368,7 @@ export default function App() {
     const handleDrop = (e: DragEvent) => {
       e.preventDefault();
       dragCounter.current = 0;
-      setDragOver(false);
+      setIsDragOver(false);
 
       if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
         const files = Array.from(e.dataTransfer.files);
@@ -566,7 +571,7 @@ export default function App() {
         initialFiles={importFiles}
       />
 
-      <DropZoneOverlay visible={dragOver} />
+      <DropZoneOverlay visible={isDragOver} />
 
       <CommandPalette open={showCommandPalette} onClose={() => setShowCommandPalette(false)} />
       <QuickTimeLogModal open={showQuickLogModal} onClose={() => setShowQuickLogModal(false)} />
@@ -636,7 +641,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
     writing_style: 'professional' as string,
     ai_enabled: false,
   });
-  const [saving, setSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const seedDataRef = useRef(false);
   const [activeThemeId, setActiveThemeId] = useState<string>(localStorage.getItem('lance:theme') || 'default');
   const [validationErrors, setValidationErrors] = useState<{ email?: string }>({});
@@ -658,7 +663,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
 
   const handleOnboardingFinish = async () => {
     if (!onboardingForm.name.trim()) return;
-    setSaving(true);
+    setIsSaving(true);
     try {
       await saveProfile({
         name: onboardingForm.name,
@@ -685,7 +690,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
       setShowOnboarding(false);
       localStorage.setItem('lance:tour-pending', 'true');
     } finally {
-      setSaving(false);
+      setIsSaving(false);
     }
   };
 
@@ -963,7 +968,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
                   variant="secondary"
                   size="sm"
                   onClick={handleOnboardingFinish}
-                  disabled={saving || !onboardingForm.name.trim()}
+                  disabled={isSaving || !onboardingForm.name.trim()}
                   className="flex-1"
                 >
                   Skip — start fresh
@@ -974,7 +979,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
                     seedDataRef.current = true;
                     handleOnboardingFinish();
                   }}
-                  disabled={saving || !onboardingForm.name.trim()}
+                  disabled={isSaving || !onboardingForm.name.trim()}
                   className="flex-1"
                 >
                   Yes, show me around
@@ -982,7 +987,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
               </div>
             </div>
             <div className="flex justify-between pt-4">
-              <Button variant="secondary" onClick={handleOnboardingBack} size="sm" disabled={saving}>&larr; Back</Button>
+              <Button variant="secondary" onClick={handleOnboardingBack} size="sm" disabled={isSaving}>&larr; Back</Button>
               <span className="text-[10px] text-[var(--text-tertiary)] self-center">Step 4 of 4</span>
             </div>
           </>

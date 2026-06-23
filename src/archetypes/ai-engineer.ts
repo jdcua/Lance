@@ -14,10 +14,10 @@ const aiEngineer: ArchetypeConfig = {
     greeting: "What's training?",
     subgreeting: 'Your experiments, compute, and deployments at a glance.',
     metricCards: [
-      { id: 'activeProjectsCount', label: 'Active experiments', query: null as any, format: 'count', color: 'blue' },
-      { id: 'expensesTotal', label: 'Compute cost this month', query: null as any, format: 'currency', color: 'red' },
-      { id: 'thisWeeksHours', label: 'Hours this week', query: null as any, format: 'hours', color: 'green' },
-      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active experiments', query: null, format: 'count', color: 'blue' },
+      { id: 'expensesTotal', label: 'Compute cost this month', query: null, format: 'currency', color: 'red' },
+      { id: 'thisWeeksHours', label: 'Hours this week', query: null, format: 'hours', color: 'green' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'experiment-tracker-widget', component: 'ExperimentTrackerWidget', priority: 1 },

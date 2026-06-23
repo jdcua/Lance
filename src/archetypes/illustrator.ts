@@ -14,10 +14,10 @@ const illustrator: ArchetypeConfig = {
     greeting: 'What are you drawing today?',
     subgreeting: 'Your commissions, queue, and licensing at a glance.',
     metricCards: [
-      { id: 'openCommissionsCount', label: 'Open commissions', query: null as any, format: 'count', color: 'purple' },
-      { id: 'activeProjectsCount', label: 'Queue position', query: null as any, format: 'count', color: 'blue' },
-      { id: 'totalPaidRevenue', label: 'Paid this month', query: null as any, format: 'currency', color: 'green' },
-      { id: 'revisionsRemaining', label: 'Revision rounds remaining', query: null as any, format: 'text', color: 'amber' },
+      { id: 'openCommissionsCount', label: 'Open commissions', query: null, format: 'count', color: 'purple' },
+      { id: 'activeProjectsCount', label: 'Queue position', query: null, format: 'count', color: 'blue' },
+      { id: 'totalPaidRevenue', label: 'Paid this month', query: null, format: 'currency', color: 'green' },
+      { id: 'revisionsRemaining', label: 'Revision rounds remaining', query: null, format: 'text', color: 'amber' },
     ],
     widgets: [
       { id: 'commission-queue-widget', component: 'CommissionQueueWidget', priority: 1 },

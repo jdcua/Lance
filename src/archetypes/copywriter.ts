@@ -14,10 +14,10 @@ const copywriter: ArchetypeConfig = {
     greeting: "What are you writing today?",
     subgreeting: 'Your words, content types, and rates at a glance.',
     metricCards: [
-      { id: 'deadlinePressure', label: 'Deadlines in 7 days', query: null as any, format: 'count', color: 'red' },
-      { id: 'activeProjectsCount', label: 'Active projects', query: null as any, format: 'count', color: 'purple' },
-      { id: 'unbilledHours', label: 'Words pending (est)', query: null as any, format: 'hours', color: 'amber' },
-      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'deadlinePressure', label: 'Deadlines in 7 days', query: null, format: 'count', color: 'red' },
+      { id: 'activeProjectsCount', label: 'Active projects', query: null, format: 'count', color: 'purple' },
+      { id: 'unbilledHours', label: 'Words pending (est)', query: null, format: 'hours', color: 'amber' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'deadline-board-widget', component: 'DeadlineBoardWidget', priority: 1 },

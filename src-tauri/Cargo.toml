@@ -18,6 +18,8 @@ uuid = { version = "1", features = ["v4"] }
 axum = { version = "0.7", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
 rand = "0.8"
+tower = { version = "0.4", features = ["util"] }
+tower-http = { version = "0.5", features = ["timeout", "limit"] }
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }

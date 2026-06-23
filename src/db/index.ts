@@ -481,4 +481,37 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute('CREATE INDEX IF NOT EXISTS idx_metric_values_client ON metric_values(client_id)');
   await database.execute('CREATE INDEX IF NOT EXISTS idx_metric_values_period ON metric_values(definition_id, period)');
   await database.execute('CREATE INDEX IF NOT EXISTS idx_follow_up_entity ON follow_up_log(entity_type, entity_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_follow_up_status ON follow_up_log(status)');
+
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_time_entries_billable ON time_entries(billable)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_time_entries_invoiced ON time_entries(invoiced)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_time_entries_created ON time_entries(created_at)');
+
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_invoices_due_date ON invoices(due_date)');
+
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_invoice_payments_invoice ON invoice_payments(invoice_id)');
+
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_proposals_status ON proposals(status)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_proposals_expires ON proposals(expires_at)');
+
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_contracts_status ON contracts(status)');
+
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_project_templates_default ON project_templates(is_default)');
+
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_archetype_render_log_project ON archetype_render_log(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_archetype_render_log_created ON archetype_render_log(created_at)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_archetype_sessions_project ON archetype_sessions(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_archetype_sessions_created ON archetype_sessions(created_at)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_archetype_shoots_project ON archetype_shoots(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_archetype_shoots_created ON archetype_shoots(created_at)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_archetype_revisions_project ON archetype_revisions(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_archetype_revisions_created ON archetype_revisions(created_at)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_archetype_builds_project ON archetype_builds(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_archetype_builds_created ON archetype_builds(created_at)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_archetype_keywords_client ON archetype_keywords(client_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_archetype_datasets_project ON archetype_datasets(project_id)');
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_archetype_datasets_created ON archetype_datasets(created_at)');
+
+  await database.execute('CREATE INDEX IF NOT EXISTS idx_metrics_values_client_period ON metric_values(client_id, period)');
 }

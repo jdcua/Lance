@@ -14,10 +14,10 @@ const wellness: ArchetypeConfig = {
     greeting: 'Who are you seeing today?',
     subgreeting: 'Your clients, sessions, and practice health at a glance.',
     metricCards: [
-      { id: 'clientsCount', label: 'Active clients', query: null as any, format: 'count', color: 'green' },
-      { id: 'sessionsThisWeek', label: 'Sessions this week', query: null as any, format: 'count', color: 'blue' },
-      { id: 'draftsCount', label: 'Cancellations this month', query: null as any, format: 'count', color: 'red' },
-      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'clientsCount', label: 'Active clients', query: null, format: 'count', color: 'green' },
+      { id: 'sessionsThisWeek', label: 'Sessions this week', query: null, format: 'count', color: 'blue' },
+      { id: 'draftsCount', label: 'Cancellations this month', query: null, format: 'count', color: 'red' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'session-note-widget', component: 'SessionNoteWidget', priority: 1 },

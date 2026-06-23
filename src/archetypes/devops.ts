@@ -14,10 +14,10 @@ const devops: ArchetypeConfig = {
     greeting: "What's running?",
     subgreeting: 'Your infrastructure, incidents, and automation at a glance.',
     metricCards: [
-      { id: 'activeProjectsCount', label: 'Active engagements', query: null as any, format: 'count', color: 'blue' },
-      { id: 'thisWeeksHours', label: 'Hours this week', query: null as any, format: 'hours', color: 'green' },
-      { id: 'unbilledHours', label: 'Incident response hours', query: null as any, format: 'hours', color: 'red' },
-      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active engagements', query: null, format: 'count', color: 'blue' },
+      { id: 'thisWeeksHours', label: 'Hours this week', query: null, format: 'hours', color: 'green' },
+      { id: 'unbilledHours', label: 'Incident response hours', query: null, format: 'hours', color: 'red' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'infra-health-widget', component: 'InfraHealthWidget', priority: 1 },

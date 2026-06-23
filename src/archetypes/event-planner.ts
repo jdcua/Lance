@@ -14,10 +14,10 @@ const eventPlanner: ArchetypeConfig = {
     greeting: "What's on the calendar?",
     subgreeting: 'Your events, vendors, and budgets at a glance.',
     metricCards: [
-      { id: 'upcomingMilestones', label: 'Upcoming events (7d)', query: null as any, format: 'count', color: 'green' },
-      { id: 'activeProjectsCount', label: 'Active vendor contracts', query: null as any, format: 'count', color: 'blue' },
-      { id: 'expensesTotal', label: 'Event budget committed', query: null as any, format: 'currency', color: 'purple' },
-      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'upcomingMilestones', label: 'Upcoming events (7d)', query: null, format: 'count', color: 'green' },
+      { id: 'activeProjectsCount', label: 'Active vendor contracts', query: null, format: 'count', color: 'blue' },
+      { id: 'expensesTotal', label: 'Event budget committed', query: null, format: 'currency', color: 'purple' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'run-of-show-widget', component: 'RunOfShowWidget', priority: 1 },

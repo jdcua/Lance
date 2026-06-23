@@ -14,10 +14,10 @@ const cybersecurity: ArchetypeConfig = {
     greeting: "What's under review?",
     subgreeting: 'Your audits, findings, and compliance at a glance.',
     metricCards: [
-      { id: 'activeProjectsCount', label: 'Active audits', query: null as any, format: 'count', color: 'blue' },
-      { id: 'upcomingMilestones', label: 'Findings requiring remediation', query: null as any, format: 'count', color: 'red' },
-      { id: 'thisWeeksHours', label: 'Billable hours this month', query: null as any, format: 'hours', color: 'green' },
-      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active audits', query: null, format: 'count', color: 'blue' },
+      { id: 'upcomingMilestones', label: 'Findings requiring remediation', query: null, format: 'count', color: 'red' },
+      { id: 'thisWeeksHours', label: 'Billable hours this month', query: null, format: 'hours', color: 'green' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'audit-tracker-widget', component: 'AuditTrackerWidget', priority: 1 },

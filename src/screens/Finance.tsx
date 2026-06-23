@@ -9,6 +9,7 @@ import { formatCurrency, formatDate, formatMonth } from '../utils/format';
 import { getCurrencySymbol } from '../lib/currency';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useToasts } from '../store/toastStore';
+import type { ToastType } from '../store/toastStore';
 import { checkAndNotify } from '../achievements/notify';
 import { getUnlockedAchievementKeys } from '../achievements/checker';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
@@ -369,7 +370,7 @@ export default function Finance() {
           )}
         </>
       ) : tab === 'aging' ? (
-        <AgingReport invoices={invoices} payments={payments} getClientName={(id: string) => clients.find((c) => c.id === id)?.name || 'Unknown'} fmt={fmt} addPayment={addPayment} updateInvoice={updateInvoice} addToast={(msg: string, type?: string) => addToast(msg, type as any)} />
+        <AgingReport invoices={invoices} payments={payments} getClientName={(id: string) => clients.find((c) => c.id === id)?.name || 'Unknown'} fmt={fmt} addPayment={addPayment} updateInvoice={updateInvoice} addToast={(msg: string, type?: ToastType) => addToast(msg, type)} />
       ) : (
         /* ── Forecast tab ── */
         <>
@@ -772,7 +773,7 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
   fmt: (n: number) => string;
   addPayment: (data: { invoice_id: string; amount: number; payment_date: string; payment_method: string; reference?: string; notes?: string }) => Promise<any>;
   updateInvoice: (data: Invoice) => Promise<void>;
-  addToast: (msg: string, type?: string) => void;
+  addToast: (msg: string, type?: ToastType) => void;
 }) {
   const [sortKey, setSortKey] = useState<AgingSortKey>('days_overdue');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');

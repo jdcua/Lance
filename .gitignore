@@ -31,3 +31,6 @@ src-tauri/signing/*
 
 # Lint/formatter cache
 .eslintcache
+
+# Lance.key
+lance.key

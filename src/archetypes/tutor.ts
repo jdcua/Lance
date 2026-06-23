@@ -14,10 +14,10 @@ const tutor: ArchetypeConfig = {
     greeting: 'Who are you teaching?',
     subgreeting: 'Your students, sessions, and prep at a glance.',
     metricCards: [
-      { id: 'clientsCount', label: 'Active students', query: null as any, format: 'count', color: 'green' },
-      { id: 'sessionsThisWeek', label: 'Sessions this week', query: null as any, format: 'count', color: 'blue' },
-      { id: 'todaysHours', label: 'Prep hours this week', query: null as any, format: 'hours', color: 'purple' },
-      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'clientsCount', label: 'Active students', query: null, format: 'count', color: 'green' },
+      { id: 'sessionsThisWeek', label: 'Sessions this week', query: null, format: 'count', color: 'blue' },
+      { id: 'todaysHours', label: 'Prep hours this week', query: null, format: 'hours', color: 'purple' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'student-roster-widget', component: 'StudentRosterWidget', priority: 1 },

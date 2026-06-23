@@ -14,10 +14,10 @@ const developer: ArchetypeConfig = {
     greeting: "What's shipping today?",
     subgreeting: 'Your utilization, velocity, and active work at a glance.',
     metricCards: [
-      { id: 'utilizationRate', label: 'Utilization rate this month', query: null as any, format: 'percent', color: 'green' },
-      { id: 'effectiveHourlyRate', label: 'Effective hourly rate', query: null as any, format: 'currency', color: 'blue' },
-      { id: 'activeProjectsCount', label: 'Active Projects', query: null as any, format: 'count', color: 'purple' },
-      { id: 'unbilledHours', label: 'Unbilled hours', query: null as any, format: 'hours', color: 'amber' },
+      { id: 'utilizationRate', label: 'Utilization rate this month', query: null, format: 'percent', color: 'green' },
+      { id: 'effectiveHourlyRate', label: 'Effective hourly rate', query: null, format: 'currency', color: 'blue' },
+      { id: 'activeProjectsCount', label: 'Active Projects', query: null, format: 'count', color: 'purple' },
+      { id: 'unbilledHours', label: 'Unbilled hours', query: null, format: 'hours', color: 'amber' },
     ],
     widgets: [
       { id: 'sprint-board-widget', component: 'SprintBoardWidget', priority: 1 },

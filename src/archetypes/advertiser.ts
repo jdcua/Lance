@@ -14,10 +14,10 @@ const advertiser: ArchetypeConfig = {
     greeting: "What's live today?",
     subgreeting: 'Your ad accounts, spend pacing, and performance at a glance.',
     metricCards: [
-      { id: 'activeProjectsCount', label: 'Active campaigns', query: null as any, format: 'count', color: 'blue' },
-      { id: 'expensesTotal', label: 'Ad spend this month', query: null as any, format: 'currency', color: 'purple' },
-      { id: 'totalPaidRevenue', label: 'Revenue this month', query: null as any, format: 'currency', color: 'green' },
-      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active campaigns', query: null, format: 'count', color: 'blue' },
+      { id: 'expensesTotal', label: 'Ad spend this month', query: null, format: 'currency', color: 'purple' },
+      { id: 'totalPaidRevenue', label: 'Revenue this month', query: null, format: 'currency', color: 'green' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'budget-pacing-widget', component: 'BudgetPacingWidget', priority: 1 },

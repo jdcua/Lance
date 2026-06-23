@@ -14,10 +14,10 @@ const projectManager: ArchetypeConfig = {
     greeting: "What's in flight?",
     subgreeting: 'Your projects, milestones, and resources at a glance.',
     metricCards: [
-      { id: 'activeProjectsCount', label: 'Active projects', query: null as any, format: 'count', color: 'blue' },
-      { id: 'upcomingMilestones', label: 'Milestones due this week', query: null as any, format: 'count', color: 'purple' },
-      { id: 'blockedTasks', label: 'Blocked tasks', query: null as any, format: 'count', color: 'red' },
-      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active projects', query: null, format: 'count', color: 'blue' },
+      { id: 'upcomingMilestones', label: 'Milestones due this week', query: null, format: 'count', color: 'purple' },
+      { id: 'blockedTasks', label: 'Blocked tasks', query: null, format: 'count', color: 'red' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'timeline-widget', component: 'TimelineWidget', priority: 1 },

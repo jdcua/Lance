@@ -14,10 +14,10 @@ const filmmaker: ArchetypeConfig = {
     greeting: "What's in pre-pro?",
     subgreeting: 'Your productions, shoots, and post-production at a glance.',
     metricCards: [
-      { id: 'activeProjectsCount', label: 'Active productions', query: null as any, format: 'count', color: 'blue' },
-      { id: 'daysUntilNextShoot', label: 'Days until next shoot', query: null as any, format: 'text', color: 'purple' },
-      { id: 'unbilledHours', label: 'Post hours remaining (est)', query: null as any, format: 'hours', color: 'amber' },
-      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active productions', query: null, format: 'count', color: 'blue' },
+      { id: 'daysUntilNextShoot', label: 'Days until next shoot', query: null, format: 'text', color: 'purple' },
+      { id: 'unbilledHours', label: 'Post hours remaining (est)', query: null, format: 'hours', color: 'amber' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'production-phase-widget', component: 'ProductionPhaseWidget', priority: 1 },

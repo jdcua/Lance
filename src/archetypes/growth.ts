@@ -14,10 +14,10 @@ const growth: ArchetypeConfig = {
     greeting: "What's testing today?",
     subgreeting: 'Your experiments, funnels, and conversion rates at a glance.',
     metricCards: [
-      { id: 'activeProjectsCount', label: 'Active experiments', query: null as any, format: 'count', color: 'blue' },
-      { id: 'projectsCompleted', label: 'Experiments completed this month', query: null as any, format: 'count', color: 'green' },
-      { id: 'draftsCount', label: 'Experiments in design', query: null as any, format: 'count', color: 'purple' },
-      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'activeProjectsCount', label: 'Active experiments', query: null, format: 'count', color: 'blue' },
+      { id: 'projectsCompleted', label: 'Experiments completed this month', query: null, format: 'count', color: 'green' },
+      { id: 'draftsCount', label: 'Experiments in design', query: null, format: 'count', color: 'purple' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'experiment-tracker-widget', component: 'ExperimentTrackerWidget', priority: 1 },

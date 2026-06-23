@@ -1,7 +1,7 @@
 import { useEffect, useState, Suspense, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
-import type { PortalActivity } from '../types';
+import type { PortalActivity, Invoice, TimeEntry, UserProfile, Project } from '../types';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import Button from '../components/ui/Button';
@@ -12,6 +12,7 @@ import { generateFollowUpDraft } from '../utils/followUpTemplates';
 import { getArchetype } from '../archetypes';
 import type { ArchetypeConfig } from '../archetypes';
 import { getDb } from '../db';
+import type Database from '@tauri-apps/plugin-sql';
 import * as queries from '../archetypes/queries';
 import { getFeatureComponent } from '../components/features/registry';
 
@@ -71,9 +72,9 @@ export default function Dashboard() {
   useEffect(() => {
     if (!profile) return;
     let config: ArchetypeConfig;
-    if (profile.profession === 'custom' && (profile as any).custom_archetype_config) {
+    if (profile.profession === 'custom' && profile.custom_archetype_config) {
       try {
-        config = JSON.parse((profile as any).custom_archetype_config);
+        config = JSON.parse(profile.custom_archetype_config);
       } catch { /* invalid custom config JSON; fall back to profession archetype */
         config = getArchetype(profile.profession || 'default');
       }
@@ -93,7 +94,7 @@ export default function Dashboard() {
           if (card.query) {
             values[card.id] = await card.query(db, profile?.id || 1);
           } else {
-            const queryFn = (queries as any)[card.id];
+            const queryFn = (queries as Record<string, (db: Database, profileId: number) => Promise<string | number>>)[card.id];
             if (queryFn) {
               values[card.id] = await queryFn(db, profile?.id || 1);
             } else {
@@ -308,10 +309,10 @@ export default function Dashboard() {
 
 function DashboardWidgets({ archetype, recentInvoices, recentTime, profile, projects, navigate }: {
   archetype: ArchetypeConfig;
-  recentInvoices: any[];
-  recentTime: any[];
-  profile: any;
-  projects: any[];
+  recentInvoices: Invoice[];
+  recentTime: TimeEntry[];
+  profile: UserProfile | null;
+  projects: Project[];
   navigate: (path: string) => void;
 }) {
   const widgets = archetype.dashboard.widgets || [];
@@ -353,7 +354,7 @@ function DashboardWidgets({ archetype, recentInvoices, recentTime, profile, proj
           </div>
         ) : (
           <div className="space-y-2">
-            {recentInvoices.map((inv: any) => (
+            {recentInvoices.map((inv) => (
               <div key={inv.id} className="flex items-center justify-between px-3 py-2 rounded-[8px] hover:bg-[var(--bg-secondary)] transition-colors">
                 <div>
                   <p className="text-xs font-medium text-[var(--text-primary)]">{inv.invoice_number}</p>
@@ -386,8 +387,8 @@ function DashboardWidgets({ archetype, recentInvoices, recentTime, profile, proj
           </div>
         ) : (
           <div className="space-y-2">
-            {recentTime.map((entry: any) => {
-              const project = projects.find((p: any) => p.id === entry.project_id);
+            {recentTime.map((entry) => {
+              const project = projects.find((p) => p.id === entry.project_id);
               const mins = entry.duration_minutes || 0;
               return (
                 <div key={entry.id} className="flex items-center justify-between px-3 py-2 rounded-[8px] hover:bg-[var(--bg-secondary)] transition-colors">

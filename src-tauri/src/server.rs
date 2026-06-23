@@ -7,7 +7,16 @@ use axum::{
 use rusqlite::Connection;
 use serde::Deserialize;
 use std::net::TcpListener;
+use std::sync::Arc;
+use std::time::Duration;
+use std::collections::HashMap;
 use tokio::runtime::Runtime;
+use tokio::sync::Mutex;
+use tower_http::timeout::TimeoutLayer;
+
+const RATE_LIMIT_MAX: u64 = 60;
+const RATE_LIMIT_WINDOW_SECS: u64 = 60;
+const REQUEST_TIMEOUT_SECS: u64 = 30;
 
 fn chrono_now() -> String {
     crate::commands::clients::chrono_now()
@@ -16,6 +25,27 @@ fn chrono_now() -> String {
 #[derive(Clone)]
 pub struct AppState {
     pub db_path: String,
+    pub rate_limits: Arc<Mutex<HashMap<String, (u64, u64)>>>,
+}
+
+impl AppState {
+    fn check_rate_limit(&self, token: &str) -> bool {
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let mut limits = self.rate_limits.blocking_lock();
+        let entry = limits.entry(token.to_string()).or_insert((0, now));
+        if now - entry.1 >= RATE_LIMIT_WINDOW_SECS {
+            *entry = (1, now);
+            true
+        } else if entry.0 < RATE_LIMIT_MAX {
+            entry.0 += 1;
+            true
+        } else {
+            false
+        }
+    }
 }
 
 pub struct ServerHandle {
@@ -482,10 +512,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     )
 }
 
+fn rate_limited_page() -> Html<String> {
+    Html(
+        r#"<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rate Limited</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1d1d1f;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}h1{font-size:20px}p{color:#86868b;font-size:14px}</style></head><body><div><h1>Too Many Requests</h1><p>Please wait a moment before trying again.</p></div></body></html>"#
+            .to_string(),
+    )
+}
+
 async fn serve_portal(
     State(state): State<AppState>,
     Path(token): Path<String>,
 ) -> Html<String> {
+    if !state.check_rate_limit(&token) {
+        return rate_limited_page();
+    }
+
     let conn = match db_connection(&state.db_path) {
         Ok(c) => c,
         Err(_) => return fallback_page(),
@@ -619,12 +660,16 @@ pub fn start_server(db_path: String) -> Result<ServerHandle, String> {
         .map_err(|e| format!("Failed to get local addr: {}", e))?
         .port();
 
-    let state = AppState { db_path };
+    let state = AppState {
+        db_path,
+        rate_limits: Arc::new(Mutex::new(HashMap::new())),
+    };
 
     let app = Router::new()
         .route("/share/{token}", get(serve_portal))
         .route("/share/{token}/respond", post(handle_respond))
-        .with_state(state);
+        .with_state(state)
+        .layer(TimeoutLayer::new(Duration::from_secs(REQUEST_TIMEOUT_SECS)));
 
     let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<()>();
 

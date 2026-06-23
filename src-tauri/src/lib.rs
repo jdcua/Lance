@@ -2,6 +2,7 @@ use tauri::Manager;
 
 pub mod commands;
 pub mod db;
+pub mod error;
 pub mod server;
 
 pub struct SharedServerPort {

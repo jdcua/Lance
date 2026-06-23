@@ -378,7 +378,33 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            notes TEXT,
            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
            FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
-         );",
+         );
+
+         CREATE INDEX IF NOT EXISTS idx_invoice_payments_invoice ON invoice_payments(invoice_id);
+         CREATE INDEX IF NOT EXISTS idx_time_entries_billable ON time_entries(billable);
+         CREATE INDEX IF NOT EXISTS idx_time_entries_invoiced ON time_entries(invoiced);
+         CREATE INDEX IF NOT EXISTS idx_time_entries_created ON time_entries(created_at);
+         CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status);
+         CREATE INDEX IF NOT EXISTS idx_invoices_due_date ON invoices(due_date);
+         CREATE INDEX IF NOT EXISTS idx_proposals_status ON proposals(status);
+         CREATE INDEX IF NOT EXISTS idx_proposals_expires ON proposals(expires_at);
+         CREATE INDEX IF NOT EXISTS idx_contracts_status ON contracts(status);
+         CREATE INDEX IF NOT EXISTS idx_follow_up_status ON follow_up_log(status);
+         CREATE INDEX IF NOT EXISTS idx_project_templates_default ON project_templates(is_default);
+         CREATE INDEX IF NOT EXISTS idx_archetype_render_log_project ON archetype_render_log(project_id);
+         CREATE INDEX IF NOT EXISTS idx_archetype_render_log_created ON archetype_render_log(created_at);
+         CREATE INDEX IF NOT EXISTS idx_archetype_sessions_project ON archetype_sessions(project_id);
+         CREATE INDEX IF NOT EXISTS idx_archetype_sessions_created ON archetype_sessions(created_at);
+         CREATE INDEX IF NOT EXISTS idx_archetype_shoots_project ON archetype_shoots(project_id);
+         CREATE INDEX IF NOT EXISTS idx_archetype_shoots_created ON archetype_shoots(created_at);
+         CREATE INDEX IF NOT EXISTS idx_archetype_revisions_project ON archetype_revisions(project_id);
+         CREATE INDEX IF NOT EXISTS idx_archetype_revisions_created ON archetype_revisions(created_at);
+         CREATE INDEX IF NOT EXISTS idx_archetype_builds_project ON archetype_builds(project_id);
+         CREATE INDEX IF NOT EXISTS idx_archetype_builds_created ON archetype_builds(created_at);
+         CREATE INDEX IF NOT EXISTS idx_archetype_keywords_client ON archetype_keywords(client_id);
+         CREATE INDEX IF NOT EXISTS idx_archetype_datasets_project ON archetype_datasets(project_id);
+         CREATE INDEX IF NOT EXISTS idx_archetype_datasets_created ON archetype_datasets(created_at);
+         CREATE INDEX IF NOT EXISTS idx_metrics_values_client_period ON metric_values(client_id, period);",
     )
     .map_err(|e| format!("Migration failed: {}", e))?;
 

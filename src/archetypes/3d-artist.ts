@@ -14,10 +14,10 @@ const threeDArtist: ArchetypeConfig = {
     greeting: "What's rendering today?",
     subgreeting: 'Your renders, complexity, and software costs at a glance.',
     metricCards: [
-      { id: 'activeProjectsCount', label: 'Active projects', query: null as any, format: 'count', color: 'blue' },
-      { id: 'unbilledRenderHours', label: 'Unbilled render hours', query: null as any, format: 'hours', color: 'amber' },
-      { id: 'thisWeeksHours', label: 'Hours this week', query: null as any, format: 'hours', color: 'green' },
-      { id: 'expensesTotal', label: 'Software costs (monthly)', query: null as any, format: 'currency', color: 'red' },
+      { id: 'activeProjectsCount', label: 'Active projects', query: null, format: 'count', color: 'blue' },
+      { id: 'unbilledRenderHours', label: 'Unbilled render hours', query: null, format: 'hours', color: 'amber' },
+      { id: 'thisWeeksHours', label: 'Hours this week', query: null, format: 'hours', color: 'green' },
+      { id: 'expensesTotal', label: 'Software costs (monthly)', query: null, format: 'currency', color: 'red' },
     ],
     widgets: [
       { id: 'render-log-widget', component: 'RenderLogWidget', priority: 1 },

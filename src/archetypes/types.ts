@@ -3,7 +3,7 @@ import Database from '@tauri-apps/plugin-sql';
 export interface MetricCardDef {
   id: string;
   label: string;
-  query: (db: Database, profileId: number) => Promise<string | number>;
+  query?: ((db: Database, profileId: number) => Promise<string | number>) | null;
   format: 'currency' | 'hours' | 'count' | 'percent' | 'text';
   color?: 'green' | 'amber' | 'red' | 'blue' | 'purple';
   tooltip?: string;

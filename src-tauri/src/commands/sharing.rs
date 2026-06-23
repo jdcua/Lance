@@ -4,6 +4,16 @@ use tauri::{AppHandle, Manager};
 
 use crate::db;
 
+type ResponseRow = (
+    String,
+    String,
+    String,
+    String,
+    String,
+    Option<String>,
+    Option<String>,
+);
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ShareToken {
     pub id: i64,
@@ -234,7 +244,7 @@ pub fn get_portal_activity(app: AppHandle) -> Result<Vec<PortalActivity>, String
         )
         .map_err(|_| "Database operation failed".to_string())?;
 
-    let rows2: Vec<(String, String, String, String, String, Option<String>, Option<String>)> = stmt2
+    let rows2: Vec<ResponseRow> = stmt2
         .query_map([], |row| {
             Ok((
                 row.get(0)?,

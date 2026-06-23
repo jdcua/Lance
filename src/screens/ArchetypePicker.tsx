@@ -61,7 +61,7 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
 
       if (selected === 'custom') {
         const customConfig = JSON.stringify(archetype);
-        await saveProfile({ ...profile, profession: 'custom', custom_archetype_config: customConfig } as any);
+        await saveProfile({ ...profile, profession: 'custom', custom_archetype_config: customConfig });
       }
 
       const theme = getTheme(archetype.theme);

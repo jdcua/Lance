@@ -14,10 +14,10 @@ const translator: ArchetypeConfig = {
     greeting: "What are you translating today?",
     subgreeting: 'Your words, language pairs, and rates at a glance.',
     metricCards: [
-      { id: 'thisWeeksHours', label: 'Words translated this month', query: null as any, format: 'hours', color: 'green' },
-      { id: 'activeProjectsCount', label: 'Active projects', query: null as any, format: 'count', color: 'blue' },
-      { id: 'effectiveHourlyRate', label: 'Effective per-word rate', query: null as any, format: 'currency', color: 'purple' },
-      { id: 'totalOutstanding', label: 'Outstanding', query: null as any, format: 'currency', color: 'amber' },
+      { id: 'thisWeeksHours', label: 'Words translated this month', query: null, format: 'hours', color: 'green' },
+      { id: 'activeProjectsCount', label: 'Active projects', query: null, format: 'count', color: 'blue' },
+      { id: 'effectiveHourlyRate', label: 'Effective per-word rate', query: null, format: 'currency', color: 'purple' },
+      { id: 'totalOutstanding', label: 'Outstanding', query: null, format: 'currency', color: 'amber' },
     ],
     widgets: [
       { id: 'language-pair-widget', component: 'LanguagePairWidget', priority: 1 },
