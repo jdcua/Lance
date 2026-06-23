@@ -98,6 +98,8 @@ export type Expense = {
   description: string;
   amount: number;
   date: string;
+  recurring?: boolean;
+  frequency?: string;
 };
 
 export type UserProfile = {

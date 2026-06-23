@@ -125,7 +125,9 @@ async function runMigrations(database: Database): Promise<void> {
       category TEXT NOT NULL,
       description TEXT NOT NULL,
       amount REAL NOT NULL,
-      date TEXT NOT NULL
+      date TEXT NOT NULL,
+      recurring INTEGER NOT NULL DEFAULT 0,
+      frequency TEXT DEFAULT 'monthly'
     )
   `);
 
@@ -160,6 +162,8 @@ async function runMigrations(database: Database): Promise<void> {
     'ALTER TABLE user_profile ADD COLUMN custom_archetype_config TEXT',
     'ALTER TABLE user_profile ADD COLUMN density TEXT DEFAULT \'comfortable\'',
     'ALTER TABLE user_profile ADD COLUMN accent_color TEXT',
+    'ALTER TABLE expenses ADD COLUMN recurring INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE expenses ADD COLUMN frequency TEXT DEFAULT \'monthly\'',
   ];
   for (const sql of newColumns) {
     try { await database.execute(sql); } catch { /* column already exists */ }

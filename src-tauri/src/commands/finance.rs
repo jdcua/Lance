@@ -10,6 +10,8 @@ pub struct Expense {
     pub description: String,
     pub amount: f64,
     pub date: String,
+    pub recurring: Option<bool>,
+    pub frequency: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -38,6 +40,10 @@ pub struct CreateExpensePayload {
     pub description: String,
     pub amount: f64,
     pub date: String,
+    #[serde(default)]
+    pub recurring: Option<bool>,
+    #[serde(default)]
+    pub frequency: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -47,6 +53,10 @@ pub struct UpdateExpensePayload {
     pub description: String,
     pub amount: f64,
     pub date: String,
+    #[serde(default)]
+    pub recurring: Option<bool>,
+    #[serde(default)]
+    pub frequency: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -73,7 +83,7 @@ pub fn get_expenses(app: AppHandle) -> Result<Vec<Expense>, String> {
     let conn = db::get_connection(&app)?;
     let mut stmt = conn
         .prepare(
-            "SELECT id, category, description, amount, date FROM expenses ORDER BY date DESC",
+            "SELECT id, category, description, amount, date, recurring, frequency FROM expenses ORDER BY date DESC",
         )
         .map_err(|e| e.to_string())?;
     let expenses = stmt
@@ -84,6 +94,8 @@ pub fn get_expenses(app: AppHandle) -> Result<Vec<Expense>, String> {
                 description: row.get(2)?,
                 amount: row.get(3)?,
                 date: row.get(4)?,
+                recurring: row.get::<_, Option<bool>>(5)?,
+                frequency: row.get(6)?,
             })
         })
         .map_err(|e| e.to_string())?
@@ -96,9 +108,10 @@ pub fn get_expenses(app: AppHandle) -> Result<Vec<Expense>, String> {
 pub fn create_expense(app: AppHandle, payload: CreateExpensePayload) -> Result<Expense, String> {
     let conn = db::get_connection(&app)?;
     let id = uuid::Uuid::new_v4().to_string();
+    let recurring_int = payload.recurring.map(|v| if v { 1 } else { 0 });
     conn.execute(
-        "INSERT INTO expenses (id, category, description, amount, date) VALUES (?1, ?2, ?3, ?4, ?5)",
-        rusqlite::params![id, payload.category, payload.description, payload.amount, payload.date],
+        "INSERT INTO expenses (id, category, description, amount, date, recurring, frequency) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+        rusqlite::params![id, payload.category, payload.description, payload.amount, payload.date, recurring_int, payload.frequency],
     )
     .map_err(|e| e.to_string())?;
     Ok(Expense {
@@ -107,15 +120,18 @@ pub fn create_expense(app: AppHandle, payload: CreateExpensePayload) -> Result<E
         description: payload.description,
         amount: payload.amount,
         date: payload.date,
+        recurring: payload.recurring,
+        frequency: payload.frequency,
     })
 }
 
 #[tauri::command]
 pub fn update_expense(app: AppHandle, payload: UpdateExpensePayload) -> Result<(), String> {
     let conn = db::get_connection(&app)?;
+    let recurring_int = payload.recurring.map(|v| if v { 1 } else { 0 });
     conn.execute(
-        "UPDATE expenses SET category = ?1, description = ?2, amount = ?3, date = ?4 WHERE id = ?5",
-        rusqlite::params![payload.category, payload.description, payload.amount, payload.date, payload.id],
+        "UPDATE expenses SET category = ?1, description = ?2, amount = ?3, date = ?4, recurring = ?5, frequency = ?6 WHERE id = ?7",
+        rusqlite::params![payload.category, payload.description, payload.amount, payload.date, recurring_int, payload.frequency, payload.id],
     )
     .map_err(|e| e.to_string())?;
     Ok(())
