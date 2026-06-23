@@ -267,3 +267,21 @@ function formatCurrency(val: number, currency: string): string {
   const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 0 });
   try { return fmt.format(val); } catch { return `$${Math.round(val).toLocaleString()}`; }
 }
+
+export async function completedProjects(db: Database, _profileId: number): Promise<string | number> {
+  const rows: any[] = await db.select("SELECT COUNT(*) as c FROM projects WHERE status = 'completed'");
+  return rows[0]?.c ?? 0;
+}
+
+export async function blockedTasks(db: Database, _profileId: number): Promise<string | number> {
+  const rows: any[] = await db.select("SELECT COUNT(*) as c FROM milestones WHERE completed = 0");
+  return rows[0]?.c ?? 0;
+}
+
+export async function cancellationRate(db: Database, _profileId: number): Promise<string | number> {
+  return '—';
+}
+
+export async function auditionConversion(db: Database, _profileId: number): Promise<string | number> {
+  return '—';
+}
