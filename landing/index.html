@@ -424,7 +424,7 @@ footer a:hover{color:var(--d-t1)}
     <div class="hero-text">
       <div class="hero-eyebrow">
         <span class="hero-eyebrow-dot"></span>
-        Freelancer OS — v1.1.0
+        Freelancer OS — <span id="heroVer">v1.1.0</span>
       </div>
       <h1 class="hero-hl">
         <span class="hl-line"><span class="hl-inner">Win work.</span></span>
@@ -726,7 +726,7 @@ footer a:hover{color:var(--d-t1)}
   </svg>
   <div class="eyebrow">Get Lance</div>
   <h2 class="sec-title sec-title-d" style="margin-bottom:8px">Free to download. Free to use.</h2>
-  <p class="download-sub" id="dlSub">v1.1.0 · macOS · Windows · Linux</p>
+  <p class="download-sub">v<span id="dlVer">1.1.0</span> · macOS · Windows · Linux</p>
   <div class="dl-grid">
     <a href="#" class="dl-btn" id="dl-mac">
       <div class="dl-left">
@@ -1477,6 +1477,44 @@ if (dlGrid) dlObs.observe(dlGrid);
   if (isMac) { if (heroBtn) heroBtn.textContent = '\u2193 Download for Mac'; highlight('dl-mac'); }
   else if (isWin) { if (heroBtn) heroBtn.textContent = '\u2193 Download for Windows'; highlight('dl-win'); }
   else { if (heroBtn) heroBtn.textContent = '\u2193 Download for Linux'; highlight('dl-linux'); }
+})();
+
+/* ══════════════════════════════════════════════════════
+   WIRE UP — fetch latest release + set download URLs
+══════════════════════════════════════════════════════ */
+(async function() {
+  try {
+    const res = await fetch('https://api.github.com/repos/jdcua/Lance/releases/latest');
+    if (!res.ok) return;
+    const release = await res.json();
+    const assets = release.assets || [];
+    const version = release.tag_name;
+
+    const winAsset   = assets.find(a => a.name.endsWith('-setup.exe'));
+    const macAsset   = assets.find(a => a.name.endsWith('.dmg'));
+    const linuxAsset = assets.find(a => a.name.endsWith('.AppImage'));
+
+    if (winAsset)   { const b = document.getElementById('dl-win');   if (b) b.href = winAsset.browser_download_url; }
+    if (macAsset)   { const b = document.getElementById('dl-mac');   if (b) b.href = macAsset.browser_download_url; }
+    if (linuxAsset) { const b = document.getElementById('dl-linux'); if (b) b.href = linuxAsset.browser_download_url; }
+
+    const ua = navigator.userAgent || '';
+    const isMac = /Mac|iPhone|iPad/i.test(ua) && !/Windows/i.test(ua);
+    const isWin = /Windows/i.test(ua);
+    const heroBtn = document.getElementById('heroBtn');
+    if (heroBtn) {
+      if (isMac && macAsset)       heroBtn.href = macAsset.browser_download_url;
+      else if (isWin && winAsset)  heroBtn.href = winAsset.browser_download_url;
+      else if (linuxAsset)         heroBtn.href = linuxAsset.browser_download_url;
+    }
+
+    if (version) {
+      const vEl = document.getElementById('dlVer');
+      if (vEl) vEl.textContent = version;
+      const hEl = document.getElementById('heroVer');
+      if (hEl) hEl.textContent = version;
+    }
+  } catch (_) { /* page still works with # fallback links */ }
 })();
 
 /* ══════════════════════════════════════════════════════
