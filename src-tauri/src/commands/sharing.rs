@@ -3,15 +3,7 @@ use tauri::{AppHandle, Manager};
 
 use crate::db;
 
-type ResponseRow = (
-    String,
-    String,
-    String,
-    String,
-    String,
-    Option<String>,
-    Option<String>,
-);
+type ResponseRow = (String, String, String, String, String, Option<String>, Option<String>);
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ShareToken {
@@ -70,23 +62,25 @@ pub fn create_share_token(
         )
         .map_err(|_| "Database operation failed".to_string())?;
 
-    if let Ok(existing) = stmt.query_row(rusqlite::params![payload.entity_type, payload.entity_id], |row| {
-        Ok(ShareToken {
-            id: row.get(0)?,
-            token: row.get(1)?,
-            entity_type: row.get(2)?,
-            entity_id: row.get(3)?,
-            created_at: row.get(4)?,
-            expires_at: row.get(5)?,
-            viewed_at: row.get(6)?,
-            view_count: row.get(7)?,
-            client_response: row.get(8)?,
-            client_response_at: row.get(9)?,
-            client_name: row.get(10)?,
-            client_signature: row.get(11)?,
-            client_signed_at: row.get(12)?,
+    if let Ok(existing) =
+        stmt.query_row(rusqlite::params![payload.entity_type, payload.entity_id], |row| {
+            Ok(ShareToken {
+                id: row.get(0)?,
+                token: row.get(1)?,
+                entity_type: row.get(2)?,
+                entity_id: row.get(3)?,
+                created_at: row.get(4)?,
+                expires_at: row.get(5)?,
+                viewed_at: row.get(6)?,
+                view_count: row.get(7)?,
+                client_response: row.get(8)?,
+                client_response_at: row.get(9)?,
+                client_name: row.get(10)?,
+                client_signature: row.get(11)?,
+                client_signed_at: row.get(12)?,
+            })
         })
-    }) {
+    {
         return Ok(existing);
     }
 
@@ -96,7 +90,13 @@ pub fn create_share_token(
     conn.execute(
         "INSERT INTO share_tokens (token, entity_type, entity_id, created_at, expires_at)
          VALUES (?1, ?2, ?3, ?4, ?5)",
-        rusqlite::params![token, payload.entity_type, payload.entity_id, created_at, payload.expires_at],
+        rusqlite::params![
+            token,
+            payload.entity_type,
+            payload.entity_id,
+            created_at,
+            payload.expires_at
+        ],
     )
     .map_err(|_| "Database operation failed".to_string())?;
 
@@ -209,15 +209,7 @@ pub fn get_portal_activity(app: AppHandle) -> Result<Vec<PortalActivity>, String
         .map_err(|_| "Database operation failed".to_string())?;
 
     let rows: Vec<(String, String, String, String, i64)> = stmt
-        .query_map([], |row| {
-            Ok((
-                row.get(0)?,
-                row.get(1)?,
-                row.get(2)?,
-                row.get(3)?,
-                row.get(4)?,
-            ))
-        })
+        .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?)))
         .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())
         .collect();
@@ -282,7 +274,11 @@ pub fn get_portal_activity(app: AppHandle) -> Result<Vec<PortalActivity>, String
     Ok(activities)
 }
 
-fn get_entity_title(conn: &rusqlite::Connection, entity_type: &str, entity_id: &str) -> Option<String> {
+fn get_entity_title(
+    conn: &rusqlite::Connection,
+    entity_type: &str,
+    entity_id: &str,
+) -> Option<String> {
     if entity_type == "proposal" {
         conn.query_row(
             "SELECT title FROM proposals WHERE id = ?1",

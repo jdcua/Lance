@@ -180,7 +180,10 @@ pub struct CreatePaymentPayload {
 }
 
 #[tauri::command]
-pub fn get_invoice_payments(app: AppHandle, invoice_id: String) -> Result<Vec<InvoicePayment>, String> {
+pub fn get_invoice_payments(
+    app: AppHandle,
+    invoice_id: String,
+) -> Result<Vec<InvoicePayment>, String> {
     let conn = db::get_connection(&app)?;
     let mut stmt = conn
         .prepare("SELECT id, invoice_id, amount, payment_date, payment_method, reference, notes, created_at FROM invoice_payments WHERE invoice_id = ? ORDER BY payment_date DESC")
@@ -205,7 +208,10 @@ pub fn get_invoice_payments(app: AppHandle, invoice_id: String) -> Result<Vec<In
 }
 
 #[tauri::command]
-pub fn create_invoice_payment(app: AppHandle, payload: CreatePaymentPayload) -> Result<InvoicePayment, String> {
+pub fn create_invoice_payment(
+    app: AppHandle,
+    payload: CreatePaymentPayload,
+) -> Result<InvoicePayment, String> {
     let conn = db::get_connection(&app)?;
     let id = uuid::Uuid::new_v4().to_string();
     let created_at = super::clients::chrono_now();

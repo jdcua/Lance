@@ -168,11 +168,7 @@ pub fn expire_sent_proposals(app: AppHandle) -> Result<Vec<ExpiredProposal>, Str
 
     let expired: Vec<ExpiredProposal> = stmt
         .query_map(rusqlite::params![now], |row| {
-            Ok(ExpiredProposal {
-                id: row.get(0)?,
-                client_id: row.get(1)?,
-                title: row.get(2)?,
-            })
+            Ok(ExpiredProposal { id: row.get(0)?, client_id: row.get(1)?, title: row.get(2)? })
         })
         .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())

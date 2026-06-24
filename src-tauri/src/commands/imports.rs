@@ -84,13 +84,10 @@ fn get_assets_dir_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
 
 fn validate_asset_path(app: &tauri::AppHandle, path: &str) -> Result<PathBuf, String> {
     let assets_dir = get_assets_dir_path(app)?;
-    let canonical_assets = assets_dir
-        .canonicalize()
-        .map_err(|_| "Failed to resolve assets directory".to_string())?;
+    let canonical_assets =
+        assets_dir.canonicalize().map_err(|_| "Failed to resolve assets directory".to_string())?;
     let target = PathBuf::from(path);
-    let canonical = target
-        .canonicalize()
-        .map_err(|_| format!("Invalid path: {}", path))?;
+    let canonical = target.canonicalize().map_err(|_| format!("Invalid path: {}", path))?;
     if !canonical.starts_with(&canonical_assets) {
         return Err("Path traversal detected".to_string());
     }

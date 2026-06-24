@@ -11,8 +11,6 @@ use tauri_plugin_shell::ShellExt;
 #[tauri::command]
 #[allow(deprecated)]
 pub fn open_mailto(app: AppHandle, mailto_url: String) -> Result<(), String> {
-    app.shell()
-        .open(mailto_url, None)
-        .map_err(|e| format!("Failed to open mailto link: {}", e))?;
+    app.shell().open(mailto_url, None).map_err(|e| format!("Failed to open mailto link: {}", e))?;
     Ok(())
 }

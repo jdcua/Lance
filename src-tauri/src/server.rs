@@ -6,10 +6,10 @@ use axum::{
 };
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::net::TcpListener;
 use std::sync::Arc;
 use std::time::Duration;
-use std::collections::HashMap;
 use tauri::{AppHandle, Emitter};
 use tokio::runtime::Runtime;
 use tokio::sync::Mutex;
@@ -34,10 +34,8 @@ pub struct AppState {
 
 impl AppState {
     fn check_rate_limit(&self, token: &str) -> bool {
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
+        let now =
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
         let mut limits = self.rate_limits.blocking_lock();
         let entry = limits.entry(token.to_string()).or_insert((0, now));
         if now - entry.1 >= RATE_LIMIT_WINDOW_SECS {
@@ -52,10 +50,8 @@ impl AppState {
     }
 
     fn record_token_failure(&self, source: &str) -> bool {
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
+        let now =
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
         let mut failures = self.token_failures.blocking_lock();
         let entry = failures.entry(source.to_string()).or_insert((0, now));
         if now - entry.1 >= TOKEN_LOOKUP_LOCKOUT_SECS {
@@ -153,11 +149,8 @@ fn escape_html(s: &str) -> String {
 
 fn sanitize_html(html: &str) -> String {
     let mut cleaner = ammonia::Builder::new();
-    let clean_tags: std::collections::HashSet<&str> = [
-        "script", "style", "iframe", "object", "embed", "form", "input",
-    ]
-    .into_iter()
-    .collect();
+    let clean_tags: std::collections::HashSet<&str> =
+        ["script", "style", "iframe", "object", "embed", "form", "input"].into_iter().collect();
     cleaner
         .add_tags(&["p", "strong", "em", "h1", "h2", "ul", "ol", "li", "blockquote", "hr", "br"])
         .clean_content_tags(clean_tags)
@@ -174,10 +167,7 @@ struct RespondPayload {
     message: Option<String>,
 }
 
-fn build_portal_html(
-    conn: &Connection,
-    token: &TokenRecord,
-) -> Result<String, String> {
+fn build_portal_html(conn: &Connection, token: &TokenRecord) -> Result<String, String> {
     let entity_type = &token.entity_type;
     let entity_id = &token.entity_id;
     let response = token.client_response.as_deref();
@@ -212,8 +202,17 @@ fn build_portal_html(
             .map_err(|e| e.to_string())?;
 
         let (
-            title, body, scope, timeline, rate, rate_type, _created_at,
-            client_name, freelancer_name, tagline, currency,
+            title,
+            body,
+            scope,
+            timeline,
+            rate,
+            rate_type,
+            _created_at,
+            client_name,
+            freelancer_name,
+            tagline,
+            currency,
         ) = row;
 
         let freelancer_val = freelancer_name.unwrap_or_else(|| "Freelancer".into());
@@ -254,17 +253,11 @@ fn build_portal_html(
         let raw_body = body.unwrap_or_default();
         let body_html = sanitize_html(&raw_body);
 
-        let name_placeholder = token
-            .client_name
-            .as_deref()
-            .unwrap_or(&client_val);
+        let name_placeholder = token.client_name.as_deref().unwrap_or(&client_val);
 
         let action_section = if let Some(resp) = response {
-            let resp_date = token
-                .client_response_at
-                .as_deref()
-                .map(format_date)
-                .unwrap_or_default();
+            let resp_date =
+                token.client_response_at.as_deref().map(format_date).unwrap_or_default();
             let name = token.client_name.as_deref().unwrap_or("Client");
             format!(
                 r#"<div class="response-banner {}">
@@ -376,8 +369,12 @@ fn build_portal_html(
  </html>"#,
             escape_html(&title),
             stylesheet,
-            freelancer, tl, client,
-            t, details, body_html,
+            freelancer,
+            tl,
+            client,
+            t,
+            details,
+            body_html,
             action_section,
         ))
     } else {
@@ -417,11 +414,7 @@ fn build_portal_html(
         let body_html = sanitize_html(&raw_body);
 
         let sign_section = if let Some(ref sig) = token.client_signature {
-            let sig_date = token
-                .client_signed_at
-                .as_deref()
-                .map(format_date)
-                .unwrap_or_default();
+            let sig_date = token.client_signed_at.as_deref().map(format_date).unwrap_or_default();
             format!(
                 r#"<div class="signed-banner">
                     &#10003; Signed by {} on {}
@@ -520,8 +513,11 @@ fn build_portal_html(
  </html>"#,
             escape_html(&title),
             stylesheet,
-            freelancer, tl, client,
-            t, body_html,
+            freelancer,
+            tl,
+            client,
+            t,
+            body_html,
             sign_section,
         ))
     }
@@ -530,10 +526,7 @@ fn build_portal_html(
 fn security_headers() -> axum::http::HeaderMap {
     use axum::http::{HeaderMap, HeaderName, HeaderValue};
     let mut headers = HeaderMap::new();
-    headers.insert(
-        HeaderName::from_static("x-frame-options"),
-        HeaderValue::from_static("DENY"),
-    );
+    headers.insert(HeaderName::from_static("x-frame-options"), HeaderValue::from_static("DENY"));
     headers.insert(
         HeaderName::from_static("x-content-type-options"),
         HeaderValue::from_static("nosniff"),
@@ -551,7 +544,9 @@ fn security_headers() -> axum::http::HeaderMap {
     headers
 }
 
-fn add_security_headers(html: Html<String>) -> (axum::http::StatusCode, axum::http::HeaderMap, String) {
+fn add_security_headers(
+    html: Html<String>,
+) -> (axum::http::StatusCode, axum::http::HeaderMap, String) {
     let headers = security_headers();
     (axum::http::StatusCode::OK, headers, html.0)
 }
@@ -584,11 +579,7 @@ fn fallback_page() -> (axum::http::StatusCode, axum::http::HeaderMap, String) {
 fn rate_limited_page() -> (axum::http::StatusCode, axum::http::HeaderMap, String) {
     let html = r#"<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rate Limited</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1d1d1f;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}h1{font-size:20px}p{color:#86868b;font-size:14px}</style></head><body><div><h1>Too Many Requests</h1><p>Please wait a moment before trying again.</p></div></body></html>"#
             .to_string();
-    (
-        axum::http::StatusCode::TOO_MANY_REQUESTS,
-        security_headers(),
-        html,
-    )
+    (axum::http::StatusCode::TOO_MANY_REQUESTS, security_headers(), html)
 }
 
 async fn serve_portal(
@@ -604,11 +595,7 @@ async fn serve_portal(
     if !state.record_token_failure(source) {
         let html = r#"<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Blocked</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1d1d1f;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}h1{font-size:20px}p{color:#86868b;font-size:14px}</style></head><body><div><h1>Access Blocked</h1><p>Too many failed attempts. Please try again later.</p></div></body></html>"#
             .to_string();
-        return (
-            axum::http::StatusCode::TOO_MANY_REQUESTS,
-            security_headers(),
-            html,
-        );
+        return (axum::http::StatusCode::TOO_MANY_REQUESTS, security_headers(), html);
     }
 
     let conn = match db_connection(&state.db_path) {
@@ -642,10 +629,7 @@ async fn serve_portal(
 }
 
 fn check_portal_header(headers: &axum::http::HeaderMap) -> bool {
-    headers
-        .get("X-Lance-Client")
-        .map(|v| v.as_bytes() == b"portal")
-        .unwrap_or(false)
+    headers.get("X-Lance-Client").map(|v| v.as_bytes() == b"portal").unwrap_or(false)
 }
 
 async fn handle_respond(
@@ -653,25 +637,18 @@ async fn handle_respond(
     Path(token): Path<String>,
     headers: axum::http::HeaderMap,
     Json(payload): Json<RespondPayload>,
-) -> Result<(axum::http::StatusCode, axum::http::HeaderMap, String), (axum::http::StatusCode, String)> {
+) -> Result<(axum::http::StatusCode, axum::http::HeaderMap, String), (axum::http::StatusCode, String)>
+{
     if !check_portal_header(&headers) {
-        return Err((
-            axum::http::StatusCode::FORBIDDEN,
-            "Access denied.".to_string(),
-        ));
+        return Err((axum::http::StatusCode::FORBIDDEN, "Access denied.".to_string()));
     }
 
-    let conn =
-        db_connection(&state.db_path).map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e))?;
+    let conn = db_connection(&state.db_path)
+        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e))?;
 
     let record = find_token(&conn, &token)
         .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e))?
-        .ok_or_else(|| {
-            (
-                axum::http::StatusCode::NOT_FOUND,
-                "Share link not found.".to_string(),
-            )
-        })?;
+        .ok_or_else(|| (axum::http::StatusCode::NOT_FOUND, "Share link not found.".to_string()))?;
 
     if record.client_response.is_some() {
         return Err((
@@ -682,10 +659,7 @@ async fn handle_respond(
 
     if let Some(ref exp) = record.expires_at {
         if exp.as_str() < chrono_now().as_str() {
-            return Err((
-                axum::http::StatusCode::GONE,
-                "This share link has expired.".to_string(),
-            ));
+            return Err((axum::http::StatusCode::GONE, "This share link has expired.".to_string()));
         }
     }
 
@@ -779,12 +753,12 @@ struct PortalServerFailedPayload {
 pub fn start_server(db_path: String, app_handle: AppHandle) -> Result<ServerHandle, String> {
     let preferred_ports: Vec<u16> = (39821..=39830).collect();
 
-    let (listener, port) = try_bind_sequential(&preferred_ports)
-        .inspect_err(|_e| {
-            let _ = app_handle.emit("portal-server-failed", PortalServerFailedPayload {
-                reason: "Port conflict".to_string(),
-            });
-        })?;
+    let (listener, port) = try_bind_sequential(&preferred_ports).inspect_err(|_e| {
+        let _ = app_handle.emit(
+            "portal-server-failed",
+            PortalServerFailedPayload { reason: "Port conflict".to_string() },
+        );
+    })?;
 
     let state = AppState {
         db_path,
@@ -805,8 +779,8 @@ pub fn start_server(db_path: String, app_handle: AppHandle) -> Result<ServerHand
     let _ = app_handle.emit("portal-server-ready", PortalServerReadyPayload { port });
 
     runtime.spawn(async move {
-        let listener = tokio::net::TcpListener::from_std(listener)
-            .expect("Failed to convert listener");
+        let listener =
+            tokio::net::TcpListener::from_std(listener).expect("Failed to convert listener");
         axum::serve(listener, app)
             .with_graceful_shutdown(async {
                 let _ = shutdown_rx.await;
@@ -815,11 +789,7 @@ pub fn start_server(db_path: String, app_handle: AppHandle) -> Result<ServerHand
             .ok();
     });
 
-    Ok(ServerHandle {
-        port,
-        shutdown_tx: Some(shutdown_tx),
-        _runtime: runtime,
-    })
+    Ok(ServerHandle { port, shutdown_tx: Some(shutdown_tx), _runtime: runtime })
 }
 
 fn try_bind_sequential(ports: &[u16]) -> Result<(TcpListener, u16), String> {

@@ -444,12 +444,8 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
     let _ = conn.execute("ALTER TABLE expenses ADD COLUMN frequency TEXT DEFAULT 'monthly'", []);
     let _ = conn.execute("ALTER TABLE proposals ADD COLUMN expires_at TEXT", []);
     let _ = conn.execute("ALTER TABLE invoices ADD COLUMN currency TEXT DEFAULT NULL", []);
-    let _ =
-        conn.execute("ALTER TABLE clients ADD COLUMN preferred_currency TEXT DEFAULT NULL", []);
-    let _ = conn.execute(
-        "ALTER TABLE user_profile ADD COLUMN proposal_expiry_days INTEGER",
-        [],
-    );
+    let _ = conn.execute("ALTER TABLE clients ADD COLUMN preferred_currency TEXT DEFAULT NULL", []);
+    let _ = conn.execute("ALTER TABLE user_profile ADD COLUMN proposal_expiry_days INTEGER", []);
 
     // v2 user_id columns for row-level security
     let user_id_columns = [
