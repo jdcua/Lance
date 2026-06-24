@@ -28,7 +28,7 @@ body{font-family:'Inter',sans-serif;background:var(--l-bg);color:var(--l-t1);-we
   --l-bg:#F8F7F3;--l-s1:#FFFFFF;--l-bd:#E3E2DB;--l-t1:#181716;--l-t2:#68675F;
 }
 body,nav,.feat-card,.why-card,.pricing-card,.btn,.hc-body,.hc-sidebar,
-.ms-body,.ms-sidebar,.ms-stat,.ms-proposal,.pow-strip,.marquee-strip,
+.ms-body,.ms-sidebar,.ms-stat,.ms-proposal,.marquee-strip,
 .bento-card,footer{transition:background-color .4s ease,color .4s ease,border-color .4s ease}
 
 /* ── Cursor glow ─────────────────────────────────── */
@@ -141,15 +141,6 @@ nav.scrolled{background:rgba(17,17,16,.88);backdrop-filter:blur(16px);-webkit-ba
 .chip-sent{background:var(--green-dim);color:var(--green)}
 .chip-draft{background:var(--d-bd);color:var(--d-t2)}
 .chip-viewed{background:rgba(96,165,250,.12);color:#60A5FA}
-
-/* ── PoW Strip ─────────────────────────────────── */
-.pow-strip{background:var(--d-s1);border-top:1px solid var(--d-bd);border-bottom:1px solid var(--d-bd);padding:28px 32px}
-.pow-inner{max-width:1180px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap}
-.pow-stat{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;padding:0 40px}
-.pow-val{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--green);line-height:1;letter-spacing:-1.5px}
-.pow-lbl{font-family:'DM Mono',monospace;font-size:10px;color:var(--d-t2);text-transform:uppercase;letter-spacing:.8px}
-.pow-div{width:1px;height:36px;background:var(--d-bd);flex-shrink:0}
-@media(max-width:600px){.pow-div{display:none}.pow-stat{padding:12px 20px}}
 
 /* ── Marquee ─────────────────────────────────── */
 .marquee-strip{background:var(--d-bg);border-top:1px solid var(--d-bd);border-bottom:1px solid var(--d-bd);padding:13px 0;overflow:hidden;position:relative;z-index:5}
@@ -530,11 +521,6 @@ footer a:hover{color:var(--d-t1)}
   </div>
 </section>
 
-<!-- PoW Strip -->
-<div class="pow-strip">
-  <div class="pow-inner" id="powInner"><!-- Populated by JS --></div>
-</div>
-
 <!-- Marquee 1 -->
 <div class="marquee-strip">
   <div class="marquee-track" id="mq1"></div>
@@ -556,7 +542,7 @@ footer a:hover{color:var(--d-t1)}
   <div class="bento-outer" id="bentoScroll">
     <div class="bento-track" id="bentoTrack"><!-- Populated by JS --></div>
   </div>
-  <div class="bento-hint"><span>Drag to explore — auto-scrolling infinitely</span><div class="bdots" id="bdots"></div></div>
+  <div class="bento-hint"><span>Drag to explore</span><div class="bdots" id="bdots"></div></div>
   <p class="ai-fn">* AI features are optional, off by default, and togglable anytime.</p>
 </section>
 
@@ -672,7 +658,7 @@ footer a:hover{color:var(--d-t1)}
           <div class="why-num" id="wn1">02</div>
           <div class="why-content">
             <div class="why-title"><span class="why-title-i">Your data stays on your machine.</span></div>
-            <p class="why-body">No accounts. No cloud sync. No server that can get breached, sold, or shut down. Your client list and financials are yours — full stop.</p>
+            <p class="why-body">Local-first by design. Works completely offline — no internet required. Your client list and financials stay on your machine, always.</p>
           </div>
         </div>
       </div>
@@ -694,17 +680,10 @@ footer a:hover{color:var(--d-t1)}
   <div class="marquee-track" id="mq3"></div>
 </div>
 
-<!-- Wave: light → dark -->
-<div class="wave-div" style="background:var(--l-bg)">
-  <svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" height="48">
-    <path d="M0,48 C360,0 1080,48 1440,0 L1440,48 L0,48 Z" fill="#111110"/>
-  </svg>
-</div>
-
 <!-- Themes -->
 <section class="themes-section">
   <div class="container">
-    <div class="eyebrow" id="themeEyebrow">Seven themes</div>
+    <div class="eyebrow" id="themeEyebrow">7 themes</div>
     <h2 class="sec-title sec-title-d">Your workspace. Your style.</h2>
     <div class="theme-tabs" id="themeTabs"></div>
     <div id="themePreviews"></div>
@@ -888,12 +867,12 @@ function applyTheme(id) {
   document.body.style.fontFamily = theme.bFont;
 
   // Update heading elements
-  document.querySelectorAll('.hero-hl,.sec-title,.sec-title-d,.sec-title-l,.nav-brand,.footer-brand,.bc-title,.why-title,.why-num,.why-left-title,.pricing-name,.pricing-price,.hc-card-name,.hc-stat-val,.hc-topbar-title,.hcs-brand,.dm-brand,.dm-title,.dm-rn,.dm-sv,.dl-name,.anno-title,.pow-val').forEach(el => {
+  document.querySelectorAll('.hero-hl,.sec-title,.sec-title-d,.sec-title-l,.nav-brand,.footer-brand,.bc-title,.why-title,.why-num,.why-left-title,.pricing-name,.pricing-price,.hc-card-name,.hc-stat-val,.hc-topbar-title,.hcs-brand,.dm-brand,.dm-title,.dm-rn,.dm-sv,.dl-name,.anno-title').forEach(el => {
     el.style.fontFamily = theme.hFont;
   });
 
   // Update mono elements
-  document.querySelectorAll('.eyebrow,.eyebrow-l,.hero-eyebrow,.hero-trust,.hc-badge,.hc-chip,.hc-stat-lbl,.hc-card-meta,.hc-title,.hcs-group,.theme-note,.pricing-note,.download-sub,.dl-ver,.dl-sysreq,.footer-copy,.pricing-free-note,.ai-fn,.bento-hint,.pow-lbl,.m-item,.anno-eyebrow,.anno-step,.dm-sl,.dm-rm,.dm-chip,.spd,#egg-msg').forEach(el => {
+  document.querySelectorAll('.eyebrow,.eyebrow-l,.hero-eyebrow,.hero-trust,.hc-badge,.hc-chip,.hc-stat-lbl,.hc-card-meta,.hc-title,.hcs-group,.theme-note,.pricing-note,.download-sub,.dl-ver,.dl-sysreq,.footer-copy,.pricing-free-note,.ai-fn,.bento-hint,.m-item,.anno-eyebrow,.anno-step,.dm-sl,.dm-rm,.dm-chip,.spd,#egg-msg').forEach(el => {
     el.style.fontFamily = theme.mFont;
   });
 
@@ -1142,65 +1121,6 @@ document.querySelectorAll('.hcs-item').forEach(el => {
   });
 });
 setInterval(cycleHero, 3500);
-
-/* ══════════════════════════════════════════════════════
-   POW STRIP
-══════════════════════════════════════════════════════ */
-function buildPow() {
-  const powData = [
-    { val: FEATURES.length, lbl: 'Features', inf: false },
-    { val: Object.keys(THEMES_PREVIEW).length, lbl: 'Themes', inf: false },
-    { val: 1, lbl: 'Price', prefix: '$', suffix: '59', static: '$59', inf: false },
-    { val: Infinity, lbl: 'Clients', inf: true },
-    { val: 0, lbl: 'Cloud', suffix:'%', static: '0%', inf: false },
-  ];
-  const inner = document.getElementById('powInner');
-  powData.forEach((p, i) => {
-    const stat = document.createElement('div');
-    stat.className = 'pow-stat';
-    const val = document.createElement('div');
-    val.className = 'pow-val';
-    val.dataset.target = p.val;
-    val.dataset.static = p.static || '';
-    val.dataset.inf = p.inf ? '1' : '';
-    val.textContent = p.inf ? '\u221E' : (p.static || '0');
-    const lbl = document.createElement('div');
-    lbl.className = 'pow-lbl';
-    lbl.textContent = p.lbl;
-    stat.appendChild(val); stat.appendChild(lbl);
-    inner.appendChild(stat);
-    if (i < powData.length - 1) {
-      const d = document.createElement('div'); d.className = 'pow-div'; inner.appendChild(d);
-    }
-  });
-}
-buildPow();
-
-function countUp(el, target, duration) {
-  if (el.dataset.inf === '1' || el.dataset.static) return;
-  const start = Date.now();
-  const tick = () => {
-    const p = Math.min((Date.now() - start) / duration, 1);
-    const ease = 1 - Math.pow(1 - p, 3);
-    el.textContent = Math.round(ease * target);
-    if (p < 1) requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
-}
-
-const powObs = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      document.querySelectorAll('.pow-val').forEach(el => {
-        const t = parseInt(el.dataset.target);
-        if (!isNaN(t) && el.dataset.inf !== '1' && !el.dataset.static) countUp(el, t, 900);
-      });
-      powObs.disconnect();
-    }
-  });
-}, { threshold: .5 });
-const powEl = document.querySelector('.pow-strip');
-if (powEl) powObs.observe(powEl);
 
 /* ══════════════════════════════════════════════════════
    MARQUEES
@@ -1492,6 +1412,10 @@ function buildThemes() {
   });
 }
 buildThemes();
+
+// Update theme eyebrow dynamically
+const themeEyebrowEl = document.getElementById('themeEyebrow');
+if (themeEyebrowEl) themeEyebrowEl.textContent = Object.keys(THEMES_PREVIEW).length + ' themes';
 
 /* ══════════════════════════════════════════════════════
    PRICING — border trace
