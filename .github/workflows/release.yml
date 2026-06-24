@@ -59,8 +59,17 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist-artifacts
-          if [ -d src-tauri/target/release/bundle ]; then
-            cp -r src-tauri/target/release/bundle/* dist-artifacts/ 2>/dev/null || true
+          BUNDLE="src-tauri/target/release/bundle"
+          if [ -d "$BUNDLE" ]; then
+            find "$BUNDLE" -type f \( \
+              -name '*.AppImage' -o -name '*.AppImage.sig' \
+              -o -name '*.deb' -o -name '*.deb.sig' \
+              -o -name '*.dmg' \
+              -o -name '*.app.tar.gz' -o -name '*.app.tar.gz.sig' \
+              -o -name '*.msi' -o -name '*.msi.sig' \
+              -o -name '*-setup.exe' -o -name '*-setup.exe.sig' \
+            \) -exec cp {} dist-artifacts/ \;
+            ls -la dist-artifacts/
           fi
 
       - uses: actions/upload-artifact@v4
