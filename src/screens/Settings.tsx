@@ -613,7 +613,7 @@ export default function Settings() {
                 Enter license key
               </Button>
               <a
-                href="https://lance.decentra.co/license"
+                href="https://lance.placeholderlabsincorporatedlimited.yabbadabbadoo/license"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-sm text-[var(--accent)] hover:underline"

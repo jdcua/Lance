@@ -1,6 +1,6 @@
 /**
  * Lance — Freelancer OS
- * Built by Decentra (decentra.co)
+ * Built by Placeholder Labs Incorporated Limited (placeholderlabsincorporatedlimited.yabbadabbadoo)
  *
  * Privacy: Lance collects no telemetry. See PRIVACY.md.
  * License: Proprietary. See LICENSE.md.

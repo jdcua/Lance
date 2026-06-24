@@ -17,7 +17,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
   }, [isLicensed, onDismiss]);
 
   const handleGetLicense = () => {
-    window.open('https://lance.decentra.co/license', '_blank', 'noopener,noreferrer');
+    window.open('https://lance.placeholderlabsincorporatedlimited.yabbadabbadoo/license', '_blank', 'noopener,noreferrer');
   };
 
   if (isLicensed) return null;
@@ -34,7 +34,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
         </h1>
         <p className="text-sm text-[var(--text-secondary)] mb-6">Freelancer OS</p>
 
-        <p className="text-xs text-[var(--text-tertiary)] mb-5">Version 1.1.0 &middot; Built by Decentra</p>
+        <p className="text-xs text-[var(--text-tertiary)] mb-5">Version 1.1.0 &middot; Built by Placeholder Labs Incorporated Limited</p>
 
         <div className="border-t border-[var(--border-color)] my-5" />
 
@@ -54,7 +54,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
           </Button>
         </div>
 
-        <p className="text-xs text-[var(--text-tertiary)]">lance.decentra.co</p>
+        <p className="text-xs text-[var(--text-tertiary)]">lance.placeholderlabsincorporatedlimited.yabbadabbadoo</p>
       </div>
     </div>
   );

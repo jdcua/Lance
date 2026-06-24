@@ -2,7 +2,7 @@
 
 Lance is a desktop app that runs your entire freelance business — clients, projects, proposals, contracts, time tracking, invoices, expenses, and financial insights — all in one place. Everything lives on your machine. No cloud, no subscription, no vendor lock-in. Built for freelancers who want to own their data and their tools.
 
-Built by [Decentra](https://decentra.co).
+Built by [Placeholder Labs Incorporated Limited](https://placeholderlabsincorporatedlimited.yabbadabbadoo).
 
 ## What's inside
 
@@ -52,12 +52,12 @@ Lance costs **$59** one time. No subscription, no recurring fees, no cloud depen
 
 Free to use without a license. A license removes the launch screen and unlocks all themes instantly.
 
-[Buy a license](https://decentra.co/lance)
+[Buy a license](https://placeholderlabsincorporatedlimited.yabbadabbadoo/lance)
 
 ## Built with
 
 Tauri · React · TypeScript · SQLite · Rust
 
-## From Decentra
+## From Placeholder Labs Incorporated Limited
 
-Decentra builds decentralized software tools that run on your machine, not someone else's server. [decentra.co](https://decentra.co)
+Placeholder Labs Incorporated Limited builds decentralized software tools that run on your machine, not someone else's server. [placeholderlabsincorporatedlimited.yabbadabbadoo](https://placeholderlabsincorporatedlimited.yabbadabbadoo)

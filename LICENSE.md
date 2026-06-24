@@ -1,6 +1,6 @@
 # Lance License
 
-Copyright © 2026 Decentra. All rights reserved.
+Copyright © 2026 Placeholder Labs Incorporated Limited. All rights reserved.
 
 Lance is proprietary software. You may use it freely under the following terms:
 

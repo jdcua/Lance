@@ -2,7 +2,7 @@
   "$schema": "gen/schemas/desktop-schema.json",
   "productName": "Lance",
   "version": "1.0.0",
-  "identifier": "co.decentra.lance",
+  "identifier": "co.MONDAY.lance",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -33,7 +33,7 @@
     "icon": ["icons/icon.png"],
     "shortDescription": "Freelancer OS",
     "longDescription": "Win work. Run projects. Get paid. Run your business.",
-    "copyright": "Copyright © 2026 Decentra. All rights reserved.",
+    "copyright": "Copyright © 2026 Placeholder Labs Incorporated Limited. All rights reserved.",
     "category": "Productivity",
     "externalBin": [],
     "resources": []

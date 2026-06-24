@@ -53,5 +53,5 @@
 - Tauri CSP includes connect-src for api.anthropic.com
 
 ## Responsible Disclosure
-Security issues: security@decentra.co
+Security issues: security@placeholderlabsincorporatedlimited.yabbadabbadoo
 We aim to respond within 48 hours.
