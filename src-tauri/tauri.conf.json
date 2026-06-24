@@ -30,7 +30,7 @@
     "active": true,
     "targets": ["nsis", "msi", "dmg", "app", "appimage", "deb"],
     "createUpdaterArtifacts": true,
-    "icon": ["icons/icon.png"],
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
     "shortDescription": "Freelancer OS",
     "longDescription": "Win work. Run projects. Get paid. Run your business.",
     "copyright": "Copyright © 2026 Placeholder Labs Incorporated Limited. All rights reserved.",
