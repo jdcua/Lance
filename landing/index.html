@@ -1484,7 +1484,7 @@ if (dlGrid) dlObs.observe(dlGrid);
 ══════════════════════════════════════════════════════ */
 (async function() {
   try {
-    const res = await fetch('https://api.github.com/repos/jdcua/Lance/releases/latest');
+    const res = await fetch('/api/release');
     if (!res.ok) return;
     const release = await res.json();
     const assets = release.assets || [];
