@@ -189,7 +189,7 @@ nav.scrolled{background:rgba(17,17,16,.88);backdrop-filter:blur(16px);-webkit-ba
 .bc-accent{position:absolute;right:0;top:0;bottom:0;width:160px;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:.06}
 .bento-hint{display:flex;align-items:center;justify-content:center;gap:10px;padding:16px 32px 0;font-family:'DM Mono',monospace;font-size:11px;color:var(--l-t2)}
 .bdots{display:flex;gap:5px}
-.bdot{width:6px;height:6px;border-radius:50%;background:var(--l-bd);transition:background .2s,transform .2s}
+.bdot{width:6px;height:6px;border-radius:50%;background:var(--l-bd);transition:background .2s,transform .2s;cursor:pointer}
 .bdot.on{background:var(--green);transform:scale(1.3)}
 .ai-fn{font-size:11px;color:var(--l-t2);margin-top:0;font-family:'DM Mono',monospace;text-align:center;padding:0 32px 56px}
 
@@ -1179,6 +1179,7 @@ function buildBento() {
       if (dup === 0) {
         const dot = document.createElement('div');
         dot.className = 'bdot' + (i === 0 ? ' on' : '');
+        dot.addEventListener('click', () => jumpBento(i));
         dotsEl.appendChild(dot);
       }
     });
@@ -1195,9 +1196,11 @@ function buildBento() {
     card.addEventListener('mouseleave', () => { card.style.transform = ''; });
   });
 
-  // Calculate one set width
-  const singleSetWidth = track.scrollWidth / 3;
-  bentoTotalWidth = singleSetWidth;
+  // Defer width calculation until after browser layout
+  requestAnimationFrame(() => {
+    const singleSetWidth = track.scrollWidth / 3;
+    bentoTotalWidth = singleSetWidth;
+  });
 
   // Drag handling
   const outer = document.getElementById('bentoScroll');
@@ -1222,9 +1225,10 @@ function buildBento() {
     if (bentoDragTimeout) clearTimeout(bentoDragTimeout);
     const dx = e.pageX - sx;
     bentoScrollPos = sl - dx;
-    if (bentoScrollPos < -singleSetWidth) bentoScrollPos += singleSetWidth;
-    if (bentoScrollPos > singleSetWidth) bentoScrollPos -= singleSetWidth;
+    if (bentoScrollPos < -bentoTotalWidth) bentoScrollPos += bentoTotalWidth;
+    if (bentoScrollPos > bentoTotalWidth) bentoScrollPos -= bentoTotalWidth;
     track.style.transform = `translateX(${-bentoScrollPos}px)`;
+    updateBentoDots();
   });
 
   // Touch handling
@@ -1240,9 +1244,10 @@ function buildBento() {
     if (bentoDragTimeout) clearTimeout(bentoDragTimeout);
     const dx = e.touches[0].pageX - sx;
     bentoScrollPos = sl - dx;
-    if (bentoScrollPos < -singleSetWidth) bentoScrollPos += singleSetWidth;
-    if (bentoScrollPos > singleSetWidth) bentoScrollPos -= singleSetWidth;
+    if (bentoScrollPos < -bentoTotalWidth) bentoScrollPos += bentoTotalWidth;
+    if (bentoScrollPos > bentoTotalWidth) bentoScrollPos -= bentoTotalWidth;
     track.style.transform = `translateX(${-bentoScrollPos}px)`;
+    updateBentoDots();
   });
 
   outer.addEventListener('touchend', () => {
@@ -1251,16 +1256,20 @@ function buildBento() {
 }
 buildBento();
 
-function updateBentoScroll(t) {
-  if (bentoUserDragging || bentoTotalWidth <= 0) return;
-  const speed = 0.3;
-  bentoScrollPos += speed / 16;
-  if (bentoScrollPos >= bentoTotalWidth) bentoScrollPos -= bentoTotalWidth;
-  if (bentoScrollPos < 0) bentoScrollPos += bentoTotalWidth;
+function jumpBento(idx) {
+  if (bentoTotalWidth <= 0) return;
+  bentoUserDragging = true;
+  if (bentoDragTimeout) clearTimeout(bentoDragTimeout);
+  const cardWidth = bentoTotalWidth / FEATURES.length;
+  const target = idx * cardWidth;
+  bentoScrollPos = target;
   const track = document.getElementById('bentoTrack');
   if (track) track.style.transform = `translateX(${-bentoScrollPos}px)`;
+  bentoDragTimeout = setTimeout(() => { bentoUserDragging = false; }, 1500);
+}
 
-  // Update dots
+function updateBentoDots() {
+  if (bentoTotalWidth <= 0) return;
   const dotsEl = document.getElementById('bdots');
   if (!dotsEl) return;
   const pos = ((bentoScrollPos % bentoTotalWidth) + bentoTotalWidth) % bentoTotalWidth;
@@ -1268,6 +1277,17 @@ function updateBentoScroll(t) {
   const cardWidth = bentoTotalWidth / cardsPerSet;
   const activeIdx = Math.round(pos / cardWidth) % cardsPerSet;
   dotsEl.querySelectorAll('.bdot').forEach((d, i) => d.classList.toggle('on', i === activeIdx));
+}
+
+function updateBentoScroll(t) {
+  if (bentoUserDragging || bentoTotalWidth <= 0) return;
+  const speed = 1.0;
+  bentoScrollPos += speed / 16;
+  if (bentoScrollPos >= bentoTotalWidth) bentoScrollPos -= bentoTotalWidth;
+  if (bentoScrollPos < 0) bentoScrollPos += bentoTotalWidth;
+  const track = document.getElementById('bentoTrack');
+  if (track) track.style.transform = `translateX(${-bentoScrollPos}px)`;
+  updateBentoDots();
 }
 
 /* ══════════════════════════════════════════════════════
