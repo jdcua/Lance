@@ -38,6 +38,7 @@ jobs:
       - run: npm ci
 
       - name: Sanitize signing key
+        shell: bash
         run: |
           KEY=$(echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" | tr -d ' \t\r')
           echo "TAURI_SIGNING_PRIVATE_KEY_CLEAN<<EOF" >> "$GITHUB_ENV"
@@ -49,6 +50,7 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ env.TAURI_SIGNING_PRIVATE_KEY_CLEAN }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          LANCE_LICENSE_SECRET: ${{ secrets.LANCE_LICENSE_SECRET }}
 
       - name: Collect artifacts
         shell: bash
