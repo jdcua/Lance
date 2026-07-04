@@ -1,8 +1,11 @@
 use rusqlite::Connection;
 use std::path::PathBuf;
+use std::sync::Mutex;
 use tauri::{AppHandle, Manager};
 
-pub fn get_db_path(app: &AppHandle) -> Result<PathBuf, String> {
+pub struct DbState(pub Mutex<Connection>);
+
+fn get_db_path_internal(app: &AppHandle) -> Result<PathBuf, String> {
     let app_dir =
         app.path().app_data_dir().map_err(|e| format!("Failed to get app data dir: {}", e))?;
     std::fs::create_dir_all(&app_dir)
@@ -10,13 +13,14 @@ pub fn get_db_path(app: &AppHandle) -> Result<PathBuf, String> {
     Ok(app_dir.join("lance.db"))
 }
 
-pub fn get_connection(app: &AppHandle) -> Result<Connection, String> {
-    let db_path = get_db_path(app)?;
+pub fn init_db_state(app: &AppHandle) -> Result<DbState, String> {
+    let db_path = get_db_path_internal(app)?;
     let path_str = db_path.to_str().ok_or("Invalid db path")?;
     let conn = Connection::open(path_str).map_err(|e| format!("Failed to open database: {}", e))?;
     conn.execute_batch("PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL;")
         .map_err(|e| format!("Failed to set pragmas: {}", e))?;
-    Ok(conn)
+    run_migrations(&conn)?;
+    Ok(DbState(Mutex::new(conn)))
 }
 
 pub fn run_migrations(conn: &Connection) -> Result<(), String> {
@@ -28,11 +32,12 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            id TEXT PRIMARY KEY,
            user_id INTEGER NOT NULL DEFAULT 1,
            name TEXT NOT NULL,
-           -- SECURITY: encrypt with user key in v2 before cloud sync
            email TEXT,
            phone TEXT,
            company TEXT,
            notes TEXT,
+           preferred_currency TEXT DEFAULT NULL,
+           seeded INTEGER NOT NULL DEFAULT 0,
            created_at TEXT NOT NULL
          );
 
@@ -47,6 +52,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            budget REAL,
            notes TEXT,
            color TEXT,
+           seeded INTEGER NOT NULL DEFAULT 0,
            created_at TEXT NOT NULL,
            FOREIGN KEY (client_id) REFERENCES clients(id)
          );
@@ -73,9 +79,10 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            timeline TEXT,
            rate REAL,
            rate_type TEXT NOT NULL DEFAULT 'flat',
-           -- SECURITY: encrypt with user key in v2 before cloud sync
            body TEXT,
            sent_at TEXT,
+           expires_at TEXT,
+           seeded INTEGER NOT NULL DEFAULT 0,
            created_at TEXT NOT NULL,
            FOREIGN KEY (client_id) REFERENCES clients(id)
          );
@@ -88,9 +95,9 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            proposal_id TEXT,
            title TEXT NOT NULL,
            status TEXT NOT NULL DEFAULT 'draft',
-           -- SECURITY: encrypt with user key in v2 before cloud sync
            body TEXT,
            signed_at TEXT,
+           seeded INTEGER NOT NULL DEFAULT 0,
            created_at TEXT NOT NULL,
            FOREIGN KEY (client_id) REFERENCES clients(id)
          );
@@ -106,6 +113,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            duration_minutes INTEGER,
            billable INTEGER NOT NULL DEFAULT 1,
            invoiced INTEGER NOT NULL DEFAULT 0,
+           seeded INTEGER NOT NULL DEFAULT 0,
            FOREIGN KEY (project_id) REFERENCES projects(id)
          );
 
@@ -123,6 +131,8 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            due_date TEXT,
            paid_at TEXT,
            notes TEXT,
+           currency TEXT DEFAULT NULL,
+           seeded INTEGER NOT NULL DEFAULT 0,
            created_at TEXT NOT NULL,
            FOREIGN KEY (client_id) REFERENCES clients(id)
          );
@@ -133,13 +143,15 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            category TEXT NOT NULL,
            description TEXT NOT NULL,
            amount REAL NOT NULL,
-           date TEXT NOT NULL
+           date TEXT NOT NULL,
+           recurring INTEGER NOT NULL DEFAULT 0,
+           frequency TEXT DEFAULT 'monthly',
+           seeded INTEGER NOT NULL DEFAULT 0
          );
 
          CREATE TABLE IF NOT EXISTS user_profile (
            id INTEGER PRIMARY KEY DEFAULT 1,
            name TEXT CHECK(length(name) <= 100),
-           -- SECURITY: encrypt with user key in v2 before cloud sync
            email TEXT CHECK(length(email) <= 254),
            hourly_rate REAL,
            currency TEXT DEFAULT 'CAD',
@@ -150,14 +162,15 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            always_include TEXT CHECK(length(always_include) <= 2000),
            writing_style TEXT DEFAULT 'professional',
            theme TEXT DEFAULT 'light',
-           -- SECURITY: encrypt with user key in v2 before cloud sync
            license_key TEXT,
            licensed_at TEXT,
            ai_enabled INTEGER DEFAULT 0,
            profession TEXT,
            custom_archetype_config TEXT,
            density TEXT DEFAULT 'comfortable',
-           accent_color TEXT
+           accent_color TEXT,
+           proposal_expiry_days INTEGER,
+           income_target REAL
          );
 
          CREATE TABLE IF NOT EXISTS communications (
@@ -186,6 +199,8 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            active INTEGER NOT NULL DEFAULT 1,
            next_due TEXT NOT NULL,
            last_generated TEXT,
+           last_catch_up_warning TEXT,
+           seeded INTEGER NOT NULL DEFAULT 0,
            created_at TEXT NOT NULL,
            FOREIGN KEY (client_id) REFERENCES clients(id)
          );
@@ -224,18 +239,6 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            created_at TEXT NOT NULL
          );
 
-         CREATE INDEX IF NOT EXISTS idx_projects_client ON projects(client_id);
-         CREATE INDEX IF NOT EXISTS idx_milestones_project ON milestones(project_id);
-         CREATE INDEX IF NOT EXISTS idx_time_entries_project ON time_entries(project_id);
-         CREATE INDEX IF NOT EXISTS idx_invoices_client ON invoices(client_id);
-         CREATE INDEX IF NOT EXISTS idx_communications_client ON communications(client_id);
-         CREATE INDEX IF NOT EXISTS idx_proposals_client ON proposals(client_id);
-         CREATE INDEX IF NOT EXISTS idx_contracts_client ON contracts(client_id);
-         CREATE INDEX IF NOT EXISTS idx_recurring_invoices_client ON recurring_invoices(client_id);
-         CREATE INDEX IF NOT EXISTS idx_import_log_status ON import_log(status);
-         CREATE INDEX IF NOT EXISTS idx_attachments_entity ON attachments(entity_type, entity_id);
-         CREATE INDEX IF NOT EXISTS idx_attachments_mime ON attachments(mime_type);
-
          CREATE TABLE IF NOT EXISTS metric_definitions (
            id TEXT PRIMARY KEY,
            user_id INTEGER NOT NULL DEFAULT 1,
@@ -269,11 +272,6 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            created_at TEXT NOT NULL
          );
 
-         CREATE INDEX IF NOT EXISTS idx_metric_defs_client ON metric_definitions(client_id);
-         CREATE INDEX IF NOT EXISTS idx_metric_values_def ON metric_values(definition_id);
-         CREATE INDEX IF NOT EXISTS idx_metric_values_client ON metric_values(client_id);
-         CREATE INDEX IF NOT EXISTS idx_metric_values_period ON metric_values(definition_id, period);
-
          CREATE TABLE IF NOT EXISTS follow_up_log (
            id TEXT PRIMARY KEY,
            user_id INTEGER NOT NULL DEFAULT 1,
@@ -285,9 +283,6 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            actioned_at TEXT,
            action TEXT
          );
-
-         CREATE INDEX IF NOT EXISTS idx_follow_up_entity ON follow_up_log(entity_type, entity_id);
-         CREATE INDEX IF NOT EXISTS idx_invoice_payments_invoice ON invoice_payments(invoice_id);
 
          CREATE TABLE IF NOT EXISTS archetype_render_log (
            id TEXT PRIMARY KEY,
@@ -403,38 +398,104 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            amount REAL NOT NULL,
            payment_date TEXT NOT NULL,
            payment_method TEXT NOT NULL,
-           -- SECURITY: encrypt with user key in v2 before cloud sync
            reference TEXT,
            notes TEXT,
            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
            FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
          );
 
-         CREATE INDEX IF NOT EXISTS idx_invoice_payments_invoice ON invoice_payments(invoice_id);
-         CREATE INDEX IF NOT EXISTS idx_time_entries_billable ON time_entries(billable);
-         CREATE INDEX IF NOT EXISTS idx_time_entries_invoiced ON time_entries(invoiced);
-         CREATE INDEX IF NOT EXISTS idx_time_entries_created ON time_entries(created_at);
-         CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status);
-         CREATE INDEX IF NOT EXISTS idx_invoices_due_date ON invoices(due_date);
-         CREATE INDEX IF NOT EXISTS idx_proposals_status ON proposals(status);
-         CREATE INDEX IF NOT EXISTS idx_proposals_expires ON proposals(expires_at);
-         CREATE INDEX IF NOT EXISTS idx_contracts_status ON contracts(status);
-         CREATE INDEX IF NOT EXISTS idx_follow_up_status ON follow_up_log(status);
-         CREATE INDEX IF NOT EXISTS idx_project_templates_default ON project_templates(is_default);
-         CREATE INDEX IF NOT EXISTS idx_archetype_render_log_project ON archetype_render_log(project_id);
-         CREATE INDEX IF NOT EXISTS idx_archetype_render_log_created ON archetype_render_log(created_at);
-         CREATE INDEX IF NOT EXISTS idx_archetype_sessions_project ON archetype_sessions(project_id);
-         CREATE INDEX IF NOT EXISTS idx_archetype_sessions_created ON archetype_sessions(created_at);
-         CREATE INDEX IF NOT EXISTS idx_archetype_shoots_project ON archetype_shoots(project_id);
-         CREATE INDEX IF NOT EXISTS idx_archetype_shoots_created ON archetype_shoots(created_at);
-         CREATE INDEX IF NOT EXISTS idx_archetype_revisions_project ON archetype_revisions(project_id);
-         CREATE INDEX IF NOT EXISTS idx_archetype_revisions_created ON archetype_revisions(created_at);
-         CREATE INDEX IF NOT EXISTS idx_archetype_builds_project ON archetype_builds(project_id);
-         CREATE INDEX IF NOT EXISTS idx_archetype_builds_created ON archetype_builds(created_at);
-         CREATE INDEX IF NOT EXISTS idx_archetype_keywords_client ON archetype_keywords(client_id);
-         CREATE INDEX IF NOT EXISTS idx_archetype_datasets_project ON archetype_datasets(project_id);
-         CREATE INDEX IF NOT EXISTS idx_archetype_datasets_created ON archetype_datasets(created_at);
-         CREATE INDEX IF NOT EXISTS idx_metrics_values_client_period ON metric_values(client_id, period);",
+         CREATE TABLE IF NOT EXISTS share_tokens (
+             id INTEGER PRIMARY KEY AUTOINCREMENT,
+             user_id INTEGER NOT NULL DEFAULT 1,
+             token TEXT UNIQUE NOT NULL,
+             entity_type TEXT NOT NULL CHECK(entity_type IN ('proposal','contract')),
+             entity_id TEXT NOT NULL,
+             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+             expires_at TEXT,
+             viewed_at TEXT,
+             view_count INTEGER DEFAULT 0,
+             client_response TEXT CHECK(client_response IN ('accepted','declined')),
+             client_response_at TEXT,
+             client_name TEXT,
+             client_signature TEXT,
+             client_signed_at TEXT
+          );
+
+          CREATE TABLE IF NOT EXISTS app_events (
+             id INTEGER PRIMARY KEY AUTOINCREMENT,
+             event_type TEXT NOT NULL,
+             payload TEXT,
+             created_at TEXT DEFAULT CURRENT_TIMESTAMP
+          );
+
+           CREATE TABLE IF NOT EXISTS kanban_boards (
+             id TEXT PRIMARY KEY,
+             project_id TEXT NOT NULL,
+             name TEXT NOT NULL DEFAULT 'Main Board',
+             created_at TEXT NOT NULL,
+             FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+           );
+
+           CREATE TABLE IF NOT EXISTS kanban_columns (
+             id TEXT PRIMARY KEY,
+             board_id TEXT NOT NULL,
+             name TEXT NOT NULL,
+             color TEXT,
+             sort_order INTEGER NOT NULL DEFAULT 0,
+             wip_limit INTEGER,
+             created_at TEXT NOT NULL,
+             FOREIGN KEY (board_id) REFERENCES kanban_boards(id) ON DELETE CASCADE
+           );
+
+           CREATE TABLE IF NOT EXISTS kanban_cards (
+             id TEXT PRIMARY KEY,
+             column_id TEXT NOT NULL,
+             project_id TEXT NOT NULL,
+             title TEXT NOT NULL,
+             description TEXT,
+             priority TEXT NOT NULL DEFAULT 'medium',
+             hours_estimated REAL,
+             hours_actual REAL,
+             due_date TEXT,
+             labels TEXT NOT NULL DEFAULT '[]',
+             assignee TEXT,
+             sort_order INTEGER NOT NULL DEFAULT 0,
+             created_at TEXT NOT NULL,
+             FOREIGN KEY (column_id) REFERENCES kanban_columns(id) ON DELETE CASCADE,
+             FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+           );
+
+           CREATE TABLE IF NOT EXISTS schema_version (
+             version INTEGER NOT NULL
+          );
+
+          CREATE TABLE IF NOT EXISTS auto_backup_state (
+             id INTEGER PRIMARY KEY DEFAULT 1,
+             enabled INTEGER NOT NULL DEFAULT 0,
+             frequency TEXT NOT NULL DEFAULT 'weekly',
+             backup_path TEXT,
+             last_backup_at TEXT,
+             last_backup_error TEXT
+          );
+
+          CREATE TABLE IF NOT EXISTS project_templates (
+             id TEXT PRIMARY KEY,
+             name TEXT NOT NULL,
+             description TEXT,
+             default_budget REAL,
+             default_status TEXT NOT NULL DEFAULT 'Active',
+             is_default INTEGER NOT NULL DEFAULT 0,
+             created_at TEXT NOT NULL
+          );
+
+          CREATE TABLE IF NOT EXISTS project_template_milestones (
+             id TEXT PRIMARY KEY,
+             template_id TEXT NOT NULL,
+             title TEXT NOT NULL,
+             days_from_start INTEGER NOT NULL DEFAULT 0,
+             invoice_on_completion INTEGER NOT NULL DEFAULT 0,
+             FOREIGN KEY (template_id) REFERENCES project_templates(id) ON DELETE CASCADE
+          );",
     )
     .map_err(|e| format!("Migration failed: {}", e))?;
 
@@ -444,10 +505,13 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
     let _ = conn.execute("ALTER TABLE expenses ADD COLUMN frequency TEXT DEFAULT 'monthly'", []);
     let _ = conn.execute("ALTER TABLE proposals ADD COLUMN expires_at TEXT", []);
     let _ = conn.execute("ALTER TABLE invoices ADD COLUMN currency TEXT DEFAULT NULL", []);
-    let _ = conn.execute("ALTER TABLE clients ADD COLUMN preferred_currency TEXT DEFAULT NULL", []);
-    let _ = conn.execute("ALTER TABLE user_profile ADD COLUMN proposal_expiry_days INTEGER", []);
+    let _ =
+        conn.execute("ALTER TABLE clients ADD COLUMN preferred_currency TEXT DEFAULT NULL", []);
+    let _ = conn.execute(
+        "ALTER TABLE user_profile ADD COLUMN proposal_expiry_days INTEGER",
+        [],
+    );
 
-    // v2 user_id columns for row-level security
     let user_id_columns = [
         "ALTER TABLE clients ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
         "ALTER TABLE projects ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
@@ -480,34 +544,82 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
     }
 
     conn.execute_batch(
-        "CREATE TABLE IF NOT EXISTS share_tokens (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL DEFAULT 1,
-            token TEXT UNIQUE NOT NULL,
-            entity_type TEXT NOT NULL CHECK(entity_type IN ('proposal','contract')),
-            entity_id TEXT NOT NULL,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            expires_at TEXT,
-            viewed_at TEXT,
-            view_count INTEGER DEFAULT 0,
-            client_response TEXT CHECK(client_response IN ('accepted','declined')),
-            client_response_at TEXT,
-            client_name TEXT,
-            client_signature TEXT,
-            client_signed_at TEXT
-         );
+        "CREATE INDEX IF NOT EXISTS idx_projects_client ON projects(client_id);
+         CREATE INDEX IF NOT EXISTS idx_milestones_project ON milestones(project_id);
+         CREATE INDEX IF NOT EXISTS idx_time_entries_project ON time_entries(project_id);
+         CREATE INDEX IF NOT EXISTS idx_invoices_client ON invoices(client_id);
+         CREATE INDEX IF NOT EXISTS idx_communications_client ON communications(client_id);
+         CREATE INDEX IF NOT EXISTS idx_proposals_client ON proposals(client_id);
+         CREATE INDEX IF NOT EXISTS idx_contracts_client ON contracts(client_id);
+         CREATE INDEX IF NOT EXISTS idx_recurring_invoices_client ON recurring_invoices(client_id);
+         CREATE INDEX IF NOT EXISTS idx_import_log_status ON import_log(status);
+         CREATE INDEX IF NOT EXISTS idx_attachments_entity ON attachments(entity_type, entity_id);
+         CREATE INDEX IF NOT EXISTS idx_attachments_mime ON attachments(mime_type);
+
+         CREATE INDEX IF NOT EXISTS idx_metric_defs_client ON metric_definitions(client_id);
+         CREATE INDEX IF NOT EXISTS idx_metric_values_def ON metric_values(definition_id);
+         CREATE INDEX IF NOT EXISTS idx_metric_values_client ON metric_values(client_id);
+         CREATE INDEX IF NOT EXISTS idx_metric_values_period ON metric_values(definition_id, period);
+
+         CREATE INDEX IF NOT EXISTS idx_follow_up_entity ON follow_up_log(entity_type, entity_id);
+         CREATE INDEX IF NOT EXISTS idx_follow_up_status ON follow_up_log(status);
+         CREATE INDEX IF NOT EXISTS idx_project_templates_default ON project_templates(is_default);
+
+         CREATE INDEX IF NOT EXISTS idx_archetype_render_log_project ON archetype_render_log(project_id);
+         CREATE INDEX IF NOT EXISTS idx_archetype_render_log_created ON archetype_render_log(created_at);
+         CREATE INDEX IF NOT EXISTS idx_archetype_sessions_project ON archetype_sessions(project_id);
+         CREATE INDEX IF NOT EXISTS idx_archetype_sessions_created ON archetype_sessions(created_at);
+         CREATE INDEX IF NOT EXISTS idx_archetype_shoots_project ON archetype_shoots(project_id);
+         CREATE INDEX IF NOT EXISTS idx_archetype_shoots_created ON archetype_shoots(created_at);
+         CREATE INDEX IF NOT EXISTS idx_archetype_revisions_project ON archetype_revisions(project_id);
+         CREATE INDEX IF NOT EXISTS idx_archetype_revisions_created ON archetype_revisions(created_at);
+         CREATE INDEX IF NOT EXISTS idx_archetype_builds_project ON archetype_builds(project_id);
+         CREATE INDEX IF NOT EXISTS idx_archetype_builds_created ON archetype_builds(created_at);
+         CREATE INDEX IF NOT EXISTS idx_archetype_keywords_client ON archetype_keywords(client_id);
+         CREATE INDEX IF NOT EXISTS idx_archetype_datasets_project ON archetype_datasets(project_id);
+         CREATE INDEX IF NOT EXISTS idx_archetype_datasets_created ON archetype_datasets(created_at);
+
+         CREATE INDEX IF NOT EXISTS idx_invoice_payments_invoice ON invoice_payments(invoice_id);
+         CREATE INDEX IF NOT EXISTS idx_time_entries_billable ON time_entries(billable);
+         CREATE INDEX IF NOT EXISTS idx_time_entries_invoiced ON time_entries(invoiced);
+         CREATE INDEX IF NOT EXISTS idx_time_entries_created ON time_entries(created_at);
+         CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status);
+         CREATE INDEX IF NOT EXISTS idx_invoices_due_date ON invoices(due_date);
+         CREATE INDEX IF NOT EXISTS idx_proposals_status ON proposals(status);
+         CREATE INDEX IF NOT EXISTS idx_proposals_expires ON proposals(expires_at);
+         CREATE INDEX IF NOT EXISTS idx_contracts_status ON contracts(status);
+
+         CREATE INDEX IF NOT EXISTS idx_metrics_values_client_period ON metric_values(client_id, period);
+
          CREATE INDEX IF NOT EXISTS idx_share_tokens_token ON share_tokens(token);
          CREATE INDEX IF NOT EXISTS idx_share_tokens_entity ON share_tokens(entity_type, entity_id);
+          CREATE INDEX IF NOT EXISTS idx_app_events_type ON app_events(event_type);
 
-         CREATE TABLE IF NOT EXISTS app_events (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            event_type TEXT NOT NULL,
-            payload TEXT,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
-         );
-         CREATE INDEX IF NOT EXISTS idx_app_events_type ON app_events(event_type);",
+          CREATE INDEX IF NOT EXISTS idx_kanban_boards_project ON kanban_boards(project_id);
+          CREATE INDEX IF NOT EXISTS idx_kanban_columns_board ON kanban_columns(board_id);
+          CREATE INDEX IF NOT EXISTS idx_kanban_columns_order ON kanban_columns(sort_order);
+          CREATE INDEX IF NOT EXISTS idx_kanban_cards_column ON kanban_cards(column_id);
+          CREATE INDEX IF NOT EXISTS idx_kanban_cards_project ON kanban_cards(project_id);
+          CREATE INDEX IF NOT EXISTS idx_kanban_cards_order ON kanban_cards(sort_order);",
     )
-    .map_err(|e| format!("Share tokens migration failed: {}", e))?;
+    .map_err(|e| format!("Index migration failed: {}", e))?;
+
+    let seed_columns = [
+        "ALTER TABLE clients ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE projects ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE proposals ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE contracts ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE time_entries ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE invoices ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE recurring_invoices ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE expenses ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE project_templates ADD COLUMN is_default INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE user_profile ADD COLUMN income_target REAL",
+        "ALTER TABLE recurring_invoices ADD COLUMN last_catch_up_warning TEXT",
+    ];
+    for sql in &seed_columns {
+        let _ = conn.execute(sql, []);
+    }
 
     Ok(())
 }

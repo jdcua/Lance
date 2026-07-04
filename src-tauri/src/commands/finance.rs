@@ -1,10 +1,32 @@
+use crate::db::DbState;
 use serde::{Deserialize, Serialize};
-use tauri::AppHandle;
-
-use crate::db;
+use tauri::Manager;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Expense {
+    pub id: String,
+    pub category: String,
+    pub description: String,
+    pub amount: f64,
+    pub date: String,
+    pub recurring: Option<bool>,
+    pub frequency: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CreateExpensePayload {
+    pub category: String,
+    pub description: String,
+    pub amount: f64,
+    pub date: String,
+    pub recurring: Option<bool>,
+    pub frequency: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct UpdateExpensePayload {
     pub id: String,
     pub category: String,
     pub description: String,
@@ -20,7 +42,7 @@ pub struct UserProfile {
     pub name: Option<String>,
     pub email: Option<String>,
     pub hourly_rate: Option<f64>,
-    pub currency: String,
+    pub currency: Option<String>,
     pub writing_voice: Option<String>,
     pub tax_rate: Option<f64>,
     pub payment_terms: Option<i64>,
@@ -32,40 +54,20 @@ pub struct UserProfile {
     pub licensed_at: Option<String>,
     pub ai_enabled: Option<bool>,
     pub profession: Option<String>,
+    pub custom_archetype_config: Option<String>,
+    pub density: Option<String>,
+    pub accent_color: Option<String>,
     pub proposal_expiry_days: Option<i64>,
+    pub income_target: Option<f64>,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct CreateExpensePayload {
-    pub category: String,
-    pub description: String,
-    pub amount: f64,
-    pub date: String,
-    #[serde(default)]
-    pub recurring: Option<bool>,
-    #[serde(default)]
-    pub frequency: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct UpdateExpensePayload {
-    pub id: String,
-    pub category: String,
-    pub description: String,
-    pub amount: f64,
-    pub date: String,
-    #[serde(default)]
-    pub recurring: Option<bool>,
-    #[serde(default)]
-    pub frequency: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct UpsertProfilePayload {
     pub name: Option<String>,
     pub email: Option<String>,
     pub hourly_rate: Option<f64>,
-    pub currency: String,
+    pub currency: Option<String>,
     pub writing_voice: Option<String>,
     pub tax_rate: Option<f64>,
     pub payment_terms: Option<i64>,
@@ -77,16 +79,19 @@ pub struct UpsertProfilePayload {
     pub licensed_at: Option<String>,
     pub ai_enabled: Option<bool>,
     pub profession: Option<String>,
+    pub custom_archetype_config: Option<String>,
+    pub density: Option<String>,
+    pub accent_color: Option<String>,
     pub proposal_expiry_days: Option<i64>,
+    pub income_target: Option<f64>,
 }
 
 #[tauri::command]
-pub fn get_expenses(app: AppHandle) -> Result<Vec<Expense>, String> {
-    let conn = db::get_connection(&app)?;
+pub fn get_expenses(app: tauri::AppHandle) -> Result<Vec<Expense>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let mut stmt = conn
-        .prepare(
-            "SELECT id, category, description, amount, date, recurring, frequency FROM expenses ORDER BY date DESC",
-        )
+        .prepare("SELECT id, category, description, amount, date, recurring, frequency FROM expenses ORDER BY date DESC")
         .map_err(|_| "Database operation failed".to_string())?;
     let expenses = stmt
         .query_map([], |row| {
@@ -96,7 +101,7 @@ pub fn get_expenses(app: AppHandle) -> Result<Vec<Expense>, String> {
                 description: row.get(2)?,
                 amount: row.get(3)?,
                 date: row.get(4)?,
-                recurring: row.get::<_, Option<bool>>(5)?,
+                recurring: row.get::<_, Option<i32>>(5)?.map(|v| v != 0),
                 frequency: row.get(6)?,
             })
         })
@@ -107,15 +112,19 @@ pub fn get_expenses(app: AppHandle) -> Result<Vec<Expense>, String> {
 }
 
 #[tauri::command]
-pub fn create_expense(app: AppHandle, payload: CreateExpensePayload) -> Result<Expense, String> {
-    let conn = db::get_connection(&app)?;
+pub fn create_expense(
+    app: tauri::AppHandle,
+    payload: CreateExpensePayload,
+) -> Result<Expense, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let id = uuid::Uuid::new_v4().to_string();
-    let recurring_int = payload.recurring.map(|v| if v { 1 } else { 0 });
+    let recurring = payload.recurring.unwrap_or(false) as i32;
+    let frequency = payload.frequency.unwrap_or_else(|| "monthly".to_string());
     conn.execute(
         "INSERT INTO expenses (id, category, description, amount, date, recurring, frequency) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-        rusqlite::params![id, payload.category, payload.description, payload.amount, payload.date, recurring_int, payload.frequency],
-    )
-    .map_err(|_| "Database operation failed".to_string())?;
+        rusqlite::params![id, payload.category, payload.description, payload.amount, payload.date, recurring, frequency],
+    ).map_err(|_| "Database operation failed".to_string())?;
     Ok(Expense {
         id,
         category: payload.category,
@@ -123,43 +132,50 @@ pub fn create_expense(app: AppHandle, payload: CreateExpensePayload) -> Result<E
         amount: payload.amount,
         date: payload.date,
         recurring: payload.recurring,
-        frequency: payload.frequency,
+        frequency: Some(frequency),
     })
 }
 
 #[tauri::command]
-pub fn update_expense(app: AppHandle, payload: UpdateExpensePayload) -> Result<(), String> {
-    let conn = db::get_connection(&app)?;
-    let recurring_int = payload.recurring.map(|v| if v { 1 } else { 0 });
+pub fn update_expense(
+    app: tauri::AppHandle,
+    payload: UpdateExpensePayload,
+) -> Result<(), String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let recurring = payload.recurring.unwrap_or(false) as i32;
+    let frequency = payload.frequency.unwrap_or_else(|| "monthly".to_string());
     conn.execute(
         "UPDATE expenses SET category = ?1, description = ?2, amount = ?3, date = ?4, recurring = ?5, frequency = ?6 WHERE id = ?7",
-        rusqlite::params![payload.category, payload.description, payload.amount, payload.date, recurring_int, payload.frequency, payload.id],
-    )
-    .map_err(|_| "Database operation failed".to_string())?;
+        rusqlite::params![payload.category, payload.description, payload.amount, payload.date, recurring, frequency, payload.id],
+    ).map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 
 #[tauri::command]
-pub fn delete_expense(app: AppHandle, id: String) -> Result<(), String> {
-    let conn = db::get_connection(&app)?;
+pub fn delete_expense(app: tauri::AppHandle, id: String) -> Result<(), String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     conn.execute("DELETE FROM expenses WHERE id = ?", [&id])
         .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 
 #[tauri::command]
-pub fn get_user_profile(app: AppHandle) -> Result<Option<UserProfile>, String> {
-    let conn = db::get_connection(&app)?;
-    let mut stmt = conn.prepare("SELECT id, name, email, hourly_rate, currency, writing_voice, tax_rate, payment_terms, tagline, always_include, writing_style, theme, license_key, licensed_at, ai_enabled, profession, proposal_expiry_days FROM user_profile WHERE id = 1")
+pub fn get_user_profile(app: tauri::AppHandle) -> Result<Option<UserProfile>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let mut stmt = conn
+        .prepare("SELECT id, name, email, hourly_rate, currency, writing_voice, tax_rate, payment_terms, tagline, always_include, writing_style, theme, license_key, licensed_at, ai_enabled, profession, custom_archetype_config, density, accent_color, proposal_expiry_days, income_target FROM user_profile WHERE id = 1")
         .map_err(|_| "Database operation failed".to_string())?;
-    Ok(stmt
+    let profile = stmt
         .query_row([], |row| {
             Ok(UserProfile {
-                id: Some(row.get(0)?),
+                id: row.get(0)?,
                 name: row.get(1)?,
                 email: row.get(2)?,
                 hourly_rate: row.get(3)?,
-                currency: row.get::<_, String>(4).unwrap_or("CAD".to_string()),
+                currency: row.get(4)?,
                 writing_voice: row.get(5)?,
                 tax_rate: row.get(6)?,
                 payment_terms: row.get(7)?,
@@ -169,29 +185,56 @@ pub fn get_user_profile(app: AppHandle) -> Result<Option<UserProfile>, String> {
                 theme: row.get(11)?,
                 license_key: row.get(12)?,
                 licensed_at: row.get(13)?,
-                ai_enabled: row.get::<_, Option<i64>>(14)?.map(|v| v != 0),
+                ai_enabled: row.get::<_, Option<i32>>(14)?.map(|v| v != 0),
                 profession: row.get(15)?,
-                proposal_expiry_days: row.get(16)?,
+                custom_archetype_config: row.get(16)?,
+                density: row.get(17)?,
+                accent_color: row.get(18)?,
+                proposal_expiry_days: row.get(19)?,
+                income_target: row.get(20)?,
             })
         })
-        .ok())
+        .ok();
+    Ok(profile)
 }
 
 #[tauri::command]
-pub fn upsert_user_profile(app: AppHandle, payload: UpsertProfilePayload) -> Result<(), String> {
-    let conn = db::get_connection(&app)?;
-    let ai_enabled_int = payload.ai_enabled.map(|v| if v { 1 } else { 0 });
-    conn.execute(
-        "INSERT INTO user_profile (id, name, email, hourly_rate, currency, writing_voice, tax_rate, payment_terms, tagline, always_include, writing_style, theme, license_key, licensed_at, ai_enabled, profession, proposal_expiry_days) VALUES (1, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16) ON CONFLICT(id) DO UPDATE SET name = ?1, email = ?2, hourly_rate = ?3, currency = ?4, writing_voice = ?5, tax_rate = ?6, payment_terms = ?7, tagline = ?8, always_include = ?9, writing_style = ?10, theme = ?11, license_key = ?12, licensed_at = ?13, ai_enabled = ?14, profession = ?15, proposal_expiry_days = ?16",
-        rusqlite::params![payload.name, payload.email, payload.hourly_rate, payload.currency, payload.writing_voice, payload.tax_rate, payload.payment_terms, payload.tagline, payload.always_include, payload.writing_style, payload.theme, payload.license_key, payload.licensed_at, ai_enabled_int, payload.profession, payload.proposal_expiry_days],
-    ).map_err(|_| "Database operation failed".to_string())?;
+pub fn upsert_user_profile(
+    app: tauri::AppHandle,
+    payload: UpsertProfilePayload,
+) -> Result<(), String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let ai_enabled = payload.ai_enabled.map(|v| v as i32);
+
+    let existing: bool = conn
+        .query_row(
+            "SELECT COUNT(*) FROM user_profile WHERE id = 1",
+            [],
+            |row| row.get::<_, i64>(0),
+        )
+        .unwrap_or(0)
+        > 0;
+
+    if existing {
+        conn.execute(
+            "UPDATE user_profile SET name = ?1, email = ?2, hourly_rate = ?3, currency = ?4, writing_voice = ?5, tax_rate = ?6, payment_terms = ?7, tagline = ?8, always_include = ?9, writing_style = ?10, theme = ?11, license_key = ?12, licensed_at = ?13, ai_enabled = ?14, profession = ?15, custom_archetype_config = ?16, density = ?17, accent_color = ?18, proposal_expiry_days = ?19, income_target = ?20 WHERE id = 1",
+            rusqlite::params![payload.name, payload.email, payload.hourly_rate, payload.currency, payload.writing_voice, payload.tax_rate, payload.payment_terms, payload.tagline, payload.always_include, payload.writing_style, payload.theme, payload.license_key, payload.licensed_at, ai_enabled, payload.profession, payload.custom_archetype_config, payload.density, payload.accent_color, payload.proposal_expiry_days, payload.income_target],
+        ).map_err(|_| "Database operation failed".to_string())?;
+    } else {
+        conn.execute(
+            "INSERT INTO user_profile (name, email, hourly_rate, currency, writing_voice, tax_rate, payment_terms, tagline, always_include, writing_style, theme, license_key, licensed_at, ai_enabled, profession, custom_archetype_config, density, accent_color, proposal_expiry_days, income_target) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20)",
+            rusqlite::params![payload.name, payload.email, payload.hourly_rate, payload.currency, payload.writing_voice, payload.tax_rate, payload.payment_terms, payload.tagline, payload.always_include, payload.writing_style, payload.theme, payload.license_key, payload.licensed_at, ai_enabled, payload.profession, payload.custom_archetype_config, payload.density, payload.accent_color, payload.proposal_expiry_days, payload.income_target],
+        ).map_err(|_| "Database operation failed".to_string())?;
+    }
     Ok(())
 }
 
 #[tauri::command]
-pub fn delete_user_profile(app: AppHandle) -> Result<(), String> {
-    let conn = db::get_connection(&app)?;
-    conn.execute("DELETE FROM user_profile", [])
+pub fn delete_user_profile(app: tauri::AppHandle) -> Result<(), String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    conn.execute("DELETE FROM user_profile WHERE id = 1", [])
         .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }

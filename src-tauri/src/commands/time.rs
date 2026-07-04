@@ -1,7 +1,6 @@
+use crate::db::DbState;
 use serde::{Deserialize, Serialize};
-use tauri::AppHandle;
-
-use crate::db;
+use tauri::Manager;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TimeEntry {
@@ -17,15 +16,19 @@ pub struct TimeEntry {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct CreateTimeEntryPayload {
     pub project_id: String,
     pub client_id: String,
     pub description: Option<String>,
     pub start_time: String,
-    pub billable: bool,
+    pub end_time: Option<String>,
+    pub duration_minutes: Option<i64>,
+    pub billable: Option<bool>,
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct UpdateTimeEntryPayload {
     pub id: String,
     pub project_id: String,
@@ -35,13 +38,15 @@ pub struct UpdateTimeEntryPayload {
     pub end_time: Option<String>,
     pub duration_minutes: Option<i64>,
     pub billable: bool,
-    pub invoiced: bool,
+    pub invoiced: Option<bool>,
 }
 
 #[tauri::command]
-pub fn get_time_entries(app: AppHandle) -> Result<Vec<TimeEntry>, String> {
-    let conn = db::get_connection(&app)?;
-    let mut stmt = conn.prepare("SELECT id, project_id, client_id, description, start_time, end_time, duration_minutes, billable, invoiced FROM time_entries ORDER BY start_time DESC")
+pub fn get_time_entries(app: tauri::AppHandle) -> Result<Vec<TimeEntry>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let mut stmt = conn
+        .prepare("SELECT id, project_id, client_id, description, start_time, end_time, duration_minutes, billable, invoiced FROM time_entries ORDER BY start_time DESC")
         .map_err(|_| "Database operation failed".to_string())?;
     let entries = stmt
         .query_map([], |row| {
@@ -64,11 +69,13 @@ pub fn get_time_entries(app: AppHandle) -> Result<Vec<TimeEntry>, String> {
 }
 
 #[tauri::command]
-pub fn get_time_entry(app: AppHandle, id: String) -> Result<Option<TimeEntry>, String> {
-    let conn = db::get_connection(&app)?;
-    let mut stmt = conn.prepare("SELECT id, project_id, client_id, description, start_time, end_time, duration_minutes, billable, invoiced FROM time_entries WHERE id = ?")
+pub fn get_time_entry(app: tauri::AppHandle, id: String) -> Result<Option<TimeEntry>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let mut stmt = conn
+        .prepare("SELECT id, project_id, client_id, description, start_time, end_time, duration_minutes, billable, invoiced FROM time_entries WHERE id = ?")
         .map_err(|_| "Database operation failed".to_string())?;
-    Ok(stmt
+    let entry = stmt
         .query_row([&id], |row| {
             Ok(TimeEntry {
                 id: row.get(0)?,
@@ -82,19 +89,22 @@ pub fn get_time_entry(app: AppHandle, id: String) -> Result<Option<TimeEntry>, S
                 invoiced: row.get::<_, i32>(8)? != 0,
             })
         })
-        .ok())
+        .ok();
+    Ok(entry)
 }
 
 #[tauri::command]
 pub fn create_time_entry(
-    app: AppHandle,
+    app: tauri::AppHandle,
     payload: CreateTimeEntryPayload,
 ) -> Result<TimeEntry, String> {
-    let conn = db::get_connection(&app)?;
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let id = uuid::Uuid::new_v4().to_string();
+    let billable = payload.billable.unwrap_or(true) as i32;
     conn.execute(
-        "INSERT INTO time_entries (id, project_id, client_id, description, start_time, billable, invoiced) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0)",
-        rusqlite::params![id, payload.project_id, payload.client_id, payload.description, payload.start_time, payload.billable as i32],
+        "INSERT INTO time_entries (id, project_id, client_id, description, start_time, end_time, duration_minutes, billable, invoiced) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 0)",
+        rusqlite::params![id, payload.project_id, payload.client_id, payload.description, payload.start_time, payload.end_time, payload.duration_minutes, billable],
     ).map_err(|_| "Database operation failed".to_string())?;
     Ok(TimeEntry {
         id,
@@ -102,26 +112,33 @@ pub fn create_time_entry(
         client_id: payload.client_id,
         description: payload.description,
         start_time: payload.start_time,
-        end_time: None,
-        duration_minutes: None,
-        billable: payload.billable,
+        end_time: payload.end_time,
+        duration_minutes: payload.duration_minutes,
+        billable: billable != 0,
         invoiced: false,
     })
 }
 
 #[tauri::command]
-pub fn update_time_entry(app: AppHandle, payload: UpdateTimeEntryPayload) -> Result<(), String> {
-    let conn = db::get_connection(&app)?;
+pub fn update_time_entry(
+    app: tauri::AppHandle,
+    payload: UpdateTimeEntryPayload,
+) -> Result<(), String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let billable = payload.billable as i32;
+    let invoiced = payload.invoiced.unwrap_or(false) as i32;
     conn.execute(
         "UPDATE time_entries SET project_id = ?1, client_id = ?2, description = ?3, start_time = ?4, end_time = ?5, duration_minutes = ?6, billable = ?7, invoiced = ?8 WHERE id = ?9",
-        rusqlite::params![payload.project_id, payload.client_id, payload.description, payload.start_time, payload.end_time, payload.duration_minutes, payload.billable as i32, payload.invoiced as i32, payload.id],
+        rusqlite::params![payload.project_id, payload.client_id, payload.description, payload.start_time, payload.end_time, payload.duration_minutes, billable, invoiced, payload.id],
     ).map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 
 #[tauri::command]
-pub fn delete_time_entry(app: AppHandle, id: String) -> Result<(), String> {
-    let conn = db::get_connection(&app)?;
+pub fn delete_time_entry(app: tauri::AppHandle, id: String) -> Result<(), String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     conn.execute("DELETE FROM time_entries WHERE id = ?", [&id])
         .map_err(|_| "Database operation failed".to_string())?;
     Ok(())

@@ -34,3 +34,7 @@ src-tauri/signing/*
 
 # Lance.key
 lance.key
+
+# Artifacts
+*.AppImage
+dist-artifacts/

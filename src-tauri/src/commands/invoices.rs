@@ -1,7 +1,7 @@
+use crate::db::DbState;
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use tauri::AppHandle;
-
-use crate::db;
+use tauri::Manager;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Invoice {
@@ -10,7 +10,7 @@ pub struct Invoice {
     pub project_id: Option<String>,
     pub invoice_number: String,
     pub status: String,
-    pub line_items: String,
+    pub line_items: serde_json::Value,
     pub subtotal: f64,
     pub tax_rate: Option<f64>,
     pub total: f64,
@@ -22,12 +22,13 @@ pub struct Invoice {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct CreateInvoicePayload {
     pub client_id: String,
     pub project_id: Option<String>,
     pub invoice_number: String,
-    pub status: String,
-    pub line_items: String,
+    pub status: Option<String>,
+    pub line_items: serde_json::Value,
     pub subtotal: f64,
     pub tax_rate: Option<f64>,
     pub total: f64,
@@ -37,35 +38,116 @@ pub struct CreateInvoicePayload {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct UpdateInvoicePayload {
     pub id: String,
     pub client_id: String,
     pub project_id: Option<String>,
     pub invoice_number: String,
     pub status: String,
-    pub line_items: String,
+    pub line_items: serde_json::Value,
     pub subtotal: f64,
     pub tax_rate: Option<f64>,
     pub total: f64,
     pub due_date: Option<String>,
+    pub paid_at: Option<String>,
     pub notes: Option<String>,
     pub currency: Option<String>,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct InvoicePayment {
+    pub id: String,
+    pub invoice_id: String,
+    pub amount: f64,
+    pub payment_date: String,
+    pub payment_method: String,
+    pub reference: Option<String>,
+    pub notes: Option<String>,
+    pub created_at: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CreatePaymentPayload {
+    pub invoice_id: String,
+    pub amount: f64,
+    pub payment_date: String,
+    pub payment_method: String,
+    pub reference: Option<String>,
+    pub notes: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RecurringInvoice {
+    pub id: String,
+    pub client_id: String,
+    pub project_id: Option<String>,
+    pub title: String,
+    pub frequency: String,
+    pub line_items: serde_json::Value,
+    pub subtotal: f64,
+    pub tax_rate: Option<f64>,
+    pub total: f64,
+    pub notes: Option<String>,
+    pub active: bool,
+    pub next_due: String,
+    pub last_generated: Option<String>,
+    pub created_at: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CreateRecurringInvoicePayload {
+    pub client_id: String,
+    pub project_id: Option<String>,
+    pub title: String,
+    pub frequency: String,
+    pub line_items: serde_json::Value,
+    pub subtotal: f64,
+    pub tax_rate: Option<f64>,
+    pub total: f64,
+    pub notes: Option<String>,
+    pub next_due: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct UpdateRecurringInvoicePayload {
+    pub id: String,
+    pub client_id: String,
+    pub project_id: Option<String>,
+    pub title: String,
+    pub frequency: String,
+    pub line_items: serde_json::Value,
+    pub subtotal: f64,
+    pub tax_rate: Option<f64>,
+    pub total: f64,
+    pub notes: Option<String>,
+    pub active: Option<bool>,
+    pub next_due: String,
+    pub last_generated: Option<String>,
+}
+
+// ── Invoice CRUD ──
+
 #[tauri::command]
-pub fn get_invoices(app: AppHandle) -> Result<Vec<Invoice>, String> {
-    let conn = db::get_connection(&app)?;
-    let mut stmt = conn.prepare("SELECT id, client_id, project_id, invoice_number, status, line_items, subtotal, tax_rate, total, due_date, paid_at, notes, currency, created_at FROM invoices ORDER BY created_at DESC")
+pub fn get_invoices(app: tauri::AppHandle) -> Result<Vec<Invoice>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let mut stmt = conn
+        .prepare("SELECT id, client_id, project_id, invoice_number, status, line_items, subtotal, tax_rate, total, due_date, paid_at, notes, currency, created_at FROM invoices ORDER BY created_at DESC")
         .map_err(|_| "Database operation failed".to_string())?;
     let invoices = stmt
         .query_map([], |row| {
+            let line_items_str: String = row.get(5)?;
             Ok(Invoice {
                 id: row.get(0)?,
                 client_id: row.get(1)?,
                 project_id: row.get(2)?,
                 invoice_number: row.get(3)?,
                 status: row.get(4)?,
-                line_items: row.get(5)?,
+                line_items: serde_json::from_str(&line_items_str).unwrap_or(serde_json::json!([])),
                 subtotal: row.get(6)?,
                 tax_rate: row.get(7)?,
                 total: row.get(8)?,
@@ -83,19 +165,22 @@ pub fn get_invoices(app: AppHandle) -> Result<Vec<Invoice>, String> {
 }
 
 #[tauri::command]
-pub fn get_invoice(app: AppHandle, id: String) -> Result<Option<Invoice>, String> {
-    let conn = db::get_connection(&app)?;
-    let mut stmt = conn.prepare("SELECT id, client_id, project_id, invoice_number, status, line_items, subtotal, tax_rate, total, due_date, paid_at, notes, currency, created_at FROM invoices WHERE id = ?")
+pub fn get_invoice(app: tauri::AppHandle, id: String) -> Result<Option<Invoice>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let mut stmt = conn
+        .prepare("SELECT id, client_id, project_id, invoice_number, status, line_items, subtotal, tax_rate, total, due_date, paid_at, notes, currency, created_at FROM invoices WHERE id = ?")
         .map_err(|_| "Database operation failed".to_string())?;
     Ok(stmt
         .query_row([&id], |row| {
+            let line_items_str: String = row.get(5)?;
             Ok(Invoice {
                 id: row.get(0)?,
                 client_id: row.get(1)?,
                 project_id: row.get(2)?,
                 invoice_number: row.get(3)?,
                 status: row.get(4)?,
-                line_items: row.get(5)?,
+                line_items: serde_json::from_str(&line_items_str).unwrap_or(serde_json::json!([])),
                 subtotal: row.get(6)?,
                 tax_rate: row.get(7)?,
                 total: row.get(8)?,
@@ -110,20 +195,26 @@ pub fn get_invoice(app: AppHandle, id: String) -> Result<Option<Invoice>, String
 }
 
 #[tauri::command]
-pub fn create_invoice(app: AppHandle, payload: CreateInvoicePayload) -> Result<Invoice, String> {
-    let conn = db::get_connection(&app)?;
+pub fn create_invoice(
+    app: tauri::AppHandle,
+    payload: CreateInvoicePayload,
+) -> Result<Invoice, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let id = uuid::Uuid::new_v4().to_string();
-    let created_at = super::clients::chrono_now();
+    let created_at = Utc::now().to_rfc3339();
+    let status = payload.status.unwrap_or_else(|| "draft".to_string());
+    let line_items_str = payload.line_items.to_string();
     conn.execute(
         "INSERT INTO invoices (id, client_id, project_id, invoice_number, status, line_items, subtotal, tax_rate, total, due_date, notes, currency, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
-        rusqlite::params![id, payload.client_id, payload.project_id, payload.invoice_number, payload.status, payload.line_items, payload.subtotal, payload.tax_rate, payload.total, payload.due_date, payload.notes, payload.currency, created_at],
-    ).map_err(|_| "Database operation failed".to_string())?;
+        rusqlite::params![id, payload.client_id, payload.project_id, payload.invoice_number, status, line_items_str, payload.subtotal, payload.tax_rate, payload.total, payload.due_date, payload.notes, payload.currency, created_at],
+    ).map_err(|e| format!("Database operation failed: {}", e))?;
     Ok(Invoice {
         id,
         client_id: payload.client_id,
         project_id: payload.project_id,
         invoice_number: payload.invoice_number,
-        status: payload.status,
+        status,
         line_items: payload.line_items,
         subtotal: payload.subtotal,
         tax_rate: payload.tax_rate,
@@ -137,19 +228,24 @@ pub fn create_invoice(app: AppHandle, payload: CreateInvoicePayload) -> Result<I
 }
 
 #[tauri::command]
-pub fn update_invoice(app: AppHandle, payload: UpdateInvoicePayload) -> Result<(), String> {
-    let conn = db::get_connection(&app)?;
-    let now = super::clients::chrono_now();
+pub fn update_invoice(
+    app: tauri::AppHandle,
+    payload: UpdateInvoicePayload,
+) -> Result<(), String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let line_items_str = payload.line_items.to_string();
     conn.execute(
-        "UPDATE invoices SET client_id = ?1, project_id = ?2, invoice_number = ?3, status = ?4, line_items = ?5, subtotal = ?6, tax_rate = ?7, total = ?8, due_date = ?9, paid_at = CASE WHEN status = 'paid' AND (SELECT status FROM invoices WHERE id = ?10) != 'paid' THEN ?11 ELSE paid_at END, notes = ?12, currency = ?13 WHERE id = ?10",
-        rusqlite::params![payload.client_id, payload.project_id, payload.invoice_number, payload.status, payload.line_items, payload.subtotal, payload.tax_rate, payload.total, payload.due_date, payload.id, now, payload.notes, payload.currency],
+        "UPDATE invoices SET client_id = ?1, project_id = ?2, invoice_number = ?3, status = ?4, line_items = ?5, subtotal = ?6, tax_rate = ?7, total = ?8, due_date = ?9, paid_at = ?10, notes = ?11, currency = ?12 WHERE id = ?13",
+        rusqlite::params![payload.client_id, payload.project_id, payload.invoice_number, payload.status, line_items_str, payload.subtotal, payload.tax_rate, payload.total, payload.due_date, payload.paid_at, payload.notes, payload.currency, payload.id],
     ).map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 
 #[tauri::command]
-pub fn delete_invoice(app: AppHandle, id: String) -> Result<(), String> {
-    let conn = db::get_connection(&app)?;
+pub fn delete_invoice(app: tauri::AppHandle, id: String) -> Result<(), String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     conn.execute("DELETE FROM invoices WHERE id = ?", [&id])
         .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
@@ -157,34 +253,13 @@ pub fn delete_invoice(app: AppHandle, id: String) -> Result<(), String> {
 
 // ── Invoice Payments ──
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct InvoicePayment {
-    pub id: String,
-    pub invoice_id: String,
-    pub amount: f64,
-    pub payment_date: String,
-    pub payment_method: String,
-    pub reference: Option<String>,
-    pub notes: Option<String>,
-    pub created_at: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct CreatePaymentPayload {
-    pub invoice_id: String,
-    pub amount: f64,
-    pub payment_date: String,
-    pub payment_method: String,
-    pub reference: Option<String>,
-    pub notes: Option<String>,
-}
-
 #[tauri::command]
 pub fn get_invoice_payments(
-    app: AppHandle,
+    app: tauri::AppHandle,
     invoice_id: String,
 ) -> Result<Vec<InvoicePayment>, String> {
-    let conn = db::get_connection(&app)?;
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let mut stmt = conn
         .prepare("SELECT id, invoice_id, amount, payment_date, payment_method, reference, notes, created_at FROM invoice_payments WHERE invoice_id = ? ORDER BY payment_date DESC")
         .map_err(|_| "Database operation failed".to_string())?;
@@ -208,32 +283,9 @@ pub fn get_invoice_payments(
 }
 
 #[tauri::command]
-pub fn create_invoice_payment(
-    app: AppHandle,
-    payload: CreatePaymentPayload,
-) -> Result<InvoicePayment, String> {
-    let conn = db::get_connection(&app)?;
-    let id = uuid::Uuid::new_v4().to_string();
-    let created_at = super::clients::chrono_now();
-    conn.execute(
-        "INSERT INTO invoice_payments (id, invoice_id, amount, payment_date, payment_method, reference, notes, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-        rusqlite::params![id, payload.invoice_id, payload.amount, payload.payment_date, payload.payment_method, payload.reference, payload.notes, created_at],
-    ).map_err(|_| "Database operation failed".to_string())?;
-    Ok(InvoicePayment {
-        id,
-        invoice_id: payload.invoice_id,
-        amount: payload.amount,
-        payment_date: payload.payment_date,
-        payment_method: payload.payment_method,
-        reference: payload.reference,
-        notes: payload.notes,
-        created_at,
-    })
-}
-
-#[tauri::command]
-pub fn get_all_invoice_payments(app: AppHandle) -> Result<Vec<InvoicePayment>, String> {
-    let conn = db::get_connection(&app)?;
+pub fn get_all_invoice_payments(app: tauri::AppHandle) -> Result<Vec<InvoicePayment>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let mut stmt = conn
         .prepare("SELECT id, invoice_id, amount, payment_date, payment_method, reference, notes, created_at FROM invoice_payments ORDER BY payment_date DESC")
         .map_err(|_| "Database operation failed".to_string())?;
@@ -257,8 +309,61 @@ pub fn get_all_invoice_payments(app: AppHandle) -> Result<Vec<InvoicePayment>, S
 }
 
 #[tauri::command]
-pub fn delete_invoice_payment(app: AppHandle, id: String) -> Result<(), String> {
-    let conn = db::get_connection(&app)?;
+pub fn create_invoice_payment(
+    app: tauri::AppHandle,
+    payload: CreatePaymentPayload,
+) -> Result<InvoicePayment, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let id = uuid::Uuid::new_v4().to_string();
+    let created_at = Utc::now().to_rfc3339();
+    conn.execute(
+        "INSERT INTO invoice_payments (id, invoice_id, amount, payment_date, payment_method, reference, notes, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        rusqlite::params![id, payload.invoice_id, payload.amount, payload.payment_date, payload.payment_method, payload.reference, payload.notes, created_at],
+    ).map_err(|_| "Database operation failed".to_string())?;
+
+    let total_paid: f64 = conn
+        .query_row(
+            "SELECT COALESCE(SUM(amount), 0) FROM invoice_payments WHERE invoice_id = ?",
+            [&payload.invoice_id],
+            |row| row.get(0),
+        )
+        .unwrap_or(0.0);
+    let invoice_total: f64 = conn
+        .query_row(
+            "SELECT total FROM invoices WHERE id = ?",
+            [&payload.invoice_id],
+            |row| row.get(0),
+        )
+        .unwrap_or(0.0);
+    let new_status = if total_paid >= invoice_total {
+        "paid"
+    } else if total_paid > 0.0 {
+        "partial"
+    } else {
+        "sent"
+    };
+    let _ = conn.execute(
+        "UPDATE invoices SET status = ?1 WHERE id = ?2 AND status NOT IN ('paid', 'draft')",
+        rusqlite::params![new_status, payload.invoice_id],
+    );
+
+    Ok(InvoicePayment {
+        id,
+        invoice_id: payload.invoice_id,
+        amount: payload.amount,
+        payment_date: payload.payment_date,
+        payment_method: payload.payment_method,
+        reference: payload.reference,
+        notes: payload.notes,
+        created_at,
+    })
+}
+
+#[tauri::command]
+pub fn delete_invoice_payment(app: tauri::AppHandle, id: String) -> Result<(), String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     conn.execute("DELETE FROM invoice_payments WHERE id = ?", [&id])
         .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
@@ -266,39 +371,24 @@ pub fn delete_invoice_payment(app: AppHandle, id: String) -> Result<(), String> 
 
 // ── Recurring Invoices ──
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct RecurringInvoice {
-    pub id: String,
-    pub client_id: String,
-    pub project_id: Option<String>,
-    pub title: String,
-    pub frequency: String,
-    pub line_items: String,
-    pub subtotal: f64,
-    pub tax_rate: Option<f64>,
-    pub total: f64,
-    pub notes: Option<String>,
-    pub active: bool,
-    pub next_due: String,
-    pub last_generated: Option<String>,
-    pub created_at: String,
-}
-
 #[tauri::command]
-pub fn get_recurring_invoices(app: AppHandle) -> Result<Vec<RecurringInvoice>, String> {
-    let conn = db::get_connection(&app)?;
+pub fn get_recurring_invoices(app: tauri::AppHandle) -> Result<Vec<RecurringInvoice>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let mut stmt = conn
-        .prepare("SELECT id, client_id, project_id, title, frequency, line_items, subtotal, tax_rate, total, notes, active, next_due, last_generated, created_at FROM recurring_invoices ORDER BY next_due ASC")
+        .prepare("SELECT id, client_id, project_id, title, frequency, line_items, subtotal, tax_rate, total, notes, active, next_due, last_generated, created_at FROM recurring_invoices ORDER BY created_at DESC")
         .map_err(|_| "Database operation failed".to_string())?;
-    let items = stmt
+    let invoices = stmt
         .query_map([], |row| {
+            let line_items_str: String = row.get(5)?;
             Ok(RecurringInvoice {
                 id: row.get(0)?,
                 client_id: row.get(1)?,
                 project_id: row.get(2)?,
                 title: row.get(3)?,
                 frequency: row.get(4)?,
-                line_items: row.get(5)?,
+                line_items: serde_json::from_str(&line_items_str)
+                    .unwrap_or(serde_json::json!([])),
                 subtotal: row.get(6)?,
                 tax_rate: row.get(7)?,
                 total: row.get(8)?,
@@ -312,35 +402,22 @@ pub fn get_recurring_invoices(app: AppHandle) -> Result<Vec<RecurringInvoice>, S
         .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())
         .collect();
-    Ok(items)
-}
-
-#[derive(Debug, Deserialize)]
-pub struct CreateRecurringInvoicePayload {
-    pub client_id: String,
-    pub project_id: Option<String>,
-    pub title: String,
-    pub frequency: String,
-    pub line_items: String,
-    pub subtotal: f64,
-    pub tax_rate: Option<f64>,
-    pub total: f64,
-    pub notes: Option<String>,
-    pub active: bool,
-    pub next_due: String,
+    Ok(invoices)
 }
 
 #[tauri::command]
 pub fn create_recurring_invoice(
-    app: AppHandle,
+    app: tauri::AppHandle,
     payload: CreateRecurringInvoicePayload,
 ) -> Result<RecurringInvoice, String> {
-    let conn = db::get_connection(&app)?;
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let id = uuid::Uuid::new_v4().to_string();
-    let created_at = super::clients::chrono_now();
+    let created_at = Utc::now().to_rfc3339();
+    let line_items_str = payload.line_items.to_string();
     conn.execute(
-        "INSERT INTO recurring_invoices (id, client_id, project_id, title, frequency, line_items, subtotal, tax_rate, total, notes, active, next_due, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
-        rusqlite::params![id, payload.client_id, payload.project_id, payload.title, payload.frequency, payload.line_items, payload.subtotal, payload.tax_rate, payload.total, payload.notes, payload.active as i32, payload.next_due, created_at],
+        "INSERT INTO recurring_invoices (id, client_id, project_id, title, frequency, line_items, subtotal, tax_rate, total, notes, active, next_due, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, 1, ?11, ?12)",
+        rusqlite::params![id, payload.client_id, payload.project_id, payload.title, payload.frequency, line_items_str, payload.subtotal, payload.tax_rate, payload.total, payload.notes, payload.next_due, created_at],
     ).map_err(|_| "Database operation failed".to_string())?;
     Ok(RecurringInvoice {
         id,
@@ -353,7 +430,7 @@ pub fn create_recurring_invoice(
         tax_rate: payload.tax_rate,
         total: payload.total,
         notes: payload.notes,
-        active: payload.active,
+        active: true,
         next_due: payload.next_due,
         last_generated: None,
         created_at,
@@ -361,18 +438,25 @@ pub fn create_recurring_invoice(
 }
 
 #[tauri::command]
-pub fn update_recurring_invoice(app: AppHandle, payload: RecurringInvoice) -> Result<(), String> {
-    let conn = db::get_connection(&app)?;
+pub fn update_recurring_invoice(
+    app: tauri::AppHandle,
+    payload: UpdateRecurringInvoicePayload,
+) -> Result<(), String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let active = payload.active.unwrap_or(true) as i32;
+    let line_items_str = payload.line_items.to_string();
     conn.execute(
         "UPDATE recurring_invoices SET client_id = ?1, project_id = ?2, title = ?3, frequency = ?4, line_items = ?5, subtotal = ?6, tax_rate = ?7, total = ?8, notes = ?9, active = ?10, next_due = ?11, last_generated = ?12 WHERE id = ?13",
-        rusqlite::params![payload.client_id, payload.project_id, payload.title, payload.frequency, payload.line_items, payload.subtotal, payload.tax_rate, payload.total, payload.notes, payload.active as i32, payload.next_due, payload.last_generated, payload.id],
+        rusqlite::params![payload.client_id, payload.project_id, payload.title, payload.frequency, line_items_str, payload.subtotal, payload.tax_rate, payload.total, payload.notes, active, payload.next_due, payload.last_generated, payload.id],
     ).map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 
 #[tauri::command]
-pub fn delete_recurring_invoice(app: AppHandle, id: String) -> Result<(), String> {
-    let conn = db::get_connection(&app)?;
+pub fn delete_recurring_invoice(app: tauri::AppHandle, id: String) -> Result<(), String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     conn.execute("DELETE FROM recurring_invoices WHERE id = ?", [&id])
         .map_err(|_| "Database operation failed".to_string())?;
     Ok(())

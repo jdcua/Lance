@@ -1,13 +1,14 @@
 use axum::{
-    extract::{Path, State},
+    extract::{ConnectInfo, Path, State},
     response::Html,
     routing::{get, post},
     Json, Router,
 };
+use chrono::Utc;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::net::TcpListener;
+use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 use tauri::{AppHandle, Emitter};
@@ -22,7 +23,7 @@ const TOKEN_LOOKUP_LOCKOUT_SECS: u64 = 300;
 const REQUEST_TIMEOUT_SECS: u64 = 30;
 
 fn chrono_now() -> String {
-    crate::commands::clients::chrono_now()
+    Utc::now().to_rfc3339()
 }
 
 #[derive(Clone)]
@@ -33,10 +34,9 @@ pub struct AppState {
 }
 
 impl AppState {
-    fn check_rate_limit(&self, token: &str) -> bool {
-        let now =
-            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
-        let mut limits = self.rate_limits.blocking_lock();
+    async fn check_rate_limit(&self, token: &str) -> bool {
+        let now = Utc::now().timestamp() as u64;
+        let mut limits = self.rate_limits.lock().await;
         let entry = limits.entry(token.to_string()).or_insert((0, now));
         if now - entry.1 >= RATE_LIMIT_WINDOW_SECS {
             *entry = (1, now);
@@ -49,10 +49,9 @@ impl AppState {
         }
     }
 
-    fn record_token_failure(&self, source: &str) -> bool {
-        let now =
-            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
-        let mut failures = self.token_failures.blocking_lock();
+    async fn record_token_failure(&self, source: &str) -> bool {
+        let now = Utc::now().timestamp() as u64;
+        let mut failures = self.token_failures.lock().await;
         let entry = failures.entry(source.to_string()).or_insert((0, now));
         if now - entry.1 >= TOKEN_LOOKUP_LOCKOUT_SECS {
             *entry = (1, now);
@@ -584,15 +583,16 @@ fn rate_limited_page() -> (axum::http::StatusCode, axum::http::HeaderMap, String
 
 async fn serve_portal(
     State(state): State<AppState>,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Path(token): Path<String>,
 ) -> (axum::http::StatusCode, axum::http::HeaderMap, String) {
-    let source = "src:unknown";
+    let source = addr.ip().to_string();
 
-    if !state.check_rate_limit(&token) {
+    if !state.check_rate_limit(&token).await {
         return rate_limited_page();
     }
 
-    if !state.record_token_failure(source) {
+    if !state.record_token_failure(&source).await {
         let html = r#"<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Blocked</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1d1d1f;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}h1{font-size:20px}p{color:#86868b;font-size:14px}</style></head><body><div><h1>Access Blocked</h1><p>Too many failed attempts. Please try again later.</p></div></body></html>"#
             .to_string();
         return (axum::http::StatusCode::TOO_MANY_REQUESTS, security_headers(), html);
@@ -604,11 +604,7 @@ async fn serve_portal(
     };
 
     let record = match find_token(&conn, &token) {
-        Ok(Some(r)) => {
-            // Token found successfully — reset failure count for this source
-            // (we don't reset here to keep it simple, but a real impl would)
-            r
-        }
+        Ok(Some(r)) => r,
         _ => return fallback_page(),
     };
 
@@ -781,7 +777,7 @@ pub fn start_server(db_path: String, app_handle: AppHandle) -> Result<ServerHand
     runtime.spawn(async move {
         let listener =
             tokio::net::TcpListener::from_std(listener).expect("Failed to convert listener");
-        axum::serve(listener, app)
+        axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>())
             .with_graceful_shutdown(async {
                 let _ = shutdown_rx.await;
             })
@@ -792,13 +788,13 @@ pub fn start_server(db_path: String, app_handle: AppHandle) -> Result<ServerHand
     Ok(ServerHandle { port, shutdown_tx: Some(shutdown_tx), _runtime: runtime })
 }
 
-fn try_bind_sequential(ports: &[u16]) -> Result<(TcpListener, u16), String> {
+fn try_bind_sequential(ports: &[u16]) -> Result<(std::net::TcpListener, u16), String> {
     for &port in ports {
-        if let Ok(listener) = TcpListener::bind(format!("127.0.0.1:{}", port)) {
+        if let Ok(listener) = std::net::TcpListener::bind(format!("127.0.0.1:{}", port)) {
             return Ok((listener, port));
         }
     }
-    TcpListener::bind("127.0.0.1:0")
+    std::net::TcpListener::bind("127.0.0.1:0")
         .map(|listener| {
             let port = listener.local_addr().unwrap().port();
             (listener, port)

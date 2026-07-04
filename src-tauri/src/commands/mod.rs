@@ -5,6 +5,7 @@ pub mod contracts;
 pub mod finance;
 pub mod follow_ups;
 pub mod imports;
+pub mod kanban;
 pub mod invoices;
 pub mod license;
 pub mod mailto;

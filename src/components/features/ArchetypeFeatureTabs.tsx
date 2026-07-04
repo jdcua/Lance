@@ -109,6 +109,7 @@ function resolveProps(feature: ArchetypeFeatureDef, context: Record<string, stri
     'StyleTagSystem', 'ReferenceBoard', 'ReferenceBoardWidget',
     'IncidentLog', 'AutomationTracker', 'InfraDashboard', 'SLATracker',
     'PhaseGateTracker',
+    'KanbanBoard', 'KanbanBoardWidget',
     // BrandVault injects into projects
     'BrandVault', 'BrandVaultWidget',
     // SpendPacingDashboard needs projectId

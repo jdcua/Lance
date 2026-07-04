@@ -54,7 +54,9 @@ const defaultArchetype: ArchetypeConfig = {
     hidePanels: [],
   },
 
-  archetypeFeatures: [],
+  archetypeFeatures: [
+    { id: 'kanban-board', name: 'Kanban Board', description: 'Drag-and-drop project board with customizable columns', component: 'KanbanBoard', injectInto: 'projects', position: 'tab' },
+  ],
   proposalTypes: ['flat', 'hourly'],
   defaultRateLabel: 'per hour',
 

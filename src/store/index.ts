@@ -37,6 +37,15 @@ import type {
 } from '../types';
 import { validateLicenseKey } from '../license';
 
+const licenseCache = new Map<string, boolean>();
+
+async function cachedValidateLicense(key: string): Promise<boolean> {
+  if (licenseCache.has(key)) return licenseCache.get(key)!;
+  const valid = await validateLicenseKey(key);
+  licenseCache.set(key, valid);
+  return valid;
+}
+
 interface ClientSlice {
   clients: Client[];
   loadClients: () => Promise<void>;
@@ -585,7 +594,7 @@ export const useStore = create<AppStore>((set, get) => ({
   loadProfile: async () => {
     try {
       const profile = await invoke<UserProfile | null>('get_user_profile');
-      const licensed = !!(profile?.license_key && await validateLicenseKey(profile.license_key));
+      const licensed = !!(profile?.license_key && await cachedValidateLicense(profile.license_key));
       set({ profile, profileLoaded: true, isLicensed: licensed });
     } catch (e) {
       console.error('[store] loadProfile failed:', e);
@@ -594,11 +603,11 @@ export const useStore = create<AppStore>((set, get) => ({
   },
   saveProfile: async (data) => {
     await invoke('upsert_user_profile', { payload: data });
-    const licensed = !!(data.license_key && await validateLicenseKey(data.license_key));
+    const licensed = !!(data.license_key && await cachedValidateLicense(data.license_key));
     set({ profile: data, isLicensed: licensed });
   },
   activateLicense: async (key) => {
-    if (!await validateLicenseKey(key)) return false;
+    if (!await cachedValidateLicense(key)) return false;
     const profile = get().profile;
     if (!profile) return false;
     const now = new Date().toISOString();

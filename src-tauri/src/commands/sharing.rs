@@ -1,7 +1,7 @@
+use crate::db::DbState;
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
-
-use crate::db;
 
 type ResponseRow = (String, String, String, String, String, Option<String>, Option<String>);
 
@@ -23,6 +23,7 @@ pub struct ShareToken {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct CreateShareTokenPayload {
     pub entity_type: String,
     pub entity_id: String,
@@ -45,14 +46,18 @@ fn generate_token() -> String {
     bytes.iter().map(|b| format!("{:02x}", b)).collect()
 }
 
+fn chrono_now() -> String {
+    Utc::now().to_rfc3339()
+}
+
 #[tauri::command]
 pub fn create_share_token(
     app: AppHandle,
     payload: CreateShareTokenPayload,
 ) -> Result<ShareToken, String> {
-    let conn = db::get_connection(&app)?;
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
 
-    // Check if token already exists for this entity
     let mut stmt = conn
         .prepare(
             "SELECT id, token, entity_type, entity_id, created_at, expires_at, viewed_at,
@@ -85,7 +90,7 @@ pub fn create_share_token(
     }
 
     let token = generate_token();
-    let created_at = super::clients::chrono_now();
+    let created_at = chrono_now();
 
     conn.execute(
         "INSERT INTO share_tokens (token, entity_type, entity_id, created_at, expires_at)
@@ -119,7 +124,8 @@ pub fn create_share_token(
 
 #[tauri::command]
 pub fn get_share_token(app: AppHandle, token: String) -> Result<Option<ShareToken>, String> {
-    let conn = db::get_connection(&app)?;
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let mut stmt = conn
         .prepare(
             "SELECT id, token, entity_type, entity_id, created_at, expires_at, viewed_at,
@@ -156,7 +162,8 @@ pub fn get_share_token_for_entity(
     entity_type: String,
     entity_id: String,
 ) -> Result<Option<ShareToken>, String> {
-    let conn = db::get_connection(&app)?;
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let mut stmt = conn
         .prepare(
             "SELECT id, token, entity_type, entity_id, created_at, expires_at, viewed_at,
@@ -189,7 +196,8 @@ pub fn get_share_token_for_entity(
 
 #[tauri::command]
 pub fn revoke_share_token(app: AppHandle, token: String) -> Result<(), String> {
-    let conn = db::get_connection(&app)?;
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     conn.execute("DELETE FROM share_tokens WHERE token = ?1", rusqlite::params![token])
         .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
@@ -197,10 +205,10 @@ pub fn revoke_share_token(app: AppHandle, token: String) -> Result<(), String> {
 
 #[tauri::command]
 pub fn get_portal_activity(app: AppHandle) -> Result<Vec<PortalActivity>, String> {
-    let conn = db::get_connection(&app)?;
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let mut activities: Vec<PortalActivity> = Vec::new();
 
-    // Views
     let mut stmt = conn
         .prepare(
             "SELECT entity_type, entity_id, token, viewed_at, view_count
@@ -226,7 +234,6 @@ pub fn get_portal_activity(app: AppHandle) -> Result<Vec<PortalActivity>, String
         });
     }
 
-    // Responses
     let mut stmt2 = conn
         .prepare(
             "SELECT entity_type, entity_id, token, client_response, client_response_at, client_name, client_signature
@@ -305,7 +312,8 @@ pub fn get_share_server_port(app: AppHandle) -> Result<u16, String> {
 
 #[tauri::command]
 pub fn get_all_share_tokens(app: AppHandle) -> Result<Vec<ShareToken>, String> {
-    let conn = db::get_connection(&app)?;
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let mut stmt = conn
         .prepare(
             "SELECT id, token, entity_type, entity_id, created_at, expires_at, viewed_at,

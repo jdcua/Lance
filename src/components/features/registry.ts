@@ -6,6 +6,10 @@
 import { lazy, type ComponentType } from 'react';
 
 const FeatureComponents: Record<string, ComponentType<any>> = {
+  // ── Kanban Board (All archetypes) ──
+  KanbanBoard: lazy(() => import('./KanbanBoard')),
+  KanbanBoardWidget: lazy(() => import('./KanbanBoard')),
+
   // ── Render Passes (Animator, 3D Artist) ──
   RenderLog: lazy(() => import('./RenderLog')),
   RenderLogWidget: lazy(() => import('./RenderLog')),

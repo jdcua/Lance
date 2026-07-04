@@ -1,9 +1,7 @@
-use crate::db;
-use rusqlite::Connection;
+use crate::db::DbState;
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
-
-pub struct DbState(pub Mutex<Connection>);
+use tauri::Manager;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Client {
@@ -18,6 +16,7 @@ pub struct Client {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct CreateClientPayload {
     pub name: String,
     pub email: Option<String>,
@@ -28,6 +27,7 @@ pub struct CreateClientPayload {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct UpdateClientPayload {
     pub id: String,
     pub name: String,
@@ -40,7 +40,8 @@ pub struct UpdateClientPayload {
 
 #[tauri::command]
 pub fn get_clients(app: tauri::AppHandle) -> Result<Vec<Client>, String> {
-    let conn = db::get_connection(&app)?;
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let mut stmt = conn
         .prepare(
             "SELECT id, name, email, phone, company, notes, preferred_currency, created_at FROM clients ORDER BY name",
@@ -67,7 +68,8 @@ pub fn get_clients(app: tauri::AppHandle) -> Result<Vec<Client>, String> {
 
 #[tauri::command]
 pub fn get_client(app: tauri::AppHandle, id: String) -> Result<Option<Client>, String> {
-    let conn = db::get_connection(&app)?;
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let mut stmt = conn
         .prepare(
             "SELECT id, name, email, phone, company, notes, preferred_currency, created_at FROM clients WHERE id = ?",
@@ -95,9 +97,10 @@ pub fn create_client(
     app: tauri::AppHandle,
     payload: CreateClientPayload,
 ) -> Result<Client, String> {
-    let conn = db::get_connection(&app)?;
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let id = uuid::Uuid::new_v4().to_string();
-    let created_at = chrono_now();
+    let created_at = Utc::now().to_rfc3339();
     conn.execute(
         "INSERT INTO clients (id, name, email, phone, company, notes, preferred_currency, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
         rusqlite::params![id, payload.name, payload.email, payload.phone, payload.company, payload.notes, payload.preferred_currency, created_at],
@@ -116,7 +119,8 @@ pub fn create_client(
 
 #[tauri::command]
 pub fn update_client(app: tauri::AppHandle, payload: UpdateClientPayload) -> Result<(), String> {
-    let conn = db::get_connection(&app)?;
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     conn.execute(
         "UPDATE clients SET name = ?1, email = ?2, phone = ?3, company = ?4, notes = ?5, preferred_currency = ?6 WHERE id = ?7",
         rusqlite::params![payload.name, payload.email, payload.phone, payload.company, payload.notes, payload.preferred_currency, payload.id],
@@ -126,34 +130,9 @@ pub fn update_client(app: tauri::AppHandle, payload: UpdateClientPayload) -> Res
 
 #[tauri::command]
 pub fn delete_client(app: tauri::AppHandle, id: String) -> Result<(), String> {
-    let conn = db::get_connection(&app)?;
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     conn.execute("DELETE FROM clients WHERE id = ?", [&id])
         .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
-}
-
-pub fn chrono_now() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs() as i64;
-    let days = now / 86400;
-    let secs = now % 86400;
-    let hours = secs / 3600;
-    let mins = (secs % 3600) / 60;
-    let secs = secs % 60;
-    let (year, month, day) = days_since_epoch_to_date(days);
-    format!("{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z", year, month, day, hours, mins, secs)
-}
-
-fn days_since_epoch_to_date(days: i64) -> (i64, i64, i64) {
-    let d = days + 719468;
-    let era = if d >= 0 { d } else { d - 146096 } / 146097;
-    let doe = d - era * 146097;
-    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
-    let y = yoe + era * 400;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let day = doy - (153 * mp + 2) / 5 + 1;
-    let month = if mp < 10 { mp + 3 } else { mp - 9 };
-    let year = if month <= 2 { y + 1 } else { y };
-    (year, month, day)
 }

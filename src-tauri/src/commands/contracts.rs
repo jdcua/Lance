@@ -1,7 +1,7 @@
+use crate::db::DbState;
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use tauri::AppHandle;
-
-use crate::db;
+use tauri::Manager;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Contract {
@@ -17,16 +17,18 @@ pub struct Contract {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct CreateContractPayload {
     pub client_id: String,
     pub project_id: Option<String>,
     pub proposal_id: Option<String>,
     pub title: String,
-    pub status: String,
+    pub status: Option<String>,
     pub body: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct UpdateContractPayload {
     pub id: String,
     pub client_id: String,
@@ -38,9 +40,11 @@ pub struct UpdateContractPayload {
 }
 
 #[tauri::command]
-pub fn get_contracts(app: AppHandle) -> Result<Vec<Contract>, String> {
-    let conn = db::get_connection(&app)?;
-    let mut stmt = conn.prepare("SELECT id, client_id, project_id, proposal_id, title, status, body, signed_at, created_at FROM contracts ORDER BY created_at DESC")
+pub fn get_contracts(app: tauri::AppHandle) -> Result<Vec<Contract>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let mut stmt = conn
+        .prepare("SELECT id, client_id, project_id, proposal_id, title, status, body, signed_at, created_at FROM contracts ORDER BY created_at DESC")
         .map_err(|_| "Database operation failed".to_string())?;
     let contracts = stmt
         .query_map([], |row| {
@@ -63,11 +67,13 @@ pub fn get_contracts(app: AppHandle) -> Result<Vec<Contract>, String> {
 }
 
 #[tauri::command]
-pub fn get_contract(app: AppHandle, id: String) -> Result<Option<Contract>, String> {
-    let conn = db::get_connection(&app)?;
-    let mut stmt = conn.prepare("SELECT id, client_id, project_id, proposal_id, title, status, body, signed_at, created_at FROM contracts WHERE id = ?")
+pub fn get_contract(app: tauri::AppHandle, id: String) -> Result<Option<Contract>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let mut stmt = conn
+        .prepare("SELECT id, client_id, project_id, proposal_id, title, status, body, signed_at, created_at FROM contracts WHERE id = ?")
         .map_err(|_| "Database operation failed".to_string())?;
-    Ok(stmt
+    let contract = stmt
         .query_row([&id], |row| {
             Ok(Contract {
                 id: row.get(0)?,
@@ -81,17 +87,23 @@ pub fn get_contract(app: AppHandle, id: String) -> Result<Option<Contract>, Stri
                 created_at: row.get(8)?,
             })
         })
-        .ok())
+        .ok();
+    Ok(contract)
 }
 
 #[tauri::command]
-pub fn create_contract(app: AppHandle, payload: CreateContractPayload) -> Result<Contract, String> {
-    let conn = db::get_connection(&app)?;
+pub fn create_contract(
+    app: tauri::AppHandle,
+    payload: CreateContractPayload,
+) -> Result<Contract, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let id = uuid::Uuid::new_v4().to_string();
-    let created_at = super::clients::chrono_now();
+    let created_at = Utc::now().to_rfc3339();
+    let status = payload.status.unwrap_or_else(|| "draft".to_string());
     conn.execute(
         "INSERT INTO contracts (id, client_id, project_id, proposal_id, title, status, body, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-        rusqlite::params![id, payload.client_id, payload.project_id, payload.proposal_id, payload.title, payload.status, payload.body, created_at],
+        rusqlite::params![id, payload.client_id, payload.project_id, payload.proposal_id, payload.title, status, payload.body, created_at],
     ).map_err(|_| "Database operation failed".to_string())?;
     Ok(Contract {
         id,
@@ -99,7 +111,7 @@ pub fn create_contract(app: AppHandle, payload: CreateContractPayload) -> Result
         project_id: payload.project_id,
         proposal_id: payload.proposal_id,
         title: payload.title,
-        status: payload.status,
+        status,
         body: payload.body,
         signed_at: None,
         created_at,
@@ -107,19 +119,28 @@ pub fn create_contract(app: AppHandle, payload: CreateContractPayload) -> Result
 }
 
 #[tauri::command]
-pub fn update_contract(app: AppHandle, payload: UpdateContractPayload) -> Result<(), String> {
-    let conn = db::get_connection(&app)?;
-    let now = super::clients::chrono_now();
+pub fn update_contract(
+    app: tauri::AppHandle,
+    payload: UpdateContractPayload,
+) -> Result<(), String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let signed_at = if payload.status == "active" {
+        Some(Utc::now().to_rfc3339())
+    } else {
+        None
+    };
     conn.execute(
-        "UPDATE contracts SET client_id = ?1, project_id = ?2, proposal_id = ?3, title = ?4, status = ?5, body = ?6, signed_at = CASE WHEN status = 'active' AND (SELECT status FROM contracts WHERE id = ?7) = 'draft' THEN ?8 ELSE signed_at END WHERE id = ?7",
-        rusqlite::params![payload.client_id, payload.project_id, payload.proposal_id, payload.title, payload.status, payload.body, payload.id, now],
+        "UPDATE contracts SET client_id = ?1, project_id = ?2, proposal_id = ?3, title = ?4, status = ?5, body = ?6, signed_at = COALESCE(?7, signed_at) WHERE id = ?8",
+        rusqlite::params![payload.client_id, payload.project_id, payload.proposal_id, payload.title, payload.status, payload.body, signed_at, payload.id],
     ).map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
 
 #[tauri::command]
-pub fn delete_contract(app: AppHandle, id: String) -> Result<(), String> {
-    let conn = db::get_connection(&app)?;
+pub fn delete_contract(app: tauri::AppHandle, id: String) -> Result<(), String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     conn.execute("DELETE FROM contracts WHERE id = ?", [&id])
         .map_err(|_| "Database operation failed".to_string())?;
     Ok(())

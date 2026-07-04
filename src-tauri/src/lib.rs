@@ -19,22 +19,27 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
-            let conn = db::get_connection(app.handle())?;
-            db::run_migrations(&conn).expect("Failed to run migrations");
+            let db_state = db::init_db_state(app.handle())?;
 
-            let db_path = db::get_db_path(app.handle())
-                .expect("Failed to get db path")
-                .to_str()
-                .ok_or("Invalid db path")?
-                .to_string();
+            let db_path = {
+                use tauri::Manager;
+                let app_dir = app
+                    .handle()
+                    .path()
+                    .app_data_dir()
+                    .map_err(|e| format!("Failed to get app data dir: {}", e))?;
+                std::fs::create_dir_all(&app_dir)
+                    .map_err(|e| format!("Failed to create app data dir: {}", e))?;
+                app_dir.join("lance.db").to_str().unwrap_or("lance.db").to_string()
+            };
 
-            let server_handle = server::start_server(db_path, app.handle().clone())
-                .expect("Failed to start share server");
+            app.manage(db_state);
+
+            let server_handle = server::start_server(db_path, app.handle().clone())?;
             let port = server_handle.port;
 
             app.manage(SharedServerPort { port });
-            // Leak the handle to keep the server running for the app lifetime
-            std::mem::forget(server_handle);
+            app.manage(server_handle);
 
             Ok(())
         })
@@ -153,6 +158,19 @@ pub fn run() {
             commands::sharing::get_portal_activity,
             commands::sharing::get_share_server_port,
             commands::sharing::get_all_share_tokens,
+            commands::kanban::get_kanban_board,
+            commands::kanban::create_kanban_board,
+            commands::kanban::get_kanban_columns,
+            commands::kanban::create_kanban_column,
+            commands::kanban::update_kanban_column,
+            commands::kanban::delete_kanban_column,
+            commands::kanban::reorder_kanban_columns,
+            commands::kanban::get_kanban_cards,
+            commands::kanban::create_kanban_card,
+            commands::kanban::update_kanban_card,
+            commands::kanban::delete_kanban_card,
+            commands::kanban::move_kanban_card,
+            commands::kanban::reorder_kanban_cards,
             commands::license::validate_license,
         ])
         .run(tauri::generate_context!())

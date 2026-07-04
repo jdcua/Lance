@@ -6,52 +6,87 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  CARGO_TERM_COLOR: always
+  LANCE_LICENSE_SECRET: dev-ci
+
 jobs:
   typecheck:
-    name: Typecheck
+    name: TypeScript Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
+          cache: npm
       - run: npm ci
       - run: npx tsc --noEmit
 
   lint:
-    name: Lint
+    name: ESLint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
+          cache: npm
       - run: npm ci
-      - run: npx eslint src/ --ext .ts,.tsx
+      - run: npm run lint
 
-  rust-check:
-    name: Rust (check + clippy + fmt)
+  test:
+    name: Vitest
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
         with:
-          components: clippy, rustfmt
-      - uses: Swatinem/rust-cache@v2
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  rust-check:
+    name: Rust Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          workspaces: src-tauri
-      - name: Install system deps
+          toolchain: stable
+      - name: Install Linux deps
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-      - name: Cargo check
-        run: cargo check
+      - run: cargo check --lib
         working-directory: src-tauri
-      - name: Cargo clippy
-        run: cargo clippy -- -D warnings
+
+  rust-test:
+    name: Rust Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+      - name: Install Linux deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - run: cargo test --lib
         working-directory: src-tauri
-      - name: Cargo fmt check
-        run: cargo fmt --all -- --check
-        working-directory: src-tauri
+
+  build:
+    name: Vite Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build

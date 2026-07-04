@@ -1220,6 +1220,40 @@ export type ClientProgress = {
   notes?: string;
 };
 
+// ── Kanban Board ──
+export type KanbanBoard = {
+  id: string;
+  project_id: string;
+  name: string;
+  created_at: string;
+};
+
+export type KanbanColumn = {
+  id: string;
+  board_id: string;
+  name: string;
+  color?: string;
+  sort_order: number;
+  wip_limit?: number;
+  created_at: string;
+};
+
+export type KanbanCard = {
+  id: string;
+  column_id: string;
+  project_id: string;
+  title: string;
+  description?: string;
+  priority: string;
+  hours_estimated?: number;
+  hours_actual?: number;
+  due_date?: string;
+  labels: string;
+  assignee?: string;
+  sort_order: number;
+  created_at: string;
+};
+
 // ── Commission TOS (Illustrator) ──
 export type CommissionTOS = {
   id: string;
