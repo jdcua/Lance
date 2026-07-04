@@ -529,7 +529,8 @@ export async function runAutoBackup(): Promise<{ success: boolean; error?: strin
       data.user_profile = [];
     }
 
-    const APP_VERSION = '1.0.0';
+    const { getVersion } = await import('@tauri-apps/api/app');
+    const APP_VERSION = await getVersion();
     const { getCurrentSchemaVersion } = await import('../db');
     const schemaVersion = getCurrentSchemaVersion();
     const envelope = createExportEnvelope(data, APP_VERSION, schemaVersion);

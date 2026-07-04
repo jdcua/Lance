@@ -331,7 +331,8 @@ export default function Settings() {
       data.expenses = await tauriInvoke('get_expenses');
       data.user_profile = profile ? [profile] : [];
 
-      const APP_VERSION = '1.1.0';
+      const { getVersion } = await import('@tauri-apps/api/app');
+      const APP_VERSION = await getVersion();
       const schemaVersion = getCurrentSchemaVersion();
       const envelope = createExportEnvelope(data, APP_VERSION, schemaVersion);
 

@@ -21,6 +21,7 @@ import SplashScreen from './components/ui/SplashScreen';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import ImportModal from './components/ui/ImportModal';
 import DropZoneOverlay from './components/ui/DropZoneOverlay';
+import UpdaterModal from './components/ui/UpdaterModal';
 import { useStore } from './store';
 import { useToasts } from './store/toastStore';
 import { useAutoUpdater } from './hooks/useAutoUpdater';
@@ -655,6 +656,7 @@ export default function App() {
 
       <CommandPalette open={showCommandPalette} onClose={() => setShowCommandPalette(false)} />
       <QuickTimeLogModal open={showQuickLogModal} onClose={() => setShowQuickLogModal(false)} />
+      <UpdaterModal />
 
       {/* Keyboard shortcuts cheat sheet */}
       <Modal open={showShortcuts} onClose={() => setShowShortcuts(false)} title="Keyboard Shortcuts" size="sm">

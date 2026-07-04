@@ -16,12 +16,69 @@ import { formatCurrency, formatDate } from '../utils/format';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { saveFile, getProfileName } from './common';
 
+function parseHtmlToDocx(html: string): Paragraph[] {
+  const parser = new DOMParser();
+  const dom = parser.parseFromString(html, 'text/html');
+  const blocks: Paragraph[] = [];
+
+  function parseInlines(node: ChildNode, format = { bold: false, italics: false }): TextRun[] {
+    let runs: TextRun[] = [];
+    node.childNodes.forEach((child) => {
+      const isBold = format.bold || child.nodeName === 'STRONG' || child.nodeName === 'B';
+      const isItalic = format.italics || child.nodeName === 'EM' || child.nodeName === 'I';
+      
+      if (child.nodeType === Node.TEXT_NODE) {
+        if (child.textContent) {
+          runs.push(new TextRun({
+            text: child.textContent,
+            bold: isBold,
+            italics: isItalic,
+            size: 22,
+            color: '#181716'
+          }));
+        }
+      } else {
+        runs = runs.concat(parseInlines(child, { bold: isBold, italics: isItalic }));
+      }
+    });
+    return runs;
+  }
+
+  dom.body.childNodes.forEach((node) => {
+    if (node.nodeName === 'P' || node.nodeName === 'H1' || node.nodeName === 'H2' || node.nodeName === 'H3' || node.nodeName === 'DIV') {
+      blocks.push(new Paragraph({
+        children: parseInlines(node),
+        spacing: { after: 200 },
+        heading: node.nodeName === 'H1' ? HeadingLevel.HEADING_1 :
+                 node.nodeName === 'H2' ? HeadingLevel.HEADING_2 : undefined,
+      }));
+    } else if (node.nodeName === 'UL' || node.nodeName === 'OL') {
+      node.childNodes.forEach((li) => {
+        if (li.nodeName === 'LI') {
+          blocks.push(new Paragraph({
+            children: parseInlines(li),
+            bullet: { level: 0 },
+            spacing: { after: 120 }
+          }));
+        }
+      });
+    } else if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) {
+      blocks.push(new Paragraph({
+        children: [new TextRun({ text: node.textContent, size: 22, color: '#181716' })],
+        spacing: { after: 200 }
+      }));
+    }
+  });
+
+  return blocks;
+}
+
 export async function exportProposalDOCX(
   proposal: Proposal,
   client: Client,
   profile: UserProfile
 ): Promise<void> {
-  const bodyText = htmlToPlainText(proposal.body || proposal.scope || '');
+  const bodyBlocks = parseHtmlToDocx(proposal.body || proposal.scope || '');
   const profileName = getProfileName(profile);
   const statusDate = proposal.sent_at || new Date().toISOString();
 
@@ -81,9 +138,7 @@ export async function exportProposalDOCX(
             spacing: { before: 200, after: 200 },
           }),
 
-          ...bodyText.split('\n').map(
-            (line) => new Paragraph({ children: [new TextRun({ text: line, size: 22, color: '#181716' })], spacing: { line: 360 } })
-          ),
+          ...bodyBlocks,
 
           new Paragraph({
             border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '#E3E2DB' } },
@@ -341,7 +396,7 @@ export async function exportInvoiceDOCX(
                   spacing: { before: 200, after: 200 },
                 }),
                 new Paragraph({
-                  children: [new TextRun({ text: invoice.notes, size: 20, color: '#68675F', italics: true })],
+                  children: [new TextRun({ text: htmlToPlainText(invoice.notes), size: 20, color: '#68675F', italics: true })],
                   spacing: { after: 100 },
                 }),
               ]
