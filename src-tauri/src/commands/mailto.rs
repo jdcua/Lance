@@ -1,11 +1,11 @@
-use tauri_plugin_shell::ShellExt;
+use tauri_plugin_opener::OpenerExt;
 
 #[tauri::command]
 pub async fn open_mailto(app: tauri::AppHandle, address: String, subject: String, body: String) -> Result<(), String> {
     let encoded_subject = urlencoding(&subject);
     let encoded_body = urlencoding(&body);
     let uri = format!("mailto:{}?subject={}&body={}", address, encoded_subject, encoded_body);
-    app.shell().open(&uri, None).map_err(|e| e.to_string())
+    app.opener().open_url(&uri, None::<&str>).map_err(|e| e.to_string())
 }
 
 fn urlencoding(s: &str) -> String {
