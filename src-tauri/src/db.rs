@@ -114,6 +114,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            billable INTEGER NOT NULL DEFAULT 1,
            invoiced INTEGER NOT NULL DEFAULT 0,
            seeded INTEGER NOT NULL DEFAULT 0,
+           created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
            FOREIGN KEY (project_id) REFERENCES projects(id)
          );
 
@@ -509,6 +510,10 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
         conn.execute("ALTER TABLE clients ADD COLUMN preferred_currency TEXT DEFAULT NULL", []);
     let _ = conn.execute(
         "ALTER TABLE user_profile ADD COLUMN proposal_expiry_days INTEGER",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE time_entries ADD COLUMN created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP",
         [],
     );
 
