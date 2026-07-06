@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useCallback, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 
 interface ModalProps {
@@ -6,30 +6,40 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: ReactNode;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'full';
 }
 
 const sizeClasses = {
   sm: 'max-w-md',
   md: 'max-w-lg',
   lg: 'max-w-2xl',
+  full: 'w-screen h-screen max-w-none max-h-none rounded-none mx-0',
 };
 
 export default function Modal({ open, onClose, title, children, size = 'md' }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; });
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    e.stopPropagation();
+  }, []);
 
   useEffect(() => {
     if (open) {
       const el = modalRef.current;
       if (!el) return;
 
-      const handleEsc = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') onClose();
-      };
-
       const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
       const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key !== 'Escape' && e.key !== 'Tab') return;
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          onCloseRef.current();
+          return;
+        }
         if (e.key === 'Tab') {
           const focusable = el.querySelectorAll<HTMLElement>(focusableSelector);
           if (focusable.length === 0) return;
@@ -49,35 +59,37 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
         }
       };
 
-      document.addEventListener('keydown', handleEsc);
       document.addEventListener('keydown', handleKeyDown);
+
+      requestAnimationFrame(() => {
+        const focusable = el.querySelectorAll<HTMLElement>(focusableSelector);
+        if (focusable.length > 0) focusable[0].focus();
+      });
 
       document.body.style.overflow = 'hidden';
 
-      const firstFocusable = el.querySelector<HTMLElement>(focusableSelector);
-      firstFocusable?.focus();
-
       return () => {
-        document.removeEventListener('keydown', handleEsc);
         document.removeEventListener('keydown', handleKeyDown);
         document.body.style.overflow = '';
       };
     }
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) onCloseRef.current(); }} />
       <div
         ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`relative bg-[var(--bg-card)] rounded-[12px] shadow-xl w-full ${sizeClasses[size]} mx-4 max-h-[85vh] flex flex-col animate-fade-scale-in`}
+        className={`relative bg-[var(--bg-card)] shadow-xl w-full ${sizeClasses[size]} ${size === 'full' ? 'mx-0 max-h-none rounded-none' : 'mx-4 max-h-[85vh] rounded-[12px]'} flex flex-col animate-fade-scale-in`}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={handleKeyDown}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-color)]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-color)] shrink-0">
           <h2 className="text-base font-semibold text-[var(--text-primary)]">{title}</h2>
           <button
             onClick={onClose}
@@ -87,7 +99,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
             <X size={18} />
           </button>
         </div>
-        <div className="px-6 py-4 overflow-y-auto flex-1">{children}</div>
+        <div className={`${size === 'full' ? 'flex-1 overflow-hidden' : 'px-6 py-4 overflow-y-auto flex-1'}`}>{children}</div>
       </div>
     </div>
   );

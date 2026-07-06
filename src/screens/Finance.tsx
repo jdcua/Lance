@@ -673,7 +673,7 @@ export default function Finance() {
                 onClick={() => setForm({ ...form, recurring: !form.recurring, frequency: form.frequency || 'monthly' })}
                 className={`relative w-9 h-5 rounded-full transition-colors ${form.recurring ? 'bg-[var(--accent)]' : 'bg-[var(--border-color)]'}`}
               >
-                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.recurring ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-[var(--bg-card)] shadow transition-transform ${form.recurring ? 'translate-x-4' : 'translate-x-0.5'}`} />
               </button>
             </div>
             {form.recurring && (
@@ -682,7 +682,7 @@ export default function Finance() {
                 <select
                   value={form.frequency}
                   onChange={(e) => setForm({ ...form, frequency: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]"
+                  className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                 >
                   <option value="weekly">Weekly</option>
                   <option value="biweekly">Biweekly</option>
@@ -1016,7 +1016,7 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
           </div>
           <div>
             <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Payment Method</label>
-            <select value={paymentForm.payment_method} onChange={(e) => setPaymentForm({ ...paymentForm, payment_method: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]">
+            <select value={paymentForm.payment_method} onChange={(e) => setPaymentForm({ ...paymentForm, payment_method: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]">
               {['Bank Transfer', 'E-Transfer', 'Cash', 'Cheque', 'Credit Card', 'PayPal', 'Stripe', 'Wise', 'Crypto', 'Other'].map((m) => (
                 <option key={m} value={m}>{m}</option>
               ))}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import type { Client, Communication, MetricDefinition, MetricValue } from '../types';
@@ -31,6 +31,133 @@ const commLabels: Record<string, string> = {
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const COUNTRY_OPTIONS = [
+  { code: 'US', label: 'United States', dialCode: '+1' },
+  { code: 'CA', label: 'Canada', dialCode: '+1' },
+  { code: 'GB', label: 'United Kingdom', dialCode: '+44' },
+  { code: 'AU', label: 'Australia', dialCode: '+61' },
+  { code: 'IE', label: 'Ireland', dialCode: '+353' },
+  { code: 'DE', label: 'Germany', dialCode: '+49' },
+  { code: 'FR', label: 'France', dialCode: '+33' },
+  { code: 'AF', label: 'Afghanistan', dialCode: '+93' },
+  { code: 'AL', label: 'Albania', dialCode: '+355' },
+  { code: 'DZ', label: 'Algeria', dialCode: '+213' },
+  { code: 'AR', label: 'Argentina', dialCode: '+54' },
+  { code: 'AM', label: 'Armenia', dialCode: '+374' },
+  { code: 'AT', label: 'Austria', dialCode: '+43' },
+  { code: 'AZ', label: 'Azerbaijan', dialCode: '+994' },
+  { code: 'BH', label: 'Bahrain', dialCode: '+973' },
+  { code: 'BD', label: 'Bangladesh', dialCode: '+880' },
+  { code: 'BY', label: 'Belarus', dialCode: '+375' },
+  { code: 'BE', label: 'Belgium', dialCode: '+32' },
+  { code: 'BJ', label: 'Benin', dialCode: '+229' },
+  { code: 'BO', label: 'Bolivia', dialCode: '+591' },
+  { code: 'BA', label: 'Bosnia & Herzegovina', dialCode: '+387' },
+  { code: 'BR', label: 'Brazil', dialCode: '+55' },
+  { code: 'BG', label: 'Bulgaria', dialCode: '+359' },
+  { code: 'KH', label: 'Cambodia', dialCode: '+855' },
+  { code: 'CM', label: 'Cameroon', dialCode: '+237' },
+  { code: 'CL', label: 'Chile', dialCode: '+56' },
+  { code: 'CN', label: 'China', dialCode: '+86' },
+  { code: 'CO', label: 'Colombia', dialCode: '+57' },
+  { code: 'CR', label: 'Costa Rica', dialCode: '+506' },
+  { code: 'HR', label: 'Croatia', dialCode: '+385' },
+  { code: 'CU', label: 'Cuba', dialCode: '+53' },
+  { code: 'CY', label: 'Cyprus', dialCode: '+357' },
+  { code: 'CZ', label: 'Czech Republic', dialCode: '+420' },
+  { code: 'DK', label: 'Denmark', dialCode: '+45' },
+  { code: 'DO', label: 'Dominican Republic', dialCode: '+1' },
+  { code: 'EC', label: 'Ecuador', dialCode: '+593' },
+  { code: 'EG', label: 'Egypt', dialCode: '+20' },
+  { code: 'SV', label: 'El Salvador', dialCode: '+503' },
+  { code: 'EE', label: 'Estonia', dialCode: '+372' },
+  { code: 'ET', label: 'Ethiopia', dialCode: '+251' },
+  { code: 'FI', label: 'Finland', dialCode: '+358' },
+  { code: 'GE', label: 'Georgia', dialCode: '+995' },
+  { code: 'GR', label: 'Greece', dialCode: '+30' },
+  { code: 'GT', label: 'Guatemala', dialCode: '+502' },
+  { code: 'HK', label: 'Hong Kong', dialCode: '+852' },
+  { code: 'HU', label: 'Hungary', dialCode: '+36' },
+  { code: 'IS', label: 'Iceland', dialCode: '+354' },
+  { code: 'IN', label: 'India', dialCode: '+91' },
+  { code: 'ID', label: 'Indonesia', dialCode: '+62' },
+  { code: 'IR', label: 'Iran', dialCode: '+98' },
+  { code: 'IQ', label: 'Iraq', dialCode: '+964' },
+  { code: 'IL', label: 'Israel', dialCode: '+972' },
+  { code: 'IT', label: 'Italy', dialCode: '+39' },
+  { code: 'JM', label: 'Jamaica', dialCode: '+1' },
+  { code: 'JP', label: 'Japan', dialCode: '+81' },
+  { code: 'JO', label: 'Jordan', dialCode: '+962' },
+  { code: 'KZ', label: 'Kazakhstan', dialCode: '+7' },
+  { code: 'KE', label: 'Kenya', dialCode: '+254' },
+  { code: 'KW', label: 'Kuwait', dialCode: '+965' },
+  { code: 'LV', label: 'Latvia', dialCode: '+371' },
+  { code: 'LB', label: 'Lebanon', dialCode: '+961' },
+  { code: 'LI', label: 'Liechtenstein', dialCode: '+423' },
+  { code: 'LT', label: 'Lithuania', dialCode: '+370' },
+  { code: 'LU', label: 'Luxembourg', dialCode: '+352' },
+  { code: 'MO', label: 'Macau', dialCode: '+853' },
+  { code: 'MY', label: 'Malaysia', dialCode: '+60' },
+  { code: 'MT', label: 'Malta', dialCode: '+356' },
+  { code: 'MX', label: 'Mexico', dialCode: '+52' },
+  { code: 'MC', label: 'Monaco', dialCode: '+377' },
+  { code: 'MA', label: 'Morocco', dialCode: '+212' },
+  { code: 'NP', label: 'Nepal', dialCode: '+977' },
+  { code: 'NL', label: 'Netherlands', dialCode: '+31' },
+  { code: 'NZ', label: 'New Zealand', dialCode: '+64' },
+  { code: 'NG', label: 'Nigeria', dialCode: '+234' },
+  { code: 'NO', label: 'Norway', dialCode: '+47' },
+  { code: 'OM', label: 'Oman', dialCode: '+968' },
+  { code: 'PK', label: 'Pakistan', dialCode: '+92' },
+  { code: 'PA', label: 'Panama', dialCode: '+507' },
+  { code: 'PY', label: 'Paraguay', dialCode: '+595' },
+  { code: 'PE', label: 'Peru', dialCode: '+51' },
+  { code: 'PH', label: 'Philippines', dialCode: '+63' },
+  { code: 'PL', label: 'Poland', dialCode: '+48' },
+  { code: 'PT', label: 'Portugal', dialCode: '+351' },
+  { code: 'PR', label: 'Puerto Rico', dialCode: '+1' },
+  { code: 'QA', label: 'Qatar', dialCode: '+974' },
+  { code: 'RO', label: 'Romania', dialCode: '+40' },
+  { code: 'RU', label: 'Russia', dialCode: '+7' },
+  { code: 'SA', label: 'Saudi Arabia', dialCode: '+966' },
+  { code: 'RS', label: 'Serbia', dialCode: '+381' },
+  { code: 'SG', label: 'Singapore', dialCode: '+65' },
+  { code: 'SK', label: 'Slovakia', dialCode: '+421' },
+  { code: 'SI', label: 'Slovenia', dialCode: '+386' },
+  { code: 'ZA', label: 'South Africa', dialCode: '+27' },
+  { code: 'KR', label: 'South Korea', dialCode: '+82' },
+  { code: 'ES', label: 'Spain', dialCode: '+34' },
+  { code: 'LK', label: 'Sri Lanka', dialCode: '+94' },
+  { code: 'SE', label: 'Sweden', dialCode: '+46' },
+  { code: 'CH', label: 'Switzerland', dialCode: '+41' },
+  { code: 'TW', label: 'Taiwan', dialCode: '+886' },
+  { code: 'TZ', label: 'Tanzania', dialCode: '+255' },
+  { code: 'TH', label: 'Thailand', dialCode: '+66' },
+  { code: 'TN', label: 'Tunisia', dialCode: '+216' },
+  { code: 'TR', label: 'Turkey', dialCode: '+90' },
+  { code: 'UG', label: 'Uganda', dialCode: '+256' },
+  { code: 'UA', label: 'Ukraine', dialCode: '+380' },
+  { code: 'AE', label: 'United Arab Emirates', dialCode: '+971' },
+  { code: 'UY', label: 'Uruguay', dialCode: '+598' },
+  { code: 'UZ', label: 'Uzbekistan', dialCode: '+998' },
+  { code: 'VE', label: 'Venezuela', dialCode: '+58' },
+  { code: 'VN', label: 'Vietnam', dialCode: '+84' },
+  { code: 'YE', label: 'Yemen', dialCode: '+967' },
+  { code: 'ZW', label: 'Zimbabwe', dialCode: '+263' },
+];
+
+const countryCodeToFlag = (code: string) =>
+  String.fromCodePoint(...code.split('').map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+
+function detectCountry(): string {
+  try {
+    const locale = navigator.language || (navigator as any).userLanguage || '';
+    const parts = locale.split('-');
+    if (parts.length > 1 && parts[1].length === 2) return parts[1].toUpperCase();
+  } catch { /* non-critical */ }
+  return 'US';
+}
 
 export default function Clients() {
   const {
@@ -70,6 +197,10 @@ export default function Clients() {
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [templateName, setTemplateName] = useState('');
   const [showImportModal, setShowImportModal] = useState(false);
+  const [phoneCountry, setPhoneCountry] = useState(detectCountry);
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [countrySearch, setCountrySearch] = useState('');
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     Promise.all([loadClients(), loadProjects(), loadProposals(), loadInvoices(), loadProfile()])
@@ -100,6 +231,19 @@ export default function Clients() {
   }, [loadMetricTemplates]);
 
   const selectedClient = clients.find((c) => c.id === selectedId);
+  const selectedCountry = useMemo(() => COUNTRY_OPTIONS.find((country) => country.code === phoneCountry) || COUNTRY_OPTIONS[0], [phoneCountry]);
+
+  useEffect(() => {
+    if (!showCountryDropdown) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target as Node)) {
+        setShowCountryDropdown(false);
+        setCountrySearch('');
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showCountryDropdown]);
 
   const getClientStatus = (clientId: string) => {
     const hasActive = projects.some((p) => p.client_id === clientId && p.status === 'active');
@@ -128,6 +272,7 @@ export default function Clients() {
   const openNew = () => {
     setEditing(null);
     setForm({ name: '', email: '', phone: '', company: '', notes: '', preferred_currency: '' });
+    setPhoneCountry('US');
     setFormErrors({});
     setShowModal(true);
   };
@@ -142,6 +287,8 @@ export default function Clients() {
       notes: client.notes || '',
       preferred_currency: client.preferred_currency || '',
     });
+    const inferredCountry = COUNTRY_OPTIONS.find((country) => (client.phone || '').includes(country.dialCode))?.code || 'US';
+    setPhoneCountry(inferredCountry);
     setFormErrors({});
     setShowModal(true);
   };
@@ -882,13 +1029,53 @@ export default function Clients() {
             </div>
             <div>
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Phone</label>
-              <input
-                type="text"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                placeholder="(555) 000-0000"
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
-              />
+              <div className="flex gap-2 relative">
+                <div ref={countryDropdownRef} className="relative w-[160px]">
+                  <button
+                    type="button"
+                    onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                    className="w-full px-2 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 flex items-center gap-1.5 bg-[var(--bg-card)]"
+                  >
+                    <span>{countryCodeToFlag(selectedCountry.code)}</span>
+                    <span className="truncate flex-1 text-left">{selectedCountry.label}</span>
+                    <svg className="w-3 h-3 text-[var(--text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                  </button>
+                  {showCountryDropdown && (
+                    <div className="absolute top-full left-0 right-0 mt-1 border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] shadow-lg z-50 max-h-[200px] overflow-y-auto">
+                      <div className="p-1 border-b border-[var(--border-color)]">
+                        <input
+                          type="text"
+                          value={countrySearch}
+                          onChange={(e) => setCountrySearch(e.target.value)}
+                          placeholder="Search country..."
+                          className="w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]"
+                          autoFocus
+                        />
+                      </div>
+                      {COUNTRY_OPTIONS.filter(c => c.label.toLowerCase().includes(countrySearch.toLowerCase()) || c.code.toLowerCase().includes(countrySearch.toLowerCase())).map((country) => (
+                        <button
+                          key={country.code}
+                          type="button"
+                          onClick={() => { setPhoneCountry(country.code); setShowCountryDropdown(false); setCountrySearch(''); }}
+                          className={`w-full text-left px-2 py-1.5 text-xs flex items-center gap-1.5 hover:bg-[var(--bg-secondary)] transition-colors ${phoneCountry === country.code ? 'bg-[var(--accent-bg)]' : ''}`}
+                        >
+                          <span>{countryCodeToFlag(country.code)}</span>
+                          <span>{country.label}</span>
+                          <span className="text-[var(--text-tertiary)] ml-auto">{country.dialCode}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder="555-0000"
+                  className="flex-1 px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+                />
+              </div>
+              <p className="text-[10px] text-[var(--text-tertiary)] mt-1">{countryCodeToFlag(selectedCountry.code)} {selectedCountry.label} · {selectedCountry.dialCode}</p>
             </div>
           </div>
           <div>
@@ -906,7 +1093,7 @@ export default function Clients() {
             <select
               value={form.preferred_currency}
               onChange={(e) => setForm({ ...form, preferred_currency: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
             >
               <option value="">Use profile default ({profile?.currency || 'CAD'})</option>
               {[...CURRENCIES].map((c) => (

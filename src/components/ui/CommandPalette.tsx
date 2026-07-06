@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
 import { Search, FileText, FolderKanban, Receipt, PenLine, Users, Sparkles, Clock, DollarSign, Paperclip, ArrowRight } from 'lucide-react';
 import { formatCurrency } from '../../utils/format';
+import { getShortcutModifierLabel } from '../../utils/shortcuts';
 
 type ResultItem = {
   id: string;
@@ -239,8 +240,10 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
 
   if (!open) return null;
 
+  const modifier = getShortcutModifierLabel();
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[15vh]" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[15vh]" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="fixed inset-0 bg-black/30" />
       <div
         className="relative bg-[var(--bg-card)] rounded-[12px] shadow-2xl border border-[var(--border-color)] w-[560px] max-h-[420px] flex flex-col overflow-hidden animate-fade-scale-in"
@@ -257,7 +260,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
             placeholder="Search Lance..."
             className="flex-1 text-sm outline-none bg-transparent placeholder:text-[var(--text-tertiary)]"
           />
-          <kbd className="text-[10px] text-[var(--text-tertiary)] border border-[var(--border-color)] rounded-[4px] px-1.5 py-0.5">⌘K</kbd>
+          <kbd className="text-[10px] text-[var(--text-tertiary)] border border-[var(--border-color)] rounded-[4px] px-1.5 py-0.5">{modifier}K</kbd>
         </div>
         <div className="flex-1 overflow-y-auto py-2">
           {!debouncedQuery ? (
@@ -266,13 +269,13 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
                 <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider mb-2">Keyboard shortcuts</p>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
                   {[
-                    ['⌘K', 'Open command palette'],
-                    ['⌘1–8', 'Navigate sections'],
-                    ['⌘N', 'New in current section'],
-                    ['⌘,', 'Open Settings'],
-                    ['⌘⇧T', 'Start/Stop timer'],
-                    ['⌘⇧L', 'Quick log time'],
-                    ['⌘⇧P', 'Toggle AI sidebar (if on)'],
+                    [`${modifier}K`, 'Open command palette'],
+                    [`${modifier}1–8`, 'Navigate sections'],
+                    [`${modifier}N`, 'New in current section'],
+                    [`${modifier},`, 'Open Settings'],
+                    [`${modifier}⇧T`, 'Start/Stop timer'],
+                    [`${modifier}⇧L`, 'Quick log time'],
+                    [`${modifier}⇧P`, 'Toggle AI sidebar (if on)'],
                     ['Esc', 'Close this panel'],
                   ].map(([key, desc]) => (
                     <div key={key as string} className="flex items-center gap-2">

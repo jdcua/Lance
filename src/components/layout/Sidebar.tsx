@@ -48,6 +48,7 @@ import {
 import { useStore } from '../../store';
 import { getArchetype } from '../../archetypes';
 import type { SidebarItemDef } from '../../archetypes';
+import { getShortcutModifierLabel } from '../../utils/shortcuts';
 
 const ICON_MAP: Record<string, any> = {
   FileText, PenLine, FolderKanban, Clock, Receipt, Users, BarChart3, Lightbulb,
@@ -59,7 +60,7 @@ const ICON_MAP: Record<string, any> = {
 };
 
 export default function Sidebar() {
-  const { isLicensed, proposals, projects, invoices, allAttachments, pendingFollowUps, profile } = useStore((s) => ({
+  const { isLicensed, proposals, projects, invoices, allAttachments, pendingFollowUps, profile, archetypeAppliedAt } = useStore((s) => ({
     isLicensed: s.isLicensed,
     proposals: s.proposals,
     projects: s.projects,
@@ -67,9 +68,10 @@ export default function Sidebar() {
     allAttachments: s.allAttachments,
     pendingFollowUps: s.pendingFollowUps,
     profile: s.profile,
+    archetypeAppliedAt: s.archetypeAppliedAt,
   }));
 
-  const archetype = useMemo(() => getArchetype(profile?.profession || 'default'), [profile?.profession]);
+  const archetype = useMemo(() => getArchetype(profile?.profession || 'default'), [profile?.profession, archetypeAppliedAt]);
 
   const badgeMap: Record<string, number> = useMemo(() => ({
     draftProposals: proposals.filter((p) => p.status === 'draft').length,
@@ -247,7 +249,7 @@ export default function Sidebar() {
         </NavLink>
         <div className="px-4 py-2">
           <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
-            <span className="font-medium">⌘1</span>-8 navigate &middot; <span className="font-medium">⌘N</span> new
+            <span className="font-medium">{getShortcutModifierLabel()}1</span>-8 navigate &middot; <span className="font-medium">{getShortcutModifierLabel()}N</span> new
           </p>
           {isLicensed && (
             <p className="text-[10px] text-[var(--accent)] font-medium mt-1 flex items-center gap-1">

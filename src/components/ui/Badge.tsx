@@ -13,7 +13,7 @@ const variantClasses: Record<BadgeVariant, string> = {
   danger: 'bg-[var(--danger-bg)] text-[var(--danger)]',
   info: 'bg-[var(--info-bg)] text-[var(--info)]',
   success: 'bg-[var(--accent-bg)] text-[var(--accent)]',
-  dark: 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300',
+  dark: 'bg-[var(--bg-card)] text-[var(--text-secondary)] border border-[var(--neutral-border)]',
 };
 
 export default function Badge({ children, variant = 'default' }: BadgeProps) {

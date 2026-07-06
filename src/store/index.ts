@@ -136,6 +136,8 @@ interface ProfileSlice {
   saveProfile: (data: UserProfile) => Promise<void>;
   activateLicense: (key: string) => Promise<boolean>;
   removeLicense: () => Promise<void>;
+  archetypeAppliedAt: number | null;
+  setArchetypeAppliedAt: (ts: number) => void;
 }
 
 interface CommunicationSlice {
@@ -602,10 +604,14 @@ export const useStore = create<AppStore>((set, get) => ({
     }
   },
   saveProfile: async (data) => {
+    console.trace('[store] saveProfile called with', data);
     await invoke('upsert_user_profile', { payload: data });
     const licensed = !!(data.license_key && await cachedValidateLicense(data.license_key));
     set({ profile: data, isLicensed: licensed });
+    console.trace('[store] saveProfile completed, profile set');
   },
+  archetypeAppliedAt: null,
+  setArchetypeAppliedAt: (ts) => set({ archetypeAppliedAt: ts }),
   activateLicense: async (key) => {
     if (!await cachedValidateLicense(key)) return false;
     const profile = get().profile;

@@ -355,7 +355,7 @@ export default function Proposals() {
                     </button>
                   )}
                   {p.status === 'expired' && p.expires_at && (
-                    <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
+                    <p className="text-[10px] text-[var(--text-tertiary)] mt-1 flex items-center gap-1">
                       <Clock size={11} />
                       Expired on {formatDate(p.expires_at)}
                     </p>

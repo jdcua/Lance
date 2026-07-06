@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Rocket, Palette, Command, Zap, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import Button from './Button';
+import { getShortcutModifierLabel } from '../../utils/shortcuts';
 
 interface WalkthroughProps {
   open: boolean;
@@ -13,7 +14,7 @@ interface Slide {
   icon: typeof Rocket;
 }
 
-const SLIDES: Slide[] = [
+const getSlideCopy = (modifier: string): Slide[] => [
   {
     title: 'Welcome to Lance',
     description:
@@ -29,13 +30,13 @@ const SLIDES: Slide[] = [
   {
     title: 'Command Palette',
     description:
-      'Press Cmd+K (Ctrl+K on Windows) to open the command palette. Search for anything and jump anywhere — no mouse required.',
+      `Press ${modifier}+K to open the command palette. Search for anything and jump anywhere — no mouse required.`,
     icon: Command,
   },
   {
     title: 'Keyboard Shortcuts',
     description:
-      'Use Cmd+1–8 to switch between sections instantly. Press Cmd+N to create new items from anywhere — add your first client, draft a proposal, log time, or send an invoice.',
+      `Use ${modifier}+1–8 to switch between sections instantly. Press ${modifier}+N to create new items from anywhere — add your first client, draft a proposal, log time, or send an invoice.`,
     icon: Zap,
   },
   {
@@ -48,6 +49,8 @@ const SLIDES: Slide[] = [
 
 export default function Walkthrough({ open, onClose }: WalkthroughProps) {
   const [slide, setSlide] = useState(0);
+  const modifier = getShortcutModifierLabel();
+  const slides = getSlideCopy(modifier);
 
   useEffect(() => {
     if (open) setSlide(0);
@@ -66,8 +69,8 @@ export default function Walkthrough({ open, onClose }: WalkthroughProps) {
 
   if (!open) return null;
 
-  const isLast = slide === SLIDES.length - 1;
-  const Icon = SLIDES[slide].icon;
+  const isLast = slide === slides.length - 1;
+  const Icon = slides[slide].icon;
 
   const handleNext = () => {
     if (isLast) {
@@ -88,7 +91,7 @@ export default function Walkthrough({ open, onClose }: WalkthroughProps) {
         <div className="absolute top-0 left-0 right-0 h-1 bg-[var(--border-color)]">
           <div
             className="h-full bg-[var(--accent)] transition-all duration-500 ease-out rounded-r-full"
-            style={{ width: `${((slide + 1) / SLIDES.length) * 100}%` }}
+            style={{ width: `${((slide + 1) / slides.length) * 100}%` }}
           />
         </div>
 
@@ -102,7 +105,7 @@ export default function Walkthrough({ open, onClose }: WalkthroughProps) {
 
             {/* Slide dots */}
             <div className="flex gap-1.5 mb-5">
-              {SLIDES.map((_, i) => (
+              {slides.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setSlide(i)}
@@ -118,10 +121,10 @@ export default function Walkthrough({ open, onClose }: WalkthroughProps) {
 
             {/* Title + description */}
             <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
-              {SLIDES[slide].title}
+              {slides[slide].title}
             </h3>
             <p className="text-sm text-[var(--text-secondary)] leading-relaxed max-w-sm mb-4">
-              {SLIDES[slide].description}
+              {slides[slide].description}
             </p>
             {isLast && (
               <p className="text-xs text-[var(--accent)] mt-2 font-medium">
@@ -146,7 +149,7 @@ export default function Walkthrough({ open, onClose }: WalkthroughProps) {
 
           <div className="flex items-center gap-3">
             <span className="text-xs text-[var(--text-tertiary)] tabular-nums">
-              {slide + 1} / {SLIDES.length}
+              {slide + 1} / {slides.length}
             </span>
             <Button size="sm" onClick={handleNext}>
               {isLast ? 'Get Started' : 'Next'}

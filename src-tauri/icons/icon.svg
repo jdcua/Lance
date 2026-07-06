@@ -1,4 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#1EC98A"/>
-  <text x="256" y="356" font-family="'Inter','SF Pro Display','Segoe UI',sans-serif" font-size="360" font-weight="700" fill="#FFFFFF" text-anchor="middle">L</text>
+  <g stroke="#1EC98A" stroke-width="20" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="256" cy="256" r="180" fill="none" stroke-width="22"/>
+    <polygon points="256,60 220,200 292,200" fill="#1EC98A" stroke="none"/>
+    <polygon points="256,452 220,312 292,312" fill="none"/>
+    <polygon points="452,256 312,220 312,292" fill="#1EC98A" stroke="none"/>
+    <polygon points="60,256 200,220 200,292" fill="none"/>
+    <polygon points="312,200 256,60 200,200" fill="#1EC98A" opacity="0.25" stroke="none"/>
+    <polygon points="200,312 256,452 312,312" fill="#1EC98A" opacity="0.25" stroke="none"/>
+    <polygon points="200,200 60,256 200,312" fill="#1EC98A" opacity="0.25" stroke="none"/>
+    <polygon points="312,312 452,256 312,200" fill="#1EC98A" opacity="0.25" stroke="none"/>
+    <line x1="180" y1="180" x2="332" y2="332" stroke-width="16" fill="none"/>
+    <line x1="332" y1="180" x2="180" y2="332" stroke-width="16" fill="none"/>
+  </g>
 </svg>

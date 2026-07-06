@@ -65,6 +65,7 @@ export default function ClientSelect({ clients, value, onChange, placeholder = '
         break;
       case 'Escape':
         e.preventDefault();
+        e.stopPropagation();
         setOpen(false);
         setSearch('');
         setActiveIndex(-1);

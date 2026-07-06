@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import type { UserProfile, ExportTemplate } from '../types';
 import Card from '../components/ui/Card';
@@ -46,6 +47,7 @@ function labelForStyle(s: string): string {
 }
 
 export default function Settings() {
+  const navigate = useNavigate();
   const { profile, loadProfile, saveProfile, isLicensed, activateLicense, removeLicense, followUpSettings, loadFollowUpSettings, saveFollowUpSettings } = useStore();
   const addToast = useToasts((s) => s.add);
   const [saved, setSaved] = useState<Set<string>>(new Set());
@@ -102,6 +104,22 @@ export default function Settings() {
   });
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const formInitialized = useRef(false);
+  const [section, setSection] = useState<'general' | 'appearance' | 'notifications' | 'data' | 'danger-zone'>('general');
+  const innerModalOpenRef = useRef(false);
+  const NAV_ITEMS = [
+    { id: 'general' as const, label: 'General' },
+    { id: 'appearance' as const, label: 'Appearance' },
+    { id: 'notifications' as const, label: 'Notifications' },
+    { id: 'data' as const, label: 'Data & Backup' },
+    { id: 'danger-zone' as const, label: 'Danger Zone', danger: true },
+  ];
+  const handleCloseModal = useCallback(() => {
+    if (innerModalOpenRef.current) return;
+    navigate(-1);
+  }, [navigate]);
+  useEffect(() => {
+    innerModalOpenRef.current = showResetModal || showLicenseModal || showAssetWarning || showSchemaWarnModal || showImportSummary || showRemoveLicenseConfirm;
+  }, [showResetModal, showLicenseModal, showAssetWarning, showSchemaWarnModal, showImportSummary, showRemoveLicenseConfirm]);
 
   useEffect(() => {
     loadProfile()
@@ -556,16 +574,7 @@ export default function Settings() {
     }
   };
 
-  const SectionHead = ({ title }: { title: string }) => (
-    <div className="flex items-center gap-2 mb-4">
-      <h3 className="text-sm font-semibold text-[var(--text-primary)] ">{title}</h3>
-      {saved.has(title) && (
-        <span className="flex items-center gap-1 text-[10px] text-[var(--accent)] animate-pulse">
-          <Check size={12} /> Saved
-        </span>
-      )}
-    </div>
-  );
+
 
   const inputClass = "w-full px-3 py-2 text-sm border border-[var(--border-color)]  rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)]  ";
   const labelClass = "block text-xs font-medium text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-1";
@@ -573,722 +582,807 @@ export default function Settings() {
   if (loading) return <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>
 
   return (
-    <div className="p-6 max-w-2xl">
-      <h2 className="text-lg font-semibold text-[var(--text-primary)]  mb-6">Settings</h2>
-
-      {/* Section 0: License */}
-      <Card className="mb-6  ">
-        <SectionHead title="License" />
-        {isLicensed ? (
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles size={14} className="text-[var(--accent)]" />
-              <span className="text-sm font-medium text-[var(--accent)]">Licensed</span>
-              <span className="text-[10px] text-[var(--accent)] bg-[var(--accent-bg)] px-1.5 py-0.5 rounded-full">Licensed</span>
-            </div>
-            <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-2">
-              All themes unlocked \u2014 thank you for supporting Lance.
-            </p>
-            {form.licensed_at && (
-              <p className="text-xs text-[var(--text-tertiary)] mb-1">
-                Licensed since {new Date(form.licensed_at).toLocaleDateString()}.
-              </p>
-            )}
-            <p className="text-xs text-[var(--text-tertiary)] mb-4">
-              Studio, Terminal, Craft, Motion, Lens, and Scale themes are unlocked.
-            </p>
-            <button
-              onClick={() => setShowRemoveLicenseConfirm(true)}
-              className="text-xs text-[var(--text-tertiary)] hover:text-[var(--danger)] underline transition-colors"
-            >
-              Remove license
-            </button>
-          </div>
-        ) : (
-          <div>
-            <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-4">
-              Lance is free to use. A license removes the launch screen and unlocks all themes immediately.
-            </p>
-            <div className="flex items-center gap-3">
-              <Button variant="primary" onClick={() => { setLicenseKey(''); setLicenseError(''); setShowLicenseModal(true); }} size="sm">
-                Enter license key
-              </Button>
-              <a
-                href="https://lance.placeholderlabsincorporatedlimited.yabbadabbadoo/license"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-sm text-[var(--accent)] hover:underline"
-              >
-                Get a license &mdash; $59
-                <ExternalLink size={12} />
-              </a>
-            </div>
-          </div>
-        )}
-      </Card>
-
-      {/* Section 1: Profile */}
-      <Card className="mb-6  ">
-        <SectionHead title="Your profile" />
-        <div className="space-y-4">
-          <div>
-            <label className={labelClass}>Full name</label>
-              <input
-                type="text"
-                maxLength={100}
-                value={form.name || ''}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                onBlur={() => autoSave({ name: form.name }, 'Your profile')}
-                placeholder="Your full name"
-                className={inputClass}
-              />
-          </div>
-          <div>
-            <label className={labelClass}>Email</label>
-              <input
-                type="email"
-                maxLength={254}
-                value={form.email || ''}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                onBlur={() => autoSave({ email: form.email }, 'Your profile')}
-                placeholder="you@example.com"
-                className={inputClass}
-              />
-          </div>
-          <div>
-            <label className={labelClass}>Default currency</label>
-            <select
-              value={form.currency}
-              onChange={(e) => autoSave({ currency: e.target.value }, 'Your profile')}
-              className={inputClass}
-            >
-              {currencies.map((c) => (
-                <option key={c} value={c}>{c}</option>
+    <>
+      <Modal open={true} onClose={handleCloseModal} title="Settings" size="full">
+        <div className="flex h-full">
+          {/* Sidebar */}
+          <aside className="w-[200px] shrink-0 border-r border-[var(--border-color)] p-4">
+            <nav className="space-y-0.5">
+              {NAV_ITEMS.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setSection(item.id)}
+                  className={`w-full text-left px-3 py-2 text-sm rounded-[8px] transition-colors ${
+                    section === item.id
+                      ? item.danger
+                        ? 'bg-[var(--danger-bg)] text-[var(--danger)] font-medium'
+                        : 'bg-[var(--accent-bg)] text-[var(--accent)] font-medium'
+                      : item.danger
+                      ? 'text-[var(--danger)] hover:bg-[var(--danger-bg)] hover:text-[var(--danger)]'
+                      : 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  {item.label}
+                </button>
               ))}
-            </select>
-            <p className="text-[10px] text-[var(--text-tertiary)] mt-1">You can override this per-client or per-invoice.</p>
-          </div>
-        </div>
-      </Card>
+            </nav>
+          </aside>
 
-      {/* Section 2: Rates */}
-      <Card className="mb-6  ">
-        <SectionHead title="Rates" />
-        <div className="space-y-4">
-          <div>
-            <label className={labelClass}>Default hourly rate</label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-tertiary)]">$</span>
-              <input
-                type="number"
-                value={form.hourly_rate ?? ''}
-                onChange={(e) => setForm({ ...form, hourly_rate: e.target.value ? parseFloat(e.target.value) : undefined })}
-                onBlur={() => autoSave({ hourly_rate: form.hourly_rate }, 'Rates')}
-                placeholder="0.00"
-                className={`${inputClass} pl-7`}
-              />
-            </div>
-          </div>
-          <div>
-            <label className={labelClass}>Default tax rate (%)</label>
-            <input
-              type="number"
-              value={form.tax_rate ?? ''}
-              onChange={(e) => setForm({ ...form, tax_rate: e.target.value ? parseFloat(e.target.value) : undefined })}
-              onBlur={() => autoSave({ tax_rate: form.tax_rate }, 'Rates')}
-              placeholder="0"
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className={labelClass}>Payment terms (days)</label>
-            <input
-              type="number"
-              value={form.payment_terms ?? 14}
-              onChange={(e) => { const v = parseInt(e.target.value); setForm({ ...form, payment_terms: isNaN(v) ? 14 : v }); }}
-              onBlur={() => autoSave({ payment_terms: form.payment_terms }, 'Rates')}
-              className={inputClass}
-            />
-          </div>
-        </div>
-      </Card>
-
-      {/* Section 3: Proposal voice */}
-      <Card className="mb-6  ">
-        <SectionHead title="Proposal voice" />
-        <div className="space-y-4">
-          <div>
-            <label className={labelClass}>Writing style</label>
-            <select
-              value={form.writing_style || 'professional'}
-              onChange={(e) => autoSave({ writing_style: e.target.value }, 'Proposal voice')}
-              className={inputClass}
-            >
-              {writingStyles.map((s) => (
-                <option key={s} value={s}>{labelForStyle(s)}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className={labelClass}>Writing voice description</label>
-              <textarea
-                maxLength={1000}
-                value={form.writing_voice || ''}
-                onChange={(e) => setForm({ ...form, writing_voice: e.target.value })}
-                onBlur={() => autoSave({ writing_voice: form.writing_voice }, 'Proposal voice')}
-                placeholder="e.g. I'm a senior full-stack developer who explains things clearly and avoids jargon"
-                rows={2}
-                className={`${inputClass} resize-none`}
-              />
-            <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Describe your voice and expertise. This helps the AI write proposals that sound like you.</p>
-          </div>
-          <div>
-            <label className={labelClass}>Tagline / positioning</label>
-              <input
-                type="text"
-                maxLength={200}
-                value={form.tagline || ''}
-                onChange={(e) => setForm({ ...form, tagline: e.target.value })}
-                onBlur={() => autoSave({ tagline: form.tagline }, 'Proposal voice')}
-                placeholder="e.g. I help startups ship beautiful products fast."
-                className={inputClass}
-              />
-          </div>
-          <div>
-            <label className={labelClass}>What I always include</label>
-              <textarea
-                maxLength={2000}
-                value={form.always_include || ''}
-                onChange={(e) => setForm({ ...form, always_include: e.target.value })}
-                onBlur={() => autoSave({ always_include: form.always_include }, 'Proposal voice')}
-                placeholder="Anything you always want in proposals..."
-                rows={3}
-                className={`${inputClass} resize-none`}
-              />
-          </div>
-        </div>
-      </Card>
-
-      {/* Section 3.1: Proposal defaults */}
-      <Card className="mb-6">
-        <SectionHead title="Proposal defaults" />
-        <div className="space-y-3">
-          <div>
-            <label className={labelClass}>Proposals expire after</label>
-            <select
-              value={form.proposal_expiry_days ?? ''}
-              onChange={(e) => {
-                const v = e.target.value ? parseInt(e.target.value) : undefined;
-                setForm({ ...form, proposal_expiry_days: v });
-                autoSave({ proposal_expiry_days: v }, 'Proposal defaults');
-              }}
-              className={inputClass}
-            >
-              <option value="7">7 days</option>
-              <option value="14">14 days</option>
-              <option value="30">30 days</option>
-              <option value="60">60 days</option>
-              <option value="">Never</option>
-            </select>
-            <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Sent proposals will automatically expire after this period.</p>
-          </div>
-        </div>
-      </Card>
-
-      {/* Section 3.5: AI Features (COMMENTED OUT FOR v1.1.0)
-      <Card className="mb-6  ">
-        <SectionHead title="AI features" />
-        <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-4">
-          AI-assisted writing, scope warnings, and pricing analysis run locally on your machine. No data is sent anywhere.
-        </p>
-        <label className="flex items-center gap-3 cursor-pointer">
-          <button
-            onClick={() => autoSave({ ai_enabled: !form.ai_enabled }, 'AI features')}
-            className={`relative w-10 h-6 rounded-full transition-colors ${
-              form.ai_enabled ? 'bg-[var(--accent)]' : 'bg-[var(--neutral-border)]'
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-[var(--bg-card)] shadow transition-transform ${
-                form.ai_enabled ? 'translate-x-4' : 'translate-x-0'
-              }`}
-            />
-          </button>
-          <span className="text-sm text-[var(--text-primary)]  font-medium">
-            {form.ai_enabled ? 'AI features on' : 'AI features off'}
-          </span>
-        </label>
-      </Card>
-      */}
-
-      {/* Section 4: Appearance */}
-      <Card className="mb-6  ">
-        <SectionHead title="Appearance" />
-        <div className="flex items-center gap-3 mb-4">
-          <button
-            onClick={() => autoSave({ theme: 'light' }, 'Appearance')}
-            className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
-              form.theme === 'light'
-                ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
-                : 'bg-[var(--bg-card)]  text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] border-[var(--border-color)] '
-            }`}
-          >
-            Light
-          </button>
-          <button
-            onClick={() => autoSave({ theme: 'dark' }, 'Appearance')}
-            className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
-              form.theme === 'dark'
-                ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
-                : 'bg-[var(--bg-card)]  text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] border-[var(--border-color)] '
-            }`}
-          >
-            Dark
-          </button>
-        </div>
-        {unlockedAchievements.has('three_proposals') && (
-          <div className="pt-3 border-t border-[var(--border-color)]">
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-2">Layout density</label>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => handleDensityChange('comfortable')}
-                className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
-                  density === 'comfortable'
-                    ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
-                    : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-color)]'
-                }`}
-              >
-                Comfortable
-              </button>
-              <button
-                onClick={() => handleDensityChange('compact')}
-                className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
-                  density === 'compact'
-                    ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
-                    : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-color)]'
-                }`}
-              >
-                Compact
-              </button>
-            </div>
-            <p className="text-[10px] text-[var(--text-tertiary)] mt-2">Compact mode reduces row heights, padding, and spacing across the interface.</p>
-          </div>
-        )}
-      </Card>
-
-      {/* Section 4.5: Themes */}
-      <Card className="mb-6  ">
-        <SectionHead title="Themes" />
-        <div className="space-y-2">
-          {THEMES.map((theme) => {
-            const isUnlocked = unlockedThemes.has(theme.id);
-            const isActive = activeTheme === theme.id;
-            return (
-              <button
-                key={theme.id}
-                onClick={() => {
-                  if (!isUnlocked) return;
-                  setActiveTheme(theme.id);
-                  localStorage.setItem('lance:theme', theme.id);
-                  applyTheme(theme);
-                  addToast(`Switched to ${theme.name}`, 'info');
-                }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-[8px] text-left text-sm transition-colors ${
-                  isActive
-                    ? 'bg-[var(--accent-bg)] border border-[var(--accent)]/30'
-                    : isUnlocked
-                    ? 'hover:bg-[var(--bg-secondary)]  border border-transparent'
-                    : 'opacity-60 cursor-not-allowed border border-transparent'
-                }`}
-                disabled={!isUnlocked}
-              >
-                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                  isActive ? 'border-[var(--accent)]' : 'border-[var(--neutral-border)]'
-                }`}>
-                  {isActive && <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`font-medium ${isUnlocked ? 'text-[var(--text-primary)] ' : 'text-[var(--text-tertiary)]'}`}>
-                    {theme.name}
-                  </p>
-                  <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
-                    {theme.description}
-                  </p>
-                </div>
-                {isUnlocked ? (
-                  <span className="text-[10px] text-[var(--text-tertiary)]">{theme.name}</span>
-                ) : (
-                  <span className="flex items-center gap-1 text-[10px] text-[var(--text-tertiary)]">
-                    <Lock size={10} />
-                    {theme.unlockedBy.replace(/^Always available$/, '') || 'Locked'}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </Card>
-
-      {/* Section 4.55: Accent Color */}
-      {unlockedAchievements.has('five_clients') && (
-        <Card className="mb-6">
-          <SectionHead title="Accent color" />
-          <p className="text-xs text-[var(--text-tertiary)] mb-3">Choose a color that personalizes buttons, badges, progress bars, and metric cards.</p>
-          <div className="grid grid-cols-4 gap-2">
-            {ACCENT_COLORS.map((color) => (
-              <button
-                key={color.id}
-                onClick={() => handleAccentChange(color.id)}
-                className={`flex flex-col items-center gap-1.5 px-3 py-3 rounded-[8px] border transition-colors ${
-                  accentColor === color.id
-                    ? 'border-[var(--accent)] bg-[var(--accent-bg)]'
-                    : 'border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-secondary)]'
-                }`}
-              >
-                <div
-                  className="w-6 h-6 rounded-full"
-                  style={{ backgroundColor: color.hex }}
-                />
-                <span className="text-[10px] text-[var(--text-primary)]">{color.label}</span>
-              </button>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* Section 4.6: Archetype */}
-      <Card className="mb-6">
-        <SectionHead title="Profession" />
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-[var(--text-primary)]">Your Archetype</p>
-              <p className="text-xs text-[var(--text-tertiary)]">
-                {(() => {
-                  const arch = getArchetype(profile?.profession || 'default');
-                  return `${arch.emoji} ${arch.label}`;
-                })()}
-              </p>
-            </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                document.dispatchEvent(new CustomEvent('lance:open-archetype-picker'));
-              }}
-            >
-              Change <ArrowRight size={14} />
-            </Button>
-          </div>
-          <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
-            Your archetype customizes your sidebar layout, dashboard metrics, insights panels, and rate label. You can switch anytime — your data stays the same.
-          </p>
-          <div className="grid grid-cols-2 gap-1.5">
-            {ARCHETYPE_LIST.filter(a => a.id !== 'default' && a.id !== 'custom').slice(0, 8).map((archetype) => (
-              <button
-                key={archetype.id}
-                onClick={async () => {
-                  const theme = getTheme(archetype.theme);
-                  applyTheme(theme);
-                  localStorage.setItem('lance:theme', archetype.theme);
-                  if (profile) {
-                    try {
-                      await saveProfile({ ...profile, profession: archetype.id });
-                      addToast(`Switched to ${archetype.label}`, 'success');
-                    } catch { /* archetype switch is non-critical */ addToast('Failed to switch', 'error'); }
-                  }
-                }}
-                className="flex items-center gap-2 px-3 py-2 rounded-[8px] text-xs text-left transition-colors hover:bg-[var(--bg-secondary)] border border-[var(--border-color)] bg-[var(--bg-card)]"
-              >
-                <span>{archetype.emoji}</span>
-                <span className="text-[var(--text-primary)] truncate">{archetype.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </Card>
-
-      {/* Section 5: Data */}
-      <Card className="mb-6  ">
-        <SectionHead title="Data" />
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-[var(--text-primary)] ">Export all data</p>
-              <p className="text-xs text-[var(--text-tertiary)]">Backup your entire database as JSON</p>
-            </div>
-            <Button variant="secondary" onClick={handleExportData} size="sm">
-              <Download size={14} />
-              Export
-            </Button>
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-[var(--text-primary)] ">Import data</p>
-              <p className="text-xs text-[var(--text-tertiary)]">Restore from a Lance backup file</p>
-            </div>
-            <Button variant="secondary" onClick={handleImportData} size="sm">
-              <Upload size={14} />
-              Import
-            </Button>
-          </div>
-          {isSeeded && (
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-[var(--text-primary)]">Clear sample data</p>
-                <p className="text-xs text-[var(--text-tertiary)]">Remove all records tagged as sample data</p>
-              </div>
-              <Button variant="secondary" onClick={handleClearSampleData} size="sm">
-                <Trash2 size={14} />
-                Clear
-              </Button>
-            </div>
-          )}
-          <div className="border-t border-[var(--border-color)] pt-3 flex items-center justify-between">
-            <div>
-              <p className="text-sm text-[var(--text-primary)]">Assets folder</p>
-              <p className="text-xs text-[var(--text-tertiary)]">Open attached files in your file manager</p>
-            </div>
-            <Button variant="secondary" onClick={async () => {
-              try {
-                const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
-                const assetsDir = await tauriInvoke<string>('get_assets_dir');
-                const { open: shellOpen } = await import('@tauri-apps/plugin-shell');
-                await shellOpen(assetsDir);
-              } catch {
-                addToast('Failed to open assets folder', 'error');
-              }
-            }} size="sm">
-              <FolderOpen size={14} />
-              Open
-            </Button>
-          </div>
-
-          <div className="border-t border-[var(--border-color)]  pt-3 flex items-center justify-between">
-            <div>
-              <p className="text-sm text-[var(--danger)]">Reset all data</p>
-              <p className="text-xs text-[var(--text-tertiary)]">Delete all records permanently</p>
-            </div>
-            <Button variant="danger" onClick={() => setShowResetModal(true)} size="sm">
-              <Trash2 size={14} />
-              Reset
-            </Button>
-          </div>
-
-          <div className="border-t border-[var(--border-color)] pt-3">
-            <ProjectTemplatesSection />
-          </div>
-        </div>
-      </Card>
-
-      {/* Auto-backup */}
-      {autoBackupLoaded && (
-        <Card className="mb-6">
-          <SectionHead title="Auto-backup" />
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-[var(--text-primary)]">Enable auto-backup</p>
-                <p className="text-xs text-[var(--text-tertiary)]">Silently export your data on a schedule</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={autoBackupEnabled}
-                  onChange={(e) => {
-                    setAutoBackupEnabled(e.target.checked);
-                    saveAutoBackupState(e.target.checked, autoBackupFreq);
-                  }}
-                  className="sr-only peer"
-                />
-                <div className="w-9 h-5 bg-[var(--border-color)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--accent)]" />
-              </label>
-            </div>
-
-            {autoBackupEnabled && (
+          {/* Content area */}
+          <main className="flex-1 overflow-y-auto p-6">
+            {section === 'general' && (
               <>
-                <div>
-                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Frequency</label>
-                  <select
-                    value={autoBackupFreq}
-                    onChange={(e) => {
-                      const freq = e.target.value as 'daily' | 'weekly' | 'monthly';
-                      setAutoBackupFreq(freq);
-                      saveAutoBackupState(true, freq);
-                    }}
-                    className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-                  >
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Backup location</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={autoBackupPath}
-                      readOnly
-                      placeholder="Choose a folder..."
-                      className="flex-1 px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-secondary)] text-[var(--text-tertiary)] truncate"
-                    />
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={async () => {
-                        try {
-                          const { open: openDialog } = await import('@tauri-apps/plugin-dialog');
-                          const selected = await openDialog({ directory: true, title: 'Choose backup folder' });
-                          if (selected && typeof selected === 'string') {
-                            setAutoBackupPath(selected);
-                            saveAutoBackupState(true, autoBackupFreq, selected);
-                          }
-                        } catch {
-                          /* dialog cancelled */
-                        }
-                      }}
-                    >
-                      Browse
-                    </Button>
+                {/* Profile section header */}
+                <div className="text-xs uppercase tracking-widest text-[var(--text-tertiary)] font-semibold mb-4">Profile</div>
+
+                {/* License */}
+                <Card className="mb-6">
+                  <SectionHead title="License" isSaved={saved.has("License")} />
+                  {isLicensed ? (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Sparkles size={14} className="text-[var(--accent)]" />
+                        <span className="text-sm font-medium text-[var(--accent)]">Licensed</span>
+                        <span className="text-[10px] text-[var(--accent)] bg-[var(--accent-bg)] px-1.5 py-0.5 rounded-full">Licensed</span>
+                      </div>
+                      <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-2">
+                        All themes unlocked \u2014 thank you for supporting Lance.
+                      </p>
+                      {form.licensed_at && (
+                        <p className="text-xs text-[var(--text-tertiary)] mb-1">
+                          Licensed since {new Date(form.licensed_at).toLocaleDateString()}.
+                        </p>
+                      )}
+                      <p className="text-xs text-[var(--text-tertiary)] mb-4">
+                        Studio, Terminal, Craft, Motion, Lens, and Scale themes are unlocked.
+                      </p>
+                      <button
+                        onClick={() => setShowRemoveLicenseConfirm(true)}
+                        className="text-xs text-[var(--text-tertiary)] hover:text-[var(--danger)] underline transition-colors"
+                      >
+                        Remove license
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-4">
+                        Lance is free to use. A license removes the launch screen and unlocks all themes immediately.
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <Button variant="primary" onClick={() => { setLicenseKey(''); setLicenseError(''); setShowLicenseModal(true); }} size="sm">
+                          Enter license key
+                        </Button>
+                        <a
+                          href="https://lance.placeholderlabsincorporatedlimited.yabbadabbadoo/license"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-sm text-[var(--accent)] hover:underline"
+                        >
+                          Get a license &mdash; $59
+                          <ExternalLink size={12} />
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </Card>
+
+                {/* Your profile */}
+                <Card className="mb-6">
+                  <SectionHead title="Your profile" isSaved={saved.has("Your profile")} />
+                  <div className="space-y-4">
+                    <div>
+                      <label className={labelClass}>Full name</label>
+                        <input
+                          type="text"
+                          maxLength={100}
+                          value={form.name || ''}
+                          onChange={(e) => setForm({ ...form, name: e.target.value })}
+                          onBlur={() => autoSave({ name: form.name }, 'Your profile')}
+                          placeholder="Your full name"
+                          className={inputClass}
+                        />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Email</label>
+                        <input
+                          type="email"
+                          maxLength={254}
+                          value={form.email || ''}
+                          onChange={(e) => setForm({ ...form, email: e.target.value })}
+                          onBlur={() => autoSave({ email: form.email }, 'Your profile')}
+                          placeholder="you@example.com"
+                          className={inputClass}
+                        />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Default currency</label>
+                      <select
+                        value={form.currency}
+                        onChange={(e) => autoSave({ currency: e.target.value }, 'Your profile')}
+                        className={inputClass}
+                      >
+                        {currencies.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                      <p className="text-[10px] text-[var(--text-tertiary)] mt-1">You can override this per-client or per-invoice.</p>
+                    </div>
                   </div>
-                  <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
-                    Keeps last 10 backups; older files are deleted automatically.
-                  </p>
-                </div>
+                </Card>
+
+                {/* Rates */}
+                <Card className="mb-6">
+                  <SectionHead title="Rates" isSaved={saved.has("Rates")} />
+                  <div className="space-y-4">
+                    <div>
+                      <label className={labelClass}>Default hourly rate</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-tertiary)]">$</span>
+                        <input
+                          type="number"
+                          value={form.hourly_rate ?? ''}
+                          onChange={(e) => setForm({ ...form, hourly_rate: e.target.value ? parseFloat(e.target.value) : undefined })}
+                          onBlur={() => autoSave({ hourly_rate: form.hourly_rate }, 'Rates')}
+                          placeholder="0.00"
+                          className={`${inputClass} pl-7`}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className={labelClass}>Default tax rate (%)</label>
+                      <input
+                        type="number"
+                        value={form.tax_rate ?? ''}
+                        onChange={(e) => setForm({ ...form, tax_rate: e.target.value ? parseFloat(e.target.value) : undefined })}
+                        onBlur={() => autoSave({ tax_rate: form.tax_rate }, 'Rates')}
+                        placeholder="0"
+                        className={inputClass}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Payment terms (days)</label>
+                      <input
+                        type="number"
+                        value={form.payment_terms ?? 14}
+                        onChange={(e) => { const v = parseInt(e.target.value); setForm({ ...form, payment_terms: isNaN(v) ? 14 : v }); }}
+                        onBlur={() => autoSave({ payment_terms: form.payment_terms }, 'Rates')}
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Proposal voice */}
+                <Card className="mb-6">
+                  <SectionHead title="Proposal voice" isSaved={saved.has("Proposal voice")} />
+                  <div className="space-y-4">
+                    <div>
+                      <label className={labelClass}>Writing style</label>
+                      <select
+                        value={form.writing_style || 'professional'}
+                        onChange={(e) => autoSave({ writing_style: e.target.value }, 'Proposal voice')}
+                        className={inputClass}
+                      >
+                        {writingStyles.map((s) => (
+                          <option key={s} value={s}>{labelForStyle(s)}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className={labelClass}>Writing voice description</label>
+                        <textarea
+                          maxLength={1000}
+                          value={form.writing_voice || ''}
+                          onChange={(e) => setForm({ ...form, writing_voice: e.target.value })}
+                          onBlur={() => autoSave({ writing_voice: form.writing_voice }, 'Proposal voice')}
+                          placeholder="e.g. I'm a senior full-stack developer who explains things clearly and avoids jargon"
+                          rows={2}
+                          className={`${inputClass} resize-none`}
+                        />
+                      <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Describe your voice and expertise. This helps the AI write proposals that sound like you.</p>
+                    </div>
+                    <div>
+                      <label className={labelClass}>Tagline / positioning</label>
+                        <input
+                          type="text"
+                          maxLength={200}
+                          value={form.tagline || ''}
+                          onChange={(e) => setForm({ ...form, tagline: e.target.value })}
+                          onBlur={() => autoSave({ tagline: form.tagline }, 'Proposal voice')}
+                          placeholder="e.g. I help startups ship beautiful products fast."
+                          className={inputClass}
+                        />
+                    </div>
+                    <div>
+                      <label className={labelClass}>What I always include</label>
+                        <textarea
+                          maxLength={2000}
+                          value={form.always_include || ''}
+                          onChange={(e) => setForm({ ...form, always_include: e.target.value })}
+                          onBlur={() => autoSave({ always_include: form.always_include }, 'Proposal voice')}
+                          placeholder="Anything you always want in proposals..."
+                          rows={3}
+                          className={`${inputClass} resize-none`}
+                        />
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Proposal defaults */}
+                <Card className="mb-6">
+                  <SectionHead title="Proposal defaults" isSaved={saved.has("Proposal defaults")} />
+                  <div className="space-y-3">
+                    <div>
+                      <label className={labelClass}>Proposals expire after</label>
+                      <select
+                        value={form.proposal_expiry_days ?? ''}
+                        onChange={(e) => {
+                          const v = e.target.value ? parseInt(e.target.value) : undefined;
+                          setForm({ ...form, proposal_expiry_days: v });
+                          autoSave({ proposal_expiry_days: v }, 'Proposal defaults');
+                        }}
+                        className={inputClass}
+                      >
+                        <option value="7">7 days</option>
+                        <option value="14">14 days</option>
+                        <option value="30">30 days</option>
+                        <option value="60">60 days</option>
+                        <option value="">Never</option>
+                      </select>
+                      <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Sent proposals will automatically expire after this period.</p>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Profession / Archetype */}
+                <Card className="mb-6">
+                  <SectionHead title="Profession" isSaved={saved.has("Profession")} />
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-[var(--text-primary)]">Your Archetype</p>
+                        <p className="text-xs text-[var(--text-tertiary)]">
+                          {(() => {
+                            const arch = getArchetype(profile?.profession || 'default');
+                            return `${arch.emoji} ${arch.label}`;
+                          })()}
+                        </p>
+                      </div>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          document.dispatchEvent(new CustomEvent('lance:open-archetype-picker'));
+                        }}
+                      >
+                        Change <ArrowRight size={14} />
+                      </Button>
+                    </div>
+                    <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
+                      Your archetype customizes your sidebar layout, dashboard metrics, insights panels, and rate label. You can switch anytime — your data stays the same.
+                    </p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {ARCHETYPE_LIST.filter(a => a.id !== 'default' && a.id !== 'custom').slice(0, 8).map((archetype) => (
+                        <button
+                          key={archetype.id}
+                          onClick={async () => {
+                            const theme = getTheme(archetype.theme);
+                            applyTheme(theme);
+                            localStorage.setItem('lance:theme', archetype.theme);
+                            if (profile) {
+                              try {
+                                await saveProfile({ ...profile, profession: archetype.id });
+                                addToast(`Switched to ${archetype.label}`, 'success');
+                              } catch { /* archetype switch is non-critical */ addToast('Failed to switch', 'error'); }
+                            }
+                          }}
+                          className="flex items-center gap-2 px-3 py-2 rounded-[8px] text-xs text-left transition-colors hover:bg-[var(--bg-secondary)] border border-[var(--border-color)] bg-[var(--bg-card)]"
+                        >
+                          <span>{archetype.emoji}</span>
+                          <span className="text-[var(--text-primary)] truncate">{archetype.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </Card>
               </>
             )}
-          </div>
-        </Card>
-      )}
 
-      {/* Section 5.5: Export Templates */}
-      {unlockedAchievements.has('first_export') && (
-        <Card className="mb-6">
-          <SectionHead title="Export Templates" />
-          <ExportTemplatesSection />
-        </Card>
-      )}
+            {section === 'appearance' && (
+              <>
+                {/* Preferences section header */}
+                <div className="text-xs uppercase tracking-widest text-[var(--text-tertiary)] font-semibold mb-4">Preferences</div>
 
-      {/* Section 6: Follow-ups */}
-      <Card className="mb-6">
-        <SectionHead title="Follow-ups" />
-        <div className="space-y-4">
-          <p className="text-xs text-[var(--text-tertiary)]">Lance monitors sent proposals and invoices and drafts friendly follow-up messages when they need attention. You control everything — messages are never sent automatically.</p>
-          {/* TODO v1.5: SMTP integration
-              Allow users to configure SMTP credentials (host, port, user, password, from address)
-              stored encrypted in SQLite. Use lettre (Rust SMTP crate) in lib.rs to send directly.
-              Remove mailto: approach, replace with Tauri command: send_email(to, subject, body)
-              This enables true auto-send without opening the mail client. */}
+                {/* Appearance (light/dark, density) */}
+                <Card className="mb-6">
+                  <SectionHead title="Appearance" isSaved={saved.has("Appearance")} />
+                  <div className="flex items-center gap-3 mb-4">
+                    <button
+                      onClick={() => autoSave({ theme: 'light' }, 'Appearance')}
+                      className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
+                        form.theme === 'light'
+                          ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                          : 'bg-[var(--bg-card)]  text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] border-[var(--border-color)] '
+                      }`}
+                    >
+                      Light
+                    </button>
+                    <button
+                      onClick={() => autoSave({ theme: 'dark' }, 'Appearance')}
+                      className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
+                        form.theme === 'dark'
+                          ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                          : 'bg-[var(--bg-card)]  text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] border-[var(--border-color)] '
+                      }`}
+                    >
+                      Dark
+                    </button>
+                  </div>
+                  {unlockedAchievements.has('three_proposals') && (
+                    <div className="pt-3 border-t border-[var(--border-color)]">
+                      <label className="block text-xs font-medium text-[var(--text-secondary)] mb-2">Layout density</label>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => handleDensityChange('comfortable')}
+                          className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
+                            density === 'comfortable'
+                              ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                              : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-color)]'
+                          }`}
+                        >
+                          Comfortable
+                        </button>
+                        <button
+                          onClick={() => handleDensityChange('compact')}
+                          className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
+                            density === 'compact'
+                              ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                              : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-color)]'
+                          }`}
+                        >
+                          Compact
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-[var(--text-tertiary)] mt-2">Compact mode reduces row heights, padding, and spacing across the interface.</p>
+                    </div>
+                  )}
+                </Card>
 
-          {/* Toggle */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-[var(--text-primary)]">Enable follow-ups</p>
-              <p className="text-xs text-[var(--text-tertiary)]">Draft reminders for overdue proposals and invoices</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={fuEnabled}
-                onChange={(e) => {
-                  setFuEnabled(e.target.checked);
-                  saveFollowUpSettings({ enabled: e.target.checked });
-                }}
-                className="sr-only peer"
-              />
-              <div className="w-9 h-5 bg-[var(--border-color)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--accent)]" />
-            </label>
-          </div>
+                {/* Themes */}
+                <Card className="mb-6">
+                  <SectionHead title="Themes" isSaved={saved.has("Themes")} />
+                  <div className="space-y-2">
+                    {THEMES.map((theme) => {
+                      const isUnlocked = unlockedThemes.has(theme.id);
+                      const isActive = activeTheme === theme.id;
+                      return (
+                        <button
+                          key={theme.id}
+                          onClick={() => {
+                            if (!isUnlocked) return;
+                            setActiveTheme(theme.id);
+                            localStorage.setItem('lance:theme', theme.id);
+                            applyTheme(theme);
+                            addToast(`Switched to ${theme.name}`, 'info');
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-[8px] text-left text-sm transition-colors ${
+                            isActive
+                              ? 'bg-[var(--accent-bg)] border border-[var(--accent)]/30'
+                              : isUnlocked
+                              ? 'hover:bg-[var(--bg-secondary)]  border border-transparent'
+                              : 'opacity-60 cursor-not-allowed border border-transparent'
+                          }`}
+                          disabled={!isUnlocked}
+                        >
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                            isActive ? 'border-[var(--accent)]' : 'border-[var(--neutral-border)]'
+                          }`}>
+                            {isActive && <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`font-medium ${isUnlocked ? 'text-[var(--text-primary)] ' : 'text-[var(--text-tertiary)]'}`}>
+                              {theme.name}
+                            </p>
+                            <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
+                              {theme.description}
+                            </p>
+                          </div>
+                          {isUnlocked ? (
+                            <span className="text-[10px] text-[var(--text-tertiary)]">{theme.name}</span>
+                          ) : (
+                            <span className="flex items-center gap-1 text-[10px] text-[var(--text-tertiary)]">
+                              <Lock size={10} />
+                              {theme.unlockedBy.replace(/^Always available$/, '') || 'Locked'}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Card>
 
-          {/* Delays */}
-          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-[var(--border-color)]">
-            <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Proposal delay (days)</label>
-              <input
-                type="number"
-                min={1}
-                max={30}
-                value={fuProposalDelay}
-                onChange={(e) => {
-                  const v = Math.max(1, Math.min(30, parseInt(e.target.value) || 1));
-                  setFuProposalDelay(v);
-                  saveFollowUpSettings({ proposal_delay_days: v });
-                }}
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-              />
-              <p className="text-[10px] text-[var(--text-tertiary)] mt-1">First follow-up triggers after this many days of no response.</p>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Invoice overdue delay (days)</label>
-              <input
-                type="number"
-                min={0}
-                max={30}
-                value={fuInvoiceDelay}
-                onChange={(e) => {
-                  const v = Math.max(0, Math.min(30, parseInt(e.target.value) || 0));
-                  setFuInvoiceDelay(v);
-                  saveFollowUpSettings({ invoice_delay_days: v });
-                }}
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-              />
-              <p className="text-[10px] text-[var(--text-tertiary)] mt-1">First reminder triggers after due date passes by this many days.</p>
-            </div>
-          </div>
+                {/* Accent color */}
+                {unlockedAchievements.has('five_clients') && (
+                  <Card className="mb-6">
+                    <SectionHead title="Accent color" isSaved={saved.has("Accent color")} />
+                    <p className="text-xs text-[var(--text-tertiary)] mb-3">Choose a color that personalizes buttons, badges, progress bars, and metric cards.</p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {ACCENT_COLORS.map((color) => (
+                        <button
+                          key={color.id}
+                          onClick={() => handleAccentChange(color.id)}
+                          className={`flex flex-col items-center gap-1.5 px-3 py-3 rounded-[8px] border transition-colors ${
+                            accentColor === color.id
+                              ? 'border-[var(--accent)] bg-[var(--accent-bg)]'
+                              : 'border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-secondary)]'
+                          }`}
+                        >
+                          <div
+                            className="w-6 h-6 rounded-full"
+                            style={{ backgroundColor: color.hex }}
+                          />
+                          <span className="text-[10px] text-[var(--text-primary)]">{color.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </Card>
+                )}
+              </>
+            )}
 
-          {/* Templates */}
-          <div className="pt-2 border-t border-[var(--border-color)]">
-            <p className="text-sm font-medium text-[var(--text-primary)] mb-3">Message Templates</p>
-            <p className="text-xs text-[var(--text-tertiary)] mb-4">
-              Use <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{client_name}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{proposal_title}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{invoice_number}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{amount}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{due_date}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{days_elapsed}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{freelancer_name}'}</code> — they fill in automatically.
-            </p>
-            <div className="space-y-3">
-              {Object.entries(TEMPLATE_LABELS).map(([key, label]) => (
-                <div key={key}>
-                  <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1">{label}</label>
-                  <textarea
-                    value={fuTemplates[key] || ''}
-                    onChange={(e) => {
-                      const updated = { ...fuTemplates, [key]: e.target.value };
-                      setFuTemplates(updated);
-                      saveFollowUpSettings({ templates: updated });
-                    }}
-                    rows={5}
-                    className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none leading-relaxed font-mono"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
+            {section === 'notifications' && (
+              <>
+                {/* Preferences section header */}
+                <div className="text-xs uppercase tracking-widest text-[var(--text-tertiary)] font-semibold mb-4">Notifications</div>
 
-          {/* Subject Templates */}
-          <div className="pt-2 border-t border-[var(--border-color)]">
-            <p className="text-sm font-medium text-[var(--text-primary)] mb-3">Email Subject Templates</p>
-            <p className="text-xs text-[var(--text-tertiary)] mb-4">
-              Same variables as message templates. These appear in the email subject line when you click "Open in Email".
-            </p>
-            <div className="space-y-3">
-              {Object.entries(TEMPLATE_LABELS).map(([key, label]) => (
-                <div key={`subj-${key}`}>
-                  <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1">{label}</label>
-                  <input
-                    type="text"
-                    value={fuSubjectTemplates[key] || DEFAULT_SUBJECT_TEMPLATES[key] || ''}
-                    onChange={(e) => {
-                      const updated = { ...fuSubjectTemplates, [key]: e.target.value };
-                      setFuSubjectTemplates(updated);
-                      saveFollowUpSettings({ subject_templates: updated });
-                    }}
-                    className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
+                {/* AI features */}
+                <Card className="mb-6">
+                  <SectionHead title="AI features" isSaved={saved.has("AI features")} />
+                  <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-4">
+                    AI-assisted writing, scope warnings, and pricing analysis run locally on your machine. No data is sent anywhere.
+                  </p>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <button
+                      onClick={() => autoSave({ ai_enabled: !form.ai_enabled }, 'AI features')}
+                      className={`relative w-10 h-6 rounded-full transition-colors ${
+                        form.ai_enabled ? 'bg-[var(--accent)]' : 'bg-[var(--neutral-border)]'
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-[var(--bg-card)] shadow transition-transform ${
+                          form.ai_enabled ? 'translate-x-4' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-sm text-[var(--text-primary)]  font-medium">
+                      {form.ai_enabled ? 'AI features on' : 'AI features off'}
+                    </span>
+                  </label>
+                </Card>
+
+                {/* Follow-up settings */}
+                <Card className="mb-6">
+                  <SectionHead title="Follow-up reminders" isSaved={saved.has("Follow-ups")} />
+                  <div className="space-y-4">
+                    <p className="text-xs text-[var(--text-tertiary)]">Lance monitors sent proposals and invoices and drafts friendly follow-up messages when they need attention. You control everything — messages are never sent automatically.</p>
+
+                    {/* Toggle */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-[var(--text-primary)]">Enable follow-ups</p>
+                        <p className="text-xs text-[var(--text-tertiary)]">Draft reminders for overdue proposals and invoices</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={fuEnabled}
+                          onChange={(e) => {
+                            setFuEnabled(e.target.checked);
+                            saveFollowUpSettings({ enabled: e.target.checked });
+                          }}
+                          className="sr-only peer"
+                        />
+                        <div className="w-9 h-5 bg-[var(--border-color)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--accent)]" />
+                      </label>
+                    </div>
+
+                    {/* Delays */}
+                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-[var(--border-color)]">
+                      <div>
+                        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Proposal delay (days)</label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={30}
+                          value={fuProposalDelay}
+                          onChange={(e) => {
+                            const v = Math.max(1, Math.min(30, parseInt(e.target.value) || 1));
+                            setFuProposalDelay(v);
+                            saveFollowUpSettings({ proposal_delay_days: v });
+                          }}
+                          className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                        />
+                        <p className="text-[10px] text-[var(--text-tertiary)] mt-1">First follow-up triggers after this many days of no response.</p>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Invoice overdue delay (days)</label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={30}
+                          value={fuInvoiceDelay}
+                          onChange={(e) => {
+                            const v = Math.max(0, Math.min(30, parseInt(e.target.value) || 0));
+                            setFuInvoiceDelay(v);
+                            saveFollowUpSettings({ invoice_delay_days: v });
+                          }}
+                          className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                        />
+                        <p className="text-[10px] text-[var(--text-tertiary)] mt-1">First reminder triggers after due date passes by this many days.</p>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </>
+            )}
+
+            {section === 'data' && (
+              <>
+                {/* Data & Backup section header */}
+                <div className="text-xs uppercase tracking-widest text-[var(--text-tertiary)] font-semibold mb-4">Data &amp; Backup</div>
+
+                {/* Data (export, import, assets, project templates) */}
+                <Card className="mb-6">
+                  <SectionHead title="Data" isSaved={saved.has("Data")} />
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-[var(--text-primary)] ">Export all data</p>
+                        <p className="text-xs text-[var(--text-tertiary)]">Backup your entire database as JSON</p>
+                      </div>
+                      <Button variant="secondary" onClick={handleExportData} size="sm">
+                        <Download size={14} />
+                        Export
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-[var(--text-primary)] ">Import data</p>
+                        <p className="text-xs text-[var(--text-tertiary)]">Restore from a Lance backup file</p>
+                      </div>
+                      <Button variant="secondary" onClick={handleImportData} size="sm">
+                        <Upload size={14} />
+                        Import
+                      </Button>
+                    </div>
+                    {isSeeded && (
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-[var(--text-primary)]">Clear sample data</p>
+                          <p className="text-xs text-[var(--text-tertiary)]">Remove all records tagged as sample data</p>
+                        </div>
+                        <Button variant="secondary" onClick={handleClearSampleData} size="sm">
+                          <Trash2 size={14} />
+                          Clear
+                        </Button>
+                      </div>
+                    )}
+                    <div className="border-t border-[var(--border-color)] pt-3 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-[var(--text-primary)]">Assets folder</p>
+                        <p className="text-xs text-[var(--text-tertiary)]">Open attached files in your file manager</p>
+                      </div>
+                      <Button variant="secondary" onClick={async () => {
+                        try {
+                          const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
+                          const assetsDir = await tauriInvoke<string>('get_assets_dir');
+                          const { open: shellOpen } = await import('@tauri-apps/plugin-shell');
+                          await shellOpen(assetsDir);
+                        } catch {
+                          addToast('Failed to open assets folder', 'error');
+                        }
+                      }} size="sm">
+                        <FolderOpen size={14} />
+                        Open
+                      </Button>
+                    </div>
+
+                    <div className="border-t border-[var(--border-color)] pt-3">
+                      <ProjectTemplatesSection />
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Auto-backup */}
+                {autoBackupLoaded && (
+                  <Card className="mb-6">
+                    <SectionHead title="Auto-backup" isSaved={saved.has("Auto-backup")} />
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-[var(--text-primary)]">Enable auto-backup</p>
+                          <p className="text-xs text-[var(--text-tertiary)]">Silently export your data on a schedule</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={autoBackupEnabled}
+                            onChange={(e) => {
+                              setAutoBackupEnabled(e.target.checked);
+                              saveAutoBackupState(e.target.checked, autoBackupFreq);
+                            }}
+                            className="sr-only peer"
+                          />
+                          <div className="w-9 h-5 bg-[var(--border-color)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--accent)]" />
+                        </label>
+                      </div>
+
+                      {autoBackupEnabled && (
+                        <>
+                          <div>
+                            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Frequency</label>
+                            <select
+                              value={autoBackupFreq}
+                              onChange={(e) => {
+                                const freq = e.target.value as 'daily' | 'weekly' | 'monthly';
+                                setAutoBackupFreq(freq);
+                                saveAutoBackupState(true, freq);
+                              }}
+                              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                            >
+                              <option value="daily">Daily</option>
+                              <option value="weekly">Weekly</option>
+                              <option value="monthly">Monthly</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Backup location</label>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={autoBackupPath}
+                                readOnly
+                                placeholder="Choose a folder..."
+                                className="flex-1 px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-secondary)] text-[var(--text-tertiary)] truncate"
+                              />
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={async () => {
+                                  try {
+                                    const { open: openDialog } = await import('@tauri-apps/plugin-dialog');
+                                    const selected = await openDialog({ directory: true, title: 'Choose backup folder' });
+                                    if (selected && typeof selected === 'string') {
+                                      setAutoBackupPath(selected);
+                                      saveAutoBackupState(true, autoBackupFreq, selected);
+                                    }
+                                  } catch {
+                                    /* dialog cancelled */
+                                  }
+                                }}
+                              >
+                                Browse
+                              </Button>
+                            </div>
+                            <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
+                              Keeps last 10 backups; older files are deleted automatically.
+                            </p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </Card>
+                )}
+
+                {/* Export Templates */}
+                {unlockedAchievements.has('first_export') && (
+                  <Card className="mb-6">
+                    <SectionHead title="Export Templates" isSaved={saved.has("Export Templates")} />
+                    <ExportTemplatesSection />
+                  </Card>
+                )}
+
+                {/* Follow-up message templates */}
+                <Card className="mb-6">
+                  <SectionHead title="Follow-up templates" isSaved={saved.has("Follow-ups")} />
+                  <div className="space-y-4">
+                    {/* Templates */}
+                    <div>
+                      <p className="text-sm font-medium text-[var(--text-primary)] mb-3">Message Templates</p>
+                      <p className="text-xs text-[var(--text-tertiary)] mb-4">
+                        Use <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{client_name}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{proposal_title}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{invoice_number}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{amount}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{due_date}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{days_elapsed}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{freelancer_name}'}</code> — they fill in automatically.
+                      </p>
+                      <div className="space-y-3">
+                        {Object.entries(TEMPLATE_LABELS).map(([key, label]) => (
+                          <div key={key}>
+                            <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1">{label}</label>
+                            <textarea
+                              value={fuTemplates[key] || ''}
+                              onChange={(e) => {
+                                const updated = { ...fuTemplates, [key]: e.target.value };
+                                setFuTemplates(updated);
+                                saveFollowUpSettings({ templates: updated });
+                              }}
+                              rows={5}
+                              className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none leading-relaxed font-mono"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Subject Templates */}
+                    <div className="pt-2 border-t border-[var(--border-color)]">
+                      <p className="text-sm font-medium text-[var(--text-primary)] mb-3">Email Subject Templates</p>
+                      <p className="text-xs text-[var(--text-tertiary)] mb-4">
+                        Same variables as message templates. These appear in the email subject line when you click "Open in Email".
+                      </p>
+                      <div className="space-y-3">
+                        {Object.entries(TEMPLATE_LABELS).map(([key, label]) => (
+                          <div key={`subj-${key}`}>
+                            <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1">{label}</label>
+                            <input
+                              type="text"
+                              value={fuSubjectTemplates[key] || DEFAULT_SUBJECT_TEMPLATES[key] || ''}
+                              onChange={(e) => {
+                                const updated = { ...fuSubjectTemplates, [key]: e.target.value };
+                                setFuSubjectTemplates(updated);
+                                saveFollowUpSettings({ subject_templates: updated });
+                              }}
+                              className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </>
+            )}
+
+            {section === 'danger-zone' && (
+              <>
+                {/* Danger Zone section header */}
+                <div className="text-xs uppercase tracking-widest text-[var(--text-danger)] font-semibold mb-4 text-[var(--danger)]">Danger Zone</div>
+
+                {/* Remove license */}
+                {isLicensed && (
+                  <Card className="mb-6 border border-[var(--danger)]/30">
+                    <SectionHead title="Remove License" isSaved={false} />
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-[var(--danger)]">Remove license key</p>
+                        <p className="text-xs text-[var(--text-tertiary)]">The splash screen will return and theme locks will be re-applied.</p>
+                      </div>
+                      <Button variant="danger" onClick={() => setShowRemoveLicenseConfirm(true)} size="sm">
+                        <Lock size={14} />
+                        Remove license
+                      </Button>
+                    </div>
+                  </Card>
+                )}
+
+                {/* Reset all data */}
+                <Card className="mb-6 border border-[var(--danger)]/30">
+                  <SectionHead title="Reset All Data" isSaved={false} />
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-[var(--danger)]">Delete all records permanently</p>
+                      <p className="text-xs text-[var(--text-tertiary)]">All clients, projects, proposals, contracts, invoices, time entries, and expenses will be removed.</p>
+                    </div>
+                    <Button variant="danger" onClick={() => setShowResetModal(true)} size="sm">
+                      <Trash2 size={14} />
+                      Reset
+                    </Button>
+                  </div>
+                </Card>
+              </>
+            )}
+          </main>
         </div>
-      </Card>
+      </Modal>
 
+      {/* Reset all data modal */}
       <Modal open={showResetModal} onClose={() => setShowResetModal(false)} title="Reset all data" size="sm">
         <div className="space-y-4">
           <div className="flex items-start gap-3 p-3 rounded-[8px] bg-[var(--danger-bg)]">
@@ -1307,6 +1401,7 @@ export default function Settings() {
         </div>
       </Modal>
 
+      {/* License modal */}
       <Modal open={showLicenseModal} onClose={() => { if (!licenseActivating) { setShowLicenseModal(false); setLicenseKey(''); setLicenseError(''); setLicenseSuccess(false); } }} title="Enter your license key" size="sm">
         <div className="space-y-4">
           <div>
@@ -1509,9 +1604,20 @@ export default function Settings() {
         confirmLabel="Remove license"
         variant="danger"
       />
-    </div>
+    </>
   );
 }
+
+const SectionHead = ({ title, isSaved }: { title: string; isSaved: boolean }) => (
+    <div className="flex items-center gap-2 mb-4">
+      <h3 className="text-sm font-semibold text-[var(--text-primary)] ">{title}</h3>
+      {isSaved && (
+        <span className="flex items-center gap-1 text-[10px] text-[var(--accent)] animate-pulse">
+          <Check size={12} /> Saved
+        </span>
+      )}
+    </div>
+  );
 
 const EXPORT_TYPES = [
   { value: 'invoice_pdf', label: 'Invoice PDF' },

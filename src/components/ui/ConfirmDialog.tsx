@@ -28,7 +28,11 @@ export default function ConfirmDialog({
   useEffect(() => {
     if (open) {
       const handler = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') onClose();
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          onClose();
+        }
       };
       document.addEventListener('keydown', handler);
       confirmRef.current?.focus();
@@ -40,8 +44,14 @@ export default function ConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-[var(--bg-card)] rounded-[12px] shadow-xl w-full max-w-sm mx-4 animate-fade-scale-in">
+      <div
+        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      />
+      <div
+        className="relative bg-[var(--bg-card)] rounded-[12px] shadow-xl w-full max-w-sm mx-4 animate-fade-scale-in"
+        onKeyDown={(e) => e.stopPropagation()}
+      >
         <div className="px-6 pt-6 pb-4">
           <div className="flex items-start gap-3">
             {variant === 'danger' && (

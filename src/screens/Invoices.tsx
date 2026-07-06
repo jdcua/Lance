@@ -117,10 +117,22 @@ export default function Invoices() {
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + paymentTerms);
     setEditing(null);
-    setForm({ client_id: '', project_id: '', invoice_number: generateInvoiceNumber(invoices), due_date: dueDate.toISOString().split('T')[0], notes: '', tax_rate: defaultTax, status: 'draft', currency: '' });
+    setForm({ client_id: '', project_id: '', invoice_number: generateInvoiceNumber(invoices || []), due_date: dueDate.toISOString().split('T')[0], notes: '', tax_rate: defaultTax, status: 'draft', currency: '' });
     setItems([{ description: '', quantity: 1, unit_price: 0, total: 0 }]);
     setSelectedTimeIds(new Set());
     setShowModal(true);
+  };
+
+  const handleCreateFromEmptyState = () => {
+    if (!clients || clients.length === 0) {
+      addToast('Add a client before creating an invoice', 'info');
+      return;
+    }
+    if (!profile) {
+      addToast('Complete your profile before creating an invoice', 'info');
+      return;
+    }
+    openNew();
   };
 
   const openEdit = (inv: Invoice) => {
@@ -535,7 +547,7 @@ export default function Invoices() {
                 <button key={k} onClick={() => toggleSort(k)} className={`text-[10px] px-2 py-0.5 rounded-[4px] transition-colors capitalize ${sortKey === k ? 'bg-[var(--accent-bg)] text-[var(--accent)] font-medium' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}>{k}{sortKey === k && <span className="ml-0.5">{sortDir === 'asc' ? '↑' : '↓'}</span>}</button>
               ))}
             </div>
-            <Button onClick={openNew} size="sm" disabled={clients.length === 0}><Plus size={14} />New Invoice</Button>
+            <Button onClick={handleCreateFromEmptyState} size="sm" disabled={clients.length === 0}><Plus size={14} />New Invoice</Button>
           </>
         )}
         {activeTab === 'recurring' && (
@@ -549,7 +561,7 @@ export default function Invoices() {
             <Receipt size={40} className="text-[var(--text-tertiary)] mb-4" />
             <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No invoices yet</h3>
             <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Create your first invoice to get paid.</p>
-            <Button onClick={openNew} size="sm" variant="secondary">New Invoice</Button>
+            <Button onClick={handleCreateFromEmptyState} size="sm" variant="secondary">New Invoice</Button>
           </Card>
         ) : filteredInvoices.length === 0 && search ? (
           <Card className="text-center py-12"><p className="text-sm text-[var(--text-tertiary)]">No invoices match "{search}"</p></Card>
@@ -781,7 +793,7 @@ export default function Invoices() {
             </div>
             <div>
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Project (optional)</label>
-              <select value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]">
+              <select value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]">
                 <option value="">None</option>
                 {projects.filter(p => !form.client_id || p.client_id === form.client_id).map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
               </select>
@@ -798,7 +810,7 @@ export default function Invoices() {
             </div>
             <div>
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Currency</label>
-              <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]">
+              <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]">
                 <option value="">{profile?.currency ? `${getCurrencySymbol(profile.currency)} (default)` : 'Default'}</option>
                 {currencies.map((c) => (
                   <option key={c} value={c}>{getCurrencySymbol(c)} {c}</option>
@@ -880,7 +892,7 @@ export default function Invoices() {
             </div>
             <div>
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Frequency</label>
-              <select value={riForm.frequency} onChange={(e) => setRiForm({ ...riForm, frequency: e.target.value as RecurringInvoiceType['frequency'] })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]">
+              <select value={riForm.frequency} onChange={(e) => setRiForm({ ...riForm, frequency: e.target.value as RecurringInvoiceType['frequency'] })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]">
                 <option value="weekly">Weekly</option>
                 <option value="biweekly">Bi-weekly</option>
                 <option value="monthly">Monthly</option>
@@ -951,7 +963,7 @@ export default function Invoices() {
           </div>
           <div>
             <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Payment Method</label>
-            <select value={paymentForm.payment_method} onChange={(e) => setPaymentForm({ ...paymentForm, payment_method: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]">
+            <select value={paymentForm.payment_method} onChange={(e) => setPaymentForm({ ...paymentForm, payment_method: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]">
               {['Bank Transfer', 'E-Transfer', 'Cash', 'Cheque', 'Credit Card', 'PayPal', 'Stripe', 'Wise', 'Crypto', 'Other'].map((m) => (
                 <option key={m} value={m}>{m}</option>
               ))}

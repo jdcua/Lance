@@ -178,7 +178,7 @@ export default function NewProposal() {
             <select
               value={form.project_type}
               onChange={(e) => setForm({ ...form, project_type: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
             >
               {projectTypes.map((pt) => (
                 <option key={pt} value={pt}>{pt}</option>
@@ -203,7 +203,7 @@ export default function NewProposal() {
               <select
                 value={form.rate_type}
                 onChange={(e) => setForm({ ...form, rate_type: e.target.value as 'flat' | 'hourly' })}
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               >
                 <option value="flat">Flat</option>
                 <option value="hourly">Hourly</option>

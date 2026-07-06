@@ -6,7 +6,7 @@
  * License: Proprietary. See LICENSE.md.
  */
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
@@ -28,6 +28,7 @@ import { useAutoUpdater } from './hooks/useAutoUpdater';
 import { shouldGenerate, getNextDueDate, countCyclesBehind, getCatchUpCount, shouldShowCatchUpWarning } from './utils/recurringEngine';
 import { generateInvoiceNumber } from './utils/invoiceNumber';
 import { applyTheme, getTheme, THEMES } from './themes/themes';
+import { getShortcutModifierLabel } from './utils/shortcuts';
 import type { Profession } from './themes';
 import { PROFESSION_THEME } from './themes';
 import { getArchetype, ARCHETYPE_LIST } from './archetypes';
@@ -148,6 +149,92 @@ export default function App() {
     }
   }, []);
 
+  // Persist & restore window size/position (Tauri only)
+  useEffect(() => {
+    let unlistenResize: (() => void) | undefined;
+    let unlistenMove: (() => void) | undefined;
+    let debounceTimer: ReturnType<typeof setTimeout>;
+
+    const clampToDisplayBounds = async (x: number, y: number, width: number, height: number) => {
+      try {
+        const { currentMonitor } = await import('@tauri-apps/api/window');
+        const monitor = await currentMonitor();
+        if (monitor) {
+          const { x: mx, y: my } = monitor.position;
+          const { width: mw, height: mh } = monitor.size;
+          const clampedX = Math.max(mx, Math.min(x, mx + mw - Math.min(width, mw)));
+          const clampedY = Math.max(my, Math.min(y, my + mh - Math.min(height, mh)));
+          return { x: clampedX, y: clampedY, width, height };
+        }
+      } catch { /* non-critical */ }
+      return { x: Math.max(x, 0), y: Math.max(y, 0), width, height };
+    };
+
+    const setup = async () => {
+      try {
+        const { getCurrentWindow, PhysicalSize, PhysicalPosition } =
+          await import('@tauri-apps/api/window');
+        const win = getCurrentWindow();
+
+        // Restore saved window state
+        const saved = localStorage.getItem('lance:window-state');
+        if (saved) {
+          try {
+            const { width, height, x, y } = JSON.parse(saved);
+            const clamped = await clampToDisplayBounds(
+              x ?? 0, y ?? 0,
+              Math.max(width ?? 1100, 900),
+              Math.max(height ?? 680, 600),
+            );
+            await win.setSize(
+              new PhysicalSize(clamped.width, clamped.height),
+            );
+            await win.setPosition(
+              new PhysicalPosition(clamped.x, clamped.y),
+            );
+          } catch { /* ignore corrupt state */ }
+        }
+
+        const saveState = async () => {
+          try {
+            const [size, pos] = await Promise.all([
+              win.outerSize(),
+              win.outerPosition(),
+            ]);
+            const clamped = await clampToDisplayBounds(
+              Math.max(pos.x, 0), Math.max(pos.y, 0),
+              Math.max(size.width, 900), Math.max(size.height, 600),
+            );
+            localStorage.setItem(
+              'lance:window-state',
+              JSON.stringify(clamped),
+            );
+          } catch { /* non-critical */ }
+        };
+
+        // Save on resize
+        unlistenResize = await win.onResized(() => {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(saveState, 300);
+        });
+
+        // Save on move
+        unlistenMove = await win.onMoved(() => {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(saveState, 300);
+        });
+      } catch { /* not running in Tauri */ }
+    };
+
+    setup();
+
+    return () => {
+      clearTimeout(debounceTimer);
+      unlistenResize?.();
+      unlistenMove?.();
+    };
+  }, []);
+
   // Apply color theme on mount
   useEffect(() => {
     const stored = localStorage.getItem('lance:theme') || 'default';
@@ -169,22 +256,27 @@ export default function App() {
   }, [isLicensed]);
 
   useEffect(() => {
-    if (profileLoaded) {
-      const step = localStorage.getItem('lance:onboarding-step');
-      if (step && step !== 'complete') {
-        setShowOnboarding(true);
-      } else if (!step && !profile) {
-        setShowOnboarding(true);
-      }
+    const completed = localStorage.getItem('lance:onboarding-completed');
+    const step = localStorage.getItem('lance:onboarding-step');
+    if (completed === 'true' || step === 'complete') {
+      setShowOnboarding(false);
+      return;
     }
+    if (!profileLoaded) return;
+    if (Boolean(profile?.name)) {
+      localStorage.setItem('lance:onboarding-completed', 'true');
+      setShowOnboarding(false);
+      return;
+    }
+    setShowOnboarding(true);
   }, [profileLoaded, profile]);
 
   // Show walkthrough after onboarding completes
   useEffect(() => {
-    if (!showOnboarding && localStorage.getItem('lance:tour-pending') === 'true') {
+    if (!showOnboarding && localStorage.getItem('lance:tour-pending') === 'true' && !showWalkthrough) {
       setShowWalkthrough(true);
     }
-  }, [showOnboarding]);
+  }, [showOnboarding, showWalkthrough]);
 
   // Auto-generate recurring invoices on startup (deferred after first render)
   useEffect(() => {
@@ -613,7 +705,7 @@ export default function App() {
         <Topbar />
         <AIBar />
         <main className="flex-1 overflow-y-auto">
-          <Outlet />
+          <Outlet key={location.pathname} />
         </main>
       </div>
 
@@ -663,13 +755,13 @@ export default function App() {
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2 text-xs">
             {[
-              ['⌘/Ctrl + K', 'Command palette'],
-              ['⌘/Ctrl + N', 'New item (contextual)'],
-              ['⌘/Ctrl + ,', 'Settings'],
-              ['⌘/Ctrl + /', 'Shortcuts'],
-              ['⌘/Ctrl + 1–8', 'Jump to section'],
-              ['⌘/Ctrl + Shift + T', 'Start/Stop timer'],
-              ['⌘/Ctrl + Shift + L', 'Quick log time'],
+              [`${getShortcutModifierLabel()} + K`, 'Command palette'],
+              [`${getShortcutModifierLabel()} + N`, 'New item (contextual)'],
+              [`${getShortcutModifierLabel()} + ,`, 'Settings'],
+              [`${getShortcutModifierLabel()} + /`, 'Shortcuts'],
+              [`${getShortcutModifierLabel()} + 1–8`, 'Jump to section'],
+              [`${getShortcutModifierLabel()} + Shift + T`, 'Start/Stop timer'],
+              [`${getShortcutModifierLabel()} + Shift + L`, 'Quick log time'],
               ['Escape', 'Close modal / palette'],
             ].map(([key, desc]) => (
               <div key={key} className="flex items-center justify-between col-span-2 px-3 py-1.5 rounded-[6px] hover:bg-[var(--bg-secondary)]">
@@ -706,7 +798,7 @@ function DynamicShortcutLegend() {
       <p className="text-[10px] text-[var(--text-tertiary)] text-center">
         {items.map((item, i) => (
           <span key={item.num}>
-            {item.label} = ⌘{item.num}{i < items.length - 1 ? ' · ' : ''}
+            {item.label} = {getShortcutModifierLabel()}{item.num}{i < items.length - 1 ? ' · ' : ''}
           </span>
         ))}
       </p>
@@ -780,6 +872,8 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
   };
   const handleOnboardingBack = () => setOnboardingStep((s) => s - 1);
   const handleOnboardingClose = useCallback(() => {
+    localStorage.setItem('lance:onboarding-step', 'complete');
+    localStorage.setItem('lance:onboarding-completed', 'true');
     setShowOnboarding(false);
   }, []);
 
@@ -809,12 +903,12 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
       if (seedDataRef.current) {
         await seedSampleData();
       }
-      localStorage.setItem('lance:onboarding-step', 'complete');
-      setShowOnboarding(false);
-      localStorage.setItem('lance:tour-pending', 'true');
     } finally {
       setIsSaving(false);
     }
+    localStorage.setItem('lance:onboarding-step', 'complete');
+    localStorage.setItem('lance:onboarding-completed', 'true');
+    setShowOnboarding(false);
   };
 
   const inputClass = "w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)] text-[var(--text-primary)]";

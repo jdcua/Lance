@@ -19,7 +19,7 @@ interface ArchetypePickerProps {
 const CATEGORIES = ['All', 'Creative', 'Technical', 'Strategic', 'Service', 'Custom'];
 
 export default function ArchetypePicker({ onSelect, onClose, showApply = true, currentId = 'default' }: ArchetypePickerProps) {
-  const { profile, saveProfile } = useStore();
+  const { profile, saveProfile, loadProfile, setArchetypeAppliedAt } = useStore();
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
@@ -53,25 +53,39 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
   };
 
   const handleApply = async () => {
+    console.trace('[ArchetypePicker] handleApply starting, selected:', selected);
     const archetype = getArchetype(selected);
-    if (!profile) return;
+    if (!profile) {
+      console.trace('[ArchetypePicker] no profile, aborting');
+      return;
+    }
 
     try {
-      await saveProfile({ ...profile, profession: selected as string });
+      const profilePayload = {
+        ...profile,
+        profession: selected as string,
+        ...(selected === 'custom' ? { custom_archetype_config: JSON.stringify(archetype) } : {}),
+      };
+      console.trace('[ArchetypePicker] saving profile', profilePayload);
+      await saveProfile(profilePayload);
 
-      if (selected === 'custom') {
-        const customConfig = JSON.stringify(archetype);
-        await saveProfile({ ...profile, profession: 'custom', custom_archetype_config: customConfig });
-      }
+      console.trace('[ArchetypePicker] reloading profile from backend');
+      await loadProfile();
 
       const theme = getTheme(archetype.theme);
+      console.trace('[ArchetypePicker] applying theme', archetype.theme);
       applyTheme(theme);
       localStorage.setItem('lance:theme', archetype.theme);
+
+      setArchetypeAppliedAt(Date.now());
+
       addToast(`Switched to ${archetype.label}`, 'success');
 
+      console.trace('[ArchetypePicker] navigation', onClose ? 'onClose' : 'navigate to /');
       if (onClose) onClose();
       else navigate('/');
     } catch (err) {
+      console.trace('[ArchetypePicker] apply failed', err);
       addToast('Failed to apply archetype', 'error');
     }
   };

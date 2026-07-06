@@ -33,6 +33,34 @@ const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const DAY_ABBREV = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+const TabBar = ({ tab, setTab, showHeatmap }: { tab: string; setTab: (t: 'timer' | 'heatmap') => void; showHeatmap: boolean }) => (
+    <div className="flex items-center gap-4 mb-6">
+      <button
+        onClick={() => setTab('timer')}
+        className={`text-sm font-medium pb-1.5 border-b-2 transition-colors ${
+          tab === 'timer'
+            ? 'text-[var(--text-primary)] border-[var(--accent)]'
+            : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
+        }`}
+      >
+        Timer
+      </button>
+      {showHeatmap && (
+        <button
+          onClick={() => setTab('heatmap')}
+          className={`text-sm font-medium pb-1.5 border-b-2 transition-colors flex items-center gap-1.5 ${
+            tab === 'heatmap'
+              ? 'text-[var(--text-primary)] border-[var(--accent)]'
+              : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
+          }`}
+        >
+          <Grid3X3 size={14} />
+          Heatmap
+        </button>
+      )}
+    </div>
+  );
+
 export default function TimeScreen() {
   const { timeEntries, loadTimeEntries, addTimeEntry, updateTimeEntry, removeTimeEntry, projects, loadProjects, clients, loadClients } = useStore();
   const addToast = useToasts((s) => s.add);
@@ -261,37 +289,13 @@ export default function TimeScreen() {
     </div>
   );
 
-  const TabBar = () => (
-    <div className="flex items-center gap-4 mb-6">
-      <button
-        onClick={() => setTab('timer')}
-        className={`text-sm font-medium pb-1.5 border-b-2 transition-colors ${
-          tab === 'timer'
-            ? 'text-[var(--text-primary)] border-[var(--accent)]'
-            : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
-        }`}
-      >
-        Timer
-      </button>
-      {showHeatmap && (
-        <button
-          onClick={() => setTab('heatmap')}
-          className={`text-sm font-medium pb-1.5 border-b-2 transition-colors flex items-center gap-1.5 ${
-            tab === 'heatmap'
-              ? 'text-[var(--text-primary)] border-[var(--accent)]'
-              : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
-          }`}
-        >
-          <Grid3X3 size={14} />
-          Heatmap
-        </button>
-      )}
-    </div>
-  );
-
   return (
     <div className="p-6">
-      <TabBar />
+      <TabBar
+        tab={tab}
+        setTab={setTab}
+        showHeatmap={showHeatmap}
+      />
 
       {tab === 'timer' ? (
         <>
@@ -319,72 +323,8 @@ export default function TimeScreen() {
                       const project = projects.find((p) => p.id === e.target.value);
                       setEntryForm({ ...entryForm, project_id: e.target.value, client_id: project?.client_id || '' });
                     }}
-                    className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]"
+                    className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     disabled={!!activeTimer}
-                  >
-                    <option value="">Select project...</option>
-                    {projects.filter((p) => p.status === 'active').map((p) => (
-                      <option key={p.id} value={p.id}>{p.title}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Description</label>
-                  <input
-                    type="text"
-                    value={entryForm.description}
-                    onChange={(e) => setEntryForm({ ...entryForm, description: e.target.value })}
-                    placeholder="What are you working on?"
-                    className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
-                    disabled={!!activeTimer}
-                  />
-                </div>
-                <label className="flex items-center gap-1.5 pb-2">
-                  <input
-                    type="checkbox"
-                    checked={entryForm.billable}
-                    onChange={(e) => setEntryForm({ ...entryForm, billable: e.target.checked })}
-                    className="w-4 h-4 rounded border-[var(--neutral-border)] text-[var(--accent)]"
-                    disabled={!!activeTimer}
-                  />
-                  <span className="text-xs text-[var(--text-secondary)]">Billable</span>
-                </label>
-                {activeTimer ? (
-                  <Button variant="danger" onClick={stopTimer} size="md">
-                    <Square size={14} />
-                    Stop ({formatDuration(activeTimer.elapsed)})
-                  </Button>
-                ) : (
-                  <Button onClick={startTimer} loading={saving} disabled={!entryForm.project_id || !entryForm.client_id} size="md">
-                    <Play size={14} />
-                    Start
-                  </Button>
-                )}
-              </div>
-            </Card>
-          )}
-
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Time Entries</h3>
-            <button
-              onClick={() => setShowNewEntry(!showNewEntry)}
-              className="text-xs text-[var(--accent)] hover:underline flex items-center gap-1"
-            >
-              <Plus size={12} /> Add Manually
-            </button>
-          </div>
-
-          {showNewEntry && (
-            <Card className="mb-4">
-              <div className="flex items-end gap-3">
-                <div className="flex-1">
-                  <select
-                    value={entryForm.project_id}
-                    onChange={(e) => {
-                      const project = projects.find((p) => p.id === e.target.value);
-                      setEntryForm({ ...entryForm, project_id: e.target.value, client_id: project?.client_id || '' });
-                    }}
-                    className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px]"
                   >
                     <option value="">Project...</option>
                     {projects.map((p) => (
