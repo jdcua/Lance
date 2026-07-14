@@ -52,6 +52,7 @@ export default function Settings() {
   const addToast = useToasts((s) => s.add);
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [showResetModal, setShowResetModal] = useState(false);
+  const [resetConfirmText, setResetConfirmText] = useState('');
   const [loading, setLoading] = useState(true);
   const [showLicenseModal, setShowLicenseModal] = useState(false);
   const [licenseKey, setLicenseKey] = useState('');
@@ -245,11 +246,10 @@ export default function Settings() {
   };
 
   useEffect(() => {
-    if (form.theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    const isDark = form.theme === 'dark';
+    document.documentElement.classList.toggle('dark', isDark);
+    const storedThemeId = (localStorage.getItem('lance:theme') || 'default') as ThemeId;
+    applyTheme(getTheme(storedThemeId));
   }, [form.theme]);
 
   const autoSave = useCallback(
@@ -516,7 +516,6 @@ export default function Settings() {
       await tauriInvoke('delete_user_profile');
       
       localStorage.clear();
-      localStorage.setItem('lance:onboarding-step', 'complete');
       setShowResetModal(false);
       addToast('All data has been reset', 'info');
       
@@ -544,11 +543,6 @@ export default function Settings() {
         setLicenseSuccess(true);
         addToast('Lance is now licensed. All themes unlocked.', 'unlock');
         setUnlockedThemes(new Set(['default', 'studio', 'terminal', 'craft', 'motion', 'lens', 'scale']));
-        setTimeout(() => {
-          setShowLicenseModal(false);
-          setLicenseKey('');
-          setLicenseSuccess(false);
-        }, 1500);
       } else {
         setLicenseError('Invalid license key. Check your key and try again.');
         licenseInputRef.current?.focus();
@@ -1383,7 +1377,7 @@ export default function Settings() {
       </Modal>
 
       {/* Reset all data modal */}
-      <Modal open={showResetModal} onClose={() => setShowResetModal(false)} title="Reset all data" size="sm">
+      <Modal open={showResetModal} onClose={() => { setShowResetModal(false); setResetConfirmText(''); }} title="Reset all data" size="sm">
         <div className="space-y-4">
           <div className="flex items-start gap-3 p-3 rounded-[8px] bg-[var(--danger-bg)]">
             <AlertTriangle size={18} className="text-[var(--danger)] flex-shrink-0 mt-0.5" />
@@ -1394,9 +1388,20 @@ export default function Settings() {
               </p>
             </div>
           </div>
+          <div>
+            <p className="text-xs text-[var(--text-secondary)] mb-2">Type <span className="font-mono font-semibold text-[var(--text-primary)]">Lance, The Tool for Freelancers</span> to confirm:</p>
+            <input
+              type="text"
+              value={resetConfirmText}
+              onChange={(e) => setResetConfirmText(e.target.value)}
+              placeholder="Lance, The Tool for Freelancers"
+              className="w-full px-3 py-2 text-sm rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 bg-[var(--bg-card)] border border-[var(--border-color)] focus:border-[var(--accent)] focus:ring-[var(--accent)]/20"
+              autoFocus
+            />
+          </div>
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => setShowResetModal(false)} size="sm">Cancel</Button>
-            <Button variant="danger" onClick={handleResetData} size="sm">Delete everything</Button>
+            <Button variant="secondary" onClick={() => { setShowResetModal(false); setResetConfirmText(''); }} size="sm">Cancel</Button>
+            <Button variant="danger" onClick={() => { handleResetData(); setResetConfirmText(''); }} size="sm" disabled={resetConfirmText !== 'Lance, The Tool for Freelancers'}>Delete everything</Button>
           </div>
         </div>
       </Modal>

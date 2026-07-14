@@ -64,27 +64,9 @@ export default function App() {
   const [isDragOver, setIsDragOver] = useState(false);
   const dragCounter = useRef(0);
 
-  const APP_VERSION = '1.1.0';
+  const APP_VERSION = '1.2.5';
   const CHANGELOG = [
-    'Archetype System 2.0 — 21 profession archetypes reshape your entire workspace',
-    'Client Portal — share proposals and contracts with a link, get signatures',
-    'Invoice Payment Recording — partial payments, methods, transaction IDs',
-    'Invoice Aging Report — see what\u2019s overdue and by how long',
-    'Follow-ups — dedicated screen, email integration via mailto:',
-    'Finance Forecasting — 6-month revenue projection with scenarios',
-    'Time Heatmap — see your year at a glance',
-    'Project Templates — 6 built-ins + save your own',
-    'Multi-currency — invoice in CAD, USD, EUR, GBP, or AUD per client',
-    'Client CSV Import — bulk import with deduplication',
-    'Proposal Expiry — sent proposals auto-expire after your chosen delay',
-    'Export Templates — customize your PDF and DOCX layouts (unlockable)',
-    'Contract Templates — 6 professional templates (unlockable)',
-    'Compact Layout — reduced padding mode (unlockable)',
-    'Accent Colors — 8 accent color options (unlockable)',
-    'Auto-backup — scheduled JSON backups to a folder you choose',
-    'Duplicate invoice or proposal in one click',
-    'Global search now includes time entries, expenses, and assets',
-    'Cmd+Shift+T and Cmd+Shift+L for timer and quick log from anywhere',
+    'Bug fixes and stability improvements',
   ];
 
   // Changelog check on mount
@@ -126,9 +108,12 @@ export default function App() {
     const explicitTheme = profile?.theme;
     if (explicitTheme) {
       document.documentElement.classList.toggle('dark', explicitTheme === 'dark');
+      const storedThemeId = localStorage.getItem('lance:theme') || 'default';
+      applyTheme(getTheme(storedThemeId));
     } else if (profileLoaded && !profile) {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       document.documentElement.classList.toggle('dark', prefersDark);
+      applyTheme(getTheme('default'));
     } else {
       document.documentElement.classList.remove('dark');
     }
@@ -715,7 +700,7 @@ export default function App() {
       )}
 
       {/* Changelog modal */}
-      <Modal open={showChangelog} onClose={dismissChangelog} title="What's new in Lance 1.1.0" size="md">
+      <Modal open={showChangelog} onClose={dismissChangelog} title={"What's new in Lance " + APP_VERSION} size="md">
         <div className="space-y-3">
           <p className="text-xs text-[var(--text-tertiary)] font-medium">Version {APP_VERSION}</p>
           <ul className="space-y-2">

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.5] — 2026-07-06
+### Fixed
+- Fixed light/dark mode toggle (moon icon in topbar)
+- Fixed auto-backup "no such table: auto_backup_state" error
+- Updated brand logo to compass-style icon
+- Updated splash screen version display
+- Various stability improvements
+
 ## [1.1.0] — 2026-06-XX
 ### Added
 - Archetype System 2.0 — 42 profession archetypes with archetype-specific dashboards, sidebar ordering, insights panels, and exclusive features

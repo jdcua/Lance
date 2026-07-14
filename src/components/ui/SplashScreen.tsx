@@ -34,7 +34,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
         </h1>
         <p className="text-sm text-[var(--text-secondary)] mb-6">Freelancer OS</p>
 
-        <p className="text-xs text-[var(--text-tertiary)] mb-5">Version 1.1.0 &middot; Built by Placeholder Labs Incorporated Limited</p>
+        <p className="text-xs text-[var(--text-tertiary)] mb-5">Version 1.2.5 &middot; Built by Placeholder Labs Incorporated Limited</p>
 
         <div className="border-t border-[var(--border-color)] my-5" />
 

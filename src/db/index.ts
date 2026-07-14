@@ -1189,6 +1189,17 @@ async function runMigrations(database: Database): Promise<void> {
     try { await database.execute(sql); } catch { /* already exists */ }
   }
 
+  try {
+    await database.execute(`CREATE TABLE IF NOT EXISTS auto_backup_state (
+      id INTEGER PRIMARY KEY DEFAULT 1,
+      enabled INTEGER NOT NULL DEFAULT 0,
+      frequency TEXT NOT NULL DEFAULT 'weekly',
+      backup_path TEXT,
+      last_backup_at TEXT,
+      last_backup_error TEXT
+    )`);
+  } catch { /* table may already exist from backend */ }
+
   const row = await database.select<{ cnt: number }[]>('SELECT COUNT(*) as cnt FROM schema_version');
   if (!row || row.length === 0 || row[0].cnt === 0) {
     await database.execute('INSERT INTO schema_version (version) VALUES (?)', [getCurrentSchemaVersion()]);

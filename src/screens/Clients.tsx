@@ -147,14 +147,15 @@ const COUNTRY_OPTIONS = [
   { code: 'ZW', label: 'Zimbabwe', dialCode: '+263' },
 ];
 
-const countryCodeToFlag = (code: string) =>
-  String.fromCodePoint(...code.split('').map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
-
 function detectCountry(): string {
   try {
-    const locale = navigator.language || (navigator as any).userLanguage || '';
-    const parts = locale.split('-');
-    if (parts.length > 1 && parts[1].length === 2) return parts[1].toUpperCase();
+    const lang = navigator.language;
+    if (lang) {
+      const parts = lang.split('-');
+      if (parts.length > 1) return parts[parts.length - 1].toUpperCase();
+      const match = navigator.languages?.find((l) => l.includes('-'));
+      if (match) return match.split('-')[1].toUpperCase();
+    }
   } catch { /* non-critical */ }
   return 'US';
 }
@@ -198,9 +199,6 @@ export default function Clients() {
   const [templateName, setTemplateName] = useState('');
   const [showImportModal, setShowImportModal] = useState(false);
   const [phoneCountry, setPhoneCountry] = useState(detectCountry);
-  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
-  const [countrySearch, setCountrySearch] = useState('');
-  const countryDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     Promise.all([loadClients(), loadProjects(), loadProposals(), loadInvoices(), loadProfile()])
@@ -232,18 +230,6 @@ export default function Clients() {
 
   const selectedClient = clients.find((c) => c.id === selectedId);
   const selectedCountry = useMemo(() => COUNTRY_OPTIONS.find((country) => country.code === phoneCountry) || COUNTRY_OPTIONS[0], [phoneCountry]);
-
-  useEffect(() => {
-    if (!showCountryDropdown) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target as Node)) {
-        setShowCountryDropdown(false);
-        setCountrySearch('');
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showCountryDropdown]);
 
   const getClientStatus = (clientId: string) => {
     const hasActive = projects.some((p) => p.client_id === clientId && p.status === 'active');
@@ -1029,53 +1015,16 @@ export default function Clients() {
             </div>
             <div>
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Phone</label>
-              <div className="flex gap-2 relative">
-                <div ref={countryDropdownRef} className="relative w-[160px]">
-                  <button
-                    type="button"
-                    onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                    className="w-full px-2 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 flex items-center gap-1.5 bg-[var(--bg-card)]"
-                  >
-                    <span>{countryCodeToFlag(selectedCountry.code)}</span>
-                    <span className="truncate flex-1 text-left">{selectedCountry.label}</span>
-                    <svg className="w-3 h-3 text-[var(--text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                  </button>
-                  {showCountryDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-1 border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] shadow-lg z-50 max-h-[200px] overflow-y-auto">
-                      <div className="p-1 border-b border-[var(--border-color)]">
-                        <input
-                          type="text"
-                          value={countrySearch}
-                          onChange={(e) => setCountrySearch(e.target.value)}
-                          placeholder="Search country..."
-                          className="w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]"
-                          autoFocus
-                        />
-                      </div>
-                      {COUNTRY_OPTIONS.filter(c => c.label.toLowerCase().includes(countrySearch.toLowerCase()) || c.code.toLowerCase().includes(countrySearch.toLowerCase())).map((country) => (
-                        <button
-                          key={country.code}
-                          type="button"
-                          onClick={() => { setPhoneCountry(country.code); setShowCountryDropdown(false); setCountrySearch(''); }}
-                          className={`w-full text-left px-2 py-1.5 text-xs flex items-center gap-1.5 hover:bg-[var(--bg-secondary)] transition-colors ${phoneCountry === country.code ? 'bg-[var(--accent-bg)]' : ''}`}
-                        >
-                          <span>{countryCodeToFlag(country.code)}</span>
-                          <span>{country.label}</span>
-                          <span className="text-[var(--text-tertiary)] ml-auto">{country.dialCode}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+              <div className="flex items-center gap-0">
+                <span className="px-3 py-2 text-sm border border-r-0 border-[var(--border-color)] rounded-l-[8px] text-[var(--text-tertiary)] bg-[var(--bg-secondary)] whitespace-nowrap">{selectedCountry.dialCode}</span>
                 <input
                   type="text"
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   placeholder="555-0000"
-                  className="flex-1 px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+                  className="flex-1 px-3 py-2 text-sm border border-[var(--border-color)] rounded-r-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
                 />
               </div>
-              <p className="text-[10px] text-[var(--text-tertiary)] mt-1">{countryCodeToFlag(selectedCountry.code)} {selectedCountry.label} · {selectedCountry.dialCode}</p>
             </div>
           </div>
           <div>
