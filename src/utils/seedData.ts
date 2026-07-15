@@ -1,5 +1,3 @@
-import { getDb } from '../db';
-
 function daysAgo(days: number): string {
   const d = new Date(Date.now() - days * 86400000);
   return d.toISOString().split('T')[0];
@@ -8,10 +6,6 @@ function daysAgo(days: number): string {
 function daysFromNow(days: number): string {
   const d = new Date(Date.now() + days * 86400000);
   return d.toISOString().split('T')[0];
-}
-
-function isoNow(): string {
-  return new Date().toISOString();
 }
 
 const BUILT_IN_TEMPLATES = [
@@ -91,187 +85,245 @@ const BUILT_IN_TEMPLATES = [
 export async function seedBuiltInTemplates(): Promise<void> {
   if (localStorage.getItem('lance:templates-seeded') === 'true') return;
 
-  const db = await getDb();
-  const now = isoNow();
-
-  const existing = await db.select<{ count: number }[]>(
-    'SELECT COUNT(*) as count FROM project_templates WHERE is_default = 1'
-  );
-  if (existing[0] && (existing[0] as unknown as { count: number }).count > 0) {
-    localStorage.setItem('lance:templates-seeded', 'true');
-    return;
-  }
-
-  await db.execute('BEGIN TRANSACTION');
   try {
-    for (const tpl of BUILT_IN_TEMPLATES) {
-      const templateId = crypto.randomUUID();
-      await db.execute(
-        'INSERT INTO project_templates (id, name, description, default_budget, default_status, is_default, created_at) VALUES (?, ?, ?, ?, ?, 1, ?)',
-        [templateId, tpl.name, tpl.description, tpl.default_budget, tpl.default_status, now]
-      );
-      for (const ms of tpl.milestones) {
-        await db.execute(
-          'INSERT INTO project_template_milestones (id, template_id, title, days_from_start, invoice_on_completion) VALUES (?, ?, ?, ?, ?)',
-          [crypto.randomUUID(), templateId, ms.title, ms.days_from_start, ms.invoice_on_completion ? 1 : 0]
-        );
-      }
-    }
-    await db.execute('COMMIT');
-  } catch {
-    await db.execute('ROLLBACK');
-    return;
-  }
+    // Use the store to create templates via invoke() layer
+    const { useStore } = await import('../store');
+    const store = useStore.getState();
 
-  localStorage.setItem('lance:templates-seeded', 'true');
+    for (const tpl of BUILT_IN_TEMPLATES) {
+      await store.addProjectTemplate({
+        name: tpl.name,
+        description: tpl.description,
+        default_budget: tpl.default_budget,
+        default_status: tpl.default_status,
+      }, tpl.milestones);
+    }
+
+    localStorage.setItem('lance:templates-seeded', 'true');
+  } catch (err) {
+    console.warn('[seedData] seedBuiltInTemplates failed (non-critical):', err);
+  }
 }
 
 export async function seedSampleData(): Promise<void> {
   if (localStorage.getItem('lance:seeded') === 'true') return;
 
-  const db = await getDb();
-  const now = isoNow();
-
-  await seedBuiltInTemplates();
-
-  await db.execute('BEGIN TRANSACTION');
   try {
-    // --- CLIENTS ---
-    const client1Id = crypto.randomUUID();
-    const client2Id = crypto.randomUUID();
-    const client3Id = crypto.randomUUID();
-    const client4Id = crypto.randomUUID();
+    const { useStore } = await import('../store');
+    const store = useStore.getState();
 
-    await db.execute(
-      `INSERT INTO clients (id, name, email, phone, company, notes, created_at, seeded) VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
-      [client1Id, 'Mara Jensen', 'mara@designco.com', null, 'DesignCo', 'Brand designer at a startup. Responsive and easy to work with.', now]
-    );
-    await db.execute(
-      `INSERT INTO clients (id, name, email, phone, company, notes, created_at, seeded) VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
-      [client2Id, 'Kol & Nash Studio', 'hello@kolnash.com', null, 'Kol & Nash Studio', 'Creative agency with 12 employees. Proposals go through their ops lead.', now]
-    );
-    await db.execute(
-      `INSERT INTO clients (id, name, email, phone, company, notes, created_at, seeded) VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
-      [client3Id, 'David Okoro', 'david@okoro.io', null, null, 'Solo founder building a SaaS product. Prefers async communication.', now]
-    );
-    await db.execute(
-      `INSERT INTO clients (id, name, email, phone, company, notes, created_at, seeded) VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
-      [client4Id, 'The Bloom Co.', 'team@thebloomco.com', null, 'The Bloom Co.', 'Retail brand specializing in sustainable floristry. Completed project — happy client.', now]
-    );
+    await seedBuiltInTemplates();
 
-    // --- PROJECTS ---
-    const proj1Id = crypto.randomUUID();
-    const proj2Id = crypto.randomUUID();
-    const proj3Id = crypto.randomUUID();
-    const proj4Id = crypto.randomUUID();
+    // ── CLIENTS ──
+    const client1 = await store.addClient({
+      name: 'Mara Jensen',
+      email: 'mara@designco.com',
+      phone: undefined,
+      company: 'DesignCo',
+      notes: 'Brand designer at a startup. Responsive and easy to work with.',
+    });
+    const client2 = await store.addClient({
+      name: 'Kol & Nash Studio',
+      email: 'hello@kolnash.com',
+      phone: undefined,
+      company: 'Kol & Nash Studio',
+      notes: 'Creative agency with 12 employees. Proposals go through their ops lead.',
+    });
+    const client3 = await store.addClient({
+      name: 'David Okoro',
+      email: 'david@okoro.io',
+      phone: undefined,
+      company: undefined,
+      notes: 'Solo founder building a SaaS product. Prefers async communication.',
+    });
+    const client4 = await store.addClient({
+      name: 'The Bloom Co.',
+      email: 'team@thebloomco.com',
+      phone: undefined,
+      company: 'The Bloom Co.',
+      notes: 'Retail brand specializing in sustainable floristry. Completed project — happy client.',
+    });
 
-    await db.execute(
-      `INSERT INTO projects (id, client_id, title, status, start_date, budget, notes, created_at, seeded) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-      [proj1Id, client1Id, 'Brand Identity Refresh', 'active', daysAgo(21), 6500, 'Complete rebrand including logo, color palette, typography, and brand guidelines document.', now]
-    );
-    await db.execute(
-      `INSERT INTO projects (id, client_id, title, status, start_date, end_date, budget, notes, created_at, seeded) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-      [proj2Id, client4Id, 'E-commerce Site Redesign', 'completed', daysAgo(60), daysAgo(14), 4200, 'Full site redesign on Shopify. Delivered ahead of schedule.', now]
-    );
-    await db.execute(
-      `INSERT INTO projects (id, client_id, title, status, start_date, budget, notes, created_at, seeded) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-      [proj3Id, client3Id, 'Product Launch Strategy', 'active', daysAgo(10), 2800, 'Go-to-market strategy, messaging framework, and launch timeline.', now]
-    );
-    await db.execute(
-      `INSERT INTO projects (id, client_id, title, status, start_date, budget, notes, created_at, seeded) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-      [proj4Id, client2Id, 'Marketing Site Copy', 'paused', daysAgo(14), 1500, 'Website copy for their new service landing pages. Paused while they finalize product names.', now]
-    );
+    // ── PROJECTS ──
+    const proj1 = await store.addProject({
+      client_id: client1.id,
+      title: 'Brand Identity Refresh',
+      status: 'active',
+      start_date: daysAgo(21),
+      end_date: undefined,
+      budget: 6500,
+      notes: 'Complete rebrand including logo, color palette, typography, and brand guidelines document.',
+    });
+    const proj2 = await store.addProject({
+      client_id: client4.id,
+      title: 'E-commerce Site Redesign',
+      status: 'completed',
+      start_date: daysAgo(60),
+      end_date: daysAgo(14),
+      budget: 4200,
+      notes: 'Full site redesign on Shopify. Delivered ahead of schedule.',
+    });
+    const proj3 = await store.addProject({
+      client_id: client3.id,
+      title: 'Product Launch Strategy',
+      status: 'active',
+      start_date: daysAgo(10),
+      end_date: undefined,
+      budget: 2800,
+      notes: 'Go-to-market strategy, messaging framework, and launch timeline.',
+    });
+    const proj4 = await store.addProject({
+      client_id: client2.id,
+      title: 'Marketing Site Copy',
+      status: 'paused',
+      start_date: daysAgo(14),
+      end_date: undefined,
+      budget: 1500,
+      notes: 'Website copy for their new service landing pages. Paused while they finalize product names.',
+    });
 
-    // --- MILESTONES (for Brand Identity Refresh) ---
-    await db.execute(
-      `INSERT INTO milestones (id, project_id, title, due_date, completed, invoice_on_completion, seeded) VALUES (?, ?, ?, ?, ?, ?, 1)`,
-      [crypto.randomUUID(), proj1Id, 'Research & Discovery', daysAgo(7), 1, 0]
-    );
-    await db.execute(
-      `INSERT INTO milestones (id, project_id, title, due_date, completed, invoice_on_completion, seeded) VALUES (?, ?, ?, ?, ?, ?, 1)`,
-      [crypto.randomUUID(), proj1Id, 'Design Concepts', daysFromNow(7), 0, 0]
-    );
-    await db.execute(
-      `INSERT INTO milestones (id, project_id, title, due_date, completed, invoice_on_completion, seeded) VALUES (?, ?, ?, ?, ?, ?, 1)`,
-      [crypto.randomUUID(), proj1Id, 'Final Delivery', daysFromNow(21), 0, 1]
-    );
+    // ── MILESTONES (for Brand Identity Refresh) ──
+    await store.addMilestone({
+      project_id: proj1.id,
+      title: 'Research & Discovery',
+      due_date: daysAgo(7),
+      completed: true,
+      invoice_on_completion: false,
+    });
+    await store.addMilestone({
+      project_id: proj1.id,
+      title: 'Design Concepts',
+      due_date: daysFromNow(7),
+      completed: false,
+      invoice_on_completion: false,
+    });
+    await store.addMilestone({
+      project_id: proj1.id,
+      title: 'Final Delivery',
+      due_date: daysFromNow(21),
+      completed: false,
+      invoice_on_completion: true,
+    });
 
-    // --- PROPOSALS ---
-    const prop1Id = crypto.randomUUID();
-    const prop2Id = crypto.randomUUID();
-    const prop3Id = crypto.randomUUID();
+    // ── PROPOSALS ──
+    const prop1 = await store.addProposal({
+      client_id: client2.id,
+      project_id: undefined,
+      title: 'Q3 Content Campaign',
+      status: 'sent',
+      rate: 3200,
+      rate_type: 'flat',
+      sent_at: daysAgo(8),
+    });
+    const prop2 = await store.addProposal({
+      client_id: client3.id,
+      project_id: undefined,
+      title: 'Social Media Audit',
+      status: 'draft',
+      rate: 850,
+      rate_type: 'flat',
+      sent_at: undefined,
+    });
+    const prop3 = await store.addProposal({
+      client_id: client1.id,
+      project_id: proj1.id,
+      title: 'Brand Identity Refresh',
+      status: 'accepted',
+      rate: 6500,
+      rate_type: 'flat',
+      sent_at: daysAgo(21),
+    });
 
-    await db.execute(
-      `INSERT INTO proposals (id, client_id, project_id, title, status, rate, rate_type, sent_at, created_at, seeded) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-      [prop1Id, client2Id, null, 'Q3 Content Campaign', 'sent', 3200, 'flat', daysAgo(8), isoNow(), 1]
-    );
-    await db.execute(
-      `INSERT INTO proposals (id, client_id, project_id, title, status, rate, rate_type, created_at, seeded) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-      [prop2Id, client3Id, null, 'Social Media Audit', 'draft', 850, 'flat', isoNow(), 1]
-    );
-    await db.execute(
-      `INSERT INTO proposals (id, client_id, project_id, title, status, rate, rate_type, sent_at, created_at, seeded) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-      [prop3Id, client1Id, proj1Id, 'Brand Identity Refresh', 'accepted', 6500, 'flat', daysAgo(21), isoNow(), 1]
-    );
+    // ── CONTRACTS ──
+    await store.addContract({
+      client_id: client1.id,
+      project_id: proj1.id,
+      proposal_id: prop3.id,
+      title: 'Service Agreement — Brand Identity',
+      status: 'active',
+    });
+    await store.addContract({
+      client_id: client4.id,
+      project_id: proj2.id,
+      proposal_id: undefined,
+      title: 'Service Agreement — Site Redesign',
+      status: 'completed',
+    });
 
-    // --- CONTRACTS ---
-    await db.execute(
-      `INSERT INTO contracts (id, client_id, project_id, proposal_id, title, status, created_at, seeded) VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
-      [crypto.randomUUID(), client1Id, proj1Id, prop3Id, 'Service Agreement — Brand Identity', 'active', isoNow(), 1]
-    );
-    await db.execute(
-      `INSERT INTO contracts (id, client_id, project_id, title, status, signed_at, created_at, seeded) VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
-      [crypto.randomUUID(), client4Id, proj2Id, 'Service Agreement — Site Redesign', 'completed', daysAgo(60), isoNow(), 1]
-    );
-
-    // --- TIME ENTRIES ---
+    // ── TIME ENTRIES ──
     const timeEntries = [
-      { desc: 'Discovery call with Mara', proj: proj1Id, cl: client1Id, mins: 60, daysAgo: 14, billable: 1, invoiced: 1 },
-      { desc: 'Competitive brand audit', proj: proj1Id, cl: client1Id, mins: 150, daysAgo: 13, billable: 1, invoiced: 1 },
-      { desc: 'Logo concepts — round 1', proj: proj1Id, cl: client1Id, mins: 180, daysAgo: 10, billable: 1, invoiced: 1 },
-      { desc: 'Logo concepts — round 2', proj: proj1Id, cl: client1Id, mins: 120, daysAgo: 7, billable: 1, invoiced: 0 },
-      { desc: 'Color palette exploration', proj: proj1Id, cl: client1Id, mins: 90, daysAgo: 5, billable: 1, invoiced: 0 },
-      { desc: 'Typography system', proj: proj1Id, cl: client1Id, mins: 60, daysAgo: 3, billable: 1, invoiced: 0 },
-      { desc: 'Client revisions call', proj: proj1Id, cl: client1Id, mins: 45, daysAgo: 2, billable: 0, invoiced: 0 },
-      { desc: 'Homepage wireframes', proj: proj2Id, cl: client4Id, mins: 180, daysAgo: 45, billable: 1, invoiced: 1 },
-      { desc: 'Product page designs', proj: proj2Id, cl: client4Id, mins: 120, daysAgo: 42, billable: 1, invoiced: 1 },
-      { desc: 'Mobile responsive QA', proj: proj2Id, cl: client4Id, mins: 90, daysAgo: 30, billable: 1, invoiced: 1 },
-      { desc: 'Launch strategy workshop', proj: proj3Id, cl: client3Id, mins: 120, daysAgo: 8, billable: 1, invoiced: 0 },
-      { desc: 'Messaging framework draft', proj: proj3Id, cl: client3Id, mins: 150, daysAgo: 5, billable: 1, invoiced: 0 },
+      { desc: 'Discovery call with Mara', proj: proj1.id, cl: client1.id, mins: 60, daysAgo: 14, billable: 1 },
+      { desc: 'Competitive brand audit', proj: proj1.id, cl: client1.id, mins: 150, daysAgo: 13, billable: 1 },
+      { desc: 'Logo concepts — round 1', proj: proj1.id, cl: client1.id, mins: 180, daysAgo: 10, billable: 1 },
+      { desc: 'Logo concepts — round 2', proj: proj1.id, cl: client1.id, mins: 120, daysAgo: 7, billable: 1 },
+      { desc: 'Color palette exploration', proj: proj1.id, cl: client1.id, mins: 90, daysAgo: 5, billable: 1 },
+      { desc: 'Typography system', proj: proj1.id, cl: client1.id, mins: 60, daysAgo: 3, billable: 1 },
+      { desc: 'Client revisions call', proj: proj1.id, cl: client1.id, mins: 45, daysAgo: 2, billable: 0 },
+      { desc: 'Homepage wireframes', proj: proj2.id, cl: client4.id, mins: 180, daysAgo: 45, billable: 1 },
+      { desc: 'Product page designs', proj: proj2.id, cl: client4.id, mins: 120, daysAgo: 42, billable: 1 },
+      { desc: 'Mobile responsive QA', proj: proj2.id, cl: client4.id, mins: 90, daysAgo: 30, billable: 1 },
+      { desc: 'Launch strategy workshop', proj: proj3.id, cl: client3.id, mins: 120, daysAgo: 8, billable: 1 },
+      { desc: 'Messaging framework draft', proj: proj3.id, cl: client3.id, mins: 150, daysAgo: 5, billable: 1 },
     ];
     for (const te of timeEntries) {
       const d = daysAgo(te.daysAgo);
-      await db.execute(
-        `INSERT INTO time_entries (id, project_id, client_id, description, start_time, duration_minutes, billable, invoiced, seeded) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-        [crypto.randomUUID(), te.proj, te.cl, te.desc, `${d}T09:00:00.000Z`, te.mins, te.billable, te.invoiced]
-      );
+      await store.addTimeEntry({
+        project_id: te.proj,
+        client_id: te.cl,
+        description: te.desc,
+        start_time: `${d}T09:00:00.000Z`,
+        duration_minutes: te.mins,
+        billable: te.billable === 1,
+      });
     }
 
-    // --- INVOICES ---
-    await db.execute(
-      `INSERT INTO invoices (id, client_id, project_id, invoice_number, status, line_items, subtotal, total, due_date, paid_at, notes, created_at, seeded) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-      [crypto.randomUUID(), client4Id, proj2Id, 'INV-001', 'paid', JSON.stringify([{ id: crypto.randomUUID(), description: 'E-commerce Site Redesign', quantity: 1, unit_price: 4200, total: 4200 }]), 4200, 4200, daysAgo(44), daysAgo(21), 'Full payment received on time.', now]
-    );
-    await db.execute(
-      `INSERT INTO invoices (id, client_id, project_id, invoice_number, status, line_items, subtotal, total, due_date, paid_at, notes, created_at, seeded) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-      [crypto.randomUUID(), client1Id, proj1Id, 'INV-002', 'paid', JSON.stringify([{ id: crypto.randomUUID(), description: 'Brand Identity Refresh — 30% Deposit', quantity: 1, unit_price: 2000, total: 2000 }]), 2000, 2000, daysAgo(42), daysAgo(35), 'Deposit paid promptly.', now]
-    );
-    await db.execute(
-      `INSERT INTO invoices (id, client_id, project_id, invoice_number, status, line_items, subtotal, total, due_date, notes, created_at, seeded) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-      [crypto.randomUUID(), client1Id, proj1Id, 'INV-003', 'sent', JSON.stringify([{ id: crypto.randomUUID(), description: 'Brand Identity Refresh — Progress Payment', quantity: 1, unit_price: 2000, total: 2000 }]), 2000, 2000, daysFromNow(7), 'Due after design concept approval.', now]
-    );
-    await db.execute(
-      `INSERT INTO invoices (id, client_id, project_id, invoice_number, status, line_items, subtotal, total, due_date, notes, created_at, seeded) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-      [crypto.randomUUID(), client3Id, proj3Id, 'INV-004', 'overdue', JSON.stringify([{ id: crypto.randomUUID(), description: 'Product Launch Strategy', quantity: 1, unit_price: 850, total: 850 }]), 850, 850, daysAgo(12), 'First milestone payment.', now]
-    );
+    // ── INVOICES ──
+    await store.addInvoice({
+      client_id: client4.id,
+      project_id: proj2.id,
+      invoice_number: 'INV-001',
+      status: 'paid',
+      subtotal: 4200,
+      total: 4200,
+      due_date: daysAgo(44),
+      notes: 'Full payment received on time.',
+      line_items: [{ id: crypto.randomUUID(), description: 'E-commerce Site Redesign', quantity: 1, unit_price: 4200, total: 4200 }],
+    });
+    await store.addInvoice({
+      client_id: client1.id,
+      project_id: proj1.id,
+      invoice_number: 'INV-002',
+      status: 'paid',
+      subtotal: 2000,
+      total: 2000,
+      due_date: daysAgo(42),
+      notes: 'Deposit paid promptly.',
+      line_items: [{ id: crypto.randomUUID(), description: 'Brand Identity Refresh — 30% Deposit', quantity: 1, unit_price: 2000, total: 2000 }],
+    });
+    await store.addInvoice({
+      client_id: client1.id,
+      project_id: proj1.id,
+      invoice_number: 'INV-003',
+      status: 'sent',
+      subtotal: 2000,
+      total: 2000,
+      due_date: daysFromNow(7),
+      notes: 'Due after design concept approval.',
+      line_items: [{ id: crypto.randomUUID(), description: 'Brand Identity Refresh — Progress Payment', quantity: 1, unit_price: 2000, total: 2000 }],
+    });
+    await store.addInvoice({
+      client_id: client3.id,
+      project_id: proj3.id,
+      invoice_number: 'INV-004',
+      status: 'overdue',
+      subtotal: 850,
+      total: 850,
+      due_date: daysAgo(12),
+      notes: 'First milestone payment.',
+      line_items: [{ id: crypto.randomUUID(), description: 'Product Launch Strategy', quantity: 1, unit_price: 850, total: 850 }],
+    });
 
-    // --- RECURRING INVOICE ---
-    await db.execute(
-      `INSERT INTO recurring_invoices (id, client_id, project_id, title, frequency, line_items, subtotal, total, notes, active, next_due, created_at, seeded) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-      [crypto.randomUUID(), client3Id, proj3Id, 'Monthly Retainer', 'monthly', JSON.stringify([{ id: crypto.randomUUID(), description: 'Monthly Strategy Retainer', quantity: 1, unit_price: 800, total: 800 }]), 800, 800, 'Ongoing strategy and analytics support.', 1, daysFromNow(14), now]
-    );
-
-    // --- EXPENSES ---
+    // ── EXPENSES ──
     const expenseData = [
       { cat: 'Software', desc: 'Figma Professional', amt: 15, date: daysAgo(30) },
       { cat: 'Marketing', desc: 'Stock photo pack — Unsplash+', amt: 45, date: daysAgo(5) },
@@ -280,37 +332,45 @@ export async function seedSampleData(): Promise<void> {
       { cat: 'Software', desc: 'Notion Pro', amt: 10, date: daysAgo(30) },
     ];
     for (const e of expenseData) {
-      await db.execute(
-        `INSERT INTO expenses (id, category, description, amount, date, seeded) VALUES (?, ?, ?, ?, ?, 1)`,
-        [crypto.randomUUID(), e.cat, e.desc, e.amt, e.date]
-      );
+      await store.addExpense({
+        category: e.cat,
+        description: e.desc,
+        amount: e.amt,
+        date: e.date,
+      });
     }
 
-    await db.execute('COMMIT');
-  } catch {
-    await db.execute('ROLLBACK');
-    return;
+    localStorage.setItem('lance:seeded', 'true');
+    localStorage.setItem('lance:seeded-toast-shown', 'true');
+  } catch (err) {
+    console.error('[seedData] seedSampleData failed:', err);
   }
-
-  localStorage.setItem('lance:seeded', 'true');
 }
 
 export async function clearSampleData(): Promise<void> {
-  const db = await getDb();
-
-  await db.execute('BEGIN TRANSACTION');
-  try {
-    await db.execute(`DELETE FROM milestones WHERE project_id IN (SELECT id FROM projects WHERE seeded = 1)`);
-    await db.execute(`DELETE FROM follow_up_log WHERE entity_id IN (SELECT id FROM proposals WHERE seeded = 1) OR entity_id IN (SELECT id FROM invoices WHERE seeded = 1)`);
-
-    const tables = ['time_entries', 'invoices', 'recurring_invoices', 'contracts', 'proposals', 'projects', 'expenses', 'clients'];
-    for (const table of tables) {
-      await db.execute(`DELETE FROM ${table} WHERE seeded = 1`);
+  // In browser mode, we can clear the localStorage entries
+  // In Tauri mode, the original SQL-based function handles this
+  const { getDb } = await import('../db');
+  const db = await getDb().catch(() => null);
+  if (db) {
+    // Tauri mode: use SQL
+    try {
+      await db.execute('BEGIN TRANSACTION');
+      await db.execute(`DELETE FROM milestones WHERE project_id IN (SELECT id FROM projects WHERE seeded = 1)`);
+      await db.execute(`DELETE FROM follow_up_log WHERE entity_id IN (SELECT id FROM proposals WHERE seeded = 1) OR entity_id IN (SELECT id FROM invoices WHERE seeded = 1)`);
+      const tables = ['time_entries', 'invoices', 'recurring_invoices', 'contracts', 'proposals', 'projects', 'expenses', 'clients'];
+      for (const table of tables) {
+        await db.execute(`DELETE FROM ${table} WHERE seeded = 1`);
+      }
+      await db.execute('COMMIT');
+    } catch {
+      await db.execute('ROLLBACK');
     }
-    await db.execute('COMMIT');
-  } catch {
-    await db.execute('ROLLBACK');
-    return;
+  } else {
+    // Browser mode: reload from clean state — store data isn't flagged,
+    // but clearing localStorage entries resets everything
+    const keys = Object.keys(localStorage).filter(k => k.startsWith('lance:store:') || k === 'lance:seeded' || k === 'lance:seeded-toast-shown' || k === 'lance:templates-seeded');
+    keys.forEach(k => localStorage.removeItem(k));
   }
   localStorage.removeItem('lance:seeded');
   localStorage.removeItem('lance:seeded-toast-shown');

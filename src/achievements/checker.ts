@@ -3,25 +3,70 @@ import { ACHIEVEMENTS } from './index';
 import { getDb } from '../db';
 import type { AppStore } from '../store';
 
+function isTauriAvailable(): boolean {
+  return typeof window !== 'undefined' && typeof (window as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ === 'object';
+}
+
 export type StoreState = Pick<
   AppStore,
   'proposals' | 'invoices' | 'timeEntries' | 'clients' | 'contracts' | 'recurringInvoices' | 'projects'
 >;
 
+const ACHIEVEMENTS_KEY = 'lance:achievements';
+
+function lsGetUnlocked(): Set<string> {
+  try {
+    const raw = localStorage.getItem(ACHIEVEMENTS_KEY);
+    return new Set<string>(raw ? JSON.parse(raw) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function lsSaveUnlocked(key: AchievementKey): void {
+  try {
+    const current = lsGetUnlocked();
+    current.add(key);
+    localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify([...current]));
+  } catch {
+    /* localStorage may be full or unavailable */
+  }
+}
+
 async function getUnlockedKeys(): Promise<Set<string>> {
-  const db = await getDb();
-  const rows = await db.select<Array<{ key: string }>>(
-    'SELECT key FROM achievements'
-  );
-  return new Set(rows.map((r: { key: string }) => r.key));
+  if (isTauriAvailable()) {
+    try {
+      const db = await getDb();
+      const rows = await db.select<Array<{ key: string }>>(
+        'SELECT key FROM achievements'
+      );
+      // Merge DB state into localStorage for browser-mode compatibility
+      const merged = lsGetUnlocked();
+      for (const r of rows) merged.add(r.key);
+      localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify([...merged]));
+      return merged;
+    } catch {
+      /* fall through to localStorage */
+    }
+  }
+  return lsGetUnlocked();
 }
 
 async function saveAchievement(key: AchievementKey): Promise<void> {
-  const db = await getDb();
-  await db.execute(
-    'INSERT OR IGNORE INTO achievements (id, key, unlocked_at) VALUES (?, ?, ?)',
-    [crypto.randomUUID(), key, new Date().toISOString()]
-  );
+  // Always persist to localStorage for browser-mode compatibility
+  lsSaveUnlocked(key);
+
+  if (isTauriAvailable()) {
+    try {
+      const db = await getDb();
+      await db.execute(
+        'INSERT OR IGNORE INTO achievements (id, key, unlocked_at) VALUES (?, ?, ?)',
+        [crypto.randomUUID(), key, new Date().toISOString()]
+      );
+    } catch {
+      /* db write failed, already saved to localStorage */
+    }
+  }
 }
 
 export async function checkAchievements(store: StoreState): Promise<AchievementKey[]> {

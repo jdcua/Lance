@@ -276,7 +276,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
         const latestClients = useStore.getState().clients;
         for (const data of projectData) {
           const client = data.client_name
-            ? latestClients.find(c => c.name.toLowerCase() === data.client_name!.toLowerCase())
+            ? latestClients.find(c => (c.name || '').toLowerCase() === (data.client_name || '').toLowerCase())
             : latestClients[0];
           await addProject({
             client_id: client?.id || latestClients[0]?.id || '_unknown',
@@ -318,10 +318,10 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
         const latestClients = useStore.getState().clients;
         let clientId = latestClients[0]?.id || '_unknown';
         if (prefill.email) {
-          const matched = latestClients.find(c => c.email?.toLowerCase() === prefill.email?.toLowerCase());
+          const matched = latestClients.find(c => (c.email || '').toLowerCase() === (prefill.email || '').toLowerCase());
           if (matched) clientId = matched.id;
         } else if (prefill.client_name) {
-          const matched = latestClients.find(c => c.name.toLowerCase() === prefill.client_name!.toLowerCase());
+          const matched = latestClients.find(c => (c.name || '').toLowerCase() === (prefill.client_name || '').toLowerCase());
           if (matched) clientId = matched.id;
         }
 
@@ -348,7 +348,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
         const latestClients = useStore.getState().clients;
         let clientId = latestClients[0]?.id || '_unknown';
         if (prefill.client_name) {
-          const matched = latestClients.find(c => c.name.toLowerCase() === prefill.client_name!.toLowerCase());
+          const matched = latestClients.find(c => (c.name || '').toLowerCase() === (prefill.client_name || '').toLowerCase());
           if (matched) clientId = matched.id;
         }
 
@@ -367,7 +367,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
         const latestClients = useStore.getState().clients;
         let clientId = latestClients[0]?.id || '_unknown';
         if (prefill.client_name) {
-          const matched = latestClients.find(c => c.name.toLowerCase() === prefill.client_name!.toLowerCase());
+          const matched = latestClients.find(c => (c.name || '').toLowerCase() === (prefill.client_name || '').toLowerCase());
           if (matched) clientId = matched.id;
         }
 
@@ -436,6 +436,9 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
               </p>
               <p className="text-xs text-[var(--text-tertiary)]">
                 .xlsx, .csv, .pdf, .docx, .doc, .png, .jpg, .jpeg
+              </p>
+              <p className="text-[10px] text-[var(--text-tertiary)]/60">
+                Spreadsheets &amp; documents are parsed for data. Images are saved as attachments.
               </p>
             </div>
             <input

@@ -286,7 +286,7 @@ export default function Projects() {
   const filtered = projects.filter(p => {
     if (!search) return true;
     const s = search.toLowerCase();
-    return p.title.toLowerCase().includes(s) || getClientName(p.client_id).toLowerCase().includes(s);
+    return (p.title || '').toLowerCase().includes(s) || (getClientName(p.client_id) || '').toLowerCase().includes(s);
   });
 
   const sorted = [...filtered].sort((a, b) => {
@@ -380,7 +380,14 @@ export default function Projects() {
           <FolderKanban size={40} className="text-[var(--text-tertiary)] mb-4" />
           <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No projects yet</h3>
           <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Create your first project to start tracking work.</p>
-          <Button onClick={openNewProject} size="sm" variant="secondary">New Project</Button>
+          {clients.length === 0 ? (
+            <div className="text-center">
+              <p className="text-xs text-[var(--warning-text)] mb-3">Add at least one client before creating a project.</p>
+              <Button size="sm" disabled={true}>New Project</Button>
+            </div>
+          ) : (
+            <Button onClick={openNewProject} size="sm" variant="secondary">New Project</Button>
+          )}
         </Card>
       ) : filtered.length === 0 && search ? (
         <Card className="text-center py-12">

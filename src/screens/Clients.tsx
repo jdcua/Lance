@@ -15,6 +15,7 @@ import ClientImportModal from '../components/ui/ClientImportModal';
 import { formatCurrency, relativeDate } from '../utils/format';
 import { getCurrencySymbol, CURRENCIES } from '../lib/currency';
 import { checkAndNotify } from '../achievements/notify';
+import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 
 const commIcons: Record<string, typeof MessageSquare> = {
   note: MessageSquare,
@@ -250,9 +251,9 @@ export default function Clients() {
   };
 
   const filteredClients = clients.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    (c.company && c.company.toLowerCase().includes(search.toLowerCase())) ||
-    (c.email && c.email.toLowerCase().includes(search.toLowerCase()))
+    (c.name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (c.company || '').toLowerCase().includes(search.toLowerCase()) ||
+    (c.email || '').toLowerCase().includes(search.toLowerCase())
   );
 
   const openNew = () => {
@@ -287,10 +288,18 @@ export default function Clients() {
     }
     setSaving(true);
     try {
+      const sanitized = {
+        name: sanitizeInput(form.name).slice(0, MAX_LENGTHS.name),
+        email: form.email ? sanitizeInput(form.email).slice(0, MAX_LENGTHS.email) : undefined,
+        phone: form.phone ? sanitizeInput(form.phone).slice(0, MAX_LENGTHS.phone) : undefined,
+        company: form.company ? sanitizeInput(form.company).slice(0, MAX_LENGTHS.company) : undefined,
+        notes: form.notes ? sanitizeInput(form.notes).slice(0, MAX_LENGTHS.notes) : undefined,
+        preferred_currency: form.preferred_currency || undefined,
+      };
       if (editing) {
-        await updateClient({ ...editing, name: form.name, email: form.email || undefined, phone: form.phone || undefined, company: form.company || undefined, notes: form.notes || undefined, preferred_currency: form.preferred_currency || undefined });
+        await updateClient({ ...editing, ...sanitized });
       } else {
-        const c = await addClient({ name: form.name, email: form.email || undefined, phone: form.phone || undefined, company: form.company || undefined, notes: form.notes || undefined, preferred_currency: form.preferred_currency || undefined });
+        const c = await addClient(sanitized);
         setSelectedId(c.id);
       }
       setShowModal(false);
@@ -995,6 +1004,7 @@ export default function Clients() {
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="Client name"
+              maxLength={MAX_LENGTHS.name}
               className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               autoFocus
             />
@@ -1007,6 +1017,7 @@ export default function Clients() {
                 value={form.email}
                 onChange={(e) => { setForm({ ...form, email: e.target.value }); setFormErrors({}); }}
                 placeholder="email@example.com"
+                maxLength={MAX_LENGTHS.email}
                 className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               />
               {formErrors.email && (
@@ -1022,6 +1033,7 @@ export default function Clients() {
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   placeholder="555-0000"
+                  maxLength={MAX_LENGTHS.phone}
                   className="flex-1 px-3 py-2 text-sm border border-[var(--border-color)] rounded-r-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
                 />
               </div>
@@ -1034,6 +1046,7 @@ export default function Clients() {
               value={form.company}
               onChange={(e) => setForm({ ...form, company: e.target.value })}
               placeholder="Company name"
+              maxLength={MAX_LENGTHS.company}
               className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
             />
           </div>
@@ -1058,6 +1071,7 @@ export default function Clients() {
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
               placeholder="Any notes about this client..."
               rows={3}
+              maxLength={MAX_LENGTHS.notes}
               className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 resize-none"
             />
           </div>

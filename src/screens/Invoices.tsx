@@ -484,7 +484,7 @@ export default function Invoices() {
   const filteredInvoices = invoices.filter(inv => {
     if (!search) return true;
     const s = search.toLowerCase();
-    return inv.invoice_number.toLowerCase().includes(s) || getClientName(inv.client_id).toLowerCase().includes(s);
+    return (inv.invoice_number || '').toLowerCase().includes(s) || (getClientName(inv.client_id) || '').toLowerCase().includes(s);
   });
 
   const sortedInvoices = [...filteredInvoices].sort((a, b) => {
@@ -507,7 +507,7 @@ export default function Invoices() {
   const filteredRecurring = recurringInvoices.filter(ri => {
     if (!search) return true;
     const s = search.toLowerCase();
-    return ri.title.toLowerCase().includes(s) || getClientName(ri.client_id).toLowerCase().includes(s);
+    return (ri.title || '').toLowerCase().includes(s) || (getClientName(ri.client_id) || '').toLowerCase().includes(s);
   });
 
   if (loading) return (
@@ -561,7 +561,14 @@ export default function Invoices() {
             <Receipt size={40} className="text-[var(--text-tertiary)] mb-4" />
             <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No invoices yet</h3>
             <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Create your first invoice to get paid.</p>
-            <Button onClick={handleCreateFromEmptyState} size="sm" variant="secondary">New Invoice</Button>
+            {clients.length === 0 ? (
+              <div className="text-center">
+                <p className="text-xs text-[var(--warning-text)] mb-3">Add at least one client before creating an invoice.</p>
+                <Button size="sm" disabled={true}>New Invoice</Button>
+              </div>
+            ) : (
+              <Button onClick={handleCreateFromEmptyState} size="sm" variant="secondary">New Invoice</Button>
+            )}
           </Card>
         ) : filteredInvoices.length === 0 && search ? (
           <Card className="text-center py-12"><p className="text-sm text-[var(--text-tertiary)]">No invoices match "{search}"</p></Card>

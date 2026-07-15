@@ -83,7 +83,7 @@ export default function SearchScreen() {
     const groups: Record<string, SearchResult[]> = {};
 
     groups.client = clients
-      .filter((c) => c.name.toLowerCase().includes(q) || (c.company || '').toLowerCase().includes(q))
+      .filter((c) => (c.name || '').toLowerCase().includes(q) || (c.company || '').toLowerCase().includes(q))
       .map((c) => ({
         id: c.id,
         label: c.name,
@@ -93,7 +93,7 @@ export default function SearchScreen() {
       }));
 
     groups.proposal = proposals
-      .filter((p) => p.title.toLowerCase().includes(q))
+      .filter((p) => (p.title || '').toLowerCase().includes(q))
       .map((p) => ({
         id: p.id,
         label: p.title,
@@ -103,7 +103,7 @@ export default function SearchScreen() {
       }));
 
     groups.project = projects
-      .filter((p) => p.title.toLowerCase().includes(q))
+      .filter((p) => (p.title || '').toLowerCase().includes(q))
       .map((p) => ({
         id: p.id,
         label: p.title,
@@ -113,7 +113,7 @@ export default function SearchScreen() {
       }));
 
     groups.invoice = invoices
-      .filter((inv) => inv.invoice_number.toLowerCase().includes(q))
+      .filter((inv) => (inv.invoice_number || '').toLowerCase().includes(q))
       .map((inv) => ({
         id: inv.id,
         label: inv.invoice_number,
@@ -123,7 +123,7 @@ export default function SearchScreen() {
       }));
 
     groups.contract = contracts
-      .filter((c) => c.title.toLowerCase().includes(q))
+      .filter((c) => (c.title || '').toLowerCase().includes(q))
       .map((c) => ({
         id: c.id,
         label: c.title,
@@ -146,7 +146,7 @@ export default function SearchScreen() {
       });
 
     groups.expense = expenses
-      .filter((e) => e.description.toLowerCase().includes(q))
+      .filter((e) => (e.description || '').toLowerCase().includes(q))
       .map((e) => ({
         id: e.id,
         label: e.description,
@@ -158,7 +158,7 @@ export default function SearchScreen() {
     groups.asset = allAttachments
       .filter((a) => {
         const tags = parseTags(a.tags);
-        return a.filename.toLowerCase().includes(q) || tags.some((t) => t.toLowerCase().includes(q));
+        return (a.filename || '').toLowerCase().includes(q) || tags.some((t) => (t || '').toLowerCase().includes(q));
       })
       .map((a) => ({
         id: a.id,

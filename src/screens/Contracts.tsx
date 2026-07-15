@@ -205,7 +205,7 @@ export default function Contracts() {
   const filtered = contracts.filter((c) => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
-    return c.title.toLowerCase().includes(q) || getClientName(c.client_id).toLowerCase().includes(q);
+    return (c.title || '').toLowerCase().includes(q) || (getClientName(c.client_id) || '').toLowerCase().includes(q);
   });
 
   const allTemplates = [...PREBUILT_TEMPLATES.map((t) => ({ ...t, id: `prebuilt:${t.name}`, created_at: '' })), ...contractTemplates];
@@ -298,7 +298,10 @@ export default function Contracts() {
             <Card className="text-center py-16 flex flex-col items-center">
               <PenLine size={40} className="text-[var(--text-tertiary)] mb-4" />
               <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No contracts yet</h3>
-              <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Convert a proposal to get started.</p>
+              <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Convert a proposal or create a contract directly.</p>
+              {clients.length > 0 && (
+                <Button onClick={openNew} size="sm" variant="secondary"><Plus size={14} /> New Contract</Button>
+              )}
             </Card>
           ) : filtered.length === 0 ? (
             <Card className="text-center py-16 flex flex-col items-center">

@@ -7,6 +7,7 @@
  */
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { Lock } from 'lucide-react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
@@ -73,7 +74,13 @@ export default function App() {
   useEffect(() => {
     const seen = localStorage.getItem('lance:changelog-seen');
     if (seen !== APP_VERSION) {
-      setShowChangelog(true);
+      // If onboarding hasn't been completed yet, defer changelog to next session
+      const onboardingCompleted = localStorage.getItem('lance:onboarding-completed') === 'true';
+      if (onboardingCompleted) {
+        setShowChangelog(true);
+      }
+      // Otherwise, the changelog will show on the next app load
+      // (the version check will still find it unseen)
     }
   }, []);
 
@@ -83,21 +90,27 @@ export default function App() {
   };
 
   useEffect(() => {
+    let cleanup: (() => void) | undefined;
     const setupListeners = async () => {
-      const { listen } = await import('@tauri-apps/api/event');
-      const unlistenReady = await listen<{ port: number }>('portal-server-ready', (event) => {
-        setPortalPort(event.payload.port);
-      });
-      const unlistenFailed = await listen<{ reason: string }>('portal-server-failed', () => {
-        setPortalFailed();
-        addToast('Client portal unavailable \u2014 port conflict. Restart Lance to retry.', 'error', 8000);
-      });
-      return () => {
-        unlistenReady();
-        unlistenFailed();
-      };
+      try {
+        const { tauriListen } = await import('./utils/tauri');
+        const unlistenReady = await tauriListen<{ port: number }>('portal-server-ready', (event) => {
+          setPortalPort(event.port);
+        });
+        const unlistenFailed = await tauriListen<{ reason: string }>('portal-server-failed', () => {
+          setPortalFailed();
+          addToast('Client portal unavailable \u2014 port conflict. Restart Lance to retry.', 'error', 8000);
+        });
+        cleanup = () => {
+          unlistenReady();
+          unlistenFailed();
+        };
+      } catch (err) {
+        console.debug('[tauri] Portal listeners not available in browser mode:', err);
+      }
     };
     setupListeners();
+    return () => cleanup?.();
   }, []);
 
   useEffect(() => {
@@ -248,13 +261,10 @@ export default function App() {
       return;
     }
     if (!profileLoaded) return;
-    if (Boolean(profile?.name)) {
-      localStorage.setItem('lance:onboarding-completed', 'true');
-      setShowOnboarding(false);
-      return;
-    }
+    // Only show onboarding if no explicit completion flag and user hasn't finished
+    // Do NOT auto-complete just because profile.name exists — the user must go through all steps
     setShowOnboarding(true);
-  }, [profileLoaded, profile]);
+  }, [profileLoaded]);
 
   // Show walkthrough after onboarding completes
   useEffect(() => {
@@ -355,9 +365,10 @@ export default function App() {
     return () => cancelIdleCallback(handle);
   }, [hasRanAutoGen, recurringInvoices.length, invoices.length]);
 
-  // Auto-backup check — runs after engines, deferred
+  // Auto-backup check — runs after engines, deferred (browser mode: skip)
   useEffect(() => {
     if (!hasRanAutoGen) return;
+    if (typeof window === 'undefined' || !(window as any).__TAURI_INTERNALS__) return;
     const handle = requestIdleCallback(async () => {
       try {
         const { runAutoBackup } = await import('./utils/backup');
@@ -558,13 +569,6 @@ export default function App() {
     return () => document.removeEventListener('lance:open-import', handler);
   }, []);
 
-  // Listen for lance:open-archetype-picker from Settings
-  useEffect(() => {
-    const handler = () => navigate('/archetype');
-    document.addEventListener('lance:open-archetype-picker', handler);
-    return () => document.removeEventListener('lance:open-archetype-picker', handler);
-  }, [navigate]);
-
   const toggleTimer = useCallback(async () => {
     const state = useStore.getState();
     await state.loadTimeEntries();
@@ -612,6 +616,13 @@ export default function App() {
     }
   }, [addToast]);
 
+  // Listen for lance:toggle-timer from Time page MetricCard click
+  useEffect(() => {
+    const handler = () => toggleTimer();
+    document.addEventListener('lance:toggle-timer', handler);
+    return () => document.removeEventListener('lance:toggle-timer', handler);
+  }, [toggleTimer]);
+
   // Keyboard shortcuts
   const isEditing = useCallback((): boolean => {
     const tag = (document.activeElement?.tagName || '').toLowerCase();
@@ -630,7 +641,7 @@ export default function App() {
       }
       if (e.key === ',' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        if (!isEditing()) navigate('/settings');
+        if (!isEditing()) navigate('/settings', { replace: true });
         return;
       }
       const modShift = (e.metaKey || e.ctrlKey) && e.shiftKey;
@@ -679,8 +690,14 @@ export default function App() {
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [navigate, location, isEditing]);
+  }, [navigate, location, isEditing, toggleTimer]);
 
+  // Listen for lance:open-archetype-picker from Settings
+  useEffect(() => {
+    const handler = () => navigate('/archetype');
+    document.addEventListener('lance:open-archetype-picker', handler);
+    return () => document.removeEventListener('lance:open-archetype-picker', handler);
+  }, [navigate]);
 
   return (
     <ErrorBoundary>
@@ -699,8 +716,8 @@ export default function App() {
         <SplashScreen onDismiss={() => setShowSplash(false)} />
       )}
 
-      {/* Changelog modal */}
-      <Modal open={showChangelog} onClose={dismissChangelog} title={"What's new in Lance " + APP_VERSION} size="md">
+      {/* Changelog modal — hidden while onboarding is active to avoid z-index overlap */}
+      <Modal open={showChangelog && !showOnboarding} onClose={dismissChangelog} title={"What's new in Lance " + APP_VERSION} size="md">
         <div className="space-y-3">
           <p className="text-xs text-[var(--text-tertiary)] font-medium">Version {APP_VERSION}</p>
           <ul className="space-y-2">
@@ -859,6 +876,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
   const handleOnboardingClose = useCallback(() => {
     localStorage.setItem('lance:onboarding-step', 'complete');
     localStorage.setItem('lance:onboarding-completed', 'true');
+    localStorage.setItem('lance:tour-pending', 'true');
     setShowOnboarding(false);
   }, []);
 
@@ -887,12 +905,22 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
       }
       if (seedDataRef.current) {
         await seedSampleData();
+        // Check for newly unlocked achievements from seed data
+        try {
+          const { useStore } = await import('./store');
+          const newAch = await checkAchievements(useStore.getState());
+          for (const key of newAch) {
+            const ach = ACHIEVEMENTS.find((a) => a.key === key);
+            if (ach) console.info(`[achievement] Unlocked: ${ach.title}`);
+          }
+        } catch { /* non-critical */ }
       }
     } finally {
       setIsSaving(false);
     }
     localStorage.setItem('lance:onboarding-step', 'complete');
     localStorage.setItem('lance:onboarding-completed', 'true');
+    localStorage.setItem('lance:tour-pending', 'true');
     setShowOnboarding(false);
   };
 
@@ -947,7 +975,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
               ))}
             </div>
             <div className="flex justify-between pt-1">
-              <Button variant="ghost" onClick={handleOnboardingFinish} size="sm">Skip</Button>
+              <Button variant="ghost" onClick={handleOnboardingNext} size="sm">Skip</Button>
               <Button onClick={handleOnboardingNext} size="sm">Continue &rarr;</Button>
             </div>
           </>
@@ -1014,7 +1042,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
               <Button
                 onClick={handleOnboardingNext}
                 size="sm"
-                disabled={!onboardingForm.name.trim() || !!validationErrors.email || !EMAIL_REGEX.test(onboardingForm.email)}
+                disabled={!onboardingForm.name.trim() || !!validationErrors.email || (onboardingForm.email !== '' && !EMAIL_REGEX.test(onboardingForm.email))}
               >
                 Continue &rarr;
               </Button>
@@ -1034,16 +1062,14 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
               </p>
             </div>
             <div className="space-y-1 max-h-[300px] overflow-y-auto">
-              {THEMES.filter(theme => {
-                if (onboardingForm.profession && theme.id === PROFESSION_THEME[onboardingForm.profession as Profession]) return true;
-                return theme.id === 'default';
-              }).map((theme) => {
-                const isUnlocked = true; // We only render unlocked themes now
+              {THEMES.map((theme) => {
+                const isUnlocked = theme.id === 'default' || (onboardingForm.profession && theme.id === PROFESSION_THEME[onboardingForm.profession as Profession]);
                 const isActive = activeThemeId === theme.id;
                 return (
                   <button
                     key={theme.id}
                     onClick={() => {
+                      if (!isUnlocked) return;
                       applyTheme(theme);
                       localStorage.setItem('lance:theme', theme.id);
                       setActiveThemeId(theme.id);
@@ -1051,8 +1077,11 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-[8px] text-left text-xs transition-colors ${
                       isActive
                         ? 'bg-[var(--accent-bg)] border-[var(--accent)] text-[var(--text-primary)] border'
-                        : 'bg-[var(--bg-secondary)] border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] border'
+                        : isUnlocked
+                        ? 'bg-[var(--bg-secondary)] border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] border'
+                        : 'bg-[var(--bg-secondary)] border-transparent text-[var(--text-tertiary)] opacity-60 cursor-not-allowed border'
                     }`}
+                    disabled={!isUnlocked}
                   >
                     <div
                       className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
@@ -1062,9 +1091,17 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
                       {isActive && <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium">{theme.name}</div>
-                      <div className="text-[10px] opacity-70 truncate">{theme.description}</div>
+                      <div className={`font-medium ${isUnlocked ? 'text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}>{theme.name}</div>
+                      <div className="text-[10px] text-[var(--text-tertiary)] truncate mt-0.5">{theme.description}</div>
                     </div>
+                    {isUnlocked ? (
+                      <span className="text-[10px] text-[var(--text-tertiary)]">{theme.name}</span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-[10px] text-[var(--text-tertiary)]">
+                        <Lock size={10} />
+                        {theme.unlockedBy.replace(/^Always available$/, '') || 'Locked'}
+                      </span>
+                    )}
                   </button>
                 );
               })}

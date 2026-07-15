@@ -119,27 +119,27 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
     }
 
     clients.forEach((c) => {
-      if (c.name.toLowerCase().includes(q) || (c.company || '').toLowerCase().includes(q)) {
+      if ((c.name || '').toLowerCase().includes(q) || (c.company || '').toLowerCase().includes(q)) {
         items.push({ id: c.id, label: c.name, sublabel: 'Client' + (c.company ? ` — ${c.company}` : ''), type: 'client', path: `/clients` });
       }
     });
     proposals.forEach((p) => {
-      if (p.title.toLowerCase().includes(q)) {
+      if ((p.title || '').toLowerCase().includes(q)) {
         items.push({ id: p.id, label: p.title, sublabel: 'Proposal', type: 'proposal', path: `/proposals` });
       }
     });
     projects.forEach((p) => {
-      if (p.title.toLowerCase().includes(q)) {
+      if ((p.title || '').toLowerCase().includes(q)) {
         items.push({ id: p.id, label: p.title, sublabel: 'Project', type: 'project', path: `/projects` });
       }
     });
     invoices.forEach((inv) => {
-      if (inv.invoice_number.toLowerCase().includes(q)) {
+      if ((inv.invoice_number || '').toLowerCase().includes(q)) {
         items.push({ id: inv.id, label: inv.invoice_number, sublabel: 'Invoice', type: 'invoice', path: `/invoices` });
       }
     });
     contracts.forEach((c) => {
-      if (c.title.toLowerCase().includes(q)) {
+      if ((c.title || '').toLowerCase().includes(q)) {
         items.push({ id: c.id, label: c.title, sublabel: 'Contract', type: 'contract', path: `/contracts` });
       }
     });
@@ -159,7 +159,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
     });
 
     expenses.forEach((e) => {
-      if (e.description.toLowerCase().includes(q)) {
+      if ((e.description || '').toLowerCase().includes(q)) {
         items.push({
           id: e.id,
           label: e.description,
@@ -172,8 +172,8 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
 
     allAttachments.forEach((a) => {
       const tags = parseTags(a.tags);
-      const nameMatch = a.filename.toLowerCase().includes(q);
-      const tagMatch = tags.some((t: string) => t.toLowerCase().includes(q));
+      const nameMatch = (a.filename || '').toLowerCase().includes(q);
+      const tagMatch = tags.some((t: string) => (t || '').toLowerCase().includes(q));
       if (nameMatch || tagMatch) {
         const locationLabel = a.entity_type === 'library' ? 'Library' : a.entity_type;
         items.push({
@@ -275,7 +275,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
                     [`${modifier},`, 'Open Settings'],
                     [`${modifier}⇧T`, 'Start/Stop timer'],
                     [`${modifier}⇧L`, 'Quick log time'],
-                    [`${modifier}⇧P`, 'Toggle AI sidebar (if on)'],
+                    ...(aiEnabled ? [[`${modifier}⇧P`, 'Toggle AI sidebar (if on)']] : []),
                     ['Esc', 'Close this panel'],
                   ].map(([key, desc]) => (
                     <div key={key as string} className="flex items-center gap-2">

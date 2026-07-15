@@ -35,28 +35,30 @@ function LazyRoute({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <App />,
-    children: [
-      { index: true, element: <LazyRoute><Dashboard /></LazyRoute> },
-      { path: 'archetype', element: <LazyRoute><ArchetypePicker /></LazyRoute> },
-      { path: 'proposals', element: <LazyRoute><Proposals /></LazyRoute> },
-      { path: 'proposals/new', element: <LazyRoute><NewProposal /></LazyRoute> },
-      { path: 'contracts', element: <LazyRoute><Contracts /></LazyRoute> },
-      { path: 'projects', element: <LazyRoute><Projects /></LazyRoute> },
-      { path: 'time', element: <LazyRoute><Time /></LazyRoute> },
-      { path: 'invoices', element: <LazyRoute><Invoices /></LazyRoute> },
-      { path: 'follow-ups', element: <LazyRoute><FollowUps /></LazyRoute> },
-      { path: 'clients', element: <LazyRoute><Clients /></LazyRoute> },
-      { path: 'finance', element: <LazyRoute><Finance /></LazyRoute> },
-      { path: 'insights', element: <LazyRoute><Insights /></LazyRoute> },
-      { path: 'settings', element: <LazyRoute><SettingsView /></LazyRoute> },
-      { path: 'achievements', element: <LazyRoute><AchievementsPage /></LazyRoute> },
-      { path: 'assets', element: <LazyRoute><Assets /></LazyRoute> },
-      { path: 'search', element: <LazyRoute><SearchScreen /></LazyRoute> },
-      { path: '*', element: <LazyRoute><NotFound /></LazyRoute> },
-    ],
-  },
-]);
+export const router = createBrowserRouter(
+  [
+    {
+      path: '/',
+      element: <App />,
+      children: [
+        { index: true, element: <LazyRoute><Dashboard /></LazyRoute> },
+        { path: 'archetype', element: <LazyRoute><ArchetypePicker /></LazyRoute> },
+        { path: 'proposals', element: <LazyRoute><Proposals /></LazyRoute> },
+        { path: 'proposals/new', element: <LazyRoute><NewProposal /></LazyRoute> },
+        { path: 'contracts', element: <LazyRoute><Contracts /></LazyRoute> },
+        { path: 'projects', element: <LazyRoute><Projects /></LazyRoute> },
+        { path: 'time', element: <LazyRoute><Time /></LazyRoute> },
+        { path: 'invoices', element: <LazyRoute><Invoices /></LazyRoute> },
+        { path: 'follow-ups', element: <LazyRoute><FollowUps /></LazyRoute> },
+        { path: 'clients', element: <LazyRoute><Clients /></LazyRoute> },
+        { path: 'finance', element: <LazyRoute><Finance /></LazyRoute> },
+        { path: 'insights', element: <LazyRoute><Insights /></LazyRoute> },
+        { path: 'settings', element: <LazyRoute><SettingsView /></LazyRoute> },
+        { path: 'achievements', element: <LazyRoute><AchievementsPage /></LazyRoute> },
+        { path: 'assets', element: <LazyRoute><Assets /></LazyRoute> },
+        { path: 'search', element: <LazyRoute><SearchScreen /></LazyRoute> },
+        { path: '*', element: <LazyRoute><NotFound /></LazyRoute> },
+      ],
+    },
+  ],
+);

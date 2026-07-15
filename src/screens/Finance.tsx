@@ -208,7 +208,7 @@ export default function Finance() {
         onClick={() => setTab('overview')}
         className={`text-sm font-medium pb-1.5 border-b-2 transition-colors ${
           tab === 'overview'
-            ? 'text-[var(--text-primary)] border-[var(--accent)]'
+            ? 'text-[var(--accent)] border-[var(--accent)]'
             : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
         }`}
       >
@@ -218,7 +218,7 @@ export default function Finance() {
         onClick={() => setTab('aging')}
         className={`text-sm font-medium pb-1.5 border-b-2 transition-colors flex items-center gap-1.5 ${
           tab === 'aging'
-            ? 'text-[var(--text-primary)] border-[var(--accent)]'
+            ? 'text-[var(--accent)] border-[var(--accent)]'
             : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
         }`}
       >

@@ -110,25 +110,27 @@ export default function Dashboard() {
   useEffect(() => {
     if (!archetype) return;
     const loadMetrics = async () => {
-      const db = await getDb();
-      const values: Record<string, string | number> = {};
-      for (const card of archetype.dashboard.metricCards) {
-        try {
-          if (card.query) {
-            values[card.id] = await card.query(db, profile?.id || 1);
-          } else {
-            const queryFn = (queries as Record<string, (db: Database, profileId: number) => Promise<string | number>>)[card.id];
-            if (queryFn) {
-              values[card.id] = await queryFn(db, profile?.id || 1);
+      try {
+        const db = await getDb();
+        const values: Record<string, string | number> = {};
+        for (const card of archetype.dashboard.metricCards) {
+          try {
+            if (card.query) {
+              values[card.id] = await card.query(db, profile?.id || 1);
             } else {
-              values[card.id] = '—';
+              const queryFn = (queries as Record<string, (db: Database, profileId: number) => Promise<string | number>>)[card.id];
+              if (queryFn) {
+                values[card.id] = await queryFn(db, profile?.id || 1);
+              } else {
+                values[card.id] = '—';
+              }
             }
+          } catch { /* metric query failed; show em-dash as fallback */
+            values[card.id] = '—';
           }
-        } catch { /* metric query failed; show em-dash as fallback */
-          values[card.id] = '—';
         }
-      }
-      setMetricValues(values);
+        setMetricValues(values);
+      } catch { /* db not available in browser mode */ }
     };
     loadMetrics();
   }, [archetype, profile]);

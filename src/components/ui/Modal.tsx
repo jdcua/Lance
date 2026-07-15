@@ -37,6 +37,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
         if (e.key === 'Escape') {
           e.preventDefault();
           e.stopPropagation();
+          // Close even when an input is focused
           onCloseRef.current();
           return;
         }

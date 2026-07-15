@@ -299,9 +299,18 @@ interface PhaseTrackerSlice {
 export type AppStore = ClientSlice & ProjectSlice & MilestoneSlice & ProposalSlice & ContractSlice & TimeSlice & InvoiceSlice & InvoicePaymentSlice & ExpenseSlice & ProfileSlice & CommunicationSlice & RecurringInvoiceSlice & ImportSlice & AttachmentSlice & MetricSlice & FollowUpSlice & ExportTemplateSlice & ContractTemplateSlice & ProjectTemplateSlice & ArchetypeRenderLogSlice & ArchetypeSessionSlice & ArchetypeShootSlice & ArchetypeRevisionSlice & ArchetypeBuildSlice & ArchetypeKeywordSlice & ArchetypeDatasetSlice & PhaseTrackerSlice;
 
 const invoke = async <T>(cmd: string, args?: Record<string, unknown>): Promise<T> => {
-  const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
+  const { tauriInvoke } = await import('../utils/tauri');
   return tauriInvoke<T>(cmd, args);
 };
+
+/** Return true if we can use the SQLite database (Tauri plugin-sql). */
+function canUseDb(): boolean {
+  try {
+    return typeof window !== 'undefined' && typeof (window as any).__TAURI_INTERNALS__ === 'object';
+  } catch {
+    return false;
+  }
+}
 
 export const useStore = create<AppStore>((set, get) => ({
   // Clients

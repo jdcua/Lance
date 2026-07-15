@@ -303,13 +303,21 @@ export default function TimeScreen() {
             <MetricCard label="Today" value={formatDuration(todaysMinutes)} color="gray" />
             <MetricCard label="This Week" value={formatDuration(weekMinutes)} color="gray" />
             <MetricCard label="Unbilled" value={formatDuration(unbilledMinutes)} subtext="billable hours" color={unbilledMinutes > 0 ? 'amber' : 'gray'} />
-            <MetricCard
-              label={activeTimer ? 'Timer Running' : 'Timer'}
-              value={activeTimer ? formatDuration(activeTimer.elapsed) : 'Stopped'}
-              subtext={activeTimer ? getProjectName(activeTimer.entry.project_id) : 'No active timer'}
-              trend={activeTimer ? 'up' : 'neutral'}
-              color={activeTimer ? 'green' : 'gray'}
-            />
+            <div
+              onClick={() => {
+                // Dispatch custom event so App.tsx's toggleTimer handles it
+                document.dispatchEvent(new Event('lance:toggle-timer'));
+              }}
+              className="cursor-pointer"
+            >
+              <MetricCard
+                label={activeTimer ? 'Timer Running' : 'Timer'}
+                value={activeTimer ? formatDuration(activeTimer.elapsed) : 'Stopped'}
+                subtext={activeTimer ? getProjectName(activeTimer.entry.project_id) : 'No active timer'}
+                trend={activeTimer ? 'up' : 'neutral'}
+                color={activeTimer ? 'green' : 'gray'}
+              />
+            </div>
           </div>
 
           {projects.length > 0 && clients.length > 0 && (

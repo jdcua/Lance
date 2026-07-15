@@ -263,12 +263,12 @@ export default function ClientImportModal({
 
     for (const row of mapped) {
       const nameMatch = latestClients.find(
-        (c) => c.name.toLowerCase() === row.name.toLowerCase()
+        (c) => (c.name || '').toLowerCase() === (row.name || '').toLowerCase()
       );
       const emailMatch =
         row.email &&
         latestClients.find(
-          (c) => c.email && c.email.toLowerCase() === row.email.toLowerCase()
+          (c) => c.email && (c.email || '').toLowerCase() === (row.email || '').toLowerCase()
         );
 
       if (nameMatch) {

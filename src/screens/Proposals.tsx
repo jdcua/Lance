@@ -235,7 +235,7 @@ export default function Proposals() {
     if (statusFilter !== 'all' && p.status !== statusFilter) return false;
     if (!search) return true;
     const s = search.toLowerCase();
-    return p.title.toLowerCase().includes(s) || getClientName(p.client_id).toLowerCase().includes(s);
+    return (p.title || '').toLowerCase().includes(s) || (getClientName(p.client_id) || '').toLowerCase().includes(s);
   });
 
   const sorted = [...filtered].sort((a, b) => {

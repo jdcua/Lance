@@ -37,9 +37,9 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
       const q = search.toLowerCase();
       list = list.filter(
         (a) =>
-          a.label.toLowerCase().includes(q) ||
-          a.tagline.toLowerCase().includes(q) ||
-          a.description.toLowerCase().includes(q)
+          (a.label || '').toLowerCase().includes(q) ||
+          (a.tagline || '').toLowerCase().includes(q) ||
+          (a.description || '').toLowerCase().includes(q)
       );
     }
     return list;

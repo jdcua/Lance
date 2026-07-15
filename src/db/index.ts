@@ -2,8 +2,21 @@ import Database from '@tauri-apps/plugin-sql';
 
 let db: Database | null = null;
 
+/** Mock database used when running in browser mode without Tauri. */
+class MockDatabase {
+  async select<T>(_sql: string, _params?: unknown[]): Promise<T[]> { return []; }
+  async execute(_sql: string, _params?: unknown[]): Promise<unknown> { return { rowsAffected: 0, lastInsertId: 0 }; }
+  async close(): Promise<void> {}
+}
+
 export async function getDb(): Promise<Database> {
   if (db) return db;
+
+  // In browser mode, return a silent mock so callers don't crash.
+  if (typeof window === 'undefined' || !(window as any).__TAURI_INTERNALS__) {
+    return new MockDatabase() as unknown as Database;
+  }
+
   db = await Database.load('sqlite:lance.db');
   await runMigrations(db);
   return db;

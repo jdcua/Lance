@@ -118,6 +118,18 @@ export default function Settings() {
     if (innerModalOpenRef.current) return;
     navigate(-1);
   }, [navigate]);
+  // Close settings with Escape (if no inner modal is open)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !innerModalOpenRef.current) {
+        e.preventDefault();
+        navigate(-1);
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [navigate]);
+
   useEffect(() => {
     innerModalOpenRef.current = showResetModal || showLicenseModal || showAssetWarning || showSchemaWarnModal || showImportSummary || showRemoveLicenseConfirm;
   }, [showResetModal, showLicenseModal, showAssetWarning, showSchemaWarnModal, showImportSummary, showRemoveLicenseConfirm]);
@@ -1401,7 +1413,7 @@ export default function Settings() {
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={() => { setShowResetModal(false); setResetConfirmText(''); }} size="sm">Cancel</Button>
-            <Button variant="danger" onClick={() => { handleResetData(); setResetConfirmText(''); }} size="sm" disabled={resetConfirmText !== 'Lance, The Tool for Freelancers'}>Delete everything</Button>
+            <Button variant="danger" onClick={() => { handleResetData(); setResetConfirmText(''); }} size="sm" disabled={resetConfirmText.trim().replace(/\s+/g, ' ') !== 'Lance, The Tool for Freelancers'}>Delete everything</Button>
           </div>
         </div>
       </Modal>

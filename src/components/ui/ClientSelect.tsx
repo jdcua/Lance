@@ -18,9 +18,9 @@ export default function ClientSelect({ clients, value, onChange, placeholder = '
   const selected = clients.find(c => c.id === value);
 
   const filtered = clients.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    (c.company && c.company.toLowerCase().includes(search.toLowerCase())) ||
-    (c.email && c.email.toLowerCase().includes(search.toLowerCase()))
+    (c.name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (c.company || '').toLowerCase().includes(search.toLowerCase()) ||
+    (c.email || '').toLowerCase().includes(search.toLowerCase())
   );
 
   useEffect(() => {

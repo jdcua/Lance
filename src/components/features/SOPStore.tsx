@@ -125,7 +125,7 @@ export default function SOPStore({ clientId }: { clientId: string }) {
   const filtered = searchQuery.trim()
     ? sops.filter(
         (s) =>
-          s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (s.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
           (s.content || '').toLowerCase().includes(searchQuery.toLowerCase())
       )
     : sops;

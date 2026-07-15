@@ -32,6 +32,26 @@ src-tauri/signing/*
 # Lint/formatter cache
 .eslintcache
 
+# QA & testing artifacts
+.playwright-mcp/
+.qa-bugs.json
+.qa-progress.json
+qa.sh
+
+# Screenshots & snapshots
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*-snapshot.md
+lance-*.md
+lance-after-fix-snapshot.md
+lance-contracts-snapshot.md
+lance-initial-snapshot.md
+lance-snapshot-2.md
+launch-video/
+
 # Lance.key
 lance.key
 

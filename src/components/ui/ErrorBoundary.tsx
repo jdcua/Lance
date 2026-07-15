@@ -22,28 +22,54 @@ export default class ErrorBoundary extends Component<Props, State> {
     console.error('[Lance ErrorBoundary]', error, info.componentStack);
   }
 
+  handleReload = () => {
+    window.location.reload();
+  };
+
+  handleDismiss = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
+
+      const isDomError = this.state.error?.message?.includes('removeChild') ||
+        this.state.error?.message?.includes('Node');
+
       return (
         <div className="h-full flex items-center justify-center bg-[var(--bg-primary)] p-6">
           <div className="text-center max-w-sm">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-2">Something went wrong</h2>
+            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-2">
+              Something went wrong
+            </h2>
             <p className="text-sm text-[var(--text-secondary)] mb-4">
-              An unexpected error occurred. Please try reloading the application.
+              {isDomError
+                ? 'A rendering error occurred. This can happen after navigating between pages.'
+                : 'An unexpected error occurred.'}
             </p>
-            <pre className="text-[10px] text-[var(--text-tertiary)] mb-4 bg-[var(--bg-secondary)] p-3 rounded-[8px] text-left overflow-auto max-h-32">
-              An unexpected error occurred. Please reload the application.
-            </pre>
-            <Button
-              onClick={() => {
-                this.setState({ hasError: false, error: null });
-                window.location.reload();
-              }}
-              size="sm"
-            >
-              Reload Application
-            </Button>
+            <details className="text-left mb-4">
+              <summary className="text-xs text-[var(--text-tertiary)] cursor-pointer hover:text-[var(--text-secondary)]">
+                Error details
+              </summary>
+              <pre className="text-[10px] text-[var(--text-tertiary)] mt-2 bg-[var(--bg-secondary)] p-3 rounded-[8px] text-left overflow-auto max-h-32 whitespace-pre-wrap break-all">
+                {this.state.error?.message || 'Unknown error'}
+                {'\n\n'}
+                {this.state.error?.stack || ''}
+              </pre>
+            </details>
+            <div className="flex flex-col gap-2">
+              <Button onClick={this.handleReload} size="sm">
+                Reload Application
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={this.handleDismiss}
+                size="sm"
+              >
+                Dismiss &amp; Continue
+              </Button>
+            </div>
           </div>
         </div>
       );
