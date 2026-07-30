@@ -13,9 +13,9 @@ export default function RenderLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ pass_name: '', duration_minutes: '', software: '', frame_range: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { loadRenderLogs(projectId); }, [projectId, loadRenderLogs]);
+  useEffect(() => { loadRenderLogs(); }, [projectId, loadRenderLogs]);
 
-  const logs = renderLogs[projectId] || [];
+  const logs = renderLogs.filter(l => l.project_id === projectId);
 
   const handleSave = async () => {
     if (!form.pass_name.trim()) return;

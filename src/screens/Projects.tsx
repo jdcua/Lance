@@ -138,7 +138,7 @@ export default function Projects() {
     if (!editingProject || !templateName.trim()) return;
     setSaving(true);
     try {
-      const ms = milestones[editingProject.id] || [];
+      const ms = milestones.filter((m) => m.project_id === editingProject.id);
       if (ms.length === 0) {
         addToast('Project has no milestones to save as template', 'info');
         setSaving(false);
@@ -186,9 +186,7 @@ export default function Projects() {
 
   const openMilestones = (projectId: string) => {
     setSelectedProject(selectedProject === projectId ? null : projectId);
-    if (!milestones[projectId]) {
-      loadMilestones(projectId);
-    }
+    loadMilestones();
   };
 
   const handleAddMilestone = async () => {
@@ -228,7 +226,7 @@ export default function Projects() {
     const { milestone, project } = invoicePrompt;
     setInvoicePrompt(null);
     try {
-      const projectMilestones = milestones[project.id] || [];
+      const projectMilestones = milestones.filter((m) => m.project_id === project.id);
       const totalMs = projectMilestones.length || 1;
       const unitPrice = (project.budget || 0) / totalMs;
       await loadInvoices();
@@ -396,7 +394,7 @@ export default function Projects() {
       ) : (
         <div className="space-y-3">
           {sorted.map((project) => {
-            const projectMilestones = milestones[project.id] || [];
+      const projectMilestones = milestones.filter((m) => m.project_id === project.id);
             const completedMs = projectMilestones.filter((m) => m.completed).length;
             const totalMs = projectMilestones.length;
             return (

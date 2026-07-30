@@ -13,13 +13,13 @@ export default function TimelineView({ projectId }: { projectId: string }) {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      await loadMilestones(projectId);
+      await loadMilestones();
       setLoading(false);
     };
     load();
   }, [projectId, loadMilestones]);
 
-  const items = (milestones[projectId] || []).slice().sort(
+  const items = milestones.filter(m => m.project_id === projectId).slice().sort(
     (a, b) => new Date(a.due_date || '').getTime() - new Date(b.due_date || '').getTime()
   );
 

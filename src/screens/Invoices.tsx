@@ -268,7 +268,7 @@ export default function Invoices() {
   };
 
   const getPaidTotal = (invId: string) => {
-    return (payments[invId] || []).reduce((sum, p) => sum + p.amount, 0);
+    return payments.filter((p) => p.invoice_id === invId).reduce((sum, p) => sum + p.amount, 0);
   };
 
   const getRemainingBalance = (inv: Invoice) => {
@@ -296,7 +296,7 @@ export default function Invoices() {
         reference: paymentForm.reference || undefined,
         notes: paymentForm.notes || undefined,
       });
-      const updatedPayments = useStore.getState().payments[paymentInv.id] || [];
+      const updatedPayments = useStore.getState().payments.filter((p) => p.invoice_id === paymentInv.id);
       const paidTotal = updatedPayments.reduce((s, p) => s + p.amount, 0) + amount;
       const newStatus = computeInvoiceStatus(paymentInv, paidTotal);
       const isFullyPaid = newStatus === 'paid';
@@ -327,8 +327,8 @@ export default function Invoices() {
       await removePayment(id, invoiceId);
       const inv = invoices.find((i) => i.id === invoiceId);
       if (inv) {
-        const remainingPayments = (useStore.getState().payments[invoiceId] || [])
-          .filter((p) => p.id !== id);
+        const remainingPayments = useStore.getState().payments
+          .filter((p) => p.invoice_id === invoiceId && p.id !== id);
         const paidTotal = remainingPayments.reduce((s, p) => s + p.amount, 0);
         const newStatus = computeInvoiceStatus(inv, paidTotal);
         if (newStatus !== inv.status) {
@@ -578,13 +578,13 @@ export default function Invoices() {
               const isExpanded = expandedInv === inv.id;
               const paidTotal = getPaidTotal(inv.id);
               const remaining = getRemainingBalance(inv);
-              const invPayments = payments[inv.id] || [];
+              const invPayments = payments.filter((p) => p.invoice_id === inv.id);
               const toggleExpand = () => {
                 if (isExpanded) {
                   setExpandedInv(null);
                 } else {
                   setExpandedInv(inv.id);
-                  if (!payments[inv.id]) loadPayments(inv.id);
+                  loadPayments();
                 }
               };
               return (

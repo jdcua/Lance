@@ -214,16 +214,12 @@ export default function Clients() {
   }, [clients, selectedId]);
 
   useEffect(() => {
-    if (selectedId && !communications[selectedId]) {
-      loadCommunications(selectedId);
-    }
-  }, [selectedId, communications, loadCommunications]);
+    loadCommunications();
+  }, [loadCommunications]);
 
   useEffect(() => {
-    if (selectedId) {
-      loadMetricDefs(selectedId);
-    }
-  }, [selectedId, loadMetricDefs]);
+    loadMetricDefs();
+  }, [loadMetricDefs]);
 
   useEffect(() => {
     loadMetricTemplates();
@@ -246,7 +242,7 @@ export default function Clients() {
     const clientInvoices = invoices.filter((i) => i.client_id === clientId);
     const lifetime = clientInvoices.filter((i) => i.status === 'paid').reduce((s, i) => s + i.total, 0);
     const outstanding = clientInvoices.filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').reduce((s, i) => s + i.total, 0);
-    const lastComm = (communications[clientId] || [])[0];
+    const lastComm = communications.find((c) => c.client_id === clientId);
     return { projectCount: clientProjects.length, proposalCount: clientProposals.length, lifetime, outstanding, lastComm };
   };
 
@@ -364,7 +360,7 @@ export default function Clients() {
     if (!selectedId || !metricForm.name.trim()) return;
     setSaving(true);
     try {
-      const defs = metricDefs[selectedId] || [];
+      const defs = metricDefs.filter((d) => d.client_id === selectedId);
       if (editingMetric) {
         await updateMetricDef({
           id: editingMetric.id,
@@ -417,7 +413,7 @@ export default function Clients() {
 
   const handleSaveAsTemplate = async () => {
     if (!selectedId || !templateName.trim()) return;
-    const defs = metricDefs[selectedId] || [];
+    const defs = metricDefs.filter((d) => d.client_id === selectedId);
     if (defs.length === 0) return;
     try {
       await saveMetricTemplate(templateName, defs.map(d => ({
@@ -439,14 +435,14 @@ export default function Clients() {
     if (!selectedId) return;
     try {
       await applyMetricTemplate(templateName, selectedId);
-      await loadMetricDefs(selectedId);
+      await loadMetricDefs();
       addToast(`Template "${templateName}" applied`, 'success');
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to apply template', 'error');
     }
   };
 
-  const clientComms = (communications[selectedId || ''] || []);
+  const clientComms = communications.filter((c) => c.client_id === selectedId);
 
   if (loading) return (
     <div className="flex h-full">
@@ -778,7 +774,7 @@ export default function Clients() {
                   )}
 
                   {/* Templates */}
-                  {metricTemplates.length > 0 && (metricDefs[selectedId] || []).length === 0 && (
+                  {metricTemplates.length > 0 && metricDefs.filter((d) => d.client_id === selectedId).length === 0 && (
                     <Card>
                       <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-3">
                         Apply a template
@@ -800,12 +796,12 @@ export default function Clients() {
 
                   {/* Metric definitions + values */}
                   <div className="space-y-4">
-                    {(metricDefs[selectedId] || []).map((def) => {
-                      const values = metricValues[def.id] || [];
+                    {metricDefs.filter((d) => d.client_id === selectedId).map((def) => {
+                      const values = metricValues.filter((v) => v.definition_id === def.id);
                       const numericValues = values
                         .map((v) => parseFloat(v.value))
                         .filter((v) => !isNaN(v));
-                      const isLoaded = !!metricValues[def.id];
+                      const isLoaded = true;
 
                       return (
                         <Card key={def.id} className="!p-4">

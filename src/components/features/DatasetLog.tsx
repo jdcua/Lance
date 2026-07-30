@@ -13,9 +13,9 @@ export default function DatasetLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ dataset_name: '', source: '', size_bytes: '', format_type: '', license_type: '' });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { loadDatasets(projectId); }, [projectId, loadDatasets]);
+  useEffect(() => { loadDatasets(); }, [projectId, loadDatasets]);
 
-  const list = datasets[projectId] || [];
+  const list = datasets.filter(d => d.project_id === projectId);
 
   const formatSize = (bytes?: number) => {
     if (bytes == null) return '';

@@ -31,7 +31,7 @@ export default function DependencyTracker({ projectId }: { projectId: string }) 
   const [loading, setLoading] = useState(true);
 
   const list = useMemo(() => {
-    const raw = milestones[projectId] || [];
+    const raw = milestones.filter(m => m.project_id === projectId);
     return raw.map((m) => ({
       ...m,
       depends_on: undefined as string | undefined,
@@ -39,7 +39,7 @@ export default function DependencyTracker({ projectId }: { projectId: string }) 
   }, [milestones, projectId]);
 
   useEffect(() => {
-    loadMilestones(projectId).then(() => setLoading(false));
+    loadMilestones().then(() => setLoading(false));
   }, [projectId, loadMilestones]);
 
   const handleSave = async () => {
@@ -74,7 +74,7 @@ export default function DependencyTracker({ projectId }: { projectId: string }) 
       const db = await getDb();
       await db.execute('UPDATE milestones SET completed = ? WHERE id = ?', [current ? 0 : 1, id]);
       setForm((f) => ({ ...f }));
-      await loadMilestones(projectId);
+      await loadMilestones();
     } catch (e) {
       console.error('[DependencyTracker] handleToggleComplete failed:', e);
     }

@@ -13,9 +13,9 @@ export default function RevisionTracker({ projectId }: { projectId: string }) {
   const [changeSummary, setChangeSummary] = useState('');
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { loadRevisions(projectId); }, [projectId, loadRevisions]);
+  useEffect(() => { loadRevisions(); }, [projectId, loadRevisions]);
 
-  const list = revisions[projectId] || [];
+  const list = revisions.filter(r => r.project_id === projectId);
   const nextRound = list.length > 0 ? Math.max(...list.map((r) => r.round_number)) + 1 : 1;
 
   const handleSave = async () => {

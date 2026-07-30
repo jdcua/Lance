@@ -11,9 +11,9 @@ export default function RevisionCounter({ projectId }: { projectId: string }) {
   const { revisions, loadRevisions, addRevision, proposals } = useStore();
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { loadRevisions(projectId); }, [projectId, loadRevisions]);
+  useEffect(() => { loadRevisions(); }, [projectId, loadRevisions]);
 
-  const list = revisions[projectId] || [];
+  const list = revisions.filter(r => r.project_id === projectId);
   const nextRound = list.length > 0 ? Math.max(...list.map((r) => r.round_number)) + 1 : 1;
 
   const projectProposal = proposals.find(p => p.project_id === projectId);

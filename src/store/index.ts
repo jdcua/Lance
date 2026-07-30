@@ -116,7 +116,7 @@ export interface UnifiedStore {
 
   // ── Updater ──
   updateAvailable: boolean
-  updateData: unknown | null
+  updateData: any | null
   isDownloading: boolean
   downloadProgressMB: string | null
   setUpdateAvailable: (data: unknown) => void
@@ -1358,8 +1358,8 @@ export const useStore = create<UnifiedStore>((set, get) => {
       const all = get().templateMilestones;
       const map: Record<string, ProjectTemplateMilestone[]> = {};
       for (const m of all) {
-        if (!map[m.project_template_id]) map[m.project_template_id] = [];
-        map[m.project_template_id].push(m);
+        if (!map[m.template_id]) map[m.template_id] = [];
+        map[m.template_id].push(m);
       }
       return map;
     },

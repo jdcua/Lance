@@ -13,9 +13,9 @@ export default function ShootLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ shoot_date: '', location: '', shoot_type: '', camera_system: '', hours_on_location: '', conditions_notes: '' });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { loadShoots(projectId); }, [projectId, loadShoots]);
+  useEffect(() => { loadShoots(); }, [projectId, loadShoots]);
 
-  const list = shoots[projectId] || [];
+  const list = shoots.filter(s => s.project_id === projectId);
 
   const handleSave = async () => {
     if (!form.shoot_date.trim()) return;

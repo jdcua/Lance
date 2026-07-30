@@ -13,9 +13,9 @@ export default function KeywordTracker({ clientId }: { clientId: string }) {
   const [form, setForm] = useState({ keyword: '', position_start: '', position_current: '', target_position: '' });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { if (clientId) loadKeywords(clientId); }, [clientId, loadKeywords]);
+  useEffect(() => { if (clientId) loadKeywords(); }, [clientId, loadKeywords]);
 
-  const list = keywords[clientId] || [];
+  const list = keywords.filter(k => k.client_id === clientId);
 
   const handleSave = async () => {
     if (!form.keyword.trim()) return;

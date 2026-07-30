@@ -20,16 +20,41 @@ const toastStore = {
   resume: (id: string) => useStore.getState().resumeToast(id),
 };
 
+export function useToasts(): {
+  toasts: Toast[];
+  add: (message: string, type?: ToastType, duration?: number, actions?: ToastAction[]) => string;
+  remove: (id: string) => void;
+  update: (id: string, message: string) => void;
+  pause: (id: string) => void;
+  resume: (id: string) => void;
+};
+export function useToasts<T>(selector: (state: {
+  toasts: Toast[];
+  add: (message: string, type?: ToastType, duration?: number, actions?: ToastAction[]) => string;
+  remove: (id: string) => void;
+  update: (id: string, message: string) => void;
+  pause: (id: string) => void;
+  resume: (id: string) => void;
+}) => T): T;
 export function useToasts(selector?: (state: any) => any) {
-  const state = useStore();
-  if (selector) return selector(state);
+  const bundle = useStore();
+  if (selector) {
+    return selector({
+      toasts: bundle.toasts,
+      add: bundle.addToast,
+      remove: bundle.removeToast,
+      update: bundle.updateToast,
+      pause: bundle.pauseToast,
+      resume: bundle.resumeToast,
+    });
+  }
   return {
-    toasts: state.toasts,
-    add: state.addToast,
-    remove: state.removeToast,
-    update: state.updateToast,
-    pause: state.pauseToast,
-    resume: state.resumeToast,
+    toasts: bundle.toasts,
+    add: bundle.addToast,
+    remove: bundle.removeToast,
+    update: bundle.updateToast,
+    pause: bundle.pauseToast,
+    resume: bundle.resumeToast,
   };
 }
 

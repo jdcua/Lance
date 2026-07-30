@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../store';
-import type { Expense, Invoice, InvoicePayment } from '../types';
+import type { Expense, Invoice, InvoicePayment, Milestone } from '../types';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
@@ -49,7 +49,7 @@ export default function Finance() {
       await Promise.all([loadExpenses(), loadInvoices(), loadRecurringInvoices(), loadProjects(), loadAllPayments(), loadClients()]);
       const state = useStore.getState();
       const active = state.projects.filter((p) => p.status === 'active');
-      await Promise.all(active.map((p) => loadMilestones(p.id)));
+      if (active.length > 0) await loadMilestones();
     };
     loadAll()
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
@@ -150,9 +150,13 @@ export default function Finance() {
   // ── Forecast computations ──
   const forecastMonths = getNextMonths(6);
   const avgClientRevenue = computeAvgClientRevenue(invoices);
+  const milestonesByProject = milestones.reduce<Record<string, Milestone[]>>((acc, m) => {
+    (acc[m.project_id] ??= []).push(m);
+    return acc;
+  }, {});
 
   const baseRevenue = computeRevenueForecast(
-    recurringInvoices, invoices, projects, milestones, monthlyPaid, forecastMonths,
+    recurringInvoices, invoices, projects, milestonesByProject, monthlyPaid, forecastMonths,
   );
   const baseExpenses = computeExpenseForecast(expenses, monthlyExpenses, forecastMonths);
 
@@ -370,7 +374,7 @@ export default function Finance() {
           )}
         </>
       ) : tab === 'aging' ? (
-        <AgingReport invoices={invoices} payments={payments} getClientName={(id: string) => clients.find((c) => c.id === id)?.name || 'Unknown'} fmt={fmt} addPayment={addPayment} updateInvoice={updateInvoice} addToast={(msg: string, type?: ToastType) => addToast(msg, type)} />
+        <AgingReport invoices={invoices} payments={payments.reduce<Record<string, InvoicePayment[]>>((acc, p) => { (acc[p.invoice_id] ??= []).push(p); return acc; }, {})} getClientName={(id: string) => clients.find((c) => c.id === id)?.name || 'Unknown'} fmt={fmt} addPayment={addPayment} updateInvoice={updateInvoice} addToast={(msg: string, type?: ToastType) => addToast(msg, type)} />
       ) : (
         /* ── Forecast tab ── */
         <>

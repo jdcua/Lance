@@ -13,7 +13,7 @@ export default function StatusReportGenerator({ projectId }: { projectId: string
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      await Promise.all([loadTimeEntries(), loadMilestones(projectId)]);
+      await Promise.all([loadTimeEntries(), loadMilestones()]);
       setLoading(false);
     };
     load();
@@ -22,7 +22,7 @@ export default function StatusReportGenerator({ projectId }: { projectId: string
   const projectEntries = timeEntries.filter(t => t.project_id === projectId);
   const totalMinutes = projectEntries.reduce((sum, t) => sum + (t.duration_minutes || 0), 0);
   const totalHours = totalMinutes / 60;
-  const projectMilestones = milestones[projectId] || [];
+  const projectMilestones = milestones.filter(m => m.project_id === projectId);
   const completedCount = projectMilestones.filter(m => m.completed).length;
   const lastActivity = projectEntries.length > 0
     ? projectEntries.reduce((latest, t) => {

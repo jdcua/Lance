@@ -13,9 +13,9 @@ export default function BuildLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ version: '', platform: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { loadBuilds(projectId); }, [projectId, loadBuilds]);
+  useEffect(() => { loadBuilds(); }, [projectId, loadBuilds]);
 
-  const list = builds[projectId] || [];
+  const list = builds.filter(b => b.project_id === projectId);
 
   const handleSave = async () => {
     setSaving(true);

@@ -24,7 +24,7 @@ export default function CullingTracker({ projectId }: { projectId: string }) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    loadShoots(projectId);
+    loadShoots();
     loadSessions();
   }, [projectId]);
 
@@ -37,7 +37,7 @@ export default function CullingTracker({ projectId }: { projectId: string }) {
     setLoading(false);
   };
 
-  const projectShoots = shoots[projectId] || [];
+  const projectShoots = shoots.filter(s => s.project_id === projectId);
 
   const handleSave = async () => {
     if (!form.date.trim()) return;
