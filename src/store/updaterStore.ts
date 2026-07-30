@@ -1,23 +1,15 @@
-import { create } from 'zustand';
+import { useStore } from './index';
 
-interface UpdaterState {
-  updateAvailable: boolean;
-  updateData: any | null;
-  isDownloading: boolean;
-  downloadProgressMB: string | null;
-  setUpdateAvailable: (updateData: any) => void;
-  setDownloading: (isDownloading: boolean) => void;
-  setDownloadProgress: (mb: string) => void;
-  dismiss: () => void;
+export function useUpdaterStore() {
+  const s = useStore();
+  return {
+    updateAvailable: s.updateAvailable,
+    updateData: s.updateData,
+    isDownloading: s.isDownloading,
+    downloadProgressMB: s.downloadProgressMB,
+    setUpdateAvailable: s.setUpdateAvailable,
+    setDownloading: s.setDownloading,
+    setDownloadProgress: s.setDownloadProgress,
+    dismiss: s.dismissUpdate,
+  };
 }
-
-export const useUpdaterStore = create<UpdaterState>((set) => ({
-  updateAvailable: false,
-  updateData: null,
-  isDownloading: false,
-  downloadProgressMB: null,
-  setUpdateAvailable: (updateData) => set({ updateAvailable: true, updateData }),
-  setDownloading: (isDownloading) => set({ isDownloading }),
-  setDownloadProgress: (mb) => set({ downloadProgressMB: mb }),
-  dismiss: () => set({ updateAvailable: false, updateData: null, isDownloading: false, downloadProgressMB: null })
-}));
