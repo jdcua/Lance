@@ -304,7 +304,7 @@ export default function Insights() {
                             {numericValues.length >= 2 ? (
                               <div className="flex items-center justify-center gap-2">
                                 <TrendIcon size={12} className={trendColor} />
-                                <Sparkline values={numericValues} width={60} height={22} color={isUp ? 'var(--accent)' : isDown ? 'var(--danger)' : 'var(--text-tertiary)'} />
+                                <Sparkline values={[...numericValues].reverse()} width={60} height={22} color={isUp ? 'var(--accent)' : isDown ? 'var(--danger)' : 'var(--text-tertiary)'} />
                               </div>
                             ) : (
                               <span className="text-[var(--text-tertiary)]">—</span>

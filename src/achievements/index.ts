@@ -89,30 +89,29 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     key: 'motion_theme',
     title: 'Motion theme',
-    description: 'Motion theme unlocked.',
-    reward: 'Motion theme unlocked',
+    description: 'You sent your first proposal — a dash of Motion is unlocked.',
+    reward: 'Motion theme is now available in Settings → Appearance',
     unlocksTheme: 'motion',
   },
   {
     key: 'lens_theme',
     title: 'Lens theme',
-    description: 'Lens theme unlocked.',
-    reward: 'Lens theme unlocked',
+    description: 'You logged 10 hours of work — a fresh perspective is unlocked.',
+    reward: 'Lens theme is now available in Settings → Appearance',
     unlocksTheme: 'lens',
   },
   {
     key: 'scale_theme',
     title: 'Scale theme',
-    description: 'Scale theme unlocked.',
-    reward: 'Scale theme unlocked',
+    description: 'You got your first invoice paid — growing momentum is unlocked.',
+    reward: 'Scale theme is now available in Settings → Appearance',
     unlocksTheme: 'scale',
   },
   {
     key: 'first_project_completed',
     title: 'Delivered',
     description: 'You completed your first project.',
-    reward: 'Motion theme unlocked',
-    unlocksTheme: 'motion',
+    reward: 'Completed projects are tracked in Insights',
   },
 ];
 

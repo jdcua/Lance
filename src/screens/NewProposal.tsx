@@ -11,6 +11,7 @@ import { ArrowLeft, Sparkles, X, AlertTriangle, Clock } from 'lucide-react';
 import { generateProposalBody, checkScopeWarnings, type ScopeWarning } from '../ai/proposalGenerator';
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify } from '../achievements/notify';
+import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 
 const projectTypes = [
   'Brand identity',
@@ -105,11 +106,11 @@ export default function NewProposal() {
       const expiry = status === 'sent' ? computeExpiry() : { expiresAt: undefined };
       await addProposal({
         client_id: form.client_id,
-        title: form.title,
+        title: sanitizeInput(form.title).slice(0, MAX_LENGTHS.title),
         status,
-        scope: form.scope,
-        timeline: form.timeline || undefined,
-        rate: form.rate ? parseFloat(form.rate) : undefined,
+        scope: form.scope ? sanitizeInput(form.scope).slice(0, MAX_LENGTHS.description) : undefined,
+        timeline: form.timeline ? sanitizeInput(form.timeline).slice(0, 200) : undefined,
+        rate: form.rate ? Math.max(0, parseFloat(form.rate)) : undefined,
         rate_type: form.rate_type,
         body: form.body,
         expires_at: expiry.expiresAt,
@@ -213,8 +214,9 @@ export default function NewProposal() {
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Rate ({form.rate_type === 'hourly' ? `${currencySymbol}/hr` : currencySymbol})</label>
               <input
                 type="number"
+                min={0}
                 value={form.rate}
-                onChange={(e) => setForm({ ...form, rate: e.target.value })}
+                onChange={(e) => { const v = e.target.value; setForm({ ...form, rate: Number(v) < 0 ? '0' : v }); }}
                 placeholder="0.00"
                 className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               />

@@ -10,6 +10,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { Plus } from 'lucide-react';
+import { isTauri } from '../../utils/tauri';
 import { getDb } from '../../db';
 import KanbanColumnComponent from './KanbanColumn';
 import KanbanCardComponent from './KanbanCard';
@@ -32,12 +33,20 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
   const [showAddColumn, setShowAddColumn] = useState(false);
   const [newColumnName, setNewColumnName] = useState('');
   const [columnSettings, setColumnSettings] = useState({ name: '', color: '', wipLimit: '' });
+  const [unavailable, setUnavailable] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
   const loadBoard = useCallback(async () => {
+    if (!isTauri()) {
+      // Kanban board persists via the Tauri SQL backend; in browser mode there
+      // is no kanban command shim, so degrade gracefully instead of erroring.
+      setUnavailable(true);
+      setLoading(false);
+      return;
+    }
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       let boardData = await invoke<KanbanBoard | null>('get_kanban_board', { projectId });
@@ -251,6 +260,15 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
       console.error('[KanbanBoard] delete column failed:', e);
     }
   }, []);
+
+  if (unavailable) {
+    return (
+      <div className="space-y-2 rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-secondary)] p-4">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Kanban Board</h4>
+        <p className="text-xs text-[var(--text-tertiary)]">Kanban board is available in the desktop app. In the browser preview it is disabled.</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

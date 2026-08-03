@@ -38,6 +38,16 @@ function lsSetSingle<T>(key: string, data: T): void {
   catch { /* quota exceeded or private mode */ }
 }
 
+/** Parse a tags JSON string (or array) safely for browser-mode search. */
+function parseTagsBrowser(tags: unknown): string[] {
+  if (Array.isArray(tags)) return tags;
+  if (typeof tags !== 'string') return [];
+  try {
+    const parsed = JSON.parse(tags);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch { return []; }
+}
+
 // ── Entity registry ───────────────────────────────────────────────
 
 interface EntityDef {
@@ -79,6 +89,7 @@ const ENTITIES: Record<string, EntityDef> = {
   contract_template:     { listKey: 'contract_templates' },
   project_template:      { listKey: 'project_templates' },
   export_template:       { listKey: 'export_templates' },
+  share_token:           { listKey: 'share_tokens' },
 };
 
 /** Extract entity name from a Tauri command, e.g. "create_client" → "client". */
@@ -179,9 +190,179 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
     return '' as unknown as T;
   }
 
+  // ── update_follow_up_status (persist status into follow_up_logs) ──
+  if (cmd === 'update_follow_up_status') {
+    const payload = (args?.payload || {}) as Record<string, any>;
+    if (payload?.id) {
+      // follow_up_logs is stored as an object keyed by `entityType:entityId`,
+      // each value being an array of logs (lsGet returns the raw parsed value).
+      const all = (lsGet<any>('follow_up_logs') as unknown) as Record<string, any[]>;
+      let updated = false;
+      for (const key of Object.keys(all || {})) {
+        const list: any[] = all[key];
+        if (!Array.isArray(list)) continue;
+        const idx = list.findIndex((l: any) => l && l.id === payload.id);
+        if (idx !== -1) {
+          list[idx] = {
+            ...list[idx],
+            status: payload.status ?? list[idx].status,
+            action: payload.action ?? list[idx].action,
+            actioned_at: payload.actioned_at ?? new Date().toISOString(),
+          };
+          updated = true;
+        }
+      }
+      if (updated) lsSet('follow_up_logs', all as unknown as any[]);
+      // Also remove from the pending list so it doesn't reappear on reload
+      if (updated) {
+        const pending = lsGet<any>('pending_follow_ups');
+        const nextPending = pending.filter((l: any) => !l || l.id !== payload.id);
+        lsSet('pending_follow_ups', nextPending);
+      }
+    }
+    return {} as unknown as T;
+  }
+
+  // ── get_all_follow_up_logs (bulk: all statuses) ──
+  if (cmd === 'get_all_follow_up_logs') {
+    const all = (lsGet<any>('follow_up_logs') as unknown) as Record<string, any[]>;
+    const flat: any[] = [];
+    for (const key of Object.keys(all || {})) {
+      const list: any[] = all[key];
+      if (Array.isArray(list)) flat.push(...list);
+    }
+    return flat as unknown as T;
+  }
+
   // ── get_asset_stats ──
   if (cmd === 'get_asset_stats') {
     return null as unknown as T;
+  }
+
+  // ── Share token / portal commands (browser mode: simulated portal) ──
+  if (cmd === 'get_share_server_port') {
+    // In the packaged Tauri app the share server listens on port 1421.
+    // In browser mode there is no separate share server, so report the app's
+    // own origin so generated share links point at the running Lance instance.
+    if (!isTauri()) {
+      const port = window.location.port || '1420';
+      return Number(port) as unknown as T;
+    }
+    return 1421 as unknown as T;
+  }
+  if (cmd === 'get_share_token_for_entity') {
+    const { entityType, entityId } = (args || {}) as { entityType?: string; entityId?: string };
+    const tokens = lsGet<any>('share_tokens');
+    const found = tokens.find(
+      (t: any) => t.entity_type === entityType && t.entity_id === entityId && !t.revoked
+    );
+    return (found || null) as unknown as T;
+  }
+  if (cmd === 'create_share_token') {
+    const payload = (args?.payload || {}) as Record<string, any>;
+    const tokens = lsGet<any>('share_tokens');
+    const token: Record<string, any> = {
+      id: crypto.randomUUID(),
+      token: crypto.randomUUID().replace(/-/g, ''),
+      entity_type: payload.entity_type || 'proposal',
+      entity_id: payload.entity_id || '',
+      expires_at: payload.expires_at || null,
+      revoked: false,
+      view_count: 0,
+      created_at: new Date().toISOString(),
+    };
+    tokens.push(token);
+    lsSet('share_tokens', tokens);
+    return token as unknown as T;
+  }
+  if (cmd === 'revoke_share_token') {
+    const { token } = (args || {}) as { token?: string };
+    const tokens = lsGet<any>('share_tokens');
+    const idx = tokens.findIndex((t: any) => t.token === token);
+    if (idx !== -1) {
+      tokens[idx] = { ...tokens[idx], revoked: true };
+      lsSet('share_tokens', tokens);
+    }
+    return {} as unknown as T;
+  }
+  if (cmd === 'get_share_token') {
+    const { token } = (args || {}) as { token?: string };
+    const tokens = lsGet<any>('share_tokens');
+    const found = tokens.find((t: any) => t.token === token && !t.revoked);
+    return (found || null) as unknown as T;
+  }
+  if (cmd === 'record_share_view') {
+    const { token } = (args || {}) as { token?: string };
+    const tokens = lsGet<any>('share_tokens');
+    const idx = tokens.findIndex((t: any) => t.token === token && !t.revoked);
+    if (idx !== -1) {
+      const now = new Date().toISOString();
+      tokens[idx] = {
+        ...tokens[idx],
+        view_count: (tokens[idx].view_count || 0) + 1,
+        viewed_at: tokens[idx].viewed_at || now,
+      };
+      lsSet('share_tokens', tokens);
+    }
+    return {} as unknown as T;
+  }
+  if (cmd === 'respond_share_token') {
+    const payload = (args || {}) as {
+      token?: string;
+      response?: string;
+      client_name?: string;
+      client_signature?: string;
+      message?: string;
+    };
+    const tokens = lsGet<any>('share_tokens');
+    const idx = tokens.findIndex((t: any) => t.token === payload.token && !t.revoked);
+    if (idx === -1) {
+      throw new Error('Share link not found.');
+    }
+    const t = tokens[idx];
+    if (t.client_response) {
+      throw new Error('You have already responded to this.');
+    }
+    if (t.expires_at && t.expires_at < new Date().toISOString()) {
+      throw new Error('This share link has expired.');
+    }
+    {
+      const now = new Date().toISOString();
+      const safeName = (payload.client_name || '').trim().slice(0, 200) || 'Client';
+      const safeSig = (payload.client_signature || '').trim().slice(0, 200) || 'Unknown';
+      if (t.entity_type === 'contract') {
+        tokens[idx] = {
+          ...t,
+          client_response: 'accepted',
+          client_response_at: now,
+          client_signature: safeSig,
+          client_signed_at: now,
+        };
+        const contracts = lsGet<any>('contracts');
+        const cIdx = contracts.findIndex((c: any) => c.id === t.entity_id);
+        if (cIdx !== -1) {
+          contracts[cIdx] = { ...contracts[cIdx], signed_at: now };
+          lsSet('contracts', contracts);
+        }
+      } else {
+        tokens[idx] = {
+          ...t,
+          client_response: payload.response === 'declined' ? 'declined' : 'accepted',
+          client_response_at: now,
+          client_name: safeName,
+        };
+        if (payload.response === 'accepted') {
+          const proposals = lsGet<any>('proposals');
+          const pIdx = proposals.findIndex((p: any) => p.id === t.entity_id);
+          if (pIdx !== -1) {
+            proposals[pIdx] = { ...proposals[pIdx], status: 'accepted' };
+            lsSet('proposals', proposals);
+          }
+        }
+      }
+      lsSet('share_tokens', tokens);
+    }
+    return (tokens[idx] || {}) as unknown as T;
   }
 
   // ── get_sessions (special: has optional filters) ──
@@ -196,6 +377,33 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
       return filtered as unknown as T;
     }
     return all as unknown as T;
+  }
+
+  // ── get_all_headline_metrics (derived: JOIN metric_definitions + metric_values) ──
+  if (cmd === 'get_all_headline_metrics') {
+    const defs = lsGet<any>('metric_definitions');
+    const values = lsGet<any>('metric_values');
+    const clients = lsGet<any>('clients');
+    const headlineDefs = defs.filter((d: any) => d.is_headline);
+    const result: any[] = headlineDefs.map((d: any) => {
+      const client = clients.find((c: any) => c.id === d.client_id);
+      const metricValues = values
+        .filter((v: any) => v.definition_id === d.id)
+        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 2);
+      return {
+        client_id: d.client_id,
+        client_name: client?.name || 'Unknown',
+        definition_id: d.id,
+        metric_name: d.name,
+        metric_type: d.metric_type,
+        unit_label: d.unit_label || null,
+        latest_value: metricValues[0]?.value ?? null,
+        previous_value: metricValues[1]?.value ?? null,
+        values: metricValues,
+      };
+    });
+    return result as unknown as T;
   }
 
   // ── List commands (get_*) ──
@@ -238,6 +446,23 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
     return {} as unknown as T;
   }
 
+  // ── update_attachment_meta (must run BEFORE the generic 'update' handler:
+  //    'attachment_meta' does not map to a known list key, so the generic path
+  //    would silently drop the update) ──
+  if (cmd === 'update_attachment_meta') {
+    const payload = args?.payload as Record<string, any> | undefined;
+    if (payload?.id) {
+      const items = lsGet<any>('attachments');
+      const idx = items.findIndex((a: any) => a.id === payload.id);
+      if (idx !== -1) {
+        items[idx] = { ...items[idx], ...payload };
+        lsSet('attachments', items);
+        return items[idx] as unknown as T;
+      }
+    }
+    return {} as unknown as T;
+  }
+
   // ── Update commands ──
   if (verb === 'update') {
     const entity = cmdEntity(cmd);
@@ -263,9 +488,73 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
       if (id) {
         const items = lsGet<any>(key);
         lsSet(key, items.filter((i: any) => i.id !== id));
+        // Cascade: deleting a client also removes its metric definitions,
+        // metric values, and metric values' orphaned rows.
+        if (cmd === 'delete_client') {
+          const defs = lsGet<any>('metric_definitions').filter((d: any) => d.client_id !== id);
+          const defIds = new Set(lsGet<any>('metric_definitions').filter((d: any) => d.client_id === id).map((d: any) => d.id));
+          lsSet('metric_definitions', defs);
+          lsSet('metric_values', lsGet<any>('metric_values').filter((v: any) => !defIds.has(v.definition_id)));
+        }
+        // Cascade: deleting an invoice must remove its payment records.
+        if (cmd === 'delete_invoice') {
+          lsSet('invoice_payments', lsGet<any>('invoice_payments').filter((p: any) => p.invoice_id !== id));
+        }
+        // Cascade: deleting a project must remove its project-scoped child
+        // records (milestones, sprint tasks, stack, bugs, archetype tables,
+        // etc.) so no orphaned rows reference a nonexistent project. This
+        // mirrors the foreign-key integrity of the real SQLite backend.
+        if (cmd === 'delete_project') {
+          const projectScopedKeys = Object.keys(localStorage)
+            .filter((k) => k.startsWith(LS_PREFIX))
+            .map((k) => k.slice(LS_PREFIX.length));
+          for (const key of projectScopedKeys) {
+            if (key === 'projects') continue;
+            let rows: any[] = [];
+            try { rows = JSON.parse(localStorage.getItem(LS_PREFIX + key) || '[]'); } catch { continue; }
+            if (!Array.isArray(rows)) continue;
+            const hasProjectId = rows.some((r: any) => r && typeof r === 'object' && 'project_id' in r);
+            if (!hasProjectId) continue;
+            lsSet(key, rows.filter((r: any) => r?.project_id !== id));
+          }
+        }
       }
     }
     return {} as unknown as T;
+  }
+
+  // ── log_follow_up (must run BEFORE the generic 'log' handler, which maps
+  //    'follow_up' → 'follow_ups' and would drop status/drafted_at, making
+  //    follow-ups invisible and the pending guard useless → duplicates) ──
+  if (cmd === 'log_follow_up') {
+    const payload = (args?.payload || {}) as Record<string, any>;
+    const id = payload.id || crypto.randomUUID();
+    const now = new Date().toISOString();
+    const log: Record<string, any> = {
+      id,
+      entity_type: payload.entity_type || '',
+      entity_id: payload.entity_id || '',
+      stage: payload.stage ?? 1,
+      status: 'pending',
+      action: null,
+      created_at: now,
+      drafted_at: now,
+    };
+    const key = `${log.entity_type}:${log.entity_id}`;
+    const all = (lsGet<any>('follow_up_logs') as unknown) as Record<string, any[]>;
+    if (!all || typeof all !== 'object' || Array.isArray(all)) {
+      localStorage.setItem(LS_PREFIX + 'follow_up_logs', JSON.stringify({ [key]: [log] }));
+    } else {
+      all[key] = [...(all[key] || []), log];
+      lsSet('follow_up_logs', all as unknown as any[]);
+    }
+    // Register in the pending list so get_all_pending_follow_ups returns it
+    const pending = lsGet<any>('pending_follow_ups');
+    if (!pending.some((l: any) => l && l.id === id)) {
+      pending.push(log);
+      lsSet('pending_follow_ups', pending);
+    }
+    return log as unknown as T;
   }
 
   // ── log_* commands (log_follow_up, log_import, etc.) ──
@@ -286,6 +575,27 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
     return {} as unknown as T;
   }
 
+  // ── save_metric_template (must run BEFORE the generic 'save' handler,
+  //    which returns {} for any unknown save_* command) ──
+  if (cmd === 'save_metric_template') {
+    const payload = args?.payload as Record<string, any> | undefined;
+    if (payload) {
+      const id = payload.id || crypto.randomUUID();
+      const items = lsGet<any>('metric_templates');
+      const existing = items.findIndex((t: any) => t.name === payload.name);
+      if (existing !== -1) {
+        items[existing] = { ...items[existing], ...payload, id: items[existing].id || id };
+        lsSet('metric_templates', items);
+        return items[existing] as unknown as T;
+      }
+      const template = { ...payload, id, created_at: new Date().toISOString() };
+      items.push(template);
+      lsSet('metric_templates', items);
+      return template as unknown as T;
+    }
+    return {} as unknown as T;
+  }
+
   // ── save_* commands ──
   if (verb === 'save') {
     // save_import_file, save_asset_file — handled by just returning a mock path
@@ -296,7 +606,23 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
   }
 
   // ── rename/move attachment ──
-  if (cmd === 'rename_attachment' || cmd === 'move_attachment') {
+  if (cmd === 'rename_attachment') {
+    // Mirror the Rust command: new_filename is sanitized and written to the
+    // `filename` field (payload.new_filename is NOT stored as-is).
+    const payload = args?.payload as Record<string, any> | undefined;
+    if (payload?.id && payload.new_filename) {
+      const items = lsGet<any>('attachments');
+      const idx = items.findIndex((a: any) => a.id === payload.id);
+      if (idx !== -1) {
+        const safeName = String(payload.new_filename).replace(/[\/\\:*?"<>|]/g, '_');
+        items[idx] = { ...items[idx], filename: safeName };
+        lsSet('attachments', items);
+        return items[idx] as unknown as T;
+      }
+    }
+    return {} as unknown as T;
+  }
+  if (cmd === 'move_attachment') {
     const payload = args?.payload as Record<string, any> | undefined;
     if (payload?.id) {
       const items = lsGet<any>('attachments');
@@ -310,35 +636,17 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
     return {} as unknown as T;
   }
 
-  if (cmd === 'update_attachment_meta') {
-    const payload = args?.payload as Record<string, any> | undefined;
-    if (payload?.id) {
-      const items = lsGet<any>('attachments');
-      const idx = items.findIndex((a: any) => a.id === payload.id);
-      if (idx !== -1) {
-        items[idx] = { ...items[idx], ...payload };
-        lsSet('attachments', items);
-        return items[idx] as unknown as T;
-      }
-    }
-    return {} as unknown as T;
-  }
-
-  // ── save_metric_template ──
-  if (cmd === 'save_metric_template') {
-    const payload = args?.payload as Record<string, any> | undefined;
-    if (payload) {
-      const id = payload.id || crypto.randomUUID();
-      const items = lsGet<any>('metric_templates');
-      const existing = items.findIndex((t: any) => t.name === payload.name);
-      if (existing !== -1) {
-        items[existing] = { ...items[existing], ...payload, id };
-      } else {
-        items.push({ id, ...payload, created_at: new Date().toISOString() });
-      }
-      lsSet('metric_templates', items);
-    }
-    return {} as unknown as T;
+  // ── search_assets (browser shim: filter by filename or tag) ──
+  if (cmd === 'search_assets') {
+    const query = ((args?.query as string) || '').toLowerCase();
+    if (!query) return [] as unknown as T;
+    const items = lsGet<any>('attachments');
+    const results = items.filter((a: any) => {
+      const filename = (a.filename || '').toLowerCase();
+      const tags = parseTagsBrowser(a.tags);
+      return filename.includes(query) || tags.some((t: string) => t.toLowerCase().includes(query));
+    });
+    return results as unknown as T;
   }
 
   // ── expire_sent_proposals ──

@@ -9,7 +9,7 @@ import {
   Bell, Mail, Check, X, Send, Eye, AlertTriangle, Edit3, ChevronDown, RefreshCw,
 } from 'lucide-react';
 import { generateFollowUpDraft, generateSubjectLine, TEMPLATE_LABELS, openMailTo } from '../utils/followUpTemplates';
-import { formatCurrency, relativeDate } from '../utils/format';
+import { formatCurrency, relativeDate, parseDateString } from '../utils/format';
 
 type Tab = 'pending' | 'sent' | 'dismissed' | 'all';
 type Filter = 'all' | 'proposal' | 'invoice';
@@ -20,7 +20,7 @@ export default function FollowUps() {
     proposals, loadProposals,
     invoices, loadInvoices,
     pendingFollowUps, loadPendingFollowUps,
-    followUpLogs, loadFollowUpLog,
+    followUpLogs, loadAllFollowUpLogs,
     updateFollowUpStatus,
     followUpSettings,
     profile,
@@ -34,7 +34,7 @@ export default function FollowUps() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([loadClients(), loadProposals(), loadInvoices(), loadPendingFollowUps()]).finally(() => setLoading(false));
+    Promise.all([loadClients(), loadProposals(), loadInvoices(), loadPendingFollowUps(), loadAllFollowUpLogs()]).finally(() => setLoading(false));
   }, []);
 
   const getClient = (clientId: string) => clients.find((c) => c.id === clientId);
@@ -87,7 +87,7 @@ export default function FollowUps() {
         amount = inv ? formatCurrency(inv.total) : undefined;
         dueDate = inv?.due_date;
         if (inv?.due_date) {
-          daysElapsed = Math.floor((Date.now() - new Date(inv.due_date).getTime()) / 86400000);
+          daysElapsed = Math.floor((Date.now() - parseDateString(inv.due_date).getTime()) / 86400000);
         }
         if (log.stage === 1) templateKey = 'invoice_day1';
         else if (log.stage === 2) templateKey = 'invoice_day7';

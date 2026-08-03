@@ -12,12 +12,15 @@ import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 import { getUnlockedAchievementKeys } from '../achievements/checker';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { relativeDate } from '../utils/format';
+import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 import {
   computeHeatmapGrid,
   computeStreakStats,
   computeDayOfWeekBreakdown,
   computeHourOfDayHeatmap,
   computeMonthLabels,
+  getDateKey,
+  parseLocalDateKey,
   getIntensityColor,
   formatTooltip,
   getHoursLabel,
@@ -82,6 +85,31 @@ export default function TimeScreen() {
       .finally(() => setLoading(false));
   }, [loadTimeEntries, loadProjects, loadClients]);
 
+  // Sync timer card with global timer state (started via App.tsx toggle or another session)
+  useEffect(() => {
+    const running = timeEntries.find((t) => !t.end_time);
+    if (running) {
+      setActiveTimer((prev) => {
+        if (prev && prev.entry.id === running.id) return prev;
+        return { entry: running, elapsed: Math.max(0, Math.floor((Date.now() - new Date(running.start_time).getTime()) / 60000)) };
+      });
+      if (!intervalId) {
+        const id = setInterval(() => {
+          setActiveTimer((prev) => {
+            if (!prev) return null;
+            const elapsed = Math.floor((Date.now() - new Date(prev.entry.start_time).getTime()) / 60000);
+            return { ...prev, elapsed };
+          });
+        }, 1000);
+        setIntervalId(id);
+      }
+    } else {
+      setActiveTimer(null);
+      if (intervalId) { clearInterval(intervalId); setIntervalId(null); }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeEntries]);
+
   useEffect(() => {
     getUnlockedAchievementKeys().then((keys) => {
       setShowHeatmap(new Set(keys).has('twenty_five_hours'));
@@ -117,7 +145,7 @@ export default function TimeScreen() {
       const entry = await addTimeEntry({
         project_id: entryForm.project_id,
         client_id: entryForm.client_id,
-        description: entryForm.description || undefined,
+        description: entryForm.description ? sanitizeInput(entryForm.description).slice(0, MAX_LENGTHS.description) : undefined,
         start_time: new Date().toISOString(),
         billable: entryForm.billable,
       });
@@ -144,11 +172,16 @@ export default function TimeScreen() {
     try {
       const endTime = new Date().toISOString();
       const duration = Math.floor((Date.now() - new Date(activeTimer.entry.start_time).getTime()) / 60000);
-      await updateTimeEntry({
-        ...activeTimer.entry,
-        end_time: endTime,
-        duration_minutes: duration,
-      });
+      if (duration < 1) {
+        // Sub-minute timer runs produce phantom 0-minute entries. Discard them.
+        await removeTimeEntry(activeTimer.entry.id);
+      } else {
+        await updateTimeEntry({
+          ...activeTimer.entry,
+          end_time: endTime,
+          duration_minutes: duration,
+        });
+      }
       setActiveTimer(null);
       await loadTimeEntries();
       checkAndNotify(useStore.getState(), addToast);
@@ -166,7 +199,7 @@ export default function TimeScreen() {
       const created = await addTimeEntry({
         project_id: entryForm.project_id,
         client_id: entryForm.client_id,
-        description: entryForm.description || undefined,
+        description: entryForm.description ? sanitizeInput(entryForm.description).slice(0, MAX_LENGTHS.description) : undefined,
         start_time: startTime,
         billable: entryForm.billable,
       });
@@ -211,8 +244,8 @@ export default function TimeScreen() {
   const getProjectName = (projectId: string) => projects.find((p) => p.id === projectId)?.title || 'Unknown';
   const getClientName = (clientId: string) => clients.find((c) => c.id === clientId)?.name || 'Unknown';
 
-  const today = new Date().toISOString().split('T')[0];
-  const todaysEntries = timeEntries.filter((t) => t.start_time.startsWith(today));
+  const today = getDateKey(new Date());
+  const todaysEntries = timeEntries.filter((t) => getDateKey(new Date(t.start_time)) === today);
   const todaysMinutes = todaysEntries.reduce((acc, t) => acc + (t.duration_minutes || 0), 0);
   const weekEntries = timeEntries.filter((t) => {
     const startDate = new Date(t.start_time);
@@ -344,8 +377,13 @@ export default function TimeScreen() {
                   <label className="block text-[10px] text-[var(--text-tertiary)] mb-1">Minutes</label>
                   <input
                     type="number"
+                    min={1}
+                    max={10080}
                     value={durationMinutes || ''}
-                    onChange={(e) => setDurationMinutes(parseInt(e.target.value) || 0)}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value) || 0;
+                      setDurationMinutes(Math.min(10080, Math.max(0, v)));
+                    }}
                     placeholder="30"
                     className="w-20 px-2 py-2 text-xs border border-[var(--border-color)] rounded-[8px]"
                   />
@@ -462,7 +500,7 @@ export default function TimeScreen() {
             <MetricCard
               label="Best Day"
               value={streakStats.bestDayHours > 0 ? `${streakStats.bestDayHours.toFixed(1)}h` : '—'}
-              subtext={streakStats.bestDayHours > 0 ? new Date(streakStats.bestDayDate).toLocaleDateString() : undefined}
+              subtext={streakStats.bestDayHours > 0 ? parseLocalDateKey(streakStats.bestDayDate).toLocaleDateString() : undefined}
               color={streakStats.bestDayHours > 0 ? 'purple' : 'gray'}
             />
             <MetricCard

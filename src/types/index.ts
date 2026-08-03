@@ -84,6 +84,7 @@ export type Invoice = {
   due_date?: string;
   paid_at?: string;
   notes?: string;
+  milestone_id?: string;
   currency?: string;
   created_at: string;
 };

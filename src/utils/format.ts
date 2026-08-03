@@ -5,8 +5,19 @@ export function formatCurrency(amount: number, currency = 'CAD'): string {
   }).format(amount);
 }
 
+/**
+ * Parse a date value for display. Date-only strings ("YYYY-MM-DD") are parsed
+ * as LOCAL midnight — parsing them via `new Date()` treats them as UTC
+ * midnight, which renders as the PREVIOUS day in negative-offset timezones
+ * (e.g. "2026-07-01" -> "Jun 30" in UTC-6). Full ISO timestamps (with a "T")
+ * keep their normal timezone-aware parsing.
+ */
+export function parseDateString(iso: string): Date {
+  return /^\d{4}-\d{2}-\d{2}$/.test(iso) ? new Date(`${iso}T00:00:00`) : new Date(iso);
+}
+
 export function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-CA', {
+  return parseDateString(iso).toLocaleDateString('en-CA', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -14,7 +25,7 @@ export function formatDate(iso: string): string {
 }
 
 export function relativeDate(iso: string): string {
-  const date = new Date(iso);
+  const date = parseDateString(iso);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffSec = Math.floor(diffMs / 1000);
@@ -22,6 +33,13 @@ export function relativeDate(iso: string): string {
   const diffHrs = Math.floor(diffMin / 60);
   const diffDays = Math.floor(diffHrs / 24);
 
+  if (diffSec < -30) {
+    const absDays = Math.ceil(-diffMs / 86400000);
+    if (absDays <= 1) return 'tomorrow';
+    if (absDays < 7) return `in ${absDays}d`;
+    if (absDays < 30) return `in ${Math.floor(absDays / 7)}w`;
+    return `in ${absDays}d`;
+  }
   if (diffSec < 60) return 'just now';
   if (diffMin < 60) return `${diffMin}m ago`;
   if (diffHrs < 24) return `${diffHrs}h ago`;

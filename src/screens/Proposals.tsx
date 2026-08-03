@@ -16,6 +16,7 @@ import { Plus, Trash2, Send, Eye, Download, FileText, Search, ArrowUpDown, Bell,
 import ShareModal from '../components/ShareModal';
 import { generateFollowUpDraft, generateSubjectLine, openMailTo } from '../utils/followUpTemplates';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
+import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 
 const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'dark'> = {
   draft: 'warning',
@@ -162,10 +163,10 @@ export default function Proposals() {
       await addProposal({
         client_id: p.client_id,
         project_id: p.project_id,
-        title: `Copy of ${p.title}`,
+        title: sanitizeInput(`Copy of ${p.title}`).slice(0, MAX_LENGTHS.title),
         status: 'draft',
-        scope: p.scope,
-        timeline: p.timeline,
+        scope: p.scope ? sanitizeInput(p.scope).slice(0, MAX_LENGTHS.description) : undefined,
+        timeline: p.timeline ? sanitizeInput(p.timeline).slice(0, 200) : undefined,
         rate: p.rate,
         rate_type: p.rate_type,
         body: p.body,
@@ -197,7 +198,8 @@ export default function Proposals() {
         ? formatCurrency(p.rate, profile.currency) + (p.rate_type === 'hourly' ? ' per hour' : ' flat project fee')
         : 'TBD';
       const body = generateContractBody(freelancerName, client.name, p.title, p.scope || '', p.timeline || '', rateStr);
-      await addContract({ client_id: p.client_id, proposal_id: p.id, title: `Contract — ${p.title}`, status: 'draft', body });
+      const contractTitle = sanitizeInput(`Contract — ${p.title}`).slice(0, MAX_LENGTHS.title);
+      await addContract({ client_id: p.client_id, proposal_id: p.id, title: contractTitle, status: 'draft', body });
       navigate('/contracts');
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to convert to contract', 'error');

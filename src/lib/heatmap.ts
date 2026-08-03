@@ -47,6 +47,11 @@ export function getDateKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+/** Parse a local date key (YYYY-MM-DD) as LOCAL midnight, not UTC (avoids off-by-one day). */
+export function parseLocalDateKey(key: string): Date {
+  return new Date(`${key}T00:00:00`);
+}
+
 export function getIntensity(hours: number): number {
   if (hours <= 0) return 0;
   if (hours <= 1) return 1;
@@ -60,7 +65,8 @@ export function getIntensityColor(hours: number): string {
   const level = getIntensity(hours);
   const accentVar = 'var(--accent)';
   const surfaceVar = 'var(--color-surface-2, var(--bg-secondary))';
-  const opacity = [5, 20, 40, 60, 80, 100][level];
+  // Wider gradient so low vs high activity is visually distinct
+  const opacity = [6, 22, 40, 60, 80, 100][level];
   return `color-mix(in srgb, ${accentVar} ${opacity}%, ${surfaceVar})`;
 }
 
@@ -86,7 +92,7 @@ export function computeHeatmapGrid(
 
   const minutesByDay: Record<string, { minutes: number; billableMinutes: number; entries: TimeEntry[] }> = {};
   for (const t of filtered) {
-    const key = t.start_time.substring(0, 10);
+    const key = getDateKey(new Date(t.start_time));
     if (!minutesByDay[key]) minutesByDay[key] = { minutes: 0, billableMinutes: 0, entries: [] };
     minutesByDay[key].minutes += (t.duration_minutes || 0);
     if (t.billable) minutesByDay[key].billableMinutes += (t.duration_minutes || 0);
@@ -128,7 +134,7 @@ export function computeStreakStats(
 ): StreakStats {
   const minutesByDay: Record<string, { minutes: number; entries: number }> = {};
   for (const t of timeEntries) {
-    const key = t.start_time.substring(0, 10);
+    const key = getDateKey(new Date(t.start_time));
     if (!minutesByDay[key]) minutesByDay[key] = { minutes: 0, entries: 0 };
     minutesByDay[key].minutes += (t.duration_minutes || 0);
     minutesByDay[key].entries += 1;
@@ -138,29 +144,9 @@ export function computeStreakStats(
     .filter((k) => minutesByDay[k].minutes > 0)
     .sort();
 
-  let longestStreak = 0;
-  let currentStreak = 0;
-  let streak = 0;
-
-  for (let i = 0; i < sortedDates.length; i++) {
-    if (i === 0) {
-      streak = 1;
-    } else {
-      const prev = new Date(sortedDates[i - 1]);
-      const curr = new Date(sortedDates[i]);
-      const diff = (curr.getTime() - prev.getTime()) / 86400000;
-      if (diff <= 1.1) {
-        streak++;
-      } else {
-        if (streak > longestStreak) longestStreak = streak;
-        streak = 1;
-      }
-    }
-    if (streak > longestStreak) longestStreak = streak;
-  }
-
   const now = new Date();
   const checkDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let currentStreak = 0;
   let cs = 0;
   for (let i = 0; i < 365; i++) {
     const key = getDateKey(checkDate);
@@ -173,18 +159,42 @@ export function computeStreakStats(
   }
   currentStreak = cs;
 
-  const yearStart = new Date(year, 0, 1);
-  let hoursThisYear = 0;
-  for (const [key, day] of Object.entries(minutesByDay)) {
-    if (new Date(key) >= yearStart) {
-      hoursThisYear += day.minutes / 60;
+  const yearStart = parseLocalDateKey(`${year}-01-01`);
+  const yearEnd = parseLocalDateKey(`${year + 1}-01-01`);
+  const yearDates = sortedDates.filter((k) => {
+    const d = parseLocalDateKey(k);
+    return d >= yearStart && d < yearEnd;
+  });
+
+  let longestStreak = 0;
+  let streak = 0;
+  for (let i = 0; i < yearDates.length; i++) {
+    if (i === 0) {
+      streak = 1;
+    } else {
+      const prev = parseLocalDateKey(yearDates[i - 1]);
+      const curr = parseLocalDateKey(yearDates[i]);
+      const diff = (curr.getTime() - prev.getTime()) / 86400000;
+      if (diff <= 1.1) {
+        streak++;
+      } else {
+        if (streak > longestStreak) longestStreak = streak;
+        streak = 1;
+      }
     }
+    if (streak > longestStreak) longestStreak = streak;
+  }
+
+  let hoursThisYear = 0;
+  for (const key of yearDates) {
+    hoursThisYear += minutesByDay[key].minutes / 60;
   }
 
   let bestDayHours = 0;
   let bestDayDate = '';
   let bestDayEntries = 0;
-  for (const [key, day] of Object.entries(minutesByDay)) {
+  for (const key of yearDates) {
+    const day = minutesByDay[key];
     if (day.minutes / 60 > bestDayHours) {
       bestDayHours = day.minutes / 60;
       bestDayDate = key;
@@ -193,9 +203,9 @@ export function computeStreakStats(
   }
 
   const monthlyHours: Record<string, number> = {};
-  for (const [key, day] of Object.entries(minutesByDay)) {
+  for (const key of yearDates) {
     const m = key.substring(0, 7);
-    monthlyHours[m] = (monthlyHours[m] || 0) + day.minutes / 60;
+    monthlyHours[m] = (monthlyHours[m] || 0) + minutesByDay[key].minutes / 60;
   }
   let mostActiveMonth = '';
   let mostActiveMonthHours = 0;
@@ -239,13 +249,13 @@ export function computeDayOfWeekBreakdown(
     const day = d.getDay();
     byDay[day].minutes += (t.duration_minutes || 0);
     byDay[day].count += 1;
-    seenDays.add(t.start_time.substring(0, 10));
+    seenDays.add(getDateKey(new Date(t.start_time)));
   }
 
   const uniqueDays = seenDays.size || 1;
   const dowDays: Record<number, number> = {};
   for (const dk of seenDays) {
-    const dw = new Date(dk).getDay();
+    const dw = parseLocalDateKey(dk).getDay();
     dowDays[dw] = (dowDays[dw] || 0) + 1;
   }
 

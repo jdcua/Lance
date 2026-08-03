@@ -11,6 +11,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import ClientSelect from '../components/ui/ClientSelect';
 import { useToasts } from '../store/toastStore';
 import { generateInvoiceNumber } from '../utils/invoiceNumber';
+import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 import { formatCurrency, relativeDate } from '../utils/format';
 import { Plus, Pencil, Trash2, CheckCircle2, Circle, Calendar, DollarSign, ChevronRight, FolderKanban, Search, Copy } from 'lucide-react';
 
@@ -73,17 +74,23 @@ export default function Projects() {
   };
 
   const handleSaveProject = async () => {
-    if (!pform.title.trim() || !pform.client_id) return;
+    const sanitizedTitle = sanitizeInput(pform.title).trim();
+    if (!sanitizedTitle || !pform.client_id) {
+      if (!sanitizedTitle && pform.title.trim()) {
+        addToast('Project title is not allowed — remove markup and try again', 'error');
+      }
+      return;
+    }
     setSaving(true);
     try {
       const data = {
         client_id: pform.client_id,
-        title: pform.title,
+        title: sanitizedTitle.slice(0, MAX_LENGTHS.title),
         status: pform.status as Project['status'],
         start_date: pform.start_date || undefined,
         end_date: pform.end_date || undefined,
         budget: pform.budget ? parseFloat(pform.budget) : undefined,
-        notes: pform.notes || undefined,
+        notes: pform.notes ? sanitizeInput(pform.notes).slice(0, MAX_LENGTHS.notes) : undefined,
       };
       if (editingProject) {
         await updateProject({ ...editingProject, ...data, status: data.status });
@@ -190,12 +197,13 @@ export default function Projects() {
   };
 
   const handleAddMilestone = async () => {
-    if (!selectedProject || !mform.title.trim()) return;
+    const sanitizedTitle = sanitizeInput(mform.title).trim();
+    if (!selectedProject || !sanitizedTitle) return;
     setSaving(true);
     try {
       await addMilestone({
         project_id: selectedProject,
-        title: mform.title,
+        title: sanitizedTitle.slice(0, MAX_LENGTHS.title),
         due_date: mform.due_date || undefined,
         completed: false,
         invoice_on_completion: mform.invoice_on_completion,
@@ -231,6 +239,19 @@ export default function Projects() {
       const unitPrice = (project.budget || 0) / totalMs;
       await loadInvoices();
       const currentInvoices = useStore.getState().invoices;
+      // Guard against duplicate invoices for the same milestone (e.g. when a
+      // milestone is un-completed and re-completed, or on double-trigger).
+      const alreadyInvoiced = currentInvoices.some(
+        (inv) =>
+          (inv.milestone_id && inv.milestone_id === milestone.id) ||
+          (inv.project_id === project.id &&
+            inv.notes === `Generated from milestone: ${milestone.title}`)
+      );
+      if (alreadyInvoiced) {
+        await updateMilestone({ ...milestone, completed: true });
+        addToast('Invoice already exists for this milestone — no duplicate created', 'info');
+        return;
+      }
       const invNumber = generateInvoiceNumber(currentInvoices);
       const dueDate = new Date();
       dueDate.setDate(dueDate.getDate() + 14);
@@ -252,6 +273,7 @@ export default function Projects() {
         total: lineItem.total,
         due_date: dueDate.toISOString().split('T')[0],
         notes: `Generated from milestone: ${milestone.title}`,
+        milestone_id: milestone.id,
       });
       await updateMilestone({ ...milestone, completed: true });
       addToast(`Invoice ${invNumber} created — review in Invoices`, 'success');

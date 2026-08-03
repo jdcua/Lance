@@ -36,6 +36,7 @@ import { getArchetype, ARCHETYPE_LIST } from './archetypes';
 import { checkAchievements } from './achievements/checker';
 import { ACHIEVEMENTS } from './achievements';
 import { seedSampleData } from './utils/seedData';
+import { parseDateString } from './utils/format';
 
 export default function App() {
   const {
@@ -58,6 +59,9 @@ export default function App() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showQuickLogModal, setShowQuickLogModal] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  // Guard against double-processing recurring invoices when invoices.length
+  // changes mid-generation and re-triggers the idle-callback effect.
+  const autoGenProcessedRef = useRef<Set<string>>(new Set());
   const [showChangelog, setShowChangelog] = useState(false);
   const [showWalkthrough, setShowWalkthrough] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -306,8 +310,9 @@ export default function App() {
     }
     const handle = requestIdleCallback(async () => {
       const paymentTerms = profile?.payment_terms ?? 14;
-      const due = recurringInvoices.filter(shouldGenerate);
+      const due = recurringInvoices.filter(shouldGenerate).filter((ri) => !autoGenProcessedRef.current.has(ri.id));
       for (const ri of due) {
+        autoGenProcessedRef.current.add(ri.id);
         const cyclesBehind = countCyclesBehind(ri);
         const { generate, capped } = getCatchUpCount(cyclesBehind);
 
@@ -399,7 +404,12 @@ export default function App() {
         await state.loadInvoices();
         await state.loadClients();
         await state.loadPendingFollowUps();
+        await state.loadAllFollowUpLogs();
         const currentPending = useStore.getState().pendingFollowUps;
+        // Full history (keyed entity_type:entity_id) so we never re-draft a stage
+        // that was already actioned (sent/dismissed) — the pending-only guard
+        // would re-create an identical draft every run after actioning.
+        const followUpHistory = useStore.getState().followUpLogs;
 
         const now = new Date();
 
@@ -421,7 +431,10 @@ export default function App() {
           const alreadyPending = currentPending.some(
             (l) => l.entity_type === 'proposal' && l.entity_id === p.id && l.stage === stage
           );
-          if (alreadyPending) continue;
+          const alreadyLogged = (followUpHistory[`proposal:${p.id}`] || []).some(
+            (l) => l.stage === stage
+          );
+          if (alreadyPending || alreadyLogged) continue;
 
           const templateKey = getTemplateKey('proposal', daysElapsed, settings.proposal_delay_days);
           if (!templateKey) continue;
@@ -440,7 +453,7 @@ export default function App() {
             continue;
           }
 
-          const dueDate = new Date(inv.due_date);
+          const dueDate = parseDateString(inv.due_date);
           const daysElapsed = Math.floor((now.getTime() - dueDate.getTime()) / 86400000);
           if (daysElapsed < settings.invoice_delay_days) continue;
 
@@ -448,7 +461,10 @@ export default function App() {
           const alreadyPending = currentPending.some(
             (l) => l.entity_type === 'invoice' && l.entity_id === inv.id && l.stage === stage
           );
-          if (alreadyPending) continue;
+          const alreadyLogged = (followUpHistory[`invoice:${inv.id}`] || []).some(
+            (l) => l.stage === stage
+          );
+          if (alreadyPending || alreadyLogged) continue;
 
           const templateKey = getTemplateKey('invoice', daysElapsed, settings.invoice_delay_days);
           if (!templateKey) continue;
@@ -579,10 +595,16 @@ export default function App() {
     if (activeEntry) {
       const endTime = new Date().toISOString();
       const duration = Math.floor((Date.now() - new Date(activeEntry.start_time).getTime()) / 60000);
-      await state.updateTimeEntry({ ...activeEntry, end_time: endTime, duration_minutes: duration });
-      const h = Math.floor(duration / 60);
-      const m = duration % 60;
-      addToast(`Timer stopped — ${h > 0 ? `${h}h ` : ''}${m}m`, 'success');
+      if (duration < 1) {
+        // Sub-minute timer toggle produces a phantom 0-minute entry. Discard it.
+        await state.removeTimeEntry(activeEntry.id);
+        addToast('Timer stopped', 'success');
+      } else {
+        await state.updateTimeEntry({ ...activeEntry, end_time: endTime, duration_minutes: duration });
+        const h = Math.floor(duration / 60);
+        const m = duration % 60;
+        addToast(`Timer stopped — ${h > 0 ? `${h}h ` : ''}${m}m`, 'success');
+      }
     } else {
       let projectId = '';
       let clientId = '';
@@ -698,6 +720,16 @@ export default function App() {
     document.addEventListener('lance:open-archetype-picker', handler);
     return () => document.removeEventListener('lance:open-archetype-picker', handler);
   }, [navigate]);
+
+  // Listen for lance:edit-client from FollowUps (client missing email)
+  useEffect(() => {
+    const handler = () => {
+      navigate('/clients');
+      addToast('Open the client to add an email address', 'info');
+    };
+    document.addEventListener('lance:edit-client', handler);
+    return () => document.removeEventListener('lance:edit-client', handler);
+  }, [navigate, addToast]);
 
   return (
     <ErrorBoundary>

@@ -127,3 +127,29 @@ pub fn get_all_pending_follow_ups(app: tauri::AppHandle) -> Result<Vec<FollowUpL
         .collect();
     Ok(logs)
 }
+
+#[tauri::command]
+pub fn get_all_follow_up_logs(app: tauri::AppHandle) -> Result<Vec<FollowUpLog>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let mut stmt = conn
+        .prepare("SELECT id, entity_type, entity_id, stage, status, drafted_at, actioned_at, action FROM follow_up_log ORDER BY drafted_at DESC")
+        .map_err(|_| "Database operation failed".to_string())?;
+    let logs = stmt
+        .query_map([], |row| {
+            Ok(FollowUpLog {
+                id: row.get(0)?,
+                entity_type: row.get(1)?,
+                entity_id: row.get(2)?,
+                stage: row.get(3)?,
+                status: row.get(4)?,
+                drafted_at: row.get(5)?,
+                actioned_at: row.get(6)?,
+                action: row.get(7)?,
+            })
+        })
+        .map_err(|_| "Database operation failed".to_string())?
+        .filter_map(|r| r.ok())
+        .collect();
+    Ok(logs)
+}

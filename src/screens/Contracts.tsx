@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useStore } from '../store';
 import type { Contract, ContractTemplate, ShareToken } from '../types';
 import Button from '../components/ui/Button';
@@ -14,6 +14,7 @@ import { useToasts } from '../store/toastStore';
 import { checkAndNotify } from '../achievements/notify';
 import { getUnlockedAchievementKeys } from '../achievements/checker';
 import { relativeDate } from '../utils/format';
+import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 import { Plus, Pencil, Trash2, Eye, PenLine, Search, Copy, FileText, Share2, Link } from 'lucide-react';
 import ShareModal from '../components/ShareModal';
 
@@ -72,7 +73,7 @@ const TEMPLATE_BADGE_COLORS: Record<string, string> = {
 };
 
 export default function Contracts() {
-  const { contracts, loadContracts, clients, loadClients, addContract, updateContract, removeContract, contractTemplates, loadContractTemplates, addContractTemplate, removeContractTemplate } = useStore();
+  const { contracts, loadContracts, clients, loadClients, addContract, updateContract, removeContract, contractTemplates, loadContractTemplates, addContractTemplate, removeContractTemplate, profile } = useStore();
   const addToast = useToasts((s) => s.add);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Contract | null>(null);
@@ -104,11 +105,18 @@ export default function Contracts() {
     } catch { /* ignore */ }
   };
 
-  useEffect(() => {
-    getUnlockedAchievementKeys().then((keys) => {
+  const refreshTemplateAccess = useCallback(async () => {
+    try {
+      const keys = await getUnlockedAchievementKeys();
       setShowTemplatesTab(new Set(keys).has('first_contract'));
-    });
+    } catch {
+      /* non-critical */
+    }
   }, []);
+
+  useEffect(() => {
+    refreshTemplateAccess();
+  }, [refreshTemplateAccess]);
 
   const openNew = () => {
     setEditing(null);
@@ -131,16 +139,26 @@ export default function Contracts() {
   };
 
   const handleSave = async () => {
-    if (!form.title.trim() || !form.client_id) return;
+    const title = sanitizeInput(form.title).trim();
+    if (!title || !form.client_id) return;
     setSaving(true);
     try {
+      const client = clients.find((c) => c.id === form.client_id);
+      const contactName = client?.email || client?.name || 'Client';
+      const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      const filledBody = (form.body || '')
+        .replace(/\{client_name\}/g, client?.name || 'Client')
+        .replace(/\{client_contact\}/g, contactName)
+        .replace(/\{date\}/g, today)
+        .replace(/\{freelancer_name\}/g, profile?.name || '');
       if (editing) {
-        await updateContract({ ...editing, ...form, body: form.body || '' });
+        await updateContract({ ...editing, ...form, title: title.slice(0, MAX_LENGTHS.title), body: filledBody });
       } else {
-        await addContract({ ...form, body: form.body || '', status: 'draft' });
+        await addContract({ ...form, title: title.slice(0, MAX_LENGTHS.title), body: filledBody, status: 'draft' });
       }
       setShowModal(false);
-      checkAndNotify(useStore.getState(), addToast);
+      await checkAndNotify(useStore.getState(), addToast);
+      await refreshTemplateAccess();
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to save', 'error');
     } finally {
@@ -151,7 +169,7 @@ export default function Contracts() {
   const handleSaveAsTemplate = async (c: Contract) => {
     try {
       await addContractTemplate({
-        name: c.title || 'Untitled Template',
+        name: sanitizeInput(c.title || 'Untitled Template').slice(0, MAX_LENGTHS.title) || 'Untitled Template',
         category: 'Custom',
         body: c.body || '',
         variables: [],
@@ -389,11 +407,15 @@ export default function Contracts() {
                       </button>
                     </div>
                   </div>
-                  {expanded === c.id && c.body && (
+                  {expanded === c.id && (c.body ? (
                     <div className="mt-3 pt-3 border-t border-[var(--border-color)]">
                       <p className="text-xs text-[var(--text-primary)] whitespace-pre-wrap leading-relaxed">{htmlToPlainText(c.body)}</p>
                     </div>
-                  )}
+                  ) : (
+                    <div className="mt-3 pt-3 border-t border-[var(--border-color)]">
+                      <p className="text-xs text-[var(--text-tertiary)] italic">No contract body — open the editor to add terms.</p>
+                    </div>
+                  ))}
                 </Card>
               ))}
             </div>

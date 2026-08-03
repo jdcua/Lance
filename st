@@ -1,0 +1,1 @@
+['open', 'open', 'open', 'fixed', 'fixed', 'fixed', 'fixed', 'fixed', 'open', 'open', 'open', 'fixed', 'fixed', 'fixed', 'open', 'open', 'fixed', 'fixed', 'fixed', 'fixed', 'fixed', 'verified', 'verified', 'open', 'open', 'verified', 'verified', 'fixed', 'fixed', 'fixed', 'fixed', 'fixed']

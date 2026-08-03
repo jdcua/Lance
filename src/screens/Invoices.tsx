@@ -9,9 +9,10 @@ import MetricCard from '../components/ui/MetricCard';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import ClientSelect from '../components/ui/ClientSelect';
 import { exportInvoicePDF, exportInvoiceDOCX } from '../export';
-import { formatCurrency, relativeDate } from '../utils/format';
+import { formatCurrency, relativeDate, parseDateString } from '../utils/format';
 import { getCurrencySymbol } from '../lib/currency';
 import { generateInvoiceNumber } from '../utils/invoiceNumber';
+import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 import { useToasts } from '../store/toastStore';
 import { Plus, Pencil, Trash2, Download, Clock, RotateCw, Receipt, Search, Bell, X, Copy, DollarSign, ChevronDown, ChevronRight, Mail, AlertTriangle, Check } from 'lucide-react';
 import { generateFollowUpDraft, generateSubjectLine, openMailTo } from '../utils/followUpTemplates';
@@ -87,11 +88,11 @@ export default function Invoices() {
   const [reminderForm, setReminderForm] = useState({ to: '', subject: '', body: '', markFollowedUp: false });
 
   useEffect(() => {
-    Promise.all([loadInvoices(), loadClients(), loadProfile(), loadProjects()])
+    Promise.all([loadInvoices(), loadClients(), loadProfile(), loadProjects(), loadTimeEntries()])
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
     loadPendingFollowUps();
-  }, [loadInvoices, loadClients, loadProfile, loadProjects, loadPendingFollowUps]);
+  }, [loadInvoices, loadClients, loadProfile, loadProjects, loadPendingFollowUps, loadTimeEntries]);
 
   useEffect(() => {
     if (activeTab === 'recurring') loadRecurringInvoices();
@@ -151,6 +152,8 @@ export default function Invoices() {
     setItems(prev => prev.map((item, i) => {
       if (i !== index) return item;
       const newItem = { ...item, [field]: value };
+      if (field === 'quantity') newItem.quantity = Math.max(0, Number(value) || 0);
+      if (field === 'unit_price') newItem.unit_price = Math.max(0, Number(value) || 0);
       if (field === 'quantity' || field === 'unit_price') newItem.total = newItem.quantity * newItem.unit_price;
       return newItem;
     }));
@@ -167,8 +170,8 @@ export default function Invoices() {
     if (!form.client_id) return;
     setSaving(true);
     try {
-      const lineItems: LineItem[] = items.map((i) => ({ ...i, id: crypto.randomUUID() }));
-      const invoiceData = { client_id: form.client_id, invoice_number: form.invoice_number, status: form.status, line_items: lineItems, subtotal, tax_rate: taxRate || undefined, total, due_date: form.due_date || undefined, notes: form.notes || undefined, currency: form.currency || undefined };
+      const lineItems: LineItem[] = items.map((i) => ({ ...i, id: crypto.randomUUID(), description: i.description ? sanitizeInput(i.description).slice(0, MAX_LENGTHS.description) : '' }));
+      const invoiceData = { client_id: form.client_id, invoice_number: form.invoice_number, status: form.status, line_items: lineItems, subtotal, tax_rate: taxRate || undefined, total, due_date: form.due_date || undefined, notes: form.notes ? sanitizeInput(form.notes).slice(0, MAX_LENGTHS.notes) : undefined, currency: form.currency || undefined };
       if (editing) await updateInvoice({ ...editing, ...invoiceData });
       else await addInvoice(invoiceData);
       const ids = Array.from(selectedTimeIds);
@@ -278,23 +281,26 @@ export default function Invoices() {
   const computeInvoiceStatus = (inv: Invoice, paidTotal: number): Invoice['status'] => {
     if (paidTotal >= inv.total) return 'paid';
     if (paidTotal > 0) return 'partial';
-    if (inv.status === 'draft' || inv.status === 'sent') return inv.status;
-    if (inv.due_date && new Date(inv.due_date) < new Date()) return 'overdue';
-    return inv.status;
+    // No payments remain. A previously paid/partial invoice must revert to a
+    // billable state instead of staying 'paid' with zero payments.
+    if (inv.status === 'draft') return 'draft';
+    if (inv.due_date && parseDateString(inv.due_date) < new Date()) return 'overdue';
+    return 'sent';
   };
 
   const handleRecordPayment = async () => {
     if (!paymentInv || !paymentForm.amount) return;
     setPaymentSaving(true);
     try {
-      const amount = parseFloat(paymentForm.amount);
+      const amount = Math.max(0, parseFloat(paymentForm.amount) || 0);
+      if (amount <= 0) { setPaymentSaving(false); addToast('Payment amount must be greater than zero', 'error'); return; }
       await addPayment({
         invoice_id: paymentInv.id,
         amount,
         payment_date: paymentForm.payment_date,
         payment_method: paymentForm.payment_method,
-        reference: paymentForm.reference || undefined,
-        notes: paymentForm.notes || undefined,
+        reference: paymentForm.reference ? sanitizeInput(paymentForm.reference).slice(0, 500) : undefined,
+        notes: paymentForm.notes ? sanitizeInput(paymentForm.notes).slice(0, MAX_LENGTHS.notes) : undefined,
       });
       const updatedPayments = useStore.getState().payments.filter((p) => p.invoice_id === paymentInv.id);
       const paidTotal = updatedPayments.reduce((s, p) => s + p.amount, 0) + amount;
@@ -439,6 +445,8 @@ export default function Invoices() {
     setRiItems(prev => prev.map((item, i) => {
       if (i !== index) return item;
       const newItem = { ...item, [field]: value };
+      if (field === 'quantity') newItem.quantity = Math.max(0, Number(value) || 0);
+      if (field === 'unit_price') newItem.unit_price = Math.max(0, Number(value) || 0);
       if (field === 'quantity' || field === 'unit_price') newItem.total = newItem.quantity * newItem.unit_price;
       return newItem;
     }));
@@ -453,8 +461,8 @@ export default function Invoices() {
     if (!riForm.title.trim() || !riForm.client_id) return;
     setSaving(true);
     try {
-      const lineItems: LineItem[] = riItems.map((i) => ({ ...i, id: crypto.randomUUID() }));
-      const data = { client_id: riForm.client_id, project_id: riForm.project_id || undefined, title: riForm.title, frequency: riForm.frequency, line_items: lineItems, subtotal: riSubtotal, tax_rate: riTaxRate || undefined, total: riTotal, notes: riForm.notes || undefined, active: true, next_due: riForm.next_due };
+      const lineItems: LineItem[] = riItems.map((i) => ({ ...i, id: crypto.randomUUID(), description: i.description ? sanitizeInput(i.description).slice(0, MAX_LENGTHS.description) : '' }));
+      const data = { client_id: riForm.client_id, project_id: riForm.project_id || undefined, title: sanitizeInput(riForm.title).slice(0, MAX_LENGTHS.title), frequency: riForm.frequency, line_items: lineItems, subtotal: riSubtotal, tax_rate: riTaxRate || undefined, total: riTotal, notes: riForm.notes ? sanitizeInput(riForm.notes).slice(0, MAX_LENGTHS.notes) : undefined, active: true, next_due: riForm.next_due };
       if (editingRecurring) await updateRecurringInvoice({ ...editingRecurring, ...data, active: editingRecurring.active });
       else await addRecurringInvoice(data);
       setShowRecurringModal(false);
@@ -531,11 +539,11 @@ export default function Invoices() {
 
       {/* Tab bar + search + sort */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
-        <div className="flex items-center gap-2 border-b border-[var(--border-color)] flex-1 min-w-0">
-          <button onClick={() => setActiveTab('all')} className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-[1px] ${activeTab === 'all' ? 'text-[var(--accent)] border-[var(--accent)]' : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'}`}>All invoices</button>
-          <button onClick={() => setActiveTab('recurring')} className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-[1px] ${activeTab === 'recurring' ? 'text-[var(--accent)] border-[var(--accent)]' : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'}`}>Recurring</button>
+        <div className="flex items-center gap-2 border-b border-[var(--border-color)] flex-shrink-0 min-w-max">
+          <button onClick={() => setActiveTab('all')} className={`whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-[1px] ${activeTab === 'all' ? 'text-[var(--accent)] border-[var(--accent)]' : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'}`}>All invoices</button>
+          <button onClick={() => setActiveTab('recurring')} className={`whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-[1px] ${activeTab === 'recurring' ? 'text-[var(--accent)] border-[var(--accent)]' : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'}`}>Recurring</button>
         </div>
-        <div className="relative max-w-[180px]">
+        <div className="relative max-w-[180px] flex-shrink-0">
           <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
           <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Filter..." className="w-full pl-8 pr-3 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]" />
         </div>
@@ -612,7 +620,7 @@ export default function Invoices() {
                         const fu = pendingFollowUps.find((f) => f.entity_type === 'invoice' && f.entity_id === inv.id);
                         if (!fu || inv.status === 'paid') return null;
                         const client = getClient(inv.client_id);
-                        const dueDate = inv.due_date ? new Date(inv.due_date) : null;
+    const dueDate = inv.due_date ? parseDateString(inv.due_date) : null;
                         const daysElapsed = dueDate ? Math.floor((Date.now() - dueDate.getTime()) / 86400000) : 0;
                         const templateKey = daysElapsed >= 10 ? 'invoice_day14' : daysElapsed >= 4 ? 'invoice_day7' : 'invoice_day1';
                         const draft = generateFollowUpDraft(templateKey, {
@@ -874,7 +882,7 @@ export default function Invoices() {
             <div className="flex justify-between"><span className="text-[var(--text-secondary)]">Subtotal</span><span className="text-[var(--text-primary)] font-medium">{formatCurrency(subtotal)}</span></div>
             <div className="flex justify-between items-center">
               <span className="text-[var(--text-secondary)]">Tax Rate (%)</span>
-              <input type="number" value={form.tax_rate} onChange={(e) => setForm({ ...form, tax_rate: e.target.value })} placeholder="0" className="w-20 px-2 py-1 text-xs text-right border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
+              <input type="number" min={0} value={form.tax_rate} onChange={(e) => { const v = e.target.value; setForm({ ...form, tax_rate: Number(v) < 0 ? '0' : v }); }} placeholder="0" className="w-20 px-2 py-1 text-xs text-right border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
             </div>
             <div className="flex justify-between pt-1 border-t border-[var(--border-color)]"><span className="font-medium text-[var(--text-primary)]">Total</span><span className="font-semibold text-[var(--text-primary)]">{formatCurrency(total)}</span></div>
           </div>
@@ -936,7 +944,7 @@ export default function Invoices() {
             <div className="flex justify-between"><span className="text-[var(--text-secondary)]">Subtotal</span><span className="text-[var(--text-primary)] font-medium">{formatCurrency(riSubtotal)}</span></div>
             <div className="flex justify-between items-center">
               <span className="text-[var(--text-secondary)]">Tax Rate (%)</span>
-              <input type="number" value={riForm.tax_rate} onChange={(e) => setRiForm({ ...riForm, tax_rate: e.target.value })} placeholder="0" className="w-20 px-2 py-1 text-xs text-right border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
+              <input type="number" min={0} value={riForm.tax_rate} onChange={(e) => { const v = e.target.value; setRiForm({ ...riForm, tax_rate: Number(v) < 0 ? '0' : v }); }} placeholder="0" className="w-20 px-2 py-1 text-xs text-right border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
             </div>
             <div className="flex justify-between pt-1 border-t border-[var(--border-color)]"><span className="font-medium text-[var(--text-primary)]">Total</span><span className="font-semibold text-[var(--text-primary)]">{formatCurrency(riTotal)}</span></div>
           </div>
@@ -966,7 +974,7 @@ export default function Invoices() {
           </div>
           <div>
             <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Amount Received</label>
-            <input type="number" value={paymentForm.amount} onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })} placeholder="0.00" className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]" />
+            <input type="number" min={0} value={paymentForm.amount} onChange={(e) => { const v = e.target.value; setPaymentForm({ ...paymentForm, amount: Number(v) < 0 ? '0' : v }); }} placeholder="0.00" className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]" />
           </div>
           <div>
             <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Payment Method</label>

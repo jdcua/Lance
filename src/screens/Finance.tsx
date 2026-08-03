@@ -5,13 +5,14 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import Modal from '../components/ui/Modal';
-import { formatCurrency, formatDate, formatMonth } from '../utils/format';
+import { formatCurrency, formatDate, formatMonth, parseDateString } from '../utils/format';
 import { getCurrencySymbol } from '../lib/currency';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useToasts } from '../store/toastStore';
 import type { ToastType } from '../store/toastStore';
 import { checkAndNotify } from '../achievements/notify';
 import { getUnlockedAchievementKeys } from '../achievements/checker';
+import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 import {
   getNextMonths,
@@ -80,12 +81,13 @@ export default function Finance() {
     try {
       const data = {
         category: form.category,
-        description: form.description,
-        amount: parseFloat(form.amount),
+        description: sanitizeInput(form.description).slice(0, MAX_LENGTHS.description),
+        amount: Math.max(0, parseFloat(form.amount) || 0),
         date: form.date,
         recurring: form.recurring,
         frequency: form.recurring ? form.frequency : undefined,
       };
+      if (data.amount <= 0) { setSaving(false); addToast('Expense amount must be greater than zero', 'error'); return; }
       if (editing) {
         await updateExpense({ ...editing, ...data });
       } else {
@@ -653,8 +655,9 @@ export default function Finance() {
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Amount *</label>
               <input
                 type="number"
+                min={0}
                 value={form.amount}
-                onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                onChange={(e) => { const v = e.target.value; setForm({ ...form, amount: Number(v) < 0 ? '0' : v }); }}
                 placeholder="0.00"
                 className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
               />
@@ -732,7 +735,7 @@ function getBucket(dueDate: string | undefined): AgingBucket {
   if (!dueDate) return 'current';
   const now = new Date();
   now.setHours(0, 0, 0, 0);
-  const due = new Date(dueDate);
+  const due = parseDateString(dueDate);
   due.setHours(0, 0, 0, 0);
   const diffDays = Math.floor((now.getTime() - due.getTime()) / 86400000);
   if (diffDays < 0) return 'current';
@@ -800,7 +803,7 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
       if (remaining <= 0) return null;
       const bucket = getBucket(inv.due_date);
       const daysOverdue = inv.due_date
-        ? Math.floor((new Date().getTime() - new Date(inv.due_date).getTime()) / 86400000)
+        ? Math.floor((new Date().getTime() - parseDateString(inv.due_date).getTime()) / 86400000)
         : 0;
       return {
         invoice: inv,
@@ -884,8 +887,8 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
         amount,
         payment_date: paymentForm.payment_date,
         payment_method: paymentForm.payment_method,
-        reference: paymentForm.reference || undefined,
-        notes: paymentForm.notes || undefined,
+        reference: paymentForm.reference ? sanitizeInput(paymentForm.reference).slice(0, 500) : undefined,
+        notes: paymentForm.notes ? sanitizeInput(paymentForm.notes).slice(0, MAX_LENGTHS.notes) : undefined,
       });
       if (inv) {
         const existingPayments = payments[paymentInvId] || [];
@@ -1045,7 +1048,7 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
 }
 
 function relativeDate(iso: string): string {
-  const date = new Date(iso);
+  const date = parseDateString(iso);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / 86400000);

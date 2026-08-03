@@ -18,14 +18,23 @@ export function sanitizeText(value: string): string {
 
 /**
  * Sanitizes SQL-relevant characters to prevent injection.
+ *
+ * NOTE: all app queries are parameterized, so raw quotes are harmless data.
+ * We only neutralize complete injection *sequences* (e.g. a lone trailing
+ * quote immediately followed by SQL keywords, or comment tokens) instead of
+ * stripping every apostrophe/semicolon, which corrupted legitimate text
+ * like "O'Brien & Sons; LLC" -> "OBrien & Sons LLC".
  */
 export function sanitizeSql(value: string): string {
   if (!value) return '';
-  // Remove SQL injection patterns
   return value
-    .replace(/['";\\]/g, '')
-    .replace(/--/g, '')
-    .replace(/\/\*.*\*\//g, '');
+    // Neutralize classic injection sequences
+    .replace(/'\s*(OR|AND)\s+\d+\s*=\s*\d+\s*'/gi, " '")
+    .replace(/'\s*(\s*(OR|AND)\s+['"]?[0-9a-z_-]+['"]?\s*=\s*['"]?[0-9a-z_-]+['"]?)/gi, '$1')
+    .replace(/'(--|#|\s*(OR|AND)\b)/gi, '$1')
+    .replace(/;\s*(DROP|DELETE|UPDATE|INSERT|ALTER|CREATE|TRUNCATE)\b/gi, ' $1')
+    .replace(/\/\*.*\*\//g, '')
+    .replace(/--/g, '');
 }
 
 /**

@@ -2,17 +2,419 @@ import Database from '@tauri-apps/plugin-sql';
 
 let db: Database | null = null;
 
-/** Mock database used when running in browser mode without Tauri. */
+/**
+ * Mock database used when running in browser mode without Tauri.
+ *
+ * Implements a minimal SQL subset backed by localStorage so writes are NOT
+ * silently dropped: SELECT (cols, WHERE col = ?, ORDER BY, LIMIT),
+ * INSERT INTO ... VALUES, UPDATE ... SET, DELETE FROM ... WHERE.
+ * Non-data statements (PRAGMA, CREATE TABLE, BEGIN/COMMIT/ROLLBACK) are no-ops.
+ *
+ * IMPORTANT: table rows are stored under the SAME `lance:store:*` keys the
+ * browser-mode Tauri shim uses (see src/utils/tauri.ts), so metrics queries
+ * (archetype queries) see the same data as the UI. `user_profile` is a
+ * singleton stored at `lance:profile` and is special-cased.
+ */
+const MOCK_PREFIX = 'lance:store:';
+// Tables stored as a single object instead of an array. For these, a WHERE
+// condition on a column the row lacks (e.g. `id = 1` against a singleton
+// profile object with no id) is treated as a match: there is only one row and
+// callers are selecting "the" profile.
+const SINGLETON_TABLES = new Set(['user_profile']);
+
+function mockTableRows(table: string): Record<string, any>[] {
+  try {
+    if (table === 'user_profile') {
+      const raw = localStorage.getItem('lance:profile');
+      return raw ? [JSON.parse(raw)] : [];
+    }
+    const raw = localStorage.getItem(MOCK_PREFIX + table);
+    const val = raw ? JSON.parse(raw) : [];
+    return Array.isArray(val) ? val : [];
+  } catch { return []; }
+}
+
+function mockWriteTable(table: string, rows: Record<string, any>[]): void {
+  try {
+    if (table === 'user_profile') {
+      localStorage.setItem('lance:profile', JSON.stringify(rows[0] ?? {}));
+      return;
+    }
+    localStorage.setItem(MOCK_PREFIX + table, JSON.stringify(rows));
+  } catch { /* quota exceeded or private mode */ }
+}
+
+/** Normalize $1/$2 style params into a positional array in placeholder order. */
+function normalizeParams(sql: string, params?: unknown[]): unknown[] {
+  if (!params) return [];
+  if (!sql.includes('$')) return params;
+  // $N placeholders — build array indexed by N
+  const map = new Map<number, unknown>();
+  const re = /\$(\d+)/g;
+  let m: RegExpExecArray | null;
+  let idx = 0;
+  while ((m = re.exec(sql))) {
+    const n = parseInt(m[1], 10);
+    if (!map.has(n)) map.set(n, params[idx++] ?? null);
+  }
+  return Array.from({ length: Math.max(0, ...map.keys()) + 1 }, (_, i) => map.get(i) ?? null).slice(1);
+}
+
 class MockDatabase {
-  async select<T>(_sql: string, _params?: unknown[]): Promise<T[]> { return []; }
-  async execute(_sql: string, _params?: unknown[]): Promise<unknown> { return { rowsAffected: 0, lastInsertId: 0 }; }
+  private table(sql: string): string | null {
+    const m = sql.match(/\b(?:FROM|INTO|UPDATE)\s+([A-Za-z_][A-Za-z0-9_]*)/i) || sql.match(/\bDELETE\s+FROM\s+([A-Za-z_][A-Za-z0-9_]*)/i);
+    return m ? m[1] : null;
+  }
+
+  private matchesValue(a: any, b: any): boolean {
+    const numA = typeof a === 'number' ? a : Number(a);
+    const numB = typeof b === 'number' ? b : Number(b);
+    if (a === b) return true;
+    if (!isNaN(numA) && !isNaN(numB) && numA === numB) return true;
+    return String(a ?? '') === String(b ?? '');
+  }
+
+  /** Compare a row value against a literal/param value with an operator. */
+  private compareValue(colVal: any, op: string, val: any): boolean {
+    switch (op) {
+      case '=': return this.matchesValue(colVal, val);
+      case '!=': case '<>': return !this.matchesValue(colVal, val);
+      case '>': return Number(colVal) > Number(val);
+      case '<': return Number(colVal) < Number(val);
+      case '>=': return Number(colVal) >= Number(val);
+      case '<=': return Number(colVal) <= Number(val);
+      case 'LIKE': {
+        const pattern = String(val).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*').replace(/_/g, '.');
+        return new RegExp('^' + pattern + '$', 'i').test(String(colVal ?? ''));
+      }
+      case 'NOT LIKE': {
+        const pattern = String(val).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*').replace(/_/g, '.');
+        return !new RegExp('^' + pattern + '$', 'i').test(String(colVal ?? ''));
+      }
+      case 'IS NULL': return colVal === null || colVal === undefined;
+      case 'IS NOT NULL': return colVal !== null && colVal !== undefined;
+      case 'IN': return Array.isArray(val) && val.some((v) => this.matchesValue(colVal, v));
+      case 'NOT IN': return !(Array.isArray(val) && val.some((v) => this.matchesValue(colVal, v)));
+      default: return false;
+    }
+  }
+
+  /**
+   * Parse a WHERE clause into predicates: {col, op, value}. Supports =, !=,
+   * <>, >, <, >=, <=, LIKE, NOT LIKE, IS [NOT] NULL, IN (...), AND, OR.
+   * Placeholders are ? and $N; string literals '...' and numbers are supported.
+   */
+  private parseWhere(sql: string, params: unknown[]): Array<{ col: string; op: string; value: unknown }> {
+    let clause: string;
+    if (/\bWHERE\s+/i.test(sql)) {
+      const whereMatch = sql.match(/\bWHERE\s+(.+?)(?:\s+GROUP\s+BY\s+|\s+ORDER\s+BY\s+|\s+LIMIT\s+|$)/i);
+      clause = whereMatch ? whereMatch[1] : '';
+    } else {
+      clause = sql;
+    }
+    if (!clause) return [];
+    // Handle OR by splitting on top-level OR (rare in app code; each side
+    // must be a full predicate chain).
+    const ors = this.splitTopLevel(clause, 'OR');
+    if (ors.length > 1) {
+      return [{
+        col: '',
+        op: '__OR__',
+        value: ors.map((side) => this.parseAnd(side, params)),
+      }];
+    }
+    return this.parseAnd(clause, params);
+  }
+
+  private splitTopLevel(s: string, token: string): string[] {
+    const parts: string[] = [];
+    let depth = 0; let cur = '';
+    const up = token.toUpperCase();
+    let i = 0;
+    while (i < s.length) {
+      const ch = s[i];
+      if (ch === '(') depth++;
+      else if (ch === ')') depth--;
+      if (depth === 0 && s.slice(i, i + up.length).toUpperCase() === up &&
+          (i === 0 || !/[A-Za-z0-9_]/.test(s[i-1])) && (i + up.length >= s.length || !/[A-Za-z0-9_]/.test(s[i+up.length]))) {
+        parts.push(cur); cur = '';
+        i += up.length; continue;
+      }
+      cur += ch; i++;
+    }
+    if (cur.trim()) parts.push(cur);
+    return parts;
+  }
+
+  /** Split a VALUES list on top-level commas (no word-boundary checks). */
+  private splitTopLevelComma(s: string): string[] {
+    const parts: string[] = [];
+    let depth = 0; let cur = ''; let inStr = false;
+    for (let i = 0; i < s.length; i++) {
+      const ch = s[i];
+      if (ch === "'") inStr = !inStr;
+      else if (!inStr && ch === '(') depth++;
+      else if (!inStr && ch === ')') depth--;
+      if (!inStr && depth === 0 && ch === ',') { parts.push(cur); cur = ''; continue; }
+      cur += ch;
+    }
+    if (cur.trim()) parts.push(cur);
+    return parts;
+  }
+
+  private parseAnd(clause: string, params: unknown[]): Array<{ col: string; op: string; value: unknown }> {
+    const parts = this.splitTopLevel(clause, 'AND');
+    const out: Array<{ col: string; op: string; value: unknown }> = [];
+    let pi = 0;
+    for (const part of parts) {
+      const t = part.trim();
+      if (!t) continue;
+      const m = t.match(/^([A-Za-z_][A-Za-z0-9_.]*)\s*(=|!=|<>|>=|<=|>|<|LIKE|NOT\s+LIKE|IS\s+NOT\s+NULL|IS\s+NULL|IN|NOT\s+IN)\s*(.+)?$/i);
+      if (!m) continue;
+      const col = m[1].split('.').pop()!.toLowerCase();
+      const op = m[2].replace(/\s+/g, ' ').toUpperCase();
+      const rhs = m[3] ? m[3].trim() : '';
+      if (op === 'IS NULL' || op === 'IS NOT NULL') {
+        out.push({ col, op, value: null });
+        continue;
+      }
+      // IN (a, b, c) — may contain params or literals. rhs is either `IN (...)` or `(...)` (NOT IN).
+      const inM = rhs.match(/^(?:NOT\s+)?IN\s*\((.+)\)$/i) || (op === 'IN' || op === 'NOT IN' ? rhs.match(/^\((.+)\)$/) : null);
+      if (inM) {
+        const items = this.splitTopLevel(inM[1], ',').map((x) => x.trim());
+        const vals = items.map((it) => this.literalValue(it, params, () => pi++));
+        out.push({ col, op: op === 'NOT IN' ? 'NOT IN' : 'IN', value: vals });
+        continue;
+      }
+      out.push({ col, op, value: this.literalValue(rhs, params, () => pi++) });
+    }
+    return out;
+  }
+
+  private literalValue(tok: string, params: unknown[], nextParam: () => number): unknown {
+    if (tok === '?') return params[nextParam()] ?? null;
+    const dollar = tok.match(/^\$(\d+)$/);
+    if (dollar) return params[parseInt(dollar[1], 10) - 1] ?? null;
+    if (/^'[^']*'$/.test(tok)) return tok.slice(1, -1);
+    if (/^-?\d+(\.\d+)?$/.test(tok)) return Number(tok);
+    if (/^(TRUE|FALSE)$/i.test(tok)) return /^TRUE$/i.test(tok) ? 1 : 0;
+    if (/^NULL$/i.test(tok)) return null;
+    return tok; // bare token — treat as string
+  }
+
+  /** Evaluate parsed predicates against a row. */
+  private matches(row: Record<string, any>, conds: Array<{ col: string; op: string; value: unknown }>, singleton = false): boolean {
+    return conds.every((cond) => {
+      if (cond.op === '__OR__') {
+        return (cond.value as Array<Array<{ col: string; op: string; value: unknown }>>).some((side) => this.matches(row, side, singleton));
+      }
+      if (singleton && !(cond.col in row)) return true;
+      const colVal = row[cond.col];
+      if (cond.op === 'IN' && Array.isArray(cond.value) && cond.value.length === 0) return false;
+      return this.compareValue(colVal, cond.op, cond.value);
+    });
+  }
+
+  private parseOrderBy(sql: string): [string, 'asc' | 'desc'][] {
+    const m = sql.match(/\bORDER\s+BY\s+(.+?)(?:\s+LIMIT\s+|$)/i);
+    if (!m) return [];
+    return m[1].split(',').map((part) => {
+      const t = part.trim();
+      const desc = /\bDESC\b/i.test(t);
+      const col = t.replace(/\s+(ASC|DESC)\s*$/i, '').trim().split('.').pop()!.toLowerCase();
+      return [col, desc ? 'desc' : 'asc'] as [string, 'asc' | 'desc'];
+    });
+  }
+
+  private parseLimit(sql: string): number | null {
+    const m = sql.match(/\bLIMIT\s+(\d+)/i);
+    return m ? parseInt(m[1], 10) : null;
+  }
+
+  async select<T>(sql: string, params?: unknown[]): Promise<T[]> {
+    const table = await this.table(sql);
+    if (!table) return [];
+    const p = normalizeParams(sql, params);
+    let rows = mockTableRows(table);
+
+    const conds = this.parseWhere(sql, p);
+    const singleton = SINGLETON_TABLES.has(table);
+    if (conds.length) {
+      rows = rows.filter((r) => this.matches(r, conds, singleton));
+    }
+
+    const orderBy = this.parseOrderBy(sql);
+    if (orderBy.length) {
+      rows = [...rows].sort((a, b) => {
+        for (const [col, dir] of orderBy) {
+          const av = a[col];
+          const bv = b[col];
+          let cmp = 0;
+          const na = Number(av); const nb = Number(bv);
+          if (!isNaN(na) && !isNaN(nb)) cmp = na - nb;
+          else cmp = String(av ?? '').localeCompare(String(bv ?? ''));
+          if (cmp !== 0) return dir === 'asc' ? cmp : -cmp;
+        }
+        return 0;
+      });
+    }
+
+    const limit = this.parseLimit(sql);
+    if (limit !== null) rows = rows.slice(0, limit);
+
+    // Project columns if explicitly listed (not *)
+    const selectMatch = sql.match(/^SELECT\s+(.+?)\s+FROM/i);
+    if (selectMatch) {
+      const cols = this.splitTopLevelComma(selectMatch[1]).map((c) => c.trim());
+      const star = cols.length === 1 && cols[0] === '*';
+      // COUNT(*) / SUM / AVG / MIN / MAX with optional alias
+      const aggRows = this.projectAggregates(cols, rows);
+      if (aggRows) return aggRows as unknown as T[];
+      if (!star) {
+        rows = rows.map((r) => {
+          const out: Record<string, any> = {};
+          for (const c of cols) {
+            const alias = c.match(/^([A-Za-z_][A-Za-z0-9_]*)\s+as\s+([A-Za-z_][A-Za-z0-9_]*)$/i);
+            if (alias) out[alias[2].toLowerCase()] = r[alias[1].split('.').pop()!];
+            else out[c.split('.').pop()!.toLowerCase()] = r[c.split('.').pop()!];
+          }
+          return out;
+        });
+      }
+    }
+    return rows as unknown as T[];
+  }
+
+  /** Handle aggregate projections: COUNT(*), COUNT(col), SUM(col), AVG(col), MIN(col), MAX(col), with optional AS alias. */
+  private projectAggregates(cols: string[], rows: Record<string, any>[]): Record<string, any>[] | null {
+    const out: Record<string, any> = {};
+    let anyAgg = false;
+    for (const c of cols) {
+      const aliasM = c.match(/^(.+?)\s+as\s+([A-Za-z_][A-Za-z0-9_]*)$/i);
+      const expr = aliasM ? aliasM[1].trim() : c.trim();
+      const alias = (aliasM ? aliasM[2] : expr).toLowerCase();
+      // Match COUNT(*), COUNT(col), SUM(col), AVG(col), MIN(col), MAX(col),
+      // optionally wrapped in COALESCE(<agg>, default).
+      const m = expr.match(/^(?:COALESCE\s*\(\s*)?(COUNT|SUM|AVG|MIN|MAX)\s*\((\*|[A-Za-z_][A-Za-z0-9_.]*)\)(?:\s*,\s*[^)]*)?\)?$/i);
+      if (!m) continue;
+      const fn = m[1].toUpperCase();
+      const arg = m[2];
+      anyAgg = true;
+      const col = arg === '*' ? null : arg.split('.').pop()!.toLowerCase();
+      if (fn === 'COUNT') {
+        out[alias] = col ? rows.filter((r) => r[col] !== null && r[col] !== undefined).length : rows.length;
+      } else if (fn === 'SUM') {
+        out[alias] = rows.reduce((s, r) => s + (col && r[col] ? Number(r[col]) || 0 : 0), 0);
+      } else if (fn === 'AVG') {
+        const vals = col ? rows.map((r) => Number(r[col]) || 0).filter((v) => !isNaN(v)) : [];
+        out[alias] = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+      } else if (fn === 'MIN') {
+        const vals = col ? rows.map((r) => r[col]).filter((v) => v !== null && v !== undefined) : [];
+        out[alias] = vals.length ? Math.min(...vals.map((v) => Number(v))) : null;
+      } else if (fn === 'MAX') {
+        const vals = col ? rows.map((r) => r[col]).filter((v) => v !== null && v !== undefined) : [];
+        out[alias] = vals.length ? Math.max(...vals.map((v) => Number(v))) : null;
+      }
+    }
+    if (!anyAgg) return null;
+    return [out];
+  }
+
+  async execute(sql: string, params?: unknown[]): Promise<unknown> {
+    const p = normalizeParams(sql, params);
+    const trimmed = sql.trim();
+
+    if (/^BEGIN|^COMMIT|^ROLLBACK|^PRAGMA|^CREATE\s+TABLE/i.test(trimmed)) {
+      return { rowsAffected: 0, lastInsertId: 0 };
+    }
+
+    // INSERT INTO table (cols) VALUES (?, ?, ...) [ON CONFLICT(id) DO UPDATE ...]
+    const ins = sql.match(/^INSERT\s+INTO\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]+)\)\s*VALUES\s*\((.+?)\)(?:\s+ON\s+CONFLICT\s*\(([^)]*)\)\s+DO\s+UPDATE\s+SET\s+(.+))?\s*$/i);
+    if (ins) {
+      const table = ins[1];
+      const cols = ins[2].split(',').map((c) => c.trim().toLowerCase());
+      // Split VALUES into per-column tokens so literal values (e.g. `1` in
+      // `VALUES (1, ?, ?, ?)`) don't consume placeholders — params must bind
+      // ONLY to `?`/`$N` tokens, in order.
+      const valueParts = this.splitTopLevelComma(ins[3]).map((v) => v.trim());
+      const row: Record<string, any> = {};
+      let pi = 0;
+      for (let i = 0; i < cols.length; i++) {
+        if (i < valueParts.length) {
+          row[cols[i]] = this.literalValue(valueParts[i], p, () => pi++);
+        } else {
+          row[cols[i]] = null;
+        }
+      }
+      const rows = mockTableRows(table);
+      const conflictCols = ins[4] ? ins[4].split(',').map((c) => c.trim().toLowerCase()) : [];
+      let upserted = -1;
+      if (conflictCols.length) {
+        upserted = rows.findIndex((r) => conflictCols.every((c) => this.matchesValue(r[c], row[c])));
+      }
+      if (upserted !== -1) {
+        rows[upserted] = { ...rows[upserted], ...row };
+        mockWriteTable(table, rows);
+        return { rowsAffected: 1, lastInsertId: upserted + 1 };
+      }
+      rows.push(row);
+      mockWriteTable(table, rows);
+      return { rowsAffected: 1, lastInsertId: rows.length };
+    }
+
+    // UPDATE table SET col = ?, ... WHERE ...
+    const upd = sql.match(/^UPDATE\s+([A-Za-z_][A-Za-z0-9_]*)\s+SET\s+(.+?)(?:\s+WHERE\s+(.+))?$/i);
+    if (upd) {
+      const table = upd[1];
+      const sets: [string, unknown][] = [];
+      const setRe = /([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(\?|\$\d+|NULL|'[^']*'|\d+(?:\.\d+)?)/g;
+      let sm: RegExpExecArray | null;
+      // SET placeholders consume params from index 0; WHERE params continue after.
+      let si = 0;
+      while ((sm = setRe.exec(upd[2]))) {
+        let val: unknown;
+        if (sm[2] === '?') val = p[si++];
+        else if (/^\d/.test(sm[2])) val = Number(sm[2]);
+        else if (sm[2] === 'NULL') val = null;
+        else val = sm[2].slice(1, -1);
+        sets.push([sm[1].toLowerCase(), val]);
+      }
+      const conds = upd[3] ? this.parseWhere(upd[3], p.slice(si)) : [];
+      const rows = mockTableRows(table);
+      let affected = 0;
+      for (const r of rows) {
+        if (this.matches(r, conds)) {
+          for (const [col, val] of sets) r[col] = val;
+          affected++;
+        }
+      }
+      mockWriteTable(table, rows);
+      return { rowsAffected: affected, lastInsertId: 0 };
+    }
+
+    // DELETE FROM table WHERE ...
+    const del = sql.match(/^DELETE\s+FROM\s+([A-Za-z_][A-Za-z0-9_]*)(?:\s+WHERE\s+(.+))?$/i);
+    if (del) {
+      const table = del[1];
+      const conds = del[2] ? this.parseWhere(del[2], p) : [];
+      let rows = mockTableRows(table);
+      if (conds.length) rows = rows.filter((r) => !this.matches(r, conds));
+      else rows = [];
+      mockWriteTable(table, rows);
+      return { rowsAffected: 1, lastInsertId: 0 };
+    }
+
+    // Unsupported statement — no-op without throwing
+    return { rowsAffected: 0, lastInsertId: 0 };
+  }
+
   async close(): Promise<void> {}
 }
 
 export async function getDb(): Promise<Database> {
   if (db) return db;
 
-  // In browser mode, return a silent mock so callers don't crash.
+  // In browser mode, return a localStorage-backed mock so callers don't crash.
   if (typeof window === 'undefined' || !(window as any).__TAURI_INTERNALS__) {
     return new MockDatabase() as unknown as Database;
   }

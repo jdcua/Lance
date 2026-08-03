@@ -180,7 +180,7 @@ export default function Clients() {
   const [editing, setEditing] = useState<Client | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', phone: '', company: '', notes: '', preferred_currency: '' });
-  const [formErrors, setFormErrors] = useState<{ email?: string }>({});
+  const [formErrors, setFormErrors] = useState<{ email?: string; name?: string }>({});
   const [showLogForm, setShowLogForm] = useState(false);
   const [logForm, setLogForm] = useState({ type: 'note' as Communication['type'], date: new Date().toISOString().split('T')[0], summary: '' });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -219,7 +219,8 @@ export default function Clients() {
 
   useEffect(() => {
     loadMetricDefs();
-  }, [loadMetricDefs]);
+    loadMetricValues();
+  }, [loadMetricDefs, loadMetricValues]);
 
   useEffect(() => {
     loadMetricTemplates();
@@ -277,7 +278,11 @@ export default function Clients() {
   };
 
   const handleSaveClient = async () => {
-    if (!form.name.trim()) return;
+    const sanitizedName = sanitizeInput(form.name).trim();
+    if (!sanitizedName) {
+      setFormErrors({ name: 'Name is required' });
+      return;
+    }
     if (form.email && !EMAIL_REGEX.test(form.email)) {
       setFormErrors({ email: 'Please enter a valid email address' });
       return;
@@ -285,7 +290,7 @@ export default function Clients() {
     setSaving(true);
     try {
       const sanitized = {
-        name: sanitizeInput(form.name).slice(0, MAX_LENGTHS.name),
+        name: sanitizedName.slice(0, MAX_LENGTHS.name),
         email: form.email ? sanitizeInput(form.email).slice(0, MAX_LENGTHS.email) : undefined,
         phone: form.phone ? sanitizeInput(form.phone).slice(0, MAX_LENGTHS.phone) : undefined,
         company: form.company ? sanitizeInput(form.company).slice(0, MAX_LENGTHS.company) : undefined,
@@ -395,6 +400,11 @@ export default function Clients() {
 
   const handleLogValue = async (definitionId: string) => {
     if (!selectedId || !valueForm.value.trim()) return;
+    const def = metricDefs.find((d) => d.id === definitionId);
+    if (def && def.metric_type !== 'text' && Number(valueForm.value) < 0) {
+      addToast('Metric value cannot be negative', 'error');
+      return;
+    }
     try {
       await logMetricValue({
         definition_id: definitionId,
@@ -801,7 +811,6 @@ export default function Clients() {
                       const numericValues = values
                         .map((v) => parseFloat(v.value))
                         .filter((v) => !isNaN(v));
-                      const isLoaded = true;
 
                       return (
                         <Card key={def.id} className="!p-4">
@@ -847,24 +856,17 @@ export default function Clients() {
                             </div>
                           </div>
 
-                          {/* Values */}
-                          {!isLoaded ? (
-                            <button
-                              onClick={() => loadMetricValues(def.id)}
-                              className="text-[10px] text-[var(--accent)] hover:underline"
-                            >
-                              Load history
-                            </button>
-                          ) : values.length === 0 ? (
-                            <p className="text-[10px] text-[var(--text-tertiary)]">No values logged yet.</p>
-                          ) : (
+                      {/* Values */}
+                      {values.length === 0 ? (
+                        <p className="text-[10px] text-[var(--text-tertiary)]">No values logged yet.</p>
+                      ) : (
                             <div className="flex items-center gap-3">
-                              <Sparkline values={numericValues} width={100} height={28} />
+                              <Sparkline values={[...numericValues].reverse()} width={100} height={28} />
                               <div>
                                 <span className="text-sm font-semibold text-[var(--text-primary)]">
-                                  {def.metric_type === 'currency' ? `$${numericValues[numericValues.length - 1]?.toFixed(2) || '—'}` :
-                                   def.metric_type === 'percentage' ? `${numericValues[numericValues.length - 1]?.toFixed(1) || '—'}%` :
-                                   values[values.length - 1]?.value || '—'}
+                                  {def.metric_type === 'currency' ? `$${numericValues[0]?.toFixed(2) || '—'}` :
+                                   def.metric_type === 'percentage' ? `${numericValues[0]?.toFixed(1) || '—'}%` :
+                                   values[0]?.value || '—'}
                                 </span>
                                 <p className="text-[10px] text-[var(--text-tertiary)]">{values.length} entries</p>
                               </div>
@@ -877,8 +879,9 @@ export default function Clients() {
                               <div className="flex-1">
                                 <input
                                   type={def.metric_type === 'text' ? 'text' : 'number'}
+                                  min={def.metric_type === 'text' ? undefined : 0}
                                   value={valueForm.value}
-                                  onChange={(e) => setValueForm({ ...valueForm, value: e.target.value })}
+                                  onChange={(e) => { const v = e.target.value; if (def.metric_type !== 'text' && Number(v) < 0) return; setValueForm({ ...valueForm, value: v }); }}
                                   placeholder={`Value${def.unit_label ? ` (${def.unit_label})` : ''}`}
                                   className="w-full px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
                                   onKeyDown={(e) => { if (e.key === 'Enter') handleLogValue(def.id); }}
@@ -903,7 +906,6 @@ export default function Clients() {
                               onClick={() => {
                                 setShowValueForm(def.id);
                                 setValueForm({ value: '', period: new Date().toISOString().split('T')[0], notes: '' });
-                                if (!isLoaded) loadMetricValues(def.id);
                               }}
                               className="mt-2 text-[10px] text-[var(--accent)] hover:underline flex items-center gap-1"
                             >
@@ -1004,6 +1006,9 @@ export default function Clients() {
               className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               autoFocus
             />
+            {formErrors.name && (
+              <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>

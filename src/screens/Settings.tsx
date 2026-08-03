@@ -21,6 +21,7 @@ import { clearSampleData } from '../utils/seedData';
 import { createExportEnvelope, validateImportEnvelope, performImport, formatTableCounts, logVersionEvent } from '../utils/backup';
 import type { BackupEnvelope, ImportValidationResult } from '../utils/backup';
 import { getCurrentSchemaVersion } from '../db';
+import { sanitizeInput, sanitizeText } from '../utils/sanitize';
 
 const currencies = ['CAD', 'USD', 'GBP', 'EUR', 'AUD'];
 const writingStyles = ['professional', 'warm', 'direct', 'bold'];
@@ -695,7 +696,14 @@ export default function Settings() {
                           maxLength={254}
                           value={form.email || ''}
                           onChange={(e) => setForm({ ...form, email: e.target.value })}
-                          onBlur={() => autoSave({ email: form.email }, 'Your profile')}
+                          onBlur={() => {
+                            const email = (form.email || '').trim();
+                            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                              addToast('Please enter a valid email address', 'error');
+                              return;
+                            }
+                            autoSave({ email }, 'Your profile');
+                          }}
                           placeholder="you@example.com"
                           className={inputClass}
                         />
@@ -726,8 +734,14 @@ export default function Settings() {
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-tertiary)]">$</span>
                         <input
                           type="number"
+                          min={0}
+                          max={10000}
+                          step="0.01"
                           value={form.hourly_rate ?? ''}
-                          onChange={(e) => setForm({ ...form, hourly_rate: e.target.value ? parseFloat(e.target.value) : undefined })}
+                          onChange={(e) => {
+                            const v = e.target.value ? parseFloat(e.target.value) : 0;
+                            setForm({ ...form, hourly_rate: Number.isFinite(v) ? Math.max(0, Math.min(10000, v)) : 0 });
+                          }}
                           onBlur={() => autoSave({ hourly_rate: form.hourly_rate }, 'Rates')}
                           placeholder="0.00"
                           className={`${inputClass} pl-7`}
@@ -738,8 +752,13 @@ export default function Settings() {
                       <label className={labelClass}>Default tax rate (%)</label>
                       <input
                         type="number"
+                        min={0}
+                        max={100}
                         value={form.tax_rate ?? ''}
-                        onChange={(e) => setForm({ ...form, tax_rate: e.target.value ? parseFloat(e.target.value) : undefined })}
+                        onChange={(e) => {
+                          const v = e.target.value ? parseFloat(e.target.value) : 0;
+                          setForm({ ...form, tax_rate: Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : 0 });
+                        }}
                         onBlur={() => autoSave({ tax_rate: form.tax_rate }, 'Rates')}
                         placeholder="0"
                         className={inputClass}
@@ -749,8 +768,13 @@ export default function Settings() {
                       <label className={labelClass}>Payment terms (days)</label>
                       <input
                         type="number"
+                        min={0}
+                        max={365}
                         value={form.payment_terms ?? 14}
-                        onChange={(e) => { const v = parseInt(e.target.value); setForm({ ...form, payment_terms: isNaN(v) ? 14 : v }); }}
+                        onChange={(e) => {
+                          const v = parseInt(e.target.value);
+                          setForm({ ...form, payment_terms: Number.isFinite(v) ? Math.max(0, Math.min(365, v)) : 14 });
+                        }}
                         onBlur={() => autoSave({ payment_terms: form.payment_terms }, 'Rates')}
                         className={inputClass}
                       />
@@ -1305,7 +1329,7 @@ export default function Settings() {
                             <textarea
                               value={fuTemplates[key] || ''}
                               onChange={(e) => {
-                                const updated = { ...fuTemplates, [key]: e.target.value };
+                                const updated = { ...fuTemplates, [key]: sanitizeText(e.target.value) };
                                 setFuTemplates(updated);
                                 saveFollowUpSettings({ templates: updated });
                               }}
@@ -1331,7 +1355,7 @@ export default function Settings() {
                               type="text"
                               value={fuSubjectTemplates[key] || DEFAULT_SUBJECT_TEMPLATES[key] || ''}
                               onChange={(e) => {
-                                const updated = { ...fuSubjectTemplates, [key]: e.target.value };
+                                const updated = { ...fuSubjectTemplates, [key]: sanitizeText(e.target.value) };
                                 setFuSubjectTemplates(updated);
                                 saveFollowUpSettings({ subject_templates: updated });
                               }}
@@ -1442,7 +1466,7 @@ export default function Settings() {
                   if (e.key === 'Enter' && !licenseActivating) handleActivateLicense();
                 }}
                 placeholder="LANCE-XXXX-XXXX-XXXX-XXXX"
-                maxLength={24}
+                maxLength={25}
                 disabled={licenseActivating || licenseSuccess}
                 className={`w-full px-3 py-2 text-sm rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 bg-[var(--bg-card)] font-mono tracking-wider ${
                   licenseError
@@ -1691,12 +1715,18 @@ function ExportTemplatesSection() {
 
   const handleSave = async () => {
     if (!form.name.trim()) return;
+    const color = (form.color_scheme || '').trim();
+    if (color && !/^#?[0-9a-fA-F]{6}$/.test(color)) {
+      addToast('Color scheme must be a 6-digit hex value (e.g. #1e40af)', 'error');
+      return;
+    }
     setSaving(true);
     try {
+      const normalized = { ...form, name: sanitizeInput(form.name), header: sanitizeInput(form.header), footer: sanitizeInput(form.footer), color_scheme: color };
       if (editing) {
-        await updateExportTemplate({ ...editing, ...form, sections: form.sections });
+        await updateExportTemplate({ ...editing, ...normalized, sections: form.sections });
       } else {
-        await addExportTemplate({ ...form, sections: form.sections });
+        await addExportTemplate({ ...normalized, sections: form.sections });
       }
       setShowForm(false);
       addToast('Template saved', 'success');

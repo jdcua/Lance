@@ -24,7 +24,9 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
-  const [selected, setSelected] = useState<string>(currentId);
+  // Seed selection from the stored profile so the standalone /archetype route
+  // reflects the currently applied archetype instead of always defaulting to 'default'.
+  const [selected, setSelected] = useState<string>(profile?.profession || currentId);
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const filtered = useMemo(() => {

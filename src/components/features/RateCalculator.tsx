@@ -25,9 +25,9 @@ export default function RateCalculator() {
     }
   }, [profile]);
 
-  const targetNum = parseFloat(target) || 0;
-  const hoursNum = parseFloat(hours) || 0;
-  const expensesNum = parseFloat(expenses) || 0;
+  const targetNum = Math.max(0, parseFloat(target) || 0);
+  const hoursNum = Math.max(0, parseFloat(hours) || 0);
+  const expensesNum = Math.max(0, parseFloat(expenses) || 0);
 
   const requiredRate = hoursNum > 0 ? (targetNum + expensesNum) / hoursNum : 0;
   const annualRequired = requiredRate * 2080;
@@ -76,9 +76,10 @@ export default function RateCalculator() {
             <label className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide block mb-1">Monthly Target ($)</label>
             <input
               type="number"
+              min={0}
               placeholder="e.g. 8000"
               value={target}
-              onChange={(e) => setTarget(e.target.value)}
+              onChange={(e) => { const v = e.target.value; setTarget(Number(v) < 0 ? '0' : v); }}
               className={inputClass}
             />
           </div>
@@ -86,9 +87,10 @@ export default function RateCalculator() {
             <label className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide block mb-1">Avail. Hours/Mo</label>
             <input
               type="number"
+              min={0}
               placeholder="e.g. 120"
               value={hours}
-              onChange={(e) => setHours(e.target.value)}
+              onChange={(e) => { const v = e.target.value; setHours(Number(v) < 0 ? '0' : v); }}
               className={inputClass}
             />
           </div>
@@ -96,9 +98,10 @@ export default function RateCalculator() {
             <label className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide block mb-1">Expenses ($)</label>
             <input
               type="number"
+              min={0}
               placeholder="e.g. 500"
               value={expenses}
-              onChange={(e) => setExpenses(e.target.value)}
+              onChange={(e) => { const v = e.target.value; setExpenses(Number(v) < 0 ? '0' : v); }}
               className={inputClass}
             />
           </div>

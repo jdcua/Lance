@@ -218,6 +218,11 @@ export async function openMailTo(email: string, subject: string, body: string): 
   const encodedSubject = encodeURIComponent(subject);
   const encodedBody = encodeURIComponent(truncated);
   const mailtoUrl = `mailto:${encodeURIComponent(email)}?subject=${encodedSubject}&body=${encodedBody}`;
+  if (typeof window !== 'undefined' && !(window as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__) {
+    // Browser mode: hand off to the default mail client directly
+    window.location.href = mailtoUrl;
+    return;
+  }
   const { invoke } = await import('@tauri-apps/api/core');
   await invoke('open_mailto', { mailtoUrl });
 }

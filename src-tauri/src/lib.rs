@@ -129,6 +129,7 @@ pub fn run() {
             commands::follow_ups::get_follow_up_log,
             commands::follow_ups::update_follow_up_status,
             commands::follow_ups::get_all_pending_follow_ups,
+            commands::follow_ups::get_all_follow_up_logs,
             commands::mailto::open_mailto,
             commands::archetypes::get_render_logs,
             commands::archetypes::create_render_log,

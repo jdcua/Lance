@@ -18,6 +18,7 @@ const Assets = lazy(() => import('./screens/Assets'));
 const SearchScreen = lazy(() => import('./screens/Search'));
 const FollowUps = lazy(() => import('./screens/FollowUps'));
 const ArchetypePicker = lazy(() => import('./screens/ArchetypePicker'));
+const ShareView = lazy(() => import('./screens/ShareView'));
 const NotFound = lazy(() => import('./screens/NotFound'));
 
 function LazyRoute({ children }: { children: React.ReactNode }) {
@@ -59,6 +60,11 @@ export const router = createBrowserRouter(
         { path: 'search', element: <LazyRoute><SearchScreen /></LazyRoute> },
         { path: '*', element: <LazyRoute><NotFound /></LazyRoute> },
       ],
+    },
+    {
+      // Public, client-facing share portal — rendered WITHOUT the app shell
+      path: 'share/:token',
+      element: <LazyRoute><ShareView /></LazyRoute>,
     },
   ],
 );

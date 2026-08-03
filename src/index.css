@@ -99,6 +99,17 @@ button, a, input, textarea, select {
   transition: all 150ms ease;
 }
 
+/* ── Form controls follow the active theme (prevents default white inputs) ── */
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), textarea, select) {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"])::placeholder, textarea::placeholder) {
+  color: var(--text-tertiary);
+}
+
 /* ── Skeleton loading pulse ── */
 @keyframes skeleton-pulse {
   0% { opacity: 1; }

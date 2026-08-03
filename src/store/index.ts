@@ -11,6 +11,7 @@ import type {
 } from '../types';
 import type { Achievement } from '../achievements/index';
 import { validateLicenseKey } from '../license';
+import { sanitizeInput, truncate, MAX_LENGTHS } from '../utils/sanitize';
 
 const licenseCache = new Map<string, boolean>();
 
@@ -76,7 +77,7 @@ export interface UnifiedStore {
   metricValues: MetricValue[]
   metricTemplates: MetricTemplate[]
   headlineMetrics: HeadlineMetric[]
-  followUpLogs: FollowUpLog[]
+  followUpLogs: Record<string, FollowUpLog[]>
   pendingFollowUps: FollowUpLog[]
   followUpSettings: FollowUpSettings
   exportTemplates: ExportTemplate[]
@@ -241,6 +242,7 @@ export interface UnifiedStore {
   createFollowUp: (data: { entity_type: string; entity_id: string; stage: number }) => Promise<FollowUpLog>
   updateFollowUpStatus: (id: string, status: string, action?: string) => Promise<void>
   loadPendingFollowUps: () => Promise<void>
+  loadAllFollowUpLogs: () => Promise<void>
 
   // ── Export Templates ──
   loadExportTemplates: () => Promise<void>
@@ -414,7 +416,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
     metricValues: [],
     metricTemplates: [],
     headlineMetrics: [],
-    followUpLogs: [],
+    followUpLogs: {},
     pendingFollowUps: [],
     followUpSettings: { enabled: true, proposal_delay_days: 3, invoice_delay_days: 0, templates: {}, subject_templates: {} },
     exportTemplates: [],
@@ -529,6 +531,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
         get().loadKeywords(),
         get().loadDatasets(),
         get().loadMetricDefs(),
+        get().loadMetricValues(),
       ]);
       set({ initialized: true });
     },
@@ -738,9 +741,21 @@ export const useStore = create<UnifiedStore>((set, get) => {
       } finally { endLoad('profile'); }
     },
     saveProfile: async (data) => {
-      await invoke('upsert_user_profile', { payload: data });
-      const licensed = !!(data.license_key && await cachedValidateLicense(data.license_key));
-      set({ profile: data, isLicensed: licensed });
+      const sanitized: UserProfile = {
+        ...data,
+        name: truncate(sanitizeInput(data.name || ''), MAX_LENGTHS.name),
+        email: truncate(sanitizeInput(data.email || ''), MAX_LENGTHS.email),
+        writing_voice: sanitizeInput(data.writing_voice || ''),
+        tagline: truncate(sanitizeInput(data.tagline || ''), MAX_LENGTHS.tagline),
+        always_include: sanitizeInput(data.always_include || ''),
+        // Clamp numeric profile fields to sane ranges (no negatives, no infinity)
+        hourly_rate: data.hourly_rate != null && isFinite(data.hourly_rate) ? Math.max(0, data.hourly_rate) : data.hourly_rate,
+        tax_rate: data.tax_rate != null && isFinite(data.tax_rate) ? Math.min(100, Math.max(0, data.tax_rate)) : data.tax_rate,
+        payment_terms: data.payment_terms != null && isFinite(data.payment_terms) ? Math.max(0, Math.round(data.payment_terms)) : data.payment_terms,
+      };
+      await invoke('upsert_user_profile', { payload: sanitized });
+      const licensed = !!(sanitized.license_key && await cachedValidateLicense(sanitized.license_key));
+      set({ profile: sanitized, isLicensed: licensed });
     },
     activateLicense: async (key) => {
       if (!await cachedValidateLicense(key)) return false;
@@ -1003,6 +1018,17 @@ export const useStore = create<UnifiedStore>((set, get) => {
     loadPendingFollowUps: async () => {
       try { set({ pendingFollowUps: await invoke<FollowUpLog[]>('get_all_pending_follow_ups') }); }
       catch (e) { console.error('[store] loadPendingFollowUps failed:', e); }
+    },
+    loadAllFollowUpLogs: async () => {
+      try {
+        const logs = await invoke<FollowUpLog[]>('get_all_follow_up_logs');
+        const keyed: Record<string, FollowUpLog[]> = {};
+        for (const log of logs) {
+          const key = `${log.entity_type}:${log.entity_id}`;
+          (keyed as any)[key] = [...((keyed as any)[key] || []), log];
+        }
+        set({ followUpLogs: keyed });
+      } catch (e) { console.error('[store] loadAllFollowUpLogs failed:', e); }
     },
 
     // ── Export Templates ──

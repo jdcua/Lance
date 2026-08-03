@@ -3,6 +3,7 @@ import Modal from './ui/Modal';
 import Button from './ui/Button';
 import { useToasts } from '../store/toastStore';
 import { useStore } from '../store';
+import { tauriInvoke, isTauri } from '../utils/tauri';
 import { Copy, Link, Trash2, Eye, Clock } from 'lucide-react';
 import type { ShareToken } from '../types';
 
@@ -19,6 +20,15 @@ const EXPIRY_OPTIONS = [
   { label: 'Never', value: 'never' },
 ] as const;
 
+function shareUrlFor(token: ShareToken, port: number): string {
+  // In browser dev mode there is no separate share server, so share links
+  // point at the running Lance app itself (avoids a dead 1421 port).
+  if (!isTauri()) {
+    return `${window.location.origin}/share/${token.token}`;
+  }
+  return `http://localhost:${port}/share/${token.token}`;
+}
+
 export default function ShareModal({ open, onClose, entityType, entityId }: ShareModalProps) {
   const addToast = useToasts((s) => s.add);
   const portalPort = useStore((s) => s.portalPort);
@@ -32,13 +42,12 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
   const loadToken = useCallback(async () => {
     setLoading(true);
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
-      const existing = await invoke<ShareToken | null>('get_share_token_for_entity', { entityType, entityId });
+      const existing = await tauriInvoke<ShareToken | null>('get_share_token_for_entity', { entityType, entityId });
 
       let serverPort = portalPort;
       if (!serverPort) {
         try {
-          serverPort = await invoke<number>('get_share_server_port');
+          serverPort = await tauriInvoke<number>('get_share_server_port');
         } catch {
           // server not ready yet, handled by empty state
         }
@@ -63,8 +72,6 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
   const handleCreate = async () => {
     setLoading(true);
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
-
       let expiresAt: string | null = null;
       if (expiry === '7d') {
         const d = new Date();
@@ -76,7 +83,7 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
         expiresAt = d.toISOString();
       }
 
-      const newToken = await invoke<ShareToken>('create_share_token', {
+      const newToken = await tauriInvoke<ShareToken>('create_share_token', {
         payload: { entity_type: entityType, entity_id: entityId, expires_at: expiresAt },
       });
       setToken(newToken);
@@ -90,7 +97,7 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
 
   const handleCopyLink = async () => {
     if (!token) return;
-    const url = `http://localhost:${port}/share/${token.token}`;
+    const url = shareUrlFor(token, port);
     try {
       await navigator.clipboard.writeText(url);
       addToast('Link copied to clipboard', 'success');
@@ -103,8 +110,7 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
     if (!token) return;
     setRevoking(true);
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
-      await invoke('revoke_share_token', { token: token.token });
+      await tauriInvoke('revoke_share_token', { token: token.token });
       setToken(null);
       addToast('Share link revoked', 'info');
     } catch (e) {
@@ -114,7 +120,7 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
     }
   };
 
-  const url = token && port ? `http://localhost:${port}/share/${token.token}` : null;
+  const url = token && port ? shareUrlFor(token, port) : null;
 
   const entityLabel = entityType === 'proposal' ? 'Proposal' : 'Contract';
   const isServerReady = port > 0;
