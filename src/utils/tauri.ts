@@ -488,13 +488,59 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
       if (id) {
         const items = lsGet<any>(key);
         lsSet(key, items.filter((i: any) => i.id !== id));
-        // Cascade: deleting a client also removes its metric definitions,
-        // metric values, and metric values' orphaned rows.
+        // Cascade: deleting a client must remove every client-scoped child
+        // record (communications, metrics, recurring invoices, projects,
+        // proposals, contracts, time entries, invoices + payments, follow-up
+        // logs, attachments) so no orphaned rows reference a nonexistent
+        // client. This mirrors the foreign-key integrity of the real SQLite
+        // backend.
         if (cmd === 'delete_client') {
+          // Metric definitions + their values
           const defs = lsGet<any>('metric_definitions').filter((d: any) => d.client_id !== id);
           const defIds = new Set(lsGet<any>('metric_definitions').filter((d: any) => d.client_id === id).map((d: any) => d.id));
           lsSet('metric_definitions', defs);
-          lsSet('metric_values', lsGet<any>('metric_values').filter((v: any) => !defIds.has(v.definition_id)));
+          lsSet('metric_values', lsGet<any>('metric_values').filter((v: any) => !defIds.has(v.definition_id) && v.client_id !== id));
+
+          // Client-scoped rows by exact 'client_id' field
+          const clientScopedKeys = Object.keys(localStorage)
+            .filter((k) => k.startsWith(LS_PREFIX))
+            .map((k) => k.slice(LS_PREFIX.length));
+          for (const key of clientScopedKeys) {
+            if (key === 'clients' || key === 'metric_definitions' || key === 'metric_values') continue;
+            let rows: any[] = [];
+            try { rows = JSON.parse(localStorage.getItem(LS_PREFIX + key) || '[]'); } catch { continue; }
+            if (!Array.isArray(rows)) continue;
+            const hasClientId = rows.some((r: any) => r && typeof r === 'object' && 'client_id' in r);
+            if (!hasClientId) continue;
+            lsSet(key, rows.filter((r: any) => r?.client_id !== id));
+          }
+
+          // Projects belonging to this client: remove them AND their
+          // project-scoped children (same logic as delete_project).
+          const clientProjects = lsGet<any>('projects').filter((p: any) => p.client_id === id);
+          const projectIds = new Set(clientProjects.map((p: any) => p.id));
+          if (projectIds.size > 0) {
+            lsSet('projects', lsGet<any>('projects').filter((p: any) => p.client_id !== id));
+            const projectScopedKeys = Object.keys(localStorage)
+              .filter((k) => k.startsWith(LS_PREFIX))
+              .map((k) => k.slice(LS_PREFIX.length));
+            for (const key of projectScopedKeys) {
+              if (key === 'projects' || key === 'clients') continue;
+              let rows: any[] = [];
+              try { rows = JSON.parse(localStorage.getItem(LS_PREFIX + key) || '[]'); } catch { continue; }
+              if (!Array.isArray(rows)) continue;
+              const hasProjectId = rows.some((r: any) => r && typeof r === 'object' && 'project_id' in r);
+              if (!hasProjectId) continue;
+              lsSet(key, rows.filter((r: any) => r?.project_id && !projectIds.has(r.project_id)));
+            }
+          }
+
+          // Invoices belonging to this client: remove their payments too.
+          const clientInvoices = lsGet<any>('invoices').filter((i: any) => i.client_id === id);
+          const invoiceIds = new Set(clientInvoices.map((i: any) => i.id));
+          if (invoiceIds.size > 0) {
+            lsSet('invoice_payments', lsGet<any>('invoice_payments').filter((p: any) => !invoiceIds.has(p.invoice_id)));
+          }
         }
         // Cascade: deleting an invoice must remove its payment records.
         if (cmd === 'delete_invoice') {
@@ -614,7 +660,7 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
       const items = lsGet<any>('attachments');
       const idx = items.findIndex((a: any) => a.id === payload.id);
       if (idx !== -1) {
-        const safeName = String(payload.new_filename).replace(/[\/\\:*?"<>|]/g, '_');
+        const safeName = String(payload.new_filename).replace(/[/\\:*?"<>|]/g, '_');
         items[idx] = { ...items[idx], filename: safeName };
         lsSet('attachments', items);
         return items[idx] as unknown as T;

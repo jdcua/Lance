@@ -419,7 +419,7 @@ export default function Finance() {
               <p className="text-xs text-[var(--text-tertiary)] mb-4">Projected revenue based on recurring invoices, milestones, sent invoices, and historical trends.</p>
               <div className="flex items-end gap-2" style={{ minHeight: '160px' }}>
                 {revenueForecast.map((m) => (
-                  <div key={m.month.key} className="flex-1 flex flex-col items-center gap-1">
+                  <div key={m.month.key} className="flex-1 flex flex-col items-center gap-1 min-w-0">
                     <div className="w-full flex items-end justify-center gap-[2px] h-[120px]">
                       <div
                         className="w-[28%] rounded-t-[3px] bg-[var(--accent)]"
@@ -437,7 +437,7 @@ export default function Finance() {
                         title={`Projected: ${fmt(m.projected)}`}
                       />
                     </div>
-                    <span className="text-[10px] text-[var(--text-secondary)] font-medium">{m.month.label}</span>
+                    <span className="text-[10px] text-[var(--text-secondary)] font-medium truncate max-w-full">{m.month.label}</span>
                   </div>
                 ))}
               </div>
@@ -454,7 +454,7 @@ export default function Finance() {
               <p className="text-xs text-[var(--text-tertiary)] mb-4">Projected expenses based on known recurring expenses and historical averages.</p>
               <div className="flex items-end gap-2" style={{ minHeight: '160px' }}>
                 {expenseForecast.map((m) => (
-                  <div key={m.month.key} className="flex-1 flex flex-col items-center gap-1">
+                  <div key={m.month.key} className="flex-1 flex flex-col items-center gap-1 min-w-0">
                     <div className="w-full flex items-end justify-center gap-[2px] h-[120px]">
                       <div
                         className="w-[45%] rounded-t-[3px] bg-[var(--danger)]"
@@ -467,7 +467,7 @@ export default function Finance() {
                         title={`Projected: ${fmt(m.projected)}`}
                       />
                     </div>
-                    <span className="text-[10px] text-[var(--text-secondary)] font-medium">{m.month.label}</span>
+                    <span className="text-[10px] text-[var(--text-secondary)] font-medium truncate max-w-full">{m.month.label}</span>
                   </div>
                 ))}
               </div>
@@ -498,7 +498,7 @@ export default function Finance() {
             </div>
             <div className="flex items-end gap-3" style={{ minHeight: '140px' }}>
               {cashFlow.map((cf) => (
-                <div key={cf.month.key} className="flex-1 flex flex-col items-center gap-1">
+                <div key={cf.month.key} className="flex-1 flex flex-col items-center gap-1 min-w-0">
                   <div className="w-full flex flex-col items-center justify-end h-[110px]">
                     <div
                       className={`w-full rounded-t-[3px] ${cf.net >= 0 ? 'bg-[var(--accent)]' : 'bg-[var(--danger)]'}`}
@@ -506,10 +506,10 @@ export default function Finance() {
                       title={`Net: ${fmt(cf.net)}`}
                     />
                   </div>
-                  <span className="text-[10px] text-[var(--text-secondary)] font-medium">{cf.month.label}</span>
-                  <span className={`text-[10px] font-medium ${cf.net >= 0 ? 'text-[var(--accent)]' : 'text-[var(--danger)]'}`}>{fmt(cf.net)}</span>
+                  <span className="text-[10px] text-[var(--text-secondary)] font-medium truncate max-w-full">{cf.month.label}</span>
+                  <span className={`text-[10px] font-medium truncate max-w-full ${cf.net >= 0 ? 'text-[var(--accent)]' : 'text-[var(--danger)]'}`}>{fmt(cf.net)}</span>
                   {cf.runningBalance !== undefined && (
-                    <span className={`text-[9px] ${cf.runningBalance >= 0 ? 'text-[var(--text-secondary)]' : 'text-[var(--danger)]'}`}>Bal: {fmt(cf.runningBalance)}</span>
+                    <span className={`text-[9px] truncate max-w-full ${cf.runningBalance >= 0 ? 'text-[var(--text-secondary)]' : 'text-[var(--danger)]'}`}>Bal: {fmt(cf.runningBalance)}</span>
                   )}
                 </div>
               ))}

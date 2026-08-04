@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
 import type { Contract, ContractTemplate, ShareToken } from '../types';
 import Button from '../components/ui/Button';
@@ -11,12 +11,13 @@ import RichEditor from '../components/ui/RichEditor';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { ensureHtml } from '../utils/textToHtml';
 import { useToasts } from '../store/toastStore';
-import { checkAndNotify } from '../achievements/notify';
+import { checkAndNotify, tryUnlock } from '../achievements/notify';
 import { getUnlockedAchievementKeys } from '../achievements/checker';
 import { relativeDate } from '../utils/format';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
-import { Plus, Pencil, Trash2, Eye, PenLine, Search, Copy, FileText, Share2, Link } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, PenLine, Search, Copy, FileText, Share2, Link, Download } from 'lucide-react';
 import ShareModal from '../components/ShareModal';
+import { exportContractPDF, exportContractDOCX } from '../export';
 
 const statusBadge: Record<string, 'success' | 'warning' | 'info' | 'danger'> = {
   draft: 'warning',
@@ -89,6 +90,18 @@ export default function Contracts() {
   const [tab, setTab] = useState<'contracts' | 'templates'>('contracts');
   const [showTemplatesTab, setShowTemplatesTab] = useState(false);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const [exportDropdown, setExportDropdown] = useState<string | null>(null);
+  const exportDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (exportDropdownRef.current && !exportDropdownRef.current.contains(e.target as Node)) {
+        setExportDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, []);
 
   useEffect(() => {
     Promise.all([loadContracts(), loadClients(), loadContractTemplates(), loadShareTokens()])
@@ -178,6 +191,28 @@ export default function Contracts() {
     } catch { /* template save is non-critical */
       addToast('Failed to save template', 'error');
     }
+  };
+
+  const handleExportPDF = (c: Contract) => {
+    const client = clients.find((cl) => cl.id === c.client_id);
+    if (client && profile) {
+      exportContractPDF(c, client, profile);
+      tryUnlock('first_export', addToast);
+    } else if (!client) {
+      addToast('Contract has no client on file', 'error');
+    }
+    setExportDropdown(null);
+  };
+
+  const handleExportDOCX = (c: Contract) => {
+    const client = clients.find((cl) => cl.id === c.client_id);
+    if (client && profile) {
+      exportContractDOCX(c, client, profile);
+      tryUnlock('first_export', addToast);
+    } else if (!client) {
+      addToast('Contract has no client on file', 'error');
+    }
+    setExportDropdown(null);
   };
 
   const handleActivate = async (c: Contract) => {
@@ -358,6 +393,22 @@ export default function Contracts() {
                           <Share2 size={14} />
                         </button>
                       )}
+                      <div className="relative" ref={exportDropdown === c.id ? exportDropdownRef : undefined}>
+                        <button
+                          onClick={() => setExportDropdown(exportDropdown === c.id ? null : c.id)}
+                          aria-label="Export contract"
+                          className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+                          title="Export"
+                        >
+                          <Download size={14} />
+                        </button>
+                        {exportDropdown === c.id && (
+                          <div className="absolute right-0 top-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px] shadow-lg py-1 z-10 w-28">
+                            <button onClick={() => handleExportPDF(c)} className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors">PDF</button>
+                            <button onClick={() => handleExportDOCX(c)} className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors">DOCX</button>
+                          </div>
+                        )}
+                      </div>
                       {c.status === 'draft' && (
                         <button
                           onClick={() => handleActivate(c)}

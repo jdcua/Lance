@@ -501,7 +501,7 @@ export default function Clients() {
                   : 'hover:bg-[var(--bg-secondary)] border-l-2 border-transparent'
               }`}
             >
-              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getClientStatus(c.id)}`} title={projects.some(p => p.client_id === c.id && p.status === 'active') ? 'Active project' : proposals.some(p => p.client_id === c.id && (p.status === 'sent' || p.status === 'draft')) ? 'Proposal open' : 'No activity'} />
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getClientStatus(c.id)}`} title={projects.some(p => p.client_id === c.id && p.status === 'active') ? 'Active project' : proposals.some(p => p.client_id === c.id && (p.status === 'sent' || p.status === 'draft')) ? 'Proposal open' : communications.some(co => co.client_id === c.id) ? 'Has communication log' : 'No activity'} />
               <span className={`text-xs truncate ${selectedId === c.id ? 'text-[var(--accent)] font-medium' : 'text-[var(--text-primary)]'}`}>
                 {c.name}
               </span>
@@ -642,7 +642,7 @@ export default function Clients() {
                           <span className="text-xs text-[var(--text-secondary)]">Last contact</span>
                         </div>
                         <span className="text-xs text-[var(--text-primary)]">
-                          {overview.lastComm ? relativeDate(overview.lastComm.date) : 'No interactions'}
+                          {overview.lastComm ? relativeDate(overview.lastComm.created_at || overview.lastComm.date) : 'No interactions'}
                         </span>
                       </div>
                       {overview.outstanding > 0 && (
@@ -730,7 +730,7 @@ export default function Clients() {
                               <Icon size={14} className="text-[var(--text-tertiary)] mt-0.5 flex-shrink-0" />
                               <div className="flex-1 min-w-0">
                                 <p className="text-[10px] text-[var(--text-tertiary)] mb-0.5">
-                                  {commLabels[comm.type]} &middot; {relativeDate(comm.date)}
+                                  {commLabels[comm.type]} &middot; {relativeDate(comm.created_at || comm.date)}
                                 </p>
                                 <p className="text-[13px] text-[var(--text-primary)] leading-relaxed">{comm.summary}</p>
                               </div>

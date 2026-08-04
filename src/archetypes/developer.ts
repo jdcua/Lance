@@ -21,7 +21,6 @@ const developer: ArchetypeConfig = {
     ],
     widgets: [
       { id: 'sprint-board-widget', component: 'SprintBoardWidget', priority: 1 },
-      { id: 'unbilled-by-project', component: 'UnbilledByProjectWidget', priority: 2 },
     ],
     quickActions: [
       { label: 'Log Time', action: '/time', icon: 'Clock' },

@@ -202,7 +202,7 @@ export async function sessionsThisWeek(db: Database, _profileId: number): Promis
   const now = new Date();
   const weekAgo = new Date(now.getTime() - 7 * 86400000).toISOString();
   const rows = await db.select<CountRow[]>(
-    "SELECT COUNT(*) as c FROM time_entries WHERE start_time >= $1 AND description LIKE '%session%'",
+    "SELECT COUNT(*) as c FROM archetype_sessions WHERE created_at >= $1",
     [weekAgo]
   );
   return first(rows)?.c ?? 0;

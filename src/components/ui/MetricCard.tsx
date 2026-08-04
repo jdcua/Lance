@@ -21,11 +21,11 @@ export default function MetricCard({ label, value, subtext, trend, color = 'gray
   const trendArrow = trend === 'up' ? '↑' : trend === 'down' ? '↓' : '';
 
   return (
-    <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[12px] py-5 px-6 shadow-[var(--card-shadow)] transition-all duration-150" style={{ borderTop: `2px solid ${topBorderColors[color]}` }} title={tooltip}>
-      <p className="text-[11px] text-[var(--text-tertiary)] uppercase tracking-[0.6px] mb-2">{label}</p>
-      <p className="text-2xl font-semibold text-[var(--text-primary)] mb-1">{value}</p>
+    <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[12px] py-5 px-6 shadow-[var(--card-shadow)] transition-all duration-150 min-w-0" style={{ borderTop: `2px solid ${topBorderColors[color]}` }} title={tooltip}>
+      <p className="text-[11px] text-[var(--text-tertiary)] uppercase tracking-[0.6px] mb-2 break-words">{label}</p>
+      <p className="text-2xl font-semibold text-[var(--text-primary)] mb-1 break-words leading-tight">{value}</p>
       {(subtext || trend) && (
-        <p className={`text-xs ${trendColor}`}>
+        <p className={`text-xs ${trendColor} break-words`}>
           {trendArrow && <span className="mr-1">{trendArrow}</span>}
           {subtext}
         </p>

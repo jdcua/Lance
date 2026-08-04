@@ -1,5 +1,5 @@
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
-import type { Proposal, Invoice, Client, UserProfile } from '../types';
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import type { Proposal, Invoice, Contract, Client, UserProfile } from '../types';
 import { formatCurrency, formatDate } from '../utils/format';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { getProfileName } from './common';
@@ -197,6 +197,42 @@ export function InvoicePDF({ invoice, client, profile }: { invoice: Invoice; cli
         )}
 
         <Text style={pdfStyles.thankYou}>Thank you for your business.</Text>
+      </Page>
+    </Document>
+  );
+}
+
+export function ContractPDF({ contract, client, profile }: { contract: Contract; client: Client; profile: UserProfile }) {
+  const body = htmlToPlainText(contract.body || '');
+  const statusDate = contract.signed_at || contract.created_at;
+
+  return (
+    <Document>
+      <Page size="A4" style={pdfStyles.page}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24 }}>
+          <View>
+            <Text style={pdfStyles.freelancerName}>{getProfileName(profile)}</Text>
+            {profile.email && <Text style={pdfStyles.freelancerEmail}>{profile.email}</Text>}
+          </View>
+          <Text style={pdfStyles.date}>{formatDate(statusDate)}</Text>
+        </View>
+
+        <View style={pdfStyles.divider} />
+
+        <Text style={pdfStyles.heading}>CONTRACT</Text>
+        <Text style={pdfStyles.title}>{contract.title}</Text>
+        <Text style={pdfStyles.preparedFor}>
+          Between: {client.name}{client.company ? ` (${client.company})` : ''} and {getProfileName(profile)}
+        </Text>
+
+        <View style={pdfStyles.divider} />
+
+        <Text style={pdfStyles.value}>{body}</Text>
+
+        <View style={pdfStyles.divider} />
+
+        <Text style={pdfStyles.freelancerName}>{getProfileName(profile)}</Text>
+        {profile.email && <Text style={pdfStyles.freelancerEmail}>{profile.email}</Text>}
       </Page>
     </Document>
   );

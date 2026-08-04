@@ -508,6 +508,22 @@ export default function Settings() {
 
   const handleResetData = async () => {
     try {
+      // Browser mode (no Tauri): clear all persisted local-storage keys directly.
+      const isTauri =
+        typeof window !== 'undefined' &&
+        typeof (window as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ === 'object';
+      if (!isTauri) {
+        const keys: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('lance:')) keys.push(k);
+        }
+        keys.forEach((k) => localStorage.removeItem(k));
+        setShowResetModal(false);
+        addToast('All data has been reset', 'info');
+        setTimeout(() => window.location.reload(), 500);
+        return;
+      }
       const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
       const tables = [
         { list: 'get_clients', name: 'clients', del: 'delete_client' },

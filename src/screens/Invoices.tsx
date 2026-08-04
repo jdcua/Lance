@@ -170,6 +170,15 @@ export default function Invoices() {
     if (!form.client_id) return;
     setSaving(true);
     try {
+      // Invoice numbers must be unique across all invoices.
+      const duplicateNum = (invoices || []).find(
+        (i) => i.invoice_number === form.invoice_number && (!editing || i.id !== editing.id)
+      );
+      if (duplicateNum) {
+        setSaving(false);
+        addToast(`Invoice number ${form.invoice_number} already exists`, 'error');
+        return;
+      }
       const lineItems: LineItem[] = items.map((i) => ({ ...i, id: crypto.randomUUID(), description: i.description ? sanitizeInput(i.description).slice(0, MAX_LENGTHS.description) : '' }));
       const invoiceData = { client_id: form.client_id, invoice_number: form.invoice_number, status: form.status, line_items: lineItems, subtotal, tax_rate: taxRate || undefined, total, due_date: form.due_date || undefined, notes: form.notes ? sanitizeInput(form.notes).slice(0, MAX_LENGTHS.notes) : undefined, currency: form.currency || undefined };
       if (editing) await updateInvoice({ ...editing, ...invoiceData });
@@ -294,6 +303,16 @@ export default function Invoices() {
     try {
       const amount = Math.max(0, parseFloat(paymentForm.amount) || 0);
       if (amount <= 0) { setPaymentSaving(false); addToast('Payment amount must be greater than zero', 'error'); return; }
+      // Guard against overpayment: total paid must never exceed the invoice total.
+      const paidSoFar = useStore.getState().payments
+        .filter((p) => p.invoice_id === paymentInv.id)
+        .reduce((s, p) => s + p.amount, 0);
+      const remaining = Math.max(0, paymentInv.total - paidSoFar);
+      if (amount > remaining) {
+        setPaymentSaving(false);
+        addToast(`Payment exceeds remaining balance of ${fmtInv(remaining, paymentInv)}`, 'error');
+        return;
+      }
       await addPayment({
         invoice_id: paymentInv.id,
         amount,
@@ -308,7 +327,7 @@ export default function Invoices() {
       const isFullyPaid = newStatus === 'paid';
       if (newStatus !== paymentInv.status || isFullyPaid) {
         const updateData: Partial<Invoice> = { status: newStatus };
-        if (isFullyPaid) updateData.paid_at = paymentForm.payment_date;
+        if (isFullyPaid) updateData.paid_at = new Date().toISOString();
         await updateInvoice({ ...paymentInv, ...updateData, status: newStatus } as Invoice);
       }
       if (isFullyPaid) {
@@ -738,7 +757,7 @@ export default function Invoices() {
                             <div key={p.id} className="flex items-center justify-between px-2 py-1.5 rounded-[6px] bg-[var(--bg-card)]">
                               <div className="flex items-center gap-3 text-[10px]">
                                 <span className="text-[var(--text-primary)] font-medium">{fmtInv(p.amount, inv)}</span>
-                                <span className="text-[var(--text-secondary)]">{relativeDate(p.payment_date)}</span>
+                                <span className="text-[var(--text-secondary)]">{relativeDate(p.created_at || p.payment_date)}</span>
                                 <span className="text-[var(--text-tertiary)]">{p.payment_method}</span>
                                 {p.reference && <span className="text-[var(--text-tertiary)]">Ref: {p.reference}</span>}
                               </div>

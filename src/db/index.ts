@@ -22,13 +22,32 @@ const MOCK_PREFIX = 'lance:store:';
 // callers are selecting "the" profile.
 const SINGLETON_TABLES = new Set(['user_profile']);
 
+// Map real SQLite table names to their frontend store keys. The frontend
+// archetype tables live under a short store key (e.g. `archetype_sessions`
+// in the DB schema is stored under `lance:store:sessions`).
+const STORE_ALIAS: Record<string, string> = {
+  archetype_sessions: 'sessions',
+  archetype_shoots: 'shoots',
+  archetype_revisions: 'revisions',
+  archetype_builds: 'builds',
+  archetype_keywords: 'keywords',
+  archetype_datasets: 'datasets',
+  contract_templates: 'contract_templates',
+  project_templates: 'project_templates',
+  export_templates: 'export_templates',
+  share_tokens: 'share_tokens',
+};
+
 function mockTableRows(table: string): Record<string, any>[] {
   try {
     if (table === 'user_profile') {
       const raw = localStorage.getItem('lance:profile');
       return raw ? [JSON.parse(raw)] : [];
     }
-    const raw = localStorage.getItem(MOCK_PREFIX + table);
+    // Map real SQLite table names to their frontend store keys.
+    // Frontend archetype tables live under their short store key (e.g. archetype_sessions -> sessions).
+    const storeKey = STORE_ALIAS[table] ?? table;
+    const raw = localStorage.getItem(MOCK_PREFIX + storeKey);
     const val = raw ? JSON.parse(raw) : [];
     return Array.isArray(val) ? val : [];
   } catch { return []; }
@@ -40,7 +59,8 @@ function mockWriteTable(table: string, rows: Record<string, any>[]): void {
       localStorage.setItem('lance:profile', JSON.stringify(rows[0] ?? {}));
       return;
     }
-    localStorage.setItem(MOCK_PREFIX + table, JSON.stringify(rows));
+    const storeKey = STORE_ALIAS[table] ?? table;
+    localStorage.setItem(MOCK_PREFIX + storeKey, JSON.stringify(rows));
   } catch { /* quota exceeded or private mode */ }
 }
 
@@ -76,13 +96,22 @@ class MockDatabase {
 
   /** Compare a row value against a literal/param value with an operator. */
   private compareValue(colVal: any, op: string, val: any): boolean {
+    // SQLite compares TEXT columns lexicographically (ISO-8601 dates work).
+    // Number(dateString) → NaN, so fall back to string comparison for
+    // ordering operators whenever either side is not numeric.
+    const orderCompare = (a: any, b: any): number => {
+      const na = typeof a === 'number' ? a : Number(a);
+      const nb = typeof b === 'number' ? b : Number(b);
+      if (!isNaN(na) && !isNaN(nb)) return na - nb;
+      return String(a ?? '').localeCompare(String(b ?? ''));
+    };
     switch (op) {
       case '=': return this.matchesValue(colVal, val);
       case '!=': case '<>': return !this.matchesValue(colVal, val);
-      case '>': return Number(colVal) > Number(val);
-      case '<': return Number(colVal) < Number(val);
-      case '>=': return Number(colVal) >= Number(val);
-      case '<=': return Number(colVal) <= Number(val);
+      case '>': return orderCompare(colVal, val) > 0;
+      case '<': return orderCompare(colVal, val) < 0;
+      case '>=': return orderCompare(colVal, val) >= 0;
+      case '<=': return orderCompare(colVal, val) <= 0;
       case 'LIKE': {
         const pattern = String(val).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*').replace(/_/g, '.');
         return new RegExp('^' + pattern + '$', 'i').test(String(colVal ?? ''));

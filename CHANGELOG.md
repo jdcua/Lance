@@ -1,6 +1,29 @@
 # Changelog
 
-## [1.2.5] — 2026-07-06
+## [1.2.6] — 2026-08-04
+### Added
+- Contract PDF and DOCX export via the Contracts screen Export dropdown
+- Developer/Engineer dashboard now shows only the Sprint Board widget (removed stray animation "Phases" widget)
+
+### Fixed
+- 37 QA bugs resolved, including:
+  - Browser/Tauri shim errors and crashes (database, Tauri invoke, client page, sidebar, app init)
+  - Negative-value validation on client metrics, invoice line rates, payments, expenses, rate calculator, and proposal rates
+  - Time screen timer card stuck on "Stopped" and unbounded minutes input
+  - Recurring invoice double-generation guard
+  - Finance forecast chart overflow on mobile (390px)
+  - Share Proposal/Contract modal dead-end in browser mode
+  - Follow-up actions (Mark as Sent / Dismiss / Restore / Send All) now persist
+  - Contract template and export template persistence across reloads
+  - Empty contract body no longer silently does nothing
+  - License key maxLength, profile email validation
+  - Auto-backup toggle persistence
+  - Client communication timestamps and status dots now show correct values
+  - Invoice payment overpayment and uniqueness fixes
+  - Contract/export template save-toast now actually persists
+  - "Reset All Data" works in browser mode
+  - Dashboard phases counter decrements correctly on delete
+  - Sessions-this-week metric and ISO date comparisons in the browser SQL shim
 ### Fixed
 - Fixed light/dark mode toggle (moon icon in topbar)
 - Fixed auto-backup "no such table: auto_backup_state" error

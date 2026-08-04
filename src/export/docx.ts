@@ -11,7 +11,7 @@ import {
   AlignmentType,
   BorderStyle,
 } from 'docx';
-import type { Proposal, Invoice, Client, UserProfile } from '../types';
+import type { Proposal, Invoice, Contract, Client, UserProfile } from '../types';
 import { formatCurrency, formatDate } from '../utils/format';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { saveFile, getProfileName } from './common';
@@ -245,7 +245,7 @@ export async function exportInvoiceDOCX(
   );
 
   const itemRows = invoice.line_items.map(
-    (item, i) =>
+    (item) =>
       new TableRow({
         children: [
           new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: item.description, size: 22 })] })] }),
@@ -413,5 +413,68 @@ export async function exportInvoiceDOCX(
 
   const blob = await Packer.toBlob(doc);
   const filename = `Lance_Invoice_${invoice.invoice_number}_${client.name.replace(/\s+/g, '_')}.docx`;
+  await saveFile(blob, filename);
+}
+
+export async function exportContractDOCX(
+  contract: Contract,
+  client: Client,
+  profile: UserProfile
+): Promise<void> {
+  const profileName = getProfileName(profile);
+  const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#159C65';
+
+  const doc = new DocxDocument({
+    sections: [
+      {
+        properties: {
+          page: {
+            margin: { top: 1440, bottom: 1440, left: 1440, right: 1440 },
+          },
+        },
+        children: [
+          new Paragraph({
+            children: [new TextRun({ text: 'CONTRACT', bold: true, size: 56, color: accentColor })],
+            spacing: { after: 60 },
+          }),
+          new Paragraph({ children: [new TextRun({ text: contract.title, bold: true, size: 28 })], spacing: { after: 120 } }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: `Between: ${client.name}${client.company ? ` (${client.company})` : ''} and ${profileName}`, size: 20, color: '#68675F' }),
+            ],
+            spacing: { after: 200 },
+          }),
+
+          new Paragraph({
+            border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '#E3E2DB' } },
+            spacing: { before: 100, after: 200 },
+          }),
+
+          ...parseHtmlToDocx(contract.body || ''),
+
+          new Paragraph({
+            border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '#E3E2DB' } },
+            spacing: { before: 200, after: 200 },
+          }),
+
+          new Paragraph({ children: [new TextRun({ text: profileName, bold: true, size: 22 })], spacing: { after: 60 } }),
+          ...(profile.email
+            ? [new Paragraph({ children: [new TextRun({ text: profile.email, size: 20, color: '#68675F' })] })]
+            : []),
+          ...(contract.signed_at
+            ? [
+                new Paragraph({
+                  children: [new TextRun({ text: `Signed: ${formatDate(contract.signed_at)}`, size: 20, color: '#68675F' })],
+                  spacing: { before: 120 },
+                }),
+              ]
+            : []),
+        ],
+      },
+    ],
+  });
+
+  const blob = await Packer.toBlob(doc);
+  const filename = `Lance_Contract_${contract.title.replace(/\s+/g, '_')}_${client.name.replace(/\s+/g, '_')}.docx`;
   await saveFile(blob, filename);
 }

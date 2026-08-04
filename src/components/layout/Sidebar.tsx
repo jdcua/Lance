@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import BrandLogo from '../ui/BrandLogo';
 import {
@@ -62,7 +62,14 @@ const ICON_MAP: Record<string, any> = {
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('lance:sidebar-collapsed') === 'true');
   const [hovered, setHovered] = useState(false);
-  const isExpanded = !collapsed || hovered;
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  const isExpanded = (!collapsed || hovered) && !isMobile;
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
   const { isLicensed, proposals, projects, invoices, allAttachments, pendingFollowUps, profile, archetypeAppliedAt } = useStore((s) => ({
     isLicensed: s.isLicensed,
     proposals: s.proposals,
