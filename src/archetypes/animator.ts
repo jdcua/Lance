@@ -21,7 +21,6 @@ const animator: ArchetypeConfig = {
     ],
     widgets: [
       { id: 'project-phases', component: 'ProjectPhasesWidget', priority: 1 },
-      { id: 'unbilled-by-project', component: 'UnbilledByProjectWidget', priority: 2 },
     ],
     quickActions: [
       { label: 'Log Render', action: 'render-log', icon: 'Monitor' },

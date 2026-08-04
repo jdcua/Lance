@@ -62,7 +62,6 @@ const FeatureComponents: Record<string, ComponentType<any>> = {
   PhaseTracker: lazy(() => import('./PhaseTracker')),
   ProjectPhasesWidget: lazy(() => import('./PhaseTracker')),
   DeliverableLog: lazy(() => import('./DeliverableLog')),
-  UnbilledByProjectWidget: lazy(() => import('./PhaseTracker')),
 
   // ── 3D Artist panels ──
   AssetComplexityLog: lazy(() => import('./AssetComplexityLog')),
