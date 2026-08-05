@@ -31,12 +31,12 @@ fn validate_license_internal(key: &str) -> Result<bool, &'static str> {
 }
 
 fn is_valid_key_format(key: &str) -> bool {
-    if !key.starts_with("LANCE-") || key.len() != 24 {
+    if !key.starts_with("LANCE-") || key.len() != 25 {
         return false;
     }
     let body = &key[6..];
     let parts: Vec<&str> = body.split('-').collect();
-    if parts.len() != 3 {
+    if parts.len() != 4 {
         return false;
     }
     let allowed = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
