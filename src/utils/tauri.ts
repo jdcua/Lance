@@ -89,6 +89,7 @@ const ENTITIES: Record<string, EntityDef> = {
   contract_template:     { listKey: 'contract_templates' },
   project_template:      { listKey: 'project_templates' },
   export_template:       { listKey: 'export_templates' },
+  auto_backup_state:     { listKey: 'auto_backup_state', isSingleton: true },
   share_token:           { listKey: 'share_tokens' },
 };
 
@@ -463,12 +464,23 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
     return {} as unknown as T;
   }
 
-  // ── Update commands ──
+  // ── Generic update commands ──
   if (verb === 'update') {
     const entity = cmdEntity(cmd);
     if (entity && args?.payload) {
-      const key = ENTITIES[entity]?.listKey || listKeyFor(entity);
+      const def = ENTITIES[entity];
+      const key = def?.listKey || listKeyFor(entity);
       const payload = args.payload as Record<string, any>;
+
+      // Handle singleton entities (stored as single objects, not arrays)
+      if (def?.isSingleton) {
+        const current = lsGetSingle<any>(key) || {};
+        const updated = { ...current, ...payload };
+        lsSetSingle(key, updated);
+        return updated as unknown as T;
+      }
+
+      // Regular array entities
       const items = lsGet<any>(key);
       const idx = items.findIndex((i: any) => i.id === payload.id);
       if (idx !== -1) {
