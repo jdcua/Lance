@@ -28,6 +28,7 @@ import { useToasts } from './store/toastStore';
 import { useAutoUpdater } from './hooks/useAutoUpdater';
 import { shouldGenerate, getNextDueDate, countCyclesBehind, getCatchUpCount, shouldShowCatchUpWarning } from './utils/recurringEngine';
 import { generateInvoiceNumber } from './utils/invoiceNumber';
+import { useChangelog } from './utils/changelog';
 import { applyTheme, getTheme, THEMES } from './themes/themes';
 import { getShortcutModifierLabel } from './utils/shortcuts';
 import type { Profession } from './themes';
@@ -70,9 +71,7 @@ export default function App() {
   const dragCounter = useRef(0);
 
   const APP_VERSION = '1.2.5';
-  const CHANGELOG = [
-    'Bug fixes and stability improvements',
-  ];
+  const { changelog } = useChangelog();
 
   // Changelog check on mount
   useEffect(() => {
@@ -750,16 +749,27 @@ export default function App() {
 
       {/* Changelog modal — hidden while onboarding is active to avoid z-index overlap */}
       <Modal open={showChangelog && !showOnboarding} onClose={dismissChangelog} title={"What's new in Lance " + APP_VERSION} size="md">
-        <div className="space-y-3">
-          <p className="text-xs text-[var(--text-tertiary)] font-medium">Version {APP_VERSION}</p>
-          <ul className="space-y-2">
-            {CHANGELOG.map((item, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-primary)]">
-                <span className="text-[var(--accent)] mt-0.5 flex-shrink-0">&bull;</span>
-                {item}
-              </li>
-            ))}
-          </ul>
+        <div className="space-y-4">
+          {changelog.length === 0 ? (
+            <p className="text-sm text-[var(--text-tertiary)]">Loading changelog...</p>
+          ) : (
+            changelog.map((entry: { version: string; date: string; items: string[] }, i: number) => (
+              <div key={i} className="space-y-2">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xs font-semibold text-[var(--accent)]">v{entry.version}</span>
+                  <span className="text-xs text-[var(--text-tertiary)]">{entry.date}</span>
+                </div>
+                <ul className="space-y-1.5 ml-6">
+                  {entry.items.map((item: string, j: number) => (
+                    <li key={j} className="flex items-start gap-2 text-sm text-[var(--text-primary)]">
+                      <span className="text-[var(--accent)] mt-0.5 flex-shrink-0">&bull;</span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          )}
           <div className="pt-2">
             <Button onClick={dismissChangelog} className="w-full" size="sm">
               Got it
