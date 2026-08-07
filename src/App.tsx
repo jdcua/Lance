@@ -88,7 +88,8 @@ export default function App() {
   }, []);
 
   const dismissChangelog = () => {
-    localStorage.setItem('lance:changelog-seen', APP_VERSION);
+    const latestVersion = changelog[0]?.version || APP_VERSION;
+    localStorage.setItem('lance:changelog-seen', latestVersion);
     setShowChangelog(false);
   };
 
@@ -748,7 +749,7 @@ export default function App() {
       )}
 
       {/* Changelog modal — hidden while onboarding is active to avoid z-index overlap */}
-      <Modal open={showChangelog && !showOnboarding} onClose={dismissChangelog} title={"What's new in Lance " + APP_VERSION} size="md">
+      <Modal open={showChangelog && !showOnboarding} onClose={dismissChangelog} title={"What's new in Lance " + (changelog[0]?.version || APP_VERSION)} size="md">
         <div className="space-y-4">
           {changelog.length === 0 ? (
             <p className="text-sm text-[var(--text-tertiary)]">Loading changelog...</p>

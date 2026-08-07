@@ -39,19 +39,18 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
     const response = await fetch('https://api.github.com/repos/jdcua/Lance/releases?per_page=20', {
       headers: { Accept: 'application/vnd.github.v3+json' },
     });
-    if (response.ok) {
-      const releases = await response.json();
-      entries = releases
-        .filter((r: any) => !r.draft && !r.prerelease)
-        .map((r: any) => ({
-          version: r.tag_name.replace(/^v/, ''),
-          date: r.published_at.split('T')[0],
-          items: r.body
-            ?.split('\n')
-            .map((line: string) => line.replace(/^[-*]\s*/, '').trim())
-            .filter((line: string) => line.length > 0) || [],
-        }));
-    }
+    if (!response.ok) throw new Error(`GitHub API ${response.status}`);
+    const releases = await response.json();
+    entries = releases
+      .filter((r: any) => !r.draft && !r.prerelease)
+      .map((r: any) => ({
+        version: r.tag_name.replace(/^v/, ''),
+        date: r.published_at.split('T')[0],
+        items: r.body
+          ?.split('\n')
+          .map((line: string) => line.replace(/^[-*]\s*/, '').trim())
+          .filter((line: string) => line.length > 0) || [],
+      }));
   } catch {
     /* GitHub API failed — fall through to git log */
   }
@@ -71,6 +70,14 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
   if (entries.length === 0) {
     entries = [
       {
+        version: '0.9.1',
+        date: new Date().toISOString().split('T')[0],
+        items: [
+          'Dynamic changelog from GitHub Releases API with local cache fallback',
+          '"What\'s new" modal now pulls latest release notes automatically',
+        ],
+      },
+      {
         version: '0.9.0',
         date: new Date().toISOString().split('T')[0],
         items: [
@@ -86,11 +93,6 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
           'Invoice payment card shows "Paid: just now"',
           '37 bugs fixed in v0.9.0 sprint',
         ],
-      },
-      {
-        version: '1.2.6',
-        date: '2026-08-03',
-        items: ['Contract PDF/DOCX export', 'Cascade delete for clients', 'Overpayment validation'],
       },
     ];
   }
