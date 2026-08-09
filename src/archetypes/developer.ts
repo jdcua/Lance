@@ -63,6 +63,23 @@ const developer: ArchetypeConfig = {
 
   proposalTypes: ['hourly', 'flat', 'project'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 3,
+
+
+  contractPresets: [
+    {
+      name: 'Software Development Agreement',
+      category: 'Development',
+      body: '<h2>Software Development Agreement</h2>\n<p>This Software Development Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Developer").</p>\n<h3>1. Scope of Work</h3>\n<p>Developer will build: {scope}. Technology stack: {tech_stack}. Key features: {key_features}.</p>\n<h3>2. Development Process</h3>\n<p>Agile methodology with {sprint_length}-week sprints. Sprint reviews every {sprint_length} weeks. Client provides feedback within {review_period} business days.</p>\n<h3>3. Compensation</h3>\n<p>Rate: $ {rate} per {rate_type}. Estimated total: $ {estimated_total}. {deposit_percentage}% deposit on signing. Milestone payments per Exhibit A.</p>\n<h3>4. Milestones & Acceptance</h3>\n<p>Milestones defined in Exhibit A. Client has {acceptance_period} business days to test and accept each milestone. Unaccepted milestones deemed accepted after {auto_acceptance_days} days.</p>\n<h3>4. Intellectual Property</h3>\n<p>Upon full payment, Client owns all code and deliverables. Developer retains rights to general knowledge, frameworks, and reusable components.</p>\n<h3>5. Change Requests</h3>\n<p>Scope changes require written Change Order. Additional work at $ {change_order_rate}/hr. Developer provides estimate before proceeding.</p>\n<h3>6. Warranty & Support</h3>\n<p>Developer warrants code for {warranty_period} days post-delivery. Bug fixes during warranty included. Post-warranty support available at $ {support_rate}/hr.</p>\n<h3>7. Confidentiality & Security</h3>\n<p>Developer will follow Client security policies. Code stored in Client repositories. Access revoked on termination.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{scope}', '{tech_stack}', '{key_features}', '{sprint_length}', '{review_period}', '{rate}', '{rate_type}', '{estimated_total}', '{deposit_percentage}', '{acceptance_period}', '{auto_acceptance_days}', '{change_order_rate}', '{warranty_period}', '{support_rate}'],
+    },
+    {
+      name: 'Retainer Development Agreement',
+      category: 'Development',
+      body: '<h2>Retainer Development Agreement</h2>\n<p>This Retainer Development Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Developer").</p>\n<h3>1. Monthly Commitment</h3>\n<p>Developer reserves {hours_per_month} hours per month for Client. Priority access to Developer\'s schedule.</p>\n<h3>2. Monthly Retainer</h3>\n<p>Monthly fee: $ {monthly_retainer}. Includes up to {included_hours} hours. Overage at $ {overage_rate}/hr.</p>\n<h3>3. Scope</h3>\n<p>Ongoing development, maintenance, and support for: {scope}. Priority bugs addressed within {sla_response_time} hours.</p>\n<h3>4. Payment & Reporting</h3>\n<p>Invoices sent 1st of month. Payment Net {payment_terms} days. Monthly time report provided by {report_date}.</p>\n<h3>5. Term & Termination</h3>\n<p>Month-to-month. Either party may terminate with {notice_period} days notice. Unused hours do not roll over.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{hours_per_month}', '{monthly_retainer}', '{included_hours}', '{overage_rate}', '{scope}', '{sla_response_time}', '{payment_terms}', '{report_date}', '{notice_period}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my utilization and suggest ways to improve my effective rate.',

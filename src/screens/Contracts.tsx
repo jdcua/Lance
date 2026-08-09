@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { useStore } from '../store';
 import type { Contract, ContractTemplate, ShareToken } from '../types';
 import Button from '../components/ui/Button';
@@ -15,9 +15,10 @@ import { checkAndNotify, tryUnlock } from '../achievements/notify';
 import { getUnlockedAchievementKeys } from '../achievements/checker';
 import { relativeDate } from '../utils/format';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
-import { Plus, Pencil, Trash2, Eye, PenLine, Search, Copy, FileText, Share2, Link, Download } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, PenLine, Search, Copy, FileText, Share2, Link, Download, Sparkles } from 'lucide-react';
 import ShareModal from '../components/ShareModal';
 import { exportContractPDF, exportContractDOCX } from '../export';
+import { getArchetype } from '../archetypes';
 
 const statusBadge: Record<string, 'success' | 'warning' | 'info' | 'danger'> = {
   draft: 'warning',
@@ -263,6 +264,22 @@ export default function Contracts() {
 
   const allTemplates = [...PREBUILT_TEMPLATES.map((t) => ({ ...t, id: `prebuilt:${t.name}`, created_at: '' })), ...contractTemplates];
 
+  // Archetype-specific contract presets
+  const archetype = useMemo(() => getArchetype(profile?.profession || ''), [profile?.profession]);
+  const archetypeContractPresets = useMemo(() => archetype?.contractPresets || [], [archetype]);
+
+  const allTemplatesWithArchetype = useMemo(() => {
+    const archetypePresets = archetypeContractPresets.map((cp) => ({
+      ...cp,
+      id: `archetype:${cp.name}`,
+      created_at: '',
+      category: cp.category,
+      body: cp.body,
+      variables: cp.variables,
+    }));
+    return [...PREBUILT_TEMPLATES.map((t) => ({ ...t, id: `prebuilt:${t.name}`, created_at: '' })), ...archetypePresets, ...contractTemplates];
+  }, [archetypeContractPresets, contractTemplates]);
+
   if (loading) return (
     <div className="p-6">
       <div className="h-6 w-24 bg-[var(--bg-secondary)] rounded skeleton-pulse mb-1.5" />
@@ -475,14 +492,14 @@ export default function Contracts() {
       ) : (
         /* ── Templates tab ── */
         <div className="space-y-3">
-          {allTemplates.length === 0 ? (
+          {allTemplatesWithArchetype.length === 0 ? (
             <Card className="text-center py-16 flex flex-col items-center">
               <FileText size={40} className="text-[var(--text-tertiary)] mb-4" />
               <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No templates yet</h3>
               <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs">Save a contract as a template or use one of the pre-built options.</p>
             </Card>
           ) : (
-            allTemplates.map((t) => {
+            allTemplatesWithArchetype.map((t) => {
               const isPrebuilt = t.id.startsWith('prebuilt:');
               return (
                 <Card key={t.id}>
@@ -582,10 +599,10 @@ export default function Contracts() {
       {showTemplatesTab && (
         <Modal open={showTemplatePicker} onClose={() => setShowTemplatePicker(false)} title="Start from Template" size="md">
           <div className="space-y-2 max-h-[400px] overflow-y-auto">
-            {allTemplates.length === 0 ? (
+{allTemplatesWithArchetype.length === 0 ? (
               <p className="text-sm text-[var(--text-tertiary)] py-8 text-center">No templates available.</p>
             ) : (
-              allTemplates.map((t) => (
+              allTemplatesWithArchetype.map((t) => (
                 <button
                   key={t.id}
                   onClick={() => openNewFromTemplate(t)}

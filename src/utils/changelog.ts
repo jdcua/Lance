@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-// APP_VERSION imported dynamically to avoid circular deps
-const APP_VERSION = '1.2.5';
+import { getRuntimeVersion } from '../lib/version';
 
 export interface ChangelogEntry {
   version: string;

@@ -65,6 +65,23 @@ const virtualAssistant: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'retainer', 'hourly'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 1,
+
+
+  contractPresets: [
+    {
+      name: 'Virtual Assistant Retainer',
+      category: 'Virtual Assistant',
+      body: '<h2>Virtual Assistant Retainer</h2>\n<p>This Virtual Assistant Retainer ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Virtual Assistant").</p>\n<h3>1. Monthly Services</h3>\n<p>VA will provide: {services_list}. Typical tasks: email management, calendar management, data entry, research, scheduling, travel booking, document prep.</p>\n<h3>2. Monthly Retainer</h3>\n<p>Monthly fee: $ {monthly_retainer}. Includes up to {included_hours} hours. Overage at $ {overage_rate}/hr.</p>\n<h3>3. Scope & Boundaries</h3>\n<p>VA does not: make financial decisions, sign contracts, access personal banking, provide legal/medical advice. Scope creep alert at {scope_alert_threshold}% of hours used.</p>\n<h3>4. Communication & Reporting</h3>\n<p>Daily check-in: {checkin_method}. Weekly summary: {weekly_summary_day}. Time logs: {time_log_frequency}.</p>\n<h3>5. Term</h3>\n<p>Month-to-month. {notice_period} days notice to terminate. Unused hours do not roll over.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{services_list}', '{monthly_retainer}', '{included_hours}', '{overage_rate}', '{scope_alert_threshold}', '{checkin_method}', '{weekly_summary_day}', '{time_log_frequency}', '{notice_period}'],
+    },
+    {
+      name: 'Project-Based VA Agreement',
+      category: 'Virtual Assistant',
+      body: '<h2>Project-Based VA Agreement</h2>\n<p>This Project-Based VA Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Virtual Assistant").</p>\n<h3>1. Project Scope</h3>\n<p>VA will complete: {project_scope}. Deliverables: {deliverables_list}. Estimated hours: {estimated_hours}.</p>\n<h3>2. Timeline</h3>\n<p>Start: {start_date}. Milestones: {milestones}. Completion: {completion_date}.</p>\n<h3>3. Fees</h3>\n<p>Total fee: $ {total_fee}. Payment: {deposit_percentage}% deposit, {midpoint_percentage}% at midpoint, balance on delivery.</p>\n<h3>4. Revisions</h3>\n<p>Includes {included_revisions} revision rounds. Additional: $ {revision_rate}/hr.</p>',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{project_scope}', '{deliverables_list}', '{estimated_hours}', '{start_date}', '{milestones}', '{completion_date}', '{total_fee}', '{deposit_percentage}', '{midpoint_percentage}', '{included_revisions}', '{revision_rate}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my client load and flag any approaching scope limits.',

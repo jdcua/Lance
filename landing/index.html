@@ -424,7 +424,7 @@ footer a:hover{color:var(--d-t1)}
     <div class="hero-text">
       <div class="hero-eyebrow">
         <span class="hero-eyebrow-dot"></span>
-        Freelancer OS — <span id="heroVer">v1.1.0</span>
+        Freelancer OS — <span id="heroVer">—</span>
       </div>
       <h1 class="hero-hl">
         <span class="hl-line"><span class="hl-inner">Win work.</span></span>
@@ -695,25 +695,64 @@ footer a:hover{color:var(--d-t1)}
 <section class="section pricing-section" id="pricing">
   <div class="container">
     <div class="eyebrow">Pricing</div>
-    <h2 class="sec-title sec-title-l">Genuinely free.</h2>
-    <p class="pricing-intro">No time limit. No feature locks. No nag screens. Lance is free to use forever.<br>If it saves you time and makes you money — consider supporting it.</p>
-    <div class="pricing-card reveal" id="pricingCard">
-      <svg class="pricing-border-svg" viewBox="0 0 440 420" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-        <rect class="pb-path" x="1" y="1" width="438" height="418" rx="17"/>
-      </svg>
-      <div class="pricing-name">Lance License</div>
-      <div class="pricing-sub">One-time payment · Yours forever</div>
-      <div class="pricing-price"><span>$</span>59</div>
-      <ul class="pricing-perks">
-        <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Removes the launch screen</li>
-        <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>All themes unlocked immediately</li>
-        <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Works across all your devices</li>
-        <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Supports continued development</li>
-      </ul>
-      <a href="https://lance.placeholderlabsincorporatedlimited.yabbadabbadoo/license" class="btn btn-green btn-xl pricing-cta">Get a license</a>
-      <p class="pricing-note">No subscription. No account. Pay once, own it forever.</p>
+    <h2 class="sec-title sec-title-l">Core free forever. Pro optional.</h2>
+    <p class="pricing-intro">Lance core is free — no time limits, no client caps, no nag screens. <strong>Pro</strong> unlocks archetype-specific proposals, contracts, invoices, and scope-creep protection.</p>
+    <div class="pricing-grid">
+      <div class="pricing-card reveal free" id="freeCard">
+        <svg class="pricing-border-svg" viewBox="0 0 440 420" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <rect class="pb-path" x="1" y="1" width="438" height="418" rx="17"/>
+        </svg>
+        <div class="pricing-badge">Free</div>
+        <div class="pricing-name">Lance Core</div>
+        <div class="pricing-price"><span>$</span>0<span>/mo</span></div>
+        <ul class="pricing-perks">
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Unlimited clients, projects, proposals</li>
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Contracts, invoices, time tracking</li>
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Client portal (local, offline-first)</li>
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Recurring invoices, expenses, metrics</li>
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>All current themes</li>
+        </ul>
+        <p class="pricing-note">Forever free. No account. No cloud.</p>
+      </div>
+      <div class="pricing-card reveal pro" id="proCard">
+        <svg class="pricing-border-svg" viewBox="0 0 440 420" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <rect class="pb-path" x="1" y="1" width="438" height="418" rx="17"/>
+        </svg>
+        <div class="pricing-badge">Pro</div>
+        <div class="pricing-name">Lance Pro</div>
+        <div class="pricing-price"><span>$</span>14<span>/mo</span></div>
+        <ul class="pricing-perks">
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Everything in Free</li>
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Archetype proposals (rates, types)</li>
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Archetype contracts (clauses, rev limits)</li>
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Archetype invoices (deposits, terms)</li>
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Scope-creep protection (rev caps)</li>
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Advanced insights panels</li>
+        </ul>
+        <button class="btn btn-green btn-xl pricing-cta" onclick="window.location.href='https://checkout.paddle.com/products/<REPLACE_WITH_MONTHLY_PRICE_ID>'">
+          Start 30-day free trial
+        </button>
+        <p class="pricing-note">Billed monthly. Cancel anytime. 30 days free.</p>
+      </div>
+      <div class="pricing-card reveal lifetime" id="lifetimeCard">
+        <svg class="pricing-border-svg" viewBox="0 0 440 420" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <rect class="pb-path" x="1" y="1" width="438" height="418" rx="17"/>
+        </svg>
+        <div class="pricing-badge">Lifetime</div>
+        <div class="pricing-name">Lance Lifetime</div>
+        <div class="pricing-price"><span>$</span>120<span> one-time</span></div>
+        <ul class="pricing-perks">
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Everything in Pro, forever</li>
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>No subscription, ever</li>
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Future updates included</li>
+        </ul>
+        <button class="btn btn-green btn-xl pricing-cta" onclick="window.location.href='https://checkout.paddle.com/products/<REPLACE_WITH_ONETIME_PRICE_ID>'">
+          Buy lifetime license
+        </button>
+        <p class="pricing-note">One payment. Yours forever.</p>
+      </div>
     </div>
-    <p class="pricing-free-note">The free version is the full version.</p>
+    <p class="pricing-free-note">Core is genuinely free. Pro is depth, not gates.</p>
   </div>
 </section>
 
@@ -726,7 +765,7 @@ footer a:hover{color:var(--d-t1)}
   </svg>
   <div class="eyebrow">Get Lance</div>
   <h2 class="sec-title sec-title-d" style="margin-bottom:8px">Free to download. Free to use.</h2>
-  <p class="download-sub"><span id="dlVer">1.1.0</span> · macOS · Windows · Linux</p>
+  <p class="download-sub"><span id="dlVer">—</span> · macOS · Windows · Linux</p>
   <div class="dl-grid">
     <a href="#" class="dl-btn" id="dl-mac">
       <div class="dl-left">
@@ -774,9 +813,9 @@ footer a:hover{color:var(--d-t1)}
     </a>
     <p>Built by <a href="https://placeholderlabsincorporatedlimited.yabbadabbadoo">Placeholder Labs Incorporated Limited</a></p>
     <div class="footer-links">
-      <a href="#">Privacy Policy</a>
-      <a href="#">License Terms</a>
-      <a href="#">GitHub</a>
+      <a href="https://placeholderlabsincorporatedlimited.yabbadabbadoo/privacy" target="_blank" rel="noopener">Privacy Policy</a>
+      <a href="https://placeholderlabsincorporatedlimited.yabbadabbadoo/terms" target="_blank" rel="noopener">License Terms</a>
+      <a href="https://github.com/jdcua/Lance" target="_blank" rel="noopener">GitHub</a>
     </div>
     <p class="footer-copy">&copy; 2026 Placeholder Labs Incorporated Limited. Lance is free software with a proprietary license.<br>Your data stays on your device. Always.</p>
   </div>

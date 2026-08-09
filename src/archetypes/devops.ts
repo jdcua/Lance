@@ -64,6 +64,23 @@ const devops: ArchetypeConfig = {
 
   proposalTypes: ['hourly', 'retainer', 'flat'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 2,
+
+
+  contractPresets: [
+    {
+      name: 'DevOps Retainer Agreement',
+      category: 'DevOps',
+      body: '<h2>DevOps Retainer Agreement</h2>\n<p>This DevOps Retainer Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("DevOps Engineer").</p>\n<h3>1. Monthly Commitment</h3>\n<p>Engineer reserves {hours_per_month} hours/month for Client. Priority incident response: {incident_response_sla} hours.</p>\n<h3>2. Monthly Retainer</h3>\n<p>Monthly fee: $ {monthly_retainer}. Includes up to {included_hours} hours. Overage at $ {overage_rate}/hr.</p>\n<h3>2. Scope</h3>\n<p>Ongoing: infrastructure management, CI/CD maintenance, monitoring, security hardening, automation, incident response.</p>\n<h3>3. Incident Response</h3>\n<p>Severity 1: {sev1_response}h response. Severity 2: {sev2_response}h response. On-call rotation: {on_call_schedule}.</p>\n<h3>4. Payment & Reporting</h3>\n<p>Invoices 1st of month. Payment Net {payment_terms} days. Monthly report: hours used, incidents resolved, automation deployed.</p>\n<h3>5. Term</h3>\n<p>Month-to-month. {notice_period} days notice to terminate.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{hours_per_month}', '{monthly_retainer}', '{included_hours}', '{overage_rate}', '{incident_response_sla}', '{sev1_response}', '{sev2_response}', '{on_call_schedule}', '{payment_terms}', '{notice_period}'],
+    },
+    {
+      name: 'Infrastructure Project Agreement',
+      category: 'DevOps',
+      body: '<h2>Infrastructure Project Agreement</h2>\n<p>This Infrastructure Project Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("DevOps Engineer").</p>\n<h3>1. Project Scope</h3>\n<p>Engineer will deliver: {scope}. Cloud: {cloud_provider}. Technologies: {tech_stack}. Environments: {environments}.</p>\n<h3>2. Timeline</h3>\n<p>Phase 1: Assessment & Design ({design_weeks} weeks). Phase 2: Implementation ({impl_weeks} weeks). Phase 3: Testing & Handoff ({handoff_weeks} weeks).</p>\n<h3>3. Fees</h3>\n<p>Total fee: $ {total_fee}. Payment: {deposit_percentage}% deposit, {milestone_percentage}% at milestones, balance on completion.</p>\n<h3>4. Change Requests</h3>\n<p>Scope changes via Change Order. Additional work at $ {change_order_rate}/hr.</p>',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{scope}', '{cloud_provider}', '{tech_stack}', '{environments}', '{design_weeks}', '{impl_weeks}', '{handoff_weeks}', '{total_fee}', '{deposit_percentage}', '{milestone_percentage}', '{change_order_rate}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my incident patterns and suggest automation opportunities.',

@@ -64,6 +64,23 @@ const seo: ArchetypeConfig = {
 
   proposalTypes: ['retainer', 'flat', 'hourly'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 3,
+
+
+  contractPresets: [
+    {
+      name: 'SEO Retainer Agreement',
+      category: 'SEO',
+      body: '<h2>SEO Retainer Agreement</h2>\n<p>This SEO Retainer Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("SEO Specialist").</p>\n<h3>1. Monthly Services</h3>\n<p>Specialist will deliver: {monthly_deliverables}. Includes: technical audit, keyword research, on-page optimization, content strategy, link building outreach, monthly reporting.</p>\n<h3>2. Monthly Retainer</h3>\n<p>Monthly fee: $ {monthly_retainer}. Includes up to {included_hours} hours. Overage at $ {overage_rate}/hr.</p>\n<h3>3. Keyword & Content</h3>\n<p>Target keywords: {target_keywords}. Content pieces per month: {content_pieces_per_month}. Link building targets: {links_per_month}.</p>\n<h3>4. Reporting</h3>\n<p>Weekly ranking updates. Monthly comprehensive report. Quarterly strategy review. Access to live dashboard.</p>\n<h3>5. Term</h3>\n<p>Month-to-month. {notice_period} days notice to terminate. 30-day minimum recommended for SEO results.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{monthly_deliverables}', '{monthly_retainer}', '{included_hours}', '{overage_rate}', '{target_keywords}', '{content_pieces_per_month}', '{links_per_month}', '{notice_period}'],
+    },
+    {
+      name: 'SEO Audit & Strategy Project',
+      category: 'SEO',
+      body: '<h2>SEO Audit & Strategy Project</h2>\n<p>This SEO Audit & Strategy Project ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("SEO Specialist").</p>\n<h3>1. Project Scope</h3>\n<p>Specialist will deliver: technical audit, content audit, competitor gap analysis, keyword strategy, technical roadmap, content calendar.</p>\n<h3>2. Timeline</h3>\n<p>Technical audit: {audit_weeks} weeks. Competitor analysis: {competitor_weeks} weeks. Strategy & roadmap: {strategy_weeks} weeks. Total: {total_weeks} weeks.</p>\n<h3>3. Fees</h3>\n<p>Total fee: $ {total_fee}. Payment: {deposit_percentage}% deposit, {midpoint_percentage}% at audit delivery, balance on strategy delivery.</p>\n<h3>4. Deliverables</h3>\n<p>Technical audit report, content audit, competitor gap analysis, keyword strategy document, 12-month content calendar, implementation checklist.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{audit_weeks}', '{competitor_weeks}', '{strategy_weeks}', '{total_weeks}', '{total_fee}', '{deposit_percentage}', '{midpoint_percentage}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my retainer health and flag at-risk clients.',

@@ -65,6 +65,23 @@ const musician: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'hourly', 'per-track'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 2,
+
+
+  contractPresets: [
+    {
+      name: 'Music Production Agreement',
+      category: 'Music Production',
+      body: '<h2>Music Production Agreement</h2>\n<p>This Music Production Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Producer").</p>\n<h3>1. Production Scope</h3>\n<p>Producer will produce: {song_count} song(s). Genre: {genre}. Duration: {duration_per_track} per track. Arrangement: {arrangement_scope}.</p>\n<h3>2. Process</h3>\n<p>Pre-production: {prepro_days} days. Recording: {recording_days} days. Mixing: {mixing_days} days. Mastering: {mastering_days} days.</p>\n<h3>2. Compensation</h3>\n<p>Rate: $ {rate} per {rate_type}. Total: $ {total_fee}. {deposit_percentage}% deposit. Milestones: {milestone_schedule}.</p>\n<h3>3. Stems & Files</h3>\n<p>Client receives: {deliverables_list}. Formats: {file_formats}. Sample rate: {sample_rate}. Bit depth: {bit_depth}. Tracked out stems included: {stems_included}.</p>\n<h3>3. Revisions</h3>\n<p>Includes {included_revisions} revision rounds per track. Additional revisions: $ {revision_rate}/round.</p>\n<h3>4. Rights</h3>\n<p>Client owns master recordings upon full payment. Producer retains rights to beats/instrumentals unless sold exclusively. Producer retains writer\'s share of composition copyright.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{song_count}', '{genre}', '{duration_per_track}', '{arrangement_scope}', '{prepro_days}', '{recording_days}', '{mixing_days}', '{mastering_days}', '{rate}', '{rate_type}', '{total_fee}', '{deposit_percentage}', '{milestone_schedule}', '{deliverables_list}', '{file_formats}', '{sample_rate}', '{bit_depth}', '{stems_included}', '{included_revisions}', '{revision_rate}'],
+    },
+    {
+      name: 'Sync Licensing Agreement',
+      category: 'Music Licensing',
+      body: '<h2>Sync Licensing Agreement</h2>\n<p>This Sync Licensing Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Licensee") and {freelancer_name} ("Licensor").</p>\n<h3>1. Licensed Track</h3>\n<p>Track: "{track_title}". Duration: {duration}. Writers: {writers}. Publishers: {publishers}. Master: {master_owner}.</p>\n<h3>2. License Scope</h3>\n<p>Media: {media_types}. Territory: {territory}. Term: {term_years} years. Exclusive: {exclusive}.</p>\n<h3>2. Fees</h3>\n<p>Sync fee: $ {sync_fee}. Master fee: $ {master_fee}. Total: $ {total_fee}. Payment due within {payment_terms} days of execution.</p>\n<h3>3. Restrictions</h3>\n<p>No edits without approval. No use in: {restricted_uses}. Credit: "{credit_line}".',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{track_title}', '{duration}', '{writers}', '{publishers}', '{master_owner}', '{media_types}', '{territory}', '{term_years}', '{exclusive}', '{sync_fee}', '{master_fee}', '{total_fee}', '{payment_terms}', '{restricted_uses}', '{credit_line}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my session data and suggest pricing adjustments.',

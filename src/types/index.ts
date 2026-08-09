@@ -86,6 +86,7 @@ export type Invoice = {
   notes?: string;
   milestone_id?: string;
   currency?: string;
+  rate_type?: 'flat' | 'hourly';
   created_at: string;
 };
 
@@ -140,6 +141,11 @@ export type UserProfile = {
   accent_color?: string;
   proposal_expiry_days?: number;
   income_target?: number;
+  license_tier?: string;
+  license_expires_at?: string;
+  license_validated_at?: string;
+  license_grace_until?: string;
+  trial_started_at?: string;
 };
 
 export type Communication = {

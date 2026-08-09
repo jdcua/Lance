@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import Button from '../components/ui/Button';
@@ -12,6 +12,7 @@ import { generateProposalBody, checkScopeWarnings, type ScopeWarning } from '../
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify } from '../achievements/notify';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
+import { getArchetype } from '../archetypes';
 
 const projectTypes = [
   'Brand identity',
@@ -38,14 +39,29 @@ export default function NewProposal() {
   const [dismissedWarnings, setDismissedWarnings] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const aiEnabled = profile?.ai_enabled ?? false;
-  const [form, setForm] = useState({
+
+  // Get archetype config from profile's profession
+  const archetype = useMemo(() => getArchetype(profile?.profession || ''), [profile?.profession]);
+  const proposalTypes = useMemo(() => archetype?.proposalTypes || ['flat', 'hourly', 'project'], [archetype]);
+  const defaultRateLabel = useMemo(() => archetype?.defaultRateLabel || 'per hour', [archetype]);
+
+  const [form, setForm] = useState<{
+    client_id: string;
+    title: string;
+    scope: string;
+    timeline: string;
+    rate: string;
+    rate_type: string;
+    project_type: string;
+    body: string;
+  }>({
     client_id: '',
     title: '',
     scope: '',
     timeline: '',
     rate: '',
-    rate_type: 'flat' as 'flat' | 'hourly',
-    project_type: 'Web design',
+    rate_type: proposalTypes[0] || 'flat',
+    project_type: 'General',
     body: '',
   });
 
@@ -66,7 +82,7 @@ export default function NewProposal() {
         scope: form.scope,
         timeline: form.timeline,
         rate: form.rate ? parseFloat(form.rate) : 0,
-        rateType: form.rate_type,
+        rateType: (form.rate_type === 'hourly' || form.rate_type === 'per-shoot' || form.rate_type === 'per-session' || form.rate_type === 'per-track' || form.rate_type === 'per-word' || form.rate_type === 'per-track' || form.rate_type === 'per-look' || form.rate_type === 'per-event' || form.rate_type === 'per-commission' || form.rate_type === 'per-plan' || form.rate_type === 'per-closing' || form.rate_type === 'per-campaign' || form.rate_type === 'per-placement' || form.rate_type === 'per-project' || form.rate_type === 'per-track' || form.rate_type === 'milestone' || form.rate_type === 'retainer' || form.rate_type === 'commission-based') ? 'hourly' : 'flat',
         currency: profile?.currency || 'CAD',
         freelancerName: profile?.name || 'Freelancer',
         writingVoice: profile?.writing_style || profile?.writing_voice || 'professional',
@@ -111,7 +127,7 @@ export default function NewProposal() {
         scope: form.scope ? sanitizeInput(form.scope).slice(0, MAX_LENGTHS.description) : undefined,
         timeline: form.timeline ? sanitizeInput(form.timeline).slice(0, 200) : undefined,
         rate: form.rate ? Math.max(0, parseFloat(form.rate)) : undefined,
-        rate_type: form.rate_type,
+        rate_type: (form.rate_type === 'hourly' || form.rate_type === 'per-shoot' || form.rate_type === 'per-session' || form.rate_type === 'per-track' || form.rate_type === 'per-word' || form.rate_type === 'per-track' || form.rate_type === 'per-look' || form.rate_type === 'per-event' || form.rate_type === 'per-commission' || form.rate_type === 'per-plan' || form.rate_type === 'per-closing' || form.rate_type === 'per-campaign' || form.rate_type === 'per-placement' || form.rate_type === 'per-project' || form.rate_type === 'per-track' || form.rate_type === 'milestone' || form.rate_type === 'retainer' || form.rate_type === 'commission-based') ? 'hourly' : 'flat',
         body: form.body,
         expires_at: expiry.expiresAt,
       });
@@ -181,7 +197,7 @@ export default function NewProposal() {
               onChange={(e) => setForm({ ...form, project_type: e.target.value })}
               className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
             >
-              {projectTypes.map((pt) => (
+              {proposalTypes.map((pt) => (
                 <option key={pt} value={pt}>{pt}</option>
               ))}
             </select>
@@ -203,15 +219,16 @@ export default function NewProposal() {
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Rate Type</label>
               <select
                 value={form.rate_type}
-                onChange={(e) => setForm({ ...form, rate_type: e.target.value as 'flat' | 'hourly' })}
+                onChange={(e) => setForm({ ...form, rate_type: e.target.value })}
                 className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               >
-                <option value="flat">Flat</option>
-                <option value="hourly">Hourly</option>
+                {proposalTypes.map((pt) => (
+                  <option key={pt} value={pt}>{pt}</option>
+                ))}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Rate ({form.rate_type === 'hourly' ? `${currencySymbol}/hr` : currencySymbol})</label>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Rate ({form.rate_type === 'hourly' ? `${currencySymbol}/hr` : form.rate_type === 'per-shoot' ? `${currencySymbol}/shoot` : form.rate_type === 'per-word' ? `${currencySymbol}/word` : form.rate_type === 'per-session' ? `${currencySymbol}/session` : form.rate_type === 'per-track' ? `${currencySymbol}/track` : form.rate_type === 'per-look' ? `${currencySymbol}/look` : form.rate_type === 'per-event' ? `${currencySymbol}/event` : form.rate_type === 'per-commission' ? `${currencySymbol}/commission` : form.rate_type === 'per-plan' ? `${currencySymbol}/plan` : form.rate_type === 'per-closing' ? `${currencySymbol}/closing` : form.rate_type === 'per-campaign' ? `${currencySymbol}/campaign` : form.rate_type === 'per-placement' ? `${currencySymbol}/placement` : form.rate_type === 'per-project' ? `${currencySymbol}/project` : form.rate_type === 'per-track' ? `${currencySymbol}/track` : form.rate_type === 'milestone' ? `${currencySymbol}/milestone` : form.rate_type === 'retainer' ? `${currencySymbol}/retainer` : currencySymbol})</label>
               <input
                 type="number"
                 min={0}

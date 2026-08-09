@@ -64,6 +64,23 @@ const realEstate: ArchetypeConfig = {
 
   proposalTypes: ['commission-based', 'flat', 'hourly'],
   defaultRateLabel: 'per closing',
+  maxRevisions: 2,
+
+
+  contractPresets: [
+    {
+      name: 'Listing Agreement',
+      category: 'Real Estate',
+      body: '<h2>Exclusive Listing Agreement</h2>\n<p>This Exclusive Listing Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Seller") and {freelancer_name} ("Agent").</p>\n<h3>1. Property</h3>\n<p>Address: {property_address}. Property type: {property_type}. Asking price: $ {listing_price}.</p>\n<h3>2. Agency & Commission</h3>\n<p>Agent commission: {commission_percentage}% of sale price. Co-broker commission: {cobroke_percentage}%. Payable at closing.</p>\n<h3>3. Term</h3>\n<p>Exclusive listing period: {listing_period_days} days. Auto-renews for {renewal_period_days} days unless terminated with {notice_period} days notice.</p>\n<h3>4. Marketing</h3>\n<p>Agent will: {marketing_plan}. Photography: {photography_included}. Virtual tour: {virtual_tour_included}. MLS listing: {mls_included}.</p>\n<h3>5. Termination</h3>\n<p>Either party may terminate with {termination_notice} days written notice. Seller liable for marketing costs incurred.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{property_address}', '{property_type}', '{listing_price}', '{commission_percentage}', '{cobroke_percentage}', '{listing_period_days}', '{renewal_period_days}', '{notice_period}', '{marketing_plan}', '{photography_included}', '{virtual_tour_included}', '{mls_included}', '{termination_notice}'],
+    },
+    {
+      name: 'Buyer Representation Agreement',
+      category: 'Real Estate',
+      body: '<h2>Buyer Representation Agreement</h2>\n<p>This Buyer Representation Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Buyer") and {freelancer_name} ("Agent").</p>\n<h3>1. Scope</h3>\n<p>Agent will assist Buyer in finding and purchasing property in: {search_areas}. Price range: ${price_min} - ${price_max}. Property type: {property_types}.</p>\n<h3>2. Agency & Compensation</h3>\n<p>Agent represents Buyer exclusively. Commission paid by Seller via co-broker agreement. If Seller does not offer co-broke, Buyer pays: {buyer_commission}%.</p>\n<h3>3. Services</h3>\n<p>Property search, showings, market analysis, offer preparation, negotiation, inspection coordination, closing coordination.</p>\n<h3>4. Term</h3>\n<p>Term: {term_days} days. Auto-renews unless terminated with {notice_period} days notice.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{search_areas}', '{price_min}', '{price_max}', '{property_types}', '{buyer_commission}', '{term_days}', '{notice_period}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my pipeline and flag listings needing price adjustments.',

@@ -66,6 +66,23 @@ const photographer: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'hourly', 'per-shoot'],
   defaultRateLabel: 'per shoot',
+  maxRevisions: 3,
+
+
+  contractPresets: [
+    {
+      name: 'Photography Service Agreement',
+      category: 'Photography',
+      body: '<h2>Photography Service Agreement</h2>\n<p>This Photography Service Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Photographer").</p>\n<h3>1. Services</h3>\n<p>Photographer agrees to provide photography services for: {scope}</p>\n<h3>2. Shoot Details</h3>\n<p>Shoot date(s): {shoot_dates}. Location(s): {location}. Estimated duration: {duration}.</p>\n<h3>3. Compensation</h3>\n<p>Client agrees to pay Photographer {rate} per {rate_type}. A {deposit_percentage}% non-refundable deposit is due upon signing. Balance due {payment_terms} days after delivery.</p>\n<h3>4. Deliverables</h3>\n<p>Photographer will deliver {number_of_images} edited high-resolution images via online gallery within {delivery_turnaround} business days.</p>\n<h3>5. Usage Rights</h3>\n<p>Client receives a non-exclusive, perpetual license for {usage_rights}. Photographer retains copyright and may use images for portfolio/marketing unless otherwise agreed.</p>\n<h3>5. Reshoot & Cancellation</h3>\n<p>If Client cancels within {cancellation_notice} days of shoot date, deposit is forfeited. Reschedules within {reschedule_notice} days may incur a {reschedule_fee}% fee.</p>\n<h3>6. Model Releases</h3>\n<p>Client is responsible for obtaining model releases for any recognizable individuals. Photographer is not liable for claims arising from lack of releases.</p>\n<h3>7. Governing Law</h3>\n<p>This Agreement shall be governed by the laws of {jurisdiction}.</p>',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{scope}', '{rate}', '{rate_type}', '{deposit_percentage}', '{payment_terms}', '{number_of_images}', '{delivery_turnaround}', '{usage_rights}', '{cancellation_notice}', '{reschedule_notice}', '{reschedule_fee}', '{jurisdiction}'],
+    },
+    {
+      name: 'Event Photography Agreement',
+      category: 'Photography',
+      body: '<h2>Event Photography Agreement</h2>\n<p>This Event Photography Agreement is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Photographer").</p>\n<h3>1. Event Details</h3>\n<p>Event: {event_name}. Date: {event_date}. Start time: {start_time}. End time: {end_time}. Location: {event_location}.</p>\n<h3>2. Coverage</h3>\n<p>Photographer will provide {hours_of_coverage} hours of coverage. Additional hours billed at $ {overage_rate}/hr.</p>\n<h3>3. Compensation</h3>\n<p>Total fee: $ {total_fee}. {deposit_percentage}% deposit due on signing. Balance due {payment_terms} days before event.</p>\n<h3>4. Deliverables</h3>\n<p>Client will receive {number_of_images} edited images via online gallery within {delivery_turnaround} business days. Includes password-protected client gallery.</p>\n<h3>5. Cancellation & Force Majeure</h3>\n<p>Cancellation by Client: deposit forfeited. Cancellation by Photographer: full refund. Force majeure: both parties released from obligation.</p>',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{event_name}', '{event_date}', '{start_time}', '{end_time}', '{event_location}', '{hours_of_coverage}', '{overage_rate}', '{total_fee}', '{deposit_percentage}', '{payment_terms}', '{number_of_images}', '{delivery_turnaround}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my shoot-to-edit ratio and suggest pricing adjustments.',

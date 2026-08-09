@@ -66,6 +66,22 @@ const consultant: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'hourly', 'retainer'],
   defaultRateLabel: 'per session',
+  maxRevisions: 3,
+
+  contractPresets: [
+    {
+      name: 'Consulting Retainer Agreement',
+      category: 'Consulting',
+      body: '<h2>Consulting Retainer Agreement</h2>\n<p>This Consulting Retainer Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Consultant").</p>\n<h3>1. Retainer Services</h3>\n<p>Consultant will provide ongoing consulting services as described in {scope}. Services include {services_included}.</p>\n<h3>2. Retainer Fee</h3>\n<p>Client agrees to pay a monthly retainer of $ {monthly_retainer} for {hours_included} hours per month. Additional hours billed at $ {overage_rate}/hr.</p>\n<h3>3. Payment Terms</h3>\n<p>Invoices sent on the 1st of each month. Payment due Net {payment_terms} days. Late payments incur {late_fee}% monthly interest.</p>\n<h3>4. Engagement & Termination</h3>\n<p>Initial term: {term_months} months. Auto-renews unless terminated with {notice_period} days written notice. Either party may terminate for cause with immediate effect.</p>\n<h3>3. Confidentiality</h3>\n<p>Consultant agrees to maintain strict confidentiality of all Client information. Confidentiality survives termination for {confidentiality_period} years.</p>\n<h3>6. Intellectual Property</h3>\n<p>All deliverables and work product created under this Agreement are the exclusive property of Client upon full payment.</p>\n<h3>7. Governing Law</h3>\n<p>This Agreement shall be governed by the laws of {jurisdiction}.</p>',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{scope}', '{services_included}', '{monthly_retainer}', '{hours_included}', '{overage_rate}', '{payment_terms}', '{notice_period}', '{confidentiality_period}', '{jurisdiction}'],
+    },
+    {
+      name: 'Project-Based Consulting Agreement',
+      category: 'Consulting',
+      body: '<h2>Project-Based Consulting Agreement</h2>\n<p>This Project-Based Consulting Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Consultant").</p>\n<h3>1. Project Scope</h3>\n<p>Consultant will deliver the following: {scope}. Milestones and deliverables as outlined in Exhibit A.</p>\n<h3>2. Fees & Payment</h3>\n<p>Total project fee: $ {total_fee}. Payment schedule: {deposit_percentage}% deposit on signing, {milestone_payments}% at each milestone, balance on delivery.</p>\n<h3>3. Timeline</h3>\n<p>Project commences {start_date}. Estimated completion: {end_date}. Milestone dates in Exhibit A.</p>\n<h3>4. Change Requests</h3>\n<p>Changes to scope require written Change Order. Additional work billed at $ {change_order_rate}/hr. Consultant will provide estimate before proceeding.</p>\n<h3>5. Acceptance & Warranty</h3>\n<p>Client has {acceptance_period} business days to review each deliverable. Consultant warrants work for {warranty_period} days post-delivery.</p>',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{scope}', '{total_fee}', '{start_date}', '{end_date}', '{change_order_rate}', '{acceptance_period}', '{warranty_period}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my client relationships and flag at-risk retainer clients.',

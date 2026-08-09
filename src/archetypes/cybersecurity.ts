@@ -64,6 +64,23 @@ const cybersecurity: ArchetypeConfig = {
 
   proposalTypes: ['hourly', 'flat', 'retainer'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 2,
+
+
+  contractPresets: [
+    {
+      name: 'Security Audit Engagement',
+      category: 'Cybersecurity',
+      body: '<h2>Security Audit Engagement</h2>\n<p>This Security Audit Engagement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Auditor").</p>\n<h3>1. Scope of Audit</h3>\n<p>Auditor will perform a {audit_type} audit of {scope}. Frameworks: {frameworks}. Systems in scope: {systems_in_scope}.</p>\n<h3>2. Methodology</h3>\n<p>Methodology: {methodology} (OWASP, NIST, PTES, etc.). Testing: {testing_methods}. Timeline: {audit_duration_weeks} weeks.</p>\n<h3>3. Fees</h3>\n<p>Total fee: $ {total_fee}. Payment: {deposit_percentage}% deposit, {milestone_percentage}% at interim report, balance on final report delivery.</p>\n<h3>4. Reporting</h3>\n<p>Interim findings call at {interim_checkpoint}. Final report includes: executive summary, technical findings with CVSS scores, remediation guidance, and attestation letter.</p>\n<h3>5. Remediation Support</h3>\n<p>Post-audit remediation consultation: {remediation_support_hours} hours included. Additional support at $ {remediation_rate}/hr.</p>\n<h3>6. Confidentiality</h3>\n<p>All findings treated as highly confidential. Report encrypted at rest and in transit. {confidentiality_period} year confidentiality period.</p>',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{audit_type}', '{scope}', '{frameworks}', '{systems_in_scope}', '{methodology}', '{testing_methods}', '{audit_duration_weeks}', '{total_fee}', '{deposit_percentage}', '{milestone_percentage}', '{interim_checkpoint}', '{remediation_support_hours}', '{remediation_rate}', '{confidentiality_period}'],
+    },
+    {
+      name: 'Security Advisory Retainer',
+      category: 'Cybersecurity',
+      body: '<h2>Security Advisory Retainer</h2>\n<p>This Security Advisory Retainer ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Advisor").</p>\n<h3>1. Monthly Commitment</h3>\n<p>Advisor reserves {hours_per_month} hours/month for Client. Priority incident response: {incident_response_sla} hours.</p>\n<h3>2. Monthly Retainer</h3>\n<p>Monthly fee: $ {monthly_retainer}. Includes up to {included_hours} hours. Overage at $ {overage_rate}/hr.</p>\n<h3>2. Scope</h3>\n<p>Ongoing security guidance: vulnerability triage, threat modeling, incident response planning, compliance guidance, security architecture review.</p>\n<h3>3. Payment & Reporting</h3>\n<p>Invoices 1st of month. Payment Net {payment_terms} days. Monthly activity report provided.</p>\n<h3>4. Term</h3>\n<p>Month-to-month. {notice_period} days notice to terminate.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{hours_per_month}', '{incident_response_sla}', '{monthly_retainer}', '{included_hours}', '{overage_rate}', '{payment_terms}', '{notice_period}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my audit pipeline and flag overdue remediations.',

@@ -174,6 +174,7 @@ pub fn run() {
             commands::kanban::move_kanban_card,
             commands::kanban::reorder_kanban_cards,
             commands::license::validate_license,
+            commands::license::validate_license_online,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

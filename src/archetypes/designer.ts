@@ -65,6 +65,23 @@ const designer: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'hourly', 'project'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 3,
+
+
+  contractPresets: [
+    {
+      name: 'Brand Design Agreement',
+      category: 'Design',
+      body: '<h2>Brand Design Agreement</h2>\n<p>This Brand Design Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Designer").</p>\n<h3>1. Scope</h3>\n<p>Designer will create: {deliverables_list}. Scope includes: {scope_details}. Brand strategy: {brand_strategy_included}.</p>\n<h3>2. Design Process</h3>\n<p>Phase 1: Discovery & Strategy ({discovery_days} days). Phase 2: Concept Development ({concept_days} days). Phase 3: Design System ({system_days} days). Phase 4: Asset Production ({production_days} days).</p>\n<h3>2. Compensation</h3>\n<p>Total fee: $ {total_fee}. Payment: {deposit_percentage}% deposit, {milestone_percentage}% at brand system delivery, balance on final asset handoff.</p>\n<h3>3. Revisions</h3>\n<p>Includes {included_revisions} revision rounds per phase. Additional revisions: $ {additional_revision_rate} per round.</p>\n<h3>4. Deliverables & Handoff</h3>\n<p>Files delivered in {file_formats}. Includes: logo files, color palette, typography, imagery style, brand guidelines document. Source files (Figma/Sketch/Adobe) retained by Designer unless purchased separately.</p>\n<h3>5. Usage Rights</h3>\n<p>Client receives full commercial rights. Designer retains right to use work for portfolio with attribution.</p>\n<h3>6. Kill Fee</h3>\n<p>If Client cancels, Client pays for work completed to date. Minimum {kill_fee_percentage}% of total fee.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{deliverables_list}', '{scope_details}', '{brand_strategy_included}', '{discovery_days}', '{concept_days}', '{system_days}', '{production_days}', '{total_fee}', '{deposit_percentage}', '{milestone_percentage}', '{included_revisions}', '{additional_revision_rate}', '{kill_fee_percentage}'],
+    },
+    {
+      name: 'Design Retainer',
+      category: 'Design',
+      body: '<h2>Design Retainer</h2>\n<p>This Design Retainer ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Designer").</p>\n<h3>1. Monthly Commitment</h3>\n<p>Designer reserves {hours_per_month} hours/month for Client. Priority scheduling for urgent requests.</p>\n<h3>2. Monthly Retainer</h3>\n<p>Monthly fee: $ {monthly_retainer}. Includes up to {included_hours} hours. Overage at $ {overage_rate}/hr.</p>\n<h3>2. Scope</h3>\n<p>Ongoing design work: {scope}. Social media assets, marketing collateral, UI components, presentations, etc.</p>\n<h3>3. Workflow</h3>\n<p>Briefs due by {brief_due} of each month. First drafts by {draft_due}. {included_revisions} revision rounds included per deliverable.</p>\n<h3>4. Payment Terms</h3>\n<p>Invoices 1st of month. Payment Net {payment_terms} days.</p>\n<h3>5. Term</h3>\n<p>Month-to-month. Either party may terminate with {notice_period} days notice.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{hours_per_month}', '{monthly_retainer}', '{included_hours}', '{overage_rate}', '{scope}', '{brief_due}', '{draft_due}', '{included_revisions}', '{payment_terms}', '{notice_period}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my design pipeline and flag clients with high revision counts.',

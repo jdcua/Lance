@@ -64,6 +64,23 @@ const projectManager: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'hourly', 'retainer'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 3,
+
+
+  contractPresets: [
+    {
+      name: 'Project Management Agreement',
+      category: 'Project Management',
+      body: '<h2>Project Management Agreement</h2>\n<p>This Project Management Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Project Manager").</p>\n<h3>1. Scope</h3>\n<p>Project Manager will manage: {project_name}. Scope: {scope}. Team size: {team_size}. Duration: {estimated_duration_weeks} weeks.</p>\n<h3>2. Services</h3>\n<p>Planning, scheduling, resource allocation, risk management, stakeholder communication, status reporting, milestone tracking, budget management.</p>\n<h3>3. Compensation</h3>\n<p>Rate: $ {rate} per {rate_type}. Total estimated: $ {estimated_total}. {deposit_percentage}% deposit. Monthly invoicing.</p>\n<h3>3. Reporting</h3>\n<p>Weekly status reports. Monthly executive summary. Milestone notifications within 24 hours of completion.</p>\n<h3>4. Change Management</h3>\n<p>Scope changes via Change Request. Impact analysis within {change_impact_hours} hours. Client approval required before implementation.</p>\n<h3>5. Term</h3>\n<p>Project duration or month-to-month. {notice_period} days notice to terminate.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{project_name}', '{scope}', '{team_size}', '{estimated_duration_weeks}', '{rate}', '{rate_type}', '{estimated_total}', '{deposit_percentage}', '{change_impact_hours}', '{notice_period}'],
+    },
+    {
+      name: 'PMO Retainer Agreement',
+      category: 'Project Management',
+      body: '<h2>PMO Retainer Agreement</h2>\n<p>This PMO Retainer Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Project Manager").</p>\n<h3>1. Monthly Commitment</h3>\n<p>Project Manager reserves {hours_per_month} hours/month. Manages up to {max_projects} concurrent projects.</p>\n<h3>2. Monthly Retainer</h3>\n<p>Monthly fee: $ {monthly_retainer}. Includes up to {included_hours} hours. Overage at $ {overage_rate}/hr.</p>\n<h3>2. Scope</h3>\n<p>Ongoing: multi-project coordination, resource planning, cross-project dependency management, executive reporting.</p>\n<h3>3. Payment & Reporting</h3>\n<p>Invoices 1st of month. Payment Net {payment_terms} days. Monthly portfolio status report.</p>\n<h3>4. Term</h3>\n<p>Month-to-month. {notice_period} days notice to terminate. Unused hours do not roll over.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{hours_per_month}', '{max_projects}', '{monthly_retainer}', '{included_hours}', '{overage_rate}', '{payment_terms}', '{notice_period}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my project portfolio and flag at-risk projects.',

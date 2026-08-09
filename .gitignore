@@ -38,6 +38,18 @@ src-tauri/signing/*
 .qa-progress.json
 qa.sh
 
+# Build plan docs (never committed to GitHub)
+docs/MONETIZATION_ONE_SHOT.md
+docs/BUILD_STATUS.md
+
+# License worker (deployed separately, not committed)
+license-worker/
+
+# Repo hygiene strays
+src/store/index.ts.bak
+lint.json
+lint.txt
+
 # Screenshots & snapshots
 *.png
 *.jpg
@@ -58,3 +70,4 @@ lance.key
 # Artifacts
 *.AppImage
 dist-artifacts/
+vite.config.ts.timestamp-*.mjs

@@ -276,3 +276,85 @@ export const MAX_PREVIEW_ROWS = 50;
 export const SPREADSHEET_EXTS = ['xlsx', 'csv', 'xls'] as const;
 export const DOCUMENT_EXTS = ['pdf', 'docx', 'doc'] as const;
 export const IMAGE_EXTS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'] as const;
+
+// ── License Tiers ──
+export const LICENSE_TIERS = {
+  FREE: 'free',
+  PRO: 'pro',
+  TRIAL: 'trial',
+  EXPIRED: 'expired',
+  OFFLINE_CACHED: 'cached',
+  LEGACY_LIFETIME: 'lifetime',
+} as const;
+
+export type LicenseTier = (typeof LICENSE_TIERS)[keyof typeof LICENSE_TIERS];
+
+// ── Trial Constants ──
+export const TRIAL = {
+  FULL_DAYS: 30,
+  SOFT_DAY: 30,
+  HARD_DAY: 37,
+} as const;
+
+// ── Feature Flags per Tier ──
+export const FEATURE_FLAGS: Record<LicenseTier, Record<string, boolean>> = {
+  [LICENSE_TIERS.FREE]: {
+    contractPdf: true,
+    docxExport: true,
+    clientPortal: true,
+    recurringInvoices: true,
+    archetypeDepth: false,
+    scopeCreepProtection: false,
+    advancedInsights: false,
+  },
+  [LICENSE_TIERS.TRIAL]: {
+    contractPdf: true,
+    docxExport: true,
+    clientPortal: true,
+    recurringInvoices: true,
+    archetypeDepth: true,
+    scopeCreepProtection: true,
+    advancedInsights: true,
+  },
+  [LICENSE_TIERS.PRO]: {
+    contractPdf: true,
+    docxExport: true,
+    clientPortal: true,
+    recurringInvoices: true,
+    archetypeDepth: true,
+    scopeCreepProtection: true,
+    advancedInsights: true,
+  },
+  [LICENSE_TIERS.LEGACY_LIFETIME]: {
+    contractPdf: true,
+    docxExport: true,
+    clientPortal: true,
+    recurringInvoices: true,
+    archetypeDepth: true,
+    scopeCreepProtection: true,
+    advancedInsights: true,
+  },
+  [LICENSE_TIERS.EXPIRED]: {
+    contractPdf: true,
+    docxExport: true,
+    clientPortal: true,
+    recurringInvoices: true,
+    archetypeDepth: false,
+    scopeCreepProtection: false,
+    advancedInsights: false,
+  },
+  [LICENSE_TIERS.OFFLINE_CACHED]: {
+    contractPdf: true,
+    docxExport: true,
+    clientPortal: true,
+    recurringInvoices: true,
+    archetypeDepth: false,
+    scopeCreepProtection: false,
+    advancedInsights: false,
+  },
+} as const;
+
+// ── Feature Flag Helper ──
+export function getFeatureFlags(tier: LicenseTier): Record<string, boolean> {
+  return FEATURE_FLAGS[tier] ?? FEATURE_FLAGS[LICENSE_TIERS.FREE];
+}

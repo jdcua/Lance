@@ -64,6 +64,23 @@ const tutor: ArchetypeConfig = {
 
   proposalTypes: ['per-session', 'flat', 'hourly'],
   defaultRateLabel: 'per session',
+  maxRevisions: 2,
+
+
+  contractPresets: [
+    {
+      name: 'Tutoring Services Agreement',
+      category: 'Education',
+      body: '<h2>Tutoring Services Agreement</h2>\n<p>This Tutoring Services Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client/Parent") and {freelancer_name} ("Tutor").</p>\n<h3>1. Services</h3>\n<p>Tutor will provide tutoring in: {subjects}. Grade level: {grade_level}. Sessions per week: {sessions_per_week}. Duration: {session_duration} minutes. Location: {location}.</p>\n<h3>2. Fees</h3>\n<p>Rate: $ {rate} per {rate_type}. Package: {sessions_per_package} sessions for $ {package_price}. {deposit_percentage}% deposit due on signing. Balance due monthly.</p>\n<h3>3. Schedule & Cancellations</h3>\n<p>Session days/times: {schedule}. Cancellation: {cancellation_notice} hours notice required. Late cancel: session forfeited. Tutor cancels: rescheduled or credited.</p>\n<h3>4. Progress & Communication</h3>\n<p>Progress reports: {progress_report_frequency}. Parent communication: {communication_method}. Student goals: {goals}.</p>\n<h3>5. Termination</h3>\n<p>Either party may terminate with {notice_period} days notice. Unused prepaid sessions refunded pro-rata.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{subjects}', '{grade_level}', '{sessions_per_week}', '{session_duration}', '{location}', '{rate}', '{rate_type}', '{sessions_per_package}', '{package_price}', '{deposit_percentage}', '{cancellation_notice}', '{progress_report_frequency}', '{communication_method}', '{goals}', '{notice_period}'],
+    },
+    {
+      name: 'Test Prep Package Agreement',
+      category: 'Test Prep',
+      body: '<h2>Test Prep Package Agreement</h2>\n<p>This Test Prep Package Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client/Parent") and {freelancer_name} ("Tutor").</p>\n<h3>1. Program Deliverables</h3>\n<p>Tutor will prepare student for: {test_name} ({test_date}). Includes: {number_of_sessions} sessions, practice tests, study materials, strategies guide.</p>\n<h3>2. Schedule</h3>\n<p>Start date: {start_date}. Sessions per week: {sessions_per_week}. Duration: {session_duration} minutes. Estimated end: {estimated_end_date}.</p>\n<h3>2. Fees</h3>\n<p>Package price: $ {package_price}. {deposit_percentage}% deposit. Balance due midway through program.</p>\n<h3>3. Materials</h3>\n<p>Includes: practice tests, study guides, online resources access. Additional materials: $ {additional_materials_cost}.</p>\n<h3>4. Score Guarantee</h3>\n<p>If official score does not improve by {guaranteed_improvement} points, one additional cycle of sessions provided at no charge (terms apply).',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{test_name}', '{test_date}', '{number_of_sessions}', '{practice_tests}', '{study_materials}', '{strategies_guide}', '{start_date}', '{sessions_per_week}', '{session_duration}', '{estimated_end_date}', '{package_price}', '{deposit_percentage}', '{additional_materials_cost}', '{guaranteed_improvement}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my student retention and flag at-risk students.',

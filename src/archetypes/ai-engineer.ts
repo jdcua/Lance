@@ -64,6 +64,23 @@ const aiEngineer: ArchetypeConfig = {
 
   proposalTypes: ['hourly', 'flat', 'project'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 2,
+
+
+  contractPresets: [
+    {
+      name: 'ML Engineering Agreement',
+      category: 'AI/ML',
+      body: '<h2>ML Engineering Agreement</h2>\n<p>This ML Engineering Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("AI Engineer").</p>\n<h3>1. Scope</h3>\n<p>Engineer will: {scope}. Task type: {task_type} (classification, regression, NLP, CV, RL, etc.). Model type: {model_type}. Dataset: {dataset_description}.</p>\n<h3>2. Development Process</h3>\n<p>Phase 1: Data prep & EDA ({eda_weeks} weeks). Phase 2: Baseline modeling ({baseline_weeks} weeks). Phase 3: Iteration & tuning ({tuning_weeks} weeks). Phase 4: Deployment ({deploy_weeks} weeks).</p>\n<h3>2. Compensation</h3>\n<p>Rate: $ {rate} per {rate_type}. Estimated total: $ {estimated_total}. {deposit_percentage}% deposit. Milestone payments per phase.</p>\n<h3>3. Compute & Infrastructure</h3>\n<p>Client provides: {client_provided_compute}. Engineer uses: {engineer_compute}. Compute costs: {compute_cost_responsibility}. Cloud: {cloud_provider}.</p>\n<h3>3. Evaluation & Acceptance</h3>\n<p>Target metric: {target_metric} >= {target_value}. Test set: {test_set_description}. Client has {acceptance_period} days to evaluate.</p>\n<h3>4. IP & Deployment</h3>\n<p>Upon full payment, Client owns trained model and code. Engineer retains rights to architecture patterns, preprocessing pipelines, and reusable components.</p>\n<h3>5. Warranty & Monitoring</h3>\n<p>Warranty: {warranty_months} months. Includes drift monitoring setup. Retraining: separate agreement.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{scope}', '{task_type}', '{model_type}', '{dataset_description}', '{eda_weeks}', '{baseline_weeks}', '{tuning_weeks}', '{deploy_weeks}', '{rate}', '{rate_type}', '{estimated_total}', '{deposit_percentage}', '{milestone_percentage}', '{client_provided_compute}', '{engineer_compute}', '{compute_cost_responsibility}', '{cloud_provider}', '{target_metric}', '{target_value}', '{test_set_description}', '{acceptance_period}', '{warranty_months}'],
+    },
+    {
+      name: 'ML Advisory Retainer',
+      category: 'AI/ML',
+      body: '<h2>ML Advisory Retainer</h2>\n<p>This ML Advisory Retainer ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("AI Advisor").</p>\n<h3>1. Monthly Commitment</h3>\n<p>Advisor reserves {hours_per_month} hours/month. Priority for: model issues, deployment incidents, architecture reviews.</p>\n<h3>2. Monthly Retainer</h3>\n<p>Monthly fee: $ {monthly_retainer}. Includes up to {included_hours} hours. Overage at $ {overage_rate}/hr.</p>\n<h3>2. Scope</h3>\n<p>Architecture review, model debugging, MLOps guidance, cost optimization, team mentoring, vendor evaluation.</p>\n<h3>3. Payment & Reporting</h3>\n<p>Invoices 1st of month. Payment Net {payment_terms} days. Monthly report: hours used, models reviewed, recommendations made.</p>\n<h3>4. Term</h3>\n<p>Month-to-month. {notice_period} days notice to terminate. Unused hours do not roll over.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{hours_per_month}', '{monthly_retainer}', '{included_hours}', '{overage_rate}', '{payment_terms}', '{notice_period}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my compute costs and suggest optimization strategies.',

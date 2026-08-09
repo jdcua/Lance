@@ -2,13 +2,14 @@
  * Revision Counter — compact panel showing revision count vs limit.
  * Uses store for revisions and proposals; auto-increments round_number on add.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useStore } from '../../store';
 import Button from '../ui/Button';
 import { Plus, RotateCcw } from 'lucide-react';
+import { getArchetype } from '../../archetypes';
 
 export default function RevisionCounter({ projectId }: { projectId: string }) {
-  const { revisions, loadRevisions, addRevision, proposals } = useStore();
+  const { revisions, loadRevisions, addRevision, proposals, profile } = useStore();
   const [saving, setSaving] = useState(false);
 
   useEffect(() => { loadRevisions(); }, [projectId, loadRevisions]);
@@ -17,7 +18,8 @@ export default function RevisionCounter({ projectId }: { projectId: string }) {
   const nextRound = list.length > 0 ? Math.max(...list.map((r) => r.round_number)) + 1 : 1;
 
   const projectProposal = proposals.find(p => p.project_id === projectId);
-  const revisionLimit = projectProposal?.rate ? Math.max(1, Math.round(projectProposal.rate)) : 3;
+  const archetype = useMemo(() => getArchetype(profile?.profession || ''), [profile?.profession]);
+  const revisionLimit = useMemo(() => archetype?.maxRevisions ?? 3, [archetype]);
 
   const currentRound = list.length;
   const overLimit = currentRound > revisionLimit;

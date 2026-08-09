@@ -717,3 +717,32 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
   console.debug(`[tauri] handleBrowserMode: unhandled command "${cmd}"`);
   return {} as unknown as T;
 }
+
+// ── Paddle Checkout (Tauri + browser fallback) ──────────────────────
+// These URLs are built from Paddle price IDs configured in the license-worker
+// env. The actual price IDs must be set in the worker's wrangler.jsonc and
+// then mirrored here (or fetched from the worker at runtime if desired).
+const PADDLE_PRICE_IDS = {
+  monthly: '<REPLACE_WITH_MONTHLY_PRICE_ID>',
+  yearly: '<REPLACE_WITH_YEARLY_PRICE_ID>',
+  onetime: '<REPLACE_WITH_ONETIME_PRICE_ID>',
+} as const;
+
+const PADDLE_CHECKOUT_BASE = 'https://checkout.paddle.com/products/';
+
+export async function openCheckout(tier: 'monthly' | 'yearly' | 'onetime'): Promise<void> {
+  const priceId = PADDLE_PRICE_IDS[tier];
+  if (!priceId || priceId.startsWith('<')) {
+    console.warn('[paddle] Price ID not configured for', tier);
+    alert('Paddle checkout not configured yet. Set PADDLE_PRICE_IDS in src/utils/tauri.ts');
+    return;
+  }
+  const url = `${PADDLE_CHECKOUT_BASE}${priceId}`;
+
+  if (isTauri()) {
+    const { openUrl } = await import('@tauri-apps/plugin-opener');
+    await openUrl(url);
+  } else {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+}

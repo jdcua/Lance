@@ -76,8 +76,21 @@ export interface ArchetypeConfig {
   proposalTypes: string[];
   defaultRateLabel: string;
 
+  contractPresets: ContractPresetDef[];
+
+  depositPercentage?: number;
+  paymentTerms?: number;
+  maxRevisions?: number;
+
   aiPrompts: Record<string, string>;
 }
+
+export type ContractPresetDef = {
+  name: string;
+  category: string;
+  body: string;
+  variables: string[];
+};
 
 export type ArchetypeId =
   | 'default'

@@ -64,6 +64,23 @@ const wellness: ArchetypeConfig = {
 
   proposalTypes: ['per-session', 'retainer', 'flat'],
   defaultRateLabel: 'per session',
+  maxRevisions: 2,
+
+
+  contractPresets: [
+    {
+      name: 'Therapy Services Agreement',
+      category: 'Wellness',
+      body: '<h2>Therapy Services Agreement</h2>\n<p>This Therapy Services Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Therapist").</p>\n<h3>1. Services</h3>\n<p>Therapist will provide: {modality} therapy. Frequency: {frequency_per_week} sessions/week. Duration: {session_duration} minutes. Modality: {session_modality} (in-person/telehealth).</p>\n<h3>2. Fees</h3>\n<p>Rate: $ {rate} per {rate_type}. Package: {sessions_per_package} sessions for $ {package_price}. {deposit_percentage}% deposit. Sliding scale: {sliding_scale_available}.</p>\n<h3>3. Schedule & Cancellations</h3>\n<p>Session time: {scheduled_day_time}. Cancellation: {cancellation_hours} hours notice required. Late cancel/No-show: full session fee. Therapist cancels: rescheduled or credited.</p>\n<h3>4. Confidentiality</h3>\n<p>All sessions confidential per HIPAA/ethical guidelines. Records retained for {record_retention_years} years. Mandatory reporting exceptions apply.</p>\n<h3>5. Termination</h3>\n<p>Either party may terminate with {notice_period} sessions notice. Referral provided. Unused prepaid sessions refunded.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{modality}', '{frequency_per_week}', '{session_duration}', '{session_modality}', '{rate}', '{rate_type}', '{sessions_per_package}', '{package_price}', '{deposit_percentage}', '{sliding_scale_available}', '{scheduled_day_time}', '{cancellation_hours}', '{record_retention_years}', '{notice_period}'],
+    },
+    {
+      name: 'Wellness Program Package',
+      category: 'Wellness',
+      body: '<h2>Wellness Program Package</h2>\n<p>This Wellness Program Package ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Practitioner").</p>\n<h3>1. Program Deliverables</h3>\n<p>Practitioner delivers: {program_type} program. Includes: {included_sessions} sessions, {included_resources} (worksheets, audio, exercises), {support_access} support access.</p>\n<h3>2. Timeline</h3>\n<p>Program duration: {program_weeks} weeks. Sessions per week: {sessions_per_week}. Start: {start_date}. Estimated end: {estimated_end_date}.</p>\n<h3>2. Fees</h3>\n<p>Program price: $ {package_price}. {deposit_percentage}% deposit. Balance due on program start.</p>\n<h3>3. Support & Communication</h3>\n<p>Between-session support: {support_type} (email/text/portal). Response time: {response_time_hours} hours.</p>\n<h3>4. Cancellation</h3>\n<p>Client cancels before start: full refund minus deposit. After start: prorated refund for unused sessions.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{program_type}', '{included_sessions}', '{included_resources}', '{support_access}', '{program_weeks}', '{sessions_per_week}', '{start_date}', '{estimated_end_date}', '{package_price}', '{deposit_percentage}', '{support_type}', '{response_time_hours}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my practice health and suggest areas for improvement.',

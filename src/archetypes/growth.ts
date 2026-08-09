@@ -64,6 +64,23 @@ const growth: ArchetypeConfig = {
 
   proposalTypes: ['retainer', 'flat', 'hourly'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 2,
+
+
+  contractPresets: [
+    {
+      name: 'Growth / CRO Retainer',
+      category: 'Growth',
+      body: '<h2>Growth / CRO Retainer</h2>\n<p>This Growth/CRO Retainer ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Growth Specialist").</p>\n<h3>1. Monthly Services</h3>\n<p>Specialist will run {experiments_per_month} experiments/month. Funnels: {funnel_areas}. Includes: hypothesis generation, test design, implementation support, analysis, reporting.</p>\n<h3>2. Monthly Retainer</h3>\n<p>Monthly fee: $ {monthly_retainer}. Includes up to {included_hours} hours. Overage at $ {overage_rate}/hr.</p>\n<h3>3. Tools & Access</h3>\n<p>Client provides: {analytics_access}, {testing_tool_access}, {cms_access}. Specialist uses own tools for design/analysis.</p>\n<h3>4. Reporting</h3>\n<p>Weekly experiment updates. Monthly results report. Quarterly roadmap review.</p>\n<h3>5. Term</h3>\n<p>Month-to-month. {notice_period} days notice to terminate. Final experiment results delivered on termination.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{experiments_per_month}', '{funnel_areas}', '{monthly_retainer}', '{included_hours}', '{overage_rate}', '{analytics_access}', '{testing_tool_access}', '{cms_access}', '{notice_period}'],
+    },
+    {
+      name: 'CRO Audit & Roadmap Project',
+      category: 'Growth',
+      body: '<h2>CRO Audit & Roadmap Project</h2>\n<p>This CRO Audit & Roadmap Project ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Growth Specialist").</p>\n<h3>1. Project Scope</h3>\n<p>Specialist will deliver: heuristic audit, analytics audit, user research summary, experiment roadmap with ICE scores, implementation prioritization.</p>\n<h3>2. Timeline</h3>\n<p>Heuristic & analytics audit: {audit_weeks} weeks. User research: {research_weeks} weeks. Roadmap synthesis: {roadmap_weeks} weeks. Total: {total_weeks} weeks.</p>\n<h3>3. Fees</h3>\n<p>Total fee: $ {total_fee}. Payment: {deposit_percentage}% deposit, {midpoint_percentage}% at audit delivery, balance on roadmap delivery.</p>\n<h3>4. Deliverables</h3>\n<p>Full audit report, prioritized experiment backlog (ICE scored), implementation specs for top 5 experiments, executive presentation.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{audit_weeks}', '{research_weeks}', '{roadmap_weeks}', '{total_weeks}', '{total_fee}', '{deposit_percentage}', '{midpoint_percentage}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my experiment pipeline and suggest next tests.',

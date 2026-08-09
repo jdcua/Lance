@@ -12,6 +12,7 @@ import type {
 import type { Achievement } from '../achievements/index';
 import { validateLicenseKey } from '../license';
 import { sanitizeInput, truncate, MAX_LENGTHS } from '../utils/sanitize';
+import type { LicenseTier } from '../lib/constants';
 
 const licenseCache = new Map<string, boolean>();
 
@@ -380,6 +381,16 @@ export interface UnifiedStore {
   getUpcomingFollowUps: (days?: number) => FollowUpLog[]
   getProjectMetrics: (projectId: string) => { totalTime: number; totalBillable: number; totalInvoiced: number; milestoneProgress: number }
   getFinanceSummary: () => { revenue: number; expenses: number; outstanding: number; forecast: number; totalPaid: number }
+
+  // ── License / Trial / Grace ──
+  initLicenseFlow: () => Promise<void>
+  pingLicenseServer: () => Promise<void>
+  isTier: (tier: string) => boolean
+  getActiveTier: () => LicenseTier
+  getFeatureFlags: () => Promise<Record<string, boolean>>
+
+  // ── Upgrade Modal ──
+  openUpgradeModal: (triggerFeature?: string) => void
 }
 
 export type AppStore = UnifiedStore;
@@ -774,9 +785,118 @@ export const useStore = create<UnifiedStore>((set, get) => {
       await invoke('upsert_user_profile', { payload: updated });
       set({ profile: updated, isLicensed: false });
     },
+
+    // ── License tier / trial / grace ───
+    initLicenseFlow: async () => {
+      const profile = get().profile;
+      if (!profile) return;
+      const now = new Date().toISOString();
+
+      // Start trial if never started
+      if (!profile.trial_started_at) {
+        const updated = { ...profile, trial_started_at: now };
+        await invoke('upsert_user_profile', { payload: updated });
+        set({ profile: updated });
+        console.log('[license] Trial started:', now);
+      }
+
+      // If we have a license key but haven't validated recently, ping the license server
+      if (profile.license_key && !profile.license_validated_at) {
+        await get().pingLicenseServer();
+      }
+    },
+
+    pingLicenseServer: async () => {
+      const profile = get().profile;
+      if (!profile?.license_key) return;
+
+      const { isTauri } = await import('../utils/tauri');
+
+      try {
+        // In Tauri, call the Rust command to ping the license server
+        // In browser, we'd call the worker directly (future enhancement)
+        if (isTauri()) {
+          const result = await invoke<{
+            valid: boolean;
+            tier: string;
+            expires_at?: string;
+            message: string;
+          }>('validate_license_online', { key: get().profile?.license_key });
+
+          if (result.valid) {
+            const profile = get().profile;
+            if (!profile) return;
+            const now = new Date().toISOString();
+            const updated = {
+              ...profile,
+              currency: profile.currency || 'CAD',
+              license_tier: result.tier,
+              license_expires_at: result.expires_at,
+              license_validated_at: new Date().toISOString(),
+              license_grace_until: undefined,
+              isLicensed: true,
+            };
+            await invoke('upsert_user_profile', { payload: updated });
+            set({ profile: updated, isLicensed: true });
+            console.log('[license] Online validation OK:', result.tier);
+          } else if (result.tier) {
+            // Server said invalid/expired but gave us a tier — update local state
+            const profile = get().profile;
+            if (!profile) return;
+            const updated = {
+              ...profile,
+              currency: profile.currency || 'CAD',
+              license_tier: result.tier,
+              license_expires_at: result.expires_at,
+              license_validated_at: new Date().toISOString(),
+              license_grace_until: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2-day grace
+            };
+            await invoke('upsert_user_profile', { payload: updated });
+            set({ profile: updated, isLicensed: result.tier !== 'free' && result.tier !== 'expired' });
+            console.warn('[license] Online validation failed, grace started:', result.message);
+          }
+        }
+      } catch (e) {
+        console.warn('[license] Online ping failed, using cached/offline:', e);
+        // Offline: if we have a cached validation, check grace period
+        const profile = get().profile;
+        if (profile?.license_validated_at && profile.license_grace_until) {
+          const graceUntil = new Date(profile.license_grace_until).getTime();
+          if (Date.now() > graceUntil) {
+            // Grace expired — downgrade
+            const updated = { ...profile, license_tier: 'free', isLicensed: false };
+            await invoke('upsert_user_profile', { payload: updated });
+            set({ profile: updated, isLicensed: false });
+            console.warn('[license] Grace period expired, downgraded to free');
+          }
+        }
+      }
+    },
+
+    isTier: (tier: string) => {
+      const profile = get().profile;
+      return profile?.license_tier === tier;
+    },
+
+    getActiveTier: (): LicenseTier => {
+      const profile = get().profile;
+      if (!profile) return 'free';
+      return (profile.license_tier || (profile.license_key ? 'lifetime' : 'free')) as LicenseTier;
+    },
+
+    getFeatureFlags: async () => {
+      const { getFeatureFlags } = await import('../lib/constants');
+      return getFeatureFlags(get().getActiveTier());
+    },
+
     setPortalPort: (port) => set({ portalPort: port, portalFailed: false }),
     setPortalFailed: () => set({ portalFailed: true }),
     setArchetypeAppliedAt: (ts) => set({ archetypeAppliedAt: ts }),
+
+    openUpgradeModal: (triggerFeature?: string) => {
+      // This will be called from App.tsx which manages the modal state
+      // Store just provides the action for cross-component access if needed
+    },
 
     // ── Communications ──
     loadCommunications: async () => {

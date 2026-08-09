@@ -59,6 +59,23 @@ const defaultArchetype: ArchetypeConfig = {
   ],
   proposalTypes: ['flat', 'hourly'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 3,
+
+
+  contractPresets: [
+    {
+      name: 'General Service Agreement',
+      category: 'General',
+      body: '<h2>General Service Agreement</h2>\n<p>This Service Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Service Provider").</p>\n<h3>1. Services</h3>\n<p>Service Provider agrees to perform the following services: {scope}</p>\n<h3>2. Compensation</h3>\n<p>Client agrees to pay Service Provider $ {rate} per {rate_type}. Payment terms: Net {payment_terms} days from invoice date.</p>\n<h3>3. Term & Termination</h3>\n<p>This Agreement shall commence on {start_date} and continue until {end_date}, unless earlier terminated by either party with {notice_period} days written notice.</p>\n<h3>4. Independent Contractor</h3>\n<p>Service Provider is an independent contractor, not an employee of Client.</p>\n<h3>5. Governing Law</h3>\n<p>This Agreement shall be governed by the laws of {jurisdiction}.</p>',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{scope}', '{rate}', '{rate_type}', '{payment_terms}', '{start_date}', '{end_date}', '{notice_period}', '{jurisdiction}'],
+    },
+    {
+      name: 'Simple NDA',
+      category: 'Legal',
+      body: '<h2>Mutual Non-Disclosure Agreement</h2>\n<p>This Mutual Non-Disclosure Agreement ("Agreement") is entered into as of {date} by and between {client_name} and {freelancer_name} (collectively, the "Parties").</p>\n<h3>1. Purpose</h3>\n<p>The Parties wish to explore a potential business relationship regarding: {purpose}.</p>\n<h3>2. Confidential Information</h3>\n<p>"Confidential Information" means any information disclosed by one Party to the other, whether orally, in writing, or in any other form, that is designated as confidential or that reasonably should be understood to be confidential.</p>\n<h3>3. Obligations</h3>\n<p>Each Party agrees to: (a) hold Confidential Information in strict confidence; (b) not disclose Confidential Information to any third party; (c) use Confidential Information solely for the Purpose.</p>\n<h3>4. Exclusions</h3>\n<p>Confidential Information does not include information that: (a) is or becomes publicly known; (b) was independently developed; (c) was rightfully received from a third party.</p>\n<h3>5. Term</h3>\n<p>This Agreement shall remain in effect for {term_months} months from the date hereof.</p>',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{purpose}', '{term_months}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Summarize my freelance business health based on current metrics.',

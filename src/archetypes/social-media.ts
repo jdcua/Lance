@@ -65,6 +65,23 @@ const socialMedia: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'retainer', 'hourly'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 2,
+
+
+  contractPresets: [
+    {
+      name: 'Social Media Management Retainer',
+      category: 'Social Media',
+      body: '<h2>Social Media Management Retainer</h2>\n<p>This Social Media Management Retainer ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Social Media Manager").</p>\n<h3>1. Monthly Services</h3>\n<p>Manager will manage {platforms} platforms. Posts per week: {posts_per_week}. Includes: content creation, scheduling, community management, analytics reporting.</p>\n<h3>2. Monthly Retainer</h3>\n<p>Monthly fee: $ {monthly_retainer}. Includes up to {included_hours} hours. Overage at $ {overage_rate}/hr.</p>\n<h3>3. Ad Spend</h3>\n<p>Client funds ad accounts directly. Manager manages campaigns. Client responsible for all platform billing.</p>\n<h3>4. Reporting</h3>\n<p>Weekly performance summary. Monthly analytics report. Quarterly strategy review.</p>\n<h3>5. Term</h3>\n<p>Month-to-month. {notice_period} days notice to terminate. Final report within 5 business days.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{platforms}', '{posts_per_week}', '{monthly_retainer}', '{included_hours}', '{overage_rate}', '{notice_period}'],
+    },
+    {
+      name: 'Social Media Content Project',
+      category: 'Social Media',
+      body: '<h2>Social Media Content Project</h2>\n<p>This Social Media Content Project ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Content Creator").</p>\n<h3>1. Project Scope</h3>\n<p>Creator will produce {content_pieces} pieces of content. Platforms: {platforms}. Content types: {content_types} (reels, static, stories, carousel).</p>\n<h3>2. Timeline</h3>\n<p>Content calendar: {calendar_weeks} weeks. Shoot/production days: {shoot_days}. Editing: {editing_days} days. Delivery: {delivery_date}.</p>\n<h3>3. Fees</h3>\n<p>Total fee: $ {total_fee}. Payment: {deposit_percentage}% deposit, {midpoint_percentage}% at midpoint, balance on final delivery.</p>\n<h3>4. Revisions & Rights</h3>\n<p>Includes {included_revisions} revision rounds per piece. Client owns final content. Creator retains portfolio rights.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{content_pieces}', '{platforms}', '{content_types}', '{calendar_weeks}', '{shoot_days}', '{editing_days}', '{delivery_date}', '{total_fee}', '{deposit_percentage}', '{midpoint_percentage}', '{included_revisions}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my client load and flag accounts needing attention.',

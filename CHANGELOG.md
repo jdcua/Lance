@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.9.3] — 2026-08-07
+### Added
+- **Monetization layer** — Core free forever, Pro subscription ($14/mo, $120/yr), Lifetime license ($120 one-time)
+- **30-day free trial** — Full Pro access for 30 days; soft prompts days 30–37; soft free-tier lock at day 37 (created data never revoked)
+- **Cloudflare Worker license server** (`lance-license`) — D1 + KV, Paddle webhook, key generation, activation (3-device cap), validation endpoint, server-side analytics counters
+- **Paddle checkout integration** — Hosted checkout via tauri-plugin-opener (browser fallback); all CTAs repointed
+- **Offline grace + legacy HMAC fallback** — Cached tier with 2-day grace; existing one-time HMAC keys stay valid as lifetime tier
+- **Feature flag system** — Per-tier flags: `archetypeDepth`, `scopeCreepProtection`, `advancedInsights` (FREE = false, TRIAL/PRO/LIFETIME = true)
+- **Archetype "wedge"** — Archetype-aware proposal types/rates, contract presets, invoice defaults, scope-creep revision caps, mandatory archetype onboarding
+- **Version dynamization** — Single `__APP_VERSION__` injected from package.json via Vite; runtime `getRuntimeVersion()` for Tauri/browser parity; Splash, changelog, "What's new" all dynamic
+- **Landing copy flip** — Core free forever messaging; Pro depth; 3-tier pricing; footer Privacy/Terms links
+
+### Changed
+- Version → **0.9.3** (internal); landing fully dynamic from GitHub release tag
+- README License section → Core free / Pro depth / Lifetime model
+- SplashScreen & Settings copy → 30-day trial + subscription + lifetime language
+- PRIVACY.md → Updated: server-side counters only, zero client telemetry
+
+### Fixed
+- Repo hygiene: removed tracked strays (`index.ts.bak`, `st`, `lint.json`, `lint.txt`, `vite.config.ts.timestamp-*.mjs`); gitignored screenshots/AppImage
+- All hardcoded version strings removed (App.tsx, changelog.ts, SplashScreen.tsx, landing fallback spans)
+
 ## [1.2.6] — 2026-08-04
 ### Added
 - Contract PDF and DOCX export via the Contracts screen Export dropdown

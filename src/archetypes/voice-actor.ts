@@ -64,6 +64,23 @@ const voiceActor: ArchetypeConfig = {
 
   proposalTypes: ['per-session', 'flat', 'hourly'],
   defaultRateLabel: 'per session',
+  maxRevisions: 2,
+
+
+  contractPresets: [
+    {
+      name: 'Voiceover Services Agreement',
+      category: 'Voiceover',
+      body: '<h2>Voiceover Services Agreement</h2>\n<p>This Voiceover Services Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Voice Actor").</p>\n<h3>1. Services</h3>\n<p>Voice Actor will record: {project_description}. Word count: {word_count}. Style: {voice_style}. Duration: {duration_estimate}.</p>\n<h3>2. Session Details</h3>\n<p>Session type: {session_type} (directed/self-directed). Location: {session_location} (studio/remote). Duration: {session_duration}. Number of takes: {included_takes} included.</p>\n<h3>2. Compensation</h3>\n<p>Rate: $ {rate} per {rate_type}. Total: $ {total_fee}. {deposit_percentage}% deposit. Balance due on delivery.</p>\n<h3>3. Revisions</h3>\n<p>Includes {included_revisions} revision rounds. Additional revisions: $ {revision_rate}/round. Pickup sessions: $ {pickup_rate}/session.</p>\n<h3>4. Rights & Usage</h3>\n<p>Usage: {usage_rights}. Territory: {territory}. Term: {term_months} months. Exclusive: {exclusive}. Buyout available for $ {buyout_fee}.</p>\n<h3>5. Delivery</h3>\n<p>Formats: {file_formats}. Sample rate: {sample_rate}. Bit depth: {bit_depth}. Delivery: {delivery_method}. Raw takes retained by Voice Actor unless purchased.</p>',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{project_description}', '{word_count}', '{voice_style}', '{duration_estimate}', '{session_type}', '{session_location}', '{session_duration}', '{included_takes}', '{rate}', '{rate_type}', '{total_fee}', '{deposit_percentage}', '{included_revisions}', '{revision_rate}', '{pickup_rate}', '{usage_rights}', '{territory}', '{term_months}', '{exclusive}', '{buyout_fee}', '{file_formats}', '{sample_rate}', '{bit_depth}', '{delivery_method}'],
+    },
+    {
+      name: 'Voiceover Retainer',
+      category: 'Voiceover',
+      body: '<h2>Voiceover Retainer</h2>\n<p>This Voiceover Retainer ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Voice Actor").</p>\n<h3>1. Monthly Commitment</h3>\n<p>Voice Actor reserves {sessions_per_month} sessions/month. Priority scheduling for urgent bookings.</p>\n<h3>2. Monthly Retainer</h3>\n<p>Monthly fee: $ {monthly_retainer}. Includes up to {included_sessions} sessions. Overage: $ {overage_session_rate}/session.</p>\n<h3>2. Scope</h3>\n<p>Ongoing voiceover work: {content_types}. Commercial, narration, e-learning, IVR, characters.</p>\n<h3>3. Payment</h3>\n<p>Invoices 1st of month. Payment Net {payment_terms} days.</p>\n<h3>4. Term</h3>\n<p>Month-to-month. {notice_period} days notice to terminate.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{sessions_per_month}', '{monthly_retainer}', '{included_sessions}', '{overage_session_rate}', '{content_types}', '{payment_terms}', '{notice_period}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my audition-to-booking ratio and suggest where to focus.',

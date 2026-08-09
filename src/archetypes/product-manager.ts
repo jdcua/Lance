@@ -64,6 +64,23 @@ const productManager: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'hourly', 'retainer'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 3,
+
+
+  contractPresets: [
+    {
+      name: 'Product Management Retainer',
+      category: 'Product Management',
+      body: '<h2>Product Management Retainer</h2>\n<p>This Product Management Retainer ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Product Manager").</p>\n<h3>1. Monthly Commitment</h3>\n<p>Product Manager reserves {hours_per_month} hours/month for Client. Priority for roadmap strategy, feature prioritization, stakeholder management.</p>\n<h3>2. Monthly Retainer</h3>\n<p>Monthly fee: $ {monthly_retainer}. Includes up to {included_hours} hours. Overage at $ {overage_rate}/hr.</p>\n<h3>2. Scope</h3>\n<p>Roadmap planning, feature specs, sprint planning support, stakeholder communication, metrics tracking, release coordination.</p>\n<h3>3. Payment & Reporting</h3>\n<p>Invoices 1st of month. Payment Net {payment_terms} days. Monthly report: features shipped, metrics, roadmap updates.</p>\n<h3>4. Term</h3>\n<p>Month-to-month. {notice_period} days notice to terminate.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{hours_per_month}', '{monthly_retainer}', '{included_hours}', '{overage_rate}', '{payment_terms}', '{notice_period}'],
+    },
+    {
+      name: 'Product Discovery Engagement',
+      category: 'Product Management',
+      body: '<h2>Product Discovery Engagement</h2>\n<p>This Product Discovery Engagement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Product Manager").</p>\n<h3>1. Project Scope</h3>\n<p>Product Manager will deliver: user research synthesis, problem definition, solution concepts, prioritized roadmap, success metrics definition.</p>\n<h3>2. Timeline</h3>\n<p>Discovery: {discovery_weeks} weeks. User interviews: {interview_count}. Prototype testing: {test_sessions}. Total: {total_weeks} weeks.</p>\n<h3>3. Fees</h3>\n<p>Total fee: $ {total_fee}. Payment: {deposit_percentage}% deposit, {midpoint_percentage}% at midpoint, balance on delivery.</p>\n<h3>4. Deliverables</h3>\n<p>Research synthesis, problem statement, solution concepts with prototypes, prioritized feature backlog, success metrics framework, executive presentation.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{discovery_weeks}', '{interview_count}', '{test_sessions}', '{total_weeks}', '{total_fee}', '{deposit_percentage}', '{midpoint_percentage}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my product roadmap and flag initiatives at risk.',

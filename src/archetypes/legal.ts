@@ -64,6 +64,23 @@ const legal: ArchetypeConfig = {
 
   proposalTypes: ['hourly', 'retainer', 'flat'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 3,
+
+
+  contractPresets: [
+    {
+      name: 'Legal Services Engagement Letter',
+      category: 'Legal',
+      body: '<h2>Legal Services Engagement Letter</h2>\n<p>This Engagement Letter ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Attorney/Paralegal").</p>\n<h3>1. Scope of Representation</h3>\n<p>Attorney will provide legal services for: {matter_description}. Jurisdiction: {jurisdiction}. Court: {court_name}.</p>\n<h3>2. Fees & Billing</h3>\n<p>Rate: $ {rate} per {rate_type}. Retainer: $ {retainer_amount}. Billed monthly. Time billed in {billing_increments} increments. Expenses billed at cost + {expense_markup}%.</p>\n<h3>3. Retainer & Trust Account</h3>\n<p>Initial retainer: $ {initial_retainer} (held in trust). Replenish when balance falls below $ {replenish_threshold}. Unearned fees refunded on termination.</p>\n<h3>4. Client Responsibilities</h3>\n<p>Client provides all documents by {document_deadline}. Client appears at all required proceedings. Client keeps Attorney informed of contact changes.</p>\n<h3>5. Termination</h3>\n<p>Either party may terminate with written notice. Unearned retainer refunded. Client entitled to file copy. Attorney may withdraw per ethical rules.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{matter_description}', '{jurisdiction}', '{court_name}', '{rate}', '{rate_type}', '{retainer_amount}', '{billing_increments}', '{expense_markup}', '{initial_retainer}', '{replenish_threshold}', '{document_deadline}'],
+    },
+    {
+      name: 'Paralegal Services Agreement',
+      category: 'Legal',
+      body: '<h2>Paralegal Services Agreement</h2>\n<p>This Paralegal Services Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Attorney/Firm") and {freelancer_name} ("Paralegal").</p>\n<h3>1. Services</h3>\n<p>Paralegal will provide: {services_list}. Under supervision of: {supervising_attorney}. Practice areas: {practice_areas}.</p>\n<h3>2. Compensation</h3>\n<p>Rate: $ {rate} per {rate_type}. Monthly cap: $ {monthly_cap}. Invoices submitted by 5th of following month.</p>\n<h3>3. Confidentiality & Ethics</h3>\n<p>Paralegal maintains client confidentiality per applicable rules. No conflicts of interest. Secure document handling required.</p>\n<h3>4. Term</h3>\n<p>Month-to-month. {notice_period} days notice. Either party may terminate immediately for ethical violations.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{services_list}', '{supervising_attorney}', '{practice_areas}', '{rate}', '{rate_type}', '{monthly_cap}', '{notice_period}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my case load and flag approaching deadlines.',

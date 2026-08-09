@@ -23,6 +23,7 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 import ImportModal from './components/ui/ImportModal';
 import DropZoneOverlay from './components/ui/DropZoneOverlay';
 import UpdaterModal from './components/ui/UpdaterModal';
+import UpgradeModal from './components/ui/UpgradeModal';
 import { useStore } from './store';
 import { useToasts } from './store/toastStore';
 import { useAutoUpdater } from './hooks/useAutoUpdater';
@@ -38,6 +39,7 @@ import { checkAchievements } from './achievements/checker';
 import { ACHIEVEMENTS } from './achievements';
 import { seedSampleData } from './utils/seedData';
 import { parseDateString } from './utils/format';
+import { getRuntimeVersion } from './lib/version';
 
 export default function App() {
   const {
@@ -65,18 +67,31 @@ export default function App() {
   const autoGenProcessedRef = useRef<Set<string>>(new Set());
   const [showChangelog, setShowChangelog] = useState(false);
   const [showWalkthrough, setShowWalkthrough] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeTrigger, setUpgradeTrigger] = useState<string | null>(null);
+
+  const openUpgradeModal = (triggerFeature?: string) => {
+    setUpgradeTrigger(triggerFeature || null);
+    setShowUpgradeModal(true);
+  };
+
   const [showImportModal, setShowImportModal] = useState(false);
   const [importFiles, setImportFiles] = useState<File[] | undefined>(undefined);
   const [isDragOver, setIsDragOver] = useState(false);
   const dragCounter = useRef(0);
 
-  const APP_VERSION = '1.2.5';
+  const [appVersion, setAppVersion] = useState<string>('0.0.0');
   const { changelog } = useChangelog();
+
+  useEffect(() => {
+    getRuntimeVersion().then(setAppVersion);
+  }, []);
 
   // Changelog check on mount
   useEffect(() => {
+    if (!appVersion) return;
     const seen = localStorage.getItem('lance:changelog-seen');
-    if (seen !== APP_VERSION) {
+    if (seen !== appVersion) {
       // If onboarding hasn't been completed yet, defer changelog to next session
       const onboardingCompleted = localStorage.getItem('lance:onboarding-completed') === 'true';
       if (onboardingCompleted) {
@@ -88,7 +103,7 @@ export default function App() {
   }, []);
 
   const dismissChangelog = () => {
-    const latestVersion = changelog[0]?.version || APP_VERSION;
+    const latestVersion = changelog[0]?.version || appVersion;
     localStorage.setItem('lance:changelog-seen', latestVersion);
     setShowChangelog(false);
   };
@@ -749,7 +764,7 @@ export default function App() {
       )}
 
       {/* Changelog modal — hidden while onboarding is active to avoid z-index overlap */}
-      <Modal open={showChangelog && !showOnboarding} onClose={dismissChangelog} title={"What's new in Lance " + (changelog[0]?.version || APP_VERSION)} size="md">
+      <Modal open={showChangelog && !showOnboarding} onClose={dismissChangelog} title={"What's new in Lance " + (changelog[0]?.version || appVersion)} size="md">
         <div className="space-y-4">
           {changelog.length === 0 ? (
             <p className="text-sm text-[var(--text-tertiary)]">Loading changelog...</p>
@@ -1017,8 +1032,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
                 </button>
               ))}
             </div>
-            <div className="flex justify-between pt-1">
-              <Button variant="ghost" onClick={handleOnboardingNext} size="sm">Skip</Button>
+            <div className="flex justify-end pt-1">
               <Button onClick={handleOnboardingNext} size="sm">Continue &rarr;</Button>
             </div>
           </>

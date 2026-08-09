@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useStore } from '../store';
 import type { Invoice, LineItem, TimeEntry, RecurringInvoice as RecurringInvoiceType } from '../types';
 import Button from '../components/ui/Button';
@@ -17,6 +17,7 @@ import { useToasts } from '../store/toastStore';
 import { Plus, Pencil, Trash2, Download, Clock, RotateCw, Receipt, Search, Bell, X, Copy, DollarSign, ChevronDown, ChevronRight, Mail, AlertTriangle, Check } from 'lucide-react';
 import { generateFollowUpDraft, generateSubjectLine, openMailTo } from '../utils/followUpTemplates';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
+import { getArchetype } from '../archetypes';
 
 const currencies = ['CAD', 'USD', 'EUR', 'GBP', 'AUD'];
 
@@ -62,7 +63,7 @@ export default function Invoices() {
   });
   const [riItems, setRiItems] = useState<Omit<LineItem, 'id'>[]>([{ description: '', quantity: 1, unit_price: 0, total: 0 }]);
   const [form, setForm] = useState({
-    client_id: '', project_id: '', invoice_number: '', due_date: '', notes: '', tax_rate: '', status: 'draft' as Invoice['status'], currency: '',
+    client_id: '', project_id: '', invoice_number: '', due_date: '', notes: '', tax_rate: '', status: 'draft' as Invoice['status'], currency: '', rate_type: 'flat' as 'flat' | 'hourly',
   });
   const [items, setItems] = useState<Omit<LineItem, 'id'>[]>([{ description: '', quantity: 1, unit_price: 0, total: 0 }]);
   const [loading, setLoading] = useState(true);
@@ -86,6 +87,11 @@ export default function Invoices() {
   const [deletingPayment, setDeletingPayment] = useState(false);
   const [reminderInv, setReminderInv] = useState<Invoice | null>(null);
   const [reminderForm, setReminderForm] = useState({ to: '', subject: '', body: '', markFollowedUp: false });
+
+  // Archetype-aware invoice defaults
+  const archetype = useMemo(() => getArchetype(profile?.profession || ''), [profile?.profession]);
+  const depositPercentage = useMemo(() => archetype?.depositPercentage ?? 0, [archetype]);
+  const defaultPaymentTerms = useMemo(() => archetype?.paymentTerms ?? (profile?.payment_terms ?? 14), [archetype, profile?.payment_terms]);
 
   useEffect(() => {
     Promise.all([loadInvoices(), loadClients(), loadProfile(), loadProjects(), loadTimeEntries()])
@@ -113,12 +119,12 @@ export default function Invoices() {
   };
 
   const openNew = () => {
-    const paymentTerms = profile?.payment_terms ?? 14;
+    const paymentTerms = defaultPaymentTerms;
     const defaultTax = profile?.tax_rate ? String(profile.tax_rate) : '';
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + paymentTerms);
     setEditing(null);
-    setForm({ client_id: '', project_id: '', invoice_number: generateInvoiceNumber(invoices || []), due_date: dueDate.toISOString().split('T')[0], notes: '', tax_rate: defaultTax, status: 'draft', currency: '' });
+    setForm({ client_id: '', project_id: '', invoice_number: generateInvoiceNumber(invoices || []), due_date: dueDate.toISOString().split('T')[0], notes: '', tax_rate: profile?.tax_rate ? String(profile.tax_rate) : '', status: 'draft', currency: '', rate_type: 'flat' });
     setItems([{ description: '', quantity: 1, unit_price: 0, total: 0 }]);
     setSelectedTimeIds(new Set());
     setShowModal(true);
@@ -138,7 +144,7 @@ export default function Invoices() {
 
   const openEdit = (inv: Invoice) => {
     setEditing(inv);
-    setForm({ client_id: inv.client_id, project_id: inv.project_id || '', invoice_number: inv.invoice_number, due_date: inv.due_date || '', notes: inv.notes || '', tax_rate: inv.tax_rate?.toString() || '', status: inv.status, currency: inv.currency || '' });
+    setForm({ client_id: inv.client_id, project_id: inv.project_id || '', invoice_number: inv.invoice_number, due_date: inv.due_date || '', notes: inv.notes || '', tax_rate: inv.tax_rate?.toString() || '', status: inv.status, currency: inv.currency || '', rate_type: inv.rate_type ?? 'flat' });
     setItems(inv.line_items.map((li) => ({ description: li.description, quantity: li.quantity, unit_price: li.unit_price, total: li.total })));
     setShowModal(true);
   };
@@ -180,7 +186,9 @@ export default function Invoices() {
         return;
       }
       const lineItems: LineItem[] = items.map((i) => ({ ...i, id: crypto.randomUUID(), description: i.description ? sanitizeInput(i.description).slice(0, MAX_LENGTHS.description) : '' }));
-      const invoiceData = { client_id: form.client_id, invoice_number: form.invoice_number, status: form.status, line_items: lineItems, subtotal, tax_rate: taxRate || undefined, total, due_date: form.due_date || undefined, notes: form.notes ? sanitizeInput(form.notes).slice(0, MAX_LENGTHS.notes) : undefined, currency: form.currency || undefined };
+      const hourlyRateTypes = new Set(['hourly', 'per-shoot', 'per-session', 'per-track', 'per-word', 'per-look', 'per-event', 'per-commission', 'per-plan', 'per-closing', 'per-campaign', 'per-placement', 'per-project', 'milestone', 'retainer', 'commission-based', 'per-track', 'per-look', 'per-word']);
+      const storedRateType: 'flat' | 'hourly' = hourlyRateTypes.has(form.rate_type) ? 'hourly' : 'flat';
+      const invoiceData = { client_id: form.client_id, invoice_number: form.invoice_number, status: form.status, line_items: lineItems, subtotal, tax_rate: taxRate || undefined, total, due_date: form.due_date || undefined, notes: form.notes ? sanitizeInput(form.notes).slice(0, MAX_LENGTHS.notes) : undefined, currency: form.currency || undefined, rate_type: storedRateType };
       if (editing) await updateInvoice({ ...editing, ...invoiceData });
       else await addInvoice(invoiceData);
       const ids = Array.from(selectedTimeIds);

@@ -64,6 +64,23 @@ const embedded: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'hourly', 'project'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 2,
+
+
+  contractPresets: [
+    {
+      name: 'Embedded Engineering Agreement',
+      category: 'Embedded',
+      body: '<h2>Embedded Engineering Agreement</h2>\n<p>This Embedded Engineering Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Engineer").</p>\n<h3>1. Scope</h3>\n<p>Engineer will develop firmware/software for: {project_name}. Hardware: {hardware_platform}. MCU: {mcu}. RTOS: {rtos}.</p>\n<h3>2. Development Phases</h3>\n<p>Phase 1: Architecture & HAL ({arch_weeks} weeks). Phase 2: Driver & Middleware ({driver_weeks} weeks). Phase 3: Application Logic ({app_weeks} weeks). Phase 4: Integration & Test ({test_weeks} weeks).</p>\n<h3>2. Compensation</h3>\n<p>Rate: $ {rate} per {rate_type}. Estimated total: $ {estimated_total}. {deposit_percentage}% deposit. Milestone payments per phase.</p>\n<h3>3. Hardware & BOM</h3>\n<p>Client provides: {client_provided_hw}. Engineer specifies BOM: {bom_responsibility}. Component procurement: {procurement_responsibility}.</p>\n<h3>3. Testing & Delivery</h3>\n<p>Unit test coverage: {test_coverage}%. Hardware-in-loop testing: {hil_required}. Delivery: {delivery_format} (hex, bin, elf). Source code upon full payment.</p>\n<h3>4. Warranty</h3>\n<p>Warranty period: {warranty_months} months. Bug fixes included. Field failure analysis: $ {field_analysis_rate}/hr.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{project_name}', '{hardware_platform}', '{mcu}', '{rtos}', '{scope}', '{rate}', '{rate_type}', '{deposit_percentage}', '{estimated_total}', '{delivery_format}', '{warranty_months}'],
+    },
+    {
+      name: 'Hardware Design Agreement',
+      category: 'Hardware',
+      body: '<h2>Hardware Design Agreement</h2>\n<p>This Hardware Design Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Engineer").</p>\n<h3>1. Scope</h3>\n<p>Engineer will design: {board_description}. Layers: {layer_count}. Components: {component_count}. Target: {target_application}.</p>\n<h3>2. Deliverables</h3>\n<p>Schematics, PCB layout (Gerbers), BOM, assembly drawings, 3D models, DRC/ERC reports, assembly/test procedures.</p>\n<h3>3. Fees</h3>\n<p>Schematic: $ {schematic_fee}. Layout: $ {layout_fee}. BOM optimization: $ {bom_opt_fee}. Total: $ {total_fee}. {deposit_percentage}% deposit.</p>\n<h3>3. Revisions</h3>\n<p>Includes {included_revisions} layout revisions. Additional spins: $ {additional_spin_fee} each.</p>\n<h3>4. Fabrication</h3>\n<p>Fab house: {fab_house}. Lead time: {lead_time_days} days. Assembly: {assembly_required}. Stencil: {stencil_required}.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{board_description}', '{layer_count}', '{component_count}', '{target_application}', '{schematic_fee}', '{layout_fee}', '{bom_opt_fee}', '{total_fee}', '{deposit_percentage}', '{included_revisions}', '{additional_spin_fee}', '{fab_house}', '{lead_time_days}', '{assembly_required}', '{stencil_required}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my build pipeline and flag component availability risks.',

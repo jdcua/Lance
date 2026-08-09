@@ -1,5 +1,6 @@
 use hmac::{Hmac, Mac};
 use sha2::Sha256;
+use serde::{Deserialize, Serialize};
 
 type HmacSha256 = Hmac<Sha256>;
 
@@ -8,6 +9,41 @@ const LICENSE_PRIME: u64 = 999999937;
 #[tauri::command]
 pub fn validate_license(key: String) -> Result<bool, String> {
     validate_license_internal(&key).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn validate_license_online(key: String) -> Result<OnlineValidationResult, String> {
+    // Worker endpoint - will be configured via env var or config
+    let worker_url = option_env!("LANCE_LICENSE_WORKER_URL")
+        .or(Some("https://lance-license.your-subdomain.workers.dev"))
+        .unwrap_or("https://lance-license.your-subdomain.workers.dev");
+    
+    let url = format!("{}/validate?key={}", worker_url, key);
+    
+    let client = reqwest::Client::new();
+    let resp = client
+        .get(&url)
+        .timeout(std::time::Duration::from_secs(10))
+        .send()
+        .await
+        .map_err(|e| format!("Worker request failed: {}", e))?;
+    
+    if !resp.status().is_success() {
+        return Err(format!("Worker returned {}", resp.status()));
+    }
+    
+    let result = resp.json::<OnlineValidationResult>().await
+        .map_err(|e| format!("Failed to parse worker response: {}", e))?;
+    
+    Ok(result)
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct OnlineValidationResult {
+    pub valid: bool,
+    pub tier: String,
+    pub expires_at: Option<String>,
+    pub message: String,
 }
 
 fn validate_license_internal(key: &str) -> Result<bool, &'static str> {

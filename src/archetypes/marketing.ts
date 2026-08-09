@@ -64,6 +64,23 @@ const marketing: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'retainer', 'hourly'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 3,
+
+
+  contractPresets: [
+    {
+      name: 'Marketing Retainer Agreement',
+      category: 'Marketing',
+      body: '<h2>Marketing Retainer Agreement</h2>\n<p>This Marketing Retainer Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Marketer").</p>\n<h3>1. Monthly Services</h3>\n<p>Marketer will provide: {services_list}. Channels: {channels}. Includes: strategy, execution, reporting.</p>\n<h3>2. Monthly Retainer</h3>\n<p>Monthly fee: $ {monthly_retainer}. Includes up to {included_hours} hours. Overage at $ {overage_rate}/hr.</p>\n<h3>3. Ad Spend</h3>\n<p>Client funds ad accounts directly. Marketer manages campaigns. Client responsible for all platform billing.</p>\n<h3>4. Reporting</h3>\n<p>Weekly dashboard access. Monthly written report. Quarterly strategy review.</p>\n<h3>5. Term</h3>\n<p>Month-to-month. {notice_period} days notice to terminate. Final report within 5 business days.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{services_list}', '{channels}', '{monthly_retainer}', '{included_hours}', '{overage_rate}', '{notice_period}'],
+    },
+    {
+      name: 'Marketing Project Agreement',
+      category: 'Marketing',
+      body: '<h2>Marketing Project Agreement</h2>\n<p>This Marketing Project Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Marketer").</p>\n<h3>1. Project Scope</h3>\n<p>Marketer will deliver: {project_scope}. Campaign type: {campaign_type}. Platforms: {platforms}.</p>\n<h3>2. Timeline</h3>\n<p>Strategy: {strategy_weeks} weeks. Execution: {execution_weeks} weeks. Optimization: {optimization_weeks} weeks.</p>\n<h3>3. Fees</h3>\n<p>Total fee: $ {total_fee}. Payment: {deposit_percentage}% deposit, {milestone_percentage}% mid-project, balance on delivery.</p>\n<h3>4. Reporting</h3>\n<p>Weekly updates. Final report includes: KPIs, learnings, recommendations. Handoff call included.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{project_scope}', '{campaign_type}', '{platforms}', '{strategy_weeks}', '{execution_weeks}', '{optimization_weeks}', '{total_fee}', '{deposit_percentage}', '{milestone_percentage}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my campaign pipeline and flag overdue reports.',

@@ -65,6 +65,23 @@ const illustrator: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'per-piece', 'hourly'],
   defaultRateLabel: 'per commission',
+  maxRevisions: 2,
+
+
+  contractPresets: [
+    {
+      name: 'Illustration Commission Agreement',
+      category: 'Illustration',
+      body: '<h2>Illustration Commission Agreement</h2>\n<p>This Illustration Commission Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Illustrator").</p>\n<h3>1. Commission Details</h3>\n<p>Illustrator will create: {description}. Style: {style}. Complexity: {complexity_level}. Dimensions: {dimensions}. File formats: {file_formats}.</p>\n<h3>2. Process</h3>\n<p>Sketch phase: {sketch_days} days. Client approves sketch. Final render: {render_days} days. Includes {included_revisions} revision rounds. Additional: $ {additional_revision_rate}/round.</p>\n<h3>3. Compensation</h3>\n<p>Rate: $ {rate} per {rate_type}. Total: $ {total_fee}. {deposit_percentage}% deposit. Balance due on final delivery.</p>\n<h3>4. Rights & Licensing</h3>\n<p>Client receives: {usage_rights}. Illustrator retains copyright. Commercial license: {commercial_license_included}. Print rights: {print_rights}. Illustrator may use for portfolio with attribution.</p>\n<h3>5. Cancellation</h3>\n<p>Client cancels after sketch approval: 50% fee. After final render: full fee. Illustrator cancels: full refund.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{description}', '{style}', '{complexity_level}', '{dimensions}', '{file_formats}', '{sketch_days}', '{render_days}', '{included_revisions}', '{additional_revision_rate}', '{rate}', '{rate_type}', '{total_fee}', '{deposit_percentage}', '{usage_rights}', '{commercial_license_included}', '{print_rights}'],
+    },
+    {
+      name: 'Art Licensing Agreement',
+      category: 'Licensing',
+      body: '<h2>Art Licensing Agreement</h2>\n<p>This Art Licensing Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Licensee") and {freelancer_name} ("Licensor").</p>\n<h3>1. Licensed Work</h3>\n<p>Licensor grants license to use: {artwork_description}. Title: {artwork_title}. Style: {style}.</p>\n<h3>2. License Scope</h3>\n<p>Usage: {usage_scope}. Territory: {territory}. Term: {term_months} months. Exclusive: {exclusive}.</p>\n<h3>2. License Fee</h3>\n<p>Fee: $ {license_fee}. Payment: {payment_schedule}. Royalty: {royalty_percentage}% on revenue over $ {royalty_threshold}.</p>\n<h3>3. Restrictions</h3>\n<p>Licensee may not sublicense, modify, or create derivative works without written consent. Licensee must credit Licensor as: "{attribution}".</p>\n<h3>4. Termination</h3>\n<p>Licensee may terminate with {notice_period} days notice. Licensor may terminate for non-payment or breach.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{artwork_description}', '{artwork_title}', '{style}', '{usage_scope}', '{territory}', '{term_months}', '{exclusive}', '{license_fee}', '{payment_schedule}', '{royalty_percentage}', '{royalty_threshold}', '{attribution}', '{notice_period}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my commission queue and suggest which projects to prioritize.',

@@ -10,6 +10,7 @@ import { useToasts } from '../store/toastStore';
 import { save } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeFile } from '@tauri-apps/plugin-fs';
 import { open } from '@tauri-apps/plugin-dialog';
+import { openCheckout } from '../utils/tauri';
 import { Check, Upload, Download, AlertTriangle, Trash2, Lock, Sparkles, ExternalLink, Bell, Eye, ArrowRight, FileText, FolderOpen } from 'lucide-react';
 import { THEMES, applyTheme, getTheme } from '../themes/themes';
 import type { ThemeId } from '../themes';
@@ -675,15 +676,9 @@ export default function Settings() {
                         <Button variant="primary" onClick={() => { setLicenseKey(''); setLicenseError(''); setShowLicenseModal(true); }} size="sm">
                           Enter license key
                         </Button>
-                        <a
-                          href="https://lance.placeholderlabsincorporatedlimited.yabbadabbadoo/license"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-sm text-[var(--accent)] hover:underline"
-                        >
-                          Get a license &mdash; $59
-                          <ExternalLink size={12} />
-                        </a>
+                        <Button variant="secondary" onClick={() => openCheckout('monthly')} size="sm">
+                          Get a license &mdash; $14/mo
+                        </Button>
                       </div>
                     </div>
                   )}

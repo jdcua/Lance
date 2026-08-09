@@ -66,6 +66,23 @@ const writer: ArchetypeConfig = {
 
   proposalTypes: ['per-word', 'flat', 'hourly'],
   defaultRateLabel: 'per word',
+  maxRevisions: 3,
+
+
+  contractPresets: [
+    {
+      name: 'Freelance Writing Agreement',
+      category: 'Writing',
+      body: '<h2>Freelance Writing Agreement</h2>\n<p>This Freelance Writing Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Writer").</p>\n<h3>1. Assignment</h3>\n<p>Writer will produce the following content: {scope}. Word count: {word_count}. Topic: {topic}. Tone: {tone}.</p>\n<h3>2. Compensation</h3>\n<p>Rate: {rate} per {rate_type}. Total estimated fee: $ {estimated_total}. {deposit_percentage}% deposit due on signing. Balance due within {payment_terms} days of delivery.</p>\n<h3>3. Deadlines</h3>\n<p>First draft due: {first_draft_date}. Revisions due: {revision_due_date}. Final delivery: {final_due_date}. Writer will notify Client of any delays promptly.</p>\n<h3>4. Revisions</h3>\n<p>Includes {included_revisions} rounds of revisions. Additional revisions billed at $ {additional_revision_rate} per round.</p>\n<h3>5. Rights & Ownership</h3>\n<p>Upon full payment, Client receives all rights to the Work. Writer retains moral rights and may use Work for portfolio/marketing with attribution.</p>\n<h3>6. Kill Fee</h3>\n<p>If Client cancels after work has begun, Client pays {kill_fee_percentage}% of total fee for work completed to date.</p>\n<h3>7. Confidentiality</h3>\n<p>Writer agrees to keep Client information confidential during and after the engagement.</p>',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{scope}', '{word_count}', '{topic}', '{tone}', '{rate}', '{rate_type}', '{estimated_total}', '{deposit_percentage}', '{payment_terms}', '{first_draft_date}', '{revision_due_date}', '{final_due_date}', '{included_revisions}', '{additional_revision_rate}', '{kill_fee_percentage}'],
+    },
+    {
+      name: 'Content Retainer Agreement',
+      category: 'Writing',
+      body: '<h2>Content Retainer Agreement</h2>\n<p>This Content Retainer Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Writer").</p>\n<h3>1. Monthly Deliverables</h3>\n<p>Writer will produce {pieces_per_month} pieces of content per month. Total words per month: {words_per_month}. Topics: {content_topics}.</p>\n<h3>2. Retainer Fee</h3>\n<p>Monthly retainer: $ {monthly_retainer}. Includes up to {included_words} words. Additional words at $ {additional_word_rate} per word.</p>\n<h3>3. Workflow</h3>\n<p>Topics due by {topic_due_date} of each month. First drafts delivered by {draft_due_date}. {included_revisions} revision rounds included.</p>\n<h3>4. Payment Terms</h3>\n<p>Invoices sent on the 1st. Payment due Net {payment_terms} days.</p>\n<h3>5. Term & Termination</h3>\n<p>Month-to-month. Either party may terminate with {notice_period} days written notice. Unused portion of retainer forfeited on termination.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{pieces_per_month}', '{words_per_month}', '{content_topics}', '{monthly_retainer}', '{included_words}', '{additional_word_rate}', '{included_revisions}', '{payment_terms}', '{notice_period}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my writing pipeline and flag approaching deadlines.',

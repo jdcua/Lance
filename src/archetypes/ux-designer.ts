@@ -65,6 +65,23 @@ const uxDesigner: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'hourly', 'project'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 3,
+
+
+  contractPresets: [
+    {
+      name: 'UX/UI Design Agreement',
+      category: 'UX/UI Design',
+      body: '<h2>UX/UI Design Agreement</h2>\n<p>This UX/UI Design Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Designer").</p>\n<h3>1. Scope</h3>\n<p>Designer will design: {scope}. Deliverables: {deliverables_list} (user flows, wireframes, high-fidelity mockups, prototype, design system, handoff specs).</p>\n<h3>2. Process & Phases</h3>\n<p>Phase 1: Research & Discovery ({research_weeks} weeks). Phase 2: Wireframes & IA ({wireframe_weeks} weeks). Phase 3: Visual Design & Prototyping ({design_weeks} weeks). Phase 4: Handoff ({handoff_weeks} weeks).</p>\n<h3>2. Compensation</h3>\n<p>Total fee: $ {total_fee}. Payment: {deposit_percentage}% deposit, {milestone_percentage}% per phase, balance on handoff.</p>\n<h3>3. Revisions</h3>\n<p>Includes {included_revisions} revision rounds per phase. Additional revisions: $ {revision_rate}/round.</p>\n<h3>4. Handoff & Assets</h3>\n<p>Files delivered in {design_tool} (Figma/Sketch/Adobe XD). Includes: component library, tokens, annotations, prototype links. Source files retained by Designer unless purchased separately.</p>\n<h3>5. Rights</h3>\n<p>Client owns final designs upon full payment. Designer retains right to use for portfolio with attribution.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{scope}', '{deliverables_list}', '{research_weeks}', '{wireframe_weeks}', '{design_weeks}', '{handoff_weeks}', '{total_fee}', '{deposit_percentage}', '{milestone_percentage}', '{included_revisions}', '{revision_rate}', '{design_tool}'],
+    },
+    {
+      name: 'UX Retainer Agreement',
+      category: 'UX/UI Design',
+      body: '<h2>UX Retainer Agreement</h2>\n<p>This UX Retainer Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Designer").</p>\n<h3>1. Monthly Commitment</h3>\n<p>Designer reserves {hours_per_month} hours/month. Priority for sprint work, design system maintenance, ad-hoc research.</p>\n<h3>2. Monthly Retainer</h3>\n<p>Monthly fee: $ {monthly_retainer}. Includes up to {included_hours} hours. Overage at $ {overage_rate}/hr.</p>\n<h3>2. Scope</h3>\n<p>Ongoing: feature design, design system updates, usability testing, design QA, handoff support.</p>\n<h3>3. Workflow</h3>\n<p>Sprint planning: {planning_day}. Design reviews: {review_day}. Handoff: {handoff_day}. Async feedback within {async_feedback_days} days.</p>\n<h3>4. Payment Terms</h3>\n<p>Invoices 1st of month. Payment Net {payment_terms} days.</p>\n<h3>5. Term</h3>\n<p>Month-to-month. {notice_period} days notice to terminate.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{hours_per_month}', '{monthly_retainer}', '{included_hours}', '{overage_rate}', '{planning_day}', '{review_day}', '{handoff_day}', '{async_feedback_days}', '{payment_terms}', '{notice_period}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my design process and suggest where I spend too much time.',

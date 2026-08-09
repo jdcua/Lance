@@ -150,29 +150,34 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            seeded INTEGER NOT NULL DEFAULT 0
          );
 
-         CREATE TABLE IF NOT EXISTS user_profile (
-           id INTEGER PRIMARY KEY DEFAULT 1,
-           name TEXT CHECK(length(name) <= 100),
-           email TEXT CHECK(length(email) <= 254),
-           hourly_rate REAL,
-           currency TEXT DEFAULT 'CAD',
-           writing_voice TEXT CHECK(length(writing_voice) <= 1000),
-           tax_rate REAL DEFAULT 0,
-           payment_terms INTEGER DEFAULT 14,
-           tagline TEXT CHECK(length(tagline) <= 200),
-           always_include TEXT CHECK(length(always_include) <= 2000),
-           writing_style TEXT DEFAULT 'professional',
-           theme TEXT DEFAULT 'light',
-           license_key TEXT,
-           licensed_at TEXT,
-           ai_enabled INTEGER DEFAULT 0,
-           profession TEXT,
-           custom_archetype_config TEXT,
-           density TEXT DEFAULT 'comfortable',
-           accent_color TEXT,
-           proposal_expiry_days INTEGER,
-           income_target REAL
-         );
+CREATE TABLE IF NOT EXISTS user_profile (
+            id INTEGER PRIMARY KEY DEFAULT 1,
+            name TEXT CHECK(length(name) <= 100),
+            email TEXT CHECK(length(email) <= 254),
+            hourly_rate REAL,
+            currency TEXT DEFAULT 'CAD',
+            writing_voice TEXT CHECK(length(writing_voice) <= 1000),
+            tax_rate REAL DEFAULT 0,
+            payment_terms INTEGER DEFAULT 14,
+            tagline TEXT CHECK(length(tagline) <= 200),
+            always_include TEXT CHECK(length(always_include) <= 2000),
+            writing_style TEXT DEFAULT 'professional',
+            theme TEXT DEFAULT 'light',
+            license_key TEXT,
+            licensed_at TEXT,
+            ai_enabled INTEGER DEFAULT 0,
+            profession TEXT,
+            custom_archetype_config TEXT,
+            density TEXT DEFAULT 'comfortable',
+            accent_color TEXT,
+            proposal_expiry_days INTEGER,
+            income_target REAL,
+            license_tier TEXT,
+            license_expires_at TEXT,
+            license_validated_at TEXT,
+            license_grace_until TEXT,
+            trial_started_at TEXT
+          );
 
          CREATE TABLE IF NOT EXISTS communications (
            id TEXT PRIMARY KEY,
@@ -510,6 +515,26 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
         conn.execute("ALTER TABLE clients ADD COLUMN preferred_currency TEXT DEFAULT NULL", []);
     let _ = conn.execute(
         "ALTER TABLE user_profile ADD COLUMN proposal_expiry_days INTEGER",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE user_profile ADD COLUMN license_tier TEXT",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE user_profile ADD COLUMN license_expires_at TEXT",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE user_profile ADD COLUMN license_validated_at TEXT",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE user_profile ADD COLUMN license_grace_until TEXT",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE user_profile ADD COLUMN trial_started_at TEXT",
         [],
     );
     let _ = conn.execute(

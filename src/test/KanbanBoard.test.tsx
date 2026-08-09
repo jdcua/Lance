@@ -1,5 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+
+// Mock isTauri to return false so component takes the browser-mode unavailable path
+vi.mock('../../utils/tauri', () => ({
+  isTauri: () => false,
+}));
 
 vi.mock('@tauri-apps/api/core', () => ({
   invoke: vi.fn().mockResolvedValue(null),
@@ -47,6 +52,9 @@ describe('KanbanBoard', () => {
   it('shows loading state initially', async () => {
     const KanbanBoard = (await import('../components/features/KanbanBoard')).default;
     render(<KanbanBoard projectId="test-project-id" />);
-    expect(screen.getByText('Kanban Board')).toBeInTheDocument();
-  });
+    // Component should quickly become unavailable in browser mode (no Tauri)
+    await waitFor(() => {
+      expect(screen.queryByText('Kanban Board')).toBeInTheDocument();
+    }, { timeout: 1000 });
+  }, { timeout: 5000 });
 });

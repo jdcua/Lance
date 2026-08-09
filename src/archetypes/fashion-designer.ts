@@ -64,6 +64,23 @@ const fashionDesigner: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'per-look', 'hourly'],
   defaultRateLabel: 'per look',
+  maxRevisions: 2,
+
+
+  contractPresets: [
+    {
+      name: 'Fashion Design Agreement',
+      category: 'Fashion',
+      body: '<h2>Fashion Design Agreement</h2>\n<p>This Fashion Design Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Designer").</p>\n<h3>1. Collection Scope</h3>\n<p>Designer will create a collection of {number_of_looks} looks. Category: {category}. Season: {season}. Target market: {target_market}.</p>\n<h3>2. Design Process</h3>\n<p>Phase 1: Mood Board & Sketches ({moodboard_days} days). Phase 2: Pattern Development ({pattern_days} days). Phase 3: Sample Production ({sample_days} days). Phase 4: Final Production ({production_days} days).</p>\n<h3>2. Compensation</h3>\n<p>Rate: $ {rate} per {rate_type}. Total estimated: $ {estimated_total}. {deposit_percentage}% deposit. Milestones: {milestone_schedule}.</p>\n<h3>3. Materials & Sourcing</h3>\n<p>Designer sources fabrics/trims. Client approves swatches. Fabric budget: $ {fabric_budget}. Client reimburses material costs.</p>\n<h3>3. Fittings & Revisions</h3>\n<p>Includes {included_fittings} fittings per look. Additional fittings: $ {additional_fitting_fee} each. Revisions: {included_revisions} rounds included.</p>\n<h3>4. IP & Usage</h3>\n<p>Client owns final patterns and samples. Designer retains rights to use images for portfolio. Designer retains proprietary patterns unless purchased separately.</p>',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{number_of_looks}', '{category}', '{season}', '{target_market}', '{rate}', '{rate_type}', '{deposit_percentage}', '{estimated_total}', '{moodboard_days}', '{pattern_days}', '{sample_days}', '{production_days}', '{included_fittings}', '{additional_fitting_fee}', '{included_revisions}'],
+    },
+    {
+      name: 'Styling Services Agreement',
+      category: 'Styling',
+      body: '<h2>Personal Styling Agreement</h2>\n<p>This Styling Services Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Stylist").</p>\n<h3>1. Services</h3>\n<p>Stylist provides: {services_list}. Includes: wardrobe audit, personal shopping, outfit planning, event styling.</p>\n<h3>2. Sessions</h3>\n<p>Initial consultation: {initial_consultation_hours} hours. Follow-up sessions: {session_count} sessions of {session_duration} hours each.</p>\n<h3>2. Fees</h3>\n<p>Styling fee: $ {styling_fee}. Shopping budget: $ {shopping_budget} (Client reimburses). Stylist commission: {commission_percentage}% on purchases.</p>\n<h3>3. Payment</h3>\n<p>{deposit_percentage}% deposit. Balance due Net {payment_terms} days after final session.</p>',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{services_list}', '{initial_consultation_hours}', '{session_count}', '{session_duration}', '{styling_fee}', '{shopping_budget}', '{commission_percentage}', '{deposit_percentage}', '{payment_terms}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my collection pipeline and suggest where to focus.',

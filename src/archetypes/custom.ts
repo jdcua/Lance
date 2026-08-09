@@ -56,6 +56,17 @@ const custom: ArchetypeConfig = {
   archetypeFeatures: [],
   proposalTypes: ['flat', 'hourly', 'project'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 3,
+
+
+  contractPresets: [
+    {
+      name: 'General Service Agreement',
+      category: 'General',
+      body: '<h2>General Service Agreement</h2>\n<p>This Service Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Service Provider").</p>\n<h3>1. Services</h3>\n<p>Service Provider agrees to perform the following services: {scope}</p>\n<h3>2. Compensation</h3>\n<p>Client agrees to pay Service Provider $ {rate} per {rate_type}. Payment terms: Net {payment_terms} days from invoice date.</p>\n<h3>3. Term & Termination</h3>\n<p>This Agreement shall commence on {start_date} and continue until {end_date}, unless earlier terminated by either party with {notice_period} days written notice.</p>\n<h3>4. Independent Contractor</h3>\n<p>Service Provider is an independent contractor, not an employee of Client.</p>\n<h3>5. Governing Law</h3>\n<p>This Agreement shall be governed by the laws of {jurisdiction}.</p>',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{scope}', '{rate}', '{rate_type}', '{payment_terms}', '{start_date}', '{end_date}', '{notice_period}', '{jurisdiction}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Summarize my freelance business health.',

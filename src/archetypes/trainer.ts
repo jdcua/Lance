@@ -64,6 +64,23 @@ const trainer: ArchetypeConfig = {
 
   proposalTypes: ['per-session', 'per-program', 'retainer'],
   defaultRateLabel: 'per session',
+  maxRevisions: 2,
+
+
+  contractPresets: [
+    {
+      name: 'Personal Training Agreement',
+      category: 'Fitness',
+      body: '<h2>Personal Training Agreement</h2>\n<p>This Personal Training Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Trainer").</p>\n<h3>1. Services</h3>\n<p>Trainer will provide: {services_list}. Sessions per week: {sessions_per_week}. Duration: {session_duration} minutes. Location: {location}.</p>\n<h3>2. Fees</h3>\n<p>Rate: $ {rate} per {rate_type}. Package: {sessions_per_package} sessions for $ {package_price}. {deposit_percentage}% deposit due on signing.</p>\n<h3>3. Client Responsibilities</h3>\n<p>Client completes: health history, PAR-Q, physician clearance if needed. Client wears appropriate attire. Client notifies Trainer of injuries/conditions.</p>\n<h3>4. Cancellation</h3>\n<p>Client cancels: {cancellation_notice} hours notice required. Late cancel: session forfeited. Trainer cancels: session rescheduled or refunded.</p>\n<h3>5. Liability Waiver</h3>\n<p>Client assumes all risk. Client releases Trainer from liability for injuries. Client confirms physician clearance obtained if required.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{services_list}', '{sessions_per_week}', '{session_duration}', '{location}', '{rate}', '{rate_type}', '{sessions_per_package}', '{package_price}', '{deposit_percentage}', '{cancellation_notice}'],
+    },
+    {
+      name: 'Fitness Program Package',
+      category: 'Fitness',
+      body: '<h2>Fitness Program Package</h2>\n<p>This Fitness Program Package ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Trainer").</p>\n<h3>1. Program Deliverables</h3>\n<p>Trainer delivers: {number_of_programs} custom training programs. Each includes: periodized plan, exercise library access, video demos, progress tracking template.</p>\n<h3>2. Support</h3>\n<p>Includes: {check_ins_per_week} check-ins per week. Form review: {form_reviews_per_week} per week. Program adjustments: {adjustments_included} included.</p>\n<h3>2. Fees</h3>\n<p>Program price: $ {program_price}. {deposit_percentage}% deposit. Balance due on program delivery.</p>\n<h3>3. Revisions</h3>\n<p>Includes {included_revisions} revision rounds per program. Additional revisions: $ {revision_rate} each.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{number_of_programs}', '{check_ins_per_week}', '{form_reviews_per_week}', '{adjustments_included}', '{program_price}', '{deposit_percentage}', '{included_revisions}', '{revision_rate}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my client retention and suggest engagement strategies.',

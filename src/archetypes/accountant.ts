@@ -64,6 +64,23 @@ const accountant: ArchetypeConfig = {
 
   proposalTypes: ['hourly', 'flat', 'retainer'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 2,
+
+
+  contractPresets: [
+    {
+      name: 'Bookkeeping Engagement Letter',
+      category: 'Accounting',
+      body: '<h2>Bookkeeping Engagement Letter</h2>\n<p>This Engagement Letter ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Accountant").</p>\n<h3>1. Scope of Services</h3>\n<p>Accountant will provide the following bookkeeping services: {scope}. Services include: {services_included}.</p>\n<h3>2. Compensation</h3>\n<p>Rate: $ {rate} per {rate_type}. Monthly retainer: $ {monthly_retainer} for {hours_included} hours/month. Overage at $ {overage_rate}/hr.</p>\n<h3>3. Payment Terms</h3>\n<p>Invoices sent monthly on the 1st. Payment due Net {payment_terms} days.</p>\n<h3>4. Responsibilities</h3>\n<p>Client will provide all bank statements, receipts, and documents by {client_doc_deadline} each month. Accountant will deliver reconciled books by {delivery_deadline}.</p>\n<h3>5. Term & Termination</h3>\n<p>Month-to-month. Either party may terminate with {notice_period} days written notice. Final deliverables provided upon full payment.</p>',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{scope}', '{services_included}', '{rate}', '{rate_type}', '{monthly_retainer}', '{hours_included}', '{overage_rate}', '{payment_terms}', '{client_doc_deadline}', '{delivery_deadline}', '{notice_period}'],
+    },
+    {
+      name: 'Tax Preparation Engagement',
+      category: 'Tax',
+      body: '<h2>Tax Preparation Engagement Letter</h2>\n<p>This Tax Preparation Engagement Letter ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Tax Preparer").</p>\n<h3>1. Services</h3>\n<p>Tax Preparer will prepare the following returns: {returns_list}. Includes: {services_included}.</p>\n<h3>2. Fees</h3>\n<p>Estimated fee: $ {estimated_fee}. Final fee based on complexity. {deposit_percentage}% deposit due on signing.</p>\n<h3>3. Client Responsibilities</h3>\n<p>Client will provide all tax documents by {doc_deadline}. Client is responsible for accuracy of information provided.</p>\n<h3>3. Filing & Deadlines</h3>\n<p>Returns filed by {filing_deadline}. Extensions filed if documents not received on time.</p>',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{returns_list}', '{services_included}', '{estimated_fee}', '{deposit_percentage}', '{doc_deadline}', '{filing_deadline}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my client engagements and flag approaching tax deadlines.',

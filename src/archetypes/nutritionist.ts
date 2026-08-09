@@ -64,6 +64,23 @@ const nutritionist: ArchetypeConfig = {
 
   proposalTypes: ['per-session', 'per-plan', 'retainer'],
   defaultRateLabel: 'per consultation',
+  maxRevisions: 2,
+
+
+  contractPresets: [
+    {
+      name: 'Nutrition Counseling Agreement',
+      category: 'Nutrition',
+      body: '<h2>Nutrition Counseling Agreement</h2>\n<p>This Nutrition Counseling Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Nutritionist").</p>\n<h3>1. Services</h3>\n<p>Nutritionist will provide: {services_list}. Includes: initial assessment, personalized meal plan, {follow_up_sessions} follow-up sessions, email support.</p>\n<h3>2. Fees</h3>\n<p>Rate: $ {rate} per {rate_type}. Package: $ {package_price}. {deposit_percentage}% deposit due on signing.</p>\n<h3>3. Client Responsibilities</h3>\n<p>Client provides: health history, food logs, lab results, medications. Client commits to {commitment_period} program duration.</p>\n<h3>4. Confidentiality</h3>\n<p>All health information kept confidential per HIPAA. Records retained for {record_retention_years} years.</p>\n<h3>5. Cancellation</h3>\n<p>Client cancels: {cancellation_notice} days notice. Unused sessions: {refund_policy}.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{services_list}', '{follow_up_sessions}', '{rate}', '{rate_type}', '{package_price}', '{deposit_percentage}', '{commitment_period}', '{record_retention_years}', '{cancellation_notice}', '{refund_policy}'],
+    },
+    {
+      name: 'Meal Plan Package Agreement',
+      category: 'Nutrition',
+      body: '<h2>Meal Plan Package Agreement</h2>\n<p>This Meal Plan Package Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Nutritionist").</p>\n<h3>1. Package Deliverables</h3>\n<p>Nutritionist delivers: {number_of_plans} custom meal plans. Includes: recipes, grocery lists, prep guides, macro breakdowns.</p>\n<h3>2. Process</h3>\n<p>Initial assessment: {assessment_date}. Plan delivery: {delivery_schedule}. {revision_rounds} revision rounds included.</p>\n<h3>2. Fees</h3>\n<p>Package price: $ {package_price}. {deposit_percentage}% deposit. Balance due on final plan delivery.</p>\n<h3>3. Revisions</h3>\n<p>Includes {included_revisions} revision rounds per plan. Additional revisions: $ {revision_rate} each.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{number_of_plans}', '{delivery_schedule}', '{revision_rounds}', '{package_price}', '{deposit_percentage}', '{included_revisions}', '{revision_rate}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my practice and flag clients needing follow-up.',

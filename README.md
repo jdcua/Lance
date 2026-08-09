@@ -48,11 +48,16 @@ Built by [Placeholder Labs Incorporated Limited](https://placeholderlabsincorpor
 
 ## License
 
-Lance costs **$59** one time. No subscription, no recurring fees, no cloud dependency. You own your copy forever.
+Lance core is **free forever** — no time limit, no client caps, no subscription, no cloud. Your data stays on your machine.
 
-Free to use without a license. A license removes the launch screen and unlocks all themes instantly.
+**Lance Pro** ($14/mo or $120/yr) unlocks archetype depth:
+- Archetype-specific proposals, contracts, invoices
+- Scope-creep protection (revision caps)
+- Advanced insights panels
 
-[Buy a license](https://placeholderlabsincorporatedlimited.yabbadabbadoo/lance)
+**Lance Lifetime** ($120 one-time) — everything in Pro, forever, no subscription.
+
+[Buy Pro / Lifetime](https://checkout.paddle.com/products/<REPLACE_WITH_ONETIME_PRICE_ID>)
 
 ## Built with
 

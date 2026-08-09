@@ -63,6 +63,22 @@ const gameDeveloper: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'hourly', 'milestone'],
   defaultRateLabel: 'per hour',
+  maxRevisions: 3,
+
+  contractPresets: [
+    {
+      name: 'Game Development Agreement',
+      category: 'Game Development',
+      body: '<h2>Game Development Agreement</h2>\n<p>This Game Development Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Developer").</p>\n<h3>1. Scope</h3>\n<p>Developer will build: {game_concept}. Engine: {engine}. Target platforms: {target_platforms}. Genre: {genre}. Key features: {key_features}.</p>\n<h3>2. Milestones</h3>\n<p>Vertical Slice ({vertical_slice_weeks} weeks). Alpha ({alpha_weeks} weeks). Beta ({beta_weeks} weeks). Gold Master ({gold_weeks} weeks). Launch: {launch_date}.</p>\n<h3>2. Compensation</h3>\n<p>Total fee: $ {total_fee}. Payment: {deposit_percentage}% deposit, {milestone_percentage}% per milestone, balance on launch.</p>\n<h3>3. QA & Testing</h3>\n<p>Developer performs internal QA. External QA: {external_qa_required}. Bug severity SLAs: Critical {critical_sla}h, Major {major_sla}h, Minor {minor_sla}h.</p>\n<h3>3. IP & Revenue</h3>\n<p>Upon full payment, Client owns game and source code. Developer retains engine, tools, and reusable systems. Revenue share: {revenue_share}% to Developer (if applicable).</p>\n<h3>4. Post-Launch Support</h3>\n<p>Support period: {support_months} months. Patches included. DLC/Expansions: separate agreement.</p>',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{game_concept}', '{engine}', '{target_platforms}', '{genre}', '{key_features}', '{vertical_slice_weeks}', '{alpha_weeks}', '{beta_weeks}', '{gold_weeks}', '{launch_date}', '{total_fee}', '{deposit_percentage}', '{milestone_percentage}', '{external_qa_required}', '{critical_sla}', '{major_sla}', '{minor_sla}', '{revenue_share}', '{support_months}'],
+    },
+    {
+      name: 'Game Development Retainer',
+      category: 'Game Development',
+      body: '<h2>Game Development Retainer</h2>\n<p>This Game Development Retainer ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Developer").</p>\n<h3>1. Monthly Commitment</h3>\n<p>Developer reserves {hours_per_month} hours/month. Priority for live-ops, hotfixes, live-ops content.</p>\n<h3>2. Monthly Retainer</h3>\n<p>Monthly fee: $ {monthly_retainer}. Includes up to {included_hours} hours. Overage at $ {overage_rate}/hr.</p>\n<h3>2. Scope</h3>\n<p>Live-ops content, balance patches, seasonal events, platform updates, performance optimization.</p>\n<h3>3. Payment & Reporting</h3>\n<p>Invoices 1st of month. Payment Net {payment_terms} days. Monthly report: hours used, patches deployed, metrics.</p>\n<h3>4. Term</h3>\n<p>Month-to-month. {notice_period} days notice to terminate.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{hours_per_month}', '{monthly_retainer}', '{included_hours}', '{overage_rate}', '{payment_terms}', '{notice_period}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my development velocity and flag scope creep.',

@@ -65,6 +65,23 @@ const advertiser: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'retainer', 'per-campaign'],
   defaultRateLabel: 'per campaign',
+  maxRevisions: 3,
+
+
+  contractPresets: [
+    {
+      name: 'Media Buying Agreement',
+      category: 'Advertising',
+      body: '<h2>Media Buying Agreement</h2>\n<p>This Media Buying Agreement ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Media Buyer").</p>\n<h3>1. Services</h3>\n<p>Media Buyer will manage ad campaigns on the following platforms: {platforms}. Scope: {scope}. Monthly ad budget: $ {monthly_budget}.</p>\n<h3>2. Management Fee</h3>\n<p>Management fee: {management_fee}% of ad spend or $ {monthly_fee}/month (whichever is greater). Minimum monthly fee: $ {minimum_fee}.</p>\n<h3>3. Ad Spend & Payments</h3>\n<p>Client funds ad accounts directly. Media Buyer does not hold ad funds. Client responsible for all platform billing.</p>\n<h3>4. Reporting</h3>\n<p>Weekly performance reports. Monthly strategy review. Access to real-time dashboards provided.</p>\n<h3>5. Performance Guarantees</h3>\n<p>Media Buyer will use best efforts. No specific ROAS guarantees. Underperforming creatives will be rotated within {creative_rotation_days} days.</p>\n<h3>6. Term & Termination</h3>\n<p>Month-to-month. Either party may terminate with {notice_period} days notice. Final report provided within 5 business days.</p>',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{platforms}', '{scope}', '{monthly_budget}', '{management_fee}', '{monthly_fee}', '{minimum_fee}', '{notice_period}'],
+    },
+    {
+      name: 'Campaign Management Retainer',
+      category: 'Advertising',
+      body: '<h2>Campaign Management Retainer</h2>\n<p>This Campaign Management Retainer ("Agreement") is entered into as of {date} by and between {client_name} ("Client") and {freelancer_name} ("Media Buyer").</p>\n<h3>1. Monthly Management</h3>\n<p>Media Buyer will manage up to {max_campaigns} active campaigns per month. Platforms: {platforms}. Creative reviews: {creative_reviews_per_month} per month.</p>\n<h3>2. Monthly Retainer</h3>\n<p>Monthly fee: $ {monthly_retainer}. Includes up to {included_hours} hours of management. Overage at $ {overage_rate}/hr.</p>\n<h3>3. Creative Production</h3>\n<p>New creatives: {creatives_per_month} per month. Revisions: {revisions_included} rounds. Additional revisions: $ {additional_revision_rate} each.</p>\n<h3>4. Reporting & Meetings</h3>\n<p>Weekly written reports. Bi-weekly 30-min strategy call. Quarterly business review.</p>\n<h3>5. Term</h3>\n<p>Month-to-month. {notice_period} days notice to terminate. Unused hours do not roll over.',
+      variables: ['{client_name}', '{freelancer_name}', '{date}', '{max_campaigns}', '{platforms}', '{creative_reviews_per_month}', '{monthly_retainer}', '{included_hours}', '{overage_rate}', '{creatives_per_month}', '{revisions_included}', '{additional_revision_rate}', '{notice_period}'],
+    },
+  ],
 
   aiPrompts: {
     dashboard: 'Analyze my campaign performance and flag underperforming platforms.',
