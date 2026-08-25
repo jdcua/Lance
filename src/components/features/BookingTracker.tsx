@@ -1,5 +1,5 @@
 /**
- * Booking Tracker — Voice Actor feature.
+ * Booking Tracker -- Voice Actor feature.
  * Track bookings with revenue summary at top.
  */
 import { useState, useEffect } from 'react';

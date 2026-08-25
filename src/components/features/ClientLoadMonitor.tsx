@@ -1,5 +1,5 @@
 /**
- * Client Load Monitor — Dashboard widget.
+ * Client Load Monitor -- Dashboard widget.
  * Shows all retainer clients as horizontal bars: hours_used / monthly_hours.
  * Color: green (< 80%), amber (80-100%), red (> 100%).
  */

@@ -1,5 +1,5 @@
 /**
- * Meal Plan Builder — Nutritionist feature.
+ * Meal Plan Builder -- Nutritionist feature.
  * Meal plan creation with expandable detail view.
  */
 import { useState, useEffect } from 'react';

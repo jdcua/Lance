@@ -1,5 +1,5 @@
 /**
- * Run of Show Builder — ordered event timeline with up/down reorder.
+ * Run of Show Builder -- ordered event timeline with up/down reorder.
  */
 import { useState, useEffect } from 'react';
 import { getDb } from '../../db';
@@ -148,7 +148,7 @@ export default function RunOfShowBuilder({ projectId }: { projectId: string }) {
           {items.map((item, i) => (
             <div key={item.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
               <div className="flex-1 min-w-0 flex items-center gap-2">
-                <span className="text-[10px] text-[var(--text-tertiary)] font-medium w-8 text-right">{item.time_slot || '—'}</span>
+                <span className="text-[10px] text-[var(--text-tertiary)] font-medium w-8 text-right">{item.time_slot || '--'}</span>
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-[var(--text-primary)]">{item.activity}</div>
                   <div className="flex items-center gap-2 text-[10px] text-[var(--text-tertiary)]">

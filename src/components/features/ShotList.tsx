@@ -1,5 +1,5 @@
 /**
- * Shot List — Filmmaker feature.
+ * Shot List -- Filmmaker feature.
  * Tracks project shots with status, scene, inline editing, and reordering.
  */
 import { useState, useEffect } from 'react';
@@ -186,7 +186,7 @@ export default function ShotList({ projectId }: { projectId: string }) {
               {editingId === shot.id ? (
                 <div className="flex-1 min-w-0 flex items-center gap-2">
                   <GripVertical size={12} className="text-[var(--text-tertiary)] flex-shrink-0" />
-                  <span className="text-[var(--text-tertiary)] flex-shrink-0 w-8">{shot.scene || '—'}</span>
+                  <span className="text-[var(--text-tertiary)] flex-shrink-0 w-8">{shot.scene || '--'}</span>
                   <input
                     type="text"
                     value={editValues.description || ''}
@@ -208,8 +208,8 @@ export default function ShotList({ projectId }: { projectId: string }) {
                 <>
                   <div className="flex-1 min-w-0 flex items-center gap-2">
                     <GripVertical size={12} className="text-[var(--text-tertiary)] flex-shrink-0" />
-                    <span className="text-[var(--text-tertiary)] flex-shrink-0 w-8">{shot.scene || '—'}</span>
-                    <span className="text-[var(--text-primary)] truncate" onClick={() => startEdit(shot)} title="Click to edit">{shot.description || '—'}</span>
+                    <span className="text-[var(--text-tertiary)] flex-shrink-0 w-8">{shot.scene || '--'}</span>
+                    <span className="text-[var(--text-primary)] truncate" onClick={() => startEdit(shot)} title="Click to edit">{shot.description || '--'}</span>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0 ${STATUS_COLORS[shot.status] || ''}`} onClick={() => startEdit(shot)} title="Click to edit">{shot.status}</span>
                   </div>
                   <div className="flex items-center gap-0.5 ml-2 flex-shrink-0">

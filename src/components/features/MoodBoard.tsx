@@ -1,5 +1,5 @@
 /**
- * Mood Board — Designer feature.
+ * Mood Board -- Designer feature.
  * Visual grid of references: assets from library and external URLs.
  */
 import { useState, useEffect } from 'react';
@@ -238,7 +238,7 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
                 {/* Info bar */}
                 <div className="p-1.5">
                   <p className="text-[10px] font-medium text-[var(--text-primary)] truncate">
-                    {asset ? asset.filename : item.url ? new URL(item.url).hostname : '—'}
+                    {asset ? asset.filename : item.url ? new URL(item.url).hostname : '--'}
                   </p>
                   {/* Notes on hover */}
                   {item.notes && (

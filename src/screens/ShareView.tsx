@@ -6,7 +6,7 @@ import { formatCurrency, formatDate } from '../utils/format';
 import type { Client, Contract, Proposal, ShareToken, UserProfile } from '../types';
 
 // ─────────────────────────────────────────────────────────────
-// ShareView — public, client-facing portal used by browser-mode
+// ShareView -- public, client-facing portal used by browser-mode
 // share links (/share/:token). Mirrors the packaged app's axum
 // share server (src-tauri/src/server.rs serve_portal) so links
 // work identically in dev.

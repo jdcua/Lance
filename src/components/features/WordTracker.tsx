@@ -1,5 +1,5 @@
 /**
- * Word Tracker — Writer feature.
+ * Word Tracker -- Writer feature.
  * Tracks word count per time entry. Can be standalone or bound to a specific time entry.
  */
 import { useState, useEffect } from 'react';

@@ -72,7 +72,7 @@ export function getIntensityColor(hours: number): string {
 
 export function formatTooltip(cell: HeatmapCell): string {
   const d = cell.date;
-  return `${DAY_NAMES_FULL[d.getDay()]} ${MONTHS_SHORT[d.getMonth()]} ${d.getDate()} — ${cell.hours.toFixed(1)}h logged (${cell.billableHours.toFixed(1)}h billable)`;
+  return `${DAY_NAMES_FULL[d.getDay()]} ${MONTHS_SHORT[d.getMonth()]} ${d.getDate()} -- ${cell.hours.toFixed(1)}h logged (${cell.billableHours.toFixed(1)}h billable)`;
 }
 
 function getFirstSunday(year: number): Date {

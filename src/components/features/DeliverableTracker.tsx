@@ -1,5 +1,5 @@
 /**
- * Deliverable Tracker — SEO Specialist feature.
+ * Deliverable Tracker -- SEO Specialist feature.
  * Tracks SEO deliverables grouped by period with completion bars.
  */
 import { useState, useEffect } from 'react';

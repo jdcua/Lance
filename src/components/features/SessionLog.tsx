@@ -1,5 +1,5 @@
 /**
- * Session Log — Tutor / Wellness / Trainer / Consultant feature.
+ * Session Log -- Tutor / Wellness / Trainer / Consultant feature.
  * Logs client sessions with type, duration, notes, action items, next session date.
  */
 import { useState, useEffect } from 'react';
@@ -83,7 +83,7 @@ export default function SessionLog({ clientId, projectId }: { clientId?: string;
                 <div className="flex-1 min-w-0 space-y-0.5">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-[var(--text-primary)]">{s.session_type || 'Session'}</span>
-                    {!clientId && client && <span className="text-[var(--text-tertiary)]">— {client.name}</span>}
+                    {!clientId && client && <span className="text-[var(--text-tertiary)]">-- {client.name}</span>}
                   </div>
                   <div className="flex items-center gap-3 text-[10px] text-[var(--text-tertiary)]">
                     {s.duration_minutes != null && <span><Clock size={10} className="inline mr-0.5" />{s.duration_minutes}m</span>}

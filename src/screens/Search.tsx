@@ -40,7 +40,7 @@ type SearchResult = {
 };
 
 export default function SearchScreen() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -139,7 +139,7 @@ export default function SearchScreen() {
         return {
           id: t.id,
           label: t.description || 'No description',
-          sublabel: `${project?.title || 'Unknown'} — ${formatDateShort(t.start_time)} · ${t.duration_minutes ? formatDuration(t.duration_minutes) : 'In progress'}`,
+          sublabel: `${project?.title || 'Unknown'} -- ${formatDateShort(t.start_time)} · ${t.duration_minutes ? formatDuration(t.duration_minutes) : 'In progress'}`,
           type: 'time_entry',
           path: '/time',
         };
@@ -150,7 +150,7 @@ export default function SearchScreen() {
       .map((e) => ({
         id: e.id,
         label: e.description,
-        sublabel: `${e.category} · ${formatCurrency(e.amount)} — ${formatDateShort(e.date)}`,
+        sublabel: `${e.category} · ${formatCurrency(e.amount)} -- ${formatDateShort(e.date)}`,
         type: 'expense',
         path: '/finance',
       }));
@@ -195,6 +195,31 @@ export default function SearchScreen() {
 
   return (
     <div className="p-6">
+      <div className="mb-6">
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+          <input
+            autoFocus
+            type="text"
+            value={query}
+            onChange={(e) => setSearchParams({ q: e.target.value }, { replace: true })}
+            placeholder="Search clients, proposals, projects, invoices, contracts, time, expenses, assets…"
+            aria-label="Search"
+            className="w-full pl-10 pr-4 py-3 text-sm bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[10px] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+          />
+        </div>
+      </div>
+
+      {!query.trim() ? (
+        <div className="text-center py-16 flex flex-col items-center">
+          <Search size={40} className="text-[var(--text-tertiary)] mb-4" />
+          <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">Start typing to search</h3>
+          <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs">
+            Results across clients, proposals, projects, invoices, contracts, time entries, expenses, and assets will appear here.
+          </p>
+        </div>
+      ) : (
+        <>
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-1">
           Search results for "<span className="text-[var(--accent)]">{query}</span>"
@@ -242,6 +267,8 @@ export default function SearchScreen() {
             );
           })}
         </div>
+      )}
+        </>
       )}
     </div>
   );

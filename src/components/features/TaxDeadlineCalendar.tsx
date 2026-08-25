@@ -1,5 +1,5 @@
 /**
- * Tax Deadline Calendar — Accountant feature.
+ * Tax Deadline Calendar -- Accountant feature.
  * List of tax deadlines sorted by due_date ascending. Overdue items in red.
  */
 import { useState, useEffect } from 'react';
@@ -165,13 +165,13 @@ export default function TaxDeadlineCalendar({ clientId }: { clientId: string }) 
                     {d.filed ? <Check size={14} /> : <Circle size={14} />}
                   </button>
                   <span className={`font-medium truncate ${isOverdue ? 'text-[#DC2626]' : d.filed ? 'line-through text-[var(--text-tertiary)]' : 'text-[var(--text-primary)]'}`}>
-                    {d.title || '—'}
+                    {d.title || '--'}
                   </span>
                   {d.tax_type && (
                     <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)] flex-shrink-0">{d.tax_type}</span>
                   )}
                   <span className="text-[var(--text-tertiary)] flex-shrink-0 ml-auto">${(d.amount || 0).toFixed(2)}</span>
-                  <span className={`text-[10px] flex-shrink-0 ${isOverdue ? 'text-[#DC2626] font-medium' : 'text-[var(--text-tertiary)]'}`}>{d.due_date || '—'}</span>
+                  <span className={`text-[10px] flex-shrink-0 ${isOverdue ? 'text-[#DC2626] font-medium' : 'text-[var(--text-tertiary)]'}`}>{d.due_date || '--'}</span>
                 </div>
                 <button onClick={() => handleDelete(d.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                   <Trash2 size={12} />

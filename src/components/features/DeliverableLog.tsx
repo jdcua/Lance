@@ -1,5 +1,5 @@
 /**
- * Deliverable Log — Animator feature.
+ * Deliverable Log -- Animator feature.
  * Tracks project deliverables with format, resolution, approval status.
  */
 import { useState, useEffect } from 'react';
@@ -119,7 +119,7 @@ export default function DeliverableLog({ projectId }: { projectId: string }) {
             <div key={d.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
               <div className="flex-1 min-w-0 flex items-center gap-2">
                 <Film size={10} className="text-[var(--text-tertiary)]" />
-                <span className="font-medium text-[var(--text-primary)]">{d.file_name || '—'}</span>
+                <span className="font-medium text-[var(--text-primary)]">{d.file_name || '--'}</span>
                 {d.format && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)]">{d.format}</span>}
                 {d.client_approved && <Check size={12} className="text-[var(--accent)] flex-shrink-0" />}
               </div>

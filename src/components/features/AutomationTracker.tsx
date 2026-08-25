@@ -1,5 +1,5 @@
 /**
- * Automation Tracker — DevOps feature.
+ * Automation Tracker -- DevOps feature.
  * Manage automations with type, frequency, and active/inactive toggle.
  */
 import { useState, useEffect } from 'react';
@@ -102,7 +102,7 @@ export default function AutomationTracker({ projectId }: { projectId: string }) 
   const selectClass = "w-full px-2 py-1 text-[11px] border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]";
 
   const formatDate = (dateStr?: string) => {
-    if (!dateStr) return '—';
+    if (!dateStr) return '--';
     const d = new Date(dateStr);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };

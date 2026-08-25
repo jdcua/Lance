@@ -1,5 +1,5 @@
 /**
- * Fitting Log — Fashion Designer feature.
+ * Fitting Log -- Fashion Designer feature.
  * Track garment fittings with fit model, date, adjustments, and status.
  */
 import { useState, useEffect } from 'react';

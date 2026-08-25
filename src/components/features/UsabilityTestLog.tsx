@@ -1,5 +1,5 @@
 /**
- * Usability Test Log — UX Designer feature.
+ * Usability Test Log -- UX Designer feature.
  * Table with usability test sessions, severity badges, participants, and issues.
  */
 import { useState, useEffect } from 'react';
@@ -95,7 +95,7 @@ export default function UsabilityTestLog({ projectId }: { projectId: string }) {
   const criticalCount = tests.filter(t => t.severity === 'critical').length;
 
   const formatDate = (dateStr: string) => {
-    if (!dateStr) return '—';
+    if (!dateStr) return '--';
     const d = new Date(dateStr);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
@@ -194,8 +194,8 @@ export default function UsabilityTestLog({ projectId }: { projectId: string }) {
                 <tr key={t.id} className="border-b border-[var(--border-color)]/50 hover:bg-[var(--bg-hover)]">
                   <td className="py-1.5 px-2 text-[var(--text-primary)]">{formatDate(t.date)}</td>
                   <td className="py-1.5 px-2 text-[var(--text-primary)]">{t.participants || 0}</td>
-                  <td className="py-1.5 px-2 text-[var(--text-secondary)] max-w-[200px] truncate">{t.tasks_tested || '—'}</td>
-                  <td className="py-1.5 px-2 text-[var(--text-secondary)] max-w-[200px] truncate">{t.issues_found || '—'}</td>
+                  <td className="py-1.5 px-2 text-[var(--text-secondary)] max-w-[200px] truncate">{t.tasks_tested || '--'}</td>
+                  <td className="py-1.5 px-2 text-[var(--text-secondary)] max-w-[200px] truncate">{t.issues_found || '--'}</td>
                   <td className="py-1.5 px-2">
                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${severityBadgeClasses[t.severity] || severityBadgeClasses.medium}`}>
                       {t.severity}

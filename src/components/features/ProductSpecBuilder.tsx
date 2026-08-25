@@ -1,5 +1,5 @@
 /**
- * Product Spec Builder — Product Manager feature.
+ * Product Spec Builder -- Product Manager feature.
  * Product spec creation with problem, solution, success metrics.
  */
 import { useState, useEffect } from 'react';

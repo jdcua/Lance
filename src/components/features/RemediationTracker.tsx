@@ -1,5 +1,5 @@
 /**
- * Remediation Tracker — Cybersecurity feature.
+ * Remediation Tracker -- Cybersecurity feature.
  * Track remediation actions with due dates, assignment, and completion toggle.
  */
 import { useState, useEffect } from 'react';

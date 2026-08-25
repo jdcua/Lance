@@ -52,7 +52,7 @@ export default function QuickTimeLogModal({ open, onClose }: QuickTimeLogModalPr
         duration_minutes: minutes,
       });
       const project = projects.find((p) => p.id === projectId);
-      addToast(`Logged ${minutes}m — ${project?.title || 'Unknown'}`, 'success');
+      addToast(`Logged ${minutes}m -- ${project?.title || 'Unknown'}`, 'success');
       localStorage.setItem('lance:last-timer-config', JSON.stringify({ projectId, clientId }));
       checkAndNotify(useStore.getState(), addToast);
       onClose();

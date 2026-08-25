@@ -1,5 +1,5 @@
 /**
- * Build Log — Developer / Game Developer / DevOps feature.
+ * Build Log -- Developer / Game Developer / DevOps feature.
  * Tracks software builds with version, platform, notes.
  */
 import { useState, useEffect } from 'react';
@@ -59,7 +59,7 @@ export default function BuildLog({ projectId }: { projectId: string }) {
           {list.map((b) => (
             <div key={b.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
               <div className="flex-1 min-w-0">
-                <span className="font-medium text-[var(--text-primary)]"><Box size={10} className="inline mr-1" />{b.version || '—'}</span>
+                <span className="font-medium text-[var(--text-primary)]"><Box size={10} className="inline mr-1" />{b.version || '--'}</span>
                 <span className="text-[var(--text-tertiary)] ml-2">
                   {b.platform && <><Monitor size={10} className="inline mr-0.5" />{b.platform}</>}
                 </span>

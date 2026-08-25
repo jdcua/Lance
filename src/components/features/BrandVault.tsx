@@ -1,5 +1,5 @@
 /**
- * Brand Vault — Global brand asset library.
+ * Brand Vault -- Global brand asset library.
  * Filters attachments by tags containing 'brand-asset', grouped by subcategory.
  */
 import { useState, useEffect } from 'react';

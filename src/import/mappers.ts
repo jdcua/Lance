@@ -1,5 +1,5 @@
 /**
- * Entity mappers — transform parsed import data into Lance entity shapes.
+ * Entity mappers -- transform parsed import data into Lance entity shapes.
  */
 
 import type { ImportDetection } from '../types';

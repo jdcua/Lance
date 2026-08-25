@@ -11,7 +11,7 @@ export async function checkAndNotify(
     for (const key of newAchievements) {
       const ach = ACHIEVEMENTS.find((a) => a.key === key);
       if (ach) {
-        addToast(`${ach.title} — ${ach.reward}`, 'unlock');
+        addToast(`${ach.title} -- ${ach.reward}`, 'unlock');
       }
     }
   } catch {
@@ -28,7 +28,7 @@ export async function tryUnlock(
     if (!ach) return;
     const wasNew = await unlockAchievement(key);
     if (wasNew) {
-      addToast(`${ach.title} — ${ach.reward}`, 'unlock');
+      addToast(`${ach.title} -- ${ach.reward}`, 'unlock');
     }
   } catch {
     // Achievement check is non-critical

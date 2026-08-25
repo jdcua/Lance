@@ -95,7 +95,7 @@ export default function CullingTracker({ projectId }: { projectId: string }) {
           <select value={form.shoot_id} onChange={(e) => setForm({ ...form, shoot_id: e.target.value })} className={inputClass}>
             <option value="">Select shoot...</option>
             {projectShoots.map((s) => (
-              <option key={s.id} value={s.id}>{s.shoot_date?.split('T')[0] || s.id} — {s.location || ''}</option>
+              <option key={s.id} value={s.id}>{s.shoot_date?.split('T')[0] || s.id} -- {s.location || ''}</option>
             ))}
           </select>
           <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className={inputClass} />
@@ -119,7 +119,7 @@ export default function CullingTracker({ projectId }: { projectId: string }) {
           {sessions.map((s) => (
             <div key={s.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
               <div className="flex-1 min-w-0">
-                <span className="font-medium text-[var(--text-primary)]">{s.date?.split('T')[0] || '—'}</span>
+                <span className="font-medium text-[var(--text-primary)]">{s.date?.split('T')[0] || '--'}</span>
                 <span className="text-[var(--text-tertiary)] ml-2">
                   {s.shoot_hours != null && <><Clock size={10} className="inline mr-0.5" />{s.shoot_hours}h shoot </>}
                   {s.culling_hours != null && <><Scissors size={10} className="inline mr-0.5 ml-1" />{s.culling_hours}h cull </>}

@@ -1,5 +1,5 @@
 /**
- * Render Log — Animator / 3D Artist feature.
+ * Render Log -- Animator / 3D Artist feature.
  * Lists render passes for a project with duration, software, frame range.
  */
 import { useState, useEffect } from 'react';

@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import type { TimeEntry } from '../types';
 import Button from '../components/ui/Button';
@@ -65,6 +66,7 @@ const TabBar = ({ tab, setTab, showHeatmap }: { tab: string; setTab: (t: 'timer'
   );
 
 export default function TimeScreen() {
+  const navigate = useNavigate();
   const { timeEntries, loadTimeEntries, addTimeEntry, updateTimeEntry, removeTimeEntry, projects, loadProjects, clients, loadClients } = useStore();
   const addToast = useToasts((s) => s.add);
   const [activeTimer, setActiveTimer] = useState<{ entry: TimeEntry; elapsed: number } | null>(null);
@@ -408,7 +410,18 @@ export default function TimeScreen() {
             <Card className="text-center py-16 flex flex-col items-center">
               <Clock size={40} className="text-[var(--text-tertiary)] mb-4" />
               <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No time entries yet</h3>
-              <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Start a timer or add entries manually.</p>
+              {projects.length === 0 ? (
+                <>
+                  <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">
+                    Time tracking runs on projects. Create your first project to start logging hours.
+                  </p>
+                  <Button onClick={() => navigate('/projects')} variant="secondary" size="sm">
+                    <Plus size={14} /> Your first project
+                  </Button>
+                </>
+              ) : (
+                <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Start a timer or add entries manually.</p>
+              )}
             </Card>
           ) : (
             <div className="space-y-2">
@@ -417,7 +430,7 @@ export default function TimeScreen() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-xs font-medium text-[var(--text-primary)]">{getProjectName(entry.project_id)}</span>
-                      <span className="text-[10px] text-[var(--text-tertiary)]">—</span>
+                      <span className="text-[10px] text-[var(--text-tertiary)]">--</span>
                       <span className="text-xs text-[var(--text-secondary)] truncate">{entry.description || 'No description'}</span>
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-[var(--text-tertiary)]">
@@ -451,7 +464,7 @@ export default function TimeScreen() {
       ) : (
         /* ── Heatmap tab ── */
         <>
-          {/* SECTION 2 — Streak Stats + SECTION 5 — Project Filter */}
+          {/* SECTION 2 -- Streak Stats + SECTION 5 -- Project Filter */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <button
@@ -499,19 +512,19 @@ export default function TimeScreen() {
             />
             <MetricCard
               label="Best Day"
-              value={streakStats.bestDayHours > 0 ? `${streakStats.bestDayHours.toFixed(1)}h` : '—'}
+              value={streakStats.bestDayHours > 0 ? `${streakStats.bestDayHours.toFixed(1)}h` : '--'}
               subtext={streakStats.bestDayHours > 0 ? parseLocalDateKey(streakStats.bestDayDate).toLocaleDateString() : undefined}
               color={streakStats.bestDayHours > 0 ? 'purple' : 'gray'}
             />
             <MetricCard
               label="Top Month"
-              value={streakStats.mostActiveMonth || '—'}
+              value={streakStats.mostActiveMonth || '--'}
               subtext={streakStats.mostActiveMonth ? `${Math.round(streakStats.mostActiveMonthHours)}h` : undefined}
               color={streakStats.mostActiveMonth ? 'blue' : 'gray'}
             />
           </div>
 
-          {/* SECTION 1 — Annual Heatmap */}
+          {/* SECTION 1 -- Annual Heatmap */}
           <Card className="mb-6">
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Activity Heatmap</h3>
             <p className="text-xs text-[var(--text-tertiary)] mb-4">{streakStats.totalDays} day{streakStats.totalDays !== 1 ? 's' : ''} with logged time</p>
@@ -608,7 +621,7 @@ export default function TimeScreen() {
                           <div key={entry.id} className="text-[11px] text-[var(--text-secondary)] flex items-center justify-between">
                             <span className="truncate mr-2">{getProjectName(entry.project_id)}</span>
                             <span className="text-[var(--text-primary)] font-medium flex-shrink-0">
-                              {entry.duration_minutes ? formatDuration(entry.duration_minutes) : '—'}
+                              {entry.duration_minutes ? formatDuration(entry.duration_minutes) : '--'}
                             </span>
                           </div>
                         ))}
@@ -638,7 +651,7 @@ export default function TimeScreen() {
             </div>
           </Card>
 
-          {/* SECTION 3 — Day of Week Breakdown */}
+          {/* SECTION 3 -- Day of Week Breakdown */}
           <Card className="mb-6">
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Day of Week</h3>
             <p className="text-xs text-[var(--text-tertiary)] mb-4">Average hours per day of the week</p>
@@ -646,7 +659,7 @@ export default function TimeScreen() {
               {dowBreakdown.map((bar) => (
                 <div key={bar.dayIndex} className="flex-1 flex flex-col items-center gap-1">
                   <span className="text-[9px] text-[var(--text-primary)] font-medium">
-                    {bar.avgHours > 0 ? `${bar.avgHours.toFixed(1)}h` : '—'}
+                    {bar.avgHours > 0 ? `${bar.avgHours.toFixed(1)}h` : '--'}
                   </span>
                   <div className="w-full flex-1 flex flex-col justify-end">
                     <div
@@ -664,7 +677,7 @@ export default function TimeScreen() {
             </div>
           </Card>
 
-          {/* SECTION 4 — Hour of Day Heatmap */}
+          {/* SECTION 4 -- Hour of Day Heatmap */}
           <Card>
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Hour of Day</h3>
             <p className="text-xs text-[var(--text-tertiary)] mb-4">When you clock in across the week</p>
@@ -702,7 +715,7 @@ export default function TimeScreen() {
                           <div
                             key={hourIdx}
                             className="rounded-sm"
-                            title={`${DAY_NAMES[cell.dayOfWeek]} ${formatHourLabel(cell.hour)} — ${cell.count} entr${cell.count !== 1 ? 'ies' : 'y'}`}
+                            title={`${DAY_NAMES[cell.dayOfWeek]} ${formatHourLabel(cell.hour)} -- ${cell.count} entr${cell.count !== 1 ? 'ies' : 'y'}`}
                             style={{
                               width: '18px',
                               height: '14px',

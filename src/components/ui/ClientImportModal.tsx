@@ -416,7 +416,7 @@ export default function ClientImportModal({
           ))}
         </div>
 
-        {/* Step 1 — Upload */}
+        {/* Step 1 -- Upload */}
         {step === 1 && (
           <div className="space-y-4">
             <div
@@ -476,7 +476,7 @@ export default function ClientImportModal({
           </div>
         )}
 
-        {/* Step 2 — Parsing */}
+        {/* Step 2 -- Parsing */}
         {step === 2 && (
           <div className="space-y-4 text-center py-6">
             <Loader2 size={36} className="animate-spin mx-auto mb-4 text-[var(--accent)]" />
@@ -489,7 +489,7 @@ export default function ClientImportModal({
           </div>
         )}
 
-        {/* Step 3 — Column Mapping */}
+        {/* Step 3 -- Column Mapping */}
         {step === 3 && (
           <div className="space-y-4">
             <div>
@@ -562,7 +562,7 @@ export default function ClientImportModal({
                       }}
                       className="flex-1 px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     >
-                      <option value="">— Skip —</option>
+                      <option value="">-- Skip --</option>
                       {Object.keys(CLIENT_FIELDS).map((field) => (
                         <option key={field} value={field}>
                           {field === MANDATORY_FIELD ? `${field} *` : field}
@@ -589,7 +589,7 @@ export default function ClientImportModal({
           </div>
         )}
 
-        {/* Step 4 — Import progress (overlay during import, or step indicator during review) */}
+        {/* Step 4 -- Import progress (overlay during import, or step indicator during review) */}
         {step === 4 && importing && (
           <div className="space-y-4 text-center py-6">
             <Loader2 size={36} className="animate-spin mx-auto mb-4 text-[var(--accent)]" />
@@ -610,7 +610,7 @@ export default function ClientImportModal({
           </div>
         )}
 
-        {/* Step 4 — Review & Deduplication (before importing) */}
+        {/* Step 4 -- Review & Deduplication (before importing) */}
         {step === 4 && !importing && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -737,7 +737,7 @@ export default function ClientImportModal({
           </div>
         )}
 
-        {/* Step 5 — Summary */}
+        {/* Step 5 -- Summary */}
         {step === 5 && (
           <div className="space-y-4 text-center py-6">
             <div className="w-14 h-14 rounded-full bg-[var(--accent-bg)] flex items-center justify-center mx-auto mb-3">

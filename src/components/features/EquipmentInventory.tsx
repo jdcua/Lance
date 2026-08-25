@@ -1,5 +1,5 @@
 /**
- * Equipment Inventory — Voice Actor feature.
+ * Equipment Inventory -- Voice Actor feature.
  * Track equipment with total value at top.
  */
 import { useState, useEffect } from 'react';

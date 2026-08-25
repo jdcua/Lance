@@ -1,5 +1,5 @@
 /**
- * Handoff Checklist — UX Designer feature.
+ * Handoff Checklist -- UX Designer feature.
  * Checklist with auto-populated defaults, progress bar, and toggleable completion.
  */
 import { useState, useEffect } from 'react';

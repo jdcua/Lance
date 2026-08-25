@@ -1,5 +1,5 @@
 /**
- * Rate Benchmarking — Writer feature.
+ * Rate Benchmarking -- Writer feature.
  * Computes per-word rate trends from time_entry_words + time_entries + invoices.
  */
 import { useState, useEffect } from 'react';
@@ -206,19 +206,19 @@ export default function RateBenchmarking() {
                 3-Month Avg
               </div>
               <div className="text-sm font-bold text-[var(--text-primary)] tabular-nums mt-0.5">
-                {stats.threeMonthAvg != null ? formatRate(stats.threeMonthAvg) : '—'}
+                {stats.threeMonthAvg != null ? formatRate(stats.threeMonthAvg) : '--'}
               </div>
             </div>
             <div className="px-3 py-2 bg-[#16A34A]/10 rounded-[6px]">
               <div className="text-[10px] text-[#16A34A]/70 uppercase tracking-wide">Highest</div>
               <div className="text-sm font-bold text-[#16A34A] tabular-nums mt-0.5">
-                {stats.highest != null ? formatRate(stats.highest) : '—'}
+                {stats.highest != null ? formatRate(stats.highest) : '--'}
               </div>
             </div>
             <div className="px-3 py-2 bg-[#DC2626]/10 rounded-[6px]">
               <div className="text-[10px] text-[#DC2626]/70 uppercase tracking-wide">Lowest</div>
               <div className="text-sm font-bold text-[#DC2626] tabular-nums mt-0.5">
-                {stats.lowest != null ? formatRate(stats.lowest) : '—'}
+                {stats.lowest != null ? formatRate(stats.lowest) : '--'}
               </div>
             </div>
           </div>

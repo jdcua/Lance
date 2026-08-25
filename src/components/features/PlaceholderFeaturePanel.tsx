@@ -1,5 +1,5 @@
 /**
- * PlaceholderFeaturePanel — renders when an archetype feature has no dedicated component yet.
+ * PlaceholderFeaturePanel -- renders when an archetype feature has no dedicated component yet.
  * Shows the feature name and description in a styled panel so the UI is wired end-to-end.
  */
 export default function PlaceholderFeaturePanel({ title, description }: { title?: string; description?: string }) {

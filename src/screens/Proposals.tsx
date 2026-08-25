@@ -171,7 +171,7 @@ export default function Proposals() {
         rate_type: p.rate_type,
         body: p.body,
       });
-      addToast('Proposal duplicated — saved as draft', 'success');
+      addToast('Proposal duplicated -- saved as draft', 'success');
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to duplicate proposal', 'error');
     }
@@ -198,7 +198,7 @@ export default function Proposals() {
         ? formatCurrency(p.rate, profile.currency) + (p.rate_type === 'hourly' ? ' per hour' : ' flat project fee')
         : 'TBD';
       const body = generateContractBody(freelancerName, client.name, p.title, p.scope || '', p.timeline || '', rateStr);
-      const contractTitle = sanitizeInput(`Contract — ${p.title}`).slice(0, MAX_LENGTHS.title);
+      const contractTitle = sanitizeInput(`Contract -- ${p.title}`).slice(0, MAX_LENGTHS.title);
       await addContract({ client_id: p.client_id, proposal_id: p.id, title: contractTitle, status: 'draft', body });
       navigate('/contracts');
     } catch (err) {
@@ -446,7 +446,7 @@ export default function Proposals() {
                         <div className="px-3 py-2.5 rounded-[8px] bg-[var(--accent-bg)]/30 border border-[var(--accent)]/20">
                           <div className="flex items-center gap-1.5 mb-1.5">
                             <Bell size={12} className="text-[var(--accent)]" />
-                            <span className="text-[10px] font-semibold text-[var(--accent)] uppercase tracking-wide">Follow-up Draft — Stage {fu.stage}</span>
+                            <span className="text-[10px] font-semibold text-[var(--accent)] uppercase tracking-wide">Follow-up Draft -- Stage {fu.stage}</span>
                             <span className="text-[10px] text-[var(--text-tertiary)]">{daysElapsed}d since sent</span>
                             {!hasEmail && (
                               <span className="text-[10px] text-[var(--warning-text)]">No email</span>

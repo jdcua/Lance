@@ -1,5 +1,5 @@
 /**
- * Retainer Manager — Consultant feature.
+ * Retainer Manager -- Consultant feature.
  * Per-client retainer tracking with progress bar for monthly hours.
  */
 import { useState, useEffect } from 'react';
@@ -283,7 +283,7 @@ export default function RetainerManager({ clientId }: { clientId: string }) {
             </div>
             <div className="text-[10px] mt-1 text-[var(--text-tertiary)]">
               {isOver
-                ? 'Over hours — consider billing overage'
+                ? 'Over hours -- consider billing overage'
                 : isWarning
                 ? 'Approaching limit'
                 : 'Under budget'}

@@ -1,5 +1,5 @@
 /**
- * Deliverable Format Log — 3D Artist feature.
+ * Deliverable Format Log -- 3D Artist feature.
  * Logs format deliverables with poly/texture specs and delivery status.
  */
 import { useState, useEffect } from 'react';
@@ -151,7 +151,7 @@ export default function DeliverableFormatLog({ projectId }: { projectId: string 
               <div className="flex-1 min-w-0 flex items-center gap-2">
                 <Box size={10} className="text-[var(--text-tertiary)]" />
                 <span className={`font-medium ${item.delivered ? 'text-[var(--text-tertiary)] line-through' : 'text-[var(--text-primary)]'}`}>
-                  {item.format || '—'}
+                  {item.format || '--'}
                 </span>
                 {item.poly_spec && (
                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)]">{item.poly_spec}</span>

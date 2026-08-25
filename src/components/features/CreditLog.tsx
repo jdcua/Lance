@@ -131,7 +131,7 @@ export default function CreditLog({ projectId }: { projectId: string }) {
                   </a>
                 )}
                 {c.release_date && <span className="text-[10px] text-[var(--text-tertiary)]">{c.release_date}</span>}
-                {c.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">— {c.notes}</span>}
+                {c.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">-- {c.notes}</span>}
               </div>
               <button onClick={() => handleDelete(c.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                 <Trash2 size={12} />

@@ -1,5 +1,5 @@
 /**
- * Assessment Log — Trainer feature.
+ * Assessment Log -- Trainer feature.
  * Timeline list of assessments with date, metrics, and notes.
  */
 import { useState, useEffect } from 'react';
@@ -73,7 +73,7 @@ export default function AssessmentLog({ clientId }: { clientId: string }) {
   };
 
   const formatDate = (dateStr: string) => {
-    if (!dateStr) return '—';
+    if (!dateStr) return '--';
     const d = new Date(dateStr);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };

@@ -24,12 +24,12 @@ export default function RecentTimeWidget() {
                 {t.description || 'Time Entry'}
               </span>
               {project && (
-                <span className="text-[var(--text-tertiary)] ml-1">— {project.title}</span>
+                <span className="text-[var(--text-tertiary)] ml-1">-- {project.title}</span>
               )}
             </div>
             <span className="text-[var(--text-tertiary)] flex items-center gap-1 ml-2 shrink-0">
               <Clock size={10} />
-              {t.duration_minutes != null ? `${t.duration_minutes}m` : '—'}
+              {t.duration_minutes != null ? `${t.duration_minutes}m` : '--'}
             </span>
           </div>
         );

@@ -1,5 +1,5 @@
 /**
- * Commission Calculator — Universal commission calculator.
+ * Commission Calculator -- Universal commission calculator.
  * Inputs: deal amount, commission rate %, split %.
  * Output: total commission, your share.
  */

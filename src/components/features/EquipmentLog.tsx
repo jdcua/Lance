@@ -88,7 +88,7 @@ export default function EquipmentLog({ projectId }: { projectId: string }) {
           <select value={form.shoot_id} onChange={(e) => setForm({ ...form, shoot_id: e.target.value })} className={inputClass}>
             <option value="">Shoot (optional)...</option>
             {projectShoots.map((s) => (
-              <option key={s.id} value={s.id}>{s.shoot_date?.split('T')[0] || s.id} — {s.location || ''}</option>
+              <option key={s.id} value={s.id}>{s.shoot_date?.split('T')[0] || s.id} -- {s.location || ''}</option>
             ))}
           </select>
           <input type="text" placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className={inputClass} />
@@ -110,7 +110,7 @@ export default function EquipmentLog({ projectId }: { projectId: string }) {
                 <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium ml-2 bg-[var(--bg-card)] text-[var(--text-tertiary)]">
                   <Tag size={9} /> {item.equipment_type}
                 </span>
-                {item.notes && <span className="text-[var(--text-tertiary)] ml-2">— {item.notes}</span>}
+                {item.notes && <span className="text-[var(--text-tertiary)] ml-2">-- {item.notes}</span>}
               </div>
               <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                 <Trash2 size={12} />

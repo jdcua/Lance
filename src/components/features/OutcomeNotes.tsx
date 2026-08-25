@@ -1,5 +1,5 @@
 /**
- * Outcome Notes — Consultant feature.
+ * Outcome Notes -- Consultant feature.
  * Single form per project capturing before/after state, metrics, and testimonial draft.
  */
 import { useState, useEffect } from 'react';

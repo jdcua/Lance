@@ -1,5 +1,5 @@
 /**
- * Audit Finding Log — Blockchain / Cybersecurity feature.
+ * Audit Finding Log -- Blockchain / Cybersecurity feature.
  * Track audit findings with severity, contract reference, description, and resolution.
  */
 import { useState, useEffect } from 'react';

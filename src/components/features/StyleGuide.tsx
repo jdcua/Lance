@@ -1,5 +1,5 @@
 /**
- * Style Guide — Writer feature.
+ * Style Guide -- Writer feature.
  * Per-client style guide with tone, formatting rules, banned words, and reference.
  * One record per client. Edit-in-place.
  */
@@ -257,7 +257,7 @@ export default function StyleGuide({ clientId }: { clientId: string }) {
             onChange={(e) => setForm({ ...form, style_guide_ref: e.target.value })}
             className={selectClass}
           >
-            <option value="">— None —</option>
+            <option value="">-- None --</option>
             {STYLE_REF_OPTIONS.map((opt) => (
               <option key={opt} value={opt}>
                 {opt}

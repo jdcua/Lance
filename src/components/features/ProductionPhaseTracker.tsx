@@ -1,5 +1,5 @@
 /**
- * Production Phase Tracker — Filmmaker feature.
+ * Production Phase Tracker -- Filmmaker feature.
  * Thin wrapper around PhaseTracker with filmmaker defaults.
  */
 import PhaseTracker from './PhaseTracker';

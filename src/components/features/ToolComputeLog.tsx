@@ -1,5 +1,5 @@
 /**
- * Tool Compute Log — Data Analyst feature.
+ * Tool Compute Log -- Data Analyst feature.
  * Focused list of compute costs for data tools, same table as ComputeCostLog.
  */
 import { useState, useEffect } from 'react';
@@ -90,7 +90,7 @@ export default function ToolComputeLog({ projectId }: { projectId: string }) {
   const totalHours = costs.reduce((sum, c) => sum + (c.hours || 0), 0);
 
   const formatDate = (dateStr?: string) => {
-    if (!dateStr) return '—';
+    if (!dateStr) return '--';
     const d = new Date(dateStr);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };

@@ -1,5 +1,5 @@
 /**
- * Dependency Tracker — Project Manager feature.
+ * Dependency Tracker -- Project Manager feature.
  * Shows milestones with dependency visualization. Uses existing milestones from store.
  */
 import { useState, useEffect, useMemo } from 'react';

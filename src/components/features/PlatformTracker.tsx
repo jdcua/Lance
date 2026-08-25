@@ -1,5 +1,5 @@
 /**
- * Platform Tracker — Social Media Manager feature.
+ * Platform Tracker -- Social Media Manager feature.
  * Toggle which platforms are active and set handles per platform.
  */
 import { useState, useEffect } from 'react';

@@ -1,5 +1,5 @@
 /**
- * Feature Scope Board — Game Developer feature.
+ * Feature Scope Board -- Game Developer feature.
  * Grouped list by priority (must/should/nice-to-have) with status, hours, and scope indicator.
  */
 import { useState, useEffect } from 'react';

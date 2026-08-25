@@ -1,5 +1,5 @@
 /**
- * Fabrication Tracker — Embedded feature.
+ * Fabrication Tracker -- Embedded feature.
  * Track fabrication status for items with fab house and cost.
  */
 import { useState, useEffect } from 'react';
@@ -188,9 +188,9 @@ export default function FabricationTracker({ projectId }: { projectId: string })
                       {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
                     </select>
                   </td>
-                  <td className="py-1.5 px-2 text-[var(--text-tertiary)]">{item.start_date || '—'}</td>
-                  <td className="py-1.5 px-2 text-[var(--text-tertiary)]">{item.completed_date || '—'}</td>
-                  <td className="py-1.5 px-2 text-[var(--text-secondary)]">{item.fab_house || '—'}</td>
+                  <td className="py-1.5 px-2 text-[var(--text-tertiary)]">{item.start_date || '--'}</td>
+                  <td className="py-1.5 px-2 text-[var(--text-tertiary)]">{item.completed_date || '--'}</td>
+                  <td className="py-1.5 px-2 text-[var(--text-secondary)]">{item.fab_house || '--'}</td>
                   <td className="py-1.5 px-2 text-right text-[var(--text-primary)]">${(item.cost || 0).toFixed(2)}</td>
                   <td className="py-1.5 px-2">
                     <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">

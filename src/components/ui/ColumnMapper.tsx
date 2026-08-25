@@ -1,5 +1,5 @@
 /**
- * ColumnMapper — Interactive column mapping UI for spreadsheet imports.
+ * ColumnMapper -- Interactive column mapping UI for spreadsheet imports.
  * Shows source columns mapped to Lance entity fields with dropdowns.
  */
 
@@ -160,7 +160,7 @@ export default function ColumnMapper({
                       .filter(([, field]) => field)
                       .map(([header]) => (
                         <td key={header} className="px-3 py-1.5 text-[var(--text-primary)] truncate max-w-[150px]">
-                          {row[header] || '—'}
+                          {row[header] || '--'}
                         </td>
                       ))}
                   </tr>

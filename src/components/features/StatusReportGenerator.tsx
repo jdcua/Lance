@@ -1,5 +1,5 @@
 /**
- * Status Report Generator — simple project status report.
+ * Status Report Generator -- simple project status report.
  * Reads store.timeEntries + store.milestones. Shows total hours, completed/total milestones, last activity date.
  */
 import { useState, useEffect } from 'react';

@@ -1,5 +1,5 @@
 /**
- * Metric Snapshot — metric tracking with performance vs target display.
+ * Metric Snapshot -- metric tracking with performance vs target display.
  */
 import { useState, useEffect } from 'react';
 import { getDb } from '../../db';

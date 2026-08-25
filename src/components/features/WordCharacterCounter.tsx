@@ -1,5 +1,5 @@
 /**
- * Word / Character Counter — Translator feature.
+ * Word / Character Counter -- Translator feature.
  * Tracks source/target word counts and characters per time entry.
  * Supports inline editing and a summary table of recent entries.
  */
@@ -264,9 +264,9 @@ export default function WordCharacterCounter({ timeEntryId }: { timeEntryId?: st
           </div>
           {counts.length > 0 && (
             <div className="flex items-center gap-4 text-[10px] text-[var(--text-tertiary)] pt-1 border-t border-[var(--border-color)]">
-              <span>Source: <span className="font-medium text-[var(--text-primary)]">{counts[0].source_words ?? '—'}</span></span>
-              <span>Target: <span className="font-medium text-[var(--text-primary)]">{counts[0].target_words ?? '—'}</span></span>
-              <span>Chars: <span className="font-medium text-[var(--text-primary)]">{counts[0].characters ?? '—'}</span></span>
+              <span>Source: <span className="font-medium text-[var(--text-primary)]">{counts[0].source_words ?? '--'}</span></span>
+              <span>Target: <span className="font-medium text-[var(--text-primary)]">{counts[0].target_words ?? '--'}</span></span>
+              <span>Chars: <span className="font-medium text-[var(--text-primary)]">{counts[0].characters ?? '--'}</span></span>
             </div>
           )}
         </div>
@@ -331,9 +331,9 @@ export default function WordCharacterCounter({ timeEntryId }: { timeEntryId?: st
                           <span className="text-[10px] text-[var(--text-tertiary)]">{formatDate(te.start_time)}</span>
                         </div>
                         <div className="flex items-center gap-3 text-[10px] text-[var(--text-tertiary)] flex-shrink-0 ml-2">
-                          <span>S: <span className="text-[var(--text-primary)]">{cnt?.source_words ?? '—'}</span></span>
-                          <span>T: <span className="text-[var(--text-primary)]">{cnt?.target_words ?? '—'}</span></span>
-                          <span>C: <span className="text-[var(--text-primary)]">{cnt?.characters ?? '—'}</span></span>
+                          <span>S: <span className="text-[var(--text-primary)]">{cnt?.source_words ?? '--'}</span></span>
+                          <span>T: <span className="text-[var(--text-primary)]">{cnt?.target_words ?? '--'}</span></span>
+                          <span>C: <span className="text-[var(--text-primary)]">{cnt?.characters ?? '--'}</span></span>
                           <button
                             onClick={() => handleEdit(te.id)}
                             className="text-[var(--text-tertiary)] hover:text-[var(--accent)] p-0.5"

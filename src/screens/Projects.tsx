@@ -77,7 +77,7 @@ export default function Projects() {
     const sanitizedTitle = sanitizeInput(pform.title).trim();
     if (!sanitizedTitle || !pform.client_id) {
       if (!sanitizedTitle && pform.title.trim()) {
-        addToast('Project title is not allowed — remove markup and try again', 'error');
+        addToast('Project title is not allowed -- remove markup and try again', 'error');
       }
       return;
     }
@@ -166,7 +166,7 @@ export default function Projects() {
       setShowTemplateSaveModal(false);
       setTemplateName('');
       setTemplateDescription('');
-      addToast('Template saved — use it when creating future projects.', 'success');
+      addToast('Template saved -- use it when creating future projects.', 'success');
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to save template', 'error');
     } finally {
@@ -249,7 +249,7 @@ export default function Projects() {
       );
       if (alreadyInvoiced) {
         await updateMilestone({ ...milestone, completed: true });
-        addToast('Invoice already exists for this milestone — no duplicate created', 'info');
+        addToast('Invoice already exists for this milestone -- no duplicate created', 'info');
         return;
       }
       const invNumber = generateInvoiceNumber(currentInvoices);
@@ -276,7 +276,7 @@ export default function Projects() {
         milestone_id: milestone.id,
       });
       await updateMilestone({ ...milestone, completed: true });
-      addToast(`Invoice ${invNumber} created — review in Invoices`, 'success');
+      addToast(`Invoice ${invNumber} created -- review in Invoices`, 'success');
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to generate invoice from milestone', 'error');
     }
@@ -540,7 +540,7 @@ export default function Projects() {
                 onChange={(e) => handleTemplateSelect(e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               >
-                <option value="">No template — start fresh</option>
+                <option value="">No template -- start fresh</option>
                 {projectTemplates.map((tpl) => (
                   <option key={tpl.id} value={tpl.id}>{tpl.name}</option>
                 ))}

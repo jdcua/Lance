@@ -452,7 +452,7 @@ export default function Assets() {
           Drop files here to add to <strong className="text-[var(--text-primary)]">{scopeLabel}</strong>
         </p>
         <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
-          Any file type supported — stored locally in ~/Documents/Lance/Assets/
+          Any file type supported -- stored locally in ~/Documents/Lance/Assets/
         </p>
       </div>
 

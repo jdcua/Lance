@@ -1,5 +1,5 @@
 /**
- * Placement Log — Recruiter feature.
+ * Placement Log -- Recruiter feature.
  * Track placements with candidate name, role, company, fee, and status.
  * Shows total fees at top.
  */
@@ -180,9 +180,9 @@ export default function PlacementLog({ clientId }: { clientId: string }) {
               {placements.map((placement) => (
                 <tr key={placement.id} className="border-b border-[var(--border-color)]/50 hover:bg-[var(--bg-hover)]">
                   <td className="py-1.5 px-2 font-medium text-[var(--text-primary)]">{placement.candidate_name}</td>
-                  <td className="py-1.5 px-2 text-[var(--text-secondary)]">{placement.role || '—'}</td>
-                  <td className="py-1.5 px-2 text-[var(--text-secondary)]">{placement.company || '—'}</td>
-                  <td className="py-1.5 px-2 text-[var(--text-tertiary)]">{placement.start_date || '—'}</td>
+                  <td className="py-1.5 px-2 text-[var(--text-secondary)]">{placement.role || '--'}</td>
+                  <td className="py-1.5 px-2 text-[var(--text-secondary)]">{placement.company || '--'}</td>
+                  <td className="py-1.5 px-2 text-[var(--text-tertiary)]">{placement.start_date || '--'}</td>
                   <td className="py-1.5 px-2 text-right font-medium text-[var(--text-primary)]">${(placement.fee || 0).toLocaleString()}</td>
                   <td className="py-1.5 px-2">
                     <select

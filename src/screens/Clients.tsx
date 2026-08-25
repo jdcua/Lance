@@ -475,7 +475,7 @@ export default function Clients() {
 
   return (
     <div className="flex h-full">
-      {/* Left panel — client list */}
+      {/* Left panel -- client list */}
       <div className="w-[240px] border-r border-[var(--border-color)] bg-[var(--bg-card)] flex-shrink-0 flex flex-col">
         <div className="px-4 py-3 border-b border-[var(--border-color)] space-y-2">
           <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Clients</h3>
@@ -527,7 +527,7 @@ export default function Clients() {
         </div>
       </div>
 
-      {/* Right panel — detail */}
+      {/* Right panel -- detail */}
       <div className="flex-1 overflow-y-auto p-6">
         {!selectedClient ? (
           <div className="flex items-center justify-center h-full">
@@ -864,9 +864,9 @@ export default function Clients() {
                               <Sparkline values={[...numericValues].reverse()} width={100} height={28} />
                               <div>
                                 <span className="text-sm font-semibold text-[var(--text-primary)]">
-                                  {def.metric_type === 'currency' ? `$${numericValues[0]?.toFixed(2) || '—'}` :
-                                   def.metric_type === 'percentage' ? `${numericValues[0]?.toFixed(1) || '—'}%` :
-                                   values[0]?.value || '—'}
+                                  {def.metric_type === 'currency' ? `$${numericValues[0]?.toFixed(2) || '--'}` :
+                                   def.metric_type === 'percentage' ? `${numericValues[0]?.toFixed(1) || '--'}%` :
+                                   values[0]?.value || '--'}
                                 </span>
                                 <p className="text-[10px] text-[var(--text-tertiary)]">{values.length} entries</p>
                               </div>

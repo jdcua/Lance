@@ -1,5 +1,5 @@
 /**
- * Dataset Log — Data Analyst / AI Engineer feature.
+ * Dataset Log -- Data Analyst / AI Engineer feature.
  * Lists datasets with metadata (source, size, format, license).
  */
 import { useState, useEffect } from 'react';
@@ -72,7 +72,7 @@ export default function DatasetLog({ projectId }: { projectId: string }) {
           {list.map((d) => (
             <div key={d.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
               <div className="flex-1 min-w-0">
-                <span className="font-medium text-[var(--text-primary)]"><Database size={10} className="inline mr-1" />{d.dataset_name || '—'}</span>
+                <span className="font-medium text-[var(--text-primary)]"><Database size={10} className="inline mr-1" />{d.dataset_name || '--'}</span>
                 <span className="text-[var(--text-tertiary)] ml-2">
                   {d.source && <span className="mr-1">{d.source}</span>}
                   {d.size_bytes != null && <><HardDrive size={10} className="inline mr-0.5" />{formatSize(d.size_bytes)} </>}

@@ -1,5 +1,5 @@
 /**
- * Food Diary Reviews — Nutritionist feature.
+ * Food Diary Reviews -- Nutritionist feature.
  * Food diary entries grouped by date.
  */
 import { useState, useEffect } from 'react';
@@ -180,7 +180,7 @@ export default function FoodDiaryReviews({ clientId }: { clientId: string }) {
                     <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-secondary)] capitalize">
                       {e.meal || 'meal'}
                     </span>
-                    <span className="text-[var(--text-primary)] truncate">{e.foods || '—'}</span>
+                    <span className="text-[var(--text-primary)] truncate">{e.foods || '--'}</span>
                     {e.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">{e.notes}</span>}
                   </div>
                   <button onClick={() => handleDelete(e.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">

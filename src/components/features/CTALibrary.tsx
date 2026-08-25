@@ -1,5 +1,5 @@
 /**
- * CTA Library — Copywriter feature.
+ * CTA Library -- Copywriter feature.
  * CTA performance tracking with conversion rate and CTR.
  */
 import { useState, useEffect } from 'react';

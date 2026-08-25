@@ -1,5 +1,5 @@
 /**
- * Lookbook — Fashion Designer feature.
+ * Lookbook -- Fashion Designer feature.
  * Visual grid of lookbook entries with asset thumbnails from store.allAttachments.
  */
 import { useState, useEffect } from 'react';

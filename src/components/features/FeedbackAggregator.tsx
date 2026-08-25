@@ -1,5 +1,5 @@
 /**
- * Feedback Aggregator — client feedback with rating, source, actioned toggle, and average rating.
+ * Feedback Aggregator -- client feedback with rating, source, actioned toggle, and average rating.
  */
 import { useState, useEffect } from 'react';
 import { getDb } from '../../db';

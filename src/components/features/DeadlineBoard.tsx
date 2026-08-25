@@ -1,5 +1,5 @@
 /**
- * Deadline Board — Writer feature.
+ * Deadline Board -- Writer feature.
  * Visual deadline tracker for all projects with end dates.
  * Color-coded by time remaining.
  */

@@ -1,5 +1,5 @@
 /**
- * DropZoneOverlay — Full-screen glassmorphism overlay shown when files
+ * DropZoneOverlay -- Full-screen glassmorphism overlay shown when files
  * are dragged over the app window.
  */
 
@@ -35,7 +35,7 @@ export default function DropZoneOverlay({ visible }: DropZoneOverlayProps) {
             Drop files to import
           </h2>
           <p className="text-sm text-[var(--text-secondary)] max-w-xs mx-auto leading-relaxed">
-            Spreadsheets, documents, and images — Lance will scan and classify them automatically.
+            Spreadsheets, documents, and images -- Lance will scan and classify them automatically.
           </p>
 
           {/* Supported formats pills */}

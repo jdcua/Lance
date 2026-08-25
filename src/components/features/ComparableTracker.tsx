@@ -1,5 +1,5 @@
 /**
- * Comparable Tracker — Real Estate feature.
+ * Comparable Tracker -- Real Estate feature.
  * Track comparable sales with address, price, date, sqft, beds, baths.
  */
 import { useState, useEffect } from 'react';
@@ -172,11 +172,11 @@ export default function ComparableTracker({ projectId }: { projectId: string }) 
                   <tr key={comp.id} className="border-b border-[var(--border-color)]/50 hover:bg-[var(--bg-hover)]">
                     <td className="py-1.5 px-2 font-medium text-[var(--text-primary)]">{comp.address}</td>
                     <td className="py-1.5 px-2 text-right text-[var(--text-primary)]">${(comp.sale_price || 0).toLocaleString()}</td>
-                    <td className="py-1.5 px-2 text-[var(--text-tertiary)]">{comp.sale_date || '—'}</td>
-                    <td className="py-1.5 px-2 text-right text-[var(--text-primary)]">{comp.sqft ? comp.sqft.toLocaleString() : '—'}</td>
-                    <td className="py-1.5 px-2 text-right text-[var(--text-secondary)]">{pricePerSqft > 0 ? `$${pricePerSqft.toFixed(0)}` : '—'}</td>
-                    <td className="py-1.5 px-2 text-right text-[var(--text-primary)]">{comp.beds || '—'}</td>
-                    <td className="py-1.5 px-2 text-right text-[var(--text-primary)]">{comp.baths || '—'}</td>
+                    <td className="py-1.5 px-2 text-[var(--text-tertiary)]">{comp.sale_date || '--'}</td>
+                    <td className="py-1.5 px-2 text-right text-[var(--text-primary)]">{comp.sqft ? comp.sqft.toLocaleString() : '--'}</td>
+                    <td className="py-1.5 px-2 text-right text-[var(--text-secondary)]">{pricePerSqft > 0 ? `$${pricePerSqft.toFixed(0)}` : '--'}</td>
+                    <td className="py-1.5 px-2 text-right text-[var(--text-primary)]">{comp.beds || '--'}</td>
+                    <td className="py-1.5 px-2 text-right text-[var(--text-primary)]">{comp.baths || '--'}</td>
                     <td className="py-1.5 px-2">
                       <button onClick={() => handleDelete(comp.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                         <Trash2 size={12} />

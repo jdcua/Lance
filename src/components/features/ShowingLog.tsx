@@ -1,5 +1,5 @@
 /**
- * Showing Log — Real Estate feature.
+ * Showing Log -- Real Estate feature.
  * Timeline-style list of property showings with attendee info and follow-up.
  */
 import { useState, useEffect } from 'react';

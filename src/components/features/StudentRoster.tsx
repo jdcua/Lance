@@ -1,5 +1,5 @@
 /**
- * Student Roster — Tutor feature.
+ * Student Roster -- Tutor feature.
  * Simple list of students per client with inline editing.
  */
 import { useState, useEffect } from 'react';
@@ -184,7 +184,7 @@ export default function StudentRoster({ clientId }: { clientId: string }) {
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <GraduationCap size={10} className="text-[var(--text-tertiary)] flex-shrink-0" />
                     <span className="font-medium text-[var(--text-primary)]">
-                      {student.grade_level || '—'} · {student.subject || '—'}
+                      {student.grade_level || '--'} · {student.subject || '--'}
                     </span>
                     {student.hourly_rate != null && (
                       <span className="text-[var(--text-tertiary)] flex-shrink-0">${student.hourly_rate.toFixed(2)}/hr</span>

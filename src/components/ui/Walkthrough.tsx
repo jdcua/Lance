@@ -30,13 +30,13 @@ const getSlideCopy = (modifier: string): Slide[] => [
   {
     title: 'Command Palette',
     description:
-      `Press ${modifier}+K to open the command palette. Search for anything and jump anywhere — no mouse required.`,
+      `Press ${modifier}+K to open the command palette. Search for anything and jump anywhere -- no mouse required.`,
     icon: Command,
   },
   {
     title: 'Keyboard Shortcuts',
     description:
-      `Use ${modifier}+1–8 to switch between sections instantly. Press ${modifier}+N to create new items from anywhere — add your first client, draft a proposal, log time, or send an invoice.`,
+      `Use ${modifier}+1–8 to switch between sections instantly. Press ${modifier}+N to create new items from anywhere -- add your first client, draft a proposal, log time, or send an invoice.`,
     icon: Zap,
   },
   {

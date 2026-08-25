@@ -1,5 +1,5 @@
 /**
- * Glossary — Translator feature.
+ * Glossary -- Translator feature.
  * Per-client glossary of terms with approved translations.
  * Table with inline edit, search filter, add, and delete.
  */
@@ -280,7 +280,7 @@ export default function Glossary({ clientId }: { clientId: string }) {
                     )}
                     {t.notes && (
                       <span className="text-[10px] text-[var(--text-tertiary)] truncate max-w-[150px] ml-1">
-                        — {t.notes}
+                        -- {t.notes}
                       </span>
                     )}
                   </div>

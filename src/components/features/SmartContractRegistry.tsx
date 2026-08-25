@@ -1,5 +1,5 @@
 /**
- * Smart Contract Registry — Blockchain feature.
+ * Smart Contract Registry -- Blockchain feature.
  * List of deployed contracts with clickable address.
  */
 import { useState, useEffect } from 'react';
@@ -144,7 +144,7 @@ export default function SmartContractRegistry({ projectId }: { projectId: string
           {contracts.map((contract) => (
             <div key={contract.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
               <div className="flex-1 min-w-0 flex items-center gap-2">
-                <span className="font-medium text-[var(--text-primary)] truncate">{contract.name || '—'}</span>
+                <span className="font-medium text-[var(--text-primary)] truncate">{contract.name || '--'}</span>
                 {contract.network && (
                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)] flex-shrink-0">{contract.network}</span>
                 )}

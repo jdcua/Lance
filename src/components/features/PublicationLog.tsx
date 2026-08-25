@@ -1,5 +1,5 @@
 /**
- * Publication Log — Writer feature.
+ * Publication Log -- Writer feature.
  * Tracks published work by project: outlet, URL, date, byline.
  */
 import { useState, useEffect } from 'react';
@@ -219,7 +219,7 @@ export default function PublicationLog({ projectId }: { projectId: string }) {
                     </a>
                   ) : (
                     <span className="text-[var(--text-primary)] font-medium truncate block">
-                      {p.outlet_name || '—'}
+                      {p.outlet_name || '--'}
                     </span>
                   )}
                   <div className="text-[10px] text-[var(--text-tertiary)]">

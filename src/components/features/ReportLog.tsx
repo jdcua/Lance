@@ -1,5 +1,5 @@
 /**
- * Report Log — SEO Specialist feature.
+ * Report Log -- SEO Specialist feature.
  * Timeline list of client reports with expandable details.
  */
 import { useState, useEffect } from 'react';

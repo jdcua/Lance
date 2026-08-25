@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { NavLink } from 'react-router-dom';
 import BrandLogo from '../ui/BrandLogo';
 import {
@@ -60,6 +61,7 @@ const ICON_MAP: Record<string, any> = {
 };
 
 export default function Sidebar() {
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('lance:sidebar-collapsed') === 'true');
   const [hovered, setHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
@@ -123,11 +125,27 @@ export default function Sidebar() {
       <div className="flex items-center gap-2 px-3 h-[56px] border-b border-[var(--border-color)]">
         {isExpanded && (
           <>
-            <BrandLogo size={20} className="text-[var(--accent)]" />
+            <button
+              onClick={() => navigate('/')}
+              className="flex-shrink-0 p-1 hover:bg-[var(--bg-secondary)] rounded-[6px] transition-colors"
+              title="Dashboard"
+              aria-label="Dashboard"
+            >
+              <BrandLogo size={20} className="text-[var(--accent)]" />
+            </button>
             <span className="font-semibold text-sm text-[var(--text-primary)] flex-1" style={{ fontFamily: "'Syne', sans-serif" }}>Lance</span>
           </>
         )}
-        {!isExpanded && <BrandLogo size={20} className="text-[var(--accent)] mx-auto" />}
+        {!isExpanded && (
+          <button
+            onClick={() => navigate('/')}
+            className="mx-auto p-1 hover:bg-[var(--bg-secondary)] rounded-[6px] transition-colors"
+            title="Dashboard"
+            aria-label="Dashboard"
+          >
+            <BrandLogo size={20} className="text-[var(--accent)]" />
+          </button>
+        )}
         {isExpanded && (
           <button
             onClick={toggleCollapsed}

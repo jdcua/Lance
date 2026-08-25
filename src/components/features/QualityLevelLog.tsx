@@ -1,5 +1,5 @@
 /**
- * Quality Level Log — Translator feature.
+ * Quality Level Log -- Translator feature.
  * Single-record quality tier selection per project with notes.
  */
 import { useState, useEffect } from 'react';

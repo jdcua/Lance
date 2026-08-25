@@ -1,5 +1,5 @@
 /**
- * Satisfaction Trend Widget — displays average rating from feedback_aggregations and recent ratings list.
+ * Satisfaction Trend Widget -- displays average rating from feedback_aggregations and recent ratings list.
  */
 import { useState, useEffect } from 'react';
 import { getDb } from '../../db';

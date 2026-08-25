@@ -39,7 +39,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (loading) return;
     if (localStorage.getItem('lance:seeded') === 'true' && localStorage.getItem('lance:seeded-toast-shown') !== 'true') {
-      addToast('Sample data loaded — explore freely. Clear it anytime in Settings → Data.', 'info');
+      addToast('Sample data loaded -- explore freely. Clear it anytime in Settings → Data.', 'info');
       localStorage.setItem('lance:seeded-toast-shown', 'true');
     }
     loadPortalActivity();
@@ -122,11 +122,11 @@ export default function Dashboard() {
               if (queryFn) {
                 values[card.id] = await queryFn(db, profile?.id || 1);
               } else {
-                values[card.id] = '—';
+                values[card.id] = '--';
               }
             }
           } catch { /* metric query failed; show em-dash as fallback */
-            values[card.id] = '—';
+            values[card.id] = '--';
           }
         }
         setMetricValues(values);
@@ -249,7 +249,7 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* Needs Attention — Follow-ups */}
+      {/* Needs Attention -- Follow-ups */}
       {pendingFollowUps.length > 0 && (
         <Card className="mb-6 border-[var(--accent)]/20">
           <div className="flex items-center gap-2 mb-3">

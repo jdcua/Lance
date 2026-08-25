@@ -20,12 +20,12 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
   const cacheExpiryKey = 'lance:changelog-cache-expiry';
   const CACHE_TTL_MS = 1000 * 60 * 60; // 1 hour
 
-  // 1. Check cache first
+  // 1. Check cache first (still ensure installed version is represented)
   try {
     const cached = localStorage.getItem(cacheKey);
     const expiry = localStorage.getItem(cacheExpiryKey);
     if (cached && expiry && Date.now() < parseInt(expiry, 10)) {
-      return JSON.parse(cached);
+      return ensureRuntimeVersion(JSON.parse(cached) as ChangelogEntry[]);
     }
   } catch {
     /* ignore cache errors */
@@ -51,7 +51,7 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
           .filter((line: string) => line.length > 0) || [],
       }));
   } catch {
-    /* GitHub API failed — fall through to git log */
+    /* GitHub API failed -- fall through to git log */
   }
 
   // 3. Fallback: parse local git tags (dev mode, Tauri only)
@@ -68,6 +68,17 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
   // 4. Hardcoded fallback for current version
   if (entries.length === 0) {
     entries = [
+      {
+        version: '0.9.3',
+        date: new Date().toISOString().split('T')[0],
+        items: [
+          'Monetization: license tiers, Pro upgrade flow, and archetype depth',
+          'Dynamic changelog from GitHub Releases API with local cache fallback',
+          'License key format aligned to 4 groups (LANCE-XXXX-XXXX-XXXX-XXXX)',
+          'Auto-backup singleton update handler fix',
+          'GitHub API 404 no longer noisy in console; changelog modal title is dynamic',
+        ],
+      },
       {
         version: '0.9.1',
         date: new Date().toISOString().split('T')[0],
@@ -96,6 +107,11 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
     ];
   }
 
+  // Ensure the installed app version always has a changelog entry -- a stale
+  // cache (or an older GitHub release list) must not make the "What's new"
+  // modal show older notes than the running build.
+  entries = await ensureRuntimeVersion(entries);
+
   // Cache result
   try {
     localStorage.setItem(cacheKey, JSON.stringify(entries));
@@ -104,6 +120,25 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
     /* ignore */
   }
 
+  return entries;
+}
+
+async function ensureRuntimeVersion(entries: ChangelogEntry[]): Promise<ChangelogEntry[]> {
+  try {
+    const runtimeVersion = await getRuntimeVersion();
+    if (runtimeVersion && !entries.some((e) => e.version === runtimeVersion)) {
+      return [
+        {
+          version: runtimeVersion,
+          date: new Date().toISOString().split('T')[0],
+          items: ['Release notes unavailable for this version \u2014 check GitHub for details.'],
+        },
+        ...entries,
+      ];
+    }
+  } catch {
+    /* version detection is non-critical */
+  }
   return entries;
 }
 

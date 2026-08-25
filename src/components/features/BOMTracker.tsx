@@ -1,5 +1,5 @@
 /**
- * BOM Tracker — Embedded feature.
+ * BOM Tracker -- Embedded feature.
  * Bill of materials list with total cost summary.
  */
 import { useState, useEffect } from 'react';
@@ -162,12 +162,12 @@ export default function BOMTracker({ projectId }: { projectId: string }) {
               {items.map((item) => (
                 <tr key={item.id} className="border-b border-[var(--border-color)]/50 hover:bg-[var(--bg-hover)]">
                   <td className="py-1.5 px-2 font-medium text-[var(--text-primary)]">{item.part_name}</td>
-                  <td className="py-1.5 px-2 text-[var(--text-secondary)] font-mono text-[10px]">{item.part_number || '—'}</td>
+                  <td className="py-1.5 px-2 text-[var(--text-secondary)] font-mono text-[10px]">{item.part_number || '--'}</td>
                   <td className="py-1.5 px-2 text-right text-[var(--text-primary)]">{item.quantity}</td>
-                  <td className="py-1.5 px-2 text-[var(--text-secondary)]">{item.supplier || '—'}</td>
+                  <td className="py-1.5 px-2 text-[var(--text-secondary)]">{item.supplier || '--'}</td>
                   <td className="py-1.5 px-2 text-right text-[var(--text-primary)]">${(item.cost || 0).toFixed(2)}</td>
                   <td className="py-1.5 px-2 text-right text-[var(--text-primary)] font-medium">${((item.cost || 0) * (item.quantity || 0)).toFixed(2)}</td>
-                  <td className="py-1.5 px-2 text-right text-[var(--text-tertiary)]">{item.lead_time_days ? `${item.lead_time_days}d` : '—'}</td>
+                  <td className="py-1.5 px-2 text-right text-[var(--text-tertiary)]">{item.lead_time_days ? `${item.lead_time_days}d` : '--'}</td>
                   <td className="py-1.5 px-2">
                     <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                       <Trash2 size={12} />

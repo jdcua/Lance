@@ -1,5 +1,5 @@
 /**
- * Candidate Pipeline — Recruiter feature.
+ * Candidate Pipeline -- Recruiter feature.
  * Kanban-style board by status: sourced, screening, interview, offer, hired, rejected.
  */
 import { useState, useEffect } from 'react';
@@ -200,7 +200,7 @@ export default function CandidatePipeline({ clientId }: { clientId: string }) {
                   </div>
                 ))}
                 {items.length === 0 && (
-                  <p className="text-[10px] text-[var(--text-tertiary)] px-1 italic">—</p>
+                  <p className="text-[10px] text-[var(--text-tertiary)] px-1 italic">--</p>
                 )}
               </div>
             );

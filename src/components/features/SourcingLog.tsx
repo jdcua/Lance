@@ -1,5 +1,5 @@
 /**
- * Sourcing Log — Fashion Designer feature.
+ * Sourcing Log -- Fashion Designer feature.
  * Track material sourcing with supplier, cost, MOQ, lead time, and status.
  */
 import { useState, useEffect } from 'react';
@@ -165,10 +165,10 @@ export default function SourcingLog({ projectId }: { projectId: string }) {
               {items.map((item) => (
                 <tr key={item.id} className="border-b border-[var(--border-color)]/50 hover:bg-[var(--bg-hover)]">
                   <td className="py-1.5 px-2 font-medium text-[var(--text-primary)]">{item.material}</td>
-                  <td className="py-1.5 px-2 text-[var(--text-secondary)]">{item.supplier || '—'}</td>
+                  <td className="py-1.5 px-2 text-[var(--text-secondary)]">{item.supplier || '--'}</td>
                   <td className="py-1.5 px-2 text-right text-[var(--text-primary)]">${(item.cost || 0).toFixed(2)}</td>
-                  <td className="py-1.5 px-2 text-right text-[var(--text-primary)]">{item.moq || '—'}</td>
-                  <td className="py-1.5 px-2 text-right text-[var(--text-tertiary)]">{item.lead_time_days ? `${item.lead_time_days}d` : '—'}</td>
+                  <td className="py-1.5 px-2 text-right text-[var(--text-primary)]">{item.moq || '--'}</td>
+                  <td className="py-1.5 px-2 text-right text-[var(--text-tertiary)]">{item.lead_time_days ? `${item.lead_time_days}d` : '--'}</td>
                   <td className="py-1.5 px-2">
                     <select
                       value={item.status}

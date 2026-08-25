@@ -1,5 +1,5 @@
 /**
- * Build Delivery Log — Game Developer feature.
+ * Build Delivery Log -- Game Developer feature.
  * Changelog-style list of build deliveries, most recent first.
  */
 import { useState, useEffect } from 'react';
@@ -154,7 +154,7 @@ export default function BuildDeliveryLog({ projectId }: { projectId: string }) {
                 {d.version ? (
                   <span className="font-medium text-[var(--text-primary)]">{d.version}</span>
                 ) : (
-                  <span className="text-[var(--text-tertiary)]">—</span>
+                  <span className="text-[var(--text-tertiary)]">--</span>
                 )}
                 {d.platform && (
                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)] flex items-center gap-0.5">

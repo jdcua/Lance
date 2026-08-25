@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import BrandLogo from '../ui/BrandLogo';
 import { useStore } from '../../store';
+import { useToasts } from '../../store/toastStore';
 import Button from '../ui/Button';
 import { getRuntimeVersion } from '../../lib/version';
-import { openCheckout } from '../../utils/tauri';
+import { openCheckout, isCheckoutConfigured } from '../../utils/tauri';
 
 interface SplashScreenProps {
   onDismiss: () => void;
@@ -11,7 +12,10 @@ interface SplashScreenProps {
 
 export default function SplashScreen({ onDismiss }: SplashScreenProps) {
   const { isLicensed } = useStore();
+  const addToast = useToasts((s) => s.add);
   const [appVersion, setAppVersion] = useState('0.0.0');
+  const [checkoutNotice, setCheckoutNotice] = useState('');
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     getRuntimeVersion().then(setAppVersion);
@@ -23,11 +27,55 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
     return () => clearTimeout(timer);
   }, [isLicensed, onDismiss]);
 
+  // Escape dismisses the splash (matching modal behavior) and Tab stays trapped.
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onDismiss();
+        return;
+      }
+      if (e.key === 'Tab' && panelRef.current) {
+        const focusable = Array.from(
+          panelRef.current.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+        ).filter((el) => el.offsetParent !== null);
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first || !panelRef.current.contains(document.activeElement)) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onDismiss]);
+
   if (isLicensed) return null;
+
+  const handleTryPro = async () => {
+    const opened = await openCheckout('monthly');
+    if (!opened) {
+      setCheckoutNotice('Checkout isn\u2019t configured in this build yet. Contact support to get a license key.');
+      addToast('Checkout is not configured in this build', 'info');
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }}>
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Lance Pro"
         className="w-[480px] bg-[var(--bg-card)] rounded-[16px] shadow-2xl px-10 py-10 text-center"
         style={{ fontFamily: "'Inter', sans-serif" }}
       >
@@ -42,17 +90,21 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
         <div className="border-t border-[var(--border-color)] my-5" />
 
         <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-3">
-          Core is free forever. Pro adds archetype depth — proposals, contracts, invoices, scope-creep protection.
+          Core is free forever. Pro adds archetype depth -- proposals, contracts, invoices, scope-creep protection.
         </p>
 
         <div className="flex items-center justify-center gap-3 mb-6">
-          <Button variant="primary" onClick={() => openCheckout('monthly')} size="md">
+          <Button variant="primary" onClick={handleTryPro} size="md">
             Try Pro free for 30 days &mdash; $14/mo
           </Button>
           <Button variant="secondary" onClick={onDismiss} size="md">
             Continue free
           </Button>
         </div>
+
+        {checkoutNotice && (
+          <p className="text-[11px] text-[var(--warning-text)] mb-3">{checkoutNotice}</p>
+        )}
 
         <p className="text-xs text-[var(--text-tertiary)]">Try free 30 days • $14/mo or $120/yr • Lifetime license available</p>
       </div>

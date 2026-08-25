@@ -1,5 +1,5 @@
 /**
- * Prototype Log — Embedded feature.
+ * Prototype Log -- Embedded feature.
  * Thin wrapper around PrototypeTracker with embedded-specific tool defaults (Altium, KiCad, EAGLE, other).
  */
 import { useState, useEffect } from 'react';
@@ -192,9 +192,9 @@ export default function PrototypeLog({ projectId }: { projectId: string }) {
                         <ExternalLink size={10} />
                         Open
                       </a>
-                    ) : <span className="text-[var(--text-tertiary)]">—</span>}
+                    ) : <span className="text-[var(--text-tertiary)]">--</span>}
                   </td>
-                  <td className="py-1.5 px-2 text-[var(--text-secondary)] max-w-[200px] truncate">{p.feedback || '—'}</td>
+                  <td className="py-1.5 px-2 text-[var(--text-secondary)] max-w-[200px] truncate">{p.feedback || '--'}</td>
                   <td className="py-1.5 px-2 text-[var(--text-tertiary)]">{formatDate(p.created_at)}</td>
                   <td className="py-1.5 px-2">
                     <button onClick={() => handleDelete(p.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">

@@ -1,5 +1,5 @@
 /**
- * Shoot Log — Photographer / Filmmaker feature.
+ * Shoot Log -- Photographer / Filmmaker feature.
  * Logs photo/video shoots with location, type, camera system, hours.
  */
 import { useState, useEffect } from 'react';
@@ -63,7 +63,7 @@ export default function ShootLog({ projectId }: { projectId: string }) {
           {list.map((s) => (
             <div key={s.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
               <div className="flex-1 min-w-0">
-                <span className="font-medium text-[var(--text-primary)]">{s.shoot_date?.split('T')[0] || '—'}</span>
+                <span className="font-medium text-[var(--text-primary)]">{s.shoot_date?.split('T')[0] || '--'}</span>
                 <span className="text-[var(--text-tertiary)] ml-2">
                   {s.location && <><MapPin size={10} className="inline mr-0.5" />{s.location} </>}
                   {s.camera_system && <><Camera size={10} className="inline mr-0.5 ml-1" />{s.camera_system} </>}

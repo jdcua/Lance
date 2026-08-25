@@ -1,5 +1,5 @@
 /**
- * Gas Tracker — Blockchain feature.
+ * Gas Tracker -- Blockchain feature.
  * Log gas usage with running total at top.
  */
 import { useState, useEffect } from 'react';

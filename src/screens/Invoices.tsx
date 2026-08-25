@@ -11,7 +11,7 @@ import ClientSelect from '../components/ui/ClientSelect';
 import { exportInvoicePDF, exportInvoiceDOCX } from '../export';
 import { formatCurrency, relativeDate, parseDateString } from '../utils/format';
 import { getCurrencySymbol } from '../lib/currency';
-import { generateInvoiceNumber } from '../utils/invoiceNumber';
+import { generateInvoiceNumber, sanitizeInvoiceNumber } from '../utils/invoiceNumber';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 import { useToasts } from '../store/toastStore';
 import { Plus, Pencil, Trash2, Download, Clock, RotateCw, Receipt, Search, Bell, X, Copy, DollarSign, ChevronDown, ChevronRight, Mail, AlertTriangle, Check } from 'lucide-react';
@@ -173,22 +173,31 @@ export default function Invoices() {
   const total = subtotal + subtotal * (taxRate / 100);
 
   const handleSave = async () => {
-    if (!form.client_id) return;
+    if (!form.client_id) {
+      addToast('Select a client before saving the invoice', 'error');
+      return;
+    }
+    const invoice_number = sanitizeInvoiceNumber(form.invoice_number);
+    if (!invoice_number) {
+      setForm((f) => ({ ...f, invoice_number: generateInvoiceNumber(invoices || []) }));
+      addToast('Enter an invoice number', 'error');
+      return;
+    }
     setSaving(true);
     try {
       // Invoice numbers must be unique across all invoices.
       const duplicateNum = (invoices || []).find(
-        (i) => i.invoice_number === form.invoice_number && (!editing || i.id !== editing.id)
+        (i) => i.invoice_number === invoice_number && (!editing || i.id !== editing.id)
       );
       if (duplicateNum) {
         setSaving(false);
-        addToast(`Invoice number ${form.invoice_number} already exists`, 'error');
+        addToast(`Invoice number ${invoice_number} already exists`, 'error');
         return;
       }
       const lineItems: LineItem[] = items.map((i) => ({ ...i, id: crypto.randomUUID(), description: i.description ? sanitizeInput(i.description).slice(0, MAX_LENGTHS.description) : '' }));
       const hourlyRateTypes = new Set(['hourly', 'per-shoot', 'per-session', 'per-track', 'per-word', 'per-look', 'per-event', 'per-commission', 'per-plan', 'per-closing', 'per-campaign', 'per-placement', 'per-project', 'milestone', 'retainer', 'commission-based', 'per-track', 'per-look', 'per-word']);
       const storedRateType: 'flat' | 'hourly' = hourlyRateTypes.has(form.rate_type) ? 'hourly' : 'flat';
-      const invoiceData = { client_id: form.client_id, invoice_number: form.invoice_number, status: form.status, line_items: lineItems, subtotal, tax_rate: taxRate || undefined, total, due_date: form.due_date || undefined, notes: form.notes ? sanitizeInput(form.notes).slice(0, MAX_LENGTHS.notes) : undefined, currency: form.currency || undefined, rate_type: storedRateType };
+      const invoiceData = { client_id: form.client_id, invoice_number, status: form.status, line_items: lineItems, subtotal, tax_rate: taxRate || undefined, total, due_date: form.due_date || undefined, notes: form.notes ? sanitizeInput(form.notes).slice(0, MAX_LENGTHS.notes) : undefined, currency: form.currency || undefined, rate_type: storedRateType };
       if (editing) await updateInvoice({ ...editing, ...invoiceData });
       else await addInvoice(invoiceData);
       const ids = Array.from(selectedTimeIds);
@@ -252,7 +261,7 @@ export default function Invoices() {
     setReminderInv(inv);
     setReminderForm({
       to: client?.email || '',
-      subject: subject || `Friendly reminder — Invoice ${inv.invoice_number} due ${inv.due_date || 'now'}`,
+      subject: subject || `Friendly reminder -- Invoice ${inv.invoice_number} due ${inv.due_date || 'now'}`,
       body: draft,
       markFollowedUp: false,
     });
@@ -405,7 +414,7 @@ export default function Invoices() {
         notes: inv.notes,
         currency: inv.currency,
       });
-      addToast(`Invoice duplicated — ${newNumber} created as draft`, 'success');
+      addToast(`Invoice duplicated -- ${newNumber} created as draft`, 'success');
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to duplicate invoice', 'error');
     }
@@ -670,7 +679,7 @@ export default function Invoices() {
                         return (
                           <div className="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-[var(--border-color)]/50">
                             <Bell size={10} className="text-[var(--accent)]" />
-                            <span className="text-[10px] text-[var(--accent)]">Follow-up ready — {daysElapsed}d overdue</span>
+                            <span className="text-[10px] text-[var(--accent)]">Follow-up ready -- {daysElapsed}d overdue</span>
                             {!hasEmail && (
                               <span className="flex items-center gap-0.5 text-[10px] text-[var(--warning-text)]">
                                 <AlertTriangle size={9} /> No email
@@ -803,7 +812,7 @@ export default function Invoices() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="text-sm font-semibold text-[var(--text-primary)]">{ri.title}</h4>
-                    <span className="text-xs text-[var(--text-secondary)]">— {getClientName(ri.client_id)}</span>
+                    <span className="text-xs text-[var(--text-secondary)]">-- {getClientName(ri.client_id)}</span>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-[var(--text-tertiary)] mb-1.5">
                     <span>{formatCurrency(ri.total)}/{ri.frequency === 'monthly' ? 'month' : ri.frequency === 'weekly' ? 'week' : ri.frequency === 'biweekly' ? '2 weeks' : 'quarter'}</span>
@@ -811,7 +820,7 @@ export default function Invoices() {
                     {ri.last_generated && <span>Last: {relativeDate(ri.last_generated)}</span>}
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => handleToggleActive(ri)} className={`w-2 h-2 rounded-full ${ri.active ? 'bg-[var(--accent)]' : 'bg-[var(--neutral-border)]'}`} title={ri.active ? 'Active — click to pause' : 'Paused — click to resume'} />
+                    <button onClick={() => handleToggleActive(ri)} className={`w-2 h-2 rounded-full ${ri.active ? 'bg-[var(--accent)]' : 'bg-[var(--neutral-border)]'}`} title={ri.active ? 'Active -- click to pause' : 'Paused -- click to resume'} />
                     <span className={`text-[10px] ${ri.active ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)]'}`}>{ri.active ? 'Active' : 'Paused'}</span>
                   </div>
                 </div>
@@ -842,7 +851,7 @@ export default function Invoices() {
             </div>
             <div>
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Invoice #</label>
-              <input type="text" value={form.invoice_number} onChange={(e) => setForm({ ...form, invoice_number: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]" />
+              <input type="text" value={form.invoice_number} onChange={(e) => setForm({ ...form, invoice_number: sanitizeInvoiceNumber(e.target.value) })} maxLength={40} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">

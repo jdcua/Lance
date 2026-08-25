@@ -1,5 +1,5 @@
 /**
- * Filing Deadline Calendar — Legal feature.
+ * Filing Deadline Calendar -- Legal feature.
  * Deadlines sorted by due_date ascending with filed toggle.
  */
 import { useState, useEffect } from 'react';
@@ -163,12 +163,12 @@ export default function FilingDeadlineCalendar({ clientId }: { clientId: string 
                     {d.filed ? <Check size={14} /> : <Circle size={14} />}
                   </button>
                   <span className={`font-medium truncate ${isOverdue ? 'text-[#DC2626]' : d.filed ? 'line-through text-[var(--text-tertiary)]' : 'text-[var(--text-primary)]'}`}>
-                    {d.title || '—'}
+                    {d.title || '--'}
                   </span>
                   {d.case_id && (
                     <span className="text-[10px] text-[var(--text-tertiary)] flex-shrink-0">{d.case_id}</span>
                   )}
-                  <span className={`text-[10px] flex-shrink-0 ml-auto ${isOverdue ? 'text-[#DC2626] font-medium' : 'text-[var(--text-tertiary)]'}`}>{d.due_date || '—'}</span>
+                  <span className={`text-[10px] flex-shrink-0 ml-auto ${isOverdue ? 'text-[#DC2626] font-medium' : 'text-[var(--text-tertiary)]'}`}>{d.due_date || '--'}</span>
                 </div>
                 <button onClick={() => handleDelete(d.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                   <Trash2 size={12} />

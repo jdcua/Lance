@@ -1,5 +1,5 @@
 /**
- * Infra Dashboard — DevOps feature.
+ * Infra Dashboard -- DevOps feature.
  * Track infrastructure services with provider, monthly cost, and status.
  */
 import { useState, useEffect } from 'react';

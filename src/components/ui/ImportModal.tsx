@@ -1,8 +1,8 @@
 /**
- * ImportModal — Multi-step import wizard.
+ * ImportModal -- Multi-step import wizard.
  * Step 1: Drop zone + file picker
  * Step 2: Scanning progress
- * Step 3: Review — per-file preview with column mapping
+ * Step 3: Review -- per-file preview with column mapping
  * Step 4: Confirm summary
  * Step 5: Complete
  */
@@ -298,7 +298,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
         break;
       }
       case 'financial_data': {
-        // Financial data is ambiguous — import as expense list
+        // Financial data is ambiguous -- import as expense list
         const expenseData = mappers.mapToExpenses(rows, mapping);
         for (const data of expenseData) {
           await addExpense(data);
@@ -356,7 +356,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
           client_id: clientId,
           project_id: undefined,
           proposal_id: undefined,
-          title: prefill.title || `Imported Contract — ${detection.file.name}`,
+          title: prefill.title || `Imported Contract -- ${detection.file.name}`,
           status: 'draft',
           body: prefill.body,
         });
@@ -374,7 +374,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
         await addProposal({
           client_id: clientId,
           project_id: undefined,
-          title: prefill.title || `Imported Proposal — ${detection.file.name}`,
+          title: prefill.title || `Imported Proposal -- ${detection.file.name}`,
           status: 'draft',
           scope: undefined,
           timeline: undefined,
@@ -396,6 +396,20 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
     onClose();
   };
 
+  // Belt-and-suspenders: ensure Escape closes even if Modal's document listener misses it
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        handleClose();
+      }
+    };
+    document.addEventListener('keydown', handler, true); // capture phase
+    return () => document.removeEventListener('keydown', handler, true);
+  }, [open, handleClose, importing]);
+
   const stepDots = [1, 2, 3, 4, 5];
 
   return (
@@ -415,7 +429,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
           ))}
         </div>
 
-        {/* Step 1 — Drop Zone */}
+        {/* Step 1 -- Drop Zone */}
         {step === 1 && (
           <div className="space-y-4">
             <div
@@ -458,7 +472,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
           </div>
         )}
 
-        {/* Step 2 — Scanning */}
+        {/* Step 2 -- Scanning */}
         {step === 2 && (
           <div className="space-y-4">
             <div className="text-center py-8">
@@ -485,7 +499,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
           </div>
         )}
 
-        {/* Step 3 — Review */}
+        {/* Step 3 -- Review */}
         {step === 3 && (
           <div className="space-y-4">
             {!classificationBannerDismissed && (
@@ -612,7 +626,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                       </div>
                     )}
 
-                    {/* Spreadsheet — Column mapping */}
+                    {/* Spreadsheet -- Column mapping */}
                     {currentDetection.fileType === 'spreadsheet' && currentDetection.preview.headers && currentDetection.preview.rows && (
                       <ColumnMapper
                         headers={currentDetection.preview.headers}
@@ -623,7 +637,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                       />
                     )}
 
-                    {/* Document — Extracted fields preview */}
+                    {/* Document -- Extracted fields preview */}
                     {currentDetection.fileType === 'document' && (
                       <div className="space-y-3">
                         {currentDetection.preview.extractedFields && Object.keys(currentDetection.preview.extractedFields).length > 0 && (
@@ -685,7 +699,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                       </div>
                     )}
 
-                    {/* Image — Thumbnail preview */}
+                    {/* Image -- Thumbnail preview */}
                     {currentDetection.fileType === 'image' && currentDetection.preview.imageDataUrl && (
                       <div className="flex gap-4 items-start">
                         <img
@@ -755,7 +769,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
           </div>
         )}
 
-        {/* Step 4 — Importing progress */}
+        {/* Step 4 -- Importing progress */}
         {step === 4 && (
           <div className="space-y-4 text-center py-6">
             <Loader2 size={36} className="animate-spin mx-auto mb-4 text-[var(--accent)]" />
@@ -768,7 +782,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
           </div>
         )}
 
-        {/* Step 5 — Complete */}
+        {/* Step 5 -- Complete */}
         {step === 5 && (
           <div className="space-y-4 text-center py-6">
             <div className="w-14 h-14 rounded-full bg-[var(--accent-bg)] flex items-center justify-center mx-auto mb-3">

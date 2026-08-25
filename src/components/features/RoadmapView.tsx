@@ -1,5 +1,5 @@
 /**
- * Roadmap View — Product Manager feature.
+ * Roadmap View -- Product Manager feature.
  * Roadmap items grouped by quarter with reordering.
  */
 import { useState, useEffect } from 'react';

@@ -1,5 +1,5 @@
 /**
- * Impact Measurement — KPI tracking with baseline, target, actual, and variance display.
+ * Impact Measurement -- KPI tracking with baseline, target, actual, and variance display.
  */
 import { useState, useEffect } from 'react';
 import { getDb } from '../../db';

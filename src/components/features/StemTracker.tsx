@@ -136,7 +136,7 @@ export default function StemTracker({ projectId }: { projectId: string }) {
                 <span className={`font-medium ${stem.delivered ? 'line-through text-[var(--text-tertiary)]' : 'text-[var(--text-primary)]'}`}>{stem.name}</span>
                 {stem.format && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)] flex-shrink-0">{stem.format}</span>}
                 {stem.delivery_date && <span className="text-[10px] text-[var(--text-tertiary)] flex-shrink-0">{stem.delivery_date}</span>}
-                {stem.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">— {stem.notes}</span>}
+                {stem.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">-- {stem.notes}</span>}
               </div>
               <button onClick={() => handleDelete(stem.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                 <Trash2 size={12} />

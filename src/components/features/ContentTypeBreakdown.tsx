@@ -1,5 +1,5 @@
 /**
- * Content Type Breakdown — Social Media feature.
+ * Content Type Breakdown -- Social Media feature.
  * Reads content_posts table. Shows a simple count breakdown by content_type as labeled bars.
  */
 import { useState, useEffect } from 'react';

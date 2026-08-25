@@ -1,5 +1,5 @@
 /**
- * Platform Log — Game Developer feature.
+ * Platform Log -- Game Developer feature.
  * Multi-select tag panel for engines and target platforms.
  */
 import { useState, useEffect } from 'react';

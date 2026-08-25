@@ -1,5 +1,5 @@
 /**
- * Keyword Tracker — SEO Specialist feature.
+ * Keyword Tracker -- SEO Specialist feature.
  * Tracks keyword rankings by client.
  */
 import { useState, useEffect } from 'react';
@@ -72,7 +72,7 @@ export default function KeywordTracker({ clientId }: { clientId: string }) {
                 <span className="font-medium text-[var(--text-primary)]">{k.keyword}</span>
               </div>
               <span className="text-[10px] text-[var(--text-tertiary)] tabular-nums">
-                {k.position_current != null ? `#${k.position_current}` : '—'}
+                {k.position_current != null ? `#${k.position_current}` : '--'}
                 {k.target_position != null && <> → #{k.target_position}</>}
               </span>
               <button onClick={() => removeKeyword(k.id, clientId)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">

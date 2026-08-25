@@ -1,5 +1,5 @@
 /**
- * Licensing Tracker — Illustrator / Musician feature.
+ * Licensing Tracker -- Illustrator / Musician feature.
  * Tracks asset licenses with revenue totals, grouped by license type.
  */
 import { useState, useEffect } from 'react';
@@ -272,7 +272,7 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
                   >
                     <div className="flex-1 min-w-0 flex items-center gap-2">
                       <span className="font-medium text-[var(--text-primary)]">
-                        {l.licensee || '—'}
+                        {l.licensee || '--'}
                       </span>
                       {l.term && (
                         <span className="text-[10px] text-[var(--text-tertiary)]">{l.term}</span>

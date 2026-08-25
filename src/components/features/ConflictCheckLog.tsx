@@ -1,5 +1,5 @@
 /**
- * Conflict Check Log — Legal feature.
+ * Conflict Check Log -- Legal feature.
  * List of conflict checks with result badges.
  */
 import { useState, useEffect } from 'react';
@@ -159,11 +159,11 @@ export default function ConflictCheckLog({ clientId }: { clientId: string }) {
               <div key={check.id} className={`flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs border-l-[3px] ${check.result === 'conflict' ? 'border-l-[#DC2626]' : check.result === 'flagged' ? 'border-l-[#D97706]' : 'border-l-[#16A34A]'}`}>
                 <div className="flex-1 min-w-0 flex items-center gap-2">
                   <Icon size={12} className={check.result === 'clear' ? 'text-[#16A34A]' : check.result === 'conflict' ? 'text-[#DC2626]' : 'text-[#D97706]'} />
-                  <span className="font-medium text-[var(--text-primary)] truncate">{check.party_name || '—'}</span>
+                  <span className="font-medium text-[var(--text-primary)] truncate">{check.party_name || '--'}</span>
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0 ${resultBadgeClasses[check.result] || ''}`}>
                     {check.result}
                   </span>
-                  <span className="text-[10px] text-[var(--text-tertiary)] flex-shrink-0 ml-auto">{check.check_date || '—'}</span>
+                  <span className="text-[10px] text-[var(--text-tertiary)] flex-shrink-0 ml-auto">{check.check_date || '--'}</span>
                 </div>
                 <button onClick={() => handleDelete(check.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                   <Trash2 size={12} />

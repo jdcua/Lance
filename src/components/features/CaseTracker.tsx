@@ -1,5 +1,5 @@
 /**
- * Case Tracker — Legal feature.
+ * Case Tracker -- Legal feature.
  * List of legal cases with status badges.
  */
 import { useState, useEffect } from 'react';
@@ -153,7 +153,7 @@ export default function CaseTracker({ clientId }: { clientId: string }) {
                 {c.case_number && (
                   <span className="text-[10px] font-mono text-[var(--text-tertiary)] flex-shrink-0">{c.case_number}</span>
                 )}
-                <span className="font-medium text-[var(--text-primary)] truncate">{c.title || '—'}</span>
+                <span className="font-medium text-[var(--text-primary)] truncate">{c.title || '--'}</span>
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0 ${statusBadgeClasses[c.status] || ''}`}>
                   {c.status}
                 </span>

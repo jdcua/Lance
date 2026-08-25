@@ -1,5 +1,5 @@
 /**
- * Feedback Log — Designer feature.
+ * Feedback Log -- Designer feature.
  * Timeline of client feedback entries with medium, summary, actioned toggle, and project filter.
  */
 import { useState, useEffect } from 'react';

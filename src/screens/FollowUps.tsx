@@ -425,7 +425,7 @@ export default function FollowUps() {
           {pendingFiltered.some((f) => !f.clientEmail) && (
             <div className="flex items-start gap-2 p-3 rounded-[8px] bg-[var(--warning-bg)] text-[var(--warning-text)] text-xs">
               <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
-              <span>{pendingFiltered.filter((f) => !f.clientEmail).length} follow-up(s) skipped — no email on file.</span>
+              <span>{pendingFiltered.filter((f) => !f.clientEmail).length} follow-up(s) skipped -- no email on file.</span>
             </div>
           )}
           <div className="flex justify-end gap-2">

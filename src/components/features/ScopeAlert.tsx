@@ -1,5 +1,5 @@
 /**
- * Scope Alert — Virtual Assistant feature.
+ * Scope Alert -- Virtual Assistant feature.
  * Reads retainers + va_tasks. Shows an alert banner if va_tasks hours exceed 90% of retainer monthly_hours.
  */
 import { useState, useEffect } from 'react';

@@ -1,5 +1,5 @@
 /**
- * Timeline View — Generic timeline for milestones.
+ * Timeline View -- Generic timeline for milestones.
  * Reads store.milestones. Shows milestones sorted by due_date with date badges.
  */
 import { useState, useEffect } from 'react';

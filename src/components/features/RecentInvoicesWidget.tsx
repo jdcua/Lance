@@ -30,7 +30,7 @@ export default function RecentInvoicesWidget() {
                 {inv.invoice_number}
               </span>
               {client && (
-                <span className="text-[var(--text-tertiary)] ml-1">— {client.name}</span>
+                <span className="text-[var(--text-tertiary)] ml-1">-- {client.name}</span>
               )}
             </div>
             <div className="flex items-center gap-2 ml-2 shrink-0">

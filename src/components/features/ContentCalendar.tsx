@@ -1,5 +1,5 @@
 /**
- * Content Calendar — Social Media Manager feature.
+ * Content Calendar -- Social Media Manager feature.
  * Calendar grid for content posts with list view toggle and platform filter.
  */
 import { useState, useEffect } from 'react';
@@ -211,7 +211,7 @@ export default function ContentCalendar({ clientId }: { clientId: string }) {
                   <span className="font-medium text-[var(--text-primary)]">{p.content_type || 'Post'}</span>
                   <span className={`text-[10px] ${PLATFORM_TEXT_COLORS[p.platform] || PLATFORM_TEXT_COLORS.other}`}>{p.platform}</span>
                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)]">{p.status}</span>
-                  <span className="text-[10px] text-[var(--text-tertiary)]">{p.date || '—'}</span>
+                  <span className="text-[10px] text-[var(--text-tertiary)]">{p.date || '--'}</span>
                 </div>
                 <button onClick={() => handleDelete(p.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                   <Trash2 size={12} />

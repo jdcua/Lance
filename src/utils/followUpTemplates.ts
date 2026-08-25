@@ -1,5 +1,5 @@
 /**
- * Follow-up template engine — generates draft messages from templates
+ * Follow-up template engine -- generates draft messages from templates
  * with variable substitution. No AI, no API calls.
  *
  * TODO v1.5: SMTP integration
@@ -9,10 +9,12 @@
  * This enables true auto-send without opening the mail client.
  */
 
+import { sanitizeInvoiceNumber } from './invoiceNumber';
+
 export const DEFAULT_TEMPLATES: Record<string, string> = {
   proposal_day3: `Hi {client_name},
 
-Just wanted to check in on the {proposal_title} proposal I sent over a few days ago. I know things get busy — no rush at all.
+Just wanted to check in on the {proposal_title} proposal I sent over a few days ago. I know things get busy -- no rush at all.
 
 Happy to jump on a quick call if you have any questions or want to talk through anything.
 
@@ -23,14 +25,14 @@ Best,
 
 Following up on the {proposal_title} proposal I sent over last week. I put together a scope that I think would really move the needle for {project_name}.
 
-If the timing isn't right or priorities have shifted, no worries at all — just let me know where your head's at and I can adjust.
+If the timing isn't right or priorities have shifted, no worries at all -- just let me know where your head's at and I can adjust.
 
 Talk soon,
 {freelancer_name}`,
 
   proposal_day14: `Hi {client_name},
 
-I wanted to close the loop on the {proposal_title} proposal I sent your way a couple weeks back. Totally understand if things have changed — no pressure at all.
+I wanted to close the loop on the {proposal_title} proposal I sent your way a couple weeks back. Totally understand if things have changed -- no pressure at all.
 
 The offer is open whenever the timing is right. If another direction or format would work better, happy to rework it.
 
@@ -39,7 +41,7 @@ Wishing you well,
 
   invoice_day1: `Hi {client_name},
 
-Just a quick note that invoice {invoice_number} for {amount} was due on {due_date}. Totally possible it slipped through the cracks — happens to all of us.
+Just a quick note that invoice {invoice_number} for {amount} was due on {due_date}. Totally possible it slipped through the cracks -- happens to all of us.
 
 Let me know if you need anything on my end to get this processed.
 
@@ -66,21 +68,21 @@ All the best,
 };
 
 export const TEMPLATE_LABELS: Record<string, string> = {
-  proposal_day3: 'Proposal — Day 3 (Friendly check-in)',
-  proposal_day7: 'Proposal — Day 7 (Gentle nudge)',
-  proposal_day14: 'Proposal — Day 14 (Final touch)',
-  invoice_day1: 'Invoice — Day 1 overdue (Polite reminder)',
-  invoice_day7: 'Invoice — Day 7 overdue (Firm reminder)',
-  invoice_day14: 'Invoice — Day 14 overdue (Final notice)',
+  proposal_day3: 'Proposal -- Day 3 (Friendly check-in)',
+  proposal_day7: 'Proposal -- Day 7 (Gentle nudge)',
+  proposal_day14: 'Proposal -- Day 14 (Final touch)',
+  invoice_day1: 'Invoice -- Day 1 overdue (Polite reminder)',
+  invoice_day7: 'Invoice -- Day 7 overdue (Firm reminder)',
+  invoice_day14: 'Invoice -- Day 14 overdue (Final notice)',
 };
 
 export const DEFAULT_SUBJECT_TEMPLATES: Record<string, string> = {
-  proposal_day3: 'Following up — {proposal_title}',
-  proposal_day7: 'Checking in — {proposal_title}',
+  proposal_day3: 'Following up -- {proposal_title}',
+  proposal_day7: 'Checking in -- {proposal_title}',
   proposal_day14: 'Closing the loop on {proposal_title}',
-  invoice_day1: 'Invoice {invoice_number} — Friendly Reminder',
-  invoice_day7: 'Invoice {invoice_number} — Reminder ({days_elapsed} days past due)',
-  invoice_day14: 'Invoice {invoice_number} — Final Notice ({days_elapsed} days overdue)',
+  invoice_day1: 'Invoice {invoice_number} -- Friendly Reminder',
+  invoice_day7: 'Invoice {invoice_number} -- Reminder ({days_elapsed} days past due)',
+  invoice_day14: 'Invoice {invoice_number} -- Final Notice ({days_elapsed} days overdue)',
 };
 
 function getDefaultTemplate(key: string): string {
@@ -153,7 +155,7 @@ export function generateFollowUpDraft(
   const vars: Record<string, string> = {
     '{client_name}': data.clientName,
     '{proposal_title}': data.proposalTitle || '',
-    '{invoice_number}': data.invoiceNumber || '',
+    '{invoice_number}': sanitizeInvoiceNumber(data.invoiceNumber || ''),
     '{amount}': data.amount || '',
     '{due_date}': data.dueDate || '',
     '{days_elapsed}': String(data.daysElapsed),
@@ -193,7 +195,7 @@ export function generateSubjectLine(
   const vars: Record<string, string> = {
     '{client_name}': data.clientName,
     '{proposal_title}': data.proposalTitle || '',
-    '{invoice_number}': data.invoiceNumber || '',
+    '{invoice_number}': sanitizeInvoiceNumber(data.invoiceNumber || ''),
     '{amount}': data.amount || '',
     '{due_date}': data.dueDate || '',
     '{days_elapsed}': String(data.daysElapsed),

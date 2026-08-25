@@ -1,5 +1,5 @@
 /**
- * Reference Board — Illustrator feature.
+ * Reference Board -- Illustrator feature.
  * Visual grid of reference images and URLs using the mood_board_items table.
  */
 import { useState, useEffect } from 'react';

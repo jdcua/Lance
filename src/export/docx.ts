@@ -15,6 +15,7 @@ import type { Proposal, Invoice, Contract, Client, UserProfile } from '../types'
 import { formatCurrency, formatDate } from '../utils/format';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { saveFile, getProfileName } from './common';
+import { sanitizeInvoiceNumber } from '../utils/invoiceNumber';
 
 function parseHtmlToDocx(html: string): Paragraph[] {
   const parser = new DOMParser();
@@ -412,7 +413,7 @@ export async function exportInvoiceDOCX(
   });
 
   const blob = await Packer.toBlob(doc);
-  const filename = `Lance_Invoice_${invoice.invoice_number}_${client.name.replace(/\s+/g, '_')}.docx`;
+  const filename = `Lance_Invoice_${sanitizeInvoiceNumber(invoice.invoice_number) || 'INV'}_${client.name.replace(/\s+/g, '_')}.docx`;
   await saveFile(blob, filename);
 }
 

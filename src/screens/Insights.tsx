@@ -258,7 +258,7 @@ export default function Insights() {
               <Star size={32} className="text-[var(--text-tertiary)] mb-3" />
               <h4 className="text-sm font-medium text-[var(--text-secondary)] mb-1">No client metrics yet</h4>
               <p className="text-xs text-[var(--text-tertiary)] max-w-sm leading-relaxed">
-                Define custom metrics on any client profile and mark them as "Headline" to see them here. Track CPM, ROAS, story points, revision rounds — whatever matters to your craft.
+                Define custom metrics on any client profile and mark them as "Headline" to see them here. Track CPM, ROAS, story points, revision rounds -- whatever matters to your craft.
               </p>
             </Card>
           ) : (
@@ -307,7 +307,7 @@ export default function Insights() {
                                 <Sparkline values={[...numericValues].reverse()} width={60} height={22} color={isUp ? 'var(--accent)' : isDown ? 'var(--danger)' : 'var(--text-tertiary)'} />
                               </div>
                             ) : (
-                              <span className="text-[var(--text-tertiary)]">—</span>
+                              <span className="text-[var(--text-tertiary)]">--</span>
                             )}
                           </td>
                           <td className="px-4 py-3 text-right font-medium text-[var(--text-primary)]">
@@ -315,14 +315,14 @@ export default function Insights() {
                               ? hm.metric_type === 'currency' ? `$${formatMetricVal(hm.latest_value)}` :
                                 hm.metric_type === 'percentage' ? `${formatMetricVal(hm.latest_value)}%` :
                                 hm.latest_value
-                              : '—'}
+                              : '--'}
                           </td>
                           <td className="px-4 py-3 text-right text-[var(--text-tertiary)]">
                             {hm.previous_value
                               ? hm.metric_type === 'currency' ? `$${formatMetricVal(hm.previous_value)}` :
                                 hm.metric_type === 'percentage' ? `${formatMetricVal(hm.previous_value)}%` :
                                 hm.previous_value
-                              : '—'}
+                              : '--'}
                           </td>
                         </tr>
                       );

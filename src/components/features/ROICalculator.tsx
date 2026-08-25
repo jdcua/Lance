@@ -1,5 +1,5 @@
 /**
- * ROI Calculator — Finance tool.
+ * ROI Calculator -- Finance tool.
  * Simple two-input ROI calculator with percentage, ratio, and profit/loss.
  */
 import { useState } from 'react';

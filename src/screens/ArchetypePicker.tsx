@@ -19,7 +19,7 @@ interface ArchetypePickerProps {
 const CATEGORIES = ['All', 'Creative', 'Technical', 'Strategic', 'Service', 'Custom'];
 
 export default function ArchetypePicker({ onSelect, onClose, showApply = true, currentId = 'default' }: ArchetypePickerProps) {
-  const { profile, saveProfile, loadProfile, setArchetypeAppliedAt } = useStore();
+  const { profile, saveProfile, loadProfile, setArchetypeAppliedAt, getActiveTier } = useStore();
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
@@ -28,6 +28,10 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
   // reflects the currently applied archetype instead of always defaulting to 'default'.
   const [selected, setSelected] = useState<string>(profile?.profession || currentId);
   const [expanded, setExpanded] = useState<string | null>(null);
+
+  // Pro depth gate state (shared by card badges + Apply)
+  const isFirstRun = !profile?.profession;
+  const isProTier = ['pro', 'trial', 'lifetime'].includes(getActiveTier());
 
   const filtered = useMemo(() => {
     let list = ARCHETYPE_LIST;
@@ -59,6 +63,16 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
     const archetype = getArchetype(selected);
     if (!profile) {
       console.trace('[ArchetypePicker] no profile, aborting');
+      return;
+    }
+
+    // Pro feature gate (wire for real: gates were dead code before).
+    // First-run onboarding (no profession set yet) always applies -- core stays free.
+    const hasDepthFeatures = (archetype.archetypeFeatures?.length || 0) > 0;
+    if (!isFirstRun && !isProTier && hasDepthFeatures) {
+      console.trace('[ArchetypePicker] gated: archetypeDepth requires Pro');
+      document.dispatchEvent(new CustomEvent('lance:open-upgrade', { detail: `Archetype depth -- ${archetype.label}` }));
+      addToast('Archetype depth is a Pro feature', 'info');
       return;
     }
 
@@ -173,6 +187,13 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
               {isSelected && (
                 <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-[var(--accent)] flex items-center justify-center">
                   <Check size={12} className="text-white" />
+                </div>
+              )}
+
+              {/* Pro badge: depth features gated on free tier */}
+              {!isFirstRun && !isProTier && (archetype.archetypeFeatures?.length || 0) > 0 && (
+                <div className="absolute top-3 left-3 px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-[var(--bg-secondary)] text-[var(--text-tertiary)] border border-[var(--border-color)]">
+                  Pro
                 </div>
               )}
 

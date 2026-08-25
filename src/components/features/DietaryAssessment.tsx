@@ -1,5 +1,5 @@
 /**
- * Dietary Assessment — Nutritionist feature.
+ * Dietary Assessment -- Nutritionist feature.
  * Timeline of dietary assessments with food log, analysis, recommendations.
  */
 import { useState, useEffect } from 'react';

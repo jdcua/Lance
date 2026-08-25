@@ -1,5 +1,5 @@
 /**
- * Sparkline — Tiny inline SVG line chart for metric history.
+ * Sparkline -- Tiny inline SVG line chart for metric history.
  * Renders a simple polyline with optional min/max/trend display.
  */
 
@@ -21,7 +21,7 @@ export default function Sparkline({
   if (values.length < 2) {
     return (
       <div className={`flex items-center justify-center ${className}`} style={{ width, height }}>
-        <span className="text-[10px] text-[var(--text-tertiary)]">—</span>
+        <span className="text-[10px] text-[var(--text-tertiary)]">--</span>
       </div>
     );
   }

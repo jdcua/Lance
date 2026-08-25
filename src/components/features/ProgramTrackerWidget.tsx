@@ -1,5 +1,5 @@
 /**
- * Program Tracker Widget — Trainer feature.
+ * Program Tracker Widget -- Trainer feature.
  * Read-only list of active programs for a client from the programs table.
  */
 import { useState, useEffect } from 'react';

@@ -388,7 +388,7 @@ export default function Settings() {
 
       const bytes = new TextEncoder().encode(content);
       if (bytes.length > 50 * 1024 * 1024) {
-        addToast('Import failed — file exceeds 50MB limit', 'error');
+        addToast('Import failed -- file exceeds 50MB limit', 'error');
         return;
       }
 
@@ -396,18 +396,18 @@ export default function Settings() {
       try {
         parsed = JSON.parse(content);
       } catch {
-        addToast('Import failed — file is not valid JSON', 'error');
+        addToast('Import failed -- file is not valid JSON', 'error');
         return;
       }
 
       const validation = validateImportEnvelope(parsed);
       if (!validation.valid) {
-        addToast(`Import failed — ${validation.error}`, 'error');
+        addToast(`Import failed -- ${validation.error}`, 'error');
         return;
       }
 
       if (!validation.envelope) {
-        addToast('Import failed — invalid backup format', 'error');
+        addToast('Import failed -- invalid backup format', 'error');
         return;
       }
 
@@ -431,7 +431,7 @@ export default function Settings() {
 
       proceedToImportSummary(envelope);
     } catch {
-      addToast('Import failed — check file format', 'error');
+      addToast('Import failed -- check file format', 'error');
     }
   };
 
@@ -461,7 +461,7 @@ export default function Settings() {
 
     try {
       if (!importSummaryData?.envelope) {
-        addToast('Import failed — no data to import', 'error');
+        addToast('Import failed -- no data to import', 'error');
         setImportPending(false);
         return;
       }
@@ -472,7 +472,7 @@ export default function Settings() {
       const result = await performImport(envelope, mode);
 
       if (result.imported === 0 && result.skipped === 0 && result.failed > 0) {
-        addToast('Import failed — no data was changed', 'error');
+        addToast('Import failed -- no data was changed', 'error');
       } else {
         const parts: string[] = [];
         if (result.imported > 0) parts.push(`Imported: ${result.imported} records across ${result.tablesWritten} tables`);
@@ -488,7 +488,7 @@ export default function Settings() {
 
       await loadProfile();
     } catch (err) {
-      addToast(`Import failed — ${(err as Error)?.message || 'no data was changed'}`, 'error');
+      addToast(`Import failed -- ${(err as Error)?.message || 'no data was changed'}`, 'error');
     } finally {
       setImportPending(false);
     }
@@ -676,7 +676,7 @@ export default function Settings() {
                         <Button variant="primary" onClick={() => { setLicenseKey(''); setLicenseError(''); setShowLicenseModal(true); }} size="sm">
                           Enter license key
                         </Button>
-                        <Button variant="secondary" onClick={() => openCheckout('monthly')} size="sm">
+                        <Button variant="secondary" onClick={() => { openCheckout('monthly').then((ok) => { if (!ok) addToast('Checkout is not configured in this build', 'info'); }); }} size="sm">
                           Get a license &mdash; $14/mo
                         </Button>
                       </div>
@@ -900,7 +900,7 @@ export default function Settings() {
                       </Button>
                     </div>
                     <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
-                      Your archetype customizes your sidebar layout, dashboard metrics, insights panels, and rate label. You can switch anytime — your data stays the same.
+                      Your archetype customizes your sidebar layout, dashboard metrics, insights panels, and rate label. You can switch anytime -- your data stays the same.
                     </p>
                     <div className="grid grid-cols-2 gap-1.5">
                       {ARCHETYPE_LIST.filter(a => a.id !== 'default' && a.id !== 'custom').slice(0, 8).map((archetype) => (
@@ -1105,7 +1105,7 @@ export default function Settings() {
                 <Card className="mb-6">
                   <SectionHead title="Follow-up reminders" isSaved={saved.has("Follow-ups")} />
                   <div className="space-y-4">
-                    <p className="text-xs text-[var(--text-tertiary)]">Lance monitors sent proposals and invoices and drafts friendly follow-up messages when they need attention. You control everything — messages are never sent automatically.</p>
+                    <p className="text-xs text-[var(--text-tertiary)]">Lance monitors sent proposals and invoices and drafts friendly follow-up messages when they need attention. You control everything -- messages are never sent automatically.</p>
 
                     {/* Toggle */}
                     <div className="flex items-center justify-between">
@@ -1331,7 +1331,7 @@ export default function Settings() {
                     <div>
                       <p className="text-sm font-medium text-[var(--text-primary)] mb-3">Message Templates</p>
                       <p className="text-xs text-[var(--text-tertiary)] mb-4">
-                        Use <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{client_name}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{proposal_title}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{invoice_number}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{amount}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{due_date}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{days_elapsed}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{freelancer_name}'}</code> — they fill in automatically.
+                        Use <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{client_name}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{proposal_title}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{invoice_number}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{amount}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{due_date}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{days_elapsed}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{freelancer_name}'}</code> -- they fill in automatically.
                       </p>
                       <div className="space-y-3">
                         {Object.entries(TEMPLATE_LABELS).map(([key, label]) => (
@@ -1516,7 +1516,7 @@ export default function Settings() {
       <Modal open={showAssetWarning} onClose={() => setShowAssetWarning(false)} title="Backup your files" size="sm">
         <div className="space-y-4">
           <div className="text-sm text-[var(--text-primary)] leading-relaxed">
-            <p className="mb-3">Your Lance backup includes all your data — clients, projects, invoices, and everything else.</p>
+            <p className="mb-3">Your Lance backup includes all your data -- clients, projects, invoices, and everything else.</p>
             <div className="flex items-start gap-2 p-3 rounded-[8px] bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
               <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
               <div>
@@ -1611,7 +1611,7 @@ export default function Settings() {
                   {importReplaceMode ? 'Replace all data' : 'Add to existing data'}
                 </p>
                 <p className="text-[10px] text-[var(--text-tertiary)]">
-                  {importReplaceMode ? 'Destructive — removes all current data first' : 'Default — safe'}
+                  {importReplaceMode ? 'Destructive -- removes all current data first' : 'Default -- safe'}
                 </p>
               </div>
             </div>

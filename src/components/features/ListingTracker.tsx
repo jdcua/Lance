@@ -1,5 +1,5 @@
 /**
- * Listing Tracker — Real Estate feature.
+ * Listing Tracker -- Real Estate feature.
  * Track property listings with address, type, price, status badges, and dates.
  */
 import { useState, useEffect } from 'react';

@@ -1,5 +1,5 @@
 /**
- * Research Log — UX Designer feature.
+ * Research Log -- UX Designer feature.
  * Timeline of research activities with type, date, participants, and key findings.
  */
 import { useState, useEffect } from 'react';
@@ -112,7 +112,7 @@ export default function ResearchLog({ projectId }: { projectId: string }) {
   const totalParticipants = activities.reduce((sum, a) => sum + (a.participants || 0), 0);
 
   const formatDate = (dateStr: string) => {
-    if (!dateStr) return '—';
+    if (!dateStr) return '--';
     const d = new Date(dateStr);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };

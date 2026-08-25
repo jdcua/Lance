@@ -1,5 +1,5 @@
 /**
- * Campaign Budget Tracker — tracks campaign budgets with spend progress visualization.
+ * Campaign Budget Tracker -- tracks campaign budgets with spend progress visualization.
  */
 import { useState, useEffect } from 'react';
 import { getDb } from '../../db';

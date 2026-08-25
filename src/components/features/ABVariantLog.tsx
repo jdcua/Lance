@@ -1,5 +1,5 @@
 /**
- * A/B Variant Log — Copywriter feature.
+ * A/B Variant Log -- Copywriter feature.
  * A/B test variant tracking with control flag and results.
  */
 import { useState, useEffect } from 'react';

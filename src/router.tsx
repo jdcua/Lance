@@ -62,7 +62,7 @@ export const router = createBrowserRouter(
       ],
     },
     {
-      // Public, client-facing share portal — rendered WITHOUT the app shell
+      // Public, client-facing share portal -- rendered WITHOUT the app shell
       path: 'share/:token',
       element: <LazyRoute><ShareView /></LazyRoute>,
     },

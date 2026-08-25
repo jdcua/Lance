@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X, CreditCard, Calendar, Check } from 'lucide-react';
 import { useStore } from '../../store';
+import { useToasts } from '../../store/toastStore';
 import { openCheckout } from '../../utils/tauri';
 import Button from '../ui/Button';
 import type { LicenseTier } from '../../lib/constants';
@@ -13,13 +14,49 @@ interface UpgradeModalProps {
 
 export default function UpgradeModal({ isOpen, onClose, triggerFeature }: UpgradeModalProps) {
   const { getActiveTier } = useStore();
+  const addToast = useToasts((s) => s.add);
   const [activeTab, setActiveTab] = useState<'monthly' | 'yearly' | 'onetime'>('monthly');
   const [loading, setLoading] = useState<string | null>(null);
   const [currentTier, setCurrentTier] = useState<LicenseTier>('free');
+  const [checkoutNotice, setCheckoutNotice] = useState('');
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setCurrentTier(getActiveTier());
   }, [getActiveTier]);
+
+  // Escape closes the modal; Tab stays trapped inside.
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (e.key === 'Tab' && panelRef.current) {
+        const focusable = Array.from(
+          panelRef.current.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+        ).filter((el) => el.offsetParent !== null);
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first || !panelRef.current.contains(document.activeElement)) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   const isPro = ['pro', 'trial', 'lifetime'].includes(currentTier);
 
@@ -28,10 +65,15 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
   const handleCheckout = async (tier: 'monthly' | 'yearly' | 'onetime') => {
     setLoading(tier);
     try {
-      await openCheckout(tier);
+      const opened = await openCheckout(tier);
+      if (!opened) {
+        setCheckoutNotice('Checkout isn\u2019t configured in this build yet. Contact support to get a license key.');
+        addToast('Checkout is not configured in this build', 'info');
+      } else {
+        onClose();
+      }
     } finally {
       setLoading(null);
-      onClose();
     }
   };
 
@@ -68,6 +110,10 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }}>
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Unlock Pro depth"
         className="w-[520px] bg-[var(--bg-card)] rounded-[16px] shadow-2xl px-8 py-8"
         style={{ fontFamily: "'Inter', sans-serif" }}
       >
@@ -172,6 +218,10 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
             </div>
           ))}
         </div>
+
+        {checkoutNotice && (
+          <p className="text-[11px] text-[var(--warning-text)] mt-4 text-center">{checkoutNotice}</p>
+        )}
 
         {/* Current status */}
         <div className="mt-6 pt-4 border-t border-[var(--border-color)]">

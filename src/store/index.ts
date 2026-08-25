@@ -840,7 +840,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
             set({ profile: updated, isLicensed: true });
             console.log('[license] Online validation OK:', result.tier);
           } else if (result.tier) {
-            // Server said invalid/expired but gave us a tier — update local state
+            // Server said invalid/expired but gave us a tier -- update local state
             const profile = get().profile;
             if (!profile) return;
             const updated = {
@@ -863,7 +863,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
         if (profile?.license_validated_at && profile.license_grace_until) {
           const graceUntil = new Date(profile.license_grace_until).getTime();
           if (Date.now() > graceUntil) {
-            // Grace expired — downgrade
+            // Grace expired -- downgrade
             const updated = { ...profile, license_tier: 'free', isLicensed: false };
             await invoke('upsert_user_profile', { payload: updated });
             set({ profile: updated, isLicensed: false });

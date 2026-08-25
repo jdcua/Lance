@@ -6,7 +6,7 @@ const advertiser: ArchetypeConfig = {
   emoji: '📣',
   tagline: 'The tool for people who measure success in ROAS delivered',
   description: 'Built for media buyers and advertisers. Track ad spend, platform performance, and creative rotations.',
-  psychProfile: 'Thinks in budgets, platforms, and performance metrics. Ad spend is the fuel — every dollar has to prove its ROAS. Creative fatigue is real.',
+  psychProfile: 'Thinks in budgets, platforms, and performance metrics. Ad spend is the fuel -- every dollar has to prove its ROAS. Creative fatigue is real.',
   icon: 'Megaphone',
   theme: 'scale',
 

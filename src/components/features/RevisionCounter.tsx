@@ -1,5 +1,5 @@
 /**
- * Revision Counter — compact panel showing revision count vs limit.
+ * Revision Counter -- compact panel showing revision count vs limit.
  * Uses store for revisions and proposals; auto-increments round_number on add.
  */
 import { useState, useEffect, useMemo } from 'react';
@@ -65,7 +65,7 @@ export default function RevisionCounter({ projectId }: { projectId: string }) {
                 <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] flex-shrink-0 ${r.approved ? 'bg-[var(--accent)] text-white' : 'bg-[var(--border-color)] text-[var(--text-secondary)]'}`}>
                   {r.round_number}
                 </span>
-                <span className="text-[var(--text-primary)]">{r.change_summary || '—'}</span>
+                <span className="text-[var(--text-primary)]">{r.change_summary || '--'}</span>
               </div>
               {r.approved && <span className="text-[10px] text-[var(--accent)]">Approved</span>}
             </div>

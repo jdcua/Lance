@@ -1,5 +1,5 @@
 /**
- * Sprint Board — Developer feature.
+ * Sprint Board -- Developer feature.
  * Kanban board with 4 columns: backlog, in_progress, review, done.
  */
 import { useState, useEffect } from 'react';

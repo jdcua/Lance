@@ -219,7 +219,7 @@ export function entityTypeLabel(type: DetectedEntityType): string {
 export function getAvailableFields(entityType: DetectedEntityType): { value: string; label: string }[] {
   const fields = getFieldsForEntity(entityType);
   return [
-    { value: '', label: '— Skip this column —' },
+    { value: '', label: '-- Skip this column --' },
     ...Object.keys(fields).map(k => ({
       value: k,
       label: k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),

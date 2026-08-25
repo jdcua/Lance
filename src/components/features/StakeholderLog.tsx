@@ -1,5 +1,5 @@
 /**
- * Stakeholder Log — Product Manager feature.
+ * Stakeholder Log -- Product Manager feature.
  * Track project stakeholders with influence level.
  */
 import { useState, useEffect } from 'react';

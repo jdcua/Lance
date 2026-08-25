@@ -1,5 +1,5 @@
 /**
- * Campaign Tracker — Marketing / Social Media Manager feature.
+ * Campaign Tracker -- Marketing / Social Media Manager feature.
  * Tracks campaigns with channel, dates, budget, and KPI comparison.
  */
 import { useState, useEffect } from 'react';
@@ -159,7 +159,7 @@ export default function CampaignTracker({ projectId }: { projectId: string }) {
                 {(c.kpi_target || c.kpi_result) && (
                   <div className="flex items-center gap-1.5 text-[10px]">
                     <span className="text-[var(--text-tertiary)]">KPI:</span>
-                    <span className="font-medium text-[var(--text-primary)]">{c.kpi_target || '—'}</span>
+                    <span className="font-medium text-[var(--text-primary)]">{c.kpi_target || '--'}</span>
                     {c.kpi_target && c.kpi_result && (
                       <>
                         <TrendIcon size={10} className={trendColor} />

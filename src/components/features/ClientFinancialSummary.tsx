@@ -1,5 +1,5 @@
 /**
- * Client Financial Summary — Accountant feature.
+ * Client Financial Summary -- Accountant feature.
  * Timeline of financial statements with auto-calculated profit.
  */
 import { useState, useEffect } from 'react';
@@ -151,7 +151,7 @@ export default function ClientFinancialSummary({ clientId }: { clientId: string 
             <div key={f.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
               <div className="flex-1 min-w-0 flex items-center gap-2">
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)] flex-shrink-0">{f.statement_type?.replace('_', ' ') || 'other'}</span>
-                <span className="font-medium text-[var(--text-primary)]">{f.period || '—'}</span>
+                <span className="font-medium text-[var(--text-primary)]">{f.period || '--'}</span>
                 <span className="text-[var(--text-tertiary)] flex items-center gap-0.5">
                   <TrendingUp size={10} className="text-[#16A34A]" /> ${(f.revenue || 0).toFixed(0)}
                 </span>

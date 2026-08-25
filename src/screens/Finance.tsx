@@ -256,7 +256,7 @@ export default function Finance() {
             <div className="mb-4 px-3 py-2 rounded-[8px] bg-[var(--info-bg)] border border-[var(--info)]/20 flex items-start gap-2 text-xs">
               <span className="text-[var(--info)] mt-px flex-shrink-0">ⓘ</span>
               <span className="text-[var(--text-secondary)]">
-                Your finances include invoices in multiple currencies. Amounts are shown in their original currency — totals may not reflect actual value.
+                Your finances include invoices in multiple currencies. Amounts are shown in their original currency -- totals may not reflect actual value.
               </span>
             </div>
           )}
@@ -405,7 +405,7 @@ export default function Finance() {
             />
             <MetricCard
               label="Months of Runway"
-              value={forecastMetrics.monthsOfRunway !== null ? `${forecastMetrics.monthsOfRunway}` : '—'}
+              value={forecastMetrics.monthsOfRunway !== null ? `${forecastMetrics.monthsOfRunway}` : '--'}
               color={forecastMetrics.monthsOfRunway !== null && forecastMetrics.monthsOfRunway >= 6 ? 'green' : forecastMetrics.monthsOfRunway !== null ? 'amber' : 'gray'}
               subtext={forecastMetrics.monthsOfRunway !== null ? 'with current balance' : 'enter balance to see'}
               tooltip="Months until projected balance reaches zero (requires current balance input)"
@@ -413,7 +413,7 @@ export default function Finance() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* PANEL 1 — Revenue Forecast */}
+            {/* PANEL 1 -- Revenue Forecast */}
             <Card>
               <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Revenue Forecast</h3>
               <p className="text-xs text-[var(--text-tertiary)] mb-4">Projected revenue based on recurring invoices, milestones, sent invoices, and historical trends.</p>
@@ -448,7 +448,7 @@ export default function Finance() {
               </div>
             </Card>
 
-            {/* PANEL 2 — Expense Forecast */}
+            {/* PANEL 2 -- Expense Forecast */}
             <Card>
               <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Expense Forecast</h3>
               <p className="text-xs text-[var(--text-tertiary)] mb-4">Projected expenses based on known recurring expenses and historical averages.</p>
@@ -478,7 +478,7 @@ export default function Finance() {
             </Card>
           </div>
 
-          {/* PANEL 3 — Cash Flow Projection */}
+          {/* PANEL 3 -- Cash Flow Projection */}
           <Card className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <div>
@@ -516,7 +516,7 @@ export default function Finance() {
             </div>
           </Card>
 
-          {/* PANEL 4 — Scenario Modeling */}
+          {/* PANEL 4 -- Scenario Modeling */}
           <Card className="mb-6">
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Scenario Modeling</h3>
             <p className="text-xs text-[var(--text-tertiary)] mb-4">Adjust sliders to see how changes affect projections. All values are estimates.</p>
@@ -966,11 +966,11 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
                   <td className="px-3 py-2 text-[var(--text-secondary)]">{ai.clientName}</td>
                   <td className="px-3 py-2 text-[var(--text-secondary)] tabular-nums">{fmt(inv.total)}</td>
                   <td className="px-3 py-2 tabular-nums font-medium" style={{ color: ai.remaining > 0 ? bucketColor[ai.bucket] : 'var(--accent)' }}>{fmt(ai.remaining)}</td>
-                  <td className="px-3 py-2 text-[var(--text-tertiary)]">{inv.due_date ? relativeDate(inv.due_date) : '—'}</td>
+                  <td className="px-3 py-2 text-[var(--text-tertiary)]">{inv.due_date ? relativeDate(inv.due_date) : '--'}</td>
                   <td className="px-3 py-2">
                     <span className="flex items-center gap-1" style={{ color: bucketColor[ai.bucket] }}>
                       {ai.bucket === '90+' && <AlertTriangle size={10} />}
-                      <span className="font-medium">{ai.daysOverdue > 0 ? ai.daysOverdue : '—'}</span>
+                      <span className="font-medium">{ai.daysOverdue > 0 ? ai.daysOverdue : '--'}</span>
                     </span>
                   </td>
                   <td className="px-3 py-2">

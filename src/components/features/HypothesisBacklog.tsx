@@ -1,5 +1,5 @@
 /**
- * Hypothesis Backlog — hypothesis tracking with status badges and test results.
+ * Hypothesis Backlog -- hypothesis tracking with status badges and test results.
  */
 import { useState, useEffect } from 'react';
 import { getDb } from '../../db';

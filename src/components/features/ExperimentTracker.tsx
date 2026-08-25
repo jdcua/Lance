@@ -1,5 +1,5 @@
 /**
- * Experiment Tracker — AI Engineer feature.
+ * Experiment Tracker -- AI Engineer feature.
  * Track experiments with type, status, metrics, and notes.
  */
 import { useState, useEffect } from 'react';

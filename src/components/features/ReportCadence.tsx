@@ -1,5 +1,5 @@
 /**
- * Report Cadence — Marketing / SEO feature.
+ * Report Cadence -- Marketing / SEO feature.
  * Manages reporting frequency, last report date, and overdue status.
  */
 import { useState, useEffect } from 'react';
@@ -134,7 +134,7 @@ export default function ReportCadence({ clientId }: { clientId: string }) {
             <div className="flex items-center gap-1.5">
               Next due:
               <span className={`font-medium ${isOverdue(cadence.next_due) ? 'text-[#E74C3C]' : 'text-[var(--text-primary)]'}`}>
-                {cadence.next_due || '—'}
+                {cadence.next_due || '--'}
               </span>
               {isOverdue(cadence.next_due) && <AlertTriangle size={12} className="text-[#E74C3C]" />}
             </div>

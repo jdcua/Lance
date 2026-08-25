@@ -1,5 +1,5 @@
 /**
- * Cut Tracker — Filmmaker feature.
+ * Cut Tracker -- Filmmaker feature.
  * Tracks project cuts with duration, format, approval, and summary stats.
  */
 import { useState, useEffect } from 'react';
@@ -10,7 +10,7 @@ import { Plus, Trash2, Check } from 'lucide-react';
 type Cut = { id: string; project_id: string; cut_name?: string; duration_seconds?: number; format?: string; client_approved: boolean; delivery_date?: string; notes?: string };
 
 function secondsToMmss(seconds: number | undefined): string {
-  if (seconds == null || seconds < 0) return '—';
+  if (seconds == null || seconds < 0) return '--';
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
@@ -141,7 +141,7 @@ export default function CutTracker({ projectId }: { projectId: string }) {
           {cuts.map((c) => (
             <div key={c.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
               <div className="flex-1 min-w-0 flex items-center gap-2">
-                <span className="font-medium text-[var(--text-primary)]">{c.cut_name || '—'}</span>
+                <span className="font-medium text-[var(--text-primary)]">{c.cut_name || '--'}</span>
                 <span className="text-[var(--text-tertiary)] tabular-nums">{secondsToMmss(c.duration_seconds)}</span>
                 {c.format && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)]">{c.format}</span>}
                 {c.client_approved && <Check size={12} className="text-[var(--accent)] flex-shrink-0" />}

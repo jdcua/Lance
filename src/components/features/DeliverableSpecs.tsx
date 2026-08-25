@@ -1,5 +1,5 @@
 /**
- * Deliverable Specs — Filmmaker feature.
+ * Deliverable Specs -- Filmmaker feature.
  * Single-record-per-project deliverable specification form.
  */
 import { useState, useEffect } from 'react';
@@ -173,7 +173,7 @@ export default function DeliverableSpecs({ projectId }: { projectId: string }) {
           {spec && FIELDS.map(f => (
             <div key={f.key} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
               <span className="text-[var(--text-tertiary)]">{f.label}</span>
-              <span className="font-medium text-[var(--text-primary)]">{spec[f.key] || '—'}</span>
+              <span className="font-medium text-[var(--text-primary)]">{spec[f.key] || '--'}</span>
             </div>
           ))}
         </div>

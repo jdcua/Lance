@@ -1,5 +1,5 @@
 /**
- * Journey Map Builder — customer journey stages with priority badges.
+ * Journey Map Builder -- customer journey stages with priority badges.
  */
 import { useState, useEffect } from 'react';
 import { getDb } from '../../db';
@@ -127,7 +127,7 @@ export default function JourneyMapBuilder({ projectId }: { projectId: string }) 
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0 flex items-center gap-2">
                   <span className="text-[10px] text-[var(--text-tertiary)] font-medium w-5">{i + 1}</span>
-                  <span className="font-medium text-[var(--text-primary)]">{item.stage || item.touchpoint || '—'}</span>
+                  <span className="font-medium text-[var(--text-primary)]">{item.stage || item.touchpoint || '--'}</span>
                   {item.priority && (
                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${PRIORITY_COLORS[item.priority] || ''}`}>{item.priority}</span>
                   )}

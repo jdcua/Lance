@@ -1,5 +1,5 @@
 /**
- * Creative Rotation Log — tracks creative asset performance with auto-calculated CTR.
+ * Creative Rotation Log -- tracks creative asset performance with auto-calculated CTR.
  */
 import { useState, useEffect } from 'react';
 import { getDb } from '../../db';

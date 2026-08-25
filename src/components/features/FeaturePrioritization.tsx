@@ -1,5 +1,5 @@
 /**
- * Feature Prioritization — Product Manager feature.
+ * Feature Prioritization -- Product Manager feature.
  * Priority matrix display reading roadmap_items, with quick priority change.
  */
 import { useState, useEffect } from 'react';

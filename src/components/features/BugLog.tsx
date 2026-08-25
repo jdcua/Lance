@@ -1,5 +1,5 @@
 /**
- * Bug Log — Developer feature.
+ * Bug Log -- Developer feature.
  * Track bugs with priority dots, status, and resolution.
  */
 import { useState, useEffect } from 'react';

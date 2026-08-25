@@ -1,5 +1,5 @@
 /**
- * Progress Tracker — Wellness feature.
+ * Progress Tracker -- Wellness feature.
  * Timeline list of progress notes with mood score, notes, and goals.
  */
 import { useState, useEffect } from 'react';
@@ -90,7 +90,7 @@ export default function ProgressTracker({ clientId }: { clientId: string }) {
   };
 
   const formatDate = (dateStr: string) => {
-    if (!dateStr) return '—';
+    if (!dateStr) return '--';
     const d = new Date(dateStr);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };

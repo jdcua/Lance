@@ -1,5 +1,5 @@
 /**
- * Component Count — UX Designer feature.
+ * Component Count -- UX Designer feature.
  * Simple list of components with counts, inline editing, and total.
  */
 import { useState, useEffect } from 'react';

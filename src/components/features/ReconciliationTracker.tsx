@@ -1,5 +1,5 @@
 /**
- * Reconciliation Tracker — Accountant feature.
+ * Reconciliation Tracker -- Accountant feature.
  * List of account reconciliations with status badges.
  */
 import { useState, useEffect } from 'react';
@@ -141,7 +141,7 @@ export default function ReconciliationTracker({ projectId }: { projectId: string
               <div key={item.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
                 <div className="flex-1 min-w-0 flex items-center gap-2">
                   <Icon size={12} className={item.status === 'matched' ? 'text-[#16A34A]' : item.status === 'mismatch' ? 'text-[#DC2626]' : 'text-[#D97706]'} />
-                  <span className="font-medium text-[var(--text-primary)] truncate">{item.account_name || '—'}</span>
+                  <span className="font-medium text-[var(--text-primary)] truncate">{item.account_name || '--'}</span>
                   <span className="text-[var(--text-tertiary)]">${(item.expected || 0).toFixed(2)} / ${(item.actual || 0).toFixed(2)}</span>
                   {item.status !== 'matched' && (
                     <span className={`text-[10px] ${diff > 0 ? 'text-[#DC2626]' : diff < 0 ? 'text-[#D97706]' : ''}`}>

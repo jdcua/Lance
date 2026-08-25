@@ -1,5 +1,5 @@
 /**
- * Asset Complexity Log — 3D Artist feature.
+ * Asset Complexity Log -- 3D Artist feature.
  * Single-record complexity tracker per project with in-place editing.
  */
 import { useState, useEffect } from 'react';
@@ -175,11 +175,11 @@ export default function AssetComplexityLog({ projectId }: { projectId: string })
           <div className="grid grid-cols-2 gap-2">
             <div>
               <span className="text-[var(--text-tertiary)]">Poly count:</span>
-              <span className="ml-1 text-[var(--text-primary)] font-medium">{record.poly_count || '—'}</span>
+              <span className="ml-1 text-[var(--text-primary)] font-medium">{record.poly_count || '--'}</span>
             </div>
             <div>
               <span className="text-[var(--text-tertiary)]">Texture count:</span>
-              <span className="ml-1 text-[var(--text-primary)] font-medium">{record.texture_count != null ? record.texture_count : '—'}</span>
+              <span className="ml-1 text-[var(--text-primary)] font-medium">{record.texture_count != null ? record.texture_count : '--'}</span>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -189,7 +189,7 @@ export default function AssetComplexityLog({ projectId }: { projectId: string })
             </div>
             <div>
               <span className="text-[var(--text-tertiary)]">Software:</span>
-              <span className="ml-1 text-[var(--text-primary)] font-medium">{record.software || '—'}</span>
+              <span className="ml-1 text-[var(--text-primary)] font-medium">{record.software || '--'}</span>
             </div>
           </div>
           {record.notes && (

@@ -57,7 +57,7 @@ export async function todaysHours(db: Database, _profileId: number): Promise<str
     [`${today}%`]
   );
   const mins = first(rows)?.m ?? 0;
-  return mins > 0 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : '—';
+  return mins > 0 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : '--';
 }
 
 export async function thisWeeksHours(db: Database, _profileId: number): Promise<string | number> {
@@ -81,7 +81,7 @@ export async function activeProjectsWithHours(db: Database, _profileId: number):
     ORDER BY mins DESC
     LIMIT 1
   `, [new Date(new Date().getTime() - 7 * 86400000).toISOString()]);
-  if (!first(rows) || first(rows)!.mins === 0) return '—';
+  if (!first(rows) || first(rows)!.mins === 0) return '--';
   const hrs = Math.round(first(rows)!.mins / 6) / 10;
   return `${first(rows)!.title.substring(0, 20)} (${hrs}h)`;
 }
@@ -116,7 +116,7 @@ export async function utilizationRate(db: Database, _profileId: number): Promise
   );
   const total = first(totalRows)?.m ?? 0;
   const billable = first(billableRows)?.m ?? 0;
-  return total > 0 ? `${Math.round((billable / total) * 100)}%` : '—';
+  return total > 0 ? `${Math.round((billable / total) * 100)}%` : '--';
 }
 
 export async function effectiveHourlyRate(db: Database, profileId: number): Promise<string | number> {
@@ -135,7 +135,7 @@ export async function effectiveHourlyRate(db: Database, profileId: number): Prom
   );
   const rev = first(revRows)?.s ?? 0;
   const hours = (first(hoursRows)?.m ?? 0) / 60;
-  if (hours === 0) return '—';
+  if (hours === 0) return '--';
   return formatCurrency(rev / hours, currency);
 }
 
@@ -176,7 +176,7 @@ export async function editingVsShootRatio(db: Database, _profileId: number): Pro
   );
   const shoot = first(shootRows)?.m ?? 0;
   const edit = first(editRows)?.m ?? 0;
-  if (shoot === 0) return '—';
+  if (shoot === 0) return '--';
   return `${Math.round((edit / shoot) * 10) / 10}:1`;
 }
 
@@ -218,7 +218,7 @@ export async function proposalsWinRate(db: Database, _profileId: number): Promis
   const acceptedRows = await db.select<CountRow[]>("SELECT COUNT(*) as c FROM proposals WHERE status = 'accepted'");
   const total = first(totalRows)?.c ?? 0;
   const accepted = first(acceptedRows)?.c ?? 0;
-  return total > 0 ? `${Math.round((accepted / total) * 100)}%` : '—';
+  return total > 0 ? `${Math.round((accepted / total) * 100)}%` : '--';
 }
 
 export async function revenuePerProjectAvg(db: Database, profileId: number): Promise<string | number> {
@@ -251,7 +251,7 @@ export async function revisionsRemaining(db: Database, _profileId: number): Prom
     "SELECT COUNT(*) as c FROM archetype_revisions WHERE approved = 0"
   );
   const count = first(rows)?.c ?? 0;
-  return count > 0 ? `${count} pending` : '—';
+  return count > 0 ? `${count} pending` : '--';
 }
 
 export async function daysUntilNextShoot(db: Database, _profileId: number): Promise<string | number> {
@@ -259,7 +259,7 @@ export async function daysUntilNextShoot(db: Database, _profileId: number): Prom
     "SELECT MIN(shoot_date) as d FROM archetype_shoots WHERE shoot_date >= $1",
     [new Date().toISOString().split('T')[0]]
   );
-  if (!first(rows)?.d) return '—';
+  if (!first(rows)?.d) return '--';
   const days = Math.ceil((new Date(first(rows)!.d).getTime() - Date.now()) / 86400000);
   return `${days}d`;
 }
@@ -279,7 +279,7 @@ export async function profitMargin(db: Database, _profileId: number): Promise<st
   const expRows = await db.select<SumRow[]>("SELECT COALESCE(SUM(amount), 0) as s FROM expenses");
   const rev = first(revRows)?.s ?? 0;
   const exp = first(expRows)?.s ?? 0;
-  if (rev === 0) return '—';
+  if (rev === 0) return '--';
   return `${Math.round(((rev - exp) / rev) * 100)}%`;
 }
 
@@ -292,7 +292,7 @@ export async function retainerVsProjectSplit(db: Database, _profileId: number): 
   );
   const r = first(retainerRows)?.c ?? 0;
   const p = first(projectRows)?.c ?? 0;
-  if (r + p === 0) return '—';
+  if (r + p === 0) return '--';
   return `${r} retainer / ${p} project`;
 }
 
@@ -309,7 +309,7 @@ export async function clientRetentionRate(db: Database, _profileId: number): Pro
   );
   const total = first(totalRows)?.c ?? 0;
   const repeat = first(repeatRows)?.c ?? 0;
-  if (total === 0) return '—';
+  if (total === 0) return '--';
   return `${Math.round((repeat / total) * 100)}%`;
 }
 
@@ -328,7 +328,7 @@ export async function cancellationRate(db: Database, _profileId: number): Promis
   const cancelledRows = await db.select<CountRow[]>("SELECT COUNT(*) as c FROM projects WHERE status = 'cancelled'");
   const total = first(totalRows)?.c ?? 0;
   const cancelled = first(cancelledRows)?.c ?? 0;
-  if (total === 0) return '—';
+  if (total === 0) return '--';
   return `${Math.round((cancelled / total) * 100)}%`;
 }
 
@@ -337,6 +337,6 @@ export async function auditionConversion(db: Database, _profileId: number): Prom
   const acceptedRows = await db.select<CountRow[]>("SELECT COUNT(*) as c FROM proposals WHERE status = 'accepted'");
   const total = first(totalRows)?.c ?? 0;
   const accepted = first(acceptedRows)?.c ?? 0;
-  if (total === 0) return '—';
+  if (total === 0) return '--';
   return `${Math.round((accepted / total) * 100)}%`;
 }

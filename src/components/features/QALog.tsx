@@ -1,5 +1,5 @@
 /**
- * QA Log — Game Developer feature.
+ * QA Log -- Game Developer feature.
  * Table logging QA sessions with summary stats (hours, avg bugs, fix rate).
  */
 import { useState, useEffect } from 'react';
@@ -167,7 +167,7 @@ export default function QALog({ projectId }: { projectId: string }) {
           {sessions.map((session) => (
             <div key={session.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
               <div className="flex-1 min-w-0 flex items-center gap-2">
-                <span className="font-medium text-[var(--text-primary)]">{session.date || '—'}</span>
+                <span className="font-medium text-[var(--text-primary)]">{session.date || '--'}</span>
                 {session.build_version && (
                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)]">{session.build_version}</span>
                 )}

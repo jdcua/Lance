@@ -1,5 +1,5 @@
 /**
- * Ledger Log — Accountant feature.
+ * Ledger Log -- Accountant feature.
  * Income/expense list with summary (total income - total expenses = net).
  */
 import { useState, useEffect } from 'react';
@@ -156,7 +156,7 @@ export default function LedgerLog({ projectId }: { projectId: string }) {
                 <span className={`font-medium ${entry.entry_type === 'income' ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
                   {entry.entry_type === 'income' ? '+' : '-'}${(entry.amount || 0).toFixed(2)}
                 </span>
-                <span className="text-[var(--text-primary)] truncate">{entry.description || '—'}</span>
+                <span className="text-[var(--text-primary)] truncate">{entry.description || '--'}</span>
                 {entry.category && (
                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)] flex-shrink-0">{entry.category}</span>
                 )}

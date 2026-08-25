@@ -1,5 +1,5 @@
 /**
- * Lance — Freelancer OS
+ * Lance -- Freelancer OS
  * Built by Placeholder Labs Incorporated Limited (placeholderlabsincorporatedlimited.yabbadabbadoo)
  *
  * Privacy: Lance collects no telemetry. See PRIVACY.md.
@@ -75,12 +75,22 @@ export default function App() {
     setShowUpgradeModal(true);
   };
 
+  // Allow any screen to request the upgrade modal via a custom event.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      openUpgradeModal((e as CustomEvent<string>).detail || undefined);
+    };
+    document.addEventListener('lance:open-upgrade', handler);
+    return () => document.removeEventListener('lance:open-upgrade', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [showImportModal, setShowImportModal] = useState(false);
   const [importFiles, setImportFiles] = useState<File[] | undefined>(undefined);
   const [isDragOver, setIsDragOver] = useState(false);
   const dragCounter = useRef(0);
 
-  const [appVersion, setAppVersion] = useState<string>('0.0.0');
+  const [appVersion, setAppVersion] = useState<string>('');
   const { changelog } = useChangelog();
 
   useEffect(() => {
@@ -104,7 +114,13 @@ export default function App() {
 
   const dismissChangelog = () => {
     const latestVersion = changelog[0]?.version || appVersion;
-    localStorage.setItem('lance:changelog-seen', latestVersion);
+    // Never persist a "seen" version older than the installed app, otherwise
+    // the changelog modal re-shows with stale notes on every launch.
+    const seenVersion =
+      latestVersion.localeCompare(appVersion, undefined, { numeric: true }) >= 0
+        ? latestVersion
+        : appVersion;
+    localStorage.setItem('lance:changelog-seen', seenVersion);
     setShowChangelog(false);
   };
 
@@ -281,7 +297,7 @@ export default function App() {
     }
     if (!profileLoaded) return;
     // Only show onboarding if no explicit completion flag and user hasn't finished
-    // Do NOT auto-complete just because profile.name exists — the user must go through all steps
+    // Do NOT auto-complete just because profile.name exists -- the user must go through all steps
     setShowOnboarding(true);
   }, [profileLoaded]);
 
@@ -307,7 +323,7 @@ export default function App() {
           for (const key of newAchievements) {
             const ach = ACHIEVEMENTS.find((a) => a.key === key);
             if (ach) {
-              addToast(`${ach.title} — ${ach.reward}`, 'unlock');
+              addToast(`${ach.title} -- ${ach.reward}`, 'unlock');
             }
           }
         });
@@ -316,7 +332,7 @@ export default function App() {
     return () => cancelIdleCallback(handle);
   }, [profileLoaded, hasRanAutoGen, loadRecurringInvoices, loadInvoices, loadClients]);
 
-  // Deferred recurring invoice check — runs after first render via idle callback
+  // Deferred recurring invoice check -- runs after first render via idle callback
   useEffect(() => {
     if (!hasRanAutoGen || recurringInvoices.length === 0) return;
     if (invoices.length === 0 && hasRanAutoGen) {
@@ -385,7 +401,7 @@ export default function App() {
     return () => cancelIdleCallback(handle);
   }, [hasRanAutoGen, recurringInvoices.length, invoices.length]);
 
-  // Auto-backup check — runs after engines, deferred (browser mode: skip)
+  // Auto-backup check -- runs after engines, deferred (browser mode: skip)
   useEffect(() => {
     if (!hasRanAutoGen) return;
     if (typeof window === 'undefined' || !(window as any).__TAURI_INTERNALS__) return;
@@ -403,7 +419,7 @@ export default function App() {
     return () => cancelIdleCallback(handle);
   }, [hasRanAutoGen]);
 
-  // Follow-up checker — deferred after first render, runs every 30 minutes
+  // Follow-up checker -- deferred after first render, runs every 30 minutes
   useEffect(() => {
     if (!profileLoaded) return;
     loadFollowUpSettings();
@@ -422,7 +438,7 @@ export default function App() {
         await state.loadAllFollowUpLogs();
         const currentPending = useStore.getState().pendingFollowUps;
         // Full history (keyed entity_type:entity_id) so we never re-draft a stage
-        // that was already actioned (sent/dismissed) — the pending-only guard
+        // that was already actioned (sent/dismissed) -- the pending-only guard
         // would re-create an identical draft every run after actioning.
         const followUpHistory = useStore.getState().followUpLogs;
 
@@ -434,7 +450,7 @@ export default function App() {
 
           const client = useStore.getState().clients.find((c) => c.id === p.client_id);
           if (!client?.email) {
-            console.warn(`Skipping proposal follow-up for "${p.title}" — client has no email`);
+            console.warn(`Skipping proposal follow-up for "${p.title}" -- client has no email`);
             continue;
           }
 
@@ -464,7 +480,7 @@ export default function App() {
 
           const client = useStore.getState().clients.find((c) => c.id === inv.client_id);
           if (!client?.email) {
-            console.warn(`Skipping invoice follow-up for "${inv.invoice_number}" — client has no email`);
+            console.warn(`Skipping invoice follow-up for "${inv.invoice_number}" -- client has no email`);
             continue;
           }
 
@@ -497,7 +513,7 @@ export default function App() {
     };
   }, [profileLoaded]);
 
-  // Proposal expiry engine — deferred after first render, runs every hour
+  // Proposal expiry engine -- deferred after first render, runs every hour
   useEffect(() => {
     if (!profileLoaded) return;
 
@@ -618,7 +634,7 @@ export default function App() {
         await state.updateTimeEntry({ ...activeEntry, end_time: endTime, duration_minutes: duration });
         const h = Math.floor(duration / 60);
         const m = duration % 60;
-        addToast(`Timer stopped — ${h > 0 ? `${h}h ` : ''}${m}m`, 'success');
+        addToast(`Timer stopped -- ${h > 0 ? `${h}h ` : ''}${m}m`, 'success');
       }
     } else {
       let projectId = '';
@@ -649,7 +665,7 @@ export default function App() {
       });
       localStorage.setItem('lance:last-timer-config', JSON.stringify({ projectId: entry.project_id, clientId: entry.client_id }));
       const project = state.projects.find((p) => p.id === projectId);
-      addToast(`Timer started — ${project?.title || 'Unknown'}`, 'success');
+      addToast(`Timer started -- ${project?.title || 'Unknown'}`, 'success');
     }
   }, [addToast]);
 
@@ -758,12 +774,12 @@ export default function App() {
         </main>
       </div>
 
-      {/* Splash screen — shown on launch when unlicensed */}
+      {/* Splash screen -- shown on launch when unlicensed */}
       {showSplash && !isLicensed && (
         <SplashScreen onDismiss={() => setShowSplash(false)} />
       )}
 
-      {/* Changelog modal — hidden while onboarding is active to avoid z-index overlap */}
+      {/* Changelog modal -- hidden while onboarding is active to avoid z-index overlap */}
       <Modal open={showChangelog && !showOnboarding} onClose={dismissChangelog} title={"What's new in Lance " + (changelog[0]?.version || appVersion)} size="md">
         <div className="space-y-4">
           {changelog.length === 0 ? (
@@ -803,6 +819,8 @@ export default function App() {
         onClose={() => { setShowImportModal(false); setImportFiles(undefined); }}
         initialFiles={importFiles}
       />
+
+      <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} triggerFeature={upgradeTrigger || undefined} />
 
       <DropZoneOverlay visible={isDragOver} />
 
@@ -1115,7 +1133,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
               <p className="text-xs text-[var(--text-tertiary)] mt-1">
                 {onboardingForm.profession
                   ? `Your ${onboardingForm.profession} theme is unlocked. Earn more as you use Lance.`
-                  : 'All themes unlock through achievements — or instantly with a license.'}
+                  : 'All themes unlock through achievements -- or instantly with a license.'}
               </p>
             </div>
             <div className="space-y-1 max-h-[300px] overflow-y-auto">
@@ -1176,7 +1194,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
             <div className="text-center mb-2">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">AI Assistant</h3>
               <p className="text-sm text-[var(--text-secondary)] leading-relaxed mt-1">
-                Lance includes local AI to help write proposals and analyze finances. It runs on your machine — no cloud, no subscriptions.
+                Lance includes local AI to help write proposals and analyze finances. It runs on your machine -- no cloud, no subscriptions.
               </p>
             </div>
             <div className="space-y-3 py-2">
@@ -1272,7 +1290,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
                   disabled={isSaving || !onboardingForm.name.trim()}
                   className="flex-1"
                 >
-                  Skip — start fresh
+                  Skip -- start fresh
                 </Button>
                 <Button
                   size="sm"

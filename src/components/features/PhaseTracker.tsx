@@ -1,5 +1,5 @@
 /**
- * Phase Tracker — Animator / Filmmaker / Data Analyst feature.
+ * Phase Tracker -- Animator / Filmmaker / Data Analyst feature.
  * Tracks project phases with status, color, and a breakdown bar.
  */
 import { useState, useEffect } from 'react';

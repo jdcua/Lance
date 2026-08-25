@@ -1,5 +1,5 @@
 /**
- * Component Inventory — Embedded feature.
+ * Component Inventory -- Embedded feature.
  * Inventory list with component name, footprint, quantity, supplier, and unit cost.
  */
 import { useState, useEffect } from 'react';
@@ -158,9 +158,9 @@ export default function ComponentInventory({ projectId }: { projectId: string })
               {items.map((item) => (
                 <tr key={item.id} className="border-b border-[var(--border-color)]/50 hover:bg-[var(--bg-hover)]">
                   <td className="py-1.5 px-2 font-medium text-[var(--text-primary)]">{item.component_name}</td>
-                  <td className="py-1.5 px-2 text-[var(--text-secondary)] font-mono text-[10px]">{item.footprint || '—'}</td>
+                  <td className="py-1.5 px-2 text-[var(--text-secondary)] font-mono text-[10px]">{item.footprint || '--'}</td>
                   <td className="py-1.5 px-2 text-right text-[var(--text-primary)]">{item.quantity}</td>
-                  <td className="py-1.5 px-2 text-[var(--text-secondary)]">{item.supplier || '—'}</td>
+                  <td className="py-1.5 px-2 text-[var(--text-secondary)]">{item.supplier || '--'}</td>
                   <td className="py-1.5 px-2 text-right text-[var(--text-primary)]">${(item.unit_cost || 0).toFixed(2)}</td>
                   <td className="py-1.5 px-2 text-right text-[var(--text-primary)] font-medium">${((item.unit_cost || 0) * (item.quantity || 0)).toFixed(2)}</td>
                   <td className="py-1.5 px-2">

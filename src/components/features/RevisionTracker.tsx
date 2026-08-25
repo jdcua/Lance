@@ -1,5 +1,5 @@
 /**
- * Revision Tracker — Designer / Illustrator / UX Designer feature.
+ * Revision Tracker -- Designer / Illustrator / UX Designer feature.
  * Tracks revision rounds with change summaries per project.
  */
 import { useState, useEffect } from 'react';
@@ -61,7 +61,7 @@ export default function RevisionTracker({ projectId }: { projectId: string }) {
                 <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] flex-shrink-0 ${r.approved ? 'bg-[var(--accent)] text-white' : 'bg-[var(--border-color)] text-[var(--text-secondary)]'}`}>
                   {r.round_number}
                 </span>
-                <span className={`${r.approved ? 'text-[var(--text-tertiary)]' : 'text-[var(--text-primary)]'}`}>{r.change_summary || '—'}</span>
+                <span className={`${r.approved ? 'text-[var(--text-tertiary)]' : 'text-[var(--text-primary)]'}`}>{r.change_summary || '--'}</span>
               </div>
               <div className="flex items-center gap-1">
                 {r.approved ? <Check size={12} className="text-[var(--accent)]" /> : <RotateCcw size={12} className="text-[var(--text-tertiary)]" />}

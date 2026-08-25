@@ -178,7 +178,7 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
                   : 'bg-[var(--danger-bg)] text-[var(--danger-text)]'
               }`}>
                 {entityType === 'contract'
-                  ? `Signed by ${token.client_signature || 'client'} on ${token.client_signed_at ? new Date(token.client_signed_at).toLocaleDateString() : '—'}`
+                  ? `Signed by ${token.client_signature || 'client'} on ${token.client_signed_at ? new Date(token.client_signed_at).toLocaleDateString() : '--'}`
                   : `${token.client_name || 'Client'} ${token.client_response} this ${entityLabel}`}
                 {token.client_response_at && ` on ${new Date(token.client_response_at).toLocaleDateString()}`}
               </div>
