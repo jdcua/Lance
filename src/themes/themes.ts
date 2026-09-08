@@ -268,7 +268,7 @@ export const THEMES: Theme[] = [
   {
     id: 'motion',
     name: 'Motion',
-    description: 'Vibrant and kinetic, for animators and video pros',
+    description: 'High-energy motion theme, for animators and video pros',
     unlockedBy: 'Always available for animators',
     fontDisplay: "'Space Grotesk', sans-serif",
     fontBody: "'Inter', sans-serif",

@@ -8,7 +8,7 @@ pnpm tauri signer generate -w ~/.tauri/lance.key
 ```
 - Saves private key to `~/.tauri/lance.key`
 - Saves public key to `~/.tauri/lance.key.pub`
-- You will be asked for a password — store it in a password manager
+- You will be asked for a password. Store it in a password manager
 
 ### 2. Add GitHub Secrets
 Go to `github.com/jdcua/lance` → Settings → Secrets and variables → Actions → New repository secret
@@ -21,7 +21,7 @@ Go to `github.com/jdcua/lance` → Settings → Secrets and variables → Action
 ### 3. Add public key to tauri.conf.json
 Replace `__LANCE_PUBKEY__` in `src-tauri/tauri.conf.json` with the contents of `~/.tauri/lance.key.pub`.
 
-Commit this — the public key is safe to commit.
+Commit this. The public key is safe to commit.
 **NEVER commit the private key.**
 
 ## Releasing a new version
@@ -30,7 +30,7 @@ Commit this — the public key is safe to commit.
 node scripts/bump-version.cjs 1.2.0
 git add -A
 git commit -m "chore: bump version to v1.2.0"
-git tag -a v1.2.0 -m "Archetype System 2.0 — 21 professions, archetype-specific dashboards"
+git tag -a v1.2.0 -m "Archetype System 2.0: 21 professions, archetype-specific dashboards"
 git push origin main --tags
 ```
 
@@ -42,7 +42,7 @@ GitHub Actions does the rest. In ~10 minutes:
 
 ## Hotfix process
 
-Same flow — just bump the patch version (e.g. `1.2.0` → `1.2.1`):
+Same flow, just bump the patch version (e.g. `1.2.0` → `1.2.1`):
 
 ```
 node scripts/bump-version.cjs 1.2.1

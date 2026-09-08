@@ -100,7 +100,7 @@ Background engines (recurring invoices, follow-ups, expiry, updater) bypass the 
 
 ## Archetype system
 
-The archetype system is **config-driven** — no archetype-specific logic is hardcoded into app components. Each archetype is a TypeScript file exporting an `ArchetypeConfig` object that defines:
+The archetype system is **config-driven**. No archetype-specific logic is hardcoded into app components. Each archetype is a TypeScript file exporting an `ArchetypeConfig` object that defines:
 
 - **Metadata**: emoji, tagline, description, psychographic profile
 - **Dashboard**: ordered list of metric cards displayed on the dashboard
@@ -111,7 +111,7 @@ The archetype system is **config-driven** — no archetype-specific logic is har
 - **Theme**: preferred theme and accent color
 - **Keyboard shortcuts**: Cmd+1-8 dynamically remap based on sidebar order
 
-The `ArchetypePicker` screen during onboarding selects an archetype. The `getArchetype(id)` function returns the config object. Components query the archetype config for their rendering decisions — for example, `Sidebar.tsx` reads `archetype.sidebar` to determine item order and visibility.
+The `ArchetypePicker` screen during onboarding selects an archetype. The `getArchetype(id)` function returns the config object. Components query the archetype config for their rendering decisions. For example, `Sidebar.tsx` reads `archetype.sidebar` to determine item order and visibility.
 
 **File count**: 42 profession files + `default.ts` + `custom.ts` + `registry.ts` + `types.ts` = 47 files.
 
@@ -171,9 +171,9 @@ All engines run from `src/App.tsx` using `requestIdleCallback` and `setInterval`
 | Achievement checker | After initial load | One-time | Checks unlocked achievements, shows toasts |
 
 **Engine utility files**:
-- `src/utils/recurringEngine.ts` — next_due calculation, cycle counting, catch-up cap
-- `src/utils/followUpTemplates.ts` — 6 default templates with variable substitution, mailto: generation
-- `src/hooks/useAutoUpdater.ts` — Tauri updater plugin integration with 4-hour check interval
+- `src/utils/recurringEngine.ts`: next_due calculation, cycle counting, catch-up cap
+- `src/utils/followUpTemplates.ts`: 6 default templates with variable substitution, mailto: generation
+- `src/hooks/useAutoUpdater.ts`: Tauri updater plugin integration with 4-hour check interval
 
 ## Client portal architecture
 
@@ -197,7 +197,7 @@ The client portal allows freelancers to share proposals and contracts with clien
 **How it works**:
 1. User clicks "Share" on a proposal or contract → `ShareModal.tsx` calls `create_share_token`
 2. Backend generates a 64-char hex crypto-random token, stores it in `share_tokens`
-3. The share link is `http://127.0.0.1:{port}/share/{token}` — works only while Lance is running
+3. The share link is `http://127.0.0.1:{port}/share/{token}`. It works only while Lance is running
 4. Client opens the link → Axum server at `src-tauri/src/server.rs` renders the HTML
 5. Client can accept/decline proposals or sign contracts
 6. Responses update `share_tokens` and the entity status (proposal accepted, contract signed)
@@ -247,7 +247,7 @@ All routes are lazy-loaded via `React.lazy` with a loading skeleton fallback.
 ## V2 roadmap
 
 Foundations laid in v1:
-- `auth.ts` stub module — all identity queries route through `auth.getUserId()`
+- `auth.ts` stub module: all identity queries route through `auth.getUserId()`
 - `user_id INTEGER DEFAULT 1` column added to all tables
 - `app_events` audit trail table created
 - Sensitive fields annotated with `-- SECURITY: encrypt with user key in v2`

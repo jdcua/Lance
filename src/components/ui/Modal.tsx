@@ -21,7 +21,13 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
   const onCloseRef = useRef(onClose);
   useEffect(() => { onCloseRef.current = onClose; });
 
+  // Swallow keys so global shortcuts (Cmd+K, Cmd+N, …) don't fire mid-modal.
+  // Escape and Tab MUST propagate: document-level handlers implement modal
+  // dismiss and the focus trap, and a blanket stopPropagation here made
+  // Escape a no-op in every Modal-based dialog whenever focus was inside it
+  // (Modal auto-focuses its first button on open, so that was always).
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' || e.key === 'Tab') return;
     e.stopPropagation();
   }, []);
 

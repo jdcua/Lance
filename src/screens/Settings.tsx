@@ -120,13 +120,17 @@ export default function Settings() {
     if (innerModalOpenRef.current) return;
     navigate(-1);
   }, [navigate]);
-  // Close settings with Escape (if no inner modal is open)
+  // Close settings with Escape (if no inner modal is open). Also bail when ANY
+  // app-level overlay (upgrade modal, splash, walkthrough, changelog, import…)
+  // is open: Escape should dismiss the topmost modal, never navigate away
+  // underneath it (previously Escape closed the upgrade modal AND left
+  // Settings in a single keypress).
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !innerModalOpenRef.current) {
-        e.preventDefault();
-        navigate(-1);
-      }
+      if (e.key !== 'Escape' || innerModalOpenRef.current) return;
+      if (document.querySelector('[role="dialog"]')) return;
+      e.preventDefault();
+      navigate(-1);
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
@@ -677,7 +681,7 @@ export default function Settings() {
                           Enter license key
                         </Button>
                         <Button variant="secondary" onClick={() => { openCheckout('monthly').then((ok) => { if (!ok) addToast('Checkout is not configured in this build', 'info'); }); }} size="sm">
-                          Get a license &mdash; $14/mo
+                          Get a license ($14/mo)
                         </Button>
                       </div>
                     </div>

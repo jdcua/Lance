@@ -6,6 +6,8 @@ import { getShortcutModifierLabel } from '../../utils/shortcuts';
 interface WalkthroughProps {
   open: boolean;
   onClose: () => void;
+  /** Optional jump-start action offered on the final slide (anti-churn: first value in one click). */
+  onAddFirstClient?: () => void;
 }
 
 interface Slide {
@@ -21,12 +23,12 @@ const getSlideCopy = (modifier: string): Slide[] => [
       'Your freelance business, all in one place. From proposals to payments, Lance keeps you organized so you can focus on the work you love.',
     icon: Rocket,
   },
-  {
-    title: 'Your Workspace',
-    description:
-      'Pick from 7 beautiful themes to make Lance feel like home. The sidebar gives you quick access to Proposals, Contracts, Projects, Time Tracking, Invoices, Clients, Finance, and Insights.',
-    icon: Palette,
-  },
+    {
+      title: 'Your Workspace',
+      description:
+        'The sidebar starts with the essentials and reveals more sections as your business grows. Everything is one click away in Search either way. Pick from 7 beautiful themes to make Lance feel like home.',
+      icon: Palette,
+    },
   {
     title: 'Command Palette',
     description:
@@ -47,7 +49,7 @@ const getSlideCopy = (modifier: string): Slide[] => [
   },
 ];
 
-export default function Walkthrough({ open, onClose }: WalkthroughProps) {
+export default function Walkthrough({ open, onClose, onAddFirstClient }: WalkthroughProps) {
   const [slide, setSlide] = useState(0);
   const modifier = getShortcutModifierLabel();
   const slides = getSlideCopy(modifier);
@@ -151,10 +153,21 @@ export default function Walkthrough({ open, onClose }: WalkthroughProps) {
             <span className="text-xs text-[var(--text-tertiary)] tabular-nums">
               {slide + 1} / {slides.length}
             </span>
-            <Button size="sm" onClick={handleNext}>
-              {isLast ? 'Get Started' : 'Next'}
-              {!isLast && <ChevronRight size={14} />}
-            </Button>
+            {isLast && onAddFirstClient ? (
+              <>
+                <Button variant="secondary" size="sm" onClick={onClose}>
+                  Explore on my own
+                </Button>
+                <Button size="sm" onClick={onAddFirstClient}>
+                  Add your first client
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" onClick={handleNext}>
+                {isLast ? 'Get Started' : 'Next'}
+                {!isLast && <ChevronRight size={14} />}
+              </Button>
+            )}
           </div>
         </div>
       </div>

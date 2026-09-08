@@ -115,33 +115,35 @@ export async function seedSampleData(): Promise<void> {
     await seedBuiltInTemplates();
 
     // ── CLIENTS ──
+    // Sample personas are deliberately fictional (RFC 2606 example.com
+    // addresses) so demo data never resembles a real person or business.
     const client1 = await store.addClient({
-      name: 'Mara Jensen',
-      email: 'mara@designco.com',
+      name: 'Jordan Avery',
+      email: 'jordan@example.com',
       phone: undefined,
-      company: 'DesignCo',
+      company: 'Avery Design',
       notes: 'Brand designer at a startup. Responsive and easy to work with.',
     });
     const client2 = await store.addClient({
-      name: 'Kol & Nash Studio',
-      email: 'hello@kolnash.com',
+      name: 'Riley Chen',
+      email: 'riley@example.com',
       phone: undefined,
-      company: 'Kol & Nash Studio',
+      company: 'Chen & Partners',
       notes: 'Creative agency with 12 employees. Proposals go through their ops lead.',
     });
     const client3 = await store.addClient({
-      name: 'David Okoro',
-      email: 'david@okoro.io',
+      name: 'Alex Morgan',
+      email: 'alex@example.com',
       phone: undefined,
       company: undefined,
       notes: 'Solo founder building a SaaS product. Prefers async communication.',
     });
     const client4 = await store.addClient({
-      name: 'The Bloom Co.',
-      email: 'team@thebloomco.com',
+      name: 'Fern & Field Co.',
+      email: 'hello@example.com',
       phone: undefined,
-      company: 'The Bloom Co.',
-      notes: 'Retail brand specializing in sustainable floristry. Completed project -- happy client.',
+      company: 'Fern & Field Co.',
+      notes: 'Retail brand specializing in sustainable floristry. Completed project. Happy client.',
     });
 
     // ── PROJECTS ──
@@ -252,7 +254,7 @@ export async function seedSampleData(): Promise<void> {
 
     // ── TIME ENTRIES ──
     const timeEntries = [
-      { desc: 'Discovery call with Mara', proj: proj1.id, cl: client1.id, mins: 60, daysAgo: 14, billable: 1 },
+      { desc: 'Discovery call with Jordan', proj: proj1.id, cl: client1.id, mins: 60, daysAgo: 14, billable: 1 },
       { desc: 'Competitive brand audit', proj: proj1.id, cl: client1.id, mins: 150, daysAgo: 13, billable: 1 },
       { desc: 'Logo concepts -- round 1', proj: proj1.id, cl: client1.id, mins: 180, daysAgo: 10, billable: 1 },
       { desc: 'Logo concepts -- round 2', proj: proj1.id, cl: client1.id, mins: 120, daysAgo: 7, billable: 1 },

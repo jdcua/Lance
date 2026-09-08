@@ -21,11 +21,21 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
     getRuntimeVersion().then(setAppVersion);
   }, []);
 
+  // Frequency-cap accounting: count one view per mount against this version.
+  // Skipped for licensed users (splash never shows for them) and only runs
+  // when actually mounted, so suppressed sessions don't burn views.
   useEffect(() => {
     if (isLicensed) return;
-    const timer = setTimeout(onDismiss, 2000);
-    return () => clearTimeout(timer);
-  }, [isLicensed, onDismiss]);
+    getRuntimeVersion().then((v) => {
+      const key = `lance:splash-views:${v}`;
+      const n = parseInt(localStorage.getItem(key) || '0', 10) || 0;
+      localStorage.setItem(key, String(n + 1));
+    });
+  }, [isLicensed]);
+
+  // No auto-dismiss: this screen asks the user to make a real choice
+  // (start trial vs continue free). Auto-closing it mid-read was
+  // reported as the modal "disappearing". Explicit buttons + Escape only.
 
   // Escape dismisses the splash (matching modal behavior) and Tab stays trapped.
   useEffect(() => {
@@ -95,7 +105,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
 
         <div className="flex items-center justify-center gap-3 mb-6">
           <Button variant="primary" onClick={handleTryPro} size="md">
-            Try Pro free for 30 days &mdash; $14/mo
+            Try Pro free for 30 days ($14/mo)
           </Button>
           <Button variant="secondary" onClick={onDismiss} size="md">
             Continue free

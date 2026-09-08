@@ -261,6 +261,15 @@ export default function Clients() {
     setShowModal(true);
   };
 
+  // External triggers for the new-client modal: the walkthrough finale CTA
+  // and the Cmd/Ctrl+N shortcut dispatched from App.tsx. (The shortcut was
+  // previously dispatched here but nothing listened.)
+  useEffect(() => {
+    const handler = () => openNew();
+    document.addEventListener('lance:add-client', handler);
+    return () => document.removeEventListener('lance:add-client', handler);
+  }, []);
+
   const openEdit = (client: Client) => {
     setEditing(client);
     setForm({

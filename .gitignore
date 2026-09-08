@@ -37,6 +37,9 @@ src-tauri/signing/*
 .qa-bugs.json
 .qa-progress.json
 qa.sh
+qa-shots/
+test-results/
+playwright-report/
 
 # Build plan docs (never committed to GitHub)
 docs/MONETIZATION_ONE_SHOT.md
@@ -66,6 +69,13 @@ launch-video/
 
 # Lance.key
 lance.key
+
+# Local databases (user data lives outside the repo; never commit these)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
 
 # Artifacts
 *.AppImage

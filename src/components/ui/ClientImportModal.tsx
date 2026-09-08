@@ -48,8 +48,8 @@ interface DedupResult {
 const SAMPLE_CSV_CONTENT =
   'Name,Email,Phone,Company,Notes\n' +
   'Jane Smith,jane@example.com,(555) 123-4567,Acme Inc.,Primary contact for design\n' +
-  'Bob Wilson,bob@widgetcorp.com,,Widget Corp,"Needs invoicing to AP, NET 30"\n' +
-  'Maria Garcia,maria@startup.io,(555) 987-6543,,Early-stage founder\n';
+  'Bob Wilson,bob@example.com,,Widget Corp,"Needs invoicing to AP, NET 30"\n' +
+  'Maria Garcia,maria@example.com,(555) 987-6543,,Early-stage founder\n';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 

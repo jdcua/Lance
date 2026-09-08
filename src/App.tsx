@@ -35,11 +35,15 @@ import { getShortcutModifierLabel } from './utils/shortcuts';
 import type { Profession } from './themes';
 import { PROFESSION_THEME } from './themes';
 import { getArchetype, ARCHETYPE_LIST } from './archetypes';
+import { driveAxisFor, saveDrive, loadDrive, DRIVE_AXES } from './tour/voice';
 import { checkAchievements } from './achievements/checker';
 import { ACHIEVEMENTS } from './achievements';
 import { seedSampleData } from './utils/seedData';
 import { parseDateString } from './utils/format';
 import { getRuntimeVersion } from './lib/version';
+
+// Max upsell-splash views per app version for unlicensed users.
+export const SPLASH_MAX_VIEWS = 3;
 
 export default function App() {
   const {
@@ -62,6 +66,10 @@ export default function App() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showQuickLogModal, setShowQuickLogModal] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  // Upsell frequency cap: free users see the splash at most SPLASH_MAX_VIEWS
+  // times per app version, then silence until the next release. Counted in
+  // SplashScreen on mount; loaded here once the runtime version resolves.
+  const [splashViews, setSplashViews] = useState<number | null>(null);
   // Guard against double-processing recurring invoices when invoices.length
   // changes mid-generation and re-triggers the idle-callback effect.
   const autoGenProcessedRef = useRef<Set<string>>(new Set());
@@ -97,7 +105,16 @@ export default function App() {
     getRuntimeVersion().then(setAppVersion);
   }, []);
 
-  // Changelog check on mount
+  useEffect(() => {
+    if (!appVersion) return;
+    const seen = parseInt(localStorage.getItem(`lance:splash-views:${appVersion}`) || '0', 10) || 0;
+    setSplashViews(seen);
+  }, [appVersion]);
+
+  // Changelog check on mount. Depends on appVersion: getRuntimeVersion()
+  // resolves after mount, so an empty-deps effect bails on the initial ''
+  // and the "What's new" modal never appears. Re-running is safe: dismiss
+  // persists changelog-seen, which stops repeat shows.
   useEffect(() => {
     if (!appVersion) return;
     const seen = localStorage.getItem('lance:changelog-seen');
@@ -110,7 +127,7 @@ export default function App() {
       // Otherwise, the changelog will show on the next app load
       // (the version check will still find it unseen)
     }
-  }, []);
+  }, [appVersion]);
 
   const dismissChangelog = () => {
     const latestVersion = changelog[0]?.version || appVersion;
@@ -300,6 +317,16 @@ export default function App() {
     // Do NOT auto-complete just because profile.name exists -- the user must go through all steps
     setShowOnboarding(true);
   }, [profileLoaded]);
+
+  // First-run owns the session: once onboarding activates, the upsell splash
+  // stays dismissed until next launch. Otherwise the splash ambushes the user
+  // right after setup/tour (e.g. covering the New Client modal the tour CTA
+  // just opened). Returning users still see the splash on each launch.
+  useEffect(() => {
+    if (showOnboarding) {
+      setShowSplash(false);
+    }
+  }, [showOnboarding]);
 
   // Show walkthrough after onboarding completes
   useEffect(() => {
@@ -774,13 +801,18 @@ export default function App() {
         </main>
       </div>
 
-      {/* Splash screen -- shown on launch when unlicensed */}
-      {showSplash && !isLicensed && (
+      {/* Splash screen -- shown on launch when unlicensed. Suppressed while
+          onboarding or the tour is active so modals never stack (tour is
+          z-60, splash is z-100 and would bury it). Capped at SPLASH_MAX_VIEWS
+          views per version so free users aren't nagged every launch. */}
+      {showSplash && !isLicensed && !showOnboarding && !showWalkthrough && splashViews !== null && splashViews < SPLASH_MAX_VIEWS && (
         <SplashScreen onDismiss={() => setShowSplash(false)} />
       )}
 
-      {/* Changelog modal -- hidden while onboarding is active to avoid z-index overlap */}
-      <Modal open={showChangelog && !showOnboarding} onClose={dismissChangelog} title={"What's new in Lance " + (changelog[0]?.version || appVersion)} size="md">
+      {/* Changelog modal -- hidden while onboarding is active to avoid z-index overlap.
+          Also sequenced after the splash: splash (z-100) would otherwise bury
+          this modal (z-50) and trap the buttons underneath it. */}
+      <Modal open={showChangelog && !showOnboarding && (!showSplash || isLicensed)} onClose={dismissChangelog} title={"What's new in Lance " + (changelog[0]?.version || appVersion)} size="md">
         <div className="space-y-4">
           {changelog.length === 0 ? (
             <p className="text-sm text-[var(--text-tertiary)]">Loading changelog...</p>
@@ -812,7 +844,17 @@ export default function App() {
 
       <OnboardingFlow showOnboarding={showOnboarding} setShowOnboarding={setShowOnboarding} />
 
-      <Walkthrough open={showWalkthrough} onClose={() => { setShowWalkthrough(false); localStorage.removeItem('lance:tour-pending'); }} />
+      <Walkthrough
+        open={showWalkthrough}
+        onClose={() => { setShowWalkthrough(false); localStorage.removeItem('lance:tour-pending'); }}
+        onAddFirstClient={() => {
+          setShowWalkthrough(false);
+          localStorage.removeItem('lance:tour-pending');
+          navigate('/clients');
+          // Let the Clients screen mount before requesting its add-client modal.
+          setTimeout(() => document.dispatchEvent(new CustomEvent('lance:add-client')), 350);
+        }}
+      />
 
       <ImportModal
         open={showImportModal}
@@ -898,6 +940,21 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
   const seedDataRef = useRef(false);
   const [activeThemeId, setActiveThemeId] = useState<string>(localStorage.getItem('lance:theme') || 'default');
   const [validationErrors, setValidationErrors] = useState<{ email?: string }>({});
+  // "What drives you" answer for ambiguous archetypes. Tunes the tour coach
+  // voice; persisted immediately on select. Null = unanswered (engine blends).
+  const [driveValue, setDriveValue] = useState<-1 | 0 | 1 | null>(null);
+
+  const driveAxisId = driveAxisFor(onboardingForm.profession);
+  const driveAxis = driveAxisId ? DRIVE_AXES[driveAxisId] : null;
+
+  useEffect(() => {
+    const stored = loadDrive();
+    if (stored && stored.archetype === onboardingForm.profession) {
+      setDriveValue(stored.value);
+    } else {
+      setDriveValue(null);
+    }
+  }, [onboardingForm.profession]);
 
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -905,7 +962,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
     if (showOnboarding) {
       const storedStep = localStorage.getItem('lance:onboarding-step');
       const parsedStep = storedStep && storedStep !== 'complete' ? parseInt(storedStep) : NaN;
-      if (parsedStep >= 1 && parsedStep <= 5) {
+      if (parsedStep >= 1 && parsedStep <= 4) {
         setOnboardingStep(parsedStep);
         setIsResuming(true);
         if (profile) {
@@ -949,7 +1006,16 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
     setOnboardingStep(next);
   };
   const handleOnboardingBack = () => setOnboardingStep((s) => s - 1);
+  // X / backdrop = "finish later": the current step was already persisted by
+  // persistStep on every Next, so the user resumes via the welcome-back
+  // banner. Never mark onboarding complete here (that strand users who
+  // misclick out of their first run).
   const handleOnboardingClose = useCallback(() => {
+    setShowOnboarding(false);
+  }, []);
+
+  // Explicit opt-out, offered as a "Skip setup" link in the header.
+  const handleOnboardingSkip = useCallback(() => {
     localStorage.setItem('lance:onboarding-step', 'complete');
     localStorage.setItem('lance:onboarding-completed', 'true');
     localStorage.setItem('lance:tour-pending', 'true');
@@ -1003,14 +1069,27 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
   const inputClass = "w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)] text-[var(--text-primary)]";
   const labelClass = "block text-xs font-medium text-[var(--text-secondary)] mb-1";
 
+  const STEP_LABELS = ['Your craft', 'Your profile', 'Your theme', 'Rates & data'];
+
   return (
-    <Modal open={showOnboarding} onClose={handleOnboardingClose} title="" size="sm">
+    <Modal open={showOnboarding} onClose={handleOnboardingClose} title="Set up Lance" size="md">
       <div className="space-y-5">
         {isResuming && (
           <div className="text-center text-xs text-[var(--text-secondary)] bg-[var(--accent-bg)] py-1.5 px-3 rounded-[6px]">
-            Welcome back &mdash; pick up where you left off.
+            Welcome back. Pick up where you left off.
           </div>
         )}
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs text-[var(--text-tertiary)]" aria-live="polite">
+            Step {Math.min(onboardingStep, 4)} of 4 &middot; {STEP_LABELS[Math.min(onboardingStep, 4) - 1]}
+          </span>
+          <button
+            onClick={handleOnboardingSkip}
+            className="text-xs text-[var(--text-tertiary)] hover:text-[var(--text-primary)] underline underline-offset-2 transition-colors"
+          >
+            Skip setup
+          </button>
+        </div>
         <div className="flex justify-center gap-2 mb-1">
           {/* [1, 2, 3, 4, 5] -> AI disabled for v1.0.0 */}
           {[1, 2, 3, 4].map((step) => (
@@ -1029,7 +1108,8 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
             <div className="text-center space-y-2">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Welcome to Lance</h3>
               <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-                Your freelance business, all in one place. What do you do?
+                Your freelance business, all in one place. About a minute of setup,
+                free forever. What do you do?
               </p>
             </div>
             <div className="grid grid-cols-2 gap-2 max-h-[280px] overflow-y-auto pr-1">
@@ -1050,9 +1130,40 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
                 </button>
               ))}
             </div>
-            <div className="flex justify-end pt-1">
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[11px] text-[var(--text-tertiary)]">
+                Tunes proposals, contracts &amp; insights to your craft. Changeable anytime in Settings &rarr; Archetype.
+              </span>
               <Button onClick={handleOnboardingNext} size="sm">Continue &rarr;</Button>
             </div>
+            {driveAxis && driveAxisId && (
+              <div className="p-3 rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-secondary)]">
+                <p className="text-xs font-semibold text-[var(--text-primary)]">{driveAxis.question}</p>
+                <p className="text-[11px] text-[var(--text-tertiary)] mt-0.5">
+                  Tunes your tour guide to how you think. Ten seconds, skippable.
+                </p>
+                <div className="flex gap-2 mt-2" role="radiogroup" aria-label={driveAxis.question}>
+                  {([[-1, driveAxis.low], [0, driveAxis.mid], [1, driveAxis.high]] as const).map(([v, label]) => (
+                    <button
+                      key={v}
+                      role="radio"
+                      aria-checked={driveValue === v}
+                      onClick={() => {
+                        setDriveValue(v);
+                        saveDrive({ archetype: onboardingForm.profession, axis: driveAxisId, value: v });
+                      }}
+                      className={`flex-1 px-2 py-2 text-[11px] font-medium rounded-[8px] border transition-colors ${
+                        driveValue === v
+                          ? 'bg-[var(--accent-bg)] border-[var(--accent)] text-[var(--text-primary)]'
+                          : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -1061,6 +1172,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
           <>
             <div className="text-center mb-2">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Tell us about yourself</h3>
+                <p className="text-xs text-[var(--text-tertiary)] mt-1">Only your name is required. Everything else can wait.</p>
             </div>
             <div className="space-y-3">
               <div>
@@ -1077,7 +1189,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
                 />
               </div>
               <div>
-                <label className={labelClass}>Email</label>
+                <label className={labelClass}>Email <span className="font-normal text-[var(--text-tertiary)]">(optional)</span></label>
                 <input
                   type="email"
                   value={onboardingForm.email}
@@ -1131,9 +1243,12 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
             <div className="text-center mb-3">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Pick your workspace</h3>
               <p className="text-xs text-[var(--text-tertiary)] mt-1">
+                No need to decide now. Default looks great everywhere, and you can switch anytime in Settings.
+              </p>
+              <p className="text-xs text-[var(--text-tertiary)] mt-1">
                 {onboardingForm.profession
-                  ? `Your ${onboardingForm.profession} theme is unlocked. Earn more as you use Lance.`
-                  : 'All themes unlock through achievements -- or instantly with a license.'}
+                  ? `Your ${onboardingForm.profession} theme is unlocked. More themes unlock as you hit achievements -- or instantly with Pro.`
+                  : 'All themes unlock through achievements -- or instantly with Pro.'}
               </p>
             </div>
             <div className="space-y-1 max-h-[300px] overflow-y-auto">
@@ -1244,11 +1359,14 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
         {onboardingStep === 4 && (
           <>
             <div className="text-center mb-2">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Final Details</h3>
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Rates &amp; sample data</h3>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed mt-1">
+                Defaults you can override per client or invoice. Last step, then we&rsquo;ll show you around.
+              </p>
             </div>
             <div className="space-y-3">
               <div>
-                <label className={labelClass}>Default Hourly Rate ({onboardingForm.currency})</label>
+                <label className={labelClass}>Default Hourly Rate ({onboardingForm.currency}) <span className="font-normal text-[var(--text-tertiary)]">(optional)</span></label>
                 <input
                   type="number"
                   value={onboardingForm.hourly_rate}
@@ -1307,7 +1425,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
             </div>
             <div className="flex justify-between pt-4">
               <Button variant="secondary" onClick={handleOnboardingBack} size="sm" disabled={isSaving}>&larr; Back</Button>
-              <span className="text-[10px] text-[var(--text-tertiary)] self-center">Step 4 of 4</span>
+              <span className="text-[11px] text-[var(--text-tertiary)] self-center">You can revisit setup anytime in Settings</span>
             </div>
           </>
         )}

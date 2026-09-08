@@ -356,7 +356,7 @@ export default function Finance() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-xs font-medium text-[var(--text-primary)]">{exp.description}</span>
-                      <span className="text-[10px] text-[var(--text-tertiary)]">&mdash;</span>
+                      <span className="text-[10px] text-[var(--text-tertiary)]">&middot;</span>
                       <span className="text-[10px] text-[var(--text-secondary)]">{exp.category}</span>
                     </div>
                     <span className="text-[10px] text-[var(--text-tertiary)]">{formatDate(exp.date)}</span>

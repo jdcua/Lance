@@ -46,7 +46,7 @@
 - Audit log for all data mutations
 
 ## v2 Foundations Set in v1
-- `auth.ts` stub module — all identity queries route through `auth.getUserId()`
+- `auth.ts` stub module: all identity queries route through `auth.getUserId()`
 - `user_id INTEGER DEFAULT 1` column added to all tables
 - `app_events` audit trail table created
 - Sensitive fields annotated with `-- SECURITY: encrypt with user key in v2`
