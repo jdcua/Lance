@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
+import { trialDaysRemaining } from '../lib/trial';
 import type { UserProfile, ExportTemplate } from '../types';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -50,7 +51,7 @@ function labelForStyle(s: string): string {
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { profile, loadProfile, saveProfile, isLicensed, activateLicense, removeLicense, followUpSettings, loadFollowUpSettings, saveFollowUpSettings } = useStore();
+  const { profile, loadProfile, saveProfile, isLicensed, activateLicense, removeLicense, followUpSettings, loadFollowUpSettings, saveFollowUpSettings, getActiveTier } = useStore();
   const addToast = useToasts((s) => s.add);
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [showResetModal, setShowResetModal] = useState(false);
@@ -654,7 +655,7 @@ export default function Settings() {
                         <span className="text-[10px] text-[var(--accent)] bg-[var(--accent-bg)] px-1.5 py-0.5 rounded-full">Licensed</span>
                       </div>
                       <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-2">
-                        All themes unlocked \u2014 thank you for supporting Lance.
+                        All themes unlocked. Thank you for supporting Lance.
                       </p>
                       {form.licensed_at && (
                         <p className="text-xs text-[var(--text-tertiary)] mb-1">
@@ -673,6 +674,11 @@ export default function Settings() {
                     </div>
                   ) : (
                     <div>
+                      {getActiveTier() === 'trial' && (
+                        <p className="text-sm text-[var(--text-primary)] mb-2">
+                          Pro trial: <strong className="text-[var(--accent)]">{trialDaysRemaining(profile?.trial_started_at)} days left</strong>. Everything is unlocked. Keep it with a license before it ends.
+                        </p>
+                      )}
                       <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-4">
                         Lance is free to use. A license removes the launch screen and unlocks all themes immediately.
                       </p>

@@ -10,6 +10,7 @@ import { useToasts } from '../store/toastStore';
 import { Lightbulb, BarChart3, TrendingUp, TrendingDown, Minus, Star } from 'lucide-react';
 import { getArchetype } from '../archetypes';
 import type { ArchetypeConfig } from '../archetypes';
+import ProInsights from '../components/features/ProInsights';
 
 export default function Insights() {
   const { projects, loadProjects, invoices, loadInvoices, timeEntries, loadTimeEntries, clients, loadClients, proposals, loadProposals, expenses, loadExpenses, profile, loadProfile, headlineMetrics, loadHeadlineMetrics } = useStore();
@@ -244,6 +245,10 @@ export default function Insights() {
           </Card>
         )}
       </div>
+
+      {/* Pro depth: forecast, effective rate, per-client win rates.
+          Free tiers see locked teasers with real headline numbers. */}
+      <ProInsights />
 
       {/* Client Performance */}
       {!hiddenPanels.includes('client-performance') && (

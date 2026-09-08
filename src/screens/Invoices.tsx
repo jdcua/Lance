@@ -130,6 +130,14 @@ export default function Invoices() {
     setShowModal(true);
   };
 
+  // External triggers: first-run checklist + Cmd/Ctrl+N shortcut (App.tsx).
+  // (The shortcut was previously dispatched here but nothing listened.)
+  useEffect(() => {
+    const handler = () => openNew();
+    document.addEventListener('lance:add-invoice', handler);
+    return () => document.removeEventListener('lance:add-invoice', handler);
+  });
+
   const handleCreateFromEmptyState = () => {
     if (!clients || clients.length === 0) {
       addToast('Add a client before creating an invoice', 'info');

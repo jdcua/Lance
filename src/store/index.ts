@@ -6,8 +6,8 @@ import type {
   MetricValue, MetricTemplate, HeadlineMetric, FollowUpLog, FollowUpSettings,
   ExportTemplate, ContractTemplate, ArchetypeRenderLog, ArchetypeSession,
   ArchetypeShoot, ArchetypeRevision, ArchetypeBuild, ArchetypeKeyword,
-  ArchetypeDataset, ProjectPhase, ProjectTemplate, ProjectTemplateMilestone,
-  ShareToken, KanbanBoard, KanbanColumn, KanbanCard,
+  ArchetypeDataset, ProjectTemplate, ProjectTemplateMilestone,
+  ShareToken,
 } from '../types';
 import type { Achievement } from '../achievements/index';
 import { validateLicenseKey } from '../license';
@@ -71,7 +71,6 @@ export interface UnifiedStore {
   communications: Communication[]
   recurringInvoices: RecurringInvoice[]
   importHistory: ImportLog[]
-  attachments: Attachment[]
   allAttachments: Attachment[]
   assetStats: AssetStats | null
   metricDefs: MetricDefinition[]
@@ -92,10 +91,6 @@ export interface UnifiedStore {
   builds: ArchetypeBuild[]
   keywords: ArchetypeKeyword[]
   datasets: ArchetypeDataset[]
-  projectPhases: ProjectPhase[]
-  kanbanBoards: KanbanBoard[]
-  kanbanColumns: KanbanColumn[]
-  kanbanCards: KanbanCard[]
   shareTokens: ShareToken[]
   achievements: Achievement[]
 
@@ -194,7 +189,6 @@ export interface UnifiedStore {
   // ── Communications ──
   loadCommunications: () => Promise<void>
   createCommunication: (data: Omit<Communication, 'id' | 'created_at'>) => Promise<Communication>
-  updateCommunication: (id: string, clientId: string, summary: string) => Promise<void>
   deleteCommunication: (id: string, clientId: string) => Promise<void>
 
   // ── Recurring Invoices ──
@@ -210,7 +204,6 @@ export interface UnifiedStore {
   getImportsDir: () => Promise<string>
 
   // ── Attachments ──
-  loadAttachments: (entityType?: string, entityId?: string) => Promise<void>
   loadAllAttachments: () => Promise<void>
   createAttachment: (data: Omit<Attachment, 'id' | 'created_at'>) => Promise<Attachment>
   deleteAttachment: (id: string, entityType: string, entityId: string) => Promise<void>
@@ -239,7 +232,6 @@ export interface UnifiedStore {
   // ── Follow-ups ──
   loadFollowUpSettings: () => void
   saveFollowUpSettings: (settings: Partial<FollowUpSettings>) => void
-  loadFollowUpLog: (entityType: string, entityId: string) => Promise<void>
   createFollowUp: (data: { entity_type: string; entity_id: string; stage: number }) => Promise<FollowUpLog>
   updateFollowUpStatus: (id: string, status: string, action?: string) => Promise<void>
   loadPendingFollowUps: () => Promise<void>
@@ -254,7 +246,6 @@ export interface UnifiedStore {
   // ── Contract Templates ──
   loadContractTemplates: () => Promise<void>
   createContractTemplate: (data: Omit<ContractTemplate, 'id' | 'created_at'>) => Promise<ContractTemplate>
-  updateContractTemplate: (data: ContractTemplate) => Promise<void>
   deleteContractTemplate: (id: string) => Promise<void>
 
   // ── Project Templates ──
@@ -299,15 +290,6 @@ export interface UnifiedStore {
   loadDatasets: () => Promise<void>
   createDataset: (data: Omit<ArchetypeDataset, 'id' | 'created_at'>) => Promise<ArchetypeDataset>
   deleteDataset: (id: string) => Promise<void>
-
-  // ── Project Phases ──
-  loadProjectPhases: (projectId: string) => Promise<void>
-  createProjectPhase: (data: Omit<ProjectPhase, 'id'>) => Promise<ProjectPhase>
-  updateProjectPhase: (id: string, projectId: string, data: Partial<Pick<ProjectPhase, 'phase_name' | 'status' | 'color'>>) => Promise<void>
-  deleteProjectPhase: (id: string, projectId: string) => Promise<void>
-
-  // ── Kanban ──
-  loadKanbanBoards: (projectId: string) => Promise<void>
 
   // ── Backward compatibility aliases (old add→create, remove→delete) ──
   addClient: (data: Omit<Client, 'id' | 'created_at'>) => Promise<Client>
@@ -377,7 +359,6 @@ export interface UnifiedStore {
   getUnpaidInvoices: () => Invoice[]
   getPendingProposals: () => Proposal[]
   getActiveContracts: () => Contract[]
-  getKanbanBoard: (projectId: string) => { board: KanbanBoard | null; columns: KanbanColumn[]; cards: KanbanCard[] }
   getUpcomingFollowUps: (days?: number) => FollowUpLog[]
   getProjectMetrics: (projectId: string) => { totalTime: number; totalBillable: number; totalInvoiced: number; milestoneProgress: number }
   getFinanceSummary: () => { revenue: number; expenses: number; outstanding: number; forecast: number; totalPaid: number }
@@ -420,7 +401,6 @@ export const useStore = create<UnifiedStore>((set, get) => {
     communications: [],
     recurringInvoices: [],
     importHistory: [],
-    attachments: [],
     allAttachments: [],
     assetStats: null,
     metricDefs: [],
@@ -441,10 +421,6 @@ export const useStore = create<UnifiedStore>((set, get) => {
     builds: [],
     keywords: [],
     datasets: [],
-    projectPhases: [],
-    kanbanBoards: [],
-    kanbanColumns: [],
-    kanbanCards: [],
     shareTokens: [],
     achievements: [],
 
@@ -910,10 +886,6 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ communications: [...get().communications, comm] });
       return comm;
     },
-    updateCommunication: async (id, clientId, summary) => {
-      await invoke('update_communication', { id, summary });
-      set({ communications: get().communications.map((c) => (c.id === id ? { ...c, summary } : c)) });
-    },
     deleteCommunication: async (id, clientId) => {
       await invoke('delete_communication', { id });
       set({ communications: get().communications.filter((c) => c.id !== id) });
@@ -965,22 +937,6 @@ export const useStore = create<UnifiedStore>((set, get) => {
     getImportsDir: () => invoke<string>('get_imports_dir'),
 
     // ── Attachments ──
-    loadAttachments: async (entityType, entityId) => {
-      startLoad('attachments');
-      try {
-        if (entityType && entityId) {
-          const items = await invoke<Attachment[]>('get_attachments', { entityType, entityId });
-          const key = `${entityType}:${entityId}`;
-          const current = { ...get().attachments };
-          (current as any)[key] = items;
-          set({ attachments: current });
-        } else {
-          const items = await invoke<Attachment[]>('get_all_attachments');
-          set({ allAttachments: items });
-        }
-      } catch (e) { console.error('[store] loadAttachments failed:', e); setError('attachments', String(e)); }
-      finally { endLoad('attachments'); }
-    },
     loadAllAttachments: async () => {
       startLoad('allAttachments');
       try { set({ allAttachments: await invoke<Attachment[]>('get_all_attachments') }); }
@@ -1108,15 +1064,6 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ followUpSettings: merged });
       localStorage.setItem('lance:follow-up-settings', JSON.stringify(merged));
     },
-    loadFollowUpLog: async (entityType, entityId) => {
-      try {
-        const logs = await invoke<FollowUpLog[]>('get_follow_up_log', { entityType, entityId });
-        const key = `${entityType}:${entityId}`;
-        const current = { ...get().followUpLogs };
-        (current as any)[key] = logs;
-        set({ followUpLogs: current });
-      } catch (e) { console.error('[store] loadFollowUpLog failed:', e); }
-    },
     createFollowUp: async (data) => {
       const log = await invoke<FollowUpLog>('log_follow_up', { payload: data });
       const key = `${data.entity_type}:${data.entity_id}`;
@@ -1205,12 +1152,6 @@ export const useStore = create<UnifiedStore>((set, get) => {
       const template: ContractTemplate = { id, ...data, created_at: now };
       set({ contractTemplates: [template, ...get().contractTemplates] });
       return template;
-    },
-    updateContractTemplate: async (data) => {
-      const { getDb } = await import('../db');
-      const db = await getDb();
-      await db.execute('UPDATE contract_templates SET name = ?, category = ?, body = ?, variables = ? WHERE id = ?', [data.name, data.category || '', data.body, JSON.stringify(data.variables || []), data.id]);
-      set({ contractTemplates: get().contractTemplates.map((t) => (t.id === data.id ? data : t)) });
     },
     deleteContractTemplate: async (id) => {
       const { getDb } = await import('../db');
@@ -1396,56 +1337,6 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ datasets: get().datasets.filter((d) => d.id !== id) });
     },
 
-    // ── Project Phases ──
-    loadProjectPhases: async (projectId) => {
-      startLoad('projectPhases');
-      try {
-        const { getDb } = await import('../db');
-        const db = await getDb();
-        const rows = await db.select<(ProjectPhase & Record<string, unknown>)[]>('SELECT id, project_id, phase_name, status, color FROM project_phases WHERE project_id = ? ORDER BY id ASC', [projectId]);
-        set({ projectPhases: rows.map(r => ({ id: r.id as string, project_id: r.project_id as string, phase_name: r.phase_name as string, status: r.status as string, color: r.color as string | undefined })) });
-      } catch (e) { console.error('[store] loadProjectPhases failed:', e); setError('projectPhases', String(e)); }
-      finally { endLoad('projectPhases'); }
-    },
-    createProjectPhase: async (data) => {
-      const id = crypto.randomUUID();
-      const { getDb } = await import('../db');
-      const db = await getDb();
-      await db.execute('INSERT INTO project_phases (id, project_id, phase_name, status, color) VALUES (?, ?, ?, ?, ?)', [id, data.project_id, data.phase_name, data.status || 'pending', data.color || null]);
-      const item: ProjectPhase = { id, ...data, status: data.status || 'pending' };
-      set({ projectPhases: [item, ...get().projectPhases] });
-      return item;
-    },
-    updateProjectPhase: async (id, projectId, pdata) => {
-      const { getDb } = await import('../db');
-      const db = await getDb();
-      if (pdata.phase_name !== undefined) await db.execute('UPDATE project_phases SET phase_name = ? WHERE id = ?', [pdata.phase_name, id]);
-      if (pdata.status !== undefined) await db.execute('UPDATE project_phases SET status = ? WHERE id = ?', [pdata.status, id]);
-      if (pdata.color !== undefined) await db.execute('UPDATE project_phases SET color = ? WHERE id = ?', [pdata.color, id]);
-      set({ projectPhases: get().projectPhases.map((p) => p.id === id ? { ...p, ...pdata } : p) });
-    },
-    deleteProjectPhase: async (id, projectId) => {
-      const { getDb } = await import('../db');
-      const db = await getDb();
-      await db.execute('DELETE FROM project_phases WHERE id = ?', [id]);
-      set({ projectPhases: get().projectPhases.filter((p) => p.id !== id) });
-    },
-
-    // ── Kanban ──
-    loadKanbanBoards: async (projectId) => {
-      try {
-        const boards = await invoke<KanbanBoard[]>('get_kanban_boards', { projectId });
-        if (boards.length > 0) {
-          const boardId = boards[0].id;
-          const [columns, cards] = await Promise.all([
-            invoke<KanbanColumn[]>('get_kanban_columns', { boardId }),
-            invoke<KanbanCard[]>('get_kanban_cards', { boardId }),
-          ]);
-          set({ kanbanBoards: boards, kanbanColumns: columns, kanbanCards: cards });
-        }
-      } catch (e) { console.error('[store] loadKanbanBoards failed:', e); }
-    },
-
     // ── Backward compatibility aliases ──
     addClient: (data) => get().createClient(data),
     addProject: (data) => get().createProject(data),
@@ -1530,12 +1421,6 @@ export const useStore = create<UnifiedStore>((set, get) => {
     getUnpaidInvoices: () => get().invoices.filter((i) => i.status === 'sent' || i.status === 'overdue' || i.status === 'partial'),
     getPendingProposals: () => get().proposals.filter((p) => p.status === 'draft' || p.status === 'sent'),
     getActiveContracts: () => get().contracts.filter((c) => c.status === 'active'),
-    getKanbanBoard: (projectId) => {
-      const board = get().kanbanBoards.find((b) => b.project_id === projectId) || null;
-      const columns = board ? get().kanbanColumns.filter((c) => c.board_id === board.id) : [];
-      const cards = board ? get().kanbanCards.filter((c) => columns.some((col) => col.id === c.column_id)) : [];
-      return { board, columns, cards };
-    },
     getUpcomingFollowUps: (days = 7) => {
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() + days);

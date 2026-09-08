@@ -71,7 +71,6 @@ export default function TimeScreen() {
   const addToast = useToasts((s) => s.add);
   const [activeTimer, setActiveTimer] = useState<{ entry: TimeEntry; elapsed: number } | null>(null);
   const [intervalId, setIntervalId] = useState<ReturnType<typeof setInterval> | null>(null);
-  const [showNewEntry, setShowNewEntry] = useState(false);
   const [entryForm, setEntryForm] = useState({ project_id: '', client_id: '', description: '', billable: true });
   const [durationMinutes, setDurationMinutes] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -210,7 +209,6 @@ export default function TimeScreen() {
         end_time: now.toISOString(),
         duration_minutes: durationMinutes,
       });
-      setShowNewEntry(false);
       setEntryForm({ project_id: '', client_id: '', description: '', billable: true });
       setDurationMinutes(0);
       checkAndNotify(useStore.getState(), addToast);

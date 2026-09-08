@@ -49,6 +49,7 @@ import {
   ChevronUp,
 } from 'lucide-react';
 import { useStore } from '../../store';
+import { trialDaysRemaining } from '../../lib/trial';
 import { getArchetype } from '../../archetypes';
 import type { SidebarItemDef } from '../../archetypes';
 import { getShortcutModifierLabel } from '../../utils/shortcuts';
@@ -93,7 +94,7 @@ export default function Sidebar() {
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
-  const { isLicensed, proposals, projects, invoices, allAttachments, pendingFollowUps, profile, archetypeAppliedAt, clients, contracts, timeEntries, expenses } = useStore((s) => ({
+  const { isLicensed, proposals, projects, invoices, allAttachments, pendingFollowUps, profile, archetypeAppliedAt, clients, contracts, timeEntries, expenses, getActiveTier } = useStore((s) => ({
     isLicensed: s.isLicensed,
     proposals: s.proposals,
     projects: s.projects,
@@ -106,7 +107,9 @@ export default function Sidebar() {
     contracts: s.contracts,
     timeEntries: s.timeEntries,
     expenses: s.expenses,
+    getActiveTier: s.getActiveTier,
   }));
+  const isTrial = getActiveTier() === 'trial';
 
   // Remember every section the user visits (palette, deep link, tour CTA…).
   // Visited sections stay visible: nothing the user found gets taken away.
@@ -447,6 +450,12 @@ export default function Sidebar() {
               <p className="text-[10px] text-[var(--accent)] font-medium mt-1 flex items-center gap-1">
                 <Sparkles size={10} />
                 Licensed
+              </p>
+            )}
+            {!isLicensed && isTrial && (
+              <p className="text-[10px] text-[var(--accent)] font-medium mt-1 flex items-center gap-1">
+                <Sparkles size={10} />
+                Trial: {trialDaysRemaining(profile?.trial_started_at)} days left
               </p>
             )}
           </div>

@@ -29,6 +29,10 @@ export default function Dashboard() {
     last_backup_at: string | null;
     daysAgo: number | null;
   } | null>(null);
+  // Hooks must stay above the loading early-return below.
+  const [checklistDismissed, setChecklistDismissed] = useState(
+    () => typeof localStorage !== 'undefined' && localStorage.getItem('lance:checklist-dismissed') === 'true',
+  );
 
   useEffect(() => {
     Promise.all([loadInvoices(), loadProposals(), loadProjects(), loadClients(), loadTimeEntries(), loadExpenses(), loadProfile(), loadPendingFollowUps()])
@@ -162,15 +166,30 @@ export default function Dashboard() {
     );
   }
 
+  // Each step deep-links AND opens the real create form: landing on a list
+  // is not activation, doing the thing is. The time step needs no navigation
+  // because the quick-log modal is global.
+  const runStep = (to: string | null, event: string | null) => {
+    if (to) navigate(to);
+    if (event) {
+      setTimeout(() => document.dispatchEvent(new CustomEvent(event)), 350);
+    }
+  };
+
   const steps = [
-    { done: clients.length > 0, label: 'Add your first client', to: '/clients', icon: Users },
-    { done: projects.length > 0, label: 'Create a project', to: '/projects', icon: FolderKanban },
-    { done: timeEntries.length > 0, label: 'Log some time', to: '/time', icon: Clock },
-    { done: proposals.length > 0, label: 'Send a proposal', to: '/proposals/new', icon: FileText },
-    { done: invoices.length > 0, label: 'Send an invoice', to: '/invoices', icon: Receipt },
+    { done: clients.length > 0, label: 'Add your first client', to: '/clients', icon: Users, event: 'lance:add-client' },
+    { done: projects.length > 0, label: 'Create a project', to: '/projects', icon: FolderKanban, event: 'lance:add-project' },
+    { done: timeEntries.length > 0, label: 'Log some time', to: null, icon: Clock, event: 'lance:add-time' },
+    { done: proposals.length > 0, label: 'Send a proposal', to: '/proposals/new', icon: FileText, event: null },
+    { done: invoices.length > 0, label: 'Send an invoice', to: '/invoices', icon: Receipt, event: 'lance:add-invoice' },
   ];
   const allDone = steps.every(s => s.done);
-  const nextStep = steps.find(s => !s.done);
+  const showChecklist = !checklistDismissed && !allDone;
+
+  const dismissChecklist = () => {
+    localStorage.setItem('lance:checklist-dismissed', 'true');
+    setChecklistDismissed(true);
+  };
 
   return (
     <div className="p-6">
@@ -183,7 +202,7 @@ export default function Dashboard() {
           : effectiveArchetype.dashboard.subgreeting}
       </p>
 
-      {!hasData && (
+      {showChecklist && (
         <Card className="mb-6 border-[var(--accent)]/20 bg-[var(--accent-bg)]">
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-full bg-[var(--accent)]/10 flex items-center justify-center flex-shrink-0">
@@ -191,12 +210,12 @@ export default function Dashboard() {
             </div>
             <div className="flex-1">
               <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Let's get you set up</h3>
-              <p className="text-xs text-[var(--text-secondary)] mb-3">Everything in Lance starts with a client. Follow these steps to get going.</p>
-              <div className="space-y-2 mb-4">
+              <p className="text-xs text-[var(--text-secondary)] mb-3">Everything in Lance starts with a client. Each step opens the real thing.</p>
+              <div className="space-y-2 mb-1">
                 {steps.map((s, i) => (
                   <button
                     key={i}
-                    onClick={() => navigate(s.to)}
+                    onClick={() => runStep(s.to, s.event)}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[8px] text-left text-xs transition-colors ${
                       s.done
                         ? 'bg-[var(--bg-secondary)] text-[var(--text-tertiary)] line-through cursor-default'
@@ -211,10 +230,15 @@ export default function Dashboard() {
                   </button>
                 ))}
               </div>
-              {allDone && (
-                <p className="text-xs text-[var(--accent)] font-medium">You're all set. Explore the sections in the sidebar.</p>
-              )}
             </div>
+            <button
+              onClick={dismissChecklist}
+              aria-label="Dismiss setup checklist"
+              title="Dismiss"
+              className="p-1 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors flex-shrink-0"
+            >
+              <X size={16} />
+            </button>
           </div>
         </Card>
       )}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useStore } from '../store';
 import type { Contract, ContractTemplate, ShareToken } from '../types';
 import Button from '../components/ui/Button';
@@ -12,7 +12,6 @@ import { htmlToPlainText } from '../utils/htmlToText';
 import { ensureHtml } from '../utils/textToHtml';
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
-import { getUnlockedAchievementKeys } from '../achievements/checker';
 import { relativeDate } from '../utils/format';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 import { Plus, Pencil, Trash2, Eye, PenLine, Search, Copy, FileText, Share2, Link, Download, Sparkles } from 'lucide-react';
@@ -89,7 +88,6 @@ export default function Contracts() {
   const [form, setForm] = useState({ client_id: '', title: '', body: '' });
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'contracts' | 'templates'>('contracts');
-  const [showTemplatesTab, setShowTemplatesTab] = useState(false);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [exportDropdown, setExportDropdown] = useState<string | null>(null);
   const exportDropdownRef = useRef<HTMLDivElement>(null);
@@ -118,19 +116,6 @@ export default function Contracts() {
       setShareTokenIds(ids);
     } catch { /* ignore */ }
   };
-
-  const refreshTemplateAccess = useCallback(async () => {
-    try {
-      const keys = await getUnlockedAchievementKeys();
-      setShowTemplatesTab(new Set(keys).has('first_contract'));
-    } catch {
-      /* non-critical */
-    }
-  }, []);
-
-  useEffect(() => {
-    refreshTemplateAccess();
-  }, [refreshTemplateAccess]);
 
   const openNew = () => {
     setEditing(null);
@@ -172,7 +157,6 @@ export default function Contracts() {
       }
       setShowModal(false);
       await checkAndNotify(useStore.getState(), addToast);
-      await refreshTemplateAccess();
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to save', 'error');
     } finally {
@@ -300,19 +284,22 @@ export default function Contracts() {
       >
         Contracts
       </button>
-      {showTemplatesTab && (
-        <button
-          onClick={() => setTab('templates')}
-          className={`text-sm font-medium pb-1.5 border-b-2 transition-colors flex items-center gap-1.5 ${
-            tab === 'templates'
-              ? 'text-[var(--text-primary)] border-[var(--accent)]'
-              : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
-          }`}
-        >
-          <FileText size={14} />
-          Templates
-        </button>
-      )}
+      {/*
+        Templates tab is always visible. It was achievement-gated on the
+        first contract, which hid template discovery from exactly the users
+        (new, writing their first contract) who need it most.
+      */}
+      <button
+        onClick={() => setTab('templates')}
+        className={`text-sm font-medium pb-1.5 border-b-2 transition-colors flex items-center gap-1.5 ${
+          tab === 'templates'
+            ? 'text-[var(--text-primary)] border-[var(--accent)]'
+            : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
+        }`}
+      >
+        <FileText size={14} />
+        Templates
+      </button>
     </div>
   );
 
@@ -327,12 +314,10 @@ export default function Contracts() {
         </div>
         {tab === 'contracts' && (
           <div className="flex items-center gap-2">
-            {showTemplatesTab && (
-              <Button onClick={() => setShowTemplatePicker(true)} size="sm" variant="secondary" disabled={clients.length === 0}>
-                <Copy size={14} />
-                Start from template
-              </Button>
-            )}
+            <Button onClick={() => setShowTemplatePicker(true)} size="sm" variant="secondary" disabled={clients.length === 0}>
+              <Copy size={14} />
+              Start from template
+            </Button>
             <Button onClick={openNew} size="sm" disabled={clients.length === 0}>
               <Plus size={14} />
               New Contract
@@ -596,8 +581,7 @@ export default function Contracts() {
       </Modal>
 
       {/* Template picker modal */}
-      {showTemplatesTab && (
-        <Modal open={showTemplatePicker} onClose={() => setShowTemplatePicker(false)} title="Start from Template" size="md">
+      <Modal open={showTemplatePicker} onClose={() => setShowTemplatePicker(false)} title="Start from Template" size="md">
           <div className="space-y-2 max-h-[400px] overflow-y-auto">
 {allTemplatesWithArchetype.length === 0 ? (
               <p className="text-sm text-[var(--text-tertiary)] py-8 text-center">No templates available.</p>
@@ -620,7 +604,6 @@ export default function Contracts() {
             )}
           </div>
         </Modal>
-      )}
 
       <ConfirmDialog
         open={!!confirmDelete}

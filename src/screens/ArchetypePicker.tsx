@@ -59,10 +59,8 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
   };
 
   const handleApply = async () => {
-    console.trace('[ArchetypePicker] handleApply starting, selected:', selected);
     const archetype = getArchetype(selected);
     if (!profile) {
-      console.trace('[ArchetypePicker] no profile, aborting');
       return;
     }
 
@@ -70,8 +68,8 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
     // First-run onboarding (no profession set yet) always applies -- core stays free.
     const hasDepthFeatures = (archetype.archetypeFeatures?.length || 0) > 0;
     if (!isFirstRun && !isProTier && hasDepthFeatures) {
-      console.trace('[ArchetypePicker] gated: archetypeDepth requires Pro');
-      document.dispatchEvent(new CustomEvent('lance:open-upgrade', { detail: `Archetype depth -- ${archetype.label}` }));
+      console.info('[ArchetypePicker] gated: archetypeDepth requires Pro');
+      document.dispatchEvent(new CustomEvent('lance:open-upgrade', { detail: `Archetype depth: ${archetype.label}` }));
       addToast('Archetype depth is a Pro feature', 'info');
       return;
     }
@@ -82,14 +80,11 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
         profession: selected as string,
         ...(selected === 'custom' ? { custom_archetype_config: JSON.stringify(archetype) } : {}),
       };
-      console.trace('[ArchetypePicker] saving profile', profilePayload);
       await saveProfile(profilePayload);
 
-      console.trace('[ArchetypePicker] reloading profile from backend');
       await loadProfile();
 
       const theme = getTheme(archetype.theme);
-      console.trace('[ArchetypePicker] applying theme', archetype.theme);
       applyTheme(theme);
       localStorage.setItem('lance:theme', archetype.theme);
 
@@ -97,11 +92,10 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
 
       addToast(`Switched to ${archetype.label}`, 'success');
 
-      console.trace('[ArchetypePicker] navigation', onClose ? 'onClose' : 'navigate to /');
       if (onClose) onClose();
       else navigate('/');
     } catch (err) {
-      console.trace('[ArchetypePicker] apply failed', err);
+      console.error('[ArchetypePicker] apply failed', err);
       addToast('Failed to apply archetype', 'error');
     }
   };

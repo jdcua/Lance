@@ -93,6 +93,15 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Time entries are logged through the global quick-log modal (the Time
+  // screen has no new-entry trigger of its own). This wires the checklist
+  // and the Cmd/Ctrl+N shortcut, which previously dispatched to nothing.
+  useEffect(() => {
+    const handler = () => setShowQuickLogModal(true);
+    document.addEventListener('lance:add-time', handler);
+    return () => document.removeEventListener('lance:add-time', handler);
+  }, []);
+
   const [showImportModal, setShowImportModal] = useState(false);
   const [importFiles, setImportFiles] = useState<File[] | undefined>(undefined);
   const [isDragOver, setIsDragOver] = useState(false);

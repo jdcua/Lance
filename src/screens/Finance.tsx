@@ -11,7 +11,6 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useToasts } from '../store/toastStore';
 import type { ToastType } from '../store/toastStore';
 import { checkAndNotify } from '../achievements/notify';
-import { getUnlockedAchievementKeys } from '../achievements/checker';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 import {
@@ -41,7 +40,6 @@ export default function Finance() {
   const [form, setForm] = useState({ category: 'Other', description: '', amount: '', date: new Date().toISOString().split('T')[0], recurring: false, frequency: 'monthly' });
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'overview' | 'aging' | 'forecast'>('overview');
-  const [showForecast, setShowForecast] = useState(false);
   const [currentBalance, setCurrentBalance] = useState('');
   const [scenario, setScenario] = useState<ScenarioParams>({ newClientsPerMonth: 0, rateIncrease: 0, expenseGrowth: 0, mode: 'base' });
 
@@ -56,12 +54,6 @@ export default function Finance() {
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
   }, [loadExpenses, loadInvoices, loadRecurringInvoices, loadProjects, loadMilestones]);
-
-  useEffect(() => {
-    getUnlockedAchievementKeys().then((keys) => {
-      setShowForecast(new Set(keys).has('first_recurring'));
-    });
-  }, []);
 
   const openNew = () => {
     setEditing(null);
@@ -230,19 +222,22 @@ export default function Finance() {
       >
         Aging
       </button>
-      {showForecast && (
-        <button
-          onClick={() => setTab('forecast')}
-          className={`text-sm font-medium pb-1.5 border-b-2 transition-colors flex items-center gap-1.5 ${
-            tab === 'forecast'
-              ? 'text-[var(--text-primary)] border-[var(--accent)]'
-              : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
-          }`}
-        >
-          <TrendingUp size={14} />
-          Forecast
-        </button>
-      )}
+      {/*
+        Forecast tab is always visible. The projections engine (scenarios,
+        cash flow, runway) shipped in the codebase but the tab was gated
+        behind a flag that was never wired, so no user could reach it.
+      */}
+      <button
+        onClick={() => setTab('forecast')}
+        className={`text-sm font-medium pb-1.5 border-b-2 transition-colors flex items-center gap-1.5 ${
+          tab === 'forecast'
+            ? 'text-[var(--text-primary)] border-[var(--accent)]'
+            : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
+        }`}
+      >
+        <TrendingUp size={14} />
+        Forecast
+      </button>
     </div>
   );
 

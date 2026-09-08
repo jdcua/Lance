@@ -59,6 +59,14 @@ export default function Projects() {
     setShowProjectModal(true);
   };
 
+  // External triggers: first-run checklist + Cmd/Ctrl+N shortcut (App.tsx).
+  // (The shortcut was previously dispatched here but nothing listened.)
+  useEffect(() => {
+    const handler = () => openNewProject();
+    document.addEventListener('lance:add-project', handler);
+    return () => document.removeEventListener('lance:add-project', handler);
+  });
+
   const openEditProject = (project: Project) => {
     setEditingProject(project);
     setPForm({
