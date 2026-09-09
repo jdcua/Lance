@@ -18,6 +18,7 @@ import ToastContainer from './components/ui/Toast';
 import CommandPalette from './components/ui/CommandPalette';
 import QuickTimeLogModal from './components/ui/QuickTimeLogModal';
 import Walkthrough from './components/ui/Walkthrough';
+import SpotlightTour from './components/ui/SpotlightTour';
 import SplashScreen from './components/ui/SplashScreen';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import ImportModal from './components/ui/ImportModal';
@@ -77,6 +78,7 @@ export default function App() {
   const autoGenProcessedRef = useRef<Set<string>>(new Set());
   const [showChangelog, setShowChangelog] = useState(false);
   const [showWalkthrough, setShowWalkthrough] = useState(false);
+  const [showSpotlight, setShowSpotlight] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeTrigger, setUpgradeTrigger] = useState<string | null>(null);
 
@@ -933,13 +935,12 @@ export default function App() {
       <Walkthrough
         open={showWalkthrough}
         onClose={() => { setShowWalkthrough(false); localStorage.removeItem('lance:tour-pending'); }}
-        onAddFirstClient={() => {
-          setShowWalkthrough(false);
-          localStorage.removeItem('lance:tour-pending');
-          navigate('/clients');
-          // Let the Clients screen mount before requesting its add-client modal.
-          setTimeout(() => document.dispatchEvent(new CustomEvent('lance:add-client')), 350);
-        }}
+        onStartTour={() => { setShowWalkthrough(false); setShowSpotlight(true); }}
+      />
+
+      <SpotlightTour
+        open={showSpotlight}
+        onClose={() => { setShowSpotlight(false); localStorage.removeItem('lance:tour-pending'); }}
       />
 
       <ImportModal

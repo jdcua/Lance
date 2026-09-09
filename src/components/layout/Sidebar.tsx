@@ -251,6 +251,7 @@ export default function Sidebar() {
         <NavLink
           to="/"
           end
+          data-tour="nav-dashboard"
           className={({ isActive }) =>
             `flex items-center gap-2.5 px-4 h-[36px] text-sm transition-colors mb-1 ${
               !isExpanded ? 'justify-center px-0' : ''
@@ -286,6 +287,7 @@ export default function Sidebar() {
                 <NavLink
                   key={item.path}
                   to={item.path}
+                  data-tour={`nav-${item.id}`}
                   className={({ isActive }) =>
                     `flex items-center gap-2.5 px-4 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
                       isActive

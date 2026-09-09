@@ -168,7 +168,7 @@ export default function Clients() {
     proposals, loadProposals,
     invoices, loadInvoices,
     profile, loadProfile,
-    metricDefs, loadMetricDefs, addMetricDef, updateMetricDef, removeMetricDef,
+    metricDefs, loadMetricDefs, addMetricDef, updateMetricDef, removeMetricDef, removeMetricValue,
     metricValues, loadMetricValues, logMetricValue,
     metricTemplates, loadMetricTemplates, saveMetricTemplate, applyMetricTemplate, removeMetricTemplate,
   } = useStore();
@@ -927,6 +927,29 @@ export default function Clients() {
                               </div>
                             </div>
                           )}
+                      {values.length > 0 && (
+                        <details className="mt-2">
+                          <summary className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] cursor-pointer select-none">
+                            Value history
+                          </summary>
+                          <div className="mt-1.5 space-y-1">
+                            {values.map((v) => (
+                              <div key={v.id} className="flex items-center justify-between px-2 py-1 rounded-[6px] hover:bg-[var(--bg-secondary)] text-xs group/val">
+                                <span className="text-[var(--text-secondary)] tabular-nums">
+                                  {v.value}{def.unit_label ? ` ${def.unit_label}` : ''} · <span className="text-[var(--text-tertiary)]">{v.period || relativeDate(v.created_at)}</span>
+                                </span>
+                                <button
+                                  onClick={async () => { await removeMetricValue(v.id, def.id); }}
+                                  aria-label={`Delete value ${v.value}`}
+                                  className="text-[var(--text-tertiary)] hover:text-[var(--danger)] opacity-0 group-hover/val:opacity-100 transition-opacity"
+                                >
+                                  <X size={12} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      )}
 
                           {/* Log value form */}
                           {showValueForm === def.id ? (

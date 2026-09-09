@@ -60,7 +60,7 @@ function labelForStyle(s: string): string {
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { profile, loadProfile, saveProfile, isLicensed, activateLicense, removeLicense, followUpSettings, loadFollowUpSettings, saveFollowUpSettings, getActiveTier } = useStore();
+  const { profile, loadProfile, saveProfile, isLicensed, activateLicense, removeLicense, followUpSettings, loadFollowUpSettings, saveFollowUpSettings, getActiveTier, getAssetsDir, getImportsDir } = useStore();
   const addToast = useToasts((s) => s.add);
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [showResetModal, setShowResetModal] = useState(false);
@@ -1365,12 +1365,31 @@ export default function Settings() {
                       {isTauriApp() && (
                       <Button variant="secondary" onClick={async () => {
                         try {
-                          const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
-                          const assetsDir = await tauriInvoke<string>('get_assets_dir');
+                          const assetsDir = await getAssetsDir();
                           const { open: shellOpen } = await import('@tauri-apps/plugin-shell');
                           await shellOpen(assetsDir);
                         } catch {
                           addToast('Failed to open assets folder', 'error');
+                        }
+                      }} size="sm">
+                        <FolderOpen size={14} />
+                        Open
+                      </Button>
+                      )}
+                    </div>
+                    <div className="border-t border-[var(--border-color)] pt-3 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-[var(--text-primary)]">Imports folder</p>
+                        <p className="text-xs text-[var(--text-tertiary)]">Where imported source files are kept</p>
+                      </div>
+                      {isTauriApp() && (
+                      <Button variant="secondary" onClick={async () => {
+                        try {
+                          const importsDir = await getImportsDir();
+                          const { open: shellOpen } = await import('@tauri-apps/plugin-shell');
+                          await shellOpen(importsDir);
+                        } catch {
+                          addToast('Failed to open imports folder', 'error');
                         }
                       }} size="sm">
                         <FolderOpen size={14} />
