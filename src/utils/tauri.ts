@@ -418,6 +418,12 @@ const list: StoreRow[] = all[key];
     const entity = cmdEntity(cmd);
     if (entity && ENTITIES[entity] && !ENTITIES[entity]!.isSingleton) {
       const key = ENTITIES[entity]!.listKey || listKeyFor(entity);
+      // Singular (get_<entity> with { id }): single row or null. Lets public
+      // surfaces like ShareView fetch one record instead of whole tables.
+      if (cmd === `get_${entity}` && args?.id !== undefined) {
+        const row = lsGet<StoreRow>(key).find((r: StoreRow) => r.id === args.id);
+        return (row || null) as unknown as T;
+      }
       return lsGet<StoreRow>(key) as unknown as T;
     }
     // Commands like get_milestones, get_invoice_payments (scoped)

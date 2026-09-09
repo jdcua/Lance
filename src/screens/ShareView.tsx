@@ -101,9 +101,6 @@ export default function ShareView() {
   const [responded, setResponded] = useState<ShareToken | null>(null);
   const viewedRef = useRef(false);
 
-  const loadClients = useStore((s) => s.loadClients);
-  const loadProposals = useStore((s) => s.loadProposals);
-  const loadContracts = useStore((s) => s.loadContracts);
   const loadProfile = useStore((s) => s.loadProfile);
 
   useEffect(() => {
@@ -120,18 +117,22 @@ export default function ShareView() {
           setState({ kind: 'expired' });
           return;
         }
-        await Promise.all([loadClients(), loadProposals(), loadContracts(), loadProfile()]);
+        // Singular fetches: the portal renders one record, so load one
+        // record (plus profile for branding) instead of whole tables.
+        await loadProfile();
         if (cancelled) return;
-        const { clients, proposals, contracts, profile } = useStore.getState();
-        const proposal = proposals.find((p) => p.id === token.entity_id);
-        const contract = contracts.find((c) => c.id === token.entity_id);
-        const entity = token.entity_type === 'contract' ? contract : proposal;
+        const { profile } = useStore.getState();
+        const entity = token.entity_type === 'contract'
+          ? await tauriInvoke<Contract | null>('get_contract', { id: token.entity_id })
+          : await tauriInvoke<Proposal | null>('get_proposal', { id: token.entity_id });
+        if (cancelled) return;
         if (!entity) {
           setState({ kind: 'notfound' });
           return;
         }
-        const client = clients.find((c) => c.id === entity.client_id);
-        setState({ kind: 'ready', token, entity, client, profile });
+        const client = await tauriInvoke<Client | null>('get_client', { id: entity.client_id });
+        if (cancelled) return;
+        setState({ kind: 'ready', token, entity, client: client || undefined, profile });
         if (!viewedRef.current) {
           viewedRef.current = true;
           tauriInvoke('record_share_view', { token: tokenParam }).catch(() => {});
@@ -143,7 +144,7 @@ export default function ShareView() {
     return () => {
       cancelled = true;
     };
-  }, [tokenParam, loadClients, loadProposals, loadContracts, loadProfile]);
+  }, [tokenParam, loadProfile]);
 
   useEffect(() => {
     if (state.kind === 'ready' && state.entity.title) {

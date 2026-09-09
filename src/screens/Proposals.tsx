@@ -59,7 +59,7 @@ type SortKey = 'title' | 'client' | 'status' | 'date' | 'heat';
 type StatusFilter = 'all' | 'draft' | 'sent' | 'accepted' | 'declined' | 'expired';
 
 export default function Proposals() {
-  const { proposals, loadProposals, clients, loadClients, updateProposal, removeProposal, profile, loadProfile, addProposal, addContract, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings, portalActivity, loadPortalActivity, getActiveTier } = useStore();
+  const { proposals, loadProposals, clients, loadClients, updateProposal, removeProposal, profile, loadProfile, addProposal, addContract, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, logFollowUp, followUpSettings, portalActivity, loadPortalActivity, getActiveTier } = useStore();
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -270,6 +270,28 @@ export default function Proposals() {
     }
   });
 
+  // Rescue queue (Pro): sent proposals gone cold (3+ weeks, never opened)
+  // are money left on the table. One click queues a follow-up nudge.
+  const rescueList = proposals
+    .filter((p) => heatOf(p.id, p.status, p.sent_at, p.created_at) === 'cooling')
+    .sort((a, b) => (b.rate || 0) - (a.rate || 0));
+  const rescueQueued = new Set(
+    pendingFollowUps.filter((f) => f.entity_type === 'proposal').map((f) => f.entity_id),
+  );
+  const daysStale = (p: Proposal) => {
+    const since = p.sent_at || p.created_at;
+    return Math.max(0, Math.floor((Date.now() - new Date(since).getTime()) / 86400000));
+  };
+  const handleRescueNudge = async (p: Proposal) => {
+    try {
+      await logFollowUp({ entity_type: 'proposal', entity_id: p.id, stage: 1 });
+      await loadPendingFollowUps();
+      addToast(`Nudge queued for ${p.title}`, 'success');
+    } catch {
+      addToast('Failed to queue nudge', 'error');
+    }
+  };
+
   const toggleSort = (key: SortKey) => {
     if (key === 'heat' && !heatOn) {
       document.dispatchEvent(new CustomEvent('lance:open-upgrade', { detail: 'hot proposal ranking' }));
@@ -304,6 +326,54 @@ export default function Proposals() {
           New Proposal
         </Button>
       </div>
+
+      {/* Rescue queue: cold proposals worth reviving */}
+      {!heatOn && rescueList.length > 0 && (
+        <button
+          onClick={() => document.dispatchEvent(new CustomEvent('lance:open-upgrade', { detail: 'proposal rescue queue' }))}
+          className="w-full mb-4 px-4 py-3 rounded-[10px] border border-[var(--accent)]/30 bg-[var(--accent-bg)] text-left hover:border-[var(--accent)]/60 transition-colors"
+        >
+          <p className="text-xs font-semibold text-[var(--text-primary)]">
+            {rescueList.length} sent {rescueList.length === 1 ? 'proposal has' : 'proposals have'} gone cold
+          </p>
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+            Pro flags stale deals and queues the nudge for you. Unlock to recover them.
+          </p>
+        </button>
+      )}
+      {heatOn && rescueList.length > 0 && (
+        <div className="mb-4 px-4 py-3 rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-secondary)]/50">
+          <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.8px] mb-2">
+            Needs a nudge · {rescueList.length} going cold
+          </p>
+          <div className="space-y-1.5">
+            {rescueList.slice(0, 4).map((p) => {
+              const queued = rescueQueued.has(p.id);
+              return (
+                <div key={p.id} className="flex items-center gap-3 text-xs">
+                  <div className="flex-1 min-w-0">
+                    <span className="font-medium text-[var(--text-primary)] truncate">{p.title}</span>
+                    <span className="text-[var(--text-tertiary)]"> · {getClientName(p.client_id)}</span>
+                  </div>
+                  <span className="flex-shrink-0 text-[var(--text-tertiary)] tabular-nums">
+                    {p.rate && profile ? `${formatCurrency(p.rate, profile.currency)} · ` : ''}{daysStale(p)}d stale
+                  </span>
+                  {queued ? (
+                    <span className="flex-shrink-0 text-[10px] font-medium text-[var(--accent)]">Nudge queued</span>
+                  ) : (
+                    <button
+                      onClick={() => handleRescueNudge(p)}
+                      className="flex-shrink-0 text-[11px] font-medium text-[var(--accent)] hover:underline"
+                    >
+                      Draft nudge
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <div className="relative flex-1 max-w-xs">
