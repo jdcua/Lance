@@ -8,6 +8,8 @@ import Modal from '../components/ui/Modal';
 import { formatCurrency, formatDate, formatMonth, parseDateString } from '../utils/format';
 import { getCurrencySymbol } from '../lib/currency';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import TaxPack from '../components/features/TaxPack';
+import RetainerBurnDown from '../components/features/RetainerBurnDown';
 import { useToasts } from '../store/toastStore';
 import type { ToastType } from '../store/toastStore';
 import { checkAndNotify } from '../achievements/notify';
@@ -369,6 +371,12 @@ export default function Finance() {
               ))}
             </div>
           )}
+          <div className="mt-6">
+            <TaxPack />
+          </div>
+          <div className="mt-6">
+            <RetainerBurnDown />
+          </div>
         </>
       ) : tab === 'aging' ? (
         <AgingReport invoices={invoices} payments={payments.reduce<Record<string, InvoicePayment[]>>((acc, p) => { (acc[p.invoice_id] ??= []).push(p); return acc; }, {})} getClientName={(id: string) => clients.find((c) => c.id === id)?.name || 'Unknown'} fmt={fmt} addPayment={addPayment} updateInvoice={updateInvoice} addToast={(msg: string, type?: ToastType) => addToast(msg, type)} />

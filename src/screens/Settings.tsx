@@ -1,7 +1,10 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
+import { isTauri as isTauriApp } from '../utils/tauri';
 import { trialDaysRemaining } from '../lib/trial';
+import { getFeatureFlags } from '../lib/constants';
+import { resolveDunningTone } from '../utils/followUpTemplates';
 import type { UserProfile, ExportTemplate } from '../types';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -83,6 +86,8 @@ export default function Settings() {
   const [fuEnabled, setFuEnabled] = useState(true);
   const [fuProposalDelay, setFuProposalDelay] = useState(3);
   const [fuInvoiceDelay, setFuInvoiceDelay] = useState(0);
+  const [fuLateFeeEnabled, setFuLateFeeEnabled] = useState(false);
+  const [fuLateFeePercent, setFuLateFeePercent] = useState(1.5);
   const [fuTemplates, setFuTemplates] = useState<Record<string, string>>({});
   const [fuSubjectTemplates, setFuSubjectTemplates] = useState<Record<string, string>>({});
   const [fuPreview, setFuPreview] = useState<string | null>(null);
@@ -103,6 +108,7 @@ export default function Settings() {
     writing_voice: '',
     tagline: '',
     always_include: '',
+    payment_instructions: '',
     theme: 'light',
     ai_enabled: false,
   });
@@ -161,6 +167,7 @@ export default function Settings() {
         writing_voice: profile.writing_voice || '',
         tagline: profile.tagline || '',
         always_include: profile.always_include || '',
+        payment_instructions: profile.payment_instructions || '',
         theme: profile.theme || 'light',
         license_key: profile.license_key,
         licensed_at: profile.licensed_at,
@@ -222,6 +229,8 @@ export default function Settings() {
       setFuEnabled(followUpSettings.enabled);
       setFuProposalDelay(followUpSettings.proposal_delay_days);
       setFuInvoiceDelay(followUpSettings.invoice_delay_days);
+      setFuLateFeeEnabled(followUpSettings.lateFeeEnabled || false);
+      setFuLateFeePercent(followUpSettings.lateFeePercent ?? 1.5);
       setFuTemplates({ ...followUpSettings.templates });
       setFuSubjectTemplates({ ...(followUpSettings.subject_templates || {}) });
     }
@@ -358,7 +367,8 @@ export default function Settings() {
   const doExportData = async () => {
     try {
       const data: Record<string, unknown[]> = {};
-      const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
+      // Wrapper resolves via localStorage in browser mode, Tauri IPC in app.
+      const { tauriInvoke, isTauri } = await import('../utils/tauri');
       data.clients = await tauriInvoke('get_clients');
       data.projects = await tauriInvoke('get_projects');
       data.proposals = await tauriInvoke('get_proposals');
@@ -368,15 +378,21 @@ export default function Settings() {
       data.expenses = await tauriInvoke('get_expenses');
       data.user_profile = profile ? [profile] : [];
 
-      const { getVersion } = await import('@tauri-apps/api/app');
-      const APP_VERSION = await getVersion();
+      const { getRuntimeVersion } = await import('../lib/version');
+      const APP_VERSION = await getRuntimeVersion();
       const schemaVersion = getCurrentSchemaVersion();
       const envelope = createExportEnvelope(data, APP_VERSION, schemaVersion);
 
       const json = JSON.stringify(envelope, null, 2);
-      const filePath = await save({ defaultPath: `Lance_Backup_${new Date().toISOString().split('T')[0]}.json` });
-      if (!filePath) return;
-      await writeFile(filePath, new TextEncoder().encode(json));
+      const filename = `Lance_Backup_${new Date().toISOString().split('T')[0]}.json`;
+      if (isTauri()) {
+        const filePath = await save({ defaultPath: filename });
+        if (!filePath) return;
+        await writeFile(filePath, new TextEncoder().encode(json));
+      } else {
+        const { downloadTextFile } = await import('../utils/taxPack');
+        downloadTextFile(filename, json, 'application/json;charset=utf-8');
+      }
       addToast('Data exported successfully', 'success');
     } catch {
       addToast('Export failed', 'error');
@@ -801,6 +817,18 @@ export default function Settings() {
                       />
                     </div>
                   </div>
+                  <div className="mt-4">
+                    <label className={labelClass}>Payment instructions (printed on invoices)</label>
+                    <textarea
+                      value={form.payment_instructions || ''}
+                      onChange={(e) => setForm({ ...form, payment_instructions: e.target.value })}
+                      onBlur={() => autoSave({ payment_instructions: form.payment_instructions }, 'Rates')}
+                      placeholder={'e.g. Bank transfer to First National, routing 123456, account 987654321. Or pay online at example.com/pay.'}
+                      rows={3}
+                      className={`${inputClass} resize-none leading-relaxed`}
+                    />
+                    <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Bank details, payment links, or anything your clients need to pay you. Stays on your machine, shown only on your invoices.</p>
+                  </div>
                 </Card>
 
                 {/* Proposal voice */}
@@ -1172,6 +1200,68 @@ export default function Settings() {
                         <p className="text-[10px] text-[var(--text-tertiary)] mt-1">First reminder triggers after due date passes by this many days.</p>
                       </div>
                     </div>
+
+                    {/* Late fees (Pro): accrue per 30 days overdue, shown in drafts */}
+                    <div className="pt-3 border-t border-[var(--border-color)]">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-sm font-medium text-[var(--text-primary)]">Late fees</p>
+                        {getFeatureFlags(getActiveTier()).smartDunning !== true && (
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
+                            PRO
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-[var(--text-tertiary)] mb-3">
+                        Charge a monthly percent on overdue balances. Accrued fees appear in reminder drafts and can be added to the invoice with one click.
+                      </p>
+                      {(() => {
+                        const pro = getFeatureFlags(getActiveTier()).smartDunning === true;
+                        const guard = (fn: (e: ChangeEvent<HTMLInputElement>) => void) => (e: ChangeEvent<HTMLInputElement>) => {
+                          if (!pro) {
+                            document.dispatchEvent(
+                              new CustomEvent('lance:open-upgrade', { detail: 'late fees' }),
+                            );
+                            return;
+                          }
+                          fn(e);
+                        };
+                        return (
+                          <div className="flex items-center gap-4">
+                            <label className={`flex items-center gap-2 text-xs text-[var(--text-secondary)] ${!pro ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>
+                              <input
+                                type="checkbox"
+                                checked={fuLateFeeEnabled}
+                                disabled={!pro}
+                                onChange={guard((e) => {
+                                  const on = (e.target as HTMLInputElement).checked;
+                                  setFuLateFeeEnabled(on);
+                                  saveFollowUpSettings({ lateFeeEnabled: on });
+                                })}
+                                className="w-4 h-4 rounded border-[var(--border-color)] text-[var(--accent)] focus:ring-[var(--accent)]"
+                              />
+                              Enable late fees
+                            </label>
+                            <label className={`flex items-center gap-2 text-xs text-[var(--text-secondary)] ${!pro || !fuLateFeeEnabled ? 'opacity-60' : ''}`}>
+                              Percent per month
+                              <input
+                                type="number"
+                                min={0.1}
+                                max={10}
+                                step={0.1}
+                                value={fuLateFeePercent}
+                                disabled={!pro || !fuLateFeeEnabled}
+                                onChange={guard((e) => {
+                                  const v = Math.max(0.1, Math.min(10, parseFloat(e.target.value) || 1.5));
+                                  setFuLateFeePercent(v);
+                                  saveFollowUpSettings({ lateFeePercent: v });
+                                })}
+                                className="w-20 px-2 py-1.5 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                              />
+                            </label>
+                          </div>
+                        );
+                      })()}
+                    </div>
                   </div>
                 </Card>
               </>
@@ -1223,6 +1313,7 @@ export default function Settings() {
                         <p className="text-sm text-[var(--text-primary)]">Assets folder</p>
                         <p className="text-xs text-[var(--text-tertiary)]">Open attached files in your file manager</p>
                       </div>
+                      {isTauriApp() && (
                       <Button variant="secondary" onClick={async () => {
                         try {
                           const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
@@ -1236,6 +1327,7 @@ export default function Settings() {
                         <FolderOpen size={14} />
                         Open
                       </Button>
+                      )}
                     </div>
 
                     <div className="border-t border-[var(--border-color)] pt-3">
@@ -1337,6 +1429,53 @@ export default function Settings() {
                 <Card className="mb-6">
                   <SectionHead title="Follow-up templates" isSaved={saved.has("Follow-ups")} />
                   <div className="space-y-4">
+                    {/* Dunning voice (Pro): escalation drafts in your voice */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-sm font-medium text-[var(--text-primary)]">Dunning voice</p>
+                        {getFeatureFlags(getActiveTier()).smartDunning !== true && (
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
+                            PRO
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-[var(--text-tertiary)] mb-3">
+                        Overdue reminders rewritten to sound like you. Auto follows your archetype unless you pick one.
+                      </p>
+                      <div className="flex gap-2" role="radiogroup" aria-label="Dunning voice">
+                        {(['auto', 'warm', 'direct', 'formal'] as const).map((tone) => {
+                          const pro = getFeatureFlags(getActiveTier()).smartDunning === true;
+                          const selected = (followUpSettings.tone || 'auto') === tone;
+                          return (
+                            <button
+                              key={tone}
+                              role="radio"
+                              aria-checked={selected}
+                              disabled={!pro}
+                              title={!pro ? 'Custom dunning voices are a Pro feature' : undefined}
+                              onClick={() => {
+                                if (!pro) {
+                                  document.dispatchEvent(
+                                    new CustomEvent('lance:open-upgrade', { detail: 'smart dunning voices' }),
+                                  );
+                                  return;
+                                }
+                                saveFollowUpSettings({ tone });
+                              }}
+                              className={`flex-1 px-3 py-2 text-xs font-medium rounded-[8px] border transition-colors capitalize ${
+                                selected
+                                  ? 'bg-[var(--accent-bg)] border-[var(--accent)] text-[var(--text-primary)]'
+                                  : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40'
+                              } ${!pro ? 'opacity-60 cursor-not-allowed' : ''}`}
+                            >
+                              {tone === 'auto'
+                                ? `Auto (${resolveDunningTone(profile?.profession)})`
+                                : tone}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                     {/* Templates */}
                     <div>
                       <p className="text-sm font-medium text-[var(--text-primary)] mb-3">Message Templates</p>

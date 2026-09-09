@@ -8,7 +8,9 @@ import Badge from '../components/ui/Badge';
 import {
   Bell, Mail, Check, X, Send, Eye, AlertTriangle, Edit3, ChevronDown, RefreshCw,
 } from 'lucide-react';
-import { generateFollowUpDraft, generateSubjectLine, TEMPLATE_LABELS, openMailTo } from '../utils/followUpTemplates';
+import { generateFollowUpDraft, generateSubjectLine, TEMPLATE_LABELS, openMailTo, resolveDunningTone, type DunningTone } from '../utils/followUpTemplates';
+import { computeLateFee, lateFeeParagraph } from '../utils/lateFees';
+import { getFeatureFlags } from '../lib/constants';
 import { formatCurrency, relativeDate, parseDateString } from '../utils/format';
 
 type Tab = 'pending' | 'sent' | 'dismissed' | 'all';
@@ -24,8 +26,16 @@ export default function FollowUps() {
     updateFollowUpStatus,
     followUpSettings,
     profile,
+    getActiveTier,
   } = useStore();
   const addToast = useToasts((s) => s.add);
+
+  // Smart dunning (Pro): escalation drafts speak in the freelancer's voice.
+  // Free tiers always render the default templates.
+  const dunningTone: DunningTone | undefined = useMemo(() => {
+    if (getFeatureFlags(getActiveTier()).smartDunning !== true) return undefined;
+    return resolveDunningTone(profile?.profession, followUpSettings.tone);
+  }, [getActiveTier, profile?.profession, followUpSettings.tone]);
 
   const [tab, setTab] = useState<Tab>('pending');
   const [filter, setFilter] = useState<Filter>('all');
@@ -94,7 +104,7 @@ export default function FollowUps() {
         else templateKey = 'invoice_day14';
       }
 
-      const draft = generateFollowUpDraft(templateKey, {
+      const draftBase = generateFollowUpDraft(templateKey, {
         clientName: client?.name || 'Unknown',
         proposalTitle,
         invoiceNumber,
@@ -103,7 +113,19 @@ export default function FollowUps() {
         daysElapsed,
         projectName: proposalTitle,
         freelancerName: profile?.name || 'Freelancer',
-      }, followUpSettings.templates);
+      }, followUpSettings.templates, dunningTone);
+      // Late-fee footnote on invoice drafts (Pro, when enabled and accrued).
+      let draft = draftBase;
+      if (dunningTone !== undefined && followUpSettings.lateFeeEnabled === true && log.entity_type === 'invoice') {
+        const iv = getInvoice(log.entity_id);
+        if (iv) {
+          const note = lateFeeParagraph(
+            computeLateFee(iv.total, iv.due_date, followUpSettings.lateFeePercent ?? 1.5),
+            iv.currency || profile?.currency,
+          );
+          if (note) draft = `${draftBase}\n\n${note}`;
+        }
+      }
 
       results.push({
         log,
@@ -125,7 +147,7 @@ export default function FollowUps() {
 
     results.sort((a, b) => new Date(a.log.drafted_at).getTime() - new Date(b.log.drafted_at).getTime());
     return results;
-  }, [pendingFollowUps, followUpLogs, clients, proposals, invoices, profile, followUpSettings]);
+  }, [pendingFollowUps, followUpLogs, clients, proposals, invoices, profile, followUpSettings, dunningTone]);
 
   const filtered = useMemo(() => {
     let items = allFollowUps;
@@ -149,7 +171,7 @@ export default function FollowUps() {
       dueDate: item.dueDate,
       daysElapsed: item.daysElapsed,
       freelancerName: profile?.name || 'Freelancer',
-    }, followUpSettings.subject_templates);
+    }, followUpSettings.subject_templates, dunningTone);
     const body = customBody || item.draft;
 
     if (!item.clientEmail) {
@@ -205,7 +227,7 @@ export default function FollowUps() {
       dueDate: item.dueDate,
       daysElapsed: item.daysElapsed,
       freelancerName: profile?.name || 'Freelancer',
-    }, followUpSettings.subject_templates);
+    }, followUpSettings.subject_templates, dunningTone);
     setEditModal({
       id: item.log.id,
       subject,

@@ -403,6 +403,23 @@ export async function exportInvoiceDOCX(
               ]
             : []),
 
+          ...(profile.payment_instructions && profile.payment_instructions.trim()
+            ? [
+                new Paragraph({
+                  border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '#E3E2DB' } },
+                  spacing: { before: 200, after: 200 },
+                }),
+                new Paragraph({
+                  children: [new TextRun({ text: 'HOW TO PAY', size: 20, color: '#68675F', bold: true })],
+                  spacing: { after: 100 },
+                }),
+                new Paragraph({
+                  children: [new TextRun({ text: profile.payment_instructions.trim(), size: 20, color: '#181716' })],
+                  spacing: { after: 100 },
+                }),
+              ]
+            : []),
+
           new Paragraph({
             children: [new TextRun({ text: 'Thank you for your business.', size: 20, color: '#68675F' })],
             spacing: { before: 200 },

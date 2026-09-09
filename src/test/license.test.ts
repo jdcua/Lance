@@ -28,6 +28,7 @@ describe('License tier feature flags', () => {
     expect(flags.archetypeDepth).toBe(false);
     expect(flags.scopeCreepProtection).toBe(false);
     expect(flags.advancedInsights).toBe(false);
+    expect(flags.smartDunning).toBe(false);
     // Core features remain true
     expect(flags.contractPdf).toBe(true);
     expect(flags.docxExport).toBe(true);
@@ -40,6 +41,7 @@ describe('License tier feature flags', () => {
     expect(flags.archetypeDepth).toBe(true);
     expect(flags.scopeCreepProtection).toBe(true);
     expect(flags.advancedInsights).toBe(true);
+    expect(flags.smartDunning).toBe(true);
     expect(flags.contractPdf).toBe(true);
     expect(flags.docxExport).toBe(true);
     expect(flags.clientPortal).toBe(true);

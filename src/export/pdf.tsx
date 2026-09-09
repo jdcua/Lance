@@ -196,6 +196,14 @@ export function InvoicePDF({ invoice, client, profile }: { invoice: Invoice; cli
           </>
         )}
 
+        {profile.payment_instructions && profile.payment_instructions.trim() && (
+          <>
+            <View style={pdfStyles.divider} />
+            <Text style={pdfStyles.label}>HOW TO PAY</Text>
+            <Text style={pdfStyles.value}>{profile.payment_instructions.trim()}</Text>
+          </>
+        )}
+
         <Text style={pdfStyles.thankYou}>Thank you for your business.</Text>
       </Page>
     </Document>

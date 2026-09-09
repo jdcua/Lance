@@ -15,7 +15,9 @@ import { generateInvoiceNumber, sanitizeInvoiceNumber } from '../utils/invoiceNu
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 import { useToasts } from '../store/toastStore';
 import { Plus, Pencil, Trash2, Download, Clock, RotateCw, Receipt, Search, Bell, X, Copy, DollarSign, ChevronDown, ChevronRight, Mail, AlertTriangle, Check } from 'lucide-react';
-import { generateFollowUpDraft, generateSubjectLine, openMailTo } from '../utils/followUpTemplates';
+import { generateFollowUpDraft, generateSubjectLine, openMailTo, resolveDunningTone, type DunningTone } from '../utils/followUpTemplates';
+import { computeLateFee, lateFeeParagraph } from '../utils/lateFees';
+import { getFeatureFlags } from '../lib/constants';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
 import { getArchetype } from '../archetypes';
 
@@ -43,7 +45,7 @@ export default function Invoices() {
     invoices, loadInvoices, clients, loadClients, addInvoice, updateInvoice, removeInvoice, profile, loadProfile,
     timeEntries, loadTimeEntries, updateTimeEntry, projects, loadProjects,
     recurringInvoices, loadRecurringInvoices, addRecurringInvoice, updateRecurringInvoice, removeRecurringInvoice,
-    pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings,
+    pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings, getActiveTier,
     payments, loadPayments, addPayment, removePayment,
     addCommunication,
   } = useStore();
@@ -90,6 +92,46 @@ export default function Invoices() {
 
   // Archetype-aware invoice defaults
   const archetype = useMemo(() => getArchetype(profile?.profession || ''), [profile?.profession]);
+  // Smart dunning (Pro): overdue drafts speak in the freelancer's voice and
+  // can carry an accrued late fee. Free tiers render default templates.
+  const dunningTone: DunningTone | undefined = useMemo(() => {
+    if (getFeatureFlags(getActiveTier()).smartDunning !== true) return undefined;
+    return resolveDunningTone(profile?.profession, followUpSettings.tone);
+  }, [getActiveTier, profile?.profession, followUpSettings.tone]);
+  const lateFeeOn = dunningTone !== undefined && followUpSettings.lateFeeEnabled === true;
+  const lateFeePercent = followUpSettings.lateFeePercent ?? 1.5;
+
+  const withFeeNote = (text: string, inv: Invoice): string => {
+    if (!lateFeeOn) return text;
+    const note = lateFeeParagraph(
+      computeLateFee(inv.total, inv.due_date, lateFeePercent),
+      inv.currency || profile?.currency,
+    );
+    return note ? `${text}\n\n${note}` : text;
+  };
+
+  const handleAddLateFee = async (inv: Invoice) => {
+    const fee = computeLateFee(inv.total, inv.due_date, lateFeePercent);
+    if (fee.fee <= 0) return;
+    const item = {
+      id: crypto.randomUUID(),
+      description: `Late fee (${fee.periods} period${fee.periods === 1 ? '' : 's'} overdue, ${fee.percentPerPeriod}%/mo)`,
+      quantity: 1,
+      unit_price: fee.fee,
+      total: fee.fee,
+    };
+    try {
+      await updateInvoice({
+        ...inv,
+        line_items: [...inv.line_items, item],
+        subtotal: Math.round((inv.subtotal + fee.fee) * 100) / 100,
+        total: Math.round((inv.total + fee.fee) * 100) / 100,
+      });
+      addToast(`Late fee of ${formatCurrency(fee.fee, inv.currency || profile?.currency)} added`, 'success');
+    } catch {
+      addToast('Could not add the late fee', 'error');
+    }
+  };
   const depositPercentage = useMemo(() => archetype?.depositPercentage ?? 0, [archetype]);
   const defaultPaymentTerms = useMemo(() => archetype?.paymentTerms ?? (profile?.payment_terms ?? 14), [archetype, profile?.payment_terms]);
 
@@ -250,14 +292,14 @@ export default function Invoices() {
     const dueDate = inv.due_date ? new Date(inv.due_date) : null;
     const daysElapsed = dueDate ? Math.floor((Date.now() - dueDate.getTime()) / 86400000) : 0;
     const templateKey = daysElapsed >= 10 ? 'invoice_day14' : daysElapsed >= 4 ? 'invoice_day7' : 'invoice_day1';
-    const draft = generateFollowUpDraft(templateKey, {
+    const draft = withFeeNote(generateFollowUpDraft(templateKey, {
       clientName: client?.name || 'Unknown',
       invoiceNumber: inv.invoice_number,
       amount: formatCurrency(inv.total),
       dueDate: inv.due_date,
       daysElapsed,
       freelancerName: profile?.name || 'Freelancer',
-    }, followUpSettings.templates);
+    }, followUpSettings.templates, dunningTone), inv);
     const subject = generateSubjectLine(templateKey, {
       clientName: client?.name || 'Unknown',
       invoiceNumber: inv.invoice_number,
@@ -265,7 +307,7 @@ export default function Invoices() {
       dueDate: inv.due_date,
       daysElapsed,
       freelancerName: profile?.name || 'Freelancer',
-    }, followUpSettings.subject_templates);
+    }, followUpSettings.subject_templates, dunningTone);
     setReminderInv(inv);
     setReminderForm({
       to: client?.email || '',
@@ -658,6 +700,29 @@ export default function Invoices() {
                         {paidTotal > 0 && !inv.paid_at && <span className="text-[var(--warning-text)]">Paid: {fmtInv(paidTotal, inv)}</span>}
                         {remaining > 0 && remaining < inv.total && <span className="text-[var(--warning-text)]">Remaining: {fmtInv(remaining, inv)}</span>}
                         <span>{inv.line_items.length} item{inv.line_items.length !== 1 ? 's' : ''}</span>
+                        {(() => {
+                          if (!lateFeeOn) return null;
+                          if (inv.status !== 'sent' && inv.status !== 'overdue' && inv.status !== 'partial') return null;
+                          const fee = computeLateFee(inv.total, inv.due_date, lateFeePercent);
+                          if (fee.fee <= 0) return null;
+                          return (
+                            <>
+                              <span className="text-[var(--danger)]">
+                                +{formatCurrency(fee.fee, inv.currency || profile?.currency)} late fee ({fee.periods}p)
+                              </span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddLateFee(inv);
+                                }}
+                                className="text-[var(--accent)] hover:underline"
+                                title="Add the accrued late fee as a line item"
+                              >
+                                Add to invoice
+                              </button>
+                            </>
+                          );
+                        })()}
                       </div>
                       {/* Follow-up indicator */}
                       {(() => {
@@ -667,14 +732,14 @@ export default function Invoices() {
     const dueDate = inv.due_date ? parseDateString(inv.due_date) : null;
                         const daysElapsed = dueDate ? Math.floor((Date.now() - dueDate.getTime()) / 86400000) : 0;
                         const templateKey = daysElapsed >= 10 ? 'invoice_day14' : daysElapsed >= 4 ? 'invoice_day7' : 'invoice_day1';
-                        const draft = generateFollowUpDraft(templateKey, {
+                        const draft = withFeeNote(generateFollowUpDraft(templateKey, {
                           clientName: client?.name || 'Unknown',
                           invoiceNumber: inv.invoice_number,
                           amount: formatCurrency(inv.total),
                           dueDate: inv.due_date,
                           daysElapsed,
                           freelancerName: profile?.name || 'Freelancer',
-                        }, followUpSettings.templates);
+                        }, followUpSettings.templates, dunningTone), inv);
                         const subject = generateSubjectLine(templateKey, {
                           clientName: client?.name || 'Unknown',
                           invoiceNumber: inv.invoice_number,
@@ -682,7 +747,7 @@ export default function Invoices() {
                           dueDate: inv.due_date,
                           daysElapsed,
                           freelancerName: profile?.name || 'Freelancer',
-                        }, followUpSettings.subject_templates);
+                        }, followUpSettings.subject_templates, dunningTone);
                         const hasEmail = !!client?.email;
                         return (
                           <div className="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-[var(--border-color)]/50">

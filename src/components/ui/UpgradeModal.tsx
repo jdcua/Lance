@@ -237,6 +237,7 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
           </p>
           <p className="text-xs text-[var(--text-tertiary)] text-center mt-1">
             Core features (clients, projects, invoices, time tracking, client portal) always stay free.
+            Client payments go straight to you. Lance never takes a cut.
           </p>
         </div>
       </div>

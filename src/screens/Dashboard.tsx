@@ -1,7 +1,7 @@
 import { useEffect, useState, Suspense, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
-import type { PortalActivity, Invoice, TimeEntry, UserProfile, Project } from '../types';
+import type { Invoice, TimeEntry, UserProfile, Project } from '../types';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import Button from '../components/ui/Button';
@@ -17,13 +17,12 @@ import * as queries from '../archetypes/queries';
 import { getFeatureComponent } from '../components/features/registry';
 
 export default function Dashboard() {
-  const { invoices, loadInvoices, proposals, loadProposals, projects, loadProjects, clients, loadClients, timeEntries, loadTimeEntries, profile, loadProfile, expenses, loadExpenses, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings, loadContracts } = useStore();
+  const { invoices, loadInvoices, proposals, loadProposals, projects, loadProjects, clients, loadClients, timeEntries, loadTimeEntries, profile, loadProfile, expenses, loadExpenses, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings, loadContracts, portalActivity, loadPortalActivity } = useStore();
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [archetype, setArchetype] = useState<ArchetypeConfig | null>(null);
   const [metricValues, setMetricValues] = useState<Record<string, string | number>>({});
-  const [portalActivity, setPortalActivity] = useState<PortalActivity[]>([]);
   const [lastBackupInfo, setLastBackupInfo] = useState<{
     enabled: boolean;
     last_backup_at: string | null;
@@ -67,29 +66,30 @@ export default function Dashboard() {
     }
   };
 
-  const loadPortalActivity = async () => {
-    try {
-      const { invoke } = await import('@tauri-apps/api/core');
-      const activity = await invoke<PortalActivity[]>('get_portal_activity');
-      setPortalActivity(prev => {
-        if (prev.length === 0 && activity.length > 0) {
-          return activity;
-        }
-        const newItems = activity.filter(a => !prev.some(p => p.token === a.token && p.timestamp === a.timestamp));
-        for (const item of newItems) {
-          if (item.activity.includes('accepted') || item.activity.includes('signed') || item.activity.includes('declined')) {
-            addToast(item.activity, 'info');
-            loadProposals();
-            loadContracts();
-          }
-        }
-        return activity;
-      });
-    } catch { /* server may not be ready or no tokens exist */ }
+  // Portal feed lives in the store (shared with proposal badges and the
+  // App-level open alerts). This keeps the response toasts: accepted, signed
+  // or declined activity refreshes proposals and contracts.
+  const seenPortalRef = useRef<Set<string>>(new Set());
+  const refreshPortalActivity = async () => {
+    const firstLoad = seenPortalRef.current.size === 0;
+    const before = new Set(seenPortalRef.current);
+    await loadPortalActivity();
+    const activity = useStore.getState().portalActivity;
+    for (const item of activity) {
+      const key = `${item.token}:${item.timestamp}`;
+      if (before.has(key)) continue;
+      seenPortalRef.current.add(key);
+      if (firstLoad) continue;
+      if (item.activity.includes('accepted') || item.activity.includes('signed') || item.activity.includes('declined')) {
+        addToast(item.activity, 'info');
+        loadProposals();
+        loadContracts();
+      }
+    }
   };
 
   const portalPollRef = useRef<() => Promise<void>>();
-  portalPollRef.current = loadPortalActivity;
+  portalPollRef.current = refreshPortalActivity;
 
   useEffect(() => {
     const interval = setInterval(() => portalPollRef.current?.(), 30000);

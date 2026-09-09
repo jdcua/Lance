@@ -115,6 +115,32 @@ pub fn create_metric_definition(
 }
 
 #[tauri::command]
+pub fn get_all_metric_definitions(app: tauri::AppHandle) -> Result<Vec<MetricDefinition>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let mut stmt = conn
+        .prepare("SELECT id, client_id, name, metric_type, unit_label, is_headline, sort_order, created_at FROM metric_definitions ORDER BY sort_order ASC, created_at ASC")
+        .map_err(|_| "Database operation failed".to_string())?;
+    let defs = stmt
+        .query_map(rusqlite::params![], |row| {
+            Ok(MetricDefinition {
+                id: row.get(0)?,
+                client_id: row.get(1)?,
+                name: row.get(2)?,
+                metric_type: row.get(3)?,
+                unit_label: row.get(4)?,
+                is_headline: row.get::<_, i64>(5)? != 0,
+                sort_order: row.get(6)?,
+                created_at: row.get(7)?,
+            })
+        })
+        .map_err(|_| "Database operation failed".to_string())?
+        .filter_map(|r| r.ok())
+        .collect();
+    Ok(defs)
+}
+
+#[tauri::command]
 pub fn get_metric_definitions(
     app: tauri::AppHandle,
     client_id: String,

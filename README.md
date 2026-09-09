@@ -36,7 +36,7 @@ Built by [Placeholder Labs Incorporated Limited](https://placeholderlabsincorpor
 
 **Themes.** 7 color themes (Default, Studio, Terminal, Craft, Motion, Lens, Scale) with 8 accent colors. Light and dark mode. Compact layout option for dense screens.
 
-**Privacy.** No telemetry. No analytics. No crash reporting. No sign-up required. Lance is a desktop app. Your SQLite database stays on your machine. The only outbound request it ever makes is the auto-updater version check.
+**Privacy.** No telemetry. No analytics. No crash reporting. No sign-up required. Lance is a desktop app. Your SQLite database stays on your machine. The only outbound request it ever makes is the auto-updater version check. Client payments go straight to you: add your bank or payment instructions once and they print on every invoice. Lance never processes payments and never takes a cut.
 
 ## Download
 

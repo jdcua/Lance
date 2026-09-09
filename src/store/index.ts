@@ -7,7 +7,7 @@ import type {
   ExportTemplate, ContractTemplate, ArchetypeRenderLog, ArchetypeSession,
   ArchetypeShoot, ArchetypeRevision, ArchetypeBuild, ArchetypeKeyword,
   ArchetypeDataset, ProjectTemplate, ProjectTemplateMilestone,
-  ShareToken,
+  ShareToken, PortalActivity,
 } from '../types';
 import type { Achievement } from '../achievements/index';
 import { validateLicenseKey } from '../license';
@@ -79,6 +79,7 @@ export interface UnifiedStore {
   headlineMetrics: HeadlineMetric[]
   followUpLogs: Record<string, FollowUpLog[]>
   pendingFollowUps: FollowUpLog[]
+  portalActivity: PortalActivity[]
   followUpSettings: FollowUpSettings
   exportTemplates: ExportTemplate[]
   contractTemplates: ContractTemplate[]
@@ -236,6 +237,7 @@ export interface UnifiedStore {
   updateFollowUpStatus: (id: string, status: string, action?: string) => Promise<void>
   loadPendingFollowUps: () => Promise<void>
   loadAllFollowUpLogs: () => Promise<void>
+  loadPortalActivity: () => Promise<void>
 
   // ── Export Templates ──
   loadExportTemplates: () => Promise<void>
@@ -369,9 +371,6 @@ export interface UnifiedStore {
   isTier: (tier: string) => boolean
   getActiveTier: () => LicenseTier
   getFeatureFlags: () => Promise<Record<string, boolean>>
-
-  // ── Upgrade Modal ──
-  openUpgradeModal: (triggerFeature?: string) => void
 }
 
 export type AppStore = UnifiedStore;
@@ -409,6 +408,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
     headlineMetrics: [],
     followUpLogs: {},
     pendingFollowUps: [],
+    portalActivity: [],
     followUpSettings: { enabled: true, proposal_delay_days: 3, invoice_delay_days: 0, templates: {}, subject_templates: {} },
     exportTemplates: [],
     contractTemplates: [],
@@ -735,6 +735,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
         writing_voice: sanitizeInput(data.writing_voice || ''),
         tagline: truncate(sanitizeInput(data.tagline || ''), MAX_LENGTHS.tagline),
         always_include: sanitizeInput(data.always_include || ''),
+        payment_instructions: truncate(sanitizeInput(data.payment_instructions || ''), MAX_LENGTHS.notes),
         // Clamp numeric profile fields to sane ranges (no negatives, no infinity)
         hourly_rate: data.hourly_rate != null && isFinite(data.hourly_rate) ? Math.max(0, data.hourly_rate) : data.hourly_rate,
         tax_rate: data.tax_rate != null && isFinite(data.tax_rate) ? Math.min(100, Math.max(0, data.tax_rate)) : data.tax_rate,
@@ -868,11 +869,6 @@ export const useStore = create<UnifiedStore>((set, get) => {
     setPortalPort: (port) => set({ portalPort: port, portalFailed: false }),
     setPortalFailed: () => set({ portalFailed: true }),
     setArchetypeAppliedAt: (ts) => set({ archetypeAppliedAt: ts }),
-
-    openUpgradeModal: (triggerFeature?: string) => {
-      // This will be called from App.tsx which manages the modal state
-      // Store just provides the action for cross-component access if needed
-    },
 
     // ── Communications ──
     loadCommunications: async () => {
@@ -1096,6 +1092,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
         }
         set({ followUpLogs: keyed });
       } catch (e) { console.error('[store] loadAllFollowUpLogs failed:', e); }
+    },
+    // Shared portal activity (proposal/contract opens + responses). One
+    // loader feeds the dashboard feed, proposal badges, and Pro open alerts.
+    loadPortalActivity: async () => {
+      try {
+        const activities = await invoke<PortalActivity[]>('get_portal_activity');
+        set({ portalActivity: activities || [] });
+      } catch (e) { console.error('[store] loadPortalActivity failed:', e); }
     },
 
     // ── Export Templates ──

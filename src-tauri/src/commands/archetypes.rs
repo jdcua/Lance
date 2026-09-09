@@ -159,6 +159,32 @@ pub struct CreateDatasetPayload {
 }
 
 #[tauri::command]
+pub fn get_all_render_logs(app: tauri::AppHandle) -> Result<Vec<ArchetypeRenderLog>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let mut stmt = conn
+        .prepare("SELECT id, project_id, pass_name, duration_minutes, software, frame_range, notes, created_at FROM archetype_render_log ORDER BY created_at DESC")
+        .map_err(|_| "Database operation failed".to_string())?;
+    let logs = stmt
+        .query_map(rusqlite::params![], |row| {
+            Ok(ArchetypeRenderLog {
+                id: row.get(0)?,
+                project_id: row.get(1)?,
+                pass_name: row.get(2)?,
+                duration_minutes: row.get(3)?,
+                software: row.get(4)?,
+                frame_range: row.get(5)?,
+                notes: row.get(6)?,
+                created_at: row.get(7)?,
+            })
+        })
+        .map_err(|_| "Database operation failed".to_string())?
+        .filter_map(|r| r.ok())
+        .collect();
+    Ok(logs)
+}
+
+#[tauri::command]
 pub fn get_render_logs(
     app: tauri::AppHandle,
     project_id: String,
@@ -332,6 +358,33 @@ pub fn delete_session(app: tauri::AppHandle, id: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub fn get_all_shoots(app: tauri::AppHandle) -> Result<Vec<ArchetypeShoot>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let mut stmt = conn
+        .prepare("SELECT id, project_id, shoot_date, location, shoot_type, camera_system, hours_on_location, conditions_notes, created_at FROM archetype_shoots ORDER BY created_at DESC")
+        .map_err(|_| "Database operation failed".to_string())?;
+    let shoots = stmt
+        .query_map(rusqlite::params![], |row| {
+            Ok(ArchetypeShoot {
+                id: row.get(0)?,
+                project_id: row.get(1)?,
+                shoot_date: row.get(2)?,
+                location: row.get(3)?,
+                shoot_type: row.get(4)?,
+                camera_system: row.get(5)?,
+                hours_on_location: row.get(6)?,
+                conditions_notes: row.get(7)?,
+                created_at: row.get(8)?,
+            })
+        })
+        .map_err(|_| "Database operation failed".to_string())?
+        .filter_map(|r| r.ok())
+        .collect();
+    Ok(shoots)
+}
+
+#[tauri::command]
 pub fn get_shoots(app: tauri::AppHandle, project_id: String) -> Result<Vec<ArchetypeShoot>, String> {
     let state = app.state::<DbState>();
     let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
@@ -391,6 +444,30 @@ pub fn delete_shoot(app: tauri::AppHandle, id: String) -> Result<(), String> {
     conn.execute("DELETE FROM archetype_shoots WHERE id = ?", [&id])
         .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
+}
+
+#[tauri::command]
+pub fn get_all_revisions(app: tauri::AppHandle) -> Result<Vec<ArchetypeRevision>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let mut stmt = conn
+        .prepare("SELECT id, project_id, round_number, change_summary, approved, created_at FROM archetype_revisions ORDER BY created_at DESC")
+        .map_err(|_| "Database operation failed".to_string())?;
+    let revisions = stmt
+        .query_map(rusqlite::params![], |row| {
+            Ok(ArchetypeRevision {
+                id: row.get(0)?,
+                project_id: row.get(1)?,
+                round_number: row.get(2)?,
+                change_summary: row.get(3)?,
+                approved: row.get::<_, i32>(4)? != 0,
+                created_at: row.get(5)?,
+            })
+        })
+        .map_err(|_| "Database operation failed".to_string())?
+        .filter_map(|r| r.ok())
+        .collect();
+    Ok(revisions)
 }
 
 #[tauri::command]
@@ -454,6 +531,30 @@ pub fn delete_revision(app: tauri::AppHandle, id: String) -> Result<(), String> 
 }
 
 #[tauri::command]
+pub fn get_all_builds(app: tauri::AppHandle) -> Result<Vec<ArchetypeBuild>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let mut stmt = conn
+        .prepare("SELECT id, project_id, version, platform, notes, created_at FROM archetype_builds ORDER BY created_at DESC")
+        .map_err(|_| "Database operation failed".to_string())?;
+    let builds = stmt
+        .query_map(rusqlite::params![], |row| {
+            Ok(ArchetypeBuild {
+                id: row.get(0)?,
+                project_id: row.get(1)?,
+                version: row.get(2)?,
+                platform: row.get(3)?,
+                notes: row.get(4)?,
+                created_at: row.get(5)?,
+            })
+        })
+        .map_err(|_| "Database operation failed".to_string())?
+        .filter_map(|r| r.ok())
+        .collect();
+    Ok(builds)
+}
+
+#[tauri::command]
 pub fn get_builds(app: tauri::AppHandle, project_id: String) -> Result<Vec<ArchetypeBuild>, String> {
     let state = app.state::<DbState>();
     let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
@@ -500,6 +601,31 @@ pub fn delete_build(app: tauri::AppHandle, id: String) -> Result<(), String> {
     conn.execute("DELETE FROM archetype_builds WHERE id = ?", [&id])
         .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
+}
+
+#[tauri::command]
+pub fn get_all_keywords(app: tauri::AppHandle) -> Result<Vec<ArchetypeKeyword>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let mut stmt = conn
+        .prepare("SELECT id, client_id, keyword, position_start, position_current, target_position, created_at FROM archetype_keywords ORDER BY created_at DESC")
+        .map_err(|_| "Database operation failed".to_string())?;
+    let keywords = stmt
+        .query_map(rusqlite::params![], |row| {
+            Ok(ArchetypeKeyword {
+                id: row.get(0)?,
+                client_id: row.get(1)?,
+                keyword: row.get(2)?,
+                position_start: row.get(3)?,
+                position_current: row.get(4)?,
+                target_position: row.get(5)?,
+                created_at: row.get(6)?,
+            })
+        })
+        .map_err(|_| "Database operation failed".to_string())?
+        .filter_map(|r| r.ok())
+        .collect();
+    Ok(keywords)
 }
 
 #[tauri::command]
@@ -587,6 +713,32 @@ pub fn delete_keyword(app: tauri::AppHandle, id: String) -> Result<(), String> {
     conn.execute("DELETE FROM archetype_keywords WHERE id = ?", [&id])
         .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
+}
+
+#[tauri::command]
+pub fn get_all_datasets(app: tauri::AppHandle) -> Result<Vec<ArchetypeDataset>, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let mut stmt = conn
+        .prepare("SELECT id, project_id, dataset_name, source, size_bytes, format_type, license_type, created_at FROM archetype_datasets ORDER BY created_at DESC")
+        .map_err(|_| "Database operation failed".to_string())?;
+    let datasets = stmt
+        .query_map(rusqlite::params![], |row| {
+            Ok(ArchetypeDataset {
+                id: row.get(0)?,
+                project_id: row.get(1)?,
+                dataset_name: row.get(2)?,
+                source: row.get(3)?,
+                size_bytes: row.get(4)?,
+                format_type: row.get(5)?,
+                license_type: row.get(6)?,
+                created_at: row.get(7)?,
+            })
+        })
+        .map_err(|_| "Database operation failed".to_string())?
+        .filter_map(|r| r.ok())
+        .collect();
+    Ok(datasets)
 }
 
 #[tauri::command]

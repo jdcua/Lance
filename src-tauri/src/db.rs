@@ -645,6 +645,7 @@ CREATE TABLE IF NOT EXISTS user_profile (
         "ALTER TABLE expenses ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE project_templates ADD COLUMN is_default INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE user_profile ADD COLUMN income_target REAL",
+        "ALTER TABLE user_profile ADD COLUMN payment_instructions TEXT",
         "ALTER TABLE recurring_invoices ADD COLUMN last_catch_up_warning TEXT",
     ];
     for sql in &seed_columns {

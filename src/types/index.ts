@@ -146,6 +146,8 @@ export type UserProfile = {
   license_validated_at?: string;
   license_grace_until?: string;
   trial_started_at?: string;
+  /** Bank transfer / payment instructions printed on invoices. Never leaves the machine. */
+  payment_instructions?: string;
 };
 
 export type Communication = {
@@ -268,6 +270,11 @@ export type FollowUpSettings = {
   invoice_delay_days: number;
   templates: Record<string, string>;
   subject_templates: Record<string, string>;
+  /** Dunning voice for Pro escalation drafts. 'auto' follows the archetype. */
+  tone?: 'auto' | 'warm' | 'direct' | 'formal';
+  /** Late fees (Pro): charge percentPerPeriod per 30 days overdue. */
+  lateFeeEnabled?: boolean;
+  lateFeePercent?: number;
 };
 
 export type DetectedEntityType =

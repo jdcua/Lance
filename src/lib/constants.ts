@@ -306,6 +306,7 @@ export const FEATURE_FLAGS: Record<LicenseTier, Record<string, boolean>> = {
     archetypeDepth: false,
     scopeCreepProtection: false,
     advancedInsights: false,
+    smartDunning: false,
   },
   [LICENSE_TIERS.TRIAL]: {
     contractPdf: true,
@@ -315,6 +316,7 @@ export const FEATURE_FLAGS: Record<LicenseTier, Record<string, boolean>> = {
     archetypeDepth: true,
     scopeCreepProtection: true,
     advancedInsights: true,
+    smartDunning: true,
   },
   [LICENSE_TIERS.PRO]: {
     contractPdf: true,
@@ -324,6 +326,7 @@ export const FEATURE_FLAGS: Record<LicenseTier, Record<string, boolean>> = {
     archetypeDepth: true,
     scopeCreepProtection: true,
     advancedInsights: true,
+    smartDunning: true,
   },
   [LICENSE_TIERS.LEGACY_LIFETIME]: {
     contractPdf: true,
@@ -333,6 +336,7 @@ export const FEATURE_FLAGS: Record<LicenseTier, Record<string, boolean>> = {
     archetypeDepth: true,
     scopeCreepProtection: true,
     advancedInsights: true,
+    smartDunning: true,
   },
   [LICENSE_TIERS.EXPIRED]: {
     contractPdf: true,
@@ -342,6 +346,7 @@ export const FEATURE_FLAGS: Record<LicenseTier, Record<string, boolean>> = {
     archetypeDepth: false,
     scopeCreepProtection: false,
     advancedInsights: false,
+    smartDunning: false,
   },
   [LICENSE_TIERS.OFFLINE_CACHED]: {
     contractPdf: true,
@@ -351,6 +356,7 @@ export const FEATURE_FLAGS: Record<LicenseTier, Record<string, boolean>> = {
     archetypeDepth: false,
     scopeCreepProtection: false,
     advancedInsights: false,
+    smartDunning: false,
   },
 } as const;
 

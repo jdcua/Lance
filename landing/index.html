@@ -8,7 +8,7 @@
 <meta property="og:title" content="Lance: Freelancer OS">
 <meta property="og:description" content="The freelancer OS that keeps everything in one place, and none of it in the cloud.">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="canonical" href="https://lance.placeholderlabsincorporatedlimited.yabbadabbadoo">
+<link rel="canonical" href="https://github.com/jdcua/lance">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="preconnect" href="https://fonts.bunny.net">
 <link href="https://fonts.bunny.net/css?family=syne:400,600,700,800|inter:400,500|dm-mono:400,500" rel="stylesheet">
@@ -696,7 +696,7 @@ footer a:hover{color:var(--d-t1)}
   <div class="container">
     <div class="eyebrow">Pricing</div>
     <h2 class="sec-title sec-title-l">Core free forever. Pro optional.</h2>
-    <p class="pricing-intro">Lance core is free. No time limits, no client caps, no nag screens. <strong>Pro</strong> unlocks archetype-specific proposals, contracts, invoices, and scope-creep protection.</p>
+    <p class="pricing-intro">Lance core is free. No time limits, no client caps, no nag screens. <strong>Pro</strong> unlocks archetype-specific proposals, contracts, invoices, and scope-creep protection. Either way, client payments go straight to you. Lance never takes a cut.</p>
     <div class="pricing-grid">
       <div class="pricing-card reveal free" id="freeCard">
         <svg class="pricing-border-svg" viewBox="0 0 440 420" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
@@ -723,16 +723,17 @@ footer a:hover{color:var(--d-t1)}
         <div class="pricing-price"><span>$</span>14<span>/mo</span></div>
         <ul class="pricing-perks">
           <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Everything in Free</li>
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Archetype proposals (rates, types)</li>
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Archetype contracts (clauses, rev limits)</li>
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Archetype invoices (deposits, terms)</li>
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Scope-creep protection (rev caps)</li>
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Advanced insights panels</li>
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Archetype proposals, contracts, invoices</li>
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Revenue forecasts and rate-leak alerts</li>
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Change orders that bill scope creep</li>
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Hot proposals and open alerts</li>
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Smart dunning and late fees</li>
+          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Tax pack CSV and trial countdown</li>
         </ul>
-        <button class="btn btn-green btn-xl pricing-cta" onclick="window.location.href='https://checkout.paddle.com/products/<REPLACE_WITH_MONTHLY_PRICE_ID>'">
+        <button class="btn btn-green btn-xl pricing-cta" onclick="window.location.href='#download'">
           Start 30-day free trial
         </button>
-        <p class="pricing-note">Billed monthly. Cancel anytime. 30 days free.</p>
+        <p class="pricing-note">Billed monthly. Cancel anytime. 30 days free. Checkout opens after you download.</p>
       </div>
       <div class="pricing-card reveal lifetime" id="lifetimeCard">
         <svg class="pricing-border-svg" viewBox="0 0 440 420" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
@@ -746,10 +747,10 @@ footer a:hover{color:var(--d-t1)}
           <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>No subscription, ever</li>
           <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Future updates included</li>
         </ul>
-        <button class="btn btn-green btn-xl pricing-cta" onclick="window.location.href='https://checkout.paddle.com/products/<REPLACE_WITH_ONETIME_PRICE_ID>'">
+        <button class="btn btn-green btn-xl pricing-cta" onclick="window.location.href='#download'">
           Buy lifetime license
         </button>
-        <p class="pricing-note">One payment. Yours forever.</p>
+        <p class="pricing-note">One payment. Yours forever. Checkout opens after you download.</p>
       </div>
     </div>
     <p class="pricing-free-note">Core is genuinely free. Pro is depth, not gates.</p>
@@ -767,21 +768,21 @@ footer a:hover{color:var(--d-t1)}
   <h2 class="sec-title sec-title-d" style="margin-bottom:8px">Free to download. Free to use.</h2>
   <p class="download-sub"><span id="dlVer"></span> · macOS · Windows · Linux</p>
   <div class="dl-grid">
-    <a href="#" class="dl-btn" id="dl-mac">
+    <a href="https://github.com/jdcua/lance/releases/latest" class="dl-btn" id="dl-mac">
       <div class="dl-left">
         <svg class="dl-icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-        <div><div class="dl-name">Download for macOS</div><div class="dl-ver">Universal Binary · macOS 11+</div></div>
+        <div><div class="dl-name">Download for macOS</div><div class="dl-ver">Apple Silicon · macOS 11+</div></div>
       </div>
       <svg class="dl-arr icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
     </a>
-    <a href="#" class="dl-btn" id="dl-win">
+    <a href="https://github.com/jdcua/lance/releases/latest" class="dl-btn" id="dl-win">
       <div class="dl-left">
         <svg class="dl-icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
         <div><div class="dl-name">Download for Windows</div><div class="dl-ver">64-bit installer · Windows 10+</div></div>
       </div>
       <svg class="dl-arr icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
     </a>
-    <a href="#" class="dl-btn" id="dl-linux">
+    <a href="https://github.com/jdcua/lance/releases/latest" class="dl-btn" id="dl-linux">
       <div class="dl-left">
         <svg class="dl-icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         <div><div class="dl-name">Download for Linux</div><div class="dl-ver">AppImage · Ubuntu 20.04+</div></div>
@@ -811,10 +812,10 @@ footer a:hover{color:var(--d-t1)}
       <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="12 2 15 9 12 7.5 9 9 12 2"/><polyline points="12 22 9 15 12 16.5 15 15 12 22"/><polyline points="2 12 9 9 7.5 12 9 15 2 12"/><polyline points="22 12 15 15 16.5 12 15 9 22 12"/></svg>
       Lance
     </a>
-    <p>Built by <a href="https://placeholderlabsincorporatedlimited.yabbadabbadoo">Placeholder Labs Incorporated Limited</a></p>
+    <p>Built by <a href="https://github.com/jdcua">Placeholder Labs Incorporated Limited</a></p>
     <div class="footer-links">
-      <a href="https://placeholderlabsincorporatedlimited.yabbadabbadoo/privacy" target="_blank" rel="noopener">Privacy Policy</a>
-      <a href="https://placeholderlabsincorporatedlimited.yabbadabbadoo/terms" target="_blank" rel="noopener">License Terms</a>
+      <a href="https://github.com/jdcua/lance/blob/main/PRIVACY.md" target="_blank" rel="noopener">Privacy Policy</a>
+      <a href="https://github.com/jdcua/lance/blob/main/LICENSE.md" target="_blank" rel="noopener">License Terms</a>
       <a href="https://github.com/jdcua/Lance" target="_blank" rel="noopener">GitHub</a>
     </div>
     <p class="footer-copy">&copy; 2026 Placeholder Labs Incorporated Limited. Lance is free software with a proprietary license.<br>Your data stays on your device. Always.</p>
@@ -1523,7 +1524,9 @@ if (dlGrid) dlObs.observe(dlGrid);
 ══════════════════════════════════════════════════════ */
 (async function() {
   try {
-    const res = await fetch('/api/release');
+    // GitHub API works from any static host (CORS-enabled). Falls back to
+    // the releases page links above when offline or rate-limited.
+    const res = await fetch('https://api.github.com/jdcua/lance/releases/latest');
     if (!res.ok) return;
     const release = await res.json();
     const assets = release.assets || [];

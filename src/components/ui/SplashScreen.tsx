@@ -4,7 +4,7 @@ import { useStore } from '../../store';
 import { useToasts } from '../../store/toastStore';
 import Button from '../ui/Button';
 import { getRuntimeVersion } from '../../lib/version';
-import { openCheckout, isCheckoutConfigured } from '../../utils/tauri';
+import { openCheckout } from '../../utils/tauri';
 
 interface SplashScreenProps {
   onDismiss: () => void;

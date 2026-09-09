@@ -54,6 +54,11 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ env.TAURI_SIGNING_PRIVATE_KEY_CLEAN }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           LANCE_LICENSE_SECRET: ${{ secrets.LANCE_LICENSE_SECRET }}
+          # Paddle price IDs are baked in at build time (Vite). Without these,
+          # every checkout button in the shipped app reports "not configured".
+          VITE_PADDLE_MONTHLY_PRICE_ID: ${{ secrets.PADDLE_MONTHLY_PRICE_ID }}
+          VITE_PADDLE_YEARLY_PRICE_ID: ${{ secrets.PADDLE_YEARLY_PRICE_ID }}
+          VITE_PADDLE_ONETIME_PRICE_ID: ${{ secrets.PADDLE_ONETIME_PRICE_ID }}
 
       - name: Collect artifacts
         shell: bash

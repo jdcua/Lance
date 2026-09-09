@@ -493,6 +493,7 @@ async function runMigrations(database: Database): Promise<void> {
     'ALTER TABLE user_profile ADD COLUMN license_validated_at TEXT',
     'ALTER TABLE user_profile ADD COLUMN license_grace_until TEXT',
     'ALTER TABLE user_profile ADD COLUMN trial_started_at TEXT',
+    'ALTER TABLE user_profile ADD COLUMN payment_instructions TEXT',
     'ALTER TABLE recurring_invoices ADD COLUMN last_catch_up_warning TEXT',
     'ALTER TABLE projects ADD COLUMN color TEXT',
     'ALTER TABLE user_profile ADD COLUMN profession TEXT',

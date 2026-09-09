@@ -9,10 +9,14 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { exportProposalPDF, exportProposalDOCX } from '../export';
 import { formatCurrency } from '../utils/format';
 import { formatDate } from '../utils/format';
+import { relativeDate } from '../utils/format';
+import { getProposalViews } from '../utils/portalActivity';
+import { scoreProposalHeat, compareHeat, type ProposalHeat } from '../utils/proposalHeat';
+import { getFeatureFlags } from '../lib/constants';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
-import { Plus, Trash2, Send, Eye, Download, FileText, Search, ArrowUpDown, Bell, Check, X, Copy, Clock, Mail, Share2, Link } from 'lucide-react';
+import { Plus, Trash2, Send, Eye, Download, FileText, Search, ArrowUpDown, Bell, Check, X, Copy, Clock, Mail, Share2, Link, Flame } from 'lucide-react';
 import ShareModal from '../components/ShareModal';
 import { generateFollowUpDraft, generateSubjectLine, openMailTo } from '../utils/followUpTemplates';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
@@ -51,11 +55,11 @@ function generateContractBody(
   ].join('\n');
 }
 
-type SortKey = 'title' | 'client' | 'status' | 'date';
+type SortKey = 'title' | 'client' | 'status' | 'date' | 'heat';
 type StatusFilter = 'all' | 'draft' | 'sent' | 'accepted' | 'declined' | 'expired';
 
 export default function Proposals() {
-  const { proposals, loadProposals, clients, loadClients, updateProposal, removeProposal, profile, loadProfile, addProposal, addContract, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings } = useStore();
+  const { proposals, loadProposals, clients, loadClients, updateProposal, removeProposal, profile, loadProfile, addProposal, addContract, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings, portalActivity, loadPortalActivity, getActiveTier } = useStore();
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -73,11 +77,11 @@ export default function Proposals() {
   const [shareTokenIds, setShareTokenIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    Promise.all([loadProposals(), loadClients(), loadProfile(), loadShareTokens()])
+    Promise.all([loadProposals(), loadClients(), loadProfile(), loadShareTokens(), loadPortalActivity()])
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
     loadPendingFollowUps();
-  }, [loadProposals, loadClients, loadProfile, loadPendingFollowUps]);
+  }, [loadProposals, loadClients, loadProfile, loadPendingFollowUps, loadPortalActivity]);
 
   const loadShareTokens = async () => {
     try {
@@ -240,6 +244,21 @@ export default function Proposals() {
     return (p.title || '').toLowerCase().includes(s) || (getClientName(p.client_id) || '').toLowerCase().includes(s);
   });
 
+  // Buy-intent ranking (Pro): hot means opened in the last 72 hours,
+  // cooling means sent 3+ weeks ago and never opened. Free tiers keep the
+  // raw open counts; interpretation is the Pro layer.
+  const heatOn = getFeatureFlags(getActiveTier()).advancedInsights === true;
+  const heatOf = (id: string, status: string, sentAt?: string, createdAt?: string): ProposalHeat => {
+    const views = getProposalViews(portalActivity, id);
+    return scoreProposalHeat({
+      status,
+      sentAt,
+      createdAt: createdAt || new Date().toISOString(),
+      opens: views?.opens || 0,
+      lastOpenedAt: views?.lastOpenedAt,
+    });
+  };
+
   const sorted = [...filtered].sort((a, b) => {
     const dir = sortDir === 'asc' ? 1 : -1;
     switch (sortKey) {
@@ -247,11 +266,16 @@ export default function Proposals() {
       case 'client': return dir * getClientName(a.client_id).localeCompare(getClientName(b.client_id));
       case 'status': return dir * a.status.localeCompare(b.status);
       case 'date': return dir * (new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      case 'heat': return compareHeat(heatOf(a.id, a.status, a.sent_at, a.created_at), heatOf(b.id, b.status, b.sent_at, b.created_at));
       default: return 0;
     }
   });
 
   const toggleSort = (key: SortKey) => {
+    if (key === 'heat' && !heatOn) {
+      document.dispatchEvent(new CustomEvent('lance:open-upgrade', { detail: 'hot proposal ranking' }));
+      return;
+    }
     if (sortKey === key) { setSortDir(d => d === 'asc' ? 'desc' : 'asc'); }
     else { setSortKey(key); setSortDir('asc'); }
   };
@@ -309,6 +333,17 @@ export default function Proposals() {
               {k}{sortKey === k && <span className="ml-0.5">{sortDir === 'asc' ? '↑' : '↓'}</span>}
             </button>
           ))}
+          <button
+            onClick={() => toggleSort('heat')}
+            title={heatOn ? 'Sort by buy-intent' : 'Hot-first ranking is a Pro feature'}
+            className={`text-[10px] px-2 py-0.5 rounded-[4px] transition-colors capitalize flex items-center gap-0.5 ${sortKey === 'heat' ? 'bg-[var(--accent-bg)] text-[var(--accent)] font-medium' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}
+          >
+            <Flame size={10} />
+            heat
+            {!heatOn && (
+              <span className="text-[8px] font-semibold px-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">PRO</span>
+            )}
+          </button>
         </div>
       </div>
 
@@ -337,6 +372,35 @@ export default function Proposals() {
                         <Link size={12} className="text-[var(--accent)] flex-shrink-0" />
                       )}
                       <Badge variant={statusBadge[p.status]}>{p.status}</Badge>
+                      {(() => {
+                        const v = getProposalViews(portalActivity, p.id);
+                        const heat = heatOn ? heatOf(p.id, p.status, p.sent_at, p.created_at) : null;
+                        if (!v && heat !== 'cooling') return null;
+                        return (
+                          <span
+                            className="inline-flex items-center gap-1 text-[10px] text-[var(--text-tertiary)]"
+                            title={v ? `Last opened ${relativeDate(v.lastOpenedAt)}` : 'Sent over 3 weeks ago, never opened'}
+                          >
+                            {v && (
+                              <>
+                                <Eye size={12} />
+                                Opened {v.opens}x
+                              </>
+                            )}
+                            {heat === 'hot' && (
+                              <span className="inline-flex items-center gap-0.5 font-semibold px-1 py-px rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
+                                <Flame size={9} />
+                                HOT
+                              </span>
+                            )}
+                            {heat === 'cooling' && (
+                              <span className="font-medium px-1 py-px rounded-full bg-[var(--bg-secondary)] text-[var(--text-tertiary)]">
+                                Cooling
+                              </span>
+                            )}
+                          </span>
+                        );
+                      })()}
                     </div>
                   <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)] mb-2">
                     <span>{getClientName(p.client_id)}</span>

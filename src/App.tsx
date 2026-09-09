@@ -40,6 +40,8 @@ import { checkAchievements } from './achievements/checker';
 import { ACHIEVEMENTS } from './achievements';
 import { seedSampleData } from './utils/seedData';
 import { parseDateString } from './utils/format';
+import { detectNewOpens, snapshotOpens } from './utils/portalActivity';
+import { getFeatureFlags } from './lib/constants';
 import { getRuntimeVersion } from './lib/version';
 
 // Max upsell-splash views per app version for unlicensed users.
@@ -100,6 +102,56 @@ export default function App() {
     const handler = () => setShowQuickLogModal(true);
     document.addEventListener('lance:add-time', handler);
     return () => document.removeEventListener('lance:add-time', handler);
+  }, []);
+
+  // Pro open alerts: when a client opens a shared proposal, Pro and trial
+  // users get pinged with one-click actions (open it, draft a follow-up).
+  // Free tiers still see passive open badges on the Proposals screen.
+  // Polls on the same 30s cadence as the dashboard feed.
+  useEffect(() => {
+    let stopped = false;
+    const seenRef: { current: Record<string, number> } = { current: {} };
+    const check = async () => {
+      try {
+        const store = useStore.getState();
+        await store.loadPortalActivity();
+        if (stopped) return;
+        const fresh = detectNewOpens(useStore.getState().portalActivity, seenRef.current);
+        seenRef.current = snapshotOpens(useStore.getState().portalActivity);
+        if (fresh.length === 0) return;
+        if (getFeatureFlags(store.getActiveTier()).advancedInsights !== true) return;
+        const proposals = useStore.getState().proposals;
+        for (const item of fresh) {
+          const proposal = proposals.find((p) => p.id === item.proposalId);
+          if (!proposal) continue;
+          addToast(`Client opened "${proposal.title}" (${item.opens}x)`, 'info', undefined, [
+            {
+              label: 'Open proposal',
+              onClick: () => navigate('/proposals'),
+            },
+            {
+              label: 'Draft follow-up',
+              onClick: () => {
+                useStore
+                  .getState()
+                  .createFollowUp({ entity_type: 'proposal', entity_id: item.proposalId, stage: 1 })
+                  .then(() => addToast('Follow-up drafted', 'success'))
+                  .catch(() => addToast('Could not draft the follow-up', 'error'));
+              },
+            },
+          ]);
+        }
+      } catch {
+        /* portal polling is best-effort */
+      }
+    };
+    check();
+    const id = setInterval(check, 30000);
+    return () => {
+      stopped = true;
+      clearInterval(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [showImportModal, setShowImportModal] = useState(false);
@@ -180,16 +232,25 @@ export default function App() {
 
   useEffect(() => {
     const explicitTheme = profile?.theme;
+    const persistMode = (mode: 'dark' | 'light') => {
+      try {
+        localStorage.setItem('lance:theme-mode', mode);
+      } catch { /* private mode */ }
+    };
     if (explicitTheme) {
-      document.documentElement.classList.toggle('dark', explicitTheme === 'dark');
+      const dark = explicitTheme === 'dark';
+      document.documentElement.classList.toggle('dark', dark);
+      persistMode(dark ? 'dark' : 'light');
       const storedThemeId = localStorage.getItem('lance:theme') || 'default';
       applyTheme(getTheme(storedThemeId));
     } else if (profileLoaded && !profile) {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       document.documentElement.classList.toggle('dark', prefersDark);
+      persistMode(prefersDark ? 'dark' : 'light');
       applyTheme(getTheme('default'));
     } else {
       document.documentElement.classList.remove('dark');
+      persistMode('light');
     }
   }, [profile?.theme, profileLoaded, profile]);
 
