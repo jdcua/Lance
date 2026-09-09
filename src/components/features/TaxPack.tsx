@@ -60,6 +60,9 @@ export default function TaxPack() {
           ))}
         </select>
       </div>
+      <p className="text-[10px] text-[var(--text-tertiary)] mb-4">
+        Summaries for your records. Lance is not a tax advisor; confirm everything with your accountant.
+      </p>
 
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div>

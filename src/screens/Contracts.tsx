@@ -474,6 +474,9 @@ export default function Contracts() {
       ) : (
         /* ── Templates tab ── */
         <div className="space-y-3">
+          <p className="text-[11px] text-[var(--text-tertiary)]">
+            Templates are starting points, not legal advice. Have a lawyer review anything you send.
+          </p>
           {allTemplatesWithArchetype.length === 0 ? (
             <Card className="text-center py-16 flex flex-col items-center">
               <FileText size={40} className="text-[var(--text-tertiary)] mb-4" />

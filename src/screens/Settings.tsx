@@ -1301,6 +1301,9 @@ export default function Settings() {
                           </div>
                         );
                       })()}
+                      <p className="text-[10px] text-[var(--text-tertiary)] mt-2">
+                        Only charge what your contract allows and your local law permits.
+                      </p>
                     </div>
                   </div>
                 </Card>
