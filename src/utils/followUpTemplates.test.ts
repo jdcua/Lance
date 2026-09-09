@@ -55,3 +55,23 @@ describe('smart dunning tones', () => {
     expect(a).toBe(b);
   });
 });
+
+describe('stage-4 work-paused escalation', () => {
+  it('routes 30+ day invoices to stage 4 and invoice_day30', async () => {
+    const { getStage, getTemplateKey } = await import('./followUpTemplates');
+    expect(getStage('invoice', 29)).toBe(3);
+    expect(getStage('invoice', 30)).toBe(4);
+    expect(getTemplateKey('invoice', 29, 0)).toBe('invoice_day14');
+    expect(getTemplateKey('invoice', 30, 0)).toBe('invoice_day30');
+  });
+
+  it('renders the day30 draft in every tone without placeholders leaking', async () => {
+    const { generateFollowUpDraft } = await import('./followUpTemplates');
+    for (const tone of [undefined, 'warm', 'direct', 'formal'] as const) {
+      const draft = generateFollowUpDraft('invoice_day30', { ...DATA, daysElapsed: 31 }, undefined, tone);
+      expect(draft).toContain('INV-1');
+      expect(draft).toContain('31');
+      expect(draft).not.toMatch(/\{[a-z_]+\}/);
+    }
+  });
+});

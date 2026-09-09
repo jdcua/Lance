@@ -601,6 +601,14 @@ export default function App() {
 
           const dueDate = parseDateString(inv.due_date);
           const daysElapsed = Math.floor((now.getTime() - dueDate.getTime()) / DAY_MS);
+          // Auto-mark overdue: a sent invoice past its due date becomes
+          // overdue (one-time transition; everything downstream already
+          // treats both as unpaid).
+          if (inv.status === 'sent' && daysElapsed >= 1) {
+            try {
+              await state.updateInvoice({ ...inv, status: 'overdue' });
+            } catch { /* non-critical; follow-up still queues below */ }
+          }
           if (daysElapsed < settings.invoice_delay_days) continue;
 
           const stage = getStage('invoice', daysElapsed);

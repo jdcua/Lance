@@ -66,6 +66,17 @@ Thanks,
 {freelancer_name}`,
       subject: 'One last note on invoice {invoice_number}',
     },
+    invoice_day30: {
+      body: `Hi {client_name},
+
+I have paused work until invoice {invoice_number} for {amount} is resolved. It is now {days_elapsed} days overdue, and late fees are accruing.
+
+I do not want this to get harder for either of us. Please pay today, or reply with a payment date you will keep.
+
+Thanks,
+{freelancer_name}`,
+      subject: 'Work paused: invoice {invoice_number} ({days_elapsed} days overdue)',
+    },
   },
   direct: {
     invoice_day7: {
@@ -86,6 +97,17 @@ Thanks,
 {freelancer_name}`,
       subject: 'Final notice: invoice {invoice_number}',
     },
+    invoice_day30: {
+      body: `Hi {client_name},
+
+Work is now paused pending payment of invoice {invoice_number} for {amount}, {days_elapsed} days overdue (due {due_date}). Late fees continue to accrue.
+
+Pay today or reply with a firm payment date to resume work immediately.
+
+Thanks,
+{freelancer_name}`,
+      subject: 'Work paused: invoice {invoice_number} ({days_elapsed} days overdue)',
+    },
   },
   formal: {
     invoice_day7: {
@@ -105,6 +127,17 @@ Final notice regarding invoice {invoice_number} for {amount}, now {days_elapsed}
 Regards,
 {freelancer_name}`,
       subject: 'Final notice: invoice {invoice_number} ({days_elapsed} days overdue)',
+    },
+    invoice_day30: {
+      body: `Dear {client_name},
+
+All work is paused pending payment of invoice {invoice_number} for {amount}, now {days_elapsed} days overdue (due {due_date}). Late fees are accruing per the agreed terms.
+
+Remit payment immediately, or provide a binding payment date, to resume work.
+
+Regards,
+{freelancer_name}`,
+      subject: 'Work paused: invoice {invoice_number} ({days_elapsed} days overdue)',
     },
   },
 };
@@ -163,6 +196,15 @@ I value our working relationship and want to resolve this smoothly. If there's a
 
 All the best,
 {freelancer_name}`,
+
+  invoice_day30: `Hi {client_name},
+
+I have paused work until invoice {invoice_number} for {amount} is resolved. It is now {days_elapsed} days overdue, and late fees are accruing.
+
+Please pay today, or reply with a payment date you will keep, so we can get back to work.
+
+All the best,
+{freelancer_name}`,
 };
 
 export const TEMPLATE_LABELS: Record<string, string> = {
@@ -172,6 +214,7 @@ export const TEMPLATE_LABELS: Record<string, string> = {
   invoice_day1: 'Invoice · Day 1 overdue (Polite reminder)',
   invoice_day7: 'Invoice · Day 7 overdue (Firm reminder)',
   invoice_day14: 'Invoice · Day 14 overdue (Final notice)',
+  invoice_day30: 'Invoice · Day 30 overdue (Work paused)',
 };
 
 export const DEFAULT_SUBJECT_TEMPLATES: Record<string, string> = {
@@ -181,6 +224,7 @@ export const DEFAULT_SUBJECT_TEMPLATES: Record<string, string> = {
   invoice_day1: 'Invoice {invoice_number} · Friendly Reminder',
   invoice_day7: 'Invoice {invoice_number} · Reminder ({days_elapsed} days past due)',
   invoice_day14: 'Invoice {invoice_number} · Final Notice ({days_elapsed} days overdue)',
+  invoice_day30: 'Invoice {invoice_number} · Work Paused ({days_elapsed} days overdue)',
 };
 
 function getDefaultTemplate(key: string): string {
@@ -211,7 +255,8 @@ export function getTemplateKey(
   if (entityType === 'invoice') {
     if (daysElapsed >= 1 && daysElapsed < 4) return 'invoice_day1';
     if (daysElapsed >= 4 && daysElapsed < 10) return 'invoice_day7';
-    if (daysElapsed >= 10) return 'invoice_day14';
+    if (daysElapsed >= 10 && daysElapsed < 30) return 'invoice_day14';
+    if (daysElapsed >= 30) return 'invoice_day30';
     return null;
   }
   return null;
@@ -228,7 +273,8 @@ export function getStage(entityType: 'proposal' | 'invoice', daysElapsed: number
   }
   if (daysElapsed < 4) return 1;
   if (daysElapsed < 10) return 2;
-  return 3;
+  if (daysElapsed < 30) return 3;
+  return 4;
 }
 
 /**

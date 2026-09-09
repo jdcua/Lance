@@ -101,7 +101,8 @@ export default function FollowUps() {
         }
         if (log.stage === 1) templateKey = 'invoice_day1';
         else if (log.stage === 2) templateKey = 'invoice_day7';
-        else templateKey = 'invoice_day14';
+        else if (log.stage === 3) templateKey = 'invoice_day14';
+        else templateKey = 'invoice_day30';
       }
 
       const draftBase = generateFollowUpDraft(templateKey, {
