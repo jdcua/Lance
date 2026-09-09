@@ -8,10 +8,12 @@ import Button from '../ui/Button';
 import { Plus, Trash2, TrendingUp, Minus } from 'lucide-react';
 
 export default function KeywordTracker({ clientId }: { clientId: string }) {
-  const { keywords, loadKeywords, addKeyword, removeKeyword } = useStore();
+  const { keywords, loadKeywords, addKeyword, updateKeyword, removeKeyword } = useStore();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ keyword: '', position_start: '', position_current: '', target_position: '' });
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editPos, setEditPos] = useState('');
 
   useEffect(() => { if (clientId) loadKeywords(); }, [clientId, loadKeywords]);
 
@@ -26,6 +28,15 @@ export default function KeywordTracker({ clientId }: { clientId: string }) {
       setShowForm(false);
     } catch { /* handled */ }
     setSaving(false);
+  };
+
+  const handlePosSave = async (id: string) => {
+    const n = parseFloat(editPos);
+    if (Number.isNaN(n)) { setEditingId(null); return; }
+    try {
+      await updateKeyword(id, clientId, n);
+    } catch { /* handled */ }
+    setEditingId(null);
   };
 
   const positionIcon = (current: number | undefined, target: number | undefined) => {
@@ -72,7 +83,25 @@ export default function KeywordTracker({ clientId }: { clientId: string }) {
                 <span className="font-medium text-[var(--text-primary)]">{k.keyword}</span>
               </div>
               <span className="text-[10px] text-[var(--text-tertiary)] tabular-nums">
-                {k.position_current != null ? `#${k.position_current}` : '--'}
+                {editingId === k.id ? (
+                  <input
+                    type="number"
+                    value={editPos}
+                    onChange={(e) => setEditPos(e.target.value)}
+                    onBlur={() => handlePosSave(k.id)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handlePosSave(k.id); if (e.key === 'Escape') setEditingId(null); }}
+                    className="w-14 px-1 py-0.5 text-[10px] border border-[var(--accent)] rounded-[4px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none"
+                    autoFocus
+                  />
+                ) : (
+                  <button
+                    onClick={() => { setEditingId(k.id); setEditPos(k.position_current != null ? String(k.position_current) : ''); }}
+                    title="Update current position"
+                    className="hover:text-[var(--accent)]"
+                  >
+                    {k.position_current != null ? `#${k.position_current}` : '--'}
+                  </button>
+                )}
                 {k.target_position != null && <> → #{k.target_position}</>}
               </span>
               <button onClick={() => removeKeyword(k.id, clientId)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">

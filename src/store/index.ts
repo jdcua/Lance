@@ -191,6 +191,7 @@ export interface UnifiedStore {
   // ── Communications ──
   loadCommunications: () => Promise<void>
   createCommunication: (data: Omit<Communication, 'id' | 'created_at'>) => Promise<Communication>
+  updateCommunication: (id: string, summary: string) => Promise<void>
   deleteCommunication: (id: string, clientId: string) => Promise<void>
 
   // ── Recurring Invoices ──
@@ -928,6 +929,10 @@ export const useStore = create<UnifiedStore>((set, get) => {
     deleteCommunication: async (id, _clientId) => {
       await invoke('delete_communication', { id });
       set({ communications: get().communications.filter((c) => c.id !== id) });
+    },
+    updateCommunication: async (id, summary) => {
+      await invoke('update_communication', { payload: { id, summary } });
+      set({ communications: get().communications.map((c) => (c.id === id ? { ...c, summary } : c)) });
     },
 
     // ── Recurring Invoices ──

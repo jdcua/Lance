@@ -71,6 +71,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
     addClient, addProject, addInvoice, addExpense, addAttachment,
     addProposal, addContract,
     clients, loadClients,
+    importHistory, loadImportHistory,
   } = useStore();
   const addToast = useToasts((s) => s.add);
 
@@ -112,7 +113,10 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
       setFiles(initialFiles);
       startScan(initialFiles);
     }
-  }, [open, initialFiles, startScan]);
+    if (open) {
+      loadImportHistory().catch(() => { /* history is best-effort */ });
+    }
+  }, [open, initialFiles, startScan, loadImportHistory]);
 
   const handleFilesSelected = useCallback((newFiles: File[]) => {
     if (newFiles.length === 0) return;
@@ -468,6 +472,27 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={handleClose} size="sm">Cancel</Button>
             </div>
+            {importHistory.length > 0 && (
+              <div className="pt-2 border-t border-[var(--border-color)]">
+                <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide mb-2">
+                  Recent imports ({importHistory.length})
+                </p>
+                <div className="space-y-1 max-h-32 overflow-y-auto">
+                  {importHistory.slice(0, 8).map((h) => (
+                    <div key={h.id} className="flex items-center justify-between text-xs px-2 py-1 rounded-[6px] hover:bg-[var(--bg-secondary)]">
+                      <span className="truncate text-[var(--text-secondary)]" title={h.filename}>{h.filename}</span>
+                      <span className={`flex-shrink-0 ml-2 text-[10px] font-medium ${
+                        h.status === 'imported' ? 'text-[var(--accent)]'
+                        : h.status === 'error' ? 'text-[var(--danger)]'
+                        : 'text-[var(--text-tertiary)]'
+                      }`}>
+                        {h.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

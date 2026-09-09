@@ -51,7 +51,7 @@ export const SPLASH_MAX_VIEWS = 3;
 
 export default function App() {
   const {
-    profile, profileLoaded, loadProfile, isLicensed,
+    profile, profileLoaded, loadProfile, isLicensed, initLicenseFlow,
     recurringInvoices, loadRecurringInvoices, updateRecurringInvoice,
     invoices, loadInvoices, addInvoice,
     loadClients,
@@ -235,6 +235,16 @@ export default function App() {
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
+
+  // Start the trial clock / license flow once the profile lands. Without
+  // this, trial_started_at is never set and the trial never counts down.
+  const licenseFlowRan = useRef(false);
+  useEffect(() => {
+    if (profileLoaded && profile && !licenseFlowRan.current) {
+      licenseFlowRan.current = true;
+      initLicenseFlow().catch((e) => console.error('[license] flow failed', e));
+    }
+  }, [profileLoaded, profile, initLicenseFlow]);
 
   useEffect(() => {
     const explicitTheme = profile?.theme;

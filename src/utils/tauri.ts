@@ -470,6 +470,25 @@ const list: StoreRow[] = all[key];
     return {} as unknown as T;
   }
 
+  // ── update_keyword (top-level args, mirrors Rust: only provided fields update) ──
+  if (cmd === 'update_keyword') {
+    const { id, positionCurrent, targetPosition } = (args || {}) as {
+      id?: string; positionCurrent?: number | null; targetPosition?: number | null;
+    };
+    if (id) {
+      const items = lsGet<StoreRow>('keywords');
+      const idx = items.findIndex((i: StoreRow) => i.id === id);
+      if (idx !== -1) {
+        const row: StoreRow = { ...items[idx] };
+        if (positionCurrent != null) row.position_current = positionCurrent;
+        if (targetPosition != null) row.target_position = targetPosition;
+        items[idx] = row;
+        lsSet('keywords', items);
+      }
+    }
+    return {} as unknown as T;
+  }
+
   // ── Generic update commands ──
   if (verb === 'update') {
     const entity = cmdEntity(cmd);

@@ -163,14 +163,14 @@ function detectCountry(): string {
 export default function Clients() {
   const {
     clients, loadClients, addClient, updateClient, removeClient,
-    communications, loadCommunications, addCommunication, removeCommunication,
+    communications, loadCommunications, addCommunication, updateCommunication, removeCommunication,
     projects, loadProjects,
     proposals, loadProposals,
     invoices, loadInvoices,
     profile, loadProfile,
     metricDefs, loadMetricDefs, addMetricDef, updateMetricDef, removeMetricDef,
     metricValues, loadMetricValues, logMetricValue,
-    metricTemplates, loadMetricTemplates, saveMetricTemplate, applyMetricTemplate,
+    metricTemplates, loadMetricTemplates, saveMetricTemplate, applyMetricTemplate, removeMetricTemplate,
   } = useStore();
   const addToast = useToasts((s) => s.add);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -185,6 +185,8 @@ export default function Clients() {
   const [confirmDialog, setConfirmDialog] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [hoveredComm, setHoveredComm] = useState<string | null>(null);
+  const [editingCommId, setEditingCommId] = useState<string | null>(null);
+  const [editCommText, setEditCommText] = useState('');
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<'overview' | 'metrics'>('overview');
@@ -365,6 +367,16 @@ export default function Clients() {
       }
     } else {
       setDeleteConfirm(id);
+    }
+  };
+
+  const handleSaveCommEdit = async (id: string) => {
+    if (!editCommText.trim()) return;
+    try {
+      await updateCommunication(id, editCommText.trim());
+      setEditingCommId(null);
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to update communication', 'error');
     }
   };
 
@@ -739,10 +751,30 @@ export default function Clients() {
                                 <p className="text-[10px] text-[var(--text-tertiary)] mb-0.5">
                                   {commLabels[comm.type]} &middot; {relativeDate(comm.created_at || comm.date)}
                                 </p>
-                                <p className="text-[13px] text-[var(--text-primary)] leading-relaxed">{comm.summary}</p>
+                                {editingCommId === comm.id ? (
+                                  <div>
+                                    <textarea
+                                      value={editCommText}
+                                      onChange={(e) => setEditCommText(e.target.value)}
+                                      rows={2}
+                                      className="w-full px-2 py-1.5 text-[13px] border border-[var(--accent)] rounded-[6px] focus:outline-none resize-none"
+                                      autoFocus
+                                    />
+                                    <div className="flex justify-end gap-1.5 mt-1.5">
+                                      <button onClick={() => setEditingCommId(null)} aria-label="Cancel edit" className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
+                                        <X size={14} />
+                                      </button>
+                                      <button onClick={() => handleSaveCommEdit(comm.id)} aria-label="Save edit" disabled={!editCommText.trim()} className="text-[var(--accent)] hover:text-[var(--accent-hover)] disabled:opacity-40">
+                                        <Check size={14} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <p className="text-[13px] text-[var(--text-primary)] leading-relaxed">{comm.summary}</p>
+                                )}
                               </div>
-                              {hoveredComm === comm.id && (
-                                <div className="flex-shrink-0">
+                              {hoveredComm === comm.id && editingCommId !== comm.id && (
+                                <div className="flex-shrink-0 flex items-center gap-1">
                                   {isConfirming ? (
                                     <div className="flex items-center gap-1">
                                       <span className="text-[10px] text-[var(--danger)]">Delete?</span>
@@ -754,9 +786,14 @@ export default function Clients() {
                                       </button>
                                     </div>
                                   ) : (
-                                    <button onClick={() => handleDeleteComm(comm.id)} aria-label="Delete communication" className="text-[var(--text-tertiary)] hover:text-[var(--danger)]">
-                                      <X size={13} />
-                                    </button>
+                                    <>
+                                      <button onClick={() => { setEditingCommId(comm.id); setEditCommText(comm.summary); setDeleteConfirm(null); }} aria-label="Edit communication" className="text-[var(--text-tertiary)] hover:text-[var(--accent)]">
+                                        <Pencil size={13} />
+                                      </button>
+                                      <button onClick={() => handleDeleteComm(comm.id)} aria-label="Delete communication" className="text-[var(--text-tertiary)] hover:text-[var(--danger)]">
+                                        <X size={13} />
+                                      </button>
+                                    </>
                                   )}
                                 </div>
                               )}
@@ -798,14 +835,25 @@ export default function Clients() {
                       </h3>
                       <div className="flex flex-wrap gap-2">
                         {metricTemplates.map((tpl) => (
-                          <button
+                          <span
                             key={tpl.id}
-                            onClick={() => handleApplyTemplate(tpl.name)}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] border border-[var(--border-color)] text-xs text-[var(--text-secondary)] hover:border-[var(--accent)]/30 hover:text-[var(--text-primary)] transition-colors bg-[var(--bg-secondary)]"
                           >
-                            <Copy size={12} />
-                            {tpl.name}
-                          </button>
+                            <button
+                              onClick={() => handleApplyTemplate(tpl.name)}
+                              className="flex items-center gap-1.5"
+                            >
+                              <Copy size={12} />
+                              {tpl.name}
+                            </button>
+                            <button
+                              onClick={async () => { await removeMetricTemplate(tpl.id); }}
+                              aria-label={`Delete template ${tpl.name}`}
+                              className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"
+                            >
+                              <X size={12} />
+                            </button>
+                          </span>
                         ))}
                       </div>
                     </Card>

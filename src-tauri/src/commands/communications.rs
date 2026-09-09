@@ -25,15 +25,25 @@ pub struct CreateCommunicationPayload {
 #[tauri::command]
 pub fn get_communications(
     app: tauri::AppHandle,
-    client_id: String,
+    client_id: Option<String>,
 ) -> Result<Vec<Communication>, String> {
     let state = app.state::<DbState>();
     let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let (sql, params): (String, Vec<String>) = match client_id {
+        Some(id) => (
+            "SELECT id, client_id, type, summary, date, created_at FROM communications WHERE client_id = ? ORDER BY date DESC".to_string(),
+            vec![id],
+        ),
+        None => (
+            "SELECT id, client_id, type, summary, date, created_at FROM communications ORDER BY date DESC".to_string(),
+            vec![],
+        ),
+    };
     let mut stmt = conn
-        .prepare("SELECT id, client_id, type, summary, date, created_at FROM communications WHERE client_id = ? ORDER BY date DESC")
+        .prepare(&sql)
         .map_err(|_| "Database operation failed".to_string())?;
     let comms = stmt
-        .query_map([&client_id], |row| {
+        .query_map(rusqlite::params_from_iter(params), |row| {
             Ok(Communication {
                 id: row.get(0)?,
                 client_id: row.get(1)?,
@@ -72,17 +82,22 @@ pub fn create_communication(
     })
 }
 
+#[derive(Debug, Deserialize)]
+pub struct UpdateCommunicationPayload {
+    pub id: String,
+    pub summary: String,
+}
+
 #[tauri::command]
 pub fn update_communication(
     app: tauri::AppHandle,
-    id: String,
-    summary: String,
+    payload: UpdateCommunicationPayload,
 ) -> Result<(), String> {
     let state = app.state::<DbState>();
     let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     conn.execute(
         "UPDATE communications SET summary = ?1 WHERE id = ?2",
-        rusqlite::params![summary, id],
+        rusqlite::params![payload.summary, payload.id],
     )
     .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
