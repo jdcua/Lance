@@ -48,31 +48,31 @@ export const ACHIEVEMENTS: Achievement[] = [
     key: 'five_clients',
     title: 'Building something',
     description: 'You added 5 clients.',
-    reward: 'Accent color variants unlocked -- personalize in Settings → Appearance',
+    reward: 'Accent color variants unlocked · personalize in Settings → Appearance',
   },
   {
     key: 'three_proposals',
     title: 'On a roll',
     description: 'You sent 3 proposals.',
-    reward: 'Compact layout unlocked -- find it in Settings → Appearance',
+    reward: 'Compact layout unlocked · find it in Settings → Appearance',
   },
   {
     key: 'first_contract',
     title: 'Making it official',
     description: 'You created your first contract.',
-    reward: 'Contract templates unlocked -- find 6 professional templates in Contracts',
+    reward: 'Contract templates unlocked · find 6 professional templates in Contracts',
   },
   {
     key: 'first_recurring',
     title: 'Retainer life',
     description: 'You set up a recurring invoice.',
-    reward: 'Finance forecasting unlocked -- check the Forecast tab in Finance',
+    reward: 'Finance forecasting unlocked · check the Forecast tab in Finance',
   },
   {
     key: 'twenty_five_hours',
     title: 'Deep work',
     description: 'You logged 25 hours.',
-    reward: 'Time heatmap unlocked -- see your year in Time',
+    reward: 'Time heatmap unlocked · see your year in Time',
   },
   {
     key: 'ten_invoices',
@@ -84,26 +84,26 @@ export const ACHIEVEMENTS: Achievement[] = [
     key: 'first_export',
     title: 'Shipped',
     description: 'You exported your first document.',
-    reward: 'Export templates unlocked -- customize your exports in Settings → Data',
+    reward: 'Export templates unlocked · customize your exports in Settings → Data',
   },
   {
     key: 'motion_theme',
     title: 'Motion theme',
-    description: 'You sent your first proposal -- a dash of Motion is unlocked.',
+    description: 'You sent your first proposal · a dash of Motion is unlocked.',
     reward: 'Motion theme is now available in Settings → Appearance',
     unlocksTheme: 'motion',
   },
   {
     key: 'lens_theme',
     title: 'Lens theme',
-    description: 'You logged 10 hours of work -- a fresh perspective is unlocked.',
+    description: 'You logged 10 hours of work · a fresh perspective is unlocked.',
     reward: 'Lens theme is now available in Settings → Appearance',
     unlocksTheme: 'lens',
   },
   {
     key: 'scale_theme',
     title: 'Scale theme',
-    description: 'You got your first invoice paid -- growing momentum is unlocked.',
+    description: 'You got your first invoice paid · growing momentum is unlocked.',
     reward: 'Scale theme is now available in Settings → Appearance',
     unlocksTheme: 'scale',
   },
@@ -115,7 +115,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
 ];
 
-// Unused -- kept as internal helper for future use
+// Unused · kept as internal helper for future use
 function getAchievementByKey(key: AchievementKey): Achievement | undefined {
   return ACHIEVEMENTS.find((a) => a.key === key);
 }

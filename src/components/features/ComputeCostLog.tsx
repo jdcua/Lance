@@ -1,5 +1,5 @@
 /**
- * Compute Cost Log -- AI Engineer feature.
+ * Compute Cost Log · AI Engineer feature.
  * Track compute costs with provider, instance type, hours, cost, and date.
  */
 import { useState, useEffect } from 'react';

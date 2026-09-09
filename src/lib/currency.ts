@@ -14,6 +14,23 @@ export function getCurrencySymbol(code: string): string {
   return CURRENCY_SYMBOLS[code] || code;
 }
 
+export type CurrencyCode = (typeof CURRENCIES)[number];
+
+/** Best-guess default currency from the browser locale. Falls back to CAD. */
+export function defaultCurrency(): CurrencyCode {
+  try {
+    const lang = typeof navigator !== 'undefined' ? navigator.language || '' : '';
+    if (/^en-GB/i.test(lang)) return 'GBP';
+    if (/^en-AU/i.test(lang)) return 'AUD';
+    if (/^en-US/i.test(lang)) return 'USD';
+    if (/^(de|fr|es|it|nl|pt|el|fi|ga)(-|$)/i.test(lang)) return 'EUR';
+    if (/^en-CA/i.test(lang)) return 'CAD';
+  } catch {
+    /* private mode or no navigator */
+  }
+  return 'CAD';
+}
+
 export function getInvoiceCurrency(
   invoice: Invoice,
   client: Client,

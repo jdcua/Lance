@@ -20,12 +20,12 @@ export const auth = {
   // Return type is number | string to handle both v1 and v2.
   getUserId: (): number | string => 1,
 
-  // isAuthenticated(): Always true in v1 -- there is no auth gate.
+  // isAuthenticated(): Always true in v1 · there is no auth gate.
   // In v2: checks Supabase session validity and returns
   // true only if there's a valid, non-expired session.
   isAuthenticated: (): boolean => true,
 
-  // signOut(): No-op in v1 -- there's nowhere to sign out from.
+  // signOut(): No-op in v1 · there's nowhere to sign out from.
   // In v2: calls supabase.auth.signOut(), then
   // clears local state and redirects to the auth/login screen.
   signOut: async (): Promise<void> => {},

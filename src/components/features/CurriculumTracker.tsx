@@ -1,5 +1,5 @@
 /**
- * Curriculum Tracker -- Tutor feature.
+ * Curriculum Tracker · Tutor feature.
  * Ordered list of curriculum items with status badges and up/down reorder.
  */
 import { useState, useEffect } from 'react';

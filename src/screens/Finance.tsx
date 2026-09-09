@@ -5,9 +5,10 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import Modal from '../components/ui/Modal';
-import { formatCurrency, formatDate, formatMonth, parseDateString } from '../utils/format';
+import { formatCurrency, formatDate, formatMonth, parseDateString, DAY_MS } from '../utils/format';
 import { getCurrencySymbol } from '../lib/currency';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import BankImportModal from '../components/features/BankImportModal';
 import TaxPack from '../components/features/TaxPack';
 import RetainerBurnDown from '../components/features/RetainerBurnDown';
 import { useToasts } from '../store/toastStore';
@@ -25,7 +26,7 @@ import {
   applyScenario,
   type ScenarioParams,
 } from '../lib/forecast';
-import { Plus, Pencil, Trash2, BarChart3, TrendingUp, AlertTriangle, Check, DollarSign, ArrowUpDown, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, Pencil, Trash2, BarChart3, TrendingUp, AlertTriangle, Check, DollarSign, ArrowUpDown, ChevronUp, ChevronDown, Upload } from 'lucide-react';
 
 const categories = ['Software', 'Equipment', 'Office', 'Travel', 'Marketing', 'Taxes', 'Other'];
 
@@ -35,6 +36,7 @@ export default function Finance() {
   const currency = profile?.currency;
   const fmt = (amount: number) => formatCurrency(amount, currency);
   const [showModal, setShowModal] = useState(false);
+  const [showBankImport, setShowBankImport] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; description: string } | null>(null);
@@ -192,10 +194,10 @@ export default function Finance() {
 
   if (loading) return (
     <div className="p-6">
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />)}
       </div>
-      <div className="grid grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div className="h-48 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />
         <div className="h-48 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />
       </div>
@@ -253,12 +255,12 @@ export default function Finance() {
             <div className="mb-4 px-3 py-2 rounded-[8px] bg-[var(--info-bg)] border border-[var(--info)]/20 flex items-start gap-2 text-xs">
               <span className="text-[var(--info)] mt-px flex-shrink-0">ⓘ</span>
               <span className="text-[var(--text-secondary)]">
-                Your finances include invoices in multiple currencies. Amounts are shown in their original currency -- totals may not reflect actual value.
+                Your finances include invoices in multiple currencies. Amounts are shown in their original currency · totals may not reflect actual value.
               </span>
             </div>
           )}
 
-          <div className="grid grid-cols-4 gap-3 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
             <MetricCard label="Revenue (Paid)" value={hasMixedCurrencies
               ? Object.entries(revenueByCurrency).map(([cur, amt]) => `${formatCurrency(amt, cur)} ${cur}`).join(' · ')
               : fmt(totalPaidRevenue)
@@ -282,7 +284,7 @@ export default function Finance() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <Card>
               <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Monthly Overview{hasMixedCurrencies ? ' (profile currency)' : ''}</h3>
               {allMonths.length === 0 ? (
@@ -333,10 +335,16 @@ export default function Finance() {
 
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">Expenses</h3>
-            <Button onClick={openNew} size="sm">
-              <Plus size={14} />
-              Add Expense
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" onClick={() => setShowBankImport(true)} size="sm">
+                <Upload size={14} />
+                Import bank CSV
+              </Button>
+              <Button onClick={openNew} size="sm">
+                <Plus size={14} />
+                Add Expense
+              </Button>
+            </div>
           </div>
 
           {expenses.length === 0 ? (
@@ -416,7 +424,7 @@ export default function Finance() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* PANEL 1 -- Revenue Forecast */}
+            {/* PANEL 1 · Revenue Forecast */}
             <Card>
               <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Revenue Forecast</h3>
               <p className="text-xs text-[var(--text-tertiary)] mb-4">Projected revenue based on recurring invoices, milestones, sent invoices, and historical trends.</p>
@@ -451,7 +459,7 @@ export default function Finance() {
               </div>
             </Card>
 
-            {/* PANEL 2 -- Expense Forecast */}
+            {/* PANEL 2 · Expense Forecast */}
             <Card>
               <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Expense Forecast</h3>
               <p className="text-xs text-[var(--text-tertiary)] mb-4">Projected expenses based on known recurring expenses and historical averages.</p>
@@ -481,7 +489,7 @@ export default function Finance() {
             </Card>
           </div>
 
-          {/* PANEL 3 -- Cash Flow Projection */}
+          {/* PANEL 3 · Cash Flow Projection */}
           <Card className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <div>
@@ -519,7 +527,7 @@ export default function Finance() {
             </div>
           </Card>
 
-          {/* PANEL 4 -- Scenario Modeling */}
+          {/* PANEL 4 · Scenario Modeling */}
           <Card className="mb-6">
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Scenario Modeling</h3>
             <p className="text-xs text-[var(--text-tertiary)] mb-4">Adjust sliders to see how changes affect projections. All values are estimates.</p>
@@ -719,6 +727,7 @@ export default function Finance() {
         message={`Are you sure you want to delete "${confirmDelete?.description}"? This cannot be undone.`}
         loading={deleting}
       />
+      <BankImportModal open={showBankImport} onClose={() => setShowBankImport(false)} />
       <ArchetypeFeatureTabs screen="finance" />
     </div>
   );
@@ -740,7 +749,7 @@ function getBucket(dueDate: string | undefined): AgingBucket {
   now.setHours(0, 0, 0, 0);
   const due = parseDateString(dueDate);
   due.setHours(0, 0, 0, 0);
-  const diffDays = Math.floor((now.getTime() - due.getTime()) / 86400000);
+  const diffDays = Math.floor((now.getTime() - due.getTime()) / DAY_MS);
   if (diffDays < 0) return 'current';
   if (diffDays <= 30) return '1-30';
   if (diffDays <= 60) return '31-60';
@@ -806,7 +815,7 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
       if (remaining <= 0) return null;
       const bucket = getBucket(inv.due_date);
       const daysOverdue = inv.due_date
-        ? Math.floor((new Date().getTime() - parseDateString(inv.due_date).getTime()) / 86400000)
+        ? Math.floor((new Date().getTime() - parseDateString(inv.due_date).getTime()) / DAY_MS)
         : 0;
       return {
         invoice: inv,
@@ -1054,7 +1063,7 @@ function relativeDate(iso: string): string {
   const date = parseDateString(iso);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / 86400000);
+  const diffDays = Math.floor(diffMs / DAY_MS);
   if (diffDays === 0) return 'today';
   if (diffDays === 1) return 'yesterday';
   if (diffDays < 7) return `${diffDays}d ago`;

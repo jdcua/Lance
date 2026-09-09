@@ -3,6 +3,9 @@ import { X, CreditCard, Calendar, Check } from 'lucide-react';
 import { useStore } from '../../store';
 import { useToasts } from '../../store/toastStore';
 import { openCheckout } from '../../utils/tauri';
+import { getTrialValue, computeProRoi, type TrialValueSummary } from '../../utils/trialValue';
+import { recordTelemetry } from '../../utils/telemetry';
+import { formatCurrency } from '../../utils/format';
 import Button from '../ui/Button';
 import type { LicenseTier } from '../../lib/constants';
 
@@ -19,11 +22,16 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
   const [loading, setLoading] = useState<string | null>(null);
   const [currentTier, setCurrentTier] = useState<LicenseTier>('free');
   const [checkoutNotice, setCheckoutNotice] = useState('');
+  const [trialValue, setTrialValue] = useState<TrialValueSummary | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setCurrentTier(getActiveTier());
-  }, [getActiveTier]);
+    if (isOpen) {
+      setTrialValue(getTrialValue());
+      recordTelemetry('upgrade_modal_open', { trigger: triggerFeature || 'direct' });
+    }
+  }, [getActiveTier, isOpen, triggerFeature]);
 
   // Escape closes the modal; Tab stays trapped inside.
   useEffect(() => {
@@ -221,6 +229,30 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
 
         {checkoutNotice && (
           <p className="text-[11px] text-[var(--warning-text)] mt-4 text-center">{checkoutNotice}</p>
+        )}
+
+        {trialValue && trialValue.total > 0 && currentTier === 'trial' && (
+          <div className="mt-4 p-4 rounded-[12px] bg-[var(--accent-bg)] border border-[var(--accent)]/30">
+            <p className="text-sm font-semibold text-[var(--text-primary)]">
+              Pro has already earned you {formatCurrency(trialValue.total)}
+              {(() => {
+                const roi = computeProRoi(trialValue.total);
+                return roi.multiple !== null && roi.multiple >= 1
+                  ? `, ${roi.multiple}x its price`
+                  : '';
+              })()}
+            </p>
+            <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">
+              {[
+                trialValue.changeOrders > 0 ? `change orders ${formatCurrency(trialValue.changeOrders)}` : '',
+                trialValue.lateFees > 0 ? `late fees ${formatCurrency(trialValue.lateFees)}` : '',
+                trialValue.topUps > 0 ? `top-ups ${formatCurrency(trialValue.topUps)}` : '',
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+              {' '}in your trial so far. One change order typically covers months of Pro.
+            </p>
+          </div>
         )}
 
         {/* Current status */}

@@ -1,5 +1,5 @@
 /**
- * Audit Tracker -- Cybersecurity feature.
+ * Audit Tracker · Cybersecurity feature.
  * Wrapper alias for AuditFindingLog (blockchain audit findings table).
  */
 import AuditFindingLog from './AuditFindingLog';

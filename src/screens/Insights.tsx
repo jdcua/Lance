@@ -5,7 +5,7 @@ import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import ProgressBar from '../components/ui/ProgressBar';
 import Sparkline from '../components/ui/Sparkline';
-import { formatCurrency } from '../utils/format';
+import { formatCurrency, DAY_MS } from '../utils/format';
 import { useToasts } from '../store/toastStore';
 import { Lightbulb, BarChart3, TrendingUp, TrendingDown, Minus, Star } from 'lucide-react';
 import { getArchetype } from '../archetypes';
@@ -47,7 +47,7 @@ export default function Insights() {
   const hoursThisWeek = timeEntries.filter((t) => {
     const d = new Date(t.start_time);
     const now = new Date();
-    const weekAgo = new Date(now.getTime() - 7 * 86400000);
+    const weekAgo = new Date(now.getTime() - 7 * DAY_MS);
     return d >= weekAgo;
   }).reduce((sum, t) => sum + (t.duration_minutes || 0), 0);
 
@@ -89,10 +89,10 @@ export default function Insights() {
   if (!loaded) return (
     <div className="p-6">
       <div className="h-6 w-48 bg-[var(--bg-secondary)] rounded skeleton-pulse mb-6" />
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />)}
       </div>
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="h-48 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />
         <div className="h-48 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />
       </div>
@@ -118,14 +118,14 @@ export default function Insights() {
     <div className="p-6">
       <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-6">{archetype.insights.headline}</h2>
 
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <MetricCard label="Active Projects" value={activeProjects} subtext={`${completedProjects} completed`} color="gray" />
         <MetricCard label="Total Revenue" value={formatCurrency(totalPaid, profile?.currency)} subtext={`${invoices.filter((i) => i.status === 'paid').length} paid invoices`} trend="up" color="green" />
         <MetricCard label="Outstanding" value={formatCurrency(totalOutstanding, profile?.currency)} subtext={overdueInvoices > 0 ? `${overdueInvoices} overdue` : 'all current'} trend={overdueInvoices > 0 ? 'down' : 'neutral'} color={overdueInvoices > 0 ? 'red' : 'amber'} />
         <MetricCard label="Win Rate" value={`${winRate}%`} subtext={`${proposalsAccepted}/${proposalsResolved} resolved`} trend={winRate >= 50 ? 'up' : 'down'} color={winRate >= 50 ? 'green' : 'gray'} />
       </div>
 
-      <div className="grid grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Project Health */}
         {!hiddenPanels.includes('project-health') && (
           <Card>
@@ -188,7 +188,7 @@ export default function Insights() {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Top Clients */}
         {!hiddenPanels.includes('top-clients') && (
           <Card>
@@ -263,7 +263,7 @@ export default function Insights() {
               <Star size={32} className="text-[var(--text-tertiary)] mb-3" />
               <h4 className="text-sm font-medium text-[var(--text-secondary)] mb-1">No client metrics yet</h4>
               <p className="text-xs text-[var(--text-tertiary)] max-w-sm leading-relaxed">
-                Define custom metrics on any client profile and mark them as "Headline" to see them here. Track CPM, ROAS, story points, revision rounds -- whatever matters to your craft.
+                Define custom metrics on any client profile and mark them as "Headline" to see them here. Track CPM, ROAS, story points, revision rounds · whatever matters to your craft.
               </p>
             </Card>
           ) : (

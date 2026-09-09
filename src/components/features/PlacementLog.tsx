@@ -1,5 +1,5 @@
 /**
- * Placement Log -- Recruiter feature.
+ * Placement Log · Recruiter feature.
  * Track placements with candidate name, role, company, fee, and status.
  * Shows total fees at top.
  */

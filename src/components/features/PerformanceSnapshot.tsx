@@ -1,5 +1,5 @@
 /**
- * Performance Snapshot -- channel performance with auto-calculated ROAS and channel badges.
+ * Performance Snapshot · channel performance with auto-calculated ROAS and channel badges.
  */
 import { useState, useEffect } from 'react';
 import { getDb } from '../../db';

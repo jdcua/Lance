@@ -51,7 +51,7 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
           .filter((line: string) => line.length > 0) || [],
       }));
   } catch {
-    /* GitHub API failed -- fall through to git log */
+    /* GitHub API failed · fall through to git log */
   }
 
   // 3. Fallback: parse local git tags (dev mode, Tauri only)
@@ -107,7 +107,7 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
     ];
   }
 
-  // Ensure the installed app version always has a changelog entry -- a stale
+  // Ensure the installed app version always has a changelog entry · a stale
   // cache (or an older GitHub release list) must not make the "What's new"
   // modal show older notes than the running build.
   entries = await ensureRuntimeVersion(entries);

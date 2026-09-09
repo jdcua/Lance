@@ -1,5 +1,5 @@
 /**
- * Assessment Log -- Trainer feature.
+ * Assessment Log · Trainer feature.
  * Timeline list of assessments with date, metrics, and notes.
  */
 import { useState, useEffect } from 'react';

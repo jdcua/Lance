@@ -1,5 +1,5 @@
 /**
- * Software Subscription Tracker -- 3D Artist / General finance feature.
+ * Software Subscription Tracker · 3D Artist / General finance feature.
  * Lists expenses with category "Software" from the expenses table.
  * Shows monthly total and an inline expense form.
  */

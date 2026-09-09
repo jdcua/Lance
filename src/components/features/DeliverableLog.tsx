@@ -1,5 +1,5 @@
 /**
- * Deliverable Log -- Animator feature.
+ * Deliverable Log · Animator feature.
  * Tracks project deliverables with format, resolution, approval status.
  */
 import { useState, useEffect } from 'react';

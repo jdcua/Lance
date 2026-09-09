@@ -1,5 +1,5 @@
 /**
- * Brand Voice Notes -- Copywriter feature.
+ * Brand Voice Notes · Copywriter feature.
  * Single brand voice record per client with save-in-place editing.
  */
 import { useState, useEffect } from 'react';

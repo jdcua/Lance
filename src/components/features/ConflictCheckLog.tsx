@@ -1,5 +1,5 @@
 /**
- * Conflict Check Log -- Legal feature.
+ * Conflict Check Log · Legal feature.
  * List of conflict checks with result badges.
  */
 import { useState, useEffect } from 'react';

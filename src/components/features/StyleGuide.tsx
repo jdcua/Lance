@@ -1,5 +1,5 @@
 /**
- * Style Guide -- Writer feature.
+ * Style Guide · Writer feature.
  * Per-client style guide with tone, formatting rules, banned words, and reference.
  * One record per client. Edit-in-place.
  */

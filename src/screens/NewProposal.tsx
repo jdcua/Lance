@@ -7,6 +7,7 @@ import RichEditor from '../components/ui/RichEditor';
 import ClientSelect from '../components/ui/ClientSelect';
 import { textToHtml } from '../utils/textToHtml';
 import { formatDate } from '../utils/format';
+import { getCurrencySymbol } from '../lib/currency';
 import { ArrowLeft, Sparkles, X, AlertTriangle, Clock } from 'lucide-react';
 import { generateProposalBody, checkScopeWarnings, type ScopeWarning } from '../ai/proposalGenerator';
 import { useToasts } from '../store/toastStore';
@@ -150,7 +151,7 @@ export default function NewProposal() {
 
   const activeWarnings = warnings.filter((w) => !dismissedWarnings.has(w.pattern));
 
-  const currencySymbol = profile?.currency === 'USD' || profile?.currency === 'CAD' || profile?.currency === 'AUD' ? '$' : profile?.currency === 'EUR' ? '€' : profile?.currency === 'GBP' ? '£' : '$';
+  const currencySymbol = getCurrencySymbol(profile?.currency || 'CAD');
 
   if (loading) return <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>
 

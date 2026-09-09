@@ -1,5 +1,5 @@
 /**
- * Deliverable Specs -- Filmmaker feature.
+ * Deliverable Specs · Filmmaker feature.
  * Single-record-per-project deliverable specification form.
  */
 import { useState, useEffect } from 'react';

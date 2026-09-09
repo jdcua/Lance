@@ -120,7 +120,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
 
     clients.forEach((c) => {
       if ((c.name || '').toLowerCase().includes(q) || (c.company || '').toLowerCase().includes(q)) {
-        items.push({ id: c.id, label: c.name, sublabel: 'Client' + (c.company ? ` -- ${c.company}` : ''), type: 'client', path: `/clients` });
+        items.push({ id: c.id, label: c.name, sublabel: 'Client' + (c.company ? ` · ${c.company}` : ''), type: 'client', path: `/clients` });
       }
     });
     proposals.forEach((p) => {
@@ -151,7 +151,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
         items.push({
           id: t.id,
           label: t.description || 'No description',
-          sublabel: `${projectName} -- ${formatDateShort(t.start_time)} · ${t.duration_minutes ? formatDuration(t.duration_minutes) : 'In progress'}`,
+          sublabel: `${projectName} · ${formatDateShort(t.start_time)} · ${t.duration_minutes ? formatDuration(t.duration_minutes) : 'In progress'}`,
           type: 'time_entry',
           path: '/time',
         });

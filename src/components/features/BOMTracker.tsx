@@ -1,5 +1,5 @@
 /**
- * BOM Tracker -- Embedded feature.
+ * BOM Tracker · Embedded feature.
  * Bill of materials list with total cost summary.
  */
 import { useState, useEffect } from 'react';

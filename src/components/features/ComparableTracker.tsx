@@ -1,5 +1,5 @@
 /**
- * Comparable Tracker -- Real Estate feature.
+ * Comparable Tracker · Real Estate feature.
  * Track comparable sales with address, price, date, sqft, beds, baths.
  */
 import { useState, useEffect } from 'react';

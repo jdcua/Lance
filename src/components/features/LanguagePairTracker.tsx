@@ -1,5 +1,5 @@
 /**
- * Language Pair Tracker -- Translator feature.
+ * Language Pair Tracker · Translator feature.
  * Multi-select language pairs per project with common pair suggestions and custom entry.
  */
 import { useState, useEffect } from 'react';

@@ -39,7 +39,7 @@ export async function parseSpreadsheet(file: File): Promise<ImportDetection> {
       fileType: 'spreadsheet',
       detectedEntity: 'unknown',
       confidence: 0,
-      preview: { summary: 'Empty spreadsheet -- no sheets found.' },
+      preview: { summary: 'Empty spreadsheet · no sheets found.' },
     };
   }
 
@@ -52,7 +52,7 @@ export async function parseSpreadsheet(file: File): Promise<ImportDetection> {
       fileType: 'spreadsheet',
       detectedEntity: 'unknown',
       confidence: 0,
-      preview: { summary: 'Empty spreadsheet -- no data rows found.' },
+      preview: { summary: 'Empty spreadsheet · no data rows found.' },
     };
   }
 
@@ -73,8 +73,8 @@ export async function parseSpreadsheet(file: File): Promise<ImportDetection> {
   const columnMapping = suggestColumnMapping(headers, detectedEntity);
 
   let summary = confidence >= 0.25
-    ? `Detected: ${entityTypeLabel(detectedEntity)} -- ${limitedData.length} row${limitedData.length !== 1 ? 's' : ''} found with ${headers.length} columns`
-    : `${limitedData.length} row${limitedData.length !== 1 ? 's' : ''} with ${headers.length} columns -- could not confidently classify`;
+    ? `Detected: ${entityTypeLabel(detectedEntity)} · ${limitedData.length} row${limitedData.length !== 1 ? 's' : ''} found with ${headers.length} columns`
+    : `${limitedData.length} row${limitedData.length !== 1 ? 's' : ''} with ${headers.length} columns · could not confidently classify`;
 
   if (truncated) {
     summary += ` (import limited to ${MAX_ROWS} rows)`;

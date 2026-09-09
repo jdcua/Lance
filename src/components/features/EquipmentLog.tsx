@@ -88,7 +88,7 @@ export default function EquipmentLog({ projectId }: { projectId: string }) {
           <select value={form.shoot_id} onChange={(e) => setForm({ ...form, shoot_id: e.target.value })} className={inputClass}>
             <option value="">Shoot (optional)...</option>
             {projectShoots.map((s) => (
-              <option key={s.id} value={s.id}>{s.shoot_date?.split('T')[0] || s.id} -- {s.location || ''}</option>
+              <option key={s.id} value={s.id}>{s.shoot_date?.split('T')[0] || s.id} · {s.location || ''}</option>
             ))}
           </select>
           <input type="text" placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className={inputClass} />

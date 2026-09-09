@@ -1,5 +1,5 @@
 /**
- * Budget vs Actual Tracker -- category-based budget comparison with variance display.
+ * Budget vs Actual Tracker · category-based budget comparison with variance display.
  */
 import { useState, useEffect } from 'react';
 import { getDb } from '../../db';

@@ -1,5 +1,5 @@
 /**
- * Content Calendar -- Social Media Manager feature.
+ * Content Calendar · Social Media Manager feature.
  * Calendar grid for content posts with list view toggle and platform filter.
  */
 import { useState, useEffect } from 'react';

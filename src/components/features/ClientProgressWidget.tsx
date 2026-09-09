@@ -1,5 +1,5 @@
 /**
- * Client Progress Widget -- Trainer feature.
+ * Client Progress Widget · Trainer feature.
  * Simple timeline list with most recent measurement prominently displayed.
  */
 import { useState, useEffect } from 'react';

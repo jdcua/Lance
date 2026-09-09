@@ -1,5 +1,5 @@
 /**
- * Prototype Tracker -- UX Designer feature.
+ * Prototype Tracker · UX Designer feature.
  * Table display of prototypes with tool, fidelity, auto-incrementing iterations, and clickable links.
  */
 import { useState, useEffect } from 'react';

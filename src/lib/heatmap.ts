@@ -1,4 +1,5 @@
 import type { TimeEntry } from '../types';
+import { DAY_MS } from '../utils/format';
 
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAY_NAMES_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -72,7 +73,7 @@ export function getIntensityColor(hours: number): string {
 
 export function formatTooltip(cell: HeatmapCell): string {
   const d = cell.date;
-  return `${DAY_NAMES_FULL[d.getDay()]} ${MONTHS_SHORT[d.getMonth()]} ${d.getDate()} -- ${cell.hours.toFixed(1)}h logged (${cell.billableHours.toFixed(1)}h billable)`;
+  return `${DAY_NAMES_FULL[d.getDay()]} ${MONTHS_SHORT[d.getMonth()]} ${d.getDate()} · ${cell.hours.toFixed(1)}h logged (${cell.billableHours.toFixed(1)}h billable)`;
 }
 
 function getFirstSunday(year: number): Date {
@@ -104,7 +105,7 @@ export function computeHeatmapGrid(
   const endDate = new Date(year, 11, 31);
   const lastDate = endDate > now ? now : endDate;
 
-  const totalDays = Math.ceil((lastDate.getTime() - startDate.getTime()) / 86400000) + 1;
+  const totalDays = Math.ceil((lastDate.getTime() - startDate.getTime()) / DAY_MS) + 1;
   const numWeeks = Math.ceil(totalDays / 7);
 
   const grid: HeatmapCell[][] = [];
@@ -174,7 +175,7 @@ export function computeStreakStats(
     } else {
       const prev = parseLocalDateKey(yearDates[i - 1]);
       const curr = parseLocalDateKey(yearDates[i]);
-      const diff = (curr.getTime() - prev.getTime()) / 86400000;
+      const diff = (curr.getTime() - prev.getTime()) / DAY_MS;
       if (diff <= 1.1) {
         streak++;
       } else {

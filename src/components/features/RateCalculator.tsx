@@ -1,5 +1,5 @@
 /**
- * Rate Calculator -- Pure computation UI.
+ * Rate Calculator · Pure computation UI.
  * Calculates required hourly rate and compares against profile rate.
  */
 import { useState, useEffect } from 'react';

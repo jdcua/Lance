@@ -1,5 +1,5 @@
 /**
- * Rate Benchmarking -- Writer feature.
+ * Rate Benchmarking · Writer feature.
  * Computes per-word rate trends from time_entry_words + time_entries + invoices.
  */
 import { useState, useEffect } from 'react';

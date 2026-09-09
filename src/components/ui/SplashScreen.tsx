@@ -100,7 +100,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
         <div className="border-t border-[var(--border-color)] my-5" />
 
         <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-3">
-          Core is free forever. Pro adds archetype depth -- proposals, contracts, invoices, scope-creep protection.
+          Core is free forever. Pro adds archetype depth · proposals, contracts, invoices, scope-creep protection.
         </p>
 
         <div className="flex items-center justify-center gap-3 mb-6">

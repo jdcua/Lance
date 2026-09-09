@@ -1,5 +1,5 @@
 /**
- * Reconciliation Tracker -- Accountant feature.
+ * Reconciliation Tracker · Accountant feature.
  * List of account reconciliations with status badges.
  */
 import { useState, useEffect } from 'react';

@@ -1,12 +1,12 @@
 /**
- * Dependency Tracker -- Project Manager feature.
+ * Dependency Tracker · Project Manager feature.
  * Shows milestones with dependency visualization. Uses existing milestones from store.
  */
 import { useState, useEffect, useMemo } from 'react';
 import { useStore } from '../../store';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
-import { Plus, Trash2, ArrowRight, CheckCircle2, Circle } from 'lucide-react';
+import { Plus, Trash2, ArrowRight, CheckCircle2, Circle, DollarSign } from 'lucide-react';
 
 type MilestoneWithDeps = {
   id: string;
@@ -187,7 +187,9 @@ export default function DependencyTracker({ projectId }: { projectId: string }) 
                     </span>
                   )}
                   {m.invoice_on_completion && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#9B59B6]/15 text-[#9B59B6]">$</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#9B59B6]/15 text-[#9B59B6]" title="Invoices on completion">
+                      <DollarSign size={10} className="inline" />
+                    </span>
                   )}
                 </div>
                 <button onClick={() => handleDelete(m.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">

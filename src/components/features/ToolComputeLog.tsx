@@ -1,5 +1,5 @@
 /**
- * Tool Compute Log -- Data Analyst feature.
+ * Tool Compute Log · Data Analyst feature.
  * Focused list of compute costs for data tools, same table as ComputeCostLog.
  */
 import { useState, useEffect } from 'react';

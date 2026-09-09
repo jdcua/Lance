@@ -1,5 +1,5 @@
 /**
- * Image handler -- generates thumbnails and metadata for image imports.
+ * Image handler · generates thumbnails and metadata for image imports.
  * Images are always classified as 'attachment'.
  */
 
@@ -41,7 +41,7 @@ export async function parseImage(file: File): Promise<ImportDetection> {
         detectedEntity: 'attachment',
         confidence: 1,
         preview: {
-          summary: `Image: ${img.width}×${img.height}px -- ${sizeMB} MB`,
+          summary: `Image: ${img.width}×${img.height}px · ${sizeMB} MB`,
           imageDataUrl,
           imageDimensions: { width: img.width, height: img.height },
         },
@@ -56,7 +56,7 @@ export async function parseImage(file: File): Promise<ImportDetection> {
         detectedEntity: 'attachment',
         confidence: 1,
         preview: {
-          summary: `Image file -- could not generate preview`,
+          summary: `Image file · could not generate preview`,
         },
       });
     };

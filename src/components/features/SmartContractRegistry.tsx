@@ -1,5 +1,5 @@
 /**
- * Smart Contract Registry -- Blockchain feature.
+ * Smart Contract Registry · Blockchain feature.
  * List of deployed contracts with clickable address.
  */
 import { useState, useEffect } from 'react';

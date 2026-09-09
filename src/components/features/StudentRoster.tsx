@@ -1,5 +1,5 @@
 /**
- * Student Roster -- Tutor feature.
+ * Student Roster · Tutor feature.
  * Simple list of students per client with inline editing.
  */
 import { useState, useEffect } from 'react';

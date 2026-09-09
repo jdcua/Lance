@@ -11,7 +11,7 @@ import {
 import { generateFollowUpDraft, generateSubjectLine, TEMPLATE_LABELS, openMailTo, resolveDunningTone, type DunningTone } from '../utils/followUpTemplates';
 import { computeLateFee, lateFeeParagraph } from '../utils/lateFees';
 import { getFeatureFlags } from '../lib/constants';
-import { formatCurrency, relativeDate, parseDateString } from '../utils/format';
+import { formatCurrency, relativeDate, parseDateString, DAY_MS } from '../utils/format';
 
 type Tab = 'pending' | 'sent' | 'dismissed' | 'all';
 type Filter = 'all' | 'proposal' | 'invoice';
@@ -87,7 +87,7 @@ export default function FollowUps() {
         const p = getProposal(log.entity_id);
         proposalTitle = p?.title;
         const sentDate = p?.sent_at ? new Date(p.sent_at) : new Date();
-        daysElapsed = Math.floor((Date.now() - sentDate.getTime()) / 86400000);
+        daysElapsed = Math.floor((Date.now() - sentDate.getTime()) / DAY_MS);
         if (log.stage === 1) templateKey = 'proposal_day3';
         else if (log.stage === 2) templateKey = 'proposal_day7';
         else templateKey = 'proposal_day14';
@@ -97,7 +97,7 @@ export default function FollowUps() {
         amount = inv ? formatCurrency(inv.total) : undefined;
         dueDate = inv?.due_date;
         if (inv?.due_date) {
-          daysElapsed = Math.floor((Date.now() - parseDateString(inv.due_date).getTime()) / 86400000);
+          daysElapsed = Math.floor((Date.now() - parseDateString(inv.due_date).getTime()) / DAY_MS);
         }
         if (log.stage === 1) templateKey = 'invoice_day1';
         else if (log.stage === 2) templateKey = 'invoice_day7';
@@ -447,7 +447,7 @@ export default function FollowUps() {
           {pendingFiltered.some((f) => !f.clientEmail) && (
             <div className="flex items-start gap-2 p-3 rounded-[8px] bg-[var(--warning-bg)] text-[var(--warning-text)] text-xs">
               <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
-              <span>{pendingFiltered.filter((f) => !f.clientEmail).length} follow-up(s) skipped -- no email on file.</span>
+              <span>{pendingFiltered.filter((f) => !f.clientEmail).length} follow-up(s) skipped · no email on file.</span>
             </div>
           )}
           <div className="flex justify-end gap-2">

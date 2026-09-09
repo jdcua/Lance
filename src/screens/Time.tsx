@@ -462,7 +462,7 @@ export default function TimeScreen() {
       ) : (
         /* ── Heatmap tab ── */
         <>
-          {/* SECTION 2 -- Streak Stats + SECTION 5 -- Project Filter */}
+          {/* SECTION 2 · Streak Stats + SECTION 5 · Project Filter */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <button
@@ -522,7 +522,7 @@ export default function TimeScreen() {
             />
           </div>
 
-          {/* SECTION 1 -- Annual Heatmap */}
+          {/* SECTION 1 · Annual Heatmap */}
           <Card className="mb-6">
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Activity Heatmap</h3>
             <p className="text-xs text-[var(--text-tertiary)] mb-4">{streakStats.totalDays} day{streakStats.totalDays !== 1 ? 's' : ''} with logged time</p>
@@ -649,7 +649,7 @@ export default function TimeScreen() {
             </div>
           </Card>
 
-          {/* SECTION 3 -- Day of Week Breakdown */}
+          {/* SECTION 3 · Day of Week Breakdown */}
           <Card className="mb-6">
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Day of Week</h3>
             <p className="text-xs text-[var(--text-tertiary)] mb-4">Average hours per day of the week</p>
@@ -675,7 +675,7 @@ export default function TimeScreen() {
             </div>
           </Card>
 
-          {/* SECTION 4 -- Hour of Day Heatmap */}
+          {/* SECTION 4 · Hour of Day Heatmap */}
           <Card>
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Hour of Day</h3>
             <p className="text-xs text-[var(--text-tertiary)] mb-4">When you clock in across the week</p>
@@ -713,7 +713,7 @@ export default function TimeScreen() {
                           <div
                             key={hourIdx}
                             className="rounded-sm"
-                            title={`${DAY_NAMES[cell.dayOfWeek]} ${formatHourLabel(cell.hour)} -- ${cell.count} entr${cell.count !== 1 ? 'ies' : 'y'}`}
+                            title={`${DAY_NAMES[cell.dayOfWeek]} ${formatHourLabel(cell.hour)} · ${cell.count} entr${cell.count !== 1 ? 'ies' : 'y'}`}
                             style={{
                               width: '18px',
                               height: '14px',

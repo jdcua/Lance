@@ -1,5 +1,5 @@
 /**
- * SLA Tracker -- DevOps feature.
+ * SLA Tracker · DevOps feature.
  * Track service-level agreements with metric name, target, actual, and status indicator.
  */
 import { useState, useEffect } from 'react';

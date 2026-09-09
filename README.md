@@ -2,7 +2,14 @@
 
 Lance is a desktop app that runs your entire freelance business: clients, projects, proposals, contracts, time tracking, invoices, expenses, and financial insights, all in one place. Everything lives on your machine. No cloud, no subscription, no vendor lock-in. Built for freelancers who want to own their data and their tools.
 
-Built by [Placeholder Labs Incorporated Limited](https://placeholderlabsincorporatedlimited.yabbadabbadoo).
+Built by [Placeholder Labs Incorporated Limited](https://github.com/jdcua).
+
+## Why Lance, in plain words
+
+- **Win work, then get paid for all of it.** Proposals, contracts, invoices, and reminders live in one flow, so nothing slips and late payers get chased automatically.
+- **Know your numbers cold.** Forecasts, effective hourly rate, win rates, and retainer burn-down tell you what to do next, not just what happened.
+- **Set up in a minute, guided the whole way.** Pick your craft, answer one question, and an interactive tour walks you through your first client, project, and invoice.
+- **Your business stays yours.** Offline-first, no account, no cloud. Export everything anytime. Client payments go straight to you; Lance never takes a cut.
 
 ## What's inside
 

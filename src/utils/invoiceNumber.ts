@@ -22,6 +22,7 @@ export function sanitizeInvoiceNumber(value: string): string {
   if (!value) return '';
   return value
     // Remove control chars (CR/LF/TAB/NUL etc.) and HTML-special chars first
+    // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u001f\u007f<>"'`&=]/g, '')
     // Keep only safe filename/email characters
     .replace(/[^A-Za-z0-9#./\-_:]/g, '')

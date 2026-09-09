@@ -1,5 +1,5 @@
 /**
- * Deliverable Format Log -- 3D Artist feature.
+ * Deliverable Format Log · 3D Artist feature.
  * Logs format deliverables with poly/texture specs and delivery status.
  */
 import { useState, useEffect } from 'react';

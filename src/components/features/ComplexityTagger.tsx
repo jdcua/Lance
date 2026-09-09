@@ -1,5 +1,5 @@
 /**
- * Complexity Tagger -- Data Analyst feature.
+ * Complexity Tagger · Data Analyst feature.
  * Single record per project. Complexity tier radio buttons + notes textarea, save in place.
  */
 import { useState, useEffect } from 'react';

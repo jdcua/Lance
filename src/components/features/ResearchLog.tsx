@@ -1,5 +1,5 @@
 /**
- * Research Log -- UX Designer feature.
+ * Research Log · UX Designer feature.
  * Timeline of research activities with type, date, participants, and key findings.
  */
 import { useState, useEffect } from 'react';

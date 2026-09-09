@@ -1,5 +1,5 @@
 /**
- * Sparkline -- Tiny inline SVG line chart for metric history.
+ * Sparkline · Tiny inline SVG line chart for metric history.
  * Renders a simple polyline with optional min/max/trend display.
  */
 

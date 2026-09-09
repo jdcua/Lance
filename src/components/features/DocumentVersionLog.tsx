@@ -1,5 +1,5 @@
 /**
- * Document Version Log -- Legal feature.
+ * Document Version Log · Legal feature.
  * List of document versions grouped by doc_name.
  */
 import { useState, useEffect } from 'react';

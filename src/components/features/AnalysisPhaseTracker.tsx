@@ -1,5 +1,5 @@
 /**
- * Analysis Phase Tracker -- Data Analyst feature.
+ * Analysis Phase Tracker · Data Analyst feature.
  * Thin wrapper around PhaseTracker with analysis-specific default phases.
  */
 import PhaseTracker from './PhaseTracker';

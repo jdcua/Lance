@@ -1,5 +1,5 @@
 /**
- * SOP Store -- Virtual Assistant feature.
+ * SOP Store · Virtual Assistant feature.
  * Per-client SOP cards with expand/collapse, search, add/edit/delete.
  */
 import { useState, useEffect } from 'react';

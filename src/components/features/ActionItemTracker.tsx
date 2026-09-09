@@ -1,5 +1,5 @@
 /**
- * Action Item Tracker -- Consultant feature.
+ * Action Item Tracker · Consultant feature.
  * Checklist of action items per client with owner, due date, and completion toggle.
  */
 import { useState, useEffect } from 'react';

@@ -1,5 +1,5 @@
 /**
- * Session Log -- Tutor / Wellness / Trainer / Consultant feature.
+ * Session Log · Tutor / Wellness / Trainer / Consultant feature.
  * Logs client sessions with type, duration, notes, action items, next session date.
  */
 import { useState, useEffect } from 'react';

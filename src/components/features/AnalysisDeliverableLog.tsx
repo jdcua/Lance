@@ -1,5 +1,5 @@
 /**
- * Analysis Deliverable Log -- Data Analyst feature.
+ * Analysis Deliverable Log · Data Analyst feature.
  * Track deliverables with title, type, version, delivery date, and notes.
  */
 import { useState, useEffect } from 'react';

@@ -1,5 +1,5 @@
 /**
- * Program Builder -- Trainer feature.
+ * Program Builder · Trainer feature.
  * Manage training programs with name, duration, sessions/wk, and inline editing.
  */
 import { useState, useEffect } from 'react';

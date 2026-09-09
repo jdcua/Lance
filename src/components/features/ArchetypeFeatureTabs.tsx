@@ -1,5 +1,5 @@
 /**
- * ArchetypeFeatureTabs -- renders archetype-specific feature tabs and panels.
+ * ArchetypeFeatureTabs · renders archetype-specific feature tabs and panels.
  * Reads the current archetype's features list, filters by injectInto target,
  * and renders tab-based navigation for position: 'tab' items and inline panels for 'panel' items.
  */

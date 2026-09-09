@@ -1,5 +1,5 @@
 /**
- * Service Blueprint -- service design components with frontstage/backstage mapping.
+ * Service Blueprint · service design components with frontstage/backstage mapping.
  */
 import { useState, useEffect } from 'react';
 import { getDb } from '../../db';

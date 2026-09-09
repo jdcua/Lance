@@ -1,5 +1,5 @@
 /**
- * Mood Board -- Designer feature.
+ * Mood Board · Designer feature.
  * Visual grid of references: assets from library and external URLs.
  */
 import { useState, useEffect } from 'react';

@@ -1,5 +1,5 @@
 /**
- * ColumnMapper -- Interactive column mapping UI for spreadsheet imports.
+ * ColumnMapper · Interactive column mapping UI for spreadsheet imports.
  * Shows source columns mapped to Lance entity fields with dropdowns.
  */
 

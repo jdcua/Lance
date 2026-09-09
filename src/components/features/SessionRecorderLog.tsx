@@ -1,5 +1,5 @@
 /**
- * Session Recorder Log -- Voice Actor feature.
+ * Session Recorder Log · Voice Actor feature.
  * Track recording sessions with duration and file path.
  */
 import { useState, useEffect } from 'react';

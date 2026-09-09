@@ -1,16 +1,38 @@
 # Changelog
 
+## [Unreleased]
+### Added
+- **Revenue forecasts**: 3-month projections plus a full 6-month scenario planner with cash flow and runway
+- **Know your numbers**: effective hourly rate tracking, per-client win rates, and lost-revenue totals
+- **Change orders**: extra revision rounds convert to draft invoices with one click
+- **Smart reminders**: overdue nudges rewritten in your voice, with optional late fees that add to the invoice
+- **Proposal radar**: open tracking, hot/cooling signals, and instant alerts with one-click follow-ups
+- **Tax pack**: year summary, quarterly bars, top clients, and an accountant-ready CSV
+- **Retainer burn-down**: monthly burn bars with one-click top-up invoices
+- **Trial clock**: visible countdown, friendly expired state, and an upgrade screen that shows what Pro already earned you
+- **Bank statement import**: any-bank CSV to expenses with duplicate detection
+- **Competitor switching**: one-click client import from Bonsai, HoneyBook, FreshBooks, and Wave
+- **Weekly digest**: a Monday habit card summarizing shipped, paid, and open work
+- **Get paid directly**: add bank or payment instructions once; they print on every PDF and DOCX invoice
+- **First-run checklist**: setup steps that open the real forms, plus a guided tour option
+- **Local-first telemetry**: on-device activity with a transparency panel; nothing ever uploaded
+
+### Fixed
+- Splash screen no longer vanishes mid-read; modals layer in a sane order
+- Upgrade and changelog dialogs behave with keyboard and focus
+- Finance Forecast and Contracts Templates tabs are now always reachable
+- Faster cold start with no blocking work; smoother first paint in dark mode
+- Copy pass across the app, landing page, and docs
+
 ## [0.9.3] (2026-08-07)
 ### Added
-- **Monetization layer**: Core free forever, Pro subscription ($14/mo, $120/yr), Lifetime license ($120 one-time)
-- **30-day free trial**: Full Pro access for 30 days; soft prompts days 30–37; soft free-tier lock at day 37 (created data never revoked)
-- **Cloudflare Worker license server** (`lance-license`): D1 + KV, Paddle webhook, key generation, activation (3-device cap), validation endpoint, server-side analytics counters
-- **Paddle checkout integration**: Hosted checkout via tauri-plugin-opener (browser fallback); all CTAs repointed
-- **Offline grace + legacy HMAC fallback**: Cached tier with 2-day grace; existing one-time HMAC keys stay valid as lifetime tier
-- **Feature flag system**: Per-tier flags: `archetypeDepth`, `scopeCreepProtection`, `advancedInsights` (FREE = false, TRIAL/PRO/LIFETIME = true)
-- **Archetype "wedge"**: Archetype-aware proposal types/rates, contract presets, invoice defaults, scope-creep revision caps, mandatory archetype onboarding
-- **Version dynamization**: Single `__APP_VERSION__` injected from package.json via Vite; runtime `getRuntimeVersion()` for Tauri/browser parity; Splash, changelog, "What's new" all dynamic
-- **Landing copy flip**: Core free forever messaging; Pro depth; 3-tier pricing; footer Privacy/Terms links
+- **Plans and pricing**: Core free forever, Pro subscription, one-time Lifetime license
+- **30-day free trial**: full Pro access for 30 days with a soft landing, never losing created data
+- **License activation**: online key validation with offline grace for bad connections
+- **Pro upgrade flow**: in-app plans, checkout, and license key entry
+- **Archetype depth**: profession-aware proposal types and rates, contract presets, invoice defaults, and revision caps, with mandatory archetype onboarding
+- **Live version display**: splash, changelog, and update prompts always show the real version
+- **Landing refresh**: free-forever messaging, three-tier pricing, footer links
 
 ### Changed
 - Version → **0.9.3** (internal); landing fully dynamic from GitHub release tag

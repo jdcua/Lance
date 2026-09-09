@@ -13,6 +13,10 @@ const pageTitles: Record<string, string> = {
   '/insights': 'Insights',
   '/settings': 'Settings',
   '/achievements': 'Achievements',
+  '/follow-ups': 'Follow-ups',
+  '/assets': 'Assets',
+  '/search': 'Search',
+  '/archetype': 'Archetype',
 };
 
 export default function Topbar() {

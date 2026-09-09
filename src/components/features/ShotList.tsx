@@ -1,5 +1,5 @@
 /**
- * Shot List -- Filmmaker feature.
+ * Shot List · Filmmaker feature.
  * Tracks project shots with status, scene, inline editing, and reordering.
  */
 import { useState, useEffect } from 'react';

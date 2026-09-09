@@ -1,5 +1,5 @@
 /**
- * Resource Allocation -- Project Manager feature.
+ * Resource Allocation · Project Manager feature.
  * Shows hours per week breakdown using existing time entries from store.
  */
 import { useState, useEffect, useMemo } from 'react';

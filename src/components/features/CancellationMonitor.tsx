@@ -1,5 +1,5 @@
 /**
- * Cancellation Monitor -- Wellness feature.
+ * Cancellation Monitor · Wellness feature.
  * Track session cancellations with reason, refund amount, and summary stats.
  */
 import { useState, useEffect } from 'react';

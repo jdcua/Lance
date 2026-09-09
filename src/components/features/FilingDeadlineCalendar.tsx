@@ -1,5 +1,5 @@
 /**
- * Filing Deadline Calendar -- Legal feature.
+ * Filing Deadline Calendar · Legal feature.
  * Deadlines sorted by due_date ascending with filed toggle.
  */
 import { useState, useEffect } from 'react';

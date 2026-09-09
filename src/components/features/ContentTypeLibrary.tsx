@@ -1,5 +1,5 @@
 /**
- * Content Type Library -- Copywriter feature.
+ * Content Type Library · Copywriter feature.
  * Content type definitions with category and template.
  */
 import { useState, useEffect } from 'react';

@@ -1,5 +1,5 @@
 /**
- * Commission Calculator Widget -- Thin wrapper alias.
+ * Commission Calculator Widget · Thin wrapper alias.
  */
 import CommissionCalculator from './CommissionCalculator';
 

@@ -1,4 +1,5 @@
 import Database from '@tauri-apps/plugin-sql';
+import { DAY_MS } from '../../utils/format';
 
 interface CountRow { c: number }
 interface SumRow { s: number }
@@ -62,7 +63,7 @@ export async function todaysHours(db: Database, _profileId: number): Promise<str
 
 export async function thisWeeksHours(db: Database, _profileId: number): Promise<string | number> {
   const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 86400000).toISOString();
+  const weekAgo = new Date(now.getTime() - 7 * DAY_MS).toISOString();
   const rows = await db.select<MinutesRow[]>(
     "SELECT COALESCE(SUM(duration_minutes), 0) as m FROM time_entries WHERE start_time >= $1",
     [weekAgo]
@@ -80,7 +81,7 @@ export async function activeProjectsWithHours(db: Database, _profileId: number):
     GROUP BY p.id
     ORDER BY mins DESC
     LIMIT 1
-  `, [new Date(new Date().getTime() - 7 * 86400000).toISOString()]);
+  `, [new Date(new Date().getTime() - 7 * DAY_MS).toISOString()]);
   if (!first(rows) || first(rows)!.mins === 0) return '--';
   const hrs = Math.round(first(rows)!.mins / 6) / 10;
   return `${first(rows)!.title.substring(0, 20)} (${hrs}h)`;
@@ -182,7 +183,7 @@ export async function editingVsShootRatio(db: Database, _profileId: number): Pro
 
 export async function deadlinePressure(db: Database, _profileId: number): Promise<string | number> {
   const now = new Date();
-  const weekFromNow = new Date(now.getTime() + 7 * 86400000).toISOString().split('T')[0];
+  const weekFromNow = new Date(now.getTime() + 7 * DAY_MS).toISOString().split('T')[0];
   const today = now.toISOString().split('T')[0];
   const rows = await db.select<CountRow[]>(
     "SELECT COUNT(*) as c FROM milestones WHERE due_date >= $1 AND due_date <= $2 AND completed = 0",
@@ -200,7 +201,7 @@ export async function activeRetainers(db: Database, _profileId: number): Promise
 
 export async function sessionsThisWeek(db: Database, _profileId: number): Promise<string | number> {
   const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 86400000).toISOString();
+  const weekAgo = new Date(now.getTime() - 7 * DAY_MS).toISOString();
   const rows = await db.select<CountRow[]>(
     "SELECT COUNT(*) as c FROM archetype_sessions WHERE created_at >= $1",
     [weekAgo]
@@ -260,7 +261,7 @@ export async function daysUntilNextShoot(db: Database, _profileId: number): Prom
     [new Date().toISOString().split('T')[0]]
   );
   if (!first(rows)?.d) return '--';
-  const days = Math.ceil((new Date(first(rows)!.d).getTime() - Date.now()) / 86400000);
+  const days = Math.ceil((new Date(first(rows)!.d).getTime() - Date.now()) / DAY_MS);
   return `${days}d`;
 }
 
@@ -298,7 +299,7 @@ export async function retainerVsProjectSplit(db: Database, _profileId: number): 
 
 export async function clientRetentionRate(db: Database, _profileId: number): Promise<string | number> {
   const now = new Date();
-  const threeMonthsAgo = new Date(now.getTime() - 90 * 86400000).toISOString();
+  const threeMonthsAgo = new Date(now.getTime() - 90 * DAY_MS).toISOString();
   const totalRows = await db.select<CountRow[]>(
     "SELECT COUNT(DISTINCT client_id) as c FROM invoices WHERE created_at >= $1",
     [threeMonthsAgo]

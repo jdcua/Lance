@@ -65,7 +65,7 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
     }
 
     // Pro feature gate (wire for real: gates were dead code before).
-    // First-run onboarding (no profession set yet) always applies -- core stays free.
+    // First-run onboarding (no profession set yet) always applies · core stays free.
     const hasDepthFeatures = (archetype.archetypeFeatures?.length || 0) > 0;
     if (!isFirstRun && !isProTier && hasDepthFeatures) {
       console.info('[ArchetypePicker] gated: archetypeDepth requires Pro');

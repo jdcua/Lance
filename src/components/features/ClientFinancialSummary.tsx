@@ -1,5 +1,5 @@
 /**
- * Client Financial Summary -- Accountant feature.
+ * Client Financial Summary · Accountant feature.
  * Timeline of financial statements with auto-calculated profit.
  */
 import { useState, useEffect } from 'react';

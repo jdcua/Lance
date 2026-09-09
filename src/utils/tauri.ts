@@ -1,9 +1,9 @@
 /**
- * Lance -- Tauri runtime detection & browser-mode persistence layer.
+ * Lance · Tauri runtime detection & browser-mode persistence layer.
  *
  * In browser mode (no __TAURI_INTERNALS__), all Tauri commands are
  * intercepted and backed by localStorage so the app remains fully
- * functional -- profile, clients, projects, invoices, etc. all persist
+ * functional · profile, clients, projects, invoices, etc. all persist
  * across navigation and page refreshes.
  *
  * IMPORTANT: This is an in-memory + localStorage shim. Data survives
@@ -147,7 +147,7 @@ export async function tauriListen<T>(
   handler: (payload: T) => void,
 ): Promise<() => void> {
   if (!isTauri()) {
-    console.debug(`[tauri] listen('${event}') skipped -- not in Tauri context`);
+    console.debug(`[tauri] listen('${event}') skipped · not in Tauri context`);
     return () => {};
   }
   const { listen } = await import('@tauri-apps/api/event');
@@ -163,7 +163,7 @@ export async function tauriInvoke<T>(
   args?: Record<string, unknown>,
 ): Promise<T> {
   if (!isTauri()) {
-    console.debug(`[tauri] invoke('${cmd}') -- using localStorage persistence`);
+    console.debug(`[tauri] invoke('${cmd}') · using localStorage persistence`);
     return handleBrowserMode<T>(cmd, args);
   }
   const { invoke } = await import('@tauri-apps/api/core');
@@ -417,12 +417,12 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
     // Commands like get_milestones, get_invoice_payments (scoped)
     // get_all_invoice_payments, get_all_pending_follow_ups
     // get_communications, get_attachments, get_follow_up_log
-    // These are scoped by entityId etc. -- return from localStore
+    // These are scoped by entityId etc. · return from localStore
     if (entity) {
       const key = ENTITIES[entity]?.listKey || listKeyFor(entity);
       return lsGet<any>(key) as unknown as T;
     }
-    // Unknown get command -- return empty array/null
+    // Unknown get command · return empty array/null
     return [] as unknown as T;
   }
 
@@ -656,7 +656,7 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
 
   // ── save_* commands ──
   if (verb === 'save') {
-    // save_import_file, save_asset_file -- handled by just returning a mock path
+    // save_import_file, save_asset_file · handled by just returning a mock path
     if (cmd === 'save_import_file' || cmd === 'save_asset_file') {
       return `/mock/${args?.filename || 'file'}` as unknown as T;
     }
@@ -739,7 +739,7 @@ export function isCheckoutConfigured(): boolean {
 /**
  * Opens the Paddle checkout for the requested tier.
  * Returns `true` if checkout was opened. Returns `false` (without alerting)
- * when the price IDs are not configured in this build -- callers should show
+ * when the price IDs are not configured in this build · callers should show
  * a friendly message and keep the user on the pricing/upgrade UI.
  */
 export async function openCheckout(tier: 'monthly' | 'yearly' | 'onetime'): Promise<boolean> {

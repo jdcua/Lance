@@ -1,5 +1,5 @@
 /**
- * Sourcing Log -- Fashion Designer feature.
+ * Sourcing Log · Fashion Designer feature.
  * Track material sourcing with supplier, cost, MOQ, lead time, and status.
  */
 import { useState, useEffect } from 'react';

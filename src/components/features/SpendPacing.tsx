@@ -1,5 +1,5 @@
 /**
- * Spend Pacing -- budget pacing tracker with auto-calculated variance and progress bar.
+ * Spend Pacing · budget pacing tracker with auto-calculated variance and progress bar.
  */
 import { useState, useEffect } from 'react';
 import { getDb } from '../../db';

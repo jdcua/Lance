@@ -1,5 +1,5 @@
 /**
- * Model Registry -- AI Engineer feature.
+ * Model Registry · AI Engineer feature.
  * Track ML models with framework, version, status, and metrics.
  */
 import { useState, useEffect } from 'react';

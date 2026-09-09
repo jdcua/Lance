@@ -466,7 +466,7 @@ export default function Contracts() {
                     </div>
                   ) : (
                     <div className="mt-3 pt-3 border-t border-[var(--border-color)]">
-                      <p className="text-xs text-[var(--text-tertiary)] italic">No contract body -- open the editor to add terms.</p>
+                      <p className="text-xs text-[var(--text-tertiary)] italic">No contract body · open the editor to add terms.</p>
                     </div>
                   ))}
                 </Card>

@@ -1,5 +1,5 @@
 /**
- * Chain Log -- Blockchain feature.
+ * Chain Log · Blockchain feature.
  * Simple event log, most recent first.
  */
 import { useState, useEffect } from 'react';

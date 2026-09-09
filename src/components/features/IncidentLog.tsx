@@ -1,5 +1,5 @@
 /**
- * Incident Log -- DevOps feature.
+ * Incident Log · DevOps feature.
  * Track incidents with severity, status, and resolution.
  */
 import { useState, useEffect } from 'react';

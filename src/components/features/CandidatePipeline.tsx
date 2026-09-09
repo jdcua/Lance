@@ -1,5 +1,5 @@
 /**
- * Candidate Pipeline -- Recruiter feature.
+ * Candidate Pipeline · Recruiter feature.
  * Kanban-style board by status: sourced, screening, interview, offer, hired, rejected.
  */
 import { useState, useEffect } from 'react';

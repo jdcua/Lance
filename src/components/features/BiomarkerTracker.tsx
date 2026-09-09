@@ -1,5 +1,5 @@
 /**
- * Biomarker Tracker -- Nutritionist feature.
+ * Biomarker Tracker · Nutritionist feature.
  * Track health biomarkers with latest value prominently shown.
  */
 import { useState, useEffect } from 'react';

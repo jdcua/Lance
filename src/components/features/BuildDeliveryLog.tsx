@@ -1,5 +1,5 @@
 /**
- * Build Delivery Log -- Game Developer feature.
+ * Build Delivery Log · Game Developer feature.
  * Changelog-style list of build deliveries, most recent first.
  */
 import { useState, useEffect } from 'react';

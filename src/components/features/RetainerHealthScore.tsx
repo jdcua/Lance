@@ -1,5 +1,5 @@
 /**
- * Retainer Health Score -- Consultant / Agency feature.
+ * Retainer Health Score · Consultant / Agency feature.
  * Computes a 0-100 health score from deliverables, report freshness, and communication recency.
  */
 import { useState, useEffect } from 'react';

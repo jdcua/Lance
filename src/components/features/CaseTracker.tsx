@@ -1,5 +1,5 @@
 /**
- * Case Tracker -- Legal feature.
+ * Case Tracker · Legal feature.
  * List of legal cases with status badges.
  */
 import { useState, useEffect } from 'react';

@@ -1,5 +1,5 @@
 /**
- * Vendor Directory -- searchable vendor list with service, contact, cost, and status.
+ * Vendor Directory · searchable vendor list with service, contact, cost, and status.
  */
 import { useState, useEffect } from 'react';
 import { getDb } from '../../db';

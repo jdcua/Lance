@@ -1,5 +1,5 @@
 /**
- * Journey Map Builder -- customer journey stages with priority badges.
+ * Journey Map Builder · customer journey stages with priority badges.
  */
 import { useState, useEffect } from 'react';
 import { getDb } from '../../db';

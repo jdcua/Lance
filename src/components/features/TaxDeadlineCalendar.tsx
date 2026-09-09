@@ -1,5 +1,5 @@
 /**
- * Tax Deadline Calendar -- Accountant feature.
+ * Tax Deadline Calendar · Accountant feature.
  * List of tax deadlines sorted by due_date ascending. Overdue items in red.
  */
 import { useState, useEffect } from 'react';

@@ -1,11 +1,14 @@
-import { useEffect, useState, Suspense, useRef } from 'react';
+import { useEffect, useState, Suspense, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
+import { recordTelemetry } from '../utils/telemetry';
+import { buildWeeklyDigest, weekKey } from '../utils/weeklyDigest';
+import { evaluateStruggle, getTelemetryEvents, markTipFired, wasTipFired } from '../utils/telemetry';
 import type { Invoice, TimeEntry, UserProfile, Project } from '../types';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import Button from '../components/ui/Button';
-import { relativeDate, formatCurrency } from '../utils/format';
+import { relativeDate, formatCurrency, DAY_MS } from '../utils/format';
 import { useToasts } from '../store/toastStore';
 import { Play, Receipt, FileText, Users, FolderKanban, Clock, Plus, ArrowRight, CheckCircle2, Circle, Bell, Send, Check, X, Link } from 'lucide-react';
 import { generateFollowUpDraft } from '../utils/followUpTemplates';
@@ -32,6 +35,17 @@ export default function Dashboard() {
   const [checklistDismissed, setChecklistDismissed] = useState(
     () => typeof localStorage !== 'undefined' && localStorage.getItem('lance:checklist-dismissed') === 'true',
   );
+  const [digestDismissedWeek, setDigestDismissedWeek] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      setDigestDismissedWeek(localStorage.getItem('lance:digest-dismissed'));
+    } catch { /* private mode */ }
+  }, []);
+  const digestWeek = weekKey();
+  const digest = useMemo(
+    () => buildWeeklyDigest(invoices, timeEntries, proposals),
+    [invoices, timeEntries, proposals],
+  );
 
   useEffect(() => {
     Promise.all([loadInvoices(), loadProposals(), loadProjects(), loadClients(), loadTimeEntries(), loadExpenses(), loadProfile(), loadPendingFollowUps()])
@@ -42,7 +56,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (loading) return;
     if (localStorage.getItem('lance:seeded') === 'true' && localStorage.getItem('lance:seeded-toast-shown') !== 'true') {
-      addToast('Sample data loaded -- explore freely. Clear it anytime in Settings → Data.', 'info');
+      addToast('Sample data loaded · explore freely. Clear it anytime in Settings → Data.', 'info');
       localStorage.setItem('lance:seeded-toast-shown', 'true');
     }
     loadPortalActivity();
@@ -55,7 +69,7 @@ export default function Dashboard() {
       const info = await getLastBackupInfo();
       if (info && info.enabled && info.last_backup_at) {
         const daysAgo = Math.floor(
-          (Date.now() - new Date(info.last_backup_at).getTime()) / 86400000
+          (Date.now() - new Date(info.last_backup_at).getTime()) / DAY_MS
         );
         setLastBackupInfo({ enabled: info.enabled, last_backup_at: info.last_backup_at, daysAgo });
       } else if (info && info.enabled) {
@@ -95,6 +109,43 @@ export default function Dashboard() {
     const interval = setInterval(() => portalPollRef.current?.(), 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Coach nudges: local telemetry spots struggle and helps once each.
+  // Never nags: every tip fires a single time, ever.
+  useEffect(() => {
+    if (loading) return;
+    const launches = getTelemetryEvents().filter((e) => e.event === 'app_launch').length;
+    const checklistDone =
+      (clients.length > 0 ? 1 : 0) +
+      (projects.length > 0 ? 1 : 0) +
+      (timeEntries.length > 0 ? 1 : 0) +
+      (proposals.length > 0 ? 1 : 0) +
+      (invoices.length > 0 ? 1 : 0);
+    const overdueCount = invoices.filter((i) => i.status === 'overdue').length;
+    const tips = evaluateStruggle({
+      launches,
+      checklistDone,
+      checklistTotal: 5,
+      validationErrors: {},
+      overdueCount,
+      followUpsEnabled: followUpSettings.enabled,
+    });
+    for (const tip of tips) {
+      if (wasTipFired(tip)) continue;
+      markTipFired(tip);
+      if (tip === 'stalled_checklist') {
+        addToast('Still getting set up? Your first client takes about 30 seconds.', 'info', 8000);
+      } else if (tip === 'overdue_no_followups') {
+        addToast(
+          `${overdueCount} overdue invoice${overdueCount === 1 ? '' : 's'} and reminders are off. Switch them on in Settings.`,
+          'info',
+          8000,
+          [{ label: 'Open settings', onClick: () => navigate('/settings') }],
+        );
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
 
   useEffect(() => {
     if (!profile) return;
@@ -155,10 +206,10 @@ export default function Dashboard() {
       <div className="p-6 space-y-6">
         <div className="h-6 w-32 bg-[var(--bg-secondary)] rounded skeleton-pulse mb-1" />
         <div className="h-4 w-48 bg-[var(--bg-secondary)] rounded skeleton-pulse mb-4" />
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />)}
         </div>
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="h-48 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />
           <div className="h-48 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />
         </div>
@@ -169,7 +220,8 @@ export default function Dashboard() {
   // Each step deep-links AND opens the real create form: landing on a list
   // is not activation, doing the thing is. The time step needs no navigation
   // because the quick-log modal is global.
-  const runStep = (to: string | null, event: string | null) => {
+  const runStep = (to: string | null, event: string | null, index: number) => {
+    recordTelemetry('checklist_step_done', { step: index });
     if (to) navigate(to);
     if (event) {
       setTimeout(() => document.dispatchEvent(new CustomEvent(event)), 350);
@@ -189,6 +241,16 @@ export default function Dashboard() {
   const dismissChecklist = () => {
     localStorage.setItem('lance:checklist-dismissed', 'true');
     setChecklistDismissed(true);
+  };
+
+  // Weekly digest: a Monday habit loop. Shows once the checklist is out of
+  // the way (or dismissed), hides for the rest of the week on dismiss.
+  const showDigest = !showChecklist && digestDismissedWeek !== digestWeek;
+  const dismissDigest = () => {
+    try {
+      localStorage.setItem('lance:digest-dismissed', digestWeek);
+    } catch { /* private mode */ }
+    setDigestDismissedWeek(digestWeek);
   };
 
   return (
@@ -215,7 +277,7 @@ export default function Dashboard() {
                 {steps.map((s, i) => (
                   <button
                     key={i}
-                    onClick={() => runStep(s.to, s.event)}
+                    onClick={() => runStep(s.to, s.event, i + 1)}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[8px] text-left text-xs transition-colors ${
                       s.done
                         ? 'bg-[var(--bg-secondary)] text-[var(--text-tertiary)] line-through cursor-default'
@@ -243,7 +305,50 @@ export default function Dashboard() {
         </Card>
       )}
 
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      {showDigest && (
+        <Card className="mb-6">
+          <div className="flex items-start gap-4">
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">
+                Your week <span className="font-normal text-[var(--text-tertiary)]">({digest.weekLabel})</span>
+              </h3>
+              {digest.hasActivity ? (
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                  {digest.paidCount > 0 && (
+                    <>Got paid <strong className="text-[var(--accent)]">{digest.paidCount}x</strong>{' '}</>
+                  )}
+                  {digest.hoursLogged > 0 && (
+                    <>{digest.hoursLogged}h logged{' '}</>
+                  )}
+                  {digest.openProposals > 0 && (
+                    <>{digest.openProposals} proposal{digest.openProposals === 1 ? '' : 's'} awaiting reply{' '}</>
+                  )}
+                  {digest.overdueCount > 0 && (
+                    <span className="text-[var(--danger)]">{digest.overdueCount} overdue</span>
+                  )}
+                  {digest.paidCount === 0 && digest.hoursLogged === 0 && digest.openProposals === 0 && digest.overdueCount === 0 && (
+                    <>Quiet so far.</>
+                  )}
+                </p>
+              ) : (
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                  Nothing yet this week. Log time or send an invoice to get moving.
+                </p>
+              )}
+            </div>
+            <button
+              onClick={dismissDigest}
+              aria-label="Dismiss weekly digest"
+              title="Dismiss for this week"
+              className="p-1 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors flex-shrink-0"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </Card>
+      )}
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {effectiveArchetype.dashboard.metricCards.map((card) => (
           <MetricCard
             key={card.id}
@@ -273,7 +378,7 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* Needs Attention -- Follow-ups */}
+      {/* Needs Attention · Follow-ups */}
       {pendingFollowUps.length > 0 && (
         <Card className="mb-6 border-[var(--accent)]/20">
           <div className="flex items-center gap-2 mb-3">
@@ -289,7 +394,7 @@ export default function Dashboard() {
                 : invoices.find((i) => i.id === fu.entity_id);
               if (!entity) return null;
               const client = clients.find((c) => c.id === (isProposal ? (entity as typeof proposals[0]).client_id : (entity as typeof invoices[0]).client_id));
-              const daysElapsed = Math.floor((Date.now() - (isProposal ? new Date((entity as typeof proposals[0]).sent_at || (entity as typeof proposals[0]).created_at).getTime() : new Date((entity as typeof invoices[0]).due_date || '').getTime())) / 86400000);
+              const daysElapsed = Math.floor((Date.now() - (isProposal ? new Date((entity as typeof proposals[0]).sent_at || (entity as typeof proposals[0]).created_at).getTime() : new Date((entity as typeof invoices[0]).due_date || '').getTime())) / DAY_MS);
               const templateKey = isProposal
                 ? (daysElapsed >= 10 ? 'proposal_day14' : daysElapsed >= 4 ? 'proposal_day7' : 'proposal_day3')
                 : (daysElapsed >= 10 ? 'invoice_day14' : daysElapsed >= 4 ? 'invoice_day7' : 'invoice_day1');
@@ -349,7 +454,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <DashboardWidgets archetype={effectiveArchetype} recentInvoices={recentInvoices} recentTime={recentTime} profile={profile} projects={projects} navigate={navigate} />
       </div>
 

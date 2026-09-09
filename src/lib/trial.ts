@@ -1,4 +1,5 @@
 import { TRIAL } from './constants';
+import { DAY_MS } from '../utils/format';
 
 /**
  * Days of Pro trial remaining, derived from the profile's trial start.
@@ -12,6 +13,6 @@ export function trialDaysRemaining(
   if (!trialStartedAt) return TRIAL.FULL_DAYS;
   const start = new Date(trialStartedAt);
   if (isNaN(start.getTime())) return TRIAL.FULL_DAYS;
-  const elapsedDays = Math.floor((now.getTime() - start.getTime()) / 86400000);
+  const elapsedDays = Math.floor((now.getTime() - start.getTime()) / DAY_MS);
   return Math.max(0, Math.min(TRIAL.FULL_DAYS, TRIAL.FULL_DAYS - elapsedDays));
 }

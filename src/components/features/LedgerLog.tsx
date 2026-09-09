@@ -1,5 +1,5 @@
 /**
- * Ledger Log -- Accountant feature.
+ * Ledger Log · Accountant feature.
  * Income/expense list with summary (total income - total expenses = net).
  */
 import { useState, useEffect } from 'react';

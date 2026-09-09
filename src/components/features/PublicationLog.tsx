@@ -1,5 +1,5 @@
 /**
- * Publication Log -- Writer feature.
+ * Publication Log · Writer feature.
  * Tracks published work by project: outlet, URL, date, byline.
  */
 import { useState, useEffect } from 'react';

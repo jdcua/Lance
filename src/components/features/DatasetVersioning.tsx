@@ -1,5 +1,5 @@
 /**
- * Dataset Versioning -- AI Engineer feature.
+ * Dataset Versioning · AI Engineer feature.
  * Changelog-style list of dataset versions, most recent first.
  */
 import { useState, useEffect } from 'react';

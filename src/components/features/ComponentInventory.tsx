@@ -1,5 +1,5 @@
 /**
- * Component Inventory -- Embedded feature.
+ * Component Inventory · Embedded feature.
  * Inventory list with component name, footprint, quantity, supplier, and unit cost.
  */
 import { useState, useEffect } from 'react';

@@ -1,5 +1,5 @@
 /**
- * Channel Log -- Marketing feature.
+ * Channel Log · Marketing feature.
  * Multi-select tag panel for project marketing channels.
  */
 import { useState, useEffect } from 'react';

@@ -1,5 +1,5 @@
 /**
- * Word / Character Counter -- Translator feature.
+ * Word / Character Counter · Translator feature.
  * Tracks source/target word counts and characters per time entry.
  * Supports inline editing and a summary table of recent entries.
  */

@@ -9,7 +9,7 @@ import MetricCard from '../components/ui/MetricCard';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import ClientSelect from '../components/ui/ClientSelect';
 import { exportInvoicePDF, exportInvoiceDOCX } from '../export';
-import { formatCurrency, relativeDate, parseDateString } from '../utils/format';
+import { formatCurrency, relativeDate, parseDateString, DAY_MS } from '../utils/format';
 import { getCurrencySymbol } from '../lib/currency';
 import { generateInvoiceNumber, sanitizeInvoiceNumber } from '../utils/invoiceNumber';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
@@ -17,6 +17,8 @@ import { useToasts } from '../store/toastStore';
 import { Plus, Pencil, Trash2, Download, Clock, RotateCw, Receipt, Search, Bell, X, Copy, DollarSign, ChevronDown, ChevronRight, Mail, AlertTriangle, Check } from 'lucide-react';
 import { generateFollowUpDraft, generateSubjectLine, openMailTo, resolveDunningTone, type DunningTone } from '../utils/followUpTemplates';
 import { computeLateFee, lateFeeParagraph } from '../utils/lateFees';
+import { recordTrialValue } from '../utils/trialValue';
+import { recordTelemetry } from '../utils/telemetry';
 import { getFeatureFlags } from '../lib/constants';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
 import { getArchetype } from '../archetypes';
@@ -128,6 +130,8 @@ export default function Invoices() {
         total: Math.round((inv.total + fee.fee) * 100) / 100,
       });
       addToast(`Late fee of ${formatCurrency(fee.fee, inv.currency || profile?.currency)} added`, 'success');
+      recordTrialValue('late-fee', fee.fee);
+      recordTelemetry('pro_feature_used', { feature: 'late-fee' });
     } catch {
       addToast('Could not add the late fee', 'error');
     }
@@ -290,7 +294,7 @@ export default function Invoices() {
   const openReminderModal = (inv: Invoice) => {
     const client = getClient(inv.client_id);
     const dueDate = inv.due_date ? new Date(inv.due_date) : null;
-    const daysElapsed = dueDate ? Math.floor((Date.now() - dueDate.getTime()) / 86400000) : 0;
+    const daysElapsed = dueDate ? Math.floor((Date.now() - dueDate.getTime()) / DAY_MS) : 0;
     const templateKey = daysElapsed >= 10 ? 'invoice_day14' : daysElapsed >= 4 ? 'invoice_day7' : 'invoice_day1';
     const draft = withFeeNote(generateFollowUpDraft(templateKey, {
       clientName: client?.name || 'Unknown',
@@ -311,7 +315,7 @@ export default function Invoices() {
     setReminderInv(inv);
     setReminderForm({
       to: client?.email || '',
-      subject: subject || `Friendly reminder -- Invoice ${inv.invoice_number} due ${inv.due_date || 'now'}`,
+      subject: subject || `Friendly reminder · Invoice ${inv.invoice_number} due ${inv.due_date || 'now'}`,
       body: draft,
       markFollowedUp: false,
     });
@@ -464,7 +468,7 @@ export default function Invoices() {
         notes: inv.notes,
         currency: inv.currency,
       });
-      addToast(`Invoice duplicated -- ${newNumber} created as draft`, 'success');
+      addToast(`Invoice duplicated · ${newNumber} created as draft`, 'success');
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to duplicate invoice', 'error');
     }
@@ -730,7 +734,7 @@ export default function Invoices() {
                         if (!fu || inv.status === 'paid') return null;
                         const client = getClient(inv.client_id);
     const dueDate = inv.due_date ? parseDateString(inv.due_date) : null;
-                        const daysElapsed = dueDate ? Math.floor((Date.now() - dueDate.getTime()) / 86400000) : 0;
+                        const daysElapsed = dueDate ? Math.floor((Date.now() - dueDate.getTime()) / DAY_MS) : 0;
                         const templateKey = daysElapsed >= 10 ? 'invoice_day14' : daysElapsed >= 4 ? 'invoice_day7' : 'invoice_day1';
                         const draft = withFeeNote(generateFollowUpDraft(templateKey, {
                           clientName: client?.name || 'Unknown',
@@ -752,7 +756,7 @@ export default function Invoices() {
                         return (
                           <div className="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-[var(--border-color)]/50">
                             <Bell size={10} className="text-[var(--accent)]" />
-                            <span className="text-[10px] text-[var(--accent)]">Follow-up ready -- {daysElapsed}d overdue</span>
+                            <span className="text-[10px] text-[var(--accent)]">Follow-up ready · {daysElapsed}d overdue</span>
                             {!hasEmail && (
                               <span className="flex items-center gap-0.5 text-[10px] text-[var(--warning-text)]">
                                 <AlertTriangle size={9} /> No email
@@ -893,7 +897,7 @@ export default function Invoices() {
                     {ri.last_generated && <span>Last: {relativeDate(ri.last_generated)}</span>}
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => handleToggleActive(ri)} className={`w-2 h-2 rounded-full ${ri.active ? 'bg-[var(--accent)]' : 'bg-[var(--neutral-border)]'}`} title={ri.active ? 'Active -- click to pause' : 'Paused -- click to resume'} />
+                    <button onClick={() => handleToggleActive(ri)} className={`w-2 h-2 rounded-full ${ri.active ? 'bg-[var(--accent)]' : 'bg-[var(--neutral-border)]'}`} title={ri.active ? 'Active · click to pause' : 'Paused · click to resume'} />
                     <span className={`text-[10px] ${ri.active ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)]'}`}>{ri.active ? 'Active' : 'Paused'}</span>
                   </div>
                 </div>

@@ -10,6 +10,8 @@ import {
   type RetainerRow,
 } from '../../utils/retainerBurn';
 import { generateInvoiceNumber } from '../../utils/invoiceNumber';
+import { recordTrialValue } from '../../utils/trialValue';
+import { recordTelemetry } from '../../utils/telemetry';
 import { formatCurrency } from '../../utils/format';
 import { useToasts } from '../../store/toastStore';
 import Card from '../ui/Card';
@@ -105,6 +107,8 @@ export default function RetainerBurnDown() {
         rate_type: 'flat',
       });
       addToast(`Top-up draft for ${clientName} created`, 'success');
+      recordTrialValue('topup', amount);
+      recordTelemetry('pro_feature_used', { feature: 'topup' });
       navigate('/invoices');
     } catch {
       addToast('Could not create the top-up invoice', 'error');

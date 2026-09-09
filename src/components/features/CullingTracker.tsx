@@ -95,7 +95,7 @@ export default function CullingTracker({ projectId }: { projectId: string }) {
           <select value={form.shoot_id} onChange={(e) => setForm({ ...form, shoot_id: e.target.value })} className={inputClass}>
             <option value="">Select shoot...</option>
             {projectShoots.map((s) => (
-              <option key={s.id} value={s.id}>{s.shoot_date?.split('T')[0] || s.id} -- {s.location || ''}</option>
+              <option key={s.id} value={s.id}>{s.shoot_date?.split('T')[0] || s.id} · {s.location || ''}</option>
             ))}
           </select>
           <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className={inputClass} />

@@ -1,5 +1,5 @@
 /**
- * Progress Reports -- Tutor feature.
+ * Progress Reports · Tutor feature.
  * Timeline list of progress reports with date, summary, next steps, and score.
  */
 import { useState, useEffect } from 'react';

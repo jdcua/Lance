@@ -1,5 +1,5 @@
 /**
- * Revision Tracker -- Designer / Illustrator / UX Designer feature.
+ * Revision Tracker · Designer / Illustrator / UX Designer feature.
  * Tracks revision rounds with change summaries per project.
  */
 import { useState, useEffect } from 'react';

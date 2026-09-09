@@ -1,5 +1,5 @@
 /**
- * Asset Complexity Log -- 3D Artist feature.
+ * Asset Complexity Log · 3D Artist feature.
  * Single-record complexity tracker per project with in-place editing.
  */
 import { useState, useEffect } from 'react';

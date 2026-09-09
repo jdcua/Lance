@@ -1,5 +1,5 @@
 /**
- * Post Volume Log -- Social Media feature.
+ * Post Volume Log · Social Media feature.
  * Reads content_posts where status='posted'. Shows count by month as simple bars.
  */
 import { useState, useEffect } from 'react';

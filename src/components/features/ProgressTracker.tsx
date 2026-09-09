@@ -1,5 +1,5 @@
 /**
- * Progress Tracker -- Wellness feature.
+ * Progress Tracker · Wellness feature.
  * Timeline list of progress notes with mood score, notes, and goals.
  */
 import { useState, useEffect } from 'react';

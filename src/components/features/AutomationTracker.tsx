@@ -1,5 +1,5 @@
 /**
- * Automation Tracker -- DevOps feature.
+ * Automation Tracker · DevOps feature.
  * Manage automations with type, frequency, and active/inactive toggle.
  */
 import { useState, useEffect } from 'react';

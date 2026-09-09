@@ -1,5 +1,5 @@
 /**
- * Licensing Tracker -- Illustrator / Musician feature.
+ * Licensing Tracker · Illustrator / Musician feature.
  * Tracks asset licenses with revenue totals, grouped by license type.
  */
 import { useState, useEffect } from 'react';

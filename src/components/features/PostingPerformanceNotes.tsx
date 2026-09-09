@@ -1,5 +1,5 @@
 /**
- * Posting Performance Notes -- Social Media feature.
+ * Posting Performance Notes · Social Media feature.
  * Reads content_posts. Shows recent posted items with their platforms and dates.
  */
 import { useState, useEffect } from 'react';

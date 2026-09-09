@@ -1,5 +1,5 @@
 /**
- * Intake Form Storage -- Wellness feature.
+ * Intake Form Storage · Wellness feature.
  * Single record per client. Form data as large textarea, save in place.
  */
 import { useState, useEffect } from 'react';

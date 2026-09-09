@@ -68,7 +68,7 @@ function mockWriteTable(table: string, rows: Record<string, any>[]): void {
 function normalizeParams(sql: string, params?: unknown[]): unknown[] {
   if (!params) return [];
   if (!sql.includes('$')) return params;
-  // $N placeholders -- build array indexed by N
+  // $N placeholders · build array indexed by N
   const map = new Map<number, unknown>();
   const re = /\$(\d+)/g;
   let m: RegExpExecArray | null;
@@ -207,7 +207,7 @@ class MockDatabase {
         out.push({ col, op, value: null });
         continue;
       }
-      // IN (a, b, c) -- may contain params or literals. rhs is either `IN (...)` or `(...)` (NOT IN).
+      // IN (a, b, c) · may contain params or literals. rhs is either `IN (...)` or `(...)` (NOT IN).
       const inM = rhs.match(/^(?:NOT\s+)?IN\s*\((.+)\)$/i) || (op === 'IN' || op === 'NOT IN' ? rhs.match(/^\((.+)\)$/) : null);
       if (inM) {
         const items = this.splitTopLevel(inM[1], ',').map((x) => x.trim());
@@ -228,7 +228,7 @@ class MockDatabase {
     if (/^-?\d+(\.\d+)?$/.test(tok)) return Number(tok);
     if (/^(TRUE|FALSE)$/i.test(tok)) return /^TRUE$/i.test(tok) ? 1 : 0;
     if (/^NULL$/i.test(tok)) return null;
-    return tok; // bare token -- treat as string
+    return tok; // bare token · treat as string
   }
 
   /** Evaluate parsed predicates against a row. */
@@ -363,7 +363,7 @@ class MockDatabase {
       const table = ins[1];
       const cols = ins[2].split(',').map((c) => c.trim().toLowerCase());
       // Split VALUES into per-column tokens so literal values (e.g. `1` in
-      // `VALUES (1, ?, ?, ?)`) don't consume placeholders -- params must bind
+      // `VALUES (1, ?, ?, ?)`) don't consume placeholders · params must bind
       // ONLY to `?`/`$N` tokens, in order.
       const valueParts = this.splitTopLevelComma(ins[3]).map((v) => v.trim());
       const row: Record<string, any> = {};
@@ -433,7 +433,7 @@ class MockDatabase {
       return { rowsAffected: 1, lastInsertId: 0 };
     }
 
-    // Unsupported statement -- no-op without throwing
+    // Unsupported statement · no-op without throwing
     return { rowsAffected: 0, lastInsertId: 0 };
   }
 

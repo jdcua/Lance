@@ -139,7 +139,7 @@ export default function SearchScreen() {
         return {
           id: t.id,
           label: t.description || 'No description',
-          sublabel: `${project?.title || 'Unknown'} -- ${formatDateShort(t.start_time)} · ${t.duration_minutes ? formatDuration(t.duration_minutes) : 'In progress'}`,
+          sublabel: `${project?.title || 'Unknown'} · ${formatDateShort(t.start_time)} · ${t.duration_minutes ? formatDuration(t.duration_minutes) : 'In progress'}`,
           type: 'time_entry',
           path: '/time',
         };
@@ -150,7 +150,7 @@ export default function SearchScreen() {
       .map((e) => ({
         id: e.id,
         label: e.description,
-        sublabel: `${e.category} · ${formatCurrency(e.amount)} -- ${formatDateShort(e.date)}`,
+        sublabel: `${e.category} · ${formatCurrency(e.amount)} · ${formatDateShort(e.date)}`,
         type: 'expense',
         path: '/finance',
       }));

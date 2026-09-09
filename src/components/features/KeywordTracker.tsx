@@ -1,5 +1,5 @@
 /**
- * Keyword Tracker -- SEO Specialist feature.
+ * Keyword Tracker · SEO Specialist feature.
  * Tracks keyword rankings by client.
  */
 import { useState, useEffect } from 'react';

@@ -1,5 +1,5 @@
 /**
- * Campaign Tracker -- Marketing / Social Media Manager feature.
+ * Campaign Tracker · Marketing / Social Media Manager feature.
  * Tracks campaigns with channel, dates, budget, and KPI comparison.
  */
 import { useState, useEffect } from 'react';

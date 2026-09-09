@@ -1,5 +1,5 @@
 /**
- * Stack Logger -- Developer feature.
+ * Stack Logger · Developer feature.
  * Tag-style input for project technology stack grouped by category.
  */
 import { useState, useEffect } from 'react';

@@ -1,5 +1,5 @@
 /**
- * Revision Counter -- compact panel showing revision count vs limit.
+ * Revision Counter · compact panel showing revision count vs limit.
  * Uses store for revisions and proposals; auto-increments round_number on add.
  * Pro (scopeCreepProtection): rounds past the limit convert into a draft
  * change-order invoice with one click. Free tiers see the counter plus a
@@ -10,6 +10,8 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
 import { getFeatureFlags } from '../../lib/constants';
 import { generateInvoiceNumber } from '../../utils/invoiceNumber';
+import { recordTrialValue } from '../../utils/trialValue';
+import { recordTelemetry } from '../../utils/telemetry';
 import { useToasts } from '../../store/toastStore';
 import Button from '../ui/Button';
 import { Plus, RotateCcw, Lock, FilePlus2 } from 'lucide-react';
@@ -70,6 +72,8 @@ export default function RevisionCounter({ projectId }: { projectId: string }) {
         rate_type: 'flat',
       });
       addToast('Change order draft created', 'success');
+      recordTrialValue('change-order', amount);
+      recordTelemetry('pro_feature_used', { feature: 'change-order' });
       navigate('/invoices');
     } catch {
       addToast('Could not create the change order', 'error');

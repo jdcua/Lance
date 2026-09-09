@@ -1,5 +1,5 @@
 /**
- * Task Log -- Virtual Assistant feature.
+ * Task Log · Virtual Assistant feature.
  * Per-client VA task list with category filter tabs and hours summary.
  */
 import { useState, useEffect } from 'react';

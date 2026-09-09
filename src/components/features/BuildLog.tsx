@@ -1,5 +1,5 @@
 /**
- * Build Log -- Developer / Game Developer / DevOps feature.
+ * Build Log · Developer / Game Developer / DevOps feature.
  * Tracks software builds with version, platform, notes.
  */
 import { useState, useEffect } from 'react';

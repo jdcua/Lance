@@ -1,5 +1,5 @@
 /**
- * Food Diary Reviews -- Nutritionist feature.
+ * Food Diary Reviews · Nutritionist feature.
  * Food diary entries grouped by date.
  */
 import { useState, useEffect } from 'react';

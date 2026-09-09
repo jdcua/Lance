@@ -1,3 +1,6 @@
+/** Milliseconds in one day. Date math app-wide uses fixed 24h days (not DST-aware). */
+export const DAY_MS = 86400000;
+
 export function formatCurrency(amount: number, currency = 'CAD'): string {
   return new Intl.NumberFormat('en-CA', {
     style: 'currency',
@@ -7,7 +10,7 @@ export function formatCurrency(amount: number, currency = 'CAD'): string {
 
 /**
  * Parse a date value for display. Date-only strings ("YYYY-MM-DD") are parsed
- * as LOCAL midnight -- parsing them via `new Date()` treats them as UTC
+ * as LOCAL midnight · parsing them via `new Date()` treats them as UTC
  * midnight, which renders as the PREVIOUS day in negative-offset timezones
  * (e.g. "2026-07-01" -> "Jun 30" in UTC-6). Full ISO timestamps (with a "T")
  * keep their normal timezone-aware parsing.
@@ -34,7 +37,7 @@ export function relativeDate(iso: string): string {
   const diffDays = Math.floor(diffHrs / 24);
 
   if (diffSec < -30) {
-    const absDays = Math.ceil(-diffMs / 86400000);
+    const absDays = Math.ceil(-diffMs / DAY_MS);
     if (absDays <= 1) return 'tomorrow';
     if (absDays < 7) return `in ${absDays}d`;
     if (absDays < 30) return `in ${Math.floor(absDays / 7)}w`;

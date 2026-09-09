@@ -1,10 +1,12 @@
+import { DAY_MS } from './format';
+
 function daysAgo(days: number): string {
-  const d = new Date(Date.now() - days * 86400000);
+  const d = new Date(Date.now() - days * DAY_MS);
   return d.toISOString().split('T')[0];
 }
 
 function daysFromNow(days: number): string {
-  const d = new Date(Date.now() + days * 86400000);
+  const d = new Date(Date.now() + days * DAY_MS);
   return d.toISOString().split('T')[0];
 }
 
@@ -241,14 +243,14 @@ export async function seedSampleData(): Promise<void> {
       client_id: client1.id,
       project_id: proj1.id,
       proposal_id: prop3.id,
-      title: 'Service Agreement -- Brand Identity',
+      title: 'Service Agreement · Brand Identity',
       status: 'active',
     });
     await store.addContract({
       client_id: client4.id,
       project_id: proj2.id,
       proposal_id: undefined,
-      title: 'Service Agreement -- Site Redesign',
+      title: 'Service Agreement · Site Redesign',
       status: 'completed',
     });
 
@@ -256,8 +258,8 @@ export async function seedSampleData(): Promise<void> {
     const timeEntries = [
       { desc: 'Discovery call with Jordan', proj: proj1.id, cl: client1.id, mins: 60, daysAgo: 14, billable: 1 },
       { desc: 'Competitive brand audit', proj: proj1.id, cl: client1.id, mins: 150, daysAgo: 13, billable: 1 },
-      { desc: 'Logo concepts -- round 1', proj: proj1.id, cl: client1.id, mins: 180, daysAgo: 10, billable: 1 },
-      { desc: 'Logo concepts -- round 2', proj: proj1.id, cl: client1.id, mins: 120, daysAgo: 7, billable: 1 },
+      { desc: 'Logo concepts · round 1', proj: proj1.id, cl: client1.id, mins: 180, daysAgo: 10, billable: 1 },
+      { desc: 'Logo concepts · round 2', proj: proj1.id, cl: client1.id, mins: 120, daysAgo: 7, billable: 1 },
       { desc: 'Color palette exploration', proj: proj1.id, cl: client1.id, mins: 90, daysAgo: 5, billable: 1 },
       { desc: 'Typography system', proj: proj1.id, cl: client1.id, mins: 60, daysAgo: 3, billable: 1 },
       { desc: 'Client revisions call', proj: proj1.id, cl: client1.id, mins: 45, daysAgo: 2, billable: 0 },
@@ -300,7 +302,7 @@ export async function seedSampleData(): Promise<void> {
       total: 2000,
       due_date: daysAgo(42),
       notes: 'Deposit paid promptly.',
-      line_items: [{ id: crypto.randomUUID(), description: 'Brand Identity Refresh -- 30% Deposit', quantity: 1, unit_price: 2000, total: 2000 }],
+      line_items: [{ id: crypto.randomUUID(), description: 'Brand Identity Refresh · 30% Deposit', quantity: 1, unit_price: 2000, total: 2000 }],
     });
     await store.addInvoice({
       client_id: client1.id,
@@ -311,7 +313,7 @@ export async function seedSampleData(): Promise<void> {
       total: 2000,
       due_date: daysFromNow(7),
       notes: 'Due after design concept approval.',
-      line_items: [{ id: crypto.randomUUID(), description: 'Brand Identity Refresh -- Progress Payment', quantity: 1, unit_price: 2000, total: 2000 }],
+      line_items: [{ id: crypto.randomUUID(), description: 'Brand Identity Refresh · Progress Payment', quantity: 1, unit_price: 2000, total: 2000 }],
     });
     await store.addInvoice({
       client_id: client3.id,
@@ -328,7 +330,7 @@ export async function seedSampleData(): Promise<void> {
     // ── EXPENSES ──
     const expenseData = [
       { cat: 'Software', desc: 'Figma Professional', amt: 15, date: daysAgo(30) },
-      { cat: 'Marketing', desc: 'Stock photo pack -- Unsplash+', amt: 45, date: daysAgo(5) },
+      { cat: 'Marketing', desc: 'Stock photo pack · Unsplash+', amt: 45, date: daysAgo(5) },
       { cat: 'Equipment', desc: 'Samsung T7 SSD 1TB', amt: 89, date: daysAgo(42) },
       { cat: 'Software', desc: 'Adobe Creative Cloud', amt: 55, date: daysAgo(30) },
       { cat: 'Software', desc: 'Notion Pro', amt: 10, date: daysAgo(30) },
@@ -369,7 +371,7 @@ export async function clearSampleData(): Promise<void> {
       await db.execute('ROLLBACK');
     }
   } else {
-    // Browser mode: reload from clean state -- store data isn't flagged,
+    // Browser mode: reload from clean state · store data isn't flagged,
     // but clearing localStorage entries resets everything
     const keys = Object.keys(localStorage).filter(k => k.startsWith('lance:store:') || k === 'lance:seeded' || k === 'lance:seeded-toast-shown' || k === 'lance:templates-seeded');
     keys.forEach(k => localStorage.removeItem(k));

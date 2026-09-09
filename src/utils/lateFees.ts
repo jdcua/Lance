@@ -1,4 +1,4 @@
-import { formatCurrency } from './format';
+import { formatCurrency, DAY_MS } from './format';
 
 /**
  * Late-fee engine (Pro, smart dunning family).
@@ -25,7 +25,7 @@ export function computeLateFee(
   }
   const due = new Date(dueDateIso);
   if (isNaN(due.getTime())) return { periods: 0, percentPerPeriod, fee: 0 };
-  const daysOverdue = Math.floor((now.getTime() - due.getTime()) / 86400000);
+  const daysOverdue = Math.floor((now.getTime() - due.getTime()) / DAY_MS);
   if (daysOverdue < 1) return { periods: 0, percentPerPeriod, fee: 0 };
   const periods = Math.floor((daysOverdue - 1) / 30) + 1;
   const fee = Math.round(total * (percentPerPeriod / 100) * periods * 100) / 100;

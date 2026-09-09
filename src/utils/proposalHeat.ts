@@ -1,3 +1,5 @@
+import { DAY_MS } from './format';
+
 export type ProposalHeat = 'hot' | 'warm' | 'cooling' | 'neutral';
 
 export interface HeatInput {
@@ -19,7 +21,7 @@ export function scoreProposalHeat(input: HeatInput, now: Date = new Date()): Pro
     if (!iso) return null;
     const d = new Date(iso);
     if (isNaN(d.getTime())) return null;
-    return (now.getTime() - d.getTime()) / 86400000;
+    return (now.getTime() - d.getTime()) / DAY_MS;
   };
   if (input.opens > 0 && input.lastOpenedAt) {
     const daysSinceOpen = since(input.lastOpenedAt);

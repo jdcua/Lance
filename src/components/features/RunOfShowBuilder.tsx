@@ -1,5 +1,5 @@
 /**
- * Run of Show Builder -- ordered event timeline with up/down reorder.
+ * Run of Show Builder · ordered event timeline with up/down reorder.
  */
 import { useState, useEffect } from 'react';
 import { getDb } from '../../db';

@@ -1,5 +1,5 @@
 /**
- * Guest List -- guest management with RSVP status badges, table assignment, and dietary tracking.
+ * Guest List · guest management with RSVP status badges, table assignment, and dietary tracking.
  */
 import { useState, useEffect } from 'react';
 import { getDb } from '../../db';

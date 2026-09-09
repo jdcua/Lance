@@ -15,27 +15,12 @@ import { useStore } from '../../store';
 import { useToasts } from '../../store/toastStore';
 import type { Client } from '../../types';
 
-const CLIENT_FIELDS: Record<string, string[]> = {
-  name: ['name', 'client', 'client_name', 'customer', 'contact', 'full_name', 'contact_name'],
-  email: ['email', 'email_address', 'e_mail', 'mail'],
-  phone: ['phone', 'phone_number', 'telephone', 'tel', 'mobile', 'cell'],
-  company: ['company', 'organization', 'org', 'business', 'company_name', 'firm'],
-  notes: ['notes', 'note', 'comments', 'comment', 'description', 'remarks'],
-};
+import { autoMapColumns, mapRowToClient, SOURCE_PRESETS, CLIENT_FIELDS, type CsvRow } from '../../utils/clientImport';
 
 const MANDATORY_FIELD = 'name';
 
 const MAX_ROWS = 500;
 
-interface CsvRow {
-  __rowIndex: number;
-  __original: Record<string, string>;
-  name: string;
-  email: string;
-  phone: string;
-  company: string;
-  notes: string;
-}
 
 interface DedupResult {
   row: CsvRow;
@@ -53,35 +38,6 @@ const SAMPLE_CSV_CONTENT =
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
-function normalizeHeader(h: string): string {
-  return h
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '_')
-    .replace(/_+/g, '_')
-    .replace(/^_|_$/g, '');
-}
-
-function levenshteinSimilarity(a: string, b: string): number {
-  const maxLen = Math.max(a.length, b.length);
-  if (maxLen === 0) return 1;
-  const matrix: number[][] = [];
-  for (let i = 0; i <= a.length; i++) {
-    matrix[i] = [i];
-    for (let j = 1; j <= b.length; j++) {
-      if (i === 0) {
-        matrix[i][j] = j;
-        continue;
-      }
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      matrix[i][j] = Math.min(
-        matrix[i - 1][j] + 1,
-        matrix[i][j - 1] + 1,
-        matrix[i - 1][j - 1] + cost
-      );
-    }
-  }
-  return 1 - matrix[a.length][b.length] / maxLen;
-}
 
 export default function ClientImportModal({
   open,
@@ -98,7 +54,6 @@ export default function ClientImportModal({
   const [rawHeaders, setRawHeaders] = useState<string[]>([]);
   const [allRows, setAllRows] = useState<Record<string, string>[]>([]);
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
-  const [mappedRows, setMappedRows] = useState<CsvRow[]>([]);
   const [dedupResults, setDedupResults] = useState<DedupResult[]>([]);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
@@ -110,13 +65,13 @@ export default function ClientImportModal({
     failures: string[];
   }>({ imported: 0, skipped: 0, merged: 0, failed: 0, failures: [] });
   const [toBeImported, setToBeImported] = useState(0);
+  const [importSource, setImportSource] = useState<string>('generic');
 
   const reset = useCallback(() => {
     setStep(1);
     setRawHeaders([]);
     setAllRows([]);
     setColumnMapping({});
-    setMappedRows([]);
     setDedupResults([]);
     setImporting(false);
     setProgress({ current: 0, total: 0 });
@@ -192,29 +147,7 @@ export default function ClientImportModal({
       setRawHeaders(headers);
       setAllRows(rows);
 
-      const mapping: Record<string, string> = {};
-      for (const header of headers) {
-        const norm = normalizeHeader(header);
-        let bestField = '';
-        let bestScore = 0;
-        for (const [field, aliases] of Object.entries(CLIENT_FIELDS)) {
-          for (const alias of aliases) {
-            let score = 0;
-            if (norm === alias) score = 1;
-            else if (norm.includes(alias) || alias.includes(norm)) score = 0.7;
-            else if (levenshteinSimilarity(norm, alias) > 0.6)
-              score = levenshteinSimilarity(norm, alias) * 0.5;
-            if (score > bestScore) {
-              bestScore = score;
-              bestField = field;
-            }
-          }
-        }
-        if (bestScore >= 0.4) {
-          mapping[header] = bestField;
-        }
-      }
-      setColumnMapping(mapping);
+      setColumnMapping(autoMapColumns(headers, importSource));
       setStep(3);
     } catch (err) {
       addToast(`Failed to parse file: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
@@ -224,27 +157,7 @@ export default function ClientImportModal({
 
   const buildMappedRows = (): CsvRow[] => {
     return allRows
-      .map((row, i) => {
-        const result: CsvRow = {
-          __rowIndex: i,
-          __original: row,
-          name: '',
-          email: '',
-          phone: '',
-          company: '',
-          notes: '',
-        };
-        for (const [srcCol, destField] of Object.entries(columnMapping)) {
-          if (row[srcCol]) {
-            if (destField === 'name') result.name = row[srcCol];
-            else if (destField === 'email') result.email = row[srcCol];
-            else if (destField === 'phone') result.phone = row[srcCol];
-            else if (destField === 'company') result.company = row[srcCol];
-            else if (destField === 'notes') result.notes = row[srcCol];
-          }
-        }
-        return result;
-      })
+      .map((row, i) => mapRowToClient(row, i, columnMapping))
       .filter((r) => r.name.trim());
   };
 
@@ -254,7 +167,6 @@ export default function ClientImportModal({
       addToast('No rows to import after mapping', 'info');
       return;
     }
-    setMappedRows(mapped);
     setToBeImported(mapped.length);
     await loadClients();
     const latestClients = useStore.getState().clients;
@@ -416,7 +328,7 @@ export default function ClientImportModal({
           ))}
         </div>
 
-        {/* Step 1 -- Upload */}
+        {/* Step 1 · Upload */}
         {step === 1 && (
           <div className="space-y-4">
             <div
@@ -449,6 +361,23 @@ export default function ClientImportModal({
                 Max {MAX_ROWS} clients per import &middot; .csv, .xlsx
               </p>
             </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="import-source" className="text-xs text-[var(--text-secondary)] flex-shrink-0">
+                Switching from another tool?
+              </label>
+              <select
+                id="import-source"
+                value={importSource}
+                onChange={(e) => setImportSource(e.target.value)}
+                className="flex-1 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              >
+                {Object.entries(SOURCE_PRESETS).map(([id, preset]) => (
+                  <option key={id} value={id}>
+                    {preset.label}
+                  </option>
+                ))}
+              </select>
+            </div>
             <input
               ref={fileInputRef}
               type="file"
@@ -476,7 +405,7 @@ export default function ClientImportModal({
           </div>
         )}
 
-        {/* Step 2 -- Parsing */}
+        {/* Step 2 · Parsing */}
         {step === 2 && (
           <div className="space-y-4 text-center py-6">
             <Loader2 size={36} className="animate-spin mx-auto mb-4 text-[var(--accent)]" />
@@ -489,7 +418,7 @@ export default function ClientImportModal({
           </div>
         )}
 
-        {/* Step 3 -- Column Mapping */}
+        {/* Step 3 · Column Mapping */}
         {step === 3 && (
           <div className="space-y-4">
             <div>
@@ -589,7 +518,7 @@ export default function ClientImportModal({
           </div>
         )}
 
-        {/* Step 4 -- Import progress (overlay during import, or step indicator during review) */}
+        {/* Step 4 · Import progress (overlay during import, or step indicator during review) */}
         {step === 4 && importing && (
           <div className="space-y-4 text-center py-6">
             <Loader2 size={36} className="animate-spin mx-auto mb-4 text-[var(--accent)]" />
@@ -610,7 +539,7 @@ export default function ClientImportModal({
           </div>
         )}
 
-        {/* Step 4 -- Review & Deduplication (before importing) */}
+        {/* Step 4 · Review & Deduplication (before importing) */}
         {step === 4 && !importing && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -737,7 +666,7 @@ export default function ClientImportModal({
           </div>
         )}
 
-        {/* Step 5 -- Summary */}
+        {/* Step 5 · Summary */}
         {step === 5 && (
           <div className="space-y-4 text-center py-6">
             <div className="w-14 h-14 rounded-full bg-[var(--accent-bg)] flex items-center justify-center mx-auto mb-3">

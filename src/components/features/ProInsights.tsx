@@ -6,6 +6,7 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 import ProgressBar from '../ui/ProgressBar';
 import { formatCurrency } from '../../utils/format';
+import { getTrialValue, computeProRoi } from '../../utils/trialValue';
 import {
   computeForecast,
   computeEffectiveRate,
@@ -98,6 +99,7 @@ export default function ProInsights() {
 
   const bestRate = clientRates.length > 0 ? clientRates[0] : null;
   const totalLost = clientRates.reduce((s, c) => s + c.lostRevenue, 0);
+  const trialRoi = useMemo(() => computeProRoi(getTrialValue().total), []);
 
   useEffect(() => {
     loadRecurringInvoices().catch(() => {});
@@ -154,6 +156,14 @@ export default function ProInsights() {
           PRO
         </span>
       </div>
+      {trialRoi.multiple !== null && trialRoi.multiple >= 1 && (
+        <div className="mb-4 px-4 py-3 rounded-[10px] bg-[var(--accent-bg)] border border-[var(--accent)]/30">
+          <p className="text-xs text-[var(--text-primary)] leading-relaxed">
+            <strong>Pro paid for itself {trialRoi.multiple}x over:</strong> {formatCurrency(trialRoi.earned, currency)} found
+            through change orders, late fees, and top-ups. That covers {trialRoi.monthsCovered} month{trialRoi.monthsCovered === 1 ? '' : 's'} of Pro.
+          </p>
+        </div>
+      )}
       <div className="grid grid-cols-3 gap-6">
         <Card>
           <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">3-Month Forecast</h3>

@@ -458,6 +458,12 @@ export default function Sidebar() {
                 Trial: {trialDaysRemaining(profile?.trial_started_at)} days left
               </p>
             )}
+            {!isLicensed && getActiveTier() === 'expired' && (
+              <p className="text-[10px] text-[var(--text-tertiary)] font-medium mt-1 flex items-center gap-1">
+                <Sparkles size={10} />
+                Trial ended
+              </p>
+            )}
           </div>
         )}
         {!isExpanded && (

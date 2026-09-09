@@ -1,5 +1,5 @@
 /**
- * Commission Queue -- Illustrator feature.
+ * Commission Queue · Illustrator feature.
  * Ordered commission list with status tracking, payment status, and reordering.
  */
 import { useState, useEffect } from 'react';

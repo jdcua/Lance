@@ -1,5 +1,5 @@
 /**
- * Prototype Log -- Embedded feature.
+ * Prototype Log · Embedded feature.
  * Thin wrapper around PrototypeTracker with embedded-specific tool defaults (Altium, KiCad, EAGLE, other).
  */
 import { useState, useEffect } from 'react';

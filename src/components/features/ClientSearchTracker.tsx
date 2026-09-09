@@ -1,5 +1,5 @@
 /**
- * Client Search Tracker -- Recruiter feature.
+ * Client Search Tracker · Recruiter feature.
  * Simple list of client searches with search name, role, requirements, and status.
  */
 import { useState, useEffect } from 'react';

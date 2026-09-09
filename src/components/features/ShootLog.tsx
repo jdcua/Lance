@@ -1,5 +1,5 @@
 /**
- * Shoot Log -- Photographer / Filmmaker feature.
+ * Shoot Log · Photographer / Filmmaker feature.
  * Logs photo/video shoots with location, type, camera system, hours.
  */
 import { useState, useEffect } from 'react';

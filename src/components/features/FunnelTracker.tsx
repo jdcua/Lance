@@ -1,5 +1,5 @@
 /**
- * Funnel Tracker -- conversion funnels grouped by name with auto-calculated rate.
+ * Funnel Tracker · conversion funnels grouped by name with auto-calculated rate.
  */
 import { useState, useEffect } from 'react';
 import { getDb } from '../../db';

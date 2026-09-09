@@ -1,5 +1,5 @@
 /**
- * QA Log -- Game Developer feature.
+ * QA Log · Game Developer feature.
  * Table logging QA sessions with summary stats (hours, avg bugs, fix rate).
  */
 import { useState, useEffect } from 'react';

@@ -1,5 +1,5 @@
 /**
- * Document parser -- handles .pdf and .docx/.doc files.
+ * Document parser · handles .pdf and .docx/.doc files.
  * Extracts text, classifies content, and pulls structured fields.
  */
 
@@ -157,7 +157,7 @@ export async function parseDocument(file: File): Promise<ImportDetection> {
     } else if (ext === 'docx') {
       rawText = await parseDOCXText(file);
     } else if (ext === 'doc') {
-      // .doc (legacy binary format) -- mammoth may handle some versions
+      // .doc (legacy binary format) · mammoth may handle some versions
       try {
         rawText = await parseDOCXText(file);
       } catch {
@@ -167,7 +167,7 @@ export async function parseDocument(file: File): Promise<ImportDetection> {
           detectedEntity: 'unknown',
           confidence: 0,
           preview: {
-            summary: 'Legacy .doc format -- could not extract text. Try saving as .docx and re-importing.',
+            summary: 'Legacy .doc format · could not extract text. Try saving as .docx and re-importing.',
           },
         };
       }
@@ -209,7 +209,7 @@ export async function parseDocument(file: File): Promise<ImportDetection> {
   const truncatedText = rawText.length > 2000 ? rawText.substring(0, 2000) + '...' : rawText;
 
   const summary = confidence >= 0.15
-    ? `Detected: ${entityTypeLabel(detectedEntity)} -- ${Object.keys(extractedFields).length} fields extracted`
+    ? `Detected: ${entityTypeLabel(detectedEntity)} · ${Object.keys(extractedFields).length} fields extracted`
     : `Could not confidently classify this document. You can assign it manually or import as an attachment.`;
 
   return {

@@ -12,7 +12,9 @@ import type {
 import type { Achievement } from '../achievements/index';
 import { validateLicenseKey } from '../license';
 import { sanitizeInput, truncate, MAX_LENGTHS } from '../utils/sanitize';
+import { DAY_MS } from '../utils/format';
 import type { LicenseTier } from '../lib/constants';
+import { TRIAL } from '../lib/constants';
 
 const licenseCache = new Map<string, boolean>();
 
@@ -758,7 +760,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
     removeLicense: async () => {
       const profile = get().profile;
       if (!profile) return;
-      const updated = { ...profile, license_key: undefined, licensed_at: undefined };
+      const updated = { ...profile, license_key: undefined, licensed_at: undefined, license_tier: undefined, license_expires_at: undefined, license_validated_at: undefined, license_grace_until: undefined };
       await invoke('upsert_user_profile', { payload: updated });
       set({ profile: updated, isLicensed: false });
     },
@@ -768,6 +770,27 @@ export const useStore = create<UnifiedStore>((set, get) => {
       const profile = get().profile;
       if (!profile) return;
       const now = new Date().toISOString();
+
+      // One-time relaunch amnesty: every keyless profile gets a fresh full
+      // 37-day trial, including early profiles whose clocks started before
+      // the trial tier actually resolved. Licensed profiles are untouched.
+      // Runs once per machine (flagged in localStorage).
+      if (!profile.license_key && !profile.license_tier) {
+        let amnesty = false;
+        try {
+          amnesty = localStorage.getItem('lance:trial-reset-v1') !== 'done';
+        } catch { /* private mode: fall through to normal start */ }
+        if (amnesty) {
+          const updated = { ...profile, trial_started_at: now };
+          await invoke('upsert_user_profile', { payload: updated });
+          set({ profile: updated });
+          try {
+            localStorage.setItem('lance:trial-reset-v1', 'done');
+          } catch { /* private mode */ }
+          console.log('[license] Trial amnesty granted:', now);
+          return;
+        }
+      }
 
       // Start trial if never started
       if (!profile.trial_started_at) {
@@ -817,7 +840,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
             set({ profile: updated, isLicensed: true });
             console.log('[license] Online validation OK:', result.tier);
           } else if (result.tier) {
-            // Server said invalid/expired but gave us a tier -- update local state
+            // Server said invalid/expired but gave us a tier · update local state
             const profile = get().profile;
             if (!profile) return;
             const updated = {
@@ -840,7 +863,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
         if (profile?.license_validated_at && profile.license_grace_until) {
           const graceUntil = new Date(profile.license_grace_until).getTime();
           if (Date.now() > graceUntil) {
-            // Grace expired -- downgrade
+            // Grace expired · downgrade
             const updated = { ...profile, license_tier: 'free', isLicensed: false };
             await invoke('upsert_user_profile', { payload: updated });
             set({ profile: updated, isLicensed: false });
@@ -858,7 +881,28 @@ export const useStore = create<UnifiedStore>((set, get) => {
     getActiveTier: (): LicenseTier => {
       const profile = get().profile;
       if (!profile) return 'free';
-      return (profile.license_tier || (profile.license_key ? 'lifetime' : 'free')) as LicenseTier;
+      // Server-validated or downgraded tiers win, but paid tiers require
+      // the key to still be present. Otherwise removing a key would leave
+      // a stale 'pro' tier granting free Pro forever.
+      if (profile.license_tier) {
+        const serverTier = profile.license_tier as LicenseTier;
+        if (serverTier !== 'pro' && serverTier !== 'lifetime') return serverTier;
+        if (profile.license_key) return serverTier;
+      } else if (profile.license_key) {
+        return 'lifetime';
+      }
+      // Keyless trial derived from the trial clock: full Pro through the
+      // grace window (day 37), expired after. Without this, trial users
+      // silently resolved to 'free' and the trial never existed.
+      if (profile.trial_started_at) {
+        const started = new Date(profile.trial_started_at).getTime();
+        if (!isNaN(started)) {
+          const ageDays = Math.floor((Date.now() - started) / DAY_MS);
+          if (ageDays <= TRIAL.HARD_DAY) return 'trial';
+          return 'expired';
+        }
+      }
+      return 'free';
     },
 
     getFeatureFlags: async () => {

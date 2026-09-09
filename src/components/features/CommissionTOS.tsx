@@ -1,5 +1,5 @@
 /**
- * Commission TOS -- Illustrator feature.
+ * Commission TOS · Illustrator feature.
  * Global TOS templates with selectable active TOS stored in localStorage.
  */
 import { useState, useEffect } from 'react';

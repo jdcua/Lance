@@ -1,5 +1,5 @@
 /**
- * Collection Tracker -- Fashion Designer feature.
+ * Collection Tracker · Fashion Designer feature.
  * Track fashion collections with name, season, status, pieces count, and launch date.
  */
 import { useState, useEffect } from 'react';

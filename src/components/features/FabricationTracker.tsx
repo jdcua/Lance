@@ -1,5 +1,5 @@
 /**
- * Fabrication Tracker -- Embedded feature.
+ * Fabrication Tracker · Embedded feature.
  * Track fabrication status for items with fab house and cost.
  */
 import { useState, useEffect } from 'react';

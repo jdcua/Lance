@@ -1,5 +1,5 @@
 /**
- * Audition Log -- Voice Actor feature.
+ * Audition Log · Voice Actor feature.
  * Track auditions with status badges and callback dates.
  */
 import { useState, useEffect } from 'react';

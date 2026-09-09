@@ -477,7 +477,7 @@ export function applyTheme(theme: Theme): void {
     root.style.setProperty(key, value);
   });
 
-  // Dark mode overrides -- use theme's dedicated dark palette
+  // Dark mode overrides · use theme's dedicated dark palette
   let darkStyle = document.getElementById('lance-theme-dark');
   if (!darkStyle) {
     darkStyle = document.createElement('style');

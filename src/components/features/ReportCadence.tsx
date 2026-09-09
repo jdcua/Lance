@@ -1,5 +1,5 @@
 /**
- * Report Cadence -- Marketing / SEO feature.
+ * Report Cadence · Marketing / SEO feature.
  * Manages reporting frequency, last report date, and overdue status.
  */
 import { useState, useEffect } from 'react';

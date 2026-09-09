@@ -1,5 +1,5 @@
 /**
- * Compliance Framework Log -- Cybersecurity feature.
+ * Compliance Framework Log · Cybersecurity feature.
  * Track compliance controls with framework name, control ID, status, and evidence.
  */
 import { useState, useEffect } from 'react';
@@ -158,7 +158,7 @@ export default function ComplianceFrameworkLog({ projectId }: { projectId: strin
                     onClick={() => setExpanded(expanded === item.id ? null : item.id)}
                     className="font-medium text-[var(--text-primary)] truncate hover:underline text-left"
                   >
-                    {item.framework_name || 'No Framework'} -- {item.control_id}
+                    {item.framework_name || 'No Framework'} · {item.control_id}
                   </button>
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0 ${statusBadgeClasses[item.status] || ''}`}>
                     {item.status.replace('_', ' ')}

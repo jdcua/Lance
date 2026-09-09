@@ -1,5 +1,5 @@
 /**
- * Dataset Log -- Data Analyst / AI Engineer feature.
+ * Dataset Log · Data Analyst / AI Engineer feature.
  * Lists datasets with metadata (source, size, format, license).
  */
 import { useState, useEffect } from 'react';

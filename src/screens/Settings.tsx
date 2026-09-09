@@ -5,6 +5,11 @@ import { isTauri as isTauriApp } from '../utils/tauri';
 import { trialDaysRemaining } from '../lib/trial';
 import { getFeatureFlags } from '../lib/constants';
 import { resolveDunningTone } from '../utils/followUpTemplates';
+import { getCurrencySymbol } from '../lib/currency';
+import { getTrialValue } from '../utils/trialValue';
+import { eventCounts, getTelemetryEvents, clearTelemetry } from '../utils/telemetry';
+import { downloadTextFile } from '../utils/taxPack';
+import { formatCurrency } from '../utils/format';
 import type { UserProfile, ExportTemplate } from '../types';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -15,7 +20,7 @@ import { save } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeFile } from '@tauri-apps/plugin-fs';
 import { open } from '@tauri-apps/plugin-dialog';
 import { openCheckout } from '../utils/tauri';
-import { Check, Upload, Download, AlertTriangle, Trash2, Lock, Sparkles, ExternalLink, Bell, Eye, ArrowRight, FileText, FolderOpen } from 'lucide-react';
+import { Check, Upload, Download, AlertTriangle, Trash2, Lock, Sparkles, ArrowRight, FileText, FolderOpen } from 'lucide-react';
 import { THEMES, applyTheme, getTheme } from '../themes/themes';
 import type { ThemeId } from '../themes';
 import { PROFESSION_THEME, type Profession } from '../themes';
@@ -90,7 +95,6 @@ export default function Settings() {
   const [fuLateFeePercent, setFuLateFeePercent] = useState(1.5);
   const [fuTemplates, setFuTemplates] = useState<Record<string, string>>({});
   const [fuSubjectTemplates, setFuSubjectTemplates] = useState<Record<string, string>>({});
-  const [fuPreview, setFuPreview] = useState<string | null>(null);
   const fuInitRef = useRef(false);
   const [density, setDensity] = useState<string>('comfortable');
   const [accentColor, setAccentColor] = useState<string>('sage');
@@ -399,17 +403,42 @@ export default function Settings() {
     }
   };
 
+  const importFileRef = useRef<HTMLInputElement | null>(null);
+
   const handleImportData = async () => {
+    // Browser mode has no native file dialog: fall back to a file input.
+    if (!isTauriApp()) {
+      importFileRef.current?.click();
+      return;
+    }
     try {
       const filePath = await open({
         filters: [{ name: 'JSON', extensions: ['json'] }],
       });
       if (!filePath) return;
       const content = await readTextFile(filePath);
+      await ingestImportText(content);
+    } catch {
+      addToast('Import failed · could not read file', 'error');
+    }
+  };
 
+  const handleImportFilePicked = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      await ingestImportText(await file.text());
+    } catch {
+      addToast('Import failed · could not read file', 'error');
+    }
+  };
+
+  const ingestImportText = async (content: string) => {
+    try {
       const bytes = new TextEncoder().encode(content);
       if (bytes.length > 50 * 1024 * 1024) {
-        addToast('Import failed -- file exceeds 50MB limit', 'error');
+        addToast('Import failed · file exceeds 50MB limit', 'error');
         return;
       }
 
@@ -417,18 +446,18 @@ export default function Settings() {
       try {
         parsed = JSON.parse(content);
       } catch {
-        addToast('Import failed -- file is not valid JSON', 'error');
+        addToast('Import failed · file is not valid JSON', 'error');
         return;
       }
 
       const validation = validateImportEnvelope(parsed);
       if (!validation.valid) {
-        addToast(`Import failed -- ${validation.error}`, 'error');
+        addToast(`Import failed · ${validation.error}`, 'error');
         return;
       }
 
       if (!validation.envelope) {
-        addToast('Import failed -- invalid backup format', 'error');
+        addToast('Import failed · invalid backup format', 'error');
         return;
       }
 
@@ -452,7 +481,7 @@ export default function Settings() {
 
       proceedToImportSummary(envelope);
     } catch {
-      addToast('Import failed -- check file format', 'error');
+      addToast('Import failed · check file format', 'error');
     }
   };
 
@@ -482,7 +511,7 @@ export default function Settings() {
 
     try {
       if (!importSummaryData?.envelope) {
-        addToast('Import failed -- no data to import', 'error');
+        addToast('Import failed · no data to import', 'error');
         setImportPending(false);
         return;
       }
@@ -493,7 +522,7 @@ export default function Settings() {
       const result = await performImport(envelope, mode);
 
       if (result.imported === 0 && result.skipped === 0 && result.failed > 0) {
-        addToast('Import failed -- no data was changed', 'error');
+        addToast('Import failed · no data was changed', 'error');
       } else {
         const parts: string[] = [];
         if (result.imported > 0) parts.push(`Imported: ${result.imported} records across ${result.tablesWritten} tables`);
@@ -509,7 +538,7 @@ export default function Settings() {
 
       await loadProfile();
     } catch (err) {
-      addToast(`Import failed -- ${(err as Error)?.message || 'no data was changed'}`, 'error');
+      addToast(`Import failed · ${(err as Error)?.message || 'no data was changed'}`, 'error');
     } finally {
       setImportPending(false);
     }
@@ -693,6 +722,16 @@ export default function Settings() {
                       {getActiveTier() === 'trial' && (
                         <p className="text-sm text-[var(--text-primary)] mb-2">
                           Pro trial: <strong className="text-[var(--accent)]">{trialDaysRemaining(profile?.trial_started_at)} days left</strong>. Everything is unlocked. Keep it with a license before it ends.
+                          {getTrialValue().total > 0 && (
+                            <span className="block text-xs text-[var(--text-secondary)] mt-1">
+                              It has already earned you {formatCurrency(getTrialValue().total)}.
+                            </span>
+                          )}
+                        </p>
+                      )}
+                      {getActiveTier() === 'expired' && (
+                        <p className="text-sm text-[var(--text-primary)] mb-2">
+                          Your Pro trial ended. Your data is intact and Core stays free forever. Resubscribe anytime to unlock Pro depth again.
                         </p>
                       )}
                       <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-4">
@@ -768,7 +807,7 @@ export default function Settings() {
                     <div>
                       <label className={labelClass}>Default hourly rate</label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-tertiary)]">$</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-tertiary)]">{getCurrencySymbol(form.currency || profile?.currency || 'CAD')}</span>
                         <input
                           type="number"
                           min={0}
@@ -938,7 +977,7 @@ export default function Settings() {
                       </Button>
                     </div>
                     <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
-                      Your archetype customizes your sidebar layout, dashboard metrics, insights panels, and rate label. You can switch anytime -- your data stays the same.
+                      Your archetype customizes your sidebar layout, dashboard metrics, insights panels, and rate label. You can switch anytime · your data stays the same.
                     </p>
                     <div className="grid grid-cols-2 gap-1.5">
                       {ARCHETYPE_LIST.filter(a => a.id !== 'default' && a.id !== 'custom').slice(0, 8).map((archetype) => (
@@ -1143,7 +1182,7 @@ export default function Settings() {
                 <Card className="mb-6">
                   <SectionHead title="Follow-up reminders" isSaved={saved.has("Follow-ups")} />
                   <div className="space-y-4">
-                    <p className="text-xs text-[var(--text-tertiary)]">Lance monitors sent proposals and invoices and drafts friendly follow-up messages when they need attention. You control everything -- messages are never sent automatically.</p>
+                    <p className="text-xs text-[var(--text-tertiary)]">Lance monitors sent proposals and invoices and drafts friendly follow-up messages when they need attention. You control everything · messages are never sent automatically.</p>
 
                     {/* Toggle */}
                     <div className="flex items-center justify-between">
@@ -1295,6 +1334,15 @@ export default function Settings() {
                         <Upload size={14} />
                         Import
                       </Button>
+                      <input
+                        ref={importFileRef}
+                        type="file"
+                        accept=".json,application/json"
+                        className="hidden"
+                        aria-hidden="true"
+                        tabIndex={-1}
+                        onChange={handleImportFilePicked}
+                      />
                     </div>
                     {isSeeded && (
                       <div className="flex items-center justify-between">
@@ -1332,6 +1380,64 @@ export default function Settings() {
 
                     <div className="border-t border-[var(--border-color)] pt-3">
                       <ProjectTemplatesSection />
+                    </div>
+
+                    {/* On-device activity: local-first telemetry, fully inspectable */}
+                    <div className="border-t border-[var(--border-color)] pt-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <div>
+                          <p className="text-sm text-[var(--text-primary)]">On-device activity</p>
+                          <p className="text-xs text-[var(--text-tertiary)]">
+                            Anonymous usage counts that power personal stats and helpful nudges.
+                            Stored only on this machine. Never uploaded, never sold. Names, emails, and amounts are never recorded.
+                          </p>
+                        </div>
+                      </div>
+                      {(() => {
+                        const counts = eventCounts();
+                        const total = Object.values(counts).reduce((a, b) => a + b, 0);
+                        if (total === 0) {
+                          return <p className="text-xs text-[var(--text-tertiary)]">No activity recorded yet.</p>;
+                        }
+                        return (
+                          <div className="space-y-2">
+                            <div className="flex flex-wrap gap-1.5">
+                              {Object.entries(counts).map(([name, n]) => (
+                                <span key={name} className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--bg-secondary)] text-[var(--text-secondary)]">
+                                  {name}: {n}
+                                </span>
+                              ))}
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => {
+                                  downloadTextFile(
+                                    `lance-activity-${new Date().toISOString().split('T')[0]}.json`,
+                                    JSON.stringify(getTelemetryEvents(), null, 2),
+                                    'application/json;charset=utf-8',
+                                  );
+                                }}
+                              >
+                                <Download size={14} />
+                                Export
+                              </Button>
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => {
+                                  clearTelemetry();
+                                  addToast('On-device activity cleared', 'success');
+                                }}
+                              >
+                                <Trash2 size={14} />
+                                Clear
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </Card>
@@ -1480,7 +1586,7 @@ export default function Settings() {
                     <div>
                       <p className="text-sm font-medium text-[var(--text-primary)] mb-3">Message Templates</p>
                       <p className="text-xs text-[var(--text-tertiary)] mb-4">
-                        Use <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{client_name}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{proposal_title}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{invoice_number}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{amount}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{due_date}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{days_elapsed}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{freelancer_name}'}</code> -- they fill in automatically.
+                        Use <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{client_name}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{proposal_title}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{invoice_number}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{amount}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{due_date}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{days_elapsed}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{freelancer_name}'}</code> · they fill in automatically.
                       </p>
                       <div className="space-y-3">
                         {Object.entries(TEMPLATE_LABELS).map(([key, label]) => (
@@ -1665,7 +1771,7 @@ export default function Settings() {
       <Modal open={showAssetWarning} onClose={() => setShowAssetWarning(false)} title="Backup your files" size="sm">
         <div className="space-y-4">
           <div className="text-sm text-[var(--text-primary)] leading-relaxed">
-            <p className="mb-3">Your Lance backup includes all your data -- clients, projects, invoices, and everything else.</p>
+            <p className="mb-3">Your Lance backup includes all your data · clients, projects, invoices, and everything else.</p>
             <div className="flex items-start gap-2 p-3 rounded-[8px] bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
               <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
               <div>
@@ -1760,7 +1866,7 @@ export default function Settings() {
                   {importReplaceMode ? 'Replace all data' : 'Add to existing data'}
                 </p>
                 <p className="text-[10px] text-[var(--text-tertiary)]">
-                  {importReplaceMode ? 'Destructive -- removes all current data first' : 'Default -- safe'}
+                  {importReplaceMode ? 'Destructive · removes all current data first' : 'Default · safe'}
                 </p>
               </div>
             </div>

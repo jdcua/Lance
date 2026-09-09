@@ -1,5 +1,5 @@
 /**
- * Cut Tracker -- Filmmaker feature.
+ * Cut Tracker · Filmmaker feature.
  * Tracks project cuts with duration, format, approval, and summary stats.
  */
 import { useState, useEffect } from 'react';

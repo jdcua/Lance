@@ -1,5 +1,5 @@
 /**
- * Usability Test Log -- UX Designer feature.
+ * Usability Test Log · UX Designer feature.
  * Table with usability test sessions, severity badges, participants, and issues.
  */
 import { useState, useEffect } from 'react';

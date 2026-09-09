@@ -1,5 +1,5 @@
 /**
- * Style Tag System -- Illustrator feature.
+ * Style Tag System · Illustrator feature.
  * Tags projects with style descriptors via predefined suggestions and custom input.
  */
 import { useState, useEffect } from 'react';
