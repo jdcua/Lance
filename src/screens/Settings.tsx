@@ -8,6 +8,14 @@ import { resolveDunningTone } from '../utils/followUpTemplates';
 import { getCurrencySymbol } from '../lib/currency';
 import { PRO_PRICES } from '../lib/pricing';
 import { getTrialValue } from '../utils/trialValue';
+import { relativeDate } from '../utils/format';
+import {
+  loadTrash,
+  removeTrashEntry,
+  clearTrash,
+  TRASH_RETENTION_DAYS,
+  type TrashEntry,
+} from '../utils/trash';
 import { eventCounts, getTelemetryEvents, clearTelemetry } from '../utils/telemetry';
 import { downloadTextFile } from '../utils/taxPack';
 import { formatCurrency } from '../utils/format';
@@ -21,7 +29,7 @@ import { save } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeFile } from '@tauri-apps/plugin-fs';
 import { open } from '@tauri-apps/plugin-dialog';
 import { openCheckout } from '../utils/tauri';
-import { Check, Upload, Download, AlertTriangle, Trash2, Lock, Sparkles, ArrowRight, FileText, FolderOpen } from 'lucide-react';
+import { Check, Upload, Download, AlertTriangle, Trash2, Lock, Sparkles, ArrowRight, FileText, FolderOpen, X } from 'lucide-react';
 import { THEMES, applyTheme, getTheme } from '../themes/themes';
 import type { ThemeId } from '../themes';
 import { PROFESSION_THEME, type Profession } from '../themes';
@@ -1341,6 +1349,7 @@ export default function Settings() {
                         </Button>
                       </div>
                     )}
+                    <TrashBinSection />
                     <div className="border-t border-[var(--border-color)] pt-3 flex items-center justify-between">
                       <div>
                         <p className="text-sm text-[var(--text-primary)]">Assets folder</p>
@@ -1952,6 +1961,80 @@ const SECTION_OPTIONS: Record<string, string[]> = {
   proposal_docx: ['Header', 'Footer', 'Cover page', 'Scope of work', 'Timeline', 'Pricing table', 'Terms', 'Signature block'],
   contract_docx: ['Header', 'Footer', 'Parties', 'Scope', 'Payment terms', 'Timeline', 'Signatures'],
 };
+
+function TrashBinSection() {
+  const restoreTrashEntry = useStore((s) => s.restoreTrashEntry);
+  const addToast = useToasts((s) => s.add);
+  const [entries, setEntries] = useState<TrashEntry[]>([]);
+  const [restoring, setRestoring] = useState<string | null>(null);
+
+  const refresh = useCallback(() => setEntries(loadTrash()), []);
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const handleRestore = async (entry: TrashEntry) => {
+    setRestoring(entry.trashId);
+    try {
+      await restoreTrashEntry(entry);
+      removeTrashEntry(entry.trashId);
+      refresh();
+      addToast(`Restored ${entry.label}`, 'success');
+    } catch {
+      addToast('Could not restore this item', 'error');
+    } finally {
+      setRestoring(null);
+    }
+  };
+
+  const handleDeleteForever = (entry: TrashEntry) => {
+    removeTrashEntry(entry.trashId);
+    refresh();
+  };
+
+  if (entries.length === 0) return null;
+
+  return (
+    <div className="border-t border-[var(--border-color)] pt-3">
+      <div className="flex items-center justify-between mb-2">
+        <div>
+          <p className="text-sm text-[var(--text-primary)]">Recently deleted</p>
+          <p className="text-xs text-[var(--text-tertiary)]">
+            Restores the record itself · linked items deleted with it are not brought back · emptied automatically after {TRASH_RETENTION_DAYS} days
+          </p>
+        </div>
+        <button
+          onClick={() => { clearTrash(); refresh(); }}
+          className="text-[11px] text-[var(--text-tertiary)] hover:text-[var(--danger)]"
+        >
+          Empty trash
+        </button>
+      </div>
+      <div className="space-y-1">
+        {entries.map((e) => (
+          <div key={e.trashId} className="flex items-center gap-3 px-2 py-1.5 rounded-[6px] hover:bg-[var(--bg-secondary)] text-xs">
+            <div className="flex-1 min-w-0">
+              <span className="font-medium text-[var(--text-primary)] truncate">{e.label}</span>
+              <span className="text-[var(--text-tertiary)]"> · {e.table} · {relativeDate(e.deletedAt)}</span>
+            </div>
+            <button
+              onClick={() => handleRestore(e)}
+              disabled={restoring === e.trashId}
+              className="flex-shrink-0 text-[11px] font-medium text-[var(--accent)] hover:underline disabled:opacity-40"
+            >
+              {restoring === e.trashId ? 'Restoring…' : 'Restore'}
+            </button>
+            <button
+              onClick={() => handleDeleteForever(e)}
+              aria-label={`Delete ${e.label} forever`}
+              className="flex-shrink-0 text-[var(--text-tertiary)] hover:text-[var(--danger)]"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function ExportTemplatesSection() {
   const { exportTemplates, loadExportTemplates, addExportTemplate, updateExportTemplate, removeExportTemplate } = useStore();

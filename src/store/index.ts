@@ -16,6 +16,7 @@ import { DAY_MS } from '../utils/format';
 import type { LicenseTier } from '../lib/constants';
 import type { Update } from '@tauri-apps/plugin-updater';
 import { TRIAL } from '../lib/constants';
+import { pushTrashEntry, trashLabel, restoreTrashEntry as restoreTrashRow, type TrashEntry } from '../utils/trash';
 
 const licenseCache = new Map<string, boolean>();
 
@@ -178,7 +179,7 @@ export interface UnifiedStore {
   createExpense: (data: Omit<Expense, 'id'>) => Promise<Expense>
   updateExpense: (data: Expense) => Promise<void>
   deleteExpense: (id: string) => Promise<void>
-
+  restoreTrashEntry: (entry: TrashEntry) => Promise<void>
   // ── Profile ──
   loadProfile: () => Promise<UserProfile | null>
   saveProfile: (data: UserProfile) => Promise<void>
@@ -387,6 +388,16 @@ export const useStore = create<UnifiedStore>((set, get) => {
     return { ...inv, line_items: typeof lineItems === 'string' ? (JSON.parse(lineItems) as LineItem[]) : (lineItems as T['line_items']) };
   }
 
+  /** Snapshot a row into the trash bin before a destructive delete. */
+  function snapshotForTrash(table: string, id: string, row: Record<string, unknown> | undefined): void {
+    if (!row) return;
+    try {
+      pushTrashEntry(table, id, trashLabel(table, row), { ...row });
+    } catch {
+      /* trash is best-effort; the delete still proceeds */
+    }
+  }
+
   return {
     // ── Data init ──
     clients: [],
@@ -543,6 +554,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ clients: get().clients.map((c) => (c.id === data.id ? data : c)) });
     },
     deleteClient: async (id) => {
+      snapshotForTrash('clients', id, get().clients.find((c) => c.id === id));
       await invoke('delete_client', { id });
       set({ clients: get().clients.filter((c) => c.id !== id) });
     },
@@ -564,6 +576,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ projects: get().projects.map((p) => (p.id === data.id ? data : p)) });
     },
     deleteProject: async (id) => {
+      snapshotForTrash('projects', id, get().projects.find((p) => p.id === id));
       await invoke('delete_project', { id });
       set({ projects: get().projects.filter((p) => p.id !== id) });
     },
@@ -585,6 +598,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ milestones: get().milestones.map((m) => (m.id === data.id ? data : m)) });
     },
     deleteMilestone: async (id) => {
+      snapshotForTrash('milestones', id, get().milestones.find((m) => m.id === id));
       await invoke('delete_milestone', { id });
       set({ milestones: get().milestones.filter((m) => m.id !== id) });
     },
@@ -606,6 +620,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ proposals: get().proposals.map((p) => (p.id === data.id ? data : p)) });
     },
     deleteProposal: async (id) => {
+      snapshotForTrash('proposals', id, get().proposals.find((p) => p.id === id));
       await invoke('delete_proposal', { id });
       set({ proposals: get().proposals.filter((p) => p.id !== id) });
     },
@@ -627,6 +642,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ contracts: get().contracts.map((c) => (c.id === data.id ? data : c)) });
     },
     deleteContract: async (id) => {
+      snapshotForTrash('contracts', id, get().contracts.find((c) => c.id === id));
       await invoke('delete_contract', { id });
       set({ contracts: get().contracts.filter((c) => c.id !== id) });
     },
@@ -648,6 +664,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ timeEntries: get().timeEntries.map((t) => (t.id === data.id ? data : t)) });
     },
     deleteTimeEntry: async (id) => {
+      snapshotForTrash('time_entries', id, get().timeEntries.find((t) => t.id === id));
       await invoke('delete_time_entry', { id });
       set({ timeEntries: get().timeEntries.filter((t) => t.id !== id) });
     },
@@ -674,6 +691,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ invoices: get().invoices.map((i) => (i.id === data.id ? data : i)) });
     },
     deleteInvoice: async (id) => {
+      snapshotForTrash('invoices', id, get().invoices.find((i) => i.id === id));
       await invoke('delete_invoice', { id });
       set({ invoices: get().invoices.filter((i) => i.id !== id) });
     },
@@ -712,8 +730,23 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ expenses: get().expenses.map((e) => (e.id === data.id ? data : e)) });
     },
     deleteExpense: async (id) => {
+      snapshotForTrash('expenses', id, get().expenses.find((e) => e.id === id));
       await invoke('delete_expense', { id });
       set({ expenses: get().expenses.filter((e) => e.id !== id) });
+    },
+    restoreTrashEntry: async (entry) => {
+      const table = await restoreTrashRow(entry);
+      const reload: Record<string, () => Promise<void>> = {
+        clients: get().loadClients,
+        projects: get().loadProjects,
+        milestones: get().loadMilestones,
+        proposals: get().loadProposals,
+        contracts: get().loadContracts,
+        time_entries: get().loadTimeEntries,
+        invoices: get().loadInvoices,
+        expenses: get().loadExpenses,
+      };
+      await reload[table]?.();
     },
 
     // ── Profile ──
