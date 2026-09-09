@@ -35,6 +35,12 @@ describe('trash bin', () => {
     expect(loadTrash().length).toBe(0);
   });
 
+  it('clears everything', () => {
+    pushTrashEntry('clients', 'c1', 'Acme', { id: 'c1', name: 'Acme' });
+    clearTrash();
+    expect(loadTrash().length).toBe(0);
+  });
+
   it('restores a row with its original id', async () => {
     const e = pushTrashEntry('clients', 'c1', 'Acme', { id: 'c1', name: 'Acme' });
     await restoreTrashEntry(e);

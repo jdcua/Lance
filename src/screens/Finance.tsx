@@ -123,16 +123,26 @@ export default function Finance() {
     monthlyExpenses[month] = (monthlyExpenses[month] || 0) + e.amount;
   });
 
+  const invCurOf = (i: { currency?: string }) => i.currency || currency || 'CAD';
+  const monthlyPaidByCurrency: Record<string, Record<string, number>> = {};
+  const addMonthlyPaid = (month: string, cur: string, amount: number) => {
+    monthlyPaidByCurrency[month] = monthlyPaidByCurrency[month] || {};
+    monthlyPaidByCurrency[month][cur] = (monthlyPaidByCurrency[month][cur] || 0) + amount;
+  };
+
   const monthlyPaid: Record<string, number> = {};
   if (paidFromPayments > 0) {
     Object.values(payments).flat().forEach((p) => {
       const month = p.payment_date.substring(0, 7);
       monthlyPaid[month] = (monthlyPaid[month] || 0) + p.amount;
+      const inv = invoices.find((i) => i.id === p.invoice_id);
+      addMonthlyPaid(month, inv ? invCurOf(inv) : (currency || 'CAD'), p.amount);
     });
   } else {
     invoices.filter((i) => i.status === 'paid' && i.paid_at).forEach((i) => {
       const month = i.paid_at!.substring(0, 7);
       monthlyPaid[month] = (monthlyPaid[month] || 0) + i.total;
+      addMonthlyPaid(month, invCurOf(i), i.total);
     });
   }
 
@@ -261,9 +271,13 @@ export default function Finance() {
             <MetricCard label="Expenses" value={fmt(totalExpenses)} color="red" />
             <MetricCard
               label="Profit"
-              value={fmt(profit)}
+              value={hasMixedCurrencies
+                ? Object.entries(revenueByCurrency).map(([cur, amt]) =>
+                    `${formatCurrency(amt - (cur === (currency || 'CAD') ? totalExpenses : 0), cur)} ${cur}`).join(' · ')
+                : fmt(profit)
+              }
               trend={profit >= 0 ? 'up' : 'down'}
-              subtext={profit >= 0 ? 'positive' : 'negative'}
+              subtext={hasMixedCurrencies ? `expenses ${fmt(totalExpenses)} counted in ${currency || 'CAD'}` : (profit >= 0 ? 'positive' : 'negative')}
               color={profit >= 0 ? 'green' : 'red'}
             />
             <MetricCard
@@ -279,7 +293,7 @@ export default function Finance() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <Card>
-              <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Monthly Overview{hasMixedCurrencies ? ' (profile currency)' : ''}</h3>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Monthly Overview{hasMixedCurrencies ? ' · per currency' : ''}</h3>
               {allMonths.length === 0 ? (
                 <p className="text-xs text-[var(--text-tertiary)]">No data yet.</p>
               ) : (
@@ -288,14 +302,32 @@ export default function Finance() {
                     const expense = monthlyExpenses[month] || 0;
                     const income = monthlyPaid[month] || 0;
                     const net = income - expense;
+                    if (!hasMixedCurrencies) {
+                      return (
+                        <div key={month} className="flex items-center justify-between text-xs">
+                          <span className="text-[var(--text-secondary)]">{formatMonth(month)}</span>
+                          <div className="flex items-center gap-4">
+                            <span className="text-[var(--accent)]">+{fmt(income)}</span>
+                            <span className="text-[var(--danger)]">-{fmt(expense)}</span>
+                            <span className={`font-medium ${net >= 0 ? 'text-[var(--accent)]' : 'text-[var(--danger)]'}`}>
+                              {fmt(net)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    }
+                    const byCur = monthlyPaidByCurrency[month] || {};
+                    const profCur = currency || 'CAD';
+                    const netParts = Object.entries(byCur).map(([cur, amt]) =>
+                      `${formatCurrency(amt - (cur === profCur ? expense : 0), cur)} ${cur}`).join(' · ');
                     return (
                       <div key={month} className="flex items-center justify-between text-xs">
                         <span className="text-[var(--text-secondary)]">{formatMonth(month)}</span>
                         <div className="flex items-center gap-4">
-                          <span className="text-[var(--accent)]">+{fmt(income)}</span>
+                          <span className="text-[var(--accent)]">+{Object.entries(byCur).map(([cur, amt]) => `${formatCurrency(amt, cur)} ${cur}`).join(' · ')}</span>
                           <span className="text-[var(--danger)]">-{fmt(expense)}</span>
-                          <span className={`font-medium ${net >= 0 ? 'text-[var(--accent)]' : 'text-[var(--danger)]'}`}>
-                            {fmt(net)}
+                          <span className="font-medium text-[var(--text-primary)]">
+                            {netParts}
                           </span>
                         </div>
                       </div>
@@ -836,6 +868,16 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
   }
 
   const totalAging = Object.values(bucketTotals).reduce((s, v) => s + v, 0);
+  const agingMixed = new Set(agingInvoices.map((a) => a.invoice.currency || 'CAD')).size > 1;
+  const agingMoney = (list: AgingInvoice[], single: number, pick: (a: AgingInvoice) => number) => {
+    if (!agingMixed) return fmt(single);
+    const by: Record<string, number> = {};
+    list.forEach((a) => {
+      const cur = a.invoice.currency || 'CAD';
+      by[cur] = (by[cur] || 0) + pick(a);
+    });
+    return Object.entries(by).map(([cur, amt]) => `${formatCurrency(amt, cur)} ${cur}`).join(' · ');
+  };
 
   const sorted = [...agingInvoices].sort((a, b) => {
     const dir = sortDir === 'asc' ? 1 : -1;
@@ -949,7 +991,7 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
       {/* Total */}
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-[var(--text-primary)]">Outstanding & Partial Invoices</h3>
-        <span className="text-xs text-[var(--text-secondary)]">Total: <strong className="text-[var(--text-primary)]">{fmt(totalAging)}</strong> across {agingInvoices.length} invoice{agingInvoices.length !== 1 ? 's' : ''}</span>
+        <span className="text-xs text-[var(--text-secondary)]">Total: <strong className="text-[var(--text-primary)]">{agingMoney(agingInvoices, totalAging, (a) => a.remaining)}</strong> across {agingInvoices.length} invoice{agingInvoices.length !== 1 ? 's' : ''}</span>
       </div>
 
       {/* Table */}
@@ -1006,8 +1048,8 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
           <tfoot>
             <tr className="border-t-2 border-[var(--border-color)] font-medium">
               <td className="px-3 py-2 text-[var(--text-secondary)]" colSpan={2}>Total ({agingInvoices.length})</td>
-              <td className="px-3 py-2 text-[var(--text-primary)] tabular-nums">{fmt(agingInvoices.reduce((s, a) => s + a.invoice.total, 0))}</td>
-              <td className="px-3 py-2 text-[var(--text-primary)] tabular-nums">{fmt(totalAging)}</td>
+              <td className="px-3 py-2 text-[var(--text-primary)] tabular-nums">{agingMoney(agingInvoices, agingInvoices.reduce((s, a) => s + a.invoice.total, 0), (a) => a.invoice.total)}</td>
+              <td className="px-3 py-2 text-[var(--text-primary)] tabular-nums">{agingMoney(agingInvoices, totalAging, (a) => a.remaining)}</td>
               <td className="px-3 py-2"></td>
               <td className="px-3 py-2"></td>
               <td className="px-3 py-2"></td>

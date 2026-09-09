@@ -217,6 +217,12 @@ export default function FollowUps() {
       await new Promise((r) => setTimeout(r, 800));
     }
     setBulkConfirm(false);
+    // Browsers may swallow all but the first mailto navigation, so confirm
+    // what happened and leave everything pending until actually sent.
+    addToast(
+      `${items.length} draft${items.length === 1 ? '' : 's'} opened in your mail app · items stay pending until marked sent`,
+      'info',
+    );
   };
 
   const openEditModal = (item: typeof allFollowUps[0]) => {

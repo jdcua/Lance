@@ -69,15 +69,16 @@ export default function Insights() {
   };
 
   // Client revenue ranking
-  const clientRevenue: Record<string, { name: string; total: number; count: number }> = {};
+  const clientRevenue: Record<string, { name: string; total: number; count: number; currencies: Set<string> }> = {};
   invoices.filter((i) => i.status === 'paid').forEach((inv) => {
     const client = clients.find((c) => c.id === inv.client_id);
     const name = client?.name || inv.client_id;
     if (!clientRevenue[inv.client_id]) {
-      clientRevenue[inv.client_id] = { name, total: 0, count: 0 };
+      clientRevenue[inv.client_id] = { name, total: 0, count: 0, currencies: new Set() };
     }
     clientRevenue[inv.client_id].total += inv.total;
     clientRevenue[inv.client_id].count += 1;
+    clientRevenue[inv.client_id].currencies.add(inv.currency || profile?.currency || 'CAD');
   });
   const topClients = Object.values(clientRevenue).sort((a, b) => b.total - a.total).slice(0, 5);
 
@@ -219,11 +220,14 @@ export default function Insights() {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-[10px] text-[var(--text-tertiary)]">{c.count} invoice{c.count !== 1 ? 's' : ''}</span>
-                      <span className="text-xs font-medium text-[var(--text-primary)]">{formatCurrency(c.total, profile?.currency)}</span>
+                      <span className="text-xs font-medium text-[var(--text-primary)]">{formatCurrency(c.total, c.currencies.size === 1 ? [...c.currencies][0] : profile?.currency)}{c.currencies.size === 1 ? ` ${[...c.currencies][0]}` : ' ∗'}</span>
                     </div>
                   </div>
                 ))}
               </div>
+            )}
+            {mixedInvoiceCurrencies && (
+              <p className="text-[10px] text-[var(--text-tertiary)] mt-3">∗ spans multiple currencies · not converted.</p>
             )}
           </Card>
         )}
