@@ -156,7 +156,7 @@ export default function Settings() {
     loadProfile()
       .catch(err => addToast(err?.toString?.() || 'Failed to load profile', 'error'))
       .finally(() => setLoading(false));
-  }, [loadProfile]);
+  }, [loadProfile, addToast]);
 
   useEffect(() => {
     if (profile && !formInitialized.current) {
@@ -226,7 +226,7 @@ export default function Settings() {
   // Load follow-up settings
   useEffect(() => {
     loadFollowUpSettings();
-  }, []);
+  }, [loadFollowUpSettings]);
 
   useEffect(() => {
     if (!fuInitRef.current && followUpSettings.templates && Object.keys(followUpSettings.templates).length > 0) {
@@ -1959,7 +1959,7 @@ function ExportTemplatesSection() {
 
   useEffect(() => {
     loadExportTemplates().finally(() => setLoaded(true));
-  }, []);
+  }, [loadExportTemplates]);
 
   const openNew = () => {
     setEditing(null);
@@ -2168,7 +2168,7 @@ function ProjectTemplatesSection() {
 
   useEffect(() => {
     loadProjectTemplates().finally(() => setLoaded(true));
-  }, []);
+  }, [loadProjectTemplates]);
 
   const handleExpand = async (id: string) => {
     if (expanded === id) {

@@ -2,10 +2,10 @@
  * Compliance Framework Log · Cybersecurity feature.
  * Track compliance controls with framework name, control ID, status, and evidence.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
-import { Plus, Trash2, FileCheck, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, FileCheck } from 'lucide-react';
 
 type ComplianceItem = {
   id: string;
@@ -35,7 +35,7 @@ export default function ComplianceFrameworkLog({ projectId }: { projectId: strin
   const [form, setForm] = useState({ framework_name: '', control_id: '', description: '', status: 'in_progress', evidence: '', last_review: new Date().toISOString().split('T')[0] });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ComplianceItem & Record<string, unknown>)[]>(
@@ -54,9 +54,9 @@ export default function ComplianceFrameworkLog({ projectId }: { projectId: strin
       })));
     } catch (e) { console.error('[ComplianceFrameworkLog] loadItems failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const handleAdd = async () => {
     if (!form.control_id.trim()) return;

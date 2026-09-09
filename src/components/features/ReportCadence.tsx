@@ -2,7 +2,7 @@
  * Report Cadence · Marketing / SEO feature.
  * Manages reporting frequency, last report date, and overdue status.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Send, AlertTriangle } from 'lucide-react';
@@ -38,7 +38,7 @@ export default function ReportCadence({ clientId }: { clientId: string }) {
   const [form, setForm] = useState({ frequency: 'monthly' });
   const [saving, setSaving] = useState(false);
 
-  const loadCadence = async () => {
+  const loadCadence = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Cadence & Record<string, unknown>)[]>(
@@ -52,9 +52,9 @@ export default function ReportCadence({ clientId }: { clientId: string }) {
       }
     } catch (e) { console.error('[ReportCadence] loadCadence failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadCadence(); }, [clientId]);
+  useEffect(() => { loadCadence(); }, [clientId, loadCadence]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -96,7 +96,6 @@ export default function ReportCadence({ clientId }: { clientId: string }) {
     setSaving(false);
   };
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
 
   if (loading) {
     return (

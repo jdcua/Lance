@@ -13,18 +13,6 @@ function first<T>(rows: T[]): T | undefined {
   return rows[0];
 }
 
-function getCount(rows: CountRow[]): number {
-  return first(rows)?.c ?? 0;
-}
-
-function getSum(rows: SumRow[]): number {
-  return first(rows)?.s ?? 0;
-}
-
-function getMins(rows: MinutesRow[]): number {
-  return first(rows)?.m ?? 0;
-}
-
 export async function activeProjectsCount(db: Database, _profileId: number): Promise<string | number> {
   const rows = await db.select<CountRow[]>("SELECT COUNT(*) as c FROM projects WHERE status = 'active'");
   return first(rows)?.c ?? 0;

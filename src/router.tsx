@@ -1,5 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, type ReactNode } from 'react';
 import App from './App';
 
 const Dashboard = lazy(() => import('./screens/Dashboard'));
@@ -21,7 +21,9 @@ const ArchetypePicker = lazy(() => import('./screens/ArchetypePicker'));
 const ShareView = lazy(() => import('./screens/ShareView'));
 const NotFound = lazy(() => import('./screens/NotFound'));
 
-function LazyRoute({ children }: { children: React.ReactNode }) {
+// Plain Suspense wrapper (not a component) so this module only exports the
+// router object and stays fast-refresh clean.
+function lazyRoute(element: ReactNode) {
   return (
     <Suspense fallback={
       <div className="p-6 space-y-6">
@@ -31,7 +33,7 @@ function LazyRoute({ children }: { children: React.ReactNode }) {
         </div>
       </div>
     }>
-      {children}
+      {element}
     </Suspense>
   );
 }
@@ -42,29 +44,29 @@ export const router = createBrowserRouter(
       path: '/',
       element: <App />,
       children: [
-        { index: true, element: <LazyRoute><Dashboard /></LazyRoute> },
-        { path: 'archetype', element: <LazyRoute><ArchetypePicker /></LazyRoute> },
-        { path: 'proposals', element: <LazyRoute><Proposals /></LazyRoute> },
-        { path: 'proposals/new', element: <LazyRoute><NewProposal /></LazyRoute> },
-        { path: 'contracts', element: <LazyRoute><Contracts /></LazyRoute> },
-        { path: 'projects', element: <LazyRoute><Projects /></LazyRoute> },
-        { path: 'time', element: <LazyRoute><Time /></LazyRoute> },
-        { path: 'invoices', element: <LazyRoute><Invoices /></LazyRoute> },
-        { path: 'follow-ups', element: <LazyRoute><FollowUps /></LazyRoute> },
-        { path: 'clients', element: <LazyRoute><Clients /></LazyRoute> },
-        { path: 'finance', element: <LazyRoute><Finance /></LazyRoute> },
-        { path: 'insights', element: <LazyRoute><Insights /></LazyRoute> },
-        { path: 'settings', element: <LazyRoute><SettingsView /></LazyRoute> },
-        { path: 'achievements', element: <LazyRoute><AchievementsPage /></LazyRoute> },
-        { path: 'assets', element: <LazyRoute><Assets /></LazyRoute> },
-        { path: 'search', element: <LazyRoute><SearchScreen /></LazyRoute> },
-        { path: '*', element: <LazyRoute><NotFound /></LazyRoute> },
+        { index: true, element: lazyRoute(<Dashboard />) },
+        { path: 'archetype', element: lazyRoute(<ArchetypePicker />) },
+        { path: 'proposals', element: lazyRoute(<Proposals />) },
+        { path: 'proposals/new', element: lazyRoute(<NewProposal />) },
+        { path: 'contracts', element: lazyRoute(<Contracts />) },
+        { path: 'projects', element: lazyRoute(<Projects />) },
+        { path: 'time', element: lazyRoute(<Time />) },
+        { path: 'invoices', element: lazyRoute(<Invoices />) },
+        { path: 'follow-ups', element: lazyRoute(<FollowUps />) },
+        { path: 'clients', element: lazyRoute(<Clients />) },
+        { path: 'finance', element: lazyRoute(<Finance />) },
+        { path: 'insights', element: lazyRoute(<Insights />) },
+        { path: 'settings', element: lazyRoute(<SettingsView />) },
+        { path: 'achievements', element: lazyRoute(<AchievementsPage />) },
+        { path: 'assets', element: lazyRoute(<Assets />) },
+        { path: 'search', element: lazyRoute(<SearchScreen />) },
+        { path: '*', element: lazyRoute(<NotFound />) },
       ],
     },
     {
       // Public, client-facing share portal · rendered WITHOUT the app shell
       path: 'share/:token',
-      element: <LazyRoute><ShareView /></LazyRoute>,
+      element: lazyRoute(<ShareView />),
     },
   ],
 );

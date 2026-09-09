@@ -6,7 +6,6 @@ import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import Modal from '../components/ui/Modal';
 import { formatCurrency, formatDate, formatMonth, parseDateString, DAY_MS } from '../utils/format';
-import { getCurrencySymbol } from '../lib/currency';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import BankImportModal from '../components/features/BankImportModal';
 import TaxPack from '../components/features/TaxPack';
@@ -57,7 +56,7 @@ export default function Finance() {
     loadAll()
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
-  }, [loadExpenses, loadInvoices, loadRecurringInvoices, loadProjects, loadMilestones]);
+  }, [loadExpenses, loadInvoices, loadRecurringInvoices, loadProjects, loadMilestones, addToast, loadAllPayments, loadClients]);
 
   const openNew = () => {
     setEditing(null);
@@ -790,7 +789,7 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
   payments: Record<string, InvoicePayment[]>;
   getClientName: (id: string) => string;
   fmt: (n: number) => string;
-  addPayment: (data: { invoice_id: string; amount: number; payment_date: string; payment_method: string; reference?: string; notes?: string }) => Promise<any>;
+  addPayment: (data: { invoice_id: string; amount: number; payment_date: string; payment_method: string; reference?: string; notes?: string }) => Promise<InvoicePayment>;
   updateInvoice: (data: Invoice) => Promise<void>;
   addToast: (msg: string, type?: ToastType) => void;
 }) {

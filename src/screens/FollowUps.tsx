@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useStore } from '../store';
 import { useToasts } from '../store/toastStore';
 import type { FollowUpLog } from '../types';
@@ -6,7 +6,7 @@ import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import {
-  Bell, Mail, Check, X, Send, Eye, AlertTriangle, Edit3, ChevronDown, RefreshCw,
+  Bell, Mail, Check, X, Send, AlertTriangle, Edit3, ChevronDown, RefreshCw,
 } from 'lucide-react';
 import { generateFollowUpDraft, generateSubjectLine, TEMPLATE_LABELS, openMailTo, resolveDunningTone, type DunningTone } from '../utils/followUpTemplates';
 import { computeLateFee, lateFeeParagraph } from '../utils/lateFees';
@@ -45,11 +45,11 @@ export default function FollowUps() {
 
   useEffect(() => {
     Promise.all([loadClients(), loadProposals(), loadInvoices(), loadPendingFollowUps(), loadAllFollowUpLogs()]).finally(() => setLoading(false));
-  }, []);
+  }, [loadClients, loadProposals, loadInvoices, loadPendingFollowUps, loadAllFollowUpLogs]);
 
-  const getClient = (clientId: string) => clients.find((c) => c.id === clientId);
-  const getProposal = (id: string) => proposals.find((p) => p.id === id);
-  const getInvoice = (invId: string) => invoices.find((i) => i.id === invId);
+  const getClient = useCallback((clientId: string) => clients.find((c) => c.id === clientId), [clients]);
+  const getProposal = useCallback((id: string) => proposals.find((p) => p.id === id), [proposals]);
+  const getInvoice = useCallback((invId: string) => invoices.find((i) => i.id === invId), [invoices]);
 
   const allFollowUps = useMemo(() => {
     const results: Array<{
@@ -147,7 +147,7 @@ export default function FollowUps() {
 
     results.sort((a, b) => new Date(a.log.drafted_at).getTime() - new Date(b.log.drafted_at).getTime());
     return results;
-  }, [pendingFollowUps, followUpLogs, clients, proposals, invoices, profile, followUpSettings, dunningTone]);
+  }, [pendingFollowUps, followUpLogs, profile, followUpSettings, dunningTone, getClient, getInvoice, getProposal]);
 
   const filtered = useMemo(() => {
     let items = allFollowUps;
@@ -182,7 +182,7 @@ export default function FollowUps() {
     try {
       await openMailTo(item.clientEmail, subject, body);
       addToast('Email opened in your default mail client', 'success');
-    } catch (e) {
+    } catch {
       addToast('Failed to open email client', 'error');
     }
   };

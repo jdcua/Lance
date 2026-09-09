@@ -2,7 +2,7 @@
  * Equipment Inventory · Voice Actor feature.
  * Track equipment with total value at top.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, DollarSign } from 'lucide-react';
@@ -34,7 +34,7 @@ export default function EquipmentInventory({ clientId }: { clientId: string }) {
   });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(EquipmentItem & Record<string, unknown>)[]>(
@@ -57,11 +57,11 @@ export default function EquipmentInventory({ clientId }: { clientId: string }) {
       console.error('[EquipmentInventory] loadItems failed:', e);
     }
     setLoading(false);
-  };
+  }, [clientId]);
 
   useEffect(() => {
     loadItems();
-  }, [clientId]);
+  }, [clientId, loadItems]);
 
   const totalValue = items.reduce((sum, i) => sum + (i.value || 0), 0);
 

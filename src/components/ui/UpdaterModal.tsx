@@ -2,6 +2,7 @@ import { useUpdaterStore } from '../../store/updaterStore';
 import Modal from './Modal';
 import Button from './Button';
 import { relaunch } from '@tauri-apps/plugin-process';
+import type { DownloadEvent } from '@tauri-apps/plugin-updater';
 import { Download, Sparkles } from 'lucide-react';
 import { getDb } from '../../db';
 
@@ -29,7 +30,7 @@ export default function UpdaterModal() {
     setDownloading(true);
     try {
       const fromVersion = updateData.currentVersion;
-      await updateData.downloadAndInstall((event: any) => {
+      await updateData.downloadAndInstall((event: DownloadEvent) => {
         if (event.event === 'Progress') {
           const mb = (event.data.chunkLength / (1024 * 1024)).toFixed(1);
           setDownloadProgress(mb);

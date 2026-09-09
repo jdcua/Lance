@@ -2,7 +2,7 @@
  * SLA Tracker · DevOps feature.
  * Track service-level agreements with metric name, target, actual, and status indicator.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Target, TrendingUp } from 'lucide-react';
@@ -23,7 +23,7 @@ export default function SLATracker({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ metric_name: '', target: '', actual: '', period: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadSLAs = async () => {
+  const loadSLAs = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(SLA & Record<string, unknown>)[]>(
@@ -40,9 +40,9 @@ export default function SLATracker({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[SLATracker] loadSLAs failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadSLAs(); }, [projectId]);
+  useEffect(() => { loadSLAs(); }, [projectId, loadSLAs]);
 
   const handleAdd = async () => {
     if (!form.metric_name.trim()) return;

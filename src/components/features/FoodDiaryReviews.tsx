@@ -2,7 +2,7 @@
  * Food Diary Reviews · Nutritionist feature.
  * Food diary entries grouped by date.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2 } from 'lucide-react';
@@ -30,7 +30,7 @@ export default function FoodDiaryReviews({ clientId }: { clientId: string }) {
   });
   const [saving, setSaving] = useState(false);
 
-  const loadEntries = async () => {
+  const loadEntries = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(FoodDiary & Record<string, unknown>)[]>(
@@ -51,11 +51,11 @@ export default function FoodDiaryReviews({ clientId }: { clientId: string }) {
       console.error('[FoodDiaryReviews] loadEntries failed:', e);
     }
     setLoading(false);
-  };
+  }, [clientId]);
 
   useEffect(() => {
     loadEntries();
-  }, [clientId]);
+  }, [clientId, loadEntries]);
 
   const groupedByDate = entries.reduce<Record<string, FoodDiary[]>>((acc, e) => {
     const d = e.date?.split('T')[0] || e.date || 'Unknown';

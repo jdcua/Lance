@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../../store';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
@@ -36,7 +36,7 @@ export default function SiteVisitLog({ projectId }: { projectId: string }) {
   const [showPhotoPicker, setShowPhotoPicker] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const loadVisits = async () => {
+  const loadVisits = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(SiteVisit & Record<string, unknown>)[]>(
@@ -54,12 +54,12 @@ export default function SiteVisitLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[SiteVisitLog] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
   useEffect(() => {
     loadAllAttachments();
     loadVisits();
-  }, [projectId]);
+  }, [projectId, loadAllAttachments, loadVisits]);
 
   const handleAdd = async () => {
     setSaving(true);

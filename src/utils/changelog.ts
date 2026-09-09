@@ -7,6 +7,14 @@ export interface ChangelogEntry {
   items: string[];
 }
 
+interface GitHubRelease {
+  draft?: boolean;
+  prerelease?: boolean;
+  tag_name: string;
+  published_at: string;
+  body?: string | null;
+}
+
 /**
  * Dynamic changelog loader.
  * Priority:
@@ -39,10 +47,10 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
       headers: { Accept: 'application/vnd.github.v3+json' },
     });
     if (!response.ok) throw new Error(`GitHub API ${response.status}`);
-    const releases = await response.json();
+    const releases = (await response.json()) as GitHubRelease[];
     entries = releases
-      .filter((r: any) => !r.draft && !r.prerelease)
-      .map((r: any) => ({
+      .filter((r) => !r.draft && !r.prerelease)
+      .map((r) => ({
         version: r.tag_name.replace(/^v/, ''),
         date: r.published_at.split('T')[0],
         items: r.body
@@ -55,7 +63,7 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
   }
 
   // 3. Fallback: parse local git tags (dev mode, Tauri only)
-  if (entries.length === 0 && typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
+  if (entries.length === 0 && typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).__TAURI_INTERNALS__) {
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       const log = await invoke<string>('get_git_changelog', { limit: 20 });

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../../store';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
@@ -23,19 +23,19 @@ export default function CullingTracker({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ shoot_id: '', date: '', shoot_hours: '', culling_hours: '', editing_hours: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    loadShoots();
-    loadSessions();
-  }, [projectId]);
-
-  const loadSessions = async () => {
+  const loadSessions = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<CullingSession[]>('SELECT * FROM culling_sessions WHERE project_id = $1 ORDER BY date DESC', [projectId]);
       setSessions(rows);
     } catch { /* handled */ }
     setLoading(false);
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    loadShoots();
+    loadSessions();
+  }, [projectId, loadSessions, loadShoots]);
 
   const projectShoots = shoots.filter(s => s.project_id === projectId);
 
@@ -45,7 +45,6 @@ export default function CullingTracker({ projectId }: { projectId: string }) {
     try {
       const db = await getDb();
       const id = crypto.randomUUID();
-      const now = new Date().toISOString();
       await db.execute(
         'INSERT INTO culling_sessions (id, project_id, shoot_id, date, shoot_hours, culling_hours, editing_hours, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
         [id, projectId, form.shoot_id || null, form.date || null, form.shoot_hours ? parseFloat(form.shoot_hours) : null, form.culling_hours ? parseFloat(form.culling_hours) : null, form.editing_hours ? parseFloat(form.editing_hours) : null, form.notes || null]

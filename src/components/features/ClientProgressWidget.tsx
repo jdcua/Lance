@@ -2,7 +2,7 @@
  * Client Progress Widget · Trainer feature.
  * Simple timeline list with most recent measurement prominently displayed.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, TrendingUp, Calendar } from 'lucide-react';
@@ -22,7 +22,7 @@ export default function ClientProgressWidget({ clientId }: { clientId: string })
   const [form, setForm] = useState({ date: new Date().toISOString().split('T')[0], measurements: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadProgress = async () => {
+  const loadProgress = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ClientProgress & Record<string, unknown>)[]>(
@@ -38,9 +38,9 @@ export default function ClientProgressWidget({ clientId }: { clientId: string })
       })));
     } catch (e) { console.error('[ClientProgressWidget] loadProgress failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadProgress(); }, [clientId]);
+  useEffect(() => { loadProgress(); }, [clientId, loadProgress]);
 
   const handleAdd = async () => {
     if (!form.date) return;

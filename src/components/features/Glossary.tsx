@@ -3,10 +3,10 @@
  * Per-client glossary of terms with approved translations.
  * Table with inline edit, search filter, add, and delete.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
-import { Plus, Trash2, Search, Edit3, X, BookOpen, Check } from 'lucide-react';
+import { Plus, Trash2, Search, Edit3, X, BookOpen } from 'lucide-react';
 
 type GlossaryTerm = {
   id: string;
@@ -27,7 +27,7 @@ export default function Glossary({ clientId }: { clientId: string }) {
   const [editForm, setEditForm] = useState({ term: '', approved_translation: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadTerms = async () => {
+  const loadTerms = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(GlossaryTerm & Record<string, unknown>)[]>(
@@ -48,11 +48,11 @@ export default function Glossary({ clientId }: { clientId: string }) {
       console.error('[Glossary] loadTerms failed:', e);
     }
     setLoading(false);
-  };
+  }, [clientId]);
 
   useEffect(() => {
     loadTerms();
-  }, [clientId]);
+  }, [clientId, loadTerms]);
 
   const handleSave = async () => {
     if (!form.term.trim()) return;

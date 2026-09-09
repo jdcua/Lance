@@ -2,7 +2,7 @@
  * Dietary Assessment · Nutritionist feature.
  * Timeline of dietary assessments with food log, analysis, recommendations.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, ChevronRight } from 'lucide-react';
@@ -29,7 +29,7 @@ export default function DietaryAssessment({ clientId }: { clientId: string }) {
   });
   const [saving, setSaving] = useState(false);
 
-  const loadAssessments = async () => {
+  const loadAssessments = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(DietaryAssessment & Record<string, unknown>)[]>(
@@ -50,11 +50,11 @@ export default function DietaryAssessment({ clientId }: { clientId: string }) {
       console.error('[DietaryAssessment] loadAssessments failed:', e);
     }
     setLoading(false);
-  };
+  }, [clientId]);
 
   useEffect(() => {
     loadAssessments();
-  }, [clientId]);
+  }, [clientId, loadAssessments]);
 
   const handleSave = async () => {
     if (!form.date) return;

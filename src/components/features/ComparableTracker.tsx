@@ -2,7 +2,7 @@
  * Comparable Tracker · Real Estate feature.
  * Track comparable sales with address, price, date, sqft, beds, baths.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Building2 } from 'lucide-react';
@@ -26,7 +26,7 @@ export default function ComparableTracker({ projectId }: { projectId: string }) 
   const [form, setForm] = useState({ address: '', sale_price: '', sale_date: '', sqft: '', beds: '', baths: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadComps = async () => {
+  const loadComps = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Comparable & Record<string, unknown>)[]>(
@@ -46,9 +46,9 @@ export default function ComparableTracker({ projectId }: { projectId: string }) 
       })));
     } catch (e) { console.error('[ComparableTracker] loadComps failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadComps(); }, [projectId]);
+  useEffect(() => { loadComps(); }, [projectId, loadComps]);
 
   const handleAdd = async () => {
     if (!form.address.trim()) return;

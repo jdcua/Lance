@@ -2,7 +2,7 @@
  * Chain Log · Blockchain feature.
  * Simple event log, most recent first.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Link2 } from 'lucide-react';
@@ -25,7 +25,7 @@ export default function ChainLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ chain_name: '', event_type: '', tx_hash: '', block_number: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ChainEvent & Record<string, unknown>)[]>(
@@ -44,9 +44,9 @@ export default function ChainLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[ChainLog] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadEvents(); }, [projectId]);
+  useEffect(() => { loadEvents(); }, [projectId, loadEvents]);
 
   const handleAdd = async () => {
     setSaving(true);

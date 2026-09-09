@@ -2,7 +2,7 @@
  * A/B Variant Log · Copywriter feature.
  * A/B test variant tracking with control flag and results.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, CheckCircle2 } from 'lucide-react';
@@ -38,7 +38,7 @@ export default function ABVariantLog({ projectId }: { projectId: string }) {
   });
   const [saving, setSaving] = useState(false);
 
-  const loadVariants = async () => {
+  const loadVariants = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ABVariant & Record<string, unknown>)[]>(
@@ -60,11 +60,11 @@ export default function ABVariantLog({ projectId }: { projectId: string }) {
       console.error('[ABVariantLog] loadVariants failed:', e);
     }
     setLoading(false);
-  };
+  }, [projectId]);
 
   useEffect(() => {
     loadVariants();
-  }, [projectId]);
+  }, [projectId, loadVariants]);
 
   const handleSave = async () => {
     if (!form.test_name.trim() || !form.variant_name.trim()) return;

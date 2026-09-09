@@ -2,11 +2,11 @@
  * Retainer Manager · Consultant feature.
  * Per-client retainer tracking with progress bar for monthly hours.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import { useStore } from '../../store';
 import Button from '../ui/Button';
-import { Save, Trash2, Calendar, DollarSign } from 'lucide-react';
+import { Trash2, Calendar, DollarSign } from 'lucide-react';
 
 type Retainer = {
   id: string;
@@ -30,7 +30,7 @@ export default function RetainerManager({ clientId }: { clientId: string }) {
     active: true,
   });
 
-  const loadRetainer = async () => {
+  const loadRetainer = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Retainer & Record<string, unknown>)[]>(
@@ -61,12 +61,12 @@ export default function RetainerManager({ clientId }: { clientId: string }) {
       console.error('[RetainerManager] loadRetainer failed:', e);
     }
     setLoading(false);
-  };
+  }, [clientId]);
 
   useEffect(() => {
     loadRetainer();
     loadTimeEntries();
-  }, [clientId]);
+  }, [clientId, loadRetainer, loadTimeEntries]);
 
   const getHoursUsedThisMonth = () => {
     const now = new Date();
@@ -141,7 +141,6 @@ export default function RetainerManager({ clientId }: { clientId: string }) {
   const percentUsed = monthlyHours > 0 ? (hoursUsed / monthlyHours) * 100 : 0;
   const isOver = percentUsed > 100;
   const isWarning = percentUsed >= 80 && percentUsed <= 100;
-  const isGood = percentUsed < 80;
 
   const barColor = isOver
     ? 'bg-[#DC2626]'

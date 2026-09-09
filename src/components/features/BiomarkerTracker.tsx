@@ -2,10 +2,10 @@
  * Biomarker Tracker · Nutritionist feature.
  * Track health biomarkers with latest value prominently shown.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
-import { Plus, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 type Biomarker = {
   id: string;
@@ -32,7 +32,7 @@ export default function BiomarkerTracker({ clientId }: { clientId: string }) {
   });
   const [saving, setSaving] = useState(false);
 
-  const loadBiomarkers = async () => {
+  const loadBiomarkers = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Biomarker & Record<string, unknown>)[]>(
@@ -55,11 +55,11 @@ export default function BiomarkerTracker({ clientId }: { clientId: string }) {
       console.error('[BiomarkerTracker] loadBiomarkers failed:', e);
     }
     setLoading(false);
-  };
+  }, [clientId]);
 
   useEffect(() => {
     loadBiomarkers();
-  }, [clientId]);
+  }, [clientId, loadBiomarkers]);
 
   const latestByType = biomarkers.reduce<Record<string, Biomarker>>((acc, b) => {
     if (!acc[b.name] || b.date > acc[b.name].date) {

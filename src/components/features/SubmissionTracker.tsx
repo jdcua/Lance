@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, AlertTriangle } from 'lucide-react';
@@ -31,7 +31,7 @@ export default function SubmissionTracker({ projectId }: { projectId: string }) 
   const [form, setForm] = useState({ type: '', submitted_date: '', response_date: '', status: STATUSES[0], resubmit: false, notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadSubmissions = async () => {
+  const loadSubmissions = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Submission & Record<string, unknown>)[]>(
@@ -50,9 +50,9 @@ export default function SubmissionTracker({ projectId }: { projectId: string }) 
       })));
     } catch (e) { console.error('[SubmissionTracker] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadSubmissions(); }, [projectId]);
+  useEffect(() => { loadSubmissions(); }, [projectId, loadSubmissions]);
 
   const handleAdd = async () => {
     if (!form.type.trim()) return;

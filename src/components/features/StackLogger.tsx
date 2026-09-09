@@ -2,7 +2,7 @@
  * Stack Logger · Developer feature.
  * Tag-style input for project technology stack grouped by category.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, X, Layers } from 'lucide-react';
@@ -39,7 +39,7 @@ export default function StackLogger({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ technology: '', category: 'frontend' });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ProjectStack & Record<string, unknown>)[]>(
@@ -54,9 +54,9 @@ export default function StackLogger({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[StackLogger] loadItems failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const handleAdd = async () => {
     if (!form.technology.trim()) return;

@@ -5,10 +5,10 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../../store';
 import Button from '../ui/Button';
-import { Plus, Trash2, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Plus, Trash2, TrendingUp, Minus } from 'lucide-react';
 
 export default function KeywordTracker({ clientId }: { clientId: string }) {
-  const { keywords, loadKeywords, addKeyword, updateKeyword, removeKeyword } = useStore();
+  const { keywords, loadKeywords, addKeyword, removeKeyword } = useStore();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ keyword: '', position_start: '', position_current: '', target_position: '' });
   const [saving, setSaving] = useState(false);

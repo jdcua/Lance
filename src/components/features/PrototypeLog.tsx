@@ -2,7 +2,7 @@
  * Prototype Log · Embedded feature.
  * Thin wrapper around PrototypeTracker with embedded-specific tool defaults (Altium, KiCad, EAGLE, other).
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, ExternalLink, Layers } from 'lucide-react';
@@ -41,7 +41,7 @@ export default function PrototypeLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ tool: 'Altium', fidelity: 'mid-fi', link: '', feedback: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadPrototypes = async () => {
+  const loadPrototypes = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Prototype & Record<string, unknown>)[]>(
@@ -60,9 +60,9 @@ export default function PrototypeLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[PrototypeLog] loadPrototypes failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadPrototypes(); }, [projectId]);
+  useEffect(() => { loadPrototypes(); }, [projectId, loadPrototypes]);
 
   const handleAdd = async () => {
     setSaving(true);

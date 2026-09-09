@@ -2,7 +2,7 @@
  * Lookbook · Fashion Designer feature.
  * Visual grid of lookbook entries with asset thumbnails from store.allAttachments.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../../store';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
@@ -34,7 +34,7 @@ export default function Lookbook({ clientId }: { clientId: string }) {
   const [form, setForm] = useState({ title: '', description: '', asset_ids: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadEntries = async () => {
+  const loadEntries = useCallback(async () => {
     try {
       await loadAllAttachments();
       const db = await getDb();
@@ -52,9 +52,9 @@ export default function Lookbook({ clientId }: { clientId: string }) {
       })));
     } catch (e) { console.error('[Lookbook] loadEntries failed:', e); }
     setLoading(false);
-  };
+  }, [clientId, loadAllAttachments]);
 
-  useEffect(() => { loadEntries(); }, [clientId]);
+  useEffect(() => { loadEntries(); }, [clientId, loadEntries]);
 
   const handleAdd = async () => {
     if (!form.title.trim()) return;

@@ -1,6 +1,6 @@
 import { useStore } from './index';
 
-export type ToastType = 'success' | 'error' | 'info' | 'unlock';
+export type ToastType = 'success' | 'error' | 'info' | 'warning' | 'unlock';
 export type ToastAction = { label: string; onClick: () => void };
 export type Toast = {
   id: string;
@@ -20,23 +20,17 @@ const toastStore = {
   resume: (id: string) => useStore.getState().resumeToast(id),
 };
 
-export function useToasts(): {
+export interface ToastSlice {
   toasts: Toast[];
   add: (message: string, type?: ToastType, duration?: number, actions?: ToastAction[]) => string;
   remove: (id: string) => void;
   update: (id: string, message: string) => void;
   pause: (id: string) => void;
   resume: (id: string) => void;
-};
-export function useToasts<T>(selector: (state: {
-  toasts: Toast[];
-  add: (message: string, type?: ToastType, duration?: number, actions?: ToastAction[]) => string;
-  remove: (id: string) => void;
-  update: (id: string, message: string) => void;
-  pause: (id: string) => void;
-  resume: (id: string) => void;
-}) => T): T;
-export function useToasts(selector?: (state: any) => any) {
+}
+export function useToasts(): ToastSlice;
+export function useToasts<T>(selector: (state: ToastSlice) => T): T;
+export function useToasts(selector?: (state: ToastSlice) => unknown) {
   const bundle = useStore();
   if (selector) {
     return selector({

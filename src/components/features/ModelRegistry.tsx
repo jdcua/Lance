@@ -2,7 +2,7 @@
  * Model Registry · AI Engineer feature.
  * Track ML models with framework, version, status, and metrics.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Box } from 'lucide-react';
@@ -45,7 +45,7 @@ export default function ModelRegistry({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ name: '', framework: 'PyTorch', version: '', status: 'development', metrics: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadModels = async () => {
+  const loadModels = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Model & Record<string, unknown>)[]>(
@@ -64,9 +64,9 @@ export default function ModelRegistry({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[ModelRegistry] loadModels failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadModels(); }, [projectId]);
+  useEffect(() => { loadModels(); }, [projectId, loadModels]);
 
   const handleAdd = async () => {
     if (!form.name.trim()) return;

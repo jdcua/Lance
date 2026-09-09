@@ -2,7 +2,7 @@
  * SOP Store · Virtual Assistant feature.
  * Per-client SOP cards with expand/collapse, search, add/edit/delete.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Search, ChevronDown, ChevronRight, Edit2, X } from 'lucide-react';
@@ -26,7 +26,7 @@ export default function SOPStore({ clientId }: { clientId: string }) {
   const [form, setForm] = useState({ title: '', content: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadSOPs = async () => {
+  const loadSOPs = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(SOP & Record<string, unknown>)[]>(
@@ -47,11 +47,11 @@ export default function SOPStore({ clientId }: { clientId: string }) {
       console.error('[SOPStore] loadSOPs failed:', e);
     }
     setLoading(false);
-  };
+  }, [clientId]);
 
   useEffect(() => {
     loadSOPs();
-  }, [clientId]);
+  }, [clientId, loadSOPs]);
 
   const handleSave = async () => {
     if (!form.title.trim()) return;

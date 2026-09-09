@@ -2,7 +2,7 @@
  * Booking Tracker · Voice Actor feature.
  * Track bookings with revenue summary at top.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, DollarSign } from 'lucide-react';
@@ -40,7 +40,7 @@ export default function BookingTracker({ clientId }: { clientId: string }) {
   });
   const [saving, setSaving] = useState(false);
 
-  const loadBookings = async () => {
+  const loadBookings = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Booking & Record<string, unknown>)[]>(
@@ -63,11 +63,11 @@ export default function BookingTracker({ clientId }: { clientId: string }) {
       console.error('[BookingTracker] loadBookings failed:', e);
     }
     setLoading(false);
-  };
+  }, [clientId]);
 
   useEffect(() => {
     loadBookings();
-  }, [clientId]);
+  }, [clientId, loadBookings]);
 
   const totalRevenue = bookings
     .filter((b) => b.status !== 'cancelled')

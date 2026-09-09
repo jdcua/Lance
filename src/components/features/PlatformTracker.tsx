@@ -2,9 +2,8 @@
  * Platform Tracker · Social Media Manager feature.
  * Toggle which platforms are active and set handles per platform.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
-import Button from '../ui/Button';
 import { Check, ExternalLink } from 'lucide-react';
 
 type ClientPlatform = {
@@ -30,9 +29,9 @@ const PLATFORM_COLORS: Record<string, string> = {
 export default function PlatformTracker({ clientId }: { clientId: string }) {
   const [platforms, setPlatforms] = useState<ClientPlatform[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [, setSaving] = useState(false);
 
-  const loadPlatforms = async () => {
+  const loadPlatforms = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ClientPlatform & Record<string, unknown>)[]>(
@@ -59,9 +58,9 @@ export default function PlatformTracker({ clientId }: { clientId: string }) {
       setPlatforms(loaded);
     } catch (e) { console.error('[PlatformTracker] loadPlatforms failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadPlatforms(); }, [clientId]);
+  useEffect(() => { loadPlatforms(); }, [clientId, loadPlatforms]);
 
   const handleToggleActive = async (p: ClientPlatform) => {
     const next = p.active ? 0 : 1;

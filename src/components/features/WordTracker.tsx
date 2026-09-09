@@ -27,7 +27,7 @@ type TimeEntryRow = {
 };
 
 export default function WordTracker({ timeEntryId }: { timeEntryId?: string }) {
-  const { timeEntries, loadTimeEntries, projects, clients, loadProjects, loadClients } = useStore();
+  const { loadTimeEntries, projects, clients, loadProjects, loadClients } = useStore();
   const [wordEntry, setWordEntry] = useState<WordEntry | null>(null);
   const [count, setCount] = useState('');
   const [loading, setLoading] = useState(true);
@@ -49,7 +49,7 @@ export default function WordTracker({ timeEntryId }: { timeEntryId?: string }) {
       setLoading(false);
     };
     load();
-  }, [timeEntryId]);
+  }, [timeEntryId, loadClients, loadProjects, loadTimeEntries]);
 
   const loadWordEntry = async (teId: string) => {
     try {

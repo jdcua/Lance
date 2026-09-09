@@ -2,7 +2,7 @@
  * Publication Log · Writer feature.
  * Tracks published work by project: outlet, URL, date, byline.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, ExternalLink, BookOpen } from 'lucide-react';
@@ -30,7 +30,7 @@ export default function PublicationLog({ projectId }: { projectId: string }) {
   });
   const [saving, setSaving] = useState(false);
 
-  const loadPublications = async () => {
+  const loadPublications = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Publication & Record<string, unknown>)[]>(
@@ -52,11 +52,11 @@ export default function PublicationLog({ projectId }: { projectId: string }) {
       console.error('[PublicationLog] loadPublications failed:', e);
     }
     setLoading(false);
-  };
+  }, [projectId]);
 
   useEffect(() => {
     loadPublications();
-  }, [projectId]);
+  }, [projectId, loadPublications]);
 
   const handleAdd = async () => {
     if (!form.outlet_name.trim() && !form.url.trim()) return;

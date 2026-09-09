@@ -10,7 +10,7 @@ import MetricCard from '../components/ui/MetricCard';
 import Button from '../components/ui/Button';
 import { relativeDate, formatCurrency, DAY_MS } from '../utils/format';
 import { useToasts } from '../store/toastStore';
-import { Play, Receipt, FileText, Users, FolderKanban, Clock, Plus, ArrowRight, CheckCircle2, Circle, Bell, Send, Check, X, Link } from 'lucide-react';
+import { Play, Receipt, FileText, Users, FolderKanban, Clock, Plus, ArrowRight, CheckCircle2, Circle, Bell, Send, X, Link } from 'lucide-react';
 import { generateFollowUpDraft } from '../utils/followUpTemplates';
 import { getArchetype } from '../archetypes';
 import type { ArchetypeConfig } from '../archetypes';
@@ -20,7 +20,7 @@ import * as queries from '../archetypes/queries';
 import { getFeatureComponent } from '../components/features/registry';
 
 export default function Dashboard() {
-  const { invoices, loadInvoices, proposals, loadProposals, projects, loadProjects, clients, loadClients, timeEntries, loadTimeEntries, profile, loadProfile, expenses, loadExpenses, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings, loadContracts, portalActivity, loadPortalActivity } = useStore();
+  const { invoices, loadInvoices, proposals, loadProposals, projects, loadProjects, clients, loadClients, timeEntries, loadTimeEntries, profile, loadProfile, loadExpenses, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings, loadContracts, portalActivity, loadPortalActivity } = useStore();
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -51,7 +51,7 @@ export default function Dashboard() {
     Promise.all([loadInvoices(), loadProposals(), loadProjects(), loadClients(), loadTimeEntries(), loadExpenses(), loadProfile(), loadPendingFollowUps()])
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
-  }, [loadInvoices, loadProposals, loadProjects, loadClients, loadTimeEntries, loadExpenses, loadProfile, loadPendingFollowUps]);
+  }, [loadInvoices, loadProposals, loadProjects, loadClients, loadTimeEntries, loadExpenses, loadProfile, loadPendingFollowUps, addToast]);
 
   useEffect(() => {
     if (loading) return;
@@ -59,26 +59,25 @@ export default function Dashboard() {
       addToast('Sample data loaded · explore freely. Clear it anytime in Settings → Data.', 'info');
       localStorage.setItem('lance:seeded-toast-shown', 'true');
     }
+    const loadBackupInfo = async () => {
+      try {
+        const { getLastBackupInfo } = await import('../utils/backup');
+        const info = await getLastBackupInfo();
+        if (info && info.enabled && info.last_backup_at) {
+          const daysAgo = Math.floor(
+            (Date.now() - new Date(info.last_backup_at).getTime()) / DAY_MS
+          );
+          setLastBackupInfo({ enabled: info.enabled, last_backup_at: info.last_backup_at, daysAgo });
+        } else if (info && info.enabled) {
+          setLastBackupInfo({ enabled: true, last_backup_at: null, daysAgo: null });
+        }
+      } catch {
+        /* non-critical */
+      }
+    };
     loadPortalActivity();
     loadBackupInfo();
-  }, [loading]);
-
-  const loadBackupInfo = async () => {
-    try {
-      const { getLastBackupInfo } = await import('../utils/backup');
-      const info = await getLastBackupInfo();
-      if (info && info.enabled && info.last_backup_at) {
-        const daysAgo = Math.floor(
-          (Date.now() - new Date(info.last_backup_at).getTime()) / DAY_MS
-        );
-        setLastBackupInfo({ enabled: info.enabled, last_backup_at: info.last_backup_at, daysAgo });
-      } else if (info && info.enabled) {
-        setLastBackupInfo({ enabled: true, last_backup_at: null, daysAgo: null });
-      }
-    } catch {
-      /* non-critical */
-    }
-  };
+  }, [loading, addToast, loadPortalActivity]);
 
   // Portal feed lives in the store (shared with proposal badges and the
   // App-level open alerts). This keeps the response toasts: accepted, signed
@@ -485,7 +484,7 @@ function DashboardWidgets({ archetype, recentInvoices, recentTime, profile, proj
   const widgets = archetype.dashboard.widgets || [];
   const hasCustomWidgets = widgets.length > 0;
 
-  const renderWidget = (widget: { id: string; component: string; priority: number; props?: Record<string, any> }) => {
+  const renderWidget = (widget: { id: string; component: string; priority: number; props?: Record<string, unknown> }) => {
     const Component = getFeatureComponent(widget.component);
     if (Component) {
       return (

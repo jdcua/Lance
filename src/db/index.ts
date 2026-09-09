@@ -38,7 +38,7 @@ const STORE_ALIAS: Record<string, string> = {
   share_tokens: 'share_tokens',
 };
 
-function mockTableRows(table: string): Record<string, any>[] {
+function mockTableRows(table: string): Record<string, unknown>[] {
   try {
     if (table === 'user_profile') {
       const raw = localStorage.getItem('lance:profile');
@@ -53,7 +53,7 @@ function mockTableRows(table: string): Record<string, any>[] {
   } catch { return []; }
 }
 
-function mockWriteTable(table: string, rows: Record<string, any>[]): void {
+function mockWriteTable(table: string, rows: Record<string, unknown>[]): void {
   try {
     if (table === 'user_profile') {
       localStorage.setItem('lance:profile', JSON.stringify(rows[0] ?? {}));
@@ -86,7 +86,7 @@ class MockDatabase {
     return m ? m[1] : null;
   }
 
-  private matchesValue(a: any, b: any): boolean {
+  private matchesValue(a: unknown, b: unknown): boolean {
     const numA = typeof a === 'number' ? a : Number(a);
     const numB = typeof b === 'number' ? b : Number(b);
     if (a === b) return true;
@@ -95,11 +95,11 @@ class MockDatabase {
   }
 
   /** Compare a row value against a literal/param value with an operator. */
-  private compareValue(colVal: any, op: string, val: any): boolean {
+  private compareValue(colVal: unknown, op: string, val: unknown): boolean {
     // SQLite compares TEXT columns lexicographically (ISO-8601 dates work).
     // Number(dateString) → NaN, so fall back to string comparison for
     // ordering operators whenever either side is not numeric.
-    const orderCompare = (a: any, b: any): number => {
+    const orderCompare = (a: unknown, b: unknown): number => {
       const na = typeof a === 'number' ? a : Number(a);
       const nb = typeof b === 'number' ? b : Number(b);
       if (!isNaN(na) && !isNaN(nb)) return na - nb;
@@ -232,7 +232,7 @@ class MockDatabase {
   }
 
   /** Evaluate parsed predicates against a row. */
-  private matches(row: Record<string, any>, conds: Array<{ col: string; op: string; value: unknown }>, singleton = false): boolean {
+  private matches(row: Record<string, unknown>, conds: Array<{ col: string; op: string; value: unknown }>, singleton = false): boolean {
     return conds.every((cond) => {
       if (cond.op === '__OR__') {
         return (cond.value as Array<Array<{ col: string; op: string; value: unknown }>>).some((side) => this.matches(row, side, singleton));
@@ -301,7 +301,7 @@ class MockDatabase {
       if (aggRows) return aggRows as unknown as T[];
       if (!star) {
         rows = rows.map((r) => {
-          const out: Record<string, any> = {};
+          const out: Record<string, unknown> = {};
           for (const c of cols) {
             const alias = c.match(/^([A-Za-z_][A-Za-z0-9_]*)\s+as\s+([A-Za-z_][A-Za-z0-9_]*)$/i);
             if (alias) out[alias[2].toLowerCase()] = r[alias[1].split('.').pop()!];
@@ -315,8 +315,8 @@ class MockDatabase {
   }
 
   /** Handle aggregate projections: COUNT(*), COUNT(col), SUM(col), AVG(col), MIN(col), MAX(col), with optional AS alias. */
-  private projectAggregates(cols: string[], rows: Record<string, any>[]): Record<string, any>[] | null {
-    const out: Record<string, any> = {};
+  private projectAggregates(cols: string[], rows: Record<string, unknown>[]): Record<string, unknown>[] | null {
+    const out: Record<string, unknown> = {};
     let anyAgg = false;
     for (const c of cols) {
       const aliasM = c.match(/^(.+?)\s+as\s+([A-Za-z_][A-Za-z0-9_]*)$/i);
@@ -366,7 +366,7 @@ class MockDatabase {
       // `VALUES (1, ?, ?, ?)`) don't consume placeholders · params must bind
       // ONLY to `?`/`$N` tokens, in order.
       const valueParts = this.splitTopLevelComma(ins[3]).map((v) => v.trim());
-      const row: Record<string, any> = {};
+      const row: Record<string, unknown> = {};
       let pi = 0;
       for (let i = 0; i < cols.length; i++) {
         if (i < valueParts.length) {
@@ -444,7 +444,7 @@ export async function getDb(): Promise<Database> {
   if (db) return db;
 
   // In browser mode, return a localStorage-backed mock so callers don't crash.
-  if (typeof window === 'undefined' || !(window as any).__TAURI_INTERNALS__) {
+  if (typeof window === 'undefined' || !(window as unknown as Record<string, unknown>).__TAURI_INTERNALS__) {
     return new MockDatabase() as unknown as Database;
   }
 

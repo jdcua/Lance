@@ -2,7 +2,7 @@
  * Incident Log · DevOps feature.
  * Track incidents with severity, status, and resolution.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, AlertTriangle, CheckCircle2 } from 'lucide-react';
@@ -48,7 +48,7 @@ export default function IncidentLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ title: '', severity: 'medium', status: 'open' });
   const [saving, setSaving] = useState(false);
 
-  const loadIncidents = async () => {
+  const loadIncidents = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Incident & Record<string, unknown>)[]>(
@@ -67,9 +67,9 @@ export default function IncidentLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[IncidentLog] loadIncidents failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadIncidents(); }, [projectId]);
+  useEffect(() => { loadIncidents(); }, [projectId, loadIncidents]);
 
   const handleAdd = async () => {
     if (!form.title.trim()) return;

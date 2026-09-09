@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, DollarSign, User } from 'lucide-react';
@@ -30,7 +30,7 @@ export default function ConsultantLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ name: '', discipline: DISCIPLINES[0], fee: '', fee_type: FEE_TYPES[0], status: STATUSES[0] });
   const [saving, setSaving] = useState(false);
 
-  const loadConsultants = async () => {
+  const loadConsultants = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ArchConsultant & Record<string, unknown>)[]>(
@@ -48,9 +48,9 @@ export default function ConsultantLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[ConsultantLog] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadConsultants(); }, [projectId]);
+  useEffect(() => { loadConsultants(); }, [projectId, loadConsultants]);
 
   const handleAdd = async () => {
     if (!form.name.trim()) return;

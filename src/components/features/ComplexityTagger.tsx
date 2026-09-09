@@ -2,7 +2,7 @@
  * Complexity Tagger · Data Analyst feature.
  * Single record per project. Complexity tier radio buttons + notes textarea, save in place.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Save, Brain } from 'lucide-react';
@@ -38,7 +38,7 @@ export default function ComplexityTagger({ projectId }: { projectId: string }) {
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
 
-  const loadRecord = async () => {
+  const loadRecord = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ComplexityRecord & Record<string, unknown>)[]>(
@@ -59,9 +59,9 @@ export default function ComplexityTagger({ projectId }: { projectId: string }) {
       }
     } catch (e) { console.error('[ComplexityTagger] loadRecord failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadRecord(); }, [projectId]);
+  useEffect(() => { loadRecord(); }, [projectId, loadRecord]);
 
   const handleSave = async () => {
     setSaving(true);

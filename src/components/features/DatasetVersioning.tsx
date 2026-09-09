@@ -2,7 +2,7 @@
  * Dataset Versioning · AI Engineer feature.
  * Changelog-style list of dataset versions, most recent first.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, GitBranch, Database } from 'lucide-react';
@@ -23,7 +23,7 @@ export default function DatasetVersioning({ projectId }: { projectId: string }) 
   const [form, setForm] = useState({ dataset_id: '', version: '', description: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadVersions = async () => {
+  const loadVersions = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(DatasetVersion & Record<string, unknown>)[]>(
@@ -40,9 +40,9 @@ export default function DatasetVersioning({ projectId }: { projectId: string }) 
       })));
     } catch (e) { console.error('[DatasetVersioning] loadVersions failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadVersions(); }, [projectId]);
+  useEffect(() => { loadVersions(); }, [projectId, loadVersions]);
 
   const handleAdd = async () => {
     if (!form.dataset_id.trim() || !form.version.trim()) return;

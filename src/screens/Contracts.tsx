@@ -14,7 +14,7 @@ import { useToasts } from '../store/toastStore';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
 import { relativeDate } from '../utils/format';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
-import { Plus, Pencil, Trash2, Eye, PenLine, Search, Copy, FileText, Share2, Link, Download, Sparkles } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, PenLine, Search, Copy, FileText, Share2, Link, Download } from 'lucide-react';
 import ShareModal from '../components/ShareModal';
 import { exportContractPDF, exportContractDOCX } from '../export';
 import { getArchetype } from '../archetypes';
@@ -103,19 +103,18 @@ export default function Contracts() {
   }, []);
 
   useEffect(() => {
+    const loadShareTokens = async () => {
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        const tokens = await invoke<ShareToken[]>('get_all_share_tokens');
+        const ids = new Set(tokens.filter(t => t.entity_type === 'contract').map(t => t.entity_id));
+        setShareTokenIds(ids);
+      } catch { /* ignore */ }
+    };
     Promise.all([loadContracts(), loadClients(), loadContractTemplates(), loadShareTokens()])
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
-  }, [loadContracts, loadClients, loadContractTemplates]);
-
-  const loadShareTokens = async () => {
-    try {
-      const { invoke } = await import('@tauri-apps/api/core');
-      const tokens = await invoke<ShareToken[]>('get_all_share_tokens');
-      const ids = new Set(tokens.filter(t => t.entity_type === 'contract').map(t => t.entity_id));
-      setShareTokenIds(ids);
-    } catch { /* ignore */ }
-  };
+  }, [loadContracts, loadClients, loadContractTemplates, addToast]);
 
   const openNew = () => {
     setEditing(null);
@@ -245,8 +244,6 @@ export default function Contracts() {
     const q = search.toLowerCase();
     return (c.title || '').toLowerCase().includes(q) || (getClientName(c.client_id) || '').toLowerCase().includes(q);
   });
-
-  const allTemplates = [...PREBUILT_TEMPLATES.map((t) => ({ ...t, id: `prebuilt:${t.name}`, created_at: '' })), ...contractTemplates];
 
   // Archetype-specific contract presets
   const archetype = useMemo(() => getArchetype(profile?.profession || ''), [profile?.profession]);

@@ -1,12 +1,12 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useStore } from '../store';
-import type { Attachment, Client, Project } from '../types';
+import type { Attachment } from '../types';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import {
   Search, Upload, Grid3X3, List, Image, FileText, File,
-  Trash2, Pencil, MoreHorizontal, ExternalLink, X, Check,
+  Trash2, Pencil, ExternalLink, X,
   Tag, Link2, FolderOpen, Clock, Package, AlertTriangle,
   ChevronRight,
 } from 'lucide-react';
@@ -15,7 +15,6 @@ import { relativeDate } from '../utils/format';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 
 type ViewMode = 'grid' | 'list';
-type EntityScope = 'library' | 'client' | 'project';
 type SelectedScope = { type: 'library'; id: string } | { type: 'client'; id: string } | { type: 'project'; id: string };
 
 function getFileIcon(mimeType: string) {
@@ -122,7 +121,7 @@ export default function Assets() {
           size_bytes: file.size,
           tags: '[]',
         });
-      } catch (err) {
+      } catch {
         addToast(`Failed to upload ${file.name}`, 'error');
       }
     }
@@ -406,7 +405,7 @@ export default function Assets() {
               icon: FolderOpen,
               scope: { type: 'project' as const, id: p.id },
             })),
-          ]).map((item, i) => {
+          ]).map((item) => {
             const isActive = scope.type === item.scope.type && scope.id === item.scope.id;
             const count = allAttachments.filter(a => a.entity_type === item.scope.type && a.entity_id === item.scope.id).length;
             return (

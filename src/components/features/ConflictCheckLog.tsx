@@ -2,7 +2,7 @@
  * Conflict Check Log · Legal feature.
  * List of conflict checks with result badges.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Shield, ShieldAlert, ShieldOff } from 'lucide-react';
@@ -37,7 +37,7 @@ export default function ConflictCheckLog({ clientId }: { clientId: string }) {
   const [form, setForm] = useState({ party_name: '', check_date: new Date().toISOString().split('T')[0], result: 'clear', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadChecks = async () => {
+  const loadChecks = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ConflictCheck & Record<string, unknown>)[]>(
@@ -54,9 +54,9 @@ export default function ConflictCheckLog({ clientId }: { clientId: string }) {
       })));
     } catch (e) { console.error('[ConflictCheckLog] load failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadChecks(); }, [clientId]);
+  useEffect(() => { loadChecks(); }, [clientId, loadChecks]);
 
   const handleAdd = async () => {
     if (!form.party_name.trim()) return;

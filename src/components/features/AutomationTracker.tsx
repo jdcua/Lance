@@ -2,7 +2,7 @@
  * Automation Tracker · DevOps feature.
  * Manage automations with type, frequency, and active/inactive toggle.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Zap, Play, Pause, Calendar } from 'lucide-react';
@@ -18,7 +18,6 @@ type Automation = {
 };
 
 const TYPE_OPTIONS = ['script', 'cron', 'ci-cd', 'webhook', 'other'] as const;
-const STATUS_OPTIONS = ['active', 'inactive', 'error'] as const;
 
 const typeBadgeClasses: Record<string, string> = {
   script: 'bg-[#7C3AED]/15 text-[#7C3AED]',
@@ -41,7 +40,7 @@ export default function AutomationTracker({ projectId }: { projectId: string }) 
   const [form, setForm] = useState({ name: '', type: 'script', frequency: '', last_run: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadAutomations = async () => {
+  const loadAutomations = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Automation & Record<string, unknown>)[]>(
@@ -59,9 +58,9 @@ export default function AutomationTracker({ projectId }: { projectId: string }) 
       })));
     } catch (e) { console.error('[AutomationTracker] loadAutomations failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadAutomations(); }, [projectId]);
+  useEffect(() => { loadAutomations(); }, [projectId, loadAutomations]);
 
   const handleAdd = async () => {
     if (!form.name.trim()) return;

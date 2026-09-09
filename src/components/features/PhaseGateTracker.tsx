@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Check, Circle } from 'lucide-react';
@@ -27,7 +27,7 @@ export default function PhaseGateTracker({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ phase_name: '', completion_percent: 0, invoice_trigger: false });
   const [saving, setSaving] = useState(false);
 
-  const loadPhases = async () => {
+  const loadPhases = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ArchPhase & Record<string, unknown>)[]>(
@@ -59,9 +59,9 @@ export default function PhaseGateTracker({ projectId }: { projectId: string }) {
       }
     } catch (e) { console.error('[PhaseGateTracker] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadPhases(); }, [projectId]);
+  useEffect(() => { loadPhases(); }, [projectId, loadPhases]);
 
   const handleAdd = async () => {
     if (!form.phase_name.trim()) return;

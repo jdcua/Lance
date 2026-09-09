@@ -2,7 +2,7 @@
  * Program Tracker Widget · Trainer feature.
  * Read-only list of active programs for a client from the programs table.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import { Dumbbell, CalendarDays, Clock } from 'lucide-react';
 
@@ -19,7 +19,7 @@ export default function ProgramTrackerWidget({ clientId }: { clientId: string })
   const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadPrograms = async () => {
+  const loadPrograms = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Program & Record<string, unknown>)[]>(
@@ -36,9 +36,9 @@ export default function ProgramTrackerWidget({ clientId }: { clientId: string })
       })));
     } catch (e) { console.error('[ProgramTrackerWidget] loadPrograms failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadPrograms(); }, [clientId]);
+  useEffect(() => { loadPrograms(); }, [clientId, loadPrograms]);
 
   if (loading) {
     return (

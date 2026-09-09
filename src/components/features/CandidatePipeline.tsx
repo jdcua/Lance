@@ -2,10 +2,10 @@
  * Candidate Pipeline · Recruiter feature.
  * Kanban-style board by status: sourced, screening, interview, offer, hired, rejected.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
-import { Plus, Trash2, User, ChevronRight } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 type Candidate = {
   id: string;
@@ -47,7 +47,7 @@ export default function CandidatePipeline({ clientId }: { clientId: string }) {
   const [form, setForm] = useState({ name: '', role: '', status: 'sourced', source: 'LinkedIn', contact: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadCandidates = async () => {
+  const loadCandidates = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Candidate & Record<string, unknown>)[]>(
@@ -67,9 +67,9 @@ export default function CandidatePipeline({ clientId }: { clientId: string }) {
       })));
     } catch (e) { console.error('[CandidatePipeline] loadCandidates failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadCandidates(); }, [clientId]);
+  useEffect(() => { loadCandidates(); }, [clientId, loadCandidates]);
 
   const handleAdd = async () => {
     if (!form.name.trim()) return;

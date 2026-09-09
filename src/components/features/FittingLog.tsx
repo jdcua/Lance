@@ -2,7 +2,7 @@
  * Fitting Log · Fashion Designer feature.
  * Track garment fittings with fit model, date, adjustments, and status.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Scissors } from 'lucide-react';
@@ -34,7 +34,7 @@ export default function FittingLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ garment: '', fit_model: '', date: new Date().toISOString().split('T')[0], adjustments: '', status: 'scheduled' });
   const [saving, setSaving] = useState(false);
 
-  const loadFittings = async () => {
+  const loadFittings = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Fitting & Record<string, unknown>)[]>(
@@ -52,9 +52,9 @@ export default function FittingLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[FittingLog] loadFittings failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadFittings(); }, [projectId]);
+  useEffect(() => { loadFittings(); }, [projectId, loadFittings]);
 
   const handleAdd = async () => {
     if (!form.garment.trim()) return;

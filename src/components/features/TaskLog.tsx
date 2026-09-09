@@ -2,7 +2,7 @@
  * Task Log · Virtual Assistant feature.
  * Per-client VA task list with category filter tabs and hours summary.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Clock, Hash } from 'lucide-react';
@@ -52,7 +52,7 @@ export default function TaskLog({ clientId }: { clientId: string }) {
   });
   const [saving, setSaving] = useState(false);
 
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(VATask & Record<string, unknown>)[]>(
@@ -74,11 +74,11 @@ export default function TaskLog({ clientId }: { clientId: string }) {
       console.error('[TaskLog] loadTasks failed:', e);
     }
     setLoading(false);
-  };
+  }, [clientId]);
 
   useEffect(() => {
     loadTasks();
-  }, [clientId]);
+  }, [clientId, loadTasks]);
 
   const handleSave = async () => {
     if (!form.title.trim()) return;

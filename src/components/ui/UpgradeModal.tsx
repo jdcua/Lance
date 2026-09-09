@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { X, CreditCard, Calendar, Check } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useStore } from '../../store';
 import { useToasts } from '../../store/toastStore';
 import { openCheckout } from '../../utils/tauri';
@@ -66,8 +66,6 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
-
-  const isPro = ['pro', 'trial', 'lifetime'].includes(currentTier);
 
   if (!isOpen) return null;
 

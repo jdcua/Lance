@@ -2,7 +2,7 @@
  * QA Log · Game Developer feature.
  * Table logging QA sessions with summary stats (hours, avg bugs, fix rate).
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Bug, ShieldCheck, Clock, BarChart3 } from 'lucide-react';
@@ -25,7 +25,7 @@ export default function QALog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ date: '', build_version: '', bugs_found: '', bugs_fixed: '', hours: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadSessions = async () => {
+  const loadSessions = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(QASession & Record<string, unknown>)[]>(
@@ -44,9 +44,9 @@ export default function QALog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[QALog] loadSessions failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadSessions(); }, [projectId]);
+  useEffect(() => { loadSessions(); }, [projectId, loadSessions]);
 
   const handleAdd = async () => {
     setSaving(true);

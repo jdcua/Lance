@@ -4,9 +4,8 @@
  */
 import { useState, useEffect } from 'react';
 import { useStore } from '../../store';
-import { getDb } from '../../db';
 import Button from '../ui/Button';
-import { Plus, Trash2, Image, FileText, Palette, FileCheck, Upload } from 'lucide-react';
+import { Trash2, Image, FileText, Palette, FileCheck, Upload } from 'lucide-react';
 
 const SUBCATEGORIES = ['Logo Files', 'Typography', 'Color Palettes', 'Guidelines', 'Final Exports'];
 

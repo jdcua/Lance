@@ -1,7 +1,7 @@
 /**
  * Spend Pacing · budget pacing tracker with auto-calculated variance and progress bar.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2 } from 'lucide-react';
@@ -22,7 +22,7 @@ export default function SpendPacing({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ period: '', budget: '', actual: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(PacingItem & Record<string, unknown>)[]>(
@@ -39,9 +39,9 @@ export default function SpendPacing({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[SpendPacing] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const handleSave = async () => {
     if (!form.period.trim()) return;

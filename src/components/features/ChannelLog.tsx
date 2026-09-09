@@ -2,9 +2,9 @@
  * Channel Log · Marketing feature.
  * Multi-select tag panel for project marketing channels.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
-import { Plus, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
 type Channel = { id: string; project_id: string; channel: string };
 
@@ -34,7 +34,7 @@ export default function ChannelLog({ projectId }: { projectId: string }) {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadChannels = async () => {
+  const loadChannels = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Channel & Record<string, unknown>)[]>(
@@ -44,9 +44,9 @@ export default function ChannelLog({ projectId }: { projectId: string }) {
       setChannels(rows.map(r => ({ id: r.id as string, project_id: r.project_id as string, channel: r.channel as string })));
     } catch (e) { console.error('[ChannelLog] loadChannels failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadChannels(); }, [projectId]);
+  useEffect(() => { loadChannels(); }, [projectId, loadChannels]);
 
   const handleToggle = async (channelName: string) => {
     const existing = channels.find(c => c.channel === channelName);

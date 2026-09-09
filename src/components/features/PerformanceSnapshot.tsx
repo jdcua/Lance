@@ -1,7 +1,7 @@
 /**
  * Performance Snapshot · channel performance with auto-calculated ROAS and channel badges.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2 } from 'lucide-react';
@@ -37,7 +37,7 @@ export default function PerformanceSnapshot({ projectId }: { projectId: string }
   const [form, setForm] = useState({ date: '', channel: CHANNELS[0], impressions: '', clicks: '', conversions: '', spend: '', revenue: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Snapshot & Record<string, unknown>)[]>(
@@ -58,9 +58,9 @@ export default function PerformanceSnapshot({ projectId }: { projectId: string }
       })));
     } catch (e) { console.error('[PerformanceSnapshot] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const handleSave = async () => {
     if (!form.channel.trim()) return;

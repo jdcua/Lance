@@ -2,7 +2,7 @@
  * Sprint Board · Developer feature.
  * Kanban board with 4 columns: backlog, in_progress, review, done.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Clock, AlertCircle } from 'lucide-react';
@@ -44,7 +44,7 @@ export default function SprintBoard({ projectId }: { projectId: string }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<SprintTask>>({});
 
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(SprintTask & Record<string, unknown>)[]>(
@@ -64,9 +64,9 @@ export default function SprintBoard({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[SprintBoard] loadTasks failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadTasks(); }, [projectId]);
+  useEffect(() => { loadTasks(); }, [projectId, loadTasks]);
 
   const handleAdd = async () => {
     if (!form.title.trim()) return;

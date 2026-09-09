@@ -2,7 +2,7 @@
  * Cancellation Monitor · Wellness feature.
  * Track session cancellations with reason, refund amount, and summary stats.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, XCircle, DollarSign, Calendar } from 'lucide-react';
@@ -22,7 +22,7 @@ export default function CancellationMonitor({ clientId }: { clientId: string }) 
   const [form, setForm] = useState({ session_date: '', reason: '', refund_amount: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadCancellations = async () => {
+  const loadCancellations = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Cancellation & Record<string, unknown>)[]>(
@@ -38,9 +38,9 @@ export default function CancellationMonitor({ clientId }: { clientId: string }) 
       })));
     } catch (e) { console.error('[CancellationMonitor] loadCancellations failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadCancellations(); }, [clientId]);
+  useEffect(() => { loadCancellations(); }, [clientId, loadCancellations]);
 
   const handleAdd = async () => {
     if (!form.session_date) return;

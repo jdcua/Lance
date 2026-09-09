@@ -6,7 +6,7 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import MetricCard from '../components/ui/MetricCard';
-import { Play, Square, Plus, Trash2, Clock, Grid3X3, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Plus, Trash2, Clock, Grid3X3, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify } from '../achievements/notify';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
@@ -84,7 +84,7 @@ export default function TimeScreen() {
     Promise.all([loadTimeEntries(), loadProjects(), loadClients()])
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
-  }, [loadTimeEntries, loadProjects, loadClients]);
+  }, [loadTimeEntries, loadProjects, loadClients, addToast]);
 
   // Sync timer card with global timer state (started via App.tsx toggle or another session)
   useEffect(() => {
@@ -133,62 +133,6 @@ export default function TimeScreen() {
   const formatTime = (iso: string) => {
     const d = new Date(iso);
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const formatDate = (iso: string) => {
-    return new Date(iso).toLocaleDateString();
-  };
-
-  const startTimer = async () => {
-    if (!entryForm.project_id || !entryForm.client_id) return;
-    setSaving(true);
-    try {
-      const entry = await addTimeEntry({
-        project_id: entryForm.project_id,
-        client_id: entryForm.client_id,
-        description: entryForm.description ? sanitizeInput(entryForm.description).slice(0, MAX_LENGTHS.description) : undefined,
-        start_time: new Date().toISOString(),
-        billable: entryForm.billable,
-      });
-      setActiveTimer({ entry, elapsed: 0 });
-      const id = setInterval(() => {
-        setActiveTimer((prev) => {
-          if (!prev) return null;
-          const elapsed = Math.floor((Date.now() - new Date(prev.entry.start_time).getTime()) / 60000);
-          return { ...prev, elapsed };
-        });
-      }, 1000);
-      setIntervalId(id);
-    } catch (err) {
-      addToast(err?.toString?.() || 'Failed to start timer', 'error');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const stopTimer = async () => {
-    if (!activeTimer) return;
-    if (intervalId) clearInterval(intervalId);
-    setIntervalId(null);
-    try {
-      const endTime = new Date().toISOString();
-      const duration = Math.floor((Date.now() - new Date(activeTimer.entry.start_time).getTime()) / 60000);
-      if (duration < 1) {
-        // Sub-minute timer runs produce phantom 0-minute entries. Discard them.
-        await removeTimeEntry(activeTimer.entry.id);
-      } else {
-        await updateTimeEntry({
-          ...activeTimer.entry,
-          end_time: endTime,
-          duration_minutes: duration,
-        });
-      }
-      setActiveTimer(null);
-      await loadTimeEntries();
-      checkAndNotify(useStore.getState(), addToast);
-    } catch (err) {
-      addToast(err?.toString?.() || 'Failed to stop timer', 'error');
-    }
   };
 
   const addManualEntry = async () => {

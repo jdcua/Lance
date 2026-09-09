@@ -2,7 +2,7 @@
  * Progress Reports · Tutor feature.
  * Timeline list of progress reports with date, summary, next steps, and score.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, FileText, Calendar } from 'lucide-react';
@@ -23,7 +23,7 @@ export default function ProgressReports({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ date: new Date().toISOString().split('T')[0], summary: '', next_steps: '', score: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadReports = async () => {
+  const loadReports = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ProgressReport & Record<string, unknown>)[]>(
@@ -40,9 +40,9 @@ export default function ProgressReports({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[ProgressReports] loadReports failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadReports(); }, [projectId]);
+  useEffect(() => { loadReports(); }, [projectId, loadReports]);
 
   const handleAdd = async () => {
     if (!form.date) return;

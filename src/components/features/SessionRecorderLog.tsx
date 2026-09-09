@@ -2,8 +2,7 @@
  * Session Recorder Log · Voice Actor feature.
  * Track recording sessions with duration and file path.
  */
-import { useState, useEffect } from 'react';
-import { useStore } from '../../store';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Clock } from 'lucide-react';
@@ -31,7 +30,7 @@ export default function SessionRecorderLog({ clientId, projectId }: { clientId?:
   });
   const [saving, setSaving] = useState(false);
 
-  const loadRecordings = async () => {
+  const loadRecordings = useCallback(async () => {
     try {
       const db = await getDb();
       let rows: (SessionRecording & Record<string, unknown>)[];
@@ -66,11 +65,11 @@ export default function SessionRecorderLog({ clientId, projectId }: { clientId?:
       console.error('[SessionRecorderLog] loadRecordings failed:', e);
     }
     setLoading(false);
-  };
+  }, [clientId, projectId]);
 
   useEffect(() => {
     loadRecordings();
-  }, [clientId, projectId]);
+  }, [clientId, projectId, loadRecordings]);
 
   const handleSave = async () => {
     if (!form.title.trim()) return;

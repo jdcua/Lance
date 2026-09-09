@@ -2,7 +2,7 @@
  * Commission Queue · Illustrator feature.
  * Ordered commission list with status tracking, payment status, and reordering.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../../store';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
@@ -35,7 +35,7 @@ export default function CommissionQueue({ clientId }: { clientId?: string }) {
   });
   const [saving, setSaving] = useState(false);
 
-  const loadCommissions = async () => {
+  const loadCommissions = useCallback(async () => {
     try {
       const db = await getDb();
       let rows: (Commission & Record<string, unknown>)[];
@@ -65,12 +65,12 @@ export default function CommissionQueue({ clientId }: { clientId?: string }) {
       console.error('[CommissionQueue] loadCommissions failed:', e);
     }
     setLoading(false);
-  };
+  }, [clientId]);
 
   useEffect(() => {
     loadCommissions();
     loadClients();
-  }, [clientId]);
+  }, [clientId, loadClients, loadCommissions]);
 
   const sorted = [...commissions];
   const maxSort = sorted.length > 0 ? Math.max(...sorted.map((c) => c.sort_order)) : 0;

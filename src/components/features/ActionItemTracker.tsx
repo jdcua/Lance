@@ -2,7 +2,7 @@
  * Action Item Tracker · Consultant feature.
  * Checklist of action items per client with owner, due date, and completion toggle.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Check, Circle, AlertCircle, User, Users } from 'lucide-react';
@@ -38,7 +38,7 @@ export default function ActionItemTracker({ clientId }: { clientId: string }) {
   });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ActionItem & Record<string, unknown>)[]>(
@@ -61,11 +61,11 @@ export default function ActionItemTracker({ clientId }: { clientId: string }) {
       console.error('[ActionItemTracker] loadItems failed:', e);
     }
     setLoading(false);
-  };
+  }, [clientId]);
 
   useEffect(() => {
     loadItems();
-  }, [clientId]);
+  }, [clientId, loadItems]);
 
   const handleAdd = async () => {
     if (!form.title.trim()) return;

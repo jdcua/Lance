@@ -18,7 +18,6 @@ import {
   Image,
   X,
   Check,
-  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   Loader2,
@@ -28,7 +27,7 @@ import {
 } from 'lucide-react';
 import type { ImportDetection, DetectedEntityType } from '../../types';
 import { processImportFiles, ACCEPTED_EXTENSIONS_STRING } from '../../import';
-import { entityTypeLabel, getAvailableFields } from '../../import/classifier';
+import { entityTypeLabel } from '../../import/classifier';
 import { useStore } from '../../store';
 import { useToasts } from '../../store/toastStore';
 
@@ -53,9 +52,9 @@ function fileIcon(fileType: string) {
 
 export default function ImportModal({ open, onClose, initialFiles }: ImportModalProps) {
   const [step, setStep] = useState<Step>(1);
-  const [files, setFiles] = useState<File[]>([]);
+  const [, setFiles] = useState<File[]>([]);
   const [detections, setDetections] = useState<ImportDetection[]>([]);
-  const [scanning, setScanning] = useState(false);
+  const [, setScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState({ current: 0, total: 0, filename: '' });
   const [reviewIndex, setReviewIndex] = useState(0);
   const [importing, setImporting] = useState(false);
@@ -88,20 +87,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
     setErrorCount(0);
   }, []);
 
-  useEffect(() => {
-    if (open && initialFiles && initialFiles.length > 0) {
-      setFiles(initialFiles);
-      startScan(initialFiles);
-    }
-  }, [open, initialFiles]);
-
-  const handleFilesSelected = useCallback((newFiles: File[]) => {
-    if (newFiles.length === 0) return;
-    setFiles(newFiles);
-    startScan(newFiles);
-  }, []);
-
-  const startScan = async (fileList: File[]) => {
+  const startScan = useCallback(async (fileList: File[]) => {
     setStep(2);
     setScanning(true);
     setScanProgress({ current: 0, total: fileList.length, filename: '' });
@@ -119,7 +105,20 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
     } finally {
       setScanning(false);
     }
-  };
+  }, [addToast]);
+
+  useEffect(() => {
+    if (open && initialFiles && initialFiles.length > 0) {
+      setFiles(initialFiles);
+      startScan(initialFiles);
+    }
+  }, [open, initialFiles, startScan]);
+
+  const handleFilesSelected = useCallback((newFiles: File[]) => {
+    if (newFiles.length === 0) return;
+    setFiles(newFiles);
+    startScan(newFiles);
+  }, [startScan]);
 
   const handleOverrideType = (index: number, type: DetectedEntityType) => {
     setDetections(prev => prev.map((d, i) =>
@@ -234,7 +233,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
     }
   };
 
-  const importSpreadsheet = async (detection: ImportDetection, filePath: string) => {
+  const importSpreadsheet = async (detection: ImportDetection, _filePath: string) => {
     const mappers = await import('../../import/mappers');
     const mapping = detection.columnMapping || {};
     const rows = detection.preview.rows || [];
@@ -390,11 +389,11 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
   const activeDetections = detections.filter(d => !d.skipped);
   const currentDetection = detections[reviewIndex];
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (importing) return;
     reset();
     onClose();
-  };
+  }, [importing, onClose, reset]);
 
   // Belt-and-suspenders: ensure Escape closes even if Modal's document listener misses it
   useEffect(() => {
@@ -408,7 +407,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
     };
     document.addEventListener('keydown', handler, true); // capture phase
     return () => document.removeEventListener('keydown', handler, true);
-  }, [open, handleClose, importing]);
+  }, [open, handleClose]);
 
   const stepDots = [1, 2, 3, 4, 5];
 
@@ -530,7 +529,6 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                 const Icon = fileIcon(d.fileType);
                 const isSkipped = d.skipped;
                 const isCurrent = i === reviewIndex;
-                const effectiveType = d.userOverride || d.detectedEntity;
                 return (
                   <button
                     key={i}

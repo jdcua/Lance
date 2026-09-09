@@ -3,10 +3,10 @@
  * Per-client style guide with tone, formatting rules, banned words, and reference.
  * One record per client. Edit-in-place.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
-import { Save, X, BookOpen, FileText } from 'lucide-react';
+import { Save, X } from 'lucide-react';
 
 type StyleGuide = {
   id: string;
@@ -34,7 +34,7 @@ export default function StyleGuide({ clientId }: { clientId: string }) {
   const [bannedWordsList, setBannedWordsList] = useState<string[]>([]);
   const [bannedWordInput, setBannedWordInput] = useState('');
 
-  const loadGuide = async () => {
+  const loadGuide = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(StyleGuide & Record<string, unknown>)[]>(
@@ -73,11 +73,11 @@ export default function StyleGuide({ clientId }: { clientId: string }) {
       console.error('[StyleGuide] loadGuide failed:', e);
     }
     setLoading(false);
-  };
+  }, [clientId]);
 
   useEffect(() => {
     loadGuide();
-  }, [clientId]);
+  }, [clientId, loadGuide]);
 
   const addBannedWord = () => {
     const w = bannedWordInput.trim();

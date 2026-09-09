@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Check, Circle } from 'lucide-react';
@@ -22,7 +22,7 @@ export default function StemTracker({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ name: '', format: FORMATS[0], delivery_date: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadStems = async () => {
+  const loadStems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Stem & Record<string, unknown>)[]>(
@@ -40,9 +40,9 @@ export default function StemTracker({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[StemTracker] loadStems failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadStems(); }, [projectId]);
+  useEffect(() => { loadStems(); }, [projectId, loadStems]);
 
   const handleAdd = async () => {
     if (!form.name.trim()) return;

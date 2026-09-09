@@ -2,7 +2,7 @@
  * Remediation Tracker · Cybersecurity feature.
  * Track remediation actions with due dates, assignment, and completion toggle.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, CheckSquare, Square, AlertTriangle } from 'lucide-react';
@@ -25,7 +25,7 @@ export default function RemediationTracker({ projectId }: { projectId: string })
   const [form, setForm] = useState({ title: '', vulnerability_id: '', action: '', assigned_to: '', due_date: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Remediation & Record<string, unknown>)[]>(
@@ -44,9 +44,9 @@ export default function RemediationTracker({ projectId }: { projectId: string })
       })));
     } catch (e) { console.error('[RemediationTracker] loadItems failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const handleAdd = async () => {
     if (!form.title.trim()) return;
@@ -97,7 +97,6 @@ export default function RemediationTracker({ projectId }: { projectId: string })
   const overdueCount = items.filter(i => isOverdue(i)).length;
 
   const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
-  const selectClass = "w-full px-2 py-1 text-[11px] border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]";
 
   if (loading) {
     return (

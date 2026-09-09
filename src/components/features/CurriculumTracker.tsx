@@ -2,7 +2,7 @@
  * Curriculum Tracker · Tutor feature.
  * Ordered list of curriculum items with status badges and up/down reorder.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
@@ -31,7 +31,7 @@ export default function CurriculumTracker({ projectId }: { projectId: string }) 
   const [form, setForm] = useState({ title: '', status: 'planned', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(CurriculumItem & Record<string, unknown>)[]>(
@@ -48,9 +48,9 @@ export default function CurriculumTracker({ projectId }: { projectId: string }) 
       })));
     } catch (e) { console.error('[CurriculumTracker] loadItems failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const handleAdd = async () => {
     if (!form.title.trim()) return;

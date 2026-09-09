@@ -2,7 +2,7 @@
  * Smart Contract Registry · Blockchain feature.
  * List of deployed contracts with clickable address.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, ExternalLink } from 'lucide-react';
@@ -35,7 +35,7 @@ export default function SmartContractRegistry({ projectId }: { projectId: string
   const [form, setForm] = useState({ name: '', network: 'ethereum', address: '', status: 'active', audit_date: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadContracts = async () => {
+  const loadContracts = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Contract & Record<string, unknown>)[]>(
@@ -54,9 +54,9 @@ export default function SmartContractRegistry({ projectId }: { projectId: string
       })));
     } catch (e) { console.error('[SmartContractRegistry] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadContracts(); }, [projectId]);
+  useEffect(() => { loadContracts(); }, [projectId, loadContracts]);
 
   const handleAdd = async () => {
     if (!form.name.trim()) return;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Rocket, Palette, Command, Zap, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import Button from './Button';
 import { getShortcutModifierLabel } from '../../utils/shortcuts';
@@ -58,6 +58,16 @@ export default function Walkthrough({ open, onClose, onAddFirstClient }: Walkthr
     if (open) setSlide(0);
   }, [open]);
 
+  const isLast = slide === slides.length - 1;
+
+  const handleNext = useCallback(() => {
+    if (isLast) {
+      onClose();
+    } else {
+      setSlide((s) => s + 1);
+    }
+  }, [isLast, onClose]);
+
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
@@ -67,20 +77,11 @@ export default function Walkthrough({ open, onClose, onAddFirstClient }: Walkthr
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [open, onClose, slide]);
+  }, [open, onClose, handleNext]);
 
   if (!open) return null;
 
-  const isLast = slide === slides.length - 1;
   const Icon = slides[slide].icon;
-
-  const handleNext = () => {
-    if (isLast) {
-      onClose();
-    } else {
-      setSlide((s) => s + 1);
-    }
-  };
 
   const handlePrev = () => setSlide((s) => s - 1);
 

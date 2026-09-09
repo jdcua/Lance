@@ -39,7 +39,7 @@ export default function TimelineView({ projectId }: { projectId: string }) {
         <p className="text-xs text-[var(--text-tertiary)]">No milestones yet.</p>
       ) : (
         <div className="relative pl-4 border-l border-[var(--border-color)] space-y-0">
-          {items.map((m, i) => {
+          {items.map((m, _i) => {
             const isComplete = m.completed;
             const isPast = new Date(m.due_date || '') < new Date() && !isComplete;
             return (

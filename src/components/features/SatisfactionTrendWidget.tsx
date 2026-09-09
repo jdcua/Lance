@@ -1,7 +1,7 @@
 /**
  * Satisfaction Trend Widget · displays average rating from feedback_aggregations and recent ratings list.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import { Star } from 'lucide-react';
 
@@ -17,7 +17,7 @@ export default function SatisfactionTrendWidget({ clientId }: { clientId?: strin
   const [items, setItems] = useState<FeedbackEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       let query = 'SELECT id, source, rating, comment, date FROM feedback_aggregations';
@@ -37,9 +37,9 @@ export default function SatisfactionTrendWidget({ clientId }: { clientId?: strin
       })));
     } catch (e) { console.error('[SatisfactionTrendWidget] load failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadItems(); }, [clientId]);
+  useEffect(() => { loadItems(); }, [clientId, loadItems]);
 
   const avgRating = items.length > 0
     ? items.reduce((sum, i) => sum + i.rating, 0) / items.length

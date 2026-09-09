@@ -6,7 +6,7 @@
  * License: Proprietary. See LICENSE.md.
  */
 
-import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Lock } from 'lucide-react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/layout/Sidebar';
@@ -51,13 +51,11 @@ export const SPLASH_MAX_VIEWS = 3;
 
 export default function App() {
   const {
-    profile, profileLoaded, loadProfile, saveProfile, isLicensed,
+    profile, profileLoaded, loadProfile, isLicensed,
     recurringInvoices, loadRecurringInvoices, updateRecurringInvoice,
     invoices, loadInvoices, addInvoice,
-    clients, loadClients,
-    proposals, loadProposals,
-    loadFollowUpSettings, loadPendingFollowUps,
-    logFollowUp, followUpSettings, pendingFollowUps,
+    loadClients,
+    loadFollowUpSettings,
     setPortalPort, setPortalFailed,
   } = useStore();
   const addToast = useToasts((s) => s.add);
@@ -232,7 +230,7 @@ export default function App() {
     };
     setupListeners();
     return () => cleanup?.();
-  }, []);
+  }, [addToast, setPortalFailed, setPortalPort]);
 
   useEffect(() => {
     loadProfile();
@@ -435,7 +433,7 @@ export default function App() {
       } catch { /* achievement check is non-critical */ }
     });
     return () => cancelIdleCallback(handle);
-  }, [profileLoaded, hasRanAutoGen, loadRecurringInvoices, loadInvoices, loadClients]);
+  }, [profileLoaded, hasRanAutoGen, loadRecurringInvoices, loadInvoices, loadClients, addToast]);
 
   // Deferred recurring invoice check · runs after first render via idle callback
   useEffect(() => {
@@ -504,12 +502,12 @@ export default function App() {
       }
     });
     return () => cancelIdleCallback(handle);
-  }, [hasRanAutoGen, recurringInvoices.length, invoices.length]);
+  }, [hasRanAutoGen, recurringInvoices, invoices.length, profile?.payment_terms, addInvoice, addToast, loadInvoices, updateRecurringInvoice]);
 
   // Auto-backup check · runs after engines, deferred (browser mode: skip)
   useEffect(() => {
     if (!hasRanAutoGen) return;
-    if (typeof window === 'undefined' || !(window as any).__TAURI_INTERNALS__) return;
+    if (typeof window === 'undefined' || !(window as unknown as Record<string, unknown>).__TAURI_INTERNALS__) return;
     const handle = requestIdleCallback(async () => {
       try {
         const { runAutoBackup } = await import('./utils/backup');
@@ -522,7 +520,7 @@ export default function App() {
       }
     });
     return () => cancelIdleCallback(handle);
-  }, [hasRanAutoGen]);
+  }, [hasRanAutoGen, addToast]);
 
   // Follow-up checker · deferred after first render, runs every 30 minutes
   useEffect(() => {
@@ -616,7 +614,7 @@ export default function App() {
       cancelIdleCallback(initialHandle);
       clearInterval(interval);
     };
-  }, [profileLoaded]);
+  }, [profileLoaded, loadFollowUpSettings]);
 
   // Proposal expiry engine · deferred after first render, runs every hour
   useEffect(() => {
@@ -663,7 +661,7 @@ export default function App() {
       cancelIdleCallback(initialHandle);
       clearInterval(interval);
     };
-  }, [profileLoaded]);
+  }, [profileLoaded, addToast]);
 
   useAutoUpdater();
 
@@ -1063,7 +1061,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
         setIsResuming(false);
       }
     }
-  }, [showOnboarding]);
+  }, [showOnboarding, profile]);
 
   const persistStep = async (step: number) => {
     localStorage.setItem('lance:onboarding-step', step.toString());
@@ -1094,7 +1092,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
   // misclick out of their first run).
   const handleOnboardingClose = useCallback(() => {
     setShowOnboarding(false);
-  }, []);
+  }, [setShowOnboarding]);
 
   // Explicit opt-out, offered as a "Skip setup" link in the header.
   const handleOnboardingSkip = useCallback(() => {
@@ -1102,7 +1100,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
     localStorage.setItem('lance:onboarding-completed', 'true');
     localStorage.setItem('lance:tour-pending', 'true');
     setShowOnboarding(false);
-  }, []);
+  }, [setShowOnboarding]);
 
   const handleOnboardingFinish = async () => {
     if (!onboardingForm.name.trim()) return;

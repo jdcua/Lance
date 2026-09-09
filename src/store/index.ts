@@ -14,6 +14,7 @@ import { validateLicenseKey } from '../license';
 import { sanitizeInput, truncate, MAX_LENGTHS } from '../utils/sanitize';
 import { DAY_MS } from '../utils/format';
 import type { LicenseTier } from '../lib/constants';
+import type { Update } from '@tauri-apps/plugin-updater';
 import { TRIAL } from '../lib/constants';
 
 const licenseCache = new Map<string, boolean>();
@@ -44,8 +45,6 @@ type Toast = {
   duration?: number;
   actions?: ToastAction[];
 };
-
-type UpdateStatus = 'idle' | 'checking' | 'available' | 'downloading' | 'downloaded' | 'error';
 
 const toastTimers = new Map<string, { timeoutId: ReturnType<typeof setTimeout>; startedAt: number; duration: number }>();
 
@@ -116,10 +115,10 @@ export interface UnifiedStore {
 
   // ── Updater ──
   updateAvailable: boolean
-  updateData: any | null
+  updateData: Update | null
   isDownloading: boolean
   downloadProgressMB: string | null
-  setUpdateAvailable: (data: unknown) => void
+  setUpdateAvailable: (data: Update) => void
   setDownloading: (val: boolean) => void
   setDownloadProgress: (mb: string) => void
   dismissUpdate: () => void
@@ -382,8 +381,9 @@ export const useStore = create<UnifiedStore>((set, get) => {
   const endLoad = (key: LoadingKey) => set({ loading: { ...get().loading, [key]: false } });
   const setError = (key: ErrorKey, err: string | null) => set({ errors: { ...get().errors, [key]: err } });
 
-  function parseLineItems(inv: Invoice | RecurringInvoice): any {
-    return { ...inv, line_items: typeof inv.line_items === 'string' ? JSON.parse(inv.line_items as string) : inv.line_items };
+  function parseLineItems<T extends Invoice | RecurringInvoice>(inv: T): T {
+    const lineItems = inv.line_items as unknown;
+    return { ...inv, line_items: typeof lineItems === 'string' ? (JSON.parse(lineItems) as LineItem[]) : (lineItems as T['line_items']) };
   }
 
   return {
@@ -826,7 +826,6 @@ export const useStore = create<UnifiedStore>((set, get) => {
           if (result.valid) {
             const profile = get().profile;
             if (!profile) return;
-            const now = new Date().toISOString();
             const updated = {
               ...profile,
               currency: profile.currency || 'CAD',
@@ -926,7 +925,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ communications: [...get().communications, comm] });
       return comm;
     },
-    deleteCommunication: async (id, clientId) => {
+    deleteCommunication: async (id, _clientId) => {
       await invoke('delete_communication', { id });
       set({ communications: get().communications.filter((c) => c.id !== id) });
     },
@@ -988,7 +987,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ allAttachments: [attachment, ...get().allAttachments] });
       return attachment;
     },
-    deleteAttachment: async (id, entityType, entityId) => {
+    deleteAttachment: async (id, _entityType, _entityId) => {
       await invoke('delete_attachment', { id });
       set({ allAttachments: get().allAttachments.filter((a) => a.id !== id) });
     },
@@ -1003,7 +1002,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ allAttachments: get().allAttachments.map((a) => (a.id === id ? attachment : a)) });
       return attachment;
     },
-    moveAttachment: async (id, entityType, entityId, oldEntityType, oldEntityId) => {
+    moveAttachment: async (id, entityType, entityId, _oldEntityType, _oldEntityId) => {
       const attachment = await invoke<Attachment>('move_attachment', { payload: { id, entity_type: entityType, entity_id: entityId } });
       set({ allAttachments: get().allAttachments.map((a) => (a.id === id ? attachment : a)) });
       return attachment;
@@ -1108,7 +1107,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       const log = await invoke<FollowUpLog>('log_follow_up', { payload: data });
       const key = `${data.entity_type}:${data.entity_id}`;
       const current = { ...get().followUpLogs };
-      (current as any)[key] = [(current as any)[key] || [], log].flat();
+      current[key] = [current[key] || [], log].flat();
       set({ followUpLogs: current });
       return log;
     },
@@ -1116,7 +1115,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       await invoke('update_follow_up_status', { payload: { id, status, action: action ?? null } });
       const allLogs = { ...get().followUpLogs };
       for (const key of Object.keys(allLogs)) {
-        (allLogs as any)[key] = (allLogs as any)[key].map((l: FollowUpLog) =>
+        allLogs[key] = allLogs[key].map((l: FollowUpLog) =>
           l.id === id ? { ...l, status: status as FollowUpLog['status'], action: action ?? l.action, actioned_at: new Date().toISOString() } : l
         );
       }
@@ -1132,7 +1131,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
         const keyed: Record<string, FollowUpLog[]> = {};
         for (const log of logs) {
           const key = `${log.entity_type}:${log.entity_id}`;
-          (keyed as any)[key] = [...((keyed as any)[key] || []), log];
+          keyed[key] = [...(keyed[key] || []), log];
         }
         set({ followUpLogs: keyed });
       } catch (e) { console.error('[store] loadAllFollowUpLogs failed:', e); }
@@ -1215,7 +1214,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
         const { getDb } = await import('../db');
         const db = await getDb();
         const rows = await db.select<ProjectTemplate[]>('SELECT id, name, description, default_budget, default_status, is_default, created_at FROM project_templates ORDER BY created_at DESC');
-        set({ projectTemplates: rows.map((r: ProjectTemplate) => ({ ...r, is_default: !!(r as any).is_default })) });
+        set({ projectTemplates: rows.map((r: ProjectTemplate) => ({ ...r, is_default: !!r.is_default })) });
       } catch (e) { console.error('[store] loadProjectTemplates failed:', e); setError('projectTemplates', String(e)); }
       finally { endLoad('projectTemplates'); }
     },
@@ -1363,7 +1362,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       await invoke('update_keyword', { id, positionCurrent: positionCurrent ?? null, targetPosition: targetPosition ?? null });
       set({ keywords: get().keywords.map((k) => k.id === id ? { ...k, position_current: positionCurrent ?? k.position_current, target_position: targetPosition ?? k.target_position } : k) });
     },
-    deleteKeyword: async (id, clientId) => {
+    deleteKeyword: async (id, _clientId) => {
       await invoke('delete_keyword', { id });
       set({ keywords: get().keywords.filter((k) => k.id !== id) });
     },

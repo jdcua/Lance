@@ -2,18 +2,11 @@
  * Retainer Health Score · Consultant / Agency feature.
  * Computes a 0-100 health score from deliverables, report freshness, and communication recency.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../../store';
 import { getDb } from '../../db';
 import { Activity, FileCheck, Calendar, MessageSquare } from 'lucide-react';
 
-type Cadence = {
-  id: string;
-  client_id: string;
-  frequency: string;
-  last_report_date?: string;
-  next_due?: string;
-};
 
 export default function RetainerHealthScore({ clientId }: { clientId: string }) {
   const { timeEntries, loadTimeEntries } = useStore();
@@ -23,7 +16,7 @@ export default function RetainerHealthScore({ clientId }: { clientId: string }) 
   const [communicationScore, setCommunicationScore] = useState(0);
   const [overallScore, setOverallScore] = useState(0);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const db = await getDb();
 
@@ -78,9 +71,9 @@ export default function RetainerHealthScore({ clientId }: { clientId: string }) 
       setOverallScore(Math.round((dScore + rScore + cScore) / 3));
     } catch (e) { console.error('[RetainerHealthScore] load failed:', e); }
     setLoading(false);
-  };
+  }, [clientId, loadTimeEntries, timeEntries]);
 
-  useEffect(() => { load(); }, [clientId]);
+  useEffect(() => { load(); }, [clientId, load]);
 
   useEffect(() => {
     if (timeEntries.length > 0) {

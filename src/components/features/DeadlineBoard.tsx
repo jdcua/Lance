@@ -23,7 +23,7 @@ export default function DeadlineBoard() {
       setLoading(false);
     };
     load();
-  }, []);
+  }, [loadClients, loadProjects]);
 
   const getClientName = (clientId: string) => {
     return clients.find((c) => c.id === clientId)?.name || 'Unknown';

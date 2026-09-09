@@ -2,7 +2,7 @@
  * Component Count · UX Designer feature.
  * Simple list of components with counts, inline editing, and total.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Edit3, Check, X, Box } from 'lucide-react';
@@ -23,7 +23,7 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ComponentCount & Record<string, unknown>)[]>(
@@ -38,9 +38,9 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[ComponentCounts] loadItems failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const handleAdd = async () => {
     if (!form.component_name.trim()) return;

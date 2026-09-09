@@ -1,7 +1,7 @@
 /**
  * Campaign Budget Tracker · tracks campaign budgets with spend progress visualization.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2 } from 'lucide-react';
@@ -26,7 +26,7 @@ export default function CampaignBudgetTracker({ projectId }: { projectId: string
   const [form, setForm] = useState({ name: '', budget: '', spent: '', start_date: '', end_date: '', status: 'planned' });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(CampaignBudget & Record<string, unknown>)[]>(
@@ -45,9 +45,9 @@ export default function CampaignBudgetTracker({ projectId }: { projectId: string
       })));
     } catch (e) { console.error('[CampaignBudgetTracker] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const handleSave = async () => {
     if (!form.name.trim()) return;

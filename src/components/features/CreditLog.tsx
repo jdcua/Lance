@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, ExternalLink } from 'lucide-react';
@@ -22,7 +22,7 @@ export default function CreditLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ artist: '', role: ROLES[0], release_link: '', release_date: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadCredits = async () => {
+  const loadCredits = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Credit & Record<string, unknown>)[]>(
@@ -40,9 +40,9 @@ export default function CreditLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[CreditLog] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadCredits(); }, [projectId]);
+  useEffect(() => { loadCredits(); }, [projectId, loadCredits]);
 
   const handleAdd = async () => {
     if (!form.artist.trim()) return;

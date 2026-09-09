@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useStore } from '../store';
-import type { Invoice, LineItem, TimeEntry, RecurringInvoice as RecurringInvoiceType } from '../types';
+import type { Invoice, LineItem, RecurringInvoice as RecurringInvoiceType } from '../types';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
@@ -136,7 +136,6 @@ export default function Invoices() {
       addToast('Could not add the late fee', 'error');
     }
   };
-  const depositPercentage = useMemo(() => archetype?.depositPercentage ?? 0, [archetype]);
   const defaultPaymentTerms = useMemo(() => archetype?.paymentTerms ?? (profile?.payment_terms ?? 14), [archetype, profile?.payment_terms]);
 
   useEffect(() => {
@@ -144,7 +143,7 @@ export default function Invoices() {
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
     loadPendingFollowUps();
-  }, [loadInvoices, loadClients, loadProfile, loadProjects, loadPendingFollowUps, loadTimeEntries]);
+  }, [loadInvoices, loadClients, loadProfile, loadProjects, loadPendingFollowUps, loadTimeEntries, addToast]);
 
   useEffect(() => {
     if (activeTab === 'recurring') loadRecurringInvoices();
@@ -166,7 +165,6 @@ export default function Invoices() {
 
   const openNew = () => {
     const paymentTerms = defaultPaymentTerms;
-    const defaultTax = profile?.tax_rate ? String(profile.tax_rate) : '';
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + paymentTerms);
     setEditing(null);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, HardDrive, Upload } from 'lucide-react';
@@ -18,16 +18,16 @@ export default function StorageTracker({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ raw_gb: '', exported_gb: '', logged_date: '' });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { loadLogs(); }, [projectId]);
-
-  const loadLogs = async () => {
+  const loadLogs = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<StorageLog[]>('SELECT * FROM storage_log WHERE project_id = $1 ORDER BY logged_date DESC', [projectId]);
       setLogs(rows);
     } catch { /* handled */ }
     setLoading(false);
-  };
+  }, [projectId]);
+
+  useEffect(() => { loadLogs(); }, [projectId, loadLogs]);
 
   const handleSave = async () => {
     if (!form.logged_date.trim()) return;

@@ -3,7 +3,7 @@
  * Track placements with candidate name, role, company, fee, and status.
  * Shows total fees at top.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, DollarSign, Briefcase } from 'lucide-react';
@@ -34,7 +34,7 @@ export default function PlacementLog({ clientId }: { clientId: string }) {
   const [form, setForm] = useState({ candidate_name: '', role: '', company: '', start_date: '', fee: '', status: 'pending' });
   const [saving, setSaving] = useState(false);
 
-  const loadPlacements = async () => {
+  const loadPlacements = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Placement & Record<string, unknown>)[]>(
@@ -53,9 +53,9 @@ export default function PlacementLog({ clientId }: { clientId: string }) {
       })));
     } catch (e) { console.error('[PlacementLog] loadPlacements failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadPlacements(); }, [clientId]);
+  useEffect(() => { loadPlacements(); }, [clientId, loadPlacements]);
 
   const handleAdd = async () => {
     if (!form.candidate_name.trim()) return;

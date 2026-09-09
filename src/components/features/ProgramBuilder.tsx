@@ -2,7 +2,7 @@
  * Program Builder · Trainer feature.
  * Manage training programs with name, duration, sessions/wk, and inline editing.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Dumbbell, Clock, CalendarDays } from 'lucide-react';
@@ -25,7 +25,7 @@ export default function ProgramBuilder({ clientId }: { clientId: string }) {
   const [addForm, setAddForm] = useState({ name: '', duration_weeks: '', sessions_per_week: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadPrograms = async () => {
+  const loadPrograms = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Program & Record<string, unknown>)[]>(
@@ -42,9 +42,9 @@ export default function ProgramBuilder({ clientId }: { clientId: string }) {
       })));
     } catch (e) { console.error('[ProgramBuilder] loadPrograms failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadPrograms(); }, [clientId]);
+  useEffect(() => { loadPrograms(); }, [clientId, loadPrograms]);
 
   const handleAdd = async () => {
     if (!addForm.name.trim()) return;

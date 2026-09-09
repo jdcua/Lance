@@ -2,7 +2,7 @@
  * Deliverable Format Log · 3D Artist feature.
  * Logs format deliverables with poly/texture specs and delivery status.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Check, CheckCircle2, Box } from 'lucide-react';
@@ -26,7 +26,7 @@ export default function DeliverableFormatLog({ projectId }: { projectId: string 
   const [form, setForm] = useState({ format: FORMATS[0], poly_spec: '', texture_spec: '', delivery_date: '', delivered: false });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(FormatDeliverable & Record<string, unknown>)[]>(
@@ -44,9 +44,9 @@ export default function DeliverableFormatLog({ projectId }: { projectId: string 
       })));
     } catch (e) { console.error('[DeliverableFormatLog] loadItems failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const handleAdd = async () => {
     setSaving(true);

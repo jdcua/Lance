@@ -1,14 +1,13 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '../store';
-import type { Client, Communication, MetricDefinition, MetricValue } from '../types';
+import type { Client, Communication, MetricDefinition } from '../types';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import Sparkline from '../components/ui/Sparkline';
-import { Plus, Pencil, Trash2, Mail, Phone, Building2, MessageSquare, PhoneCall, MailOpen, Users, X, Check, FileText, FolderKanban, Receipt, Clock, Search, BarChart3, Star, Copy, Upload } from 'lucide-react';
+import { Plus, Pencil, Trash2, Mail, Phone, Building2, MessageSquare, PhoneCall, MailOpen, Users, X, Check, FileText, FolderKanban, Receipt, Clock, Search, Star, Copy, Upload } from 'lucide-react';
 import { useToasts } from '../store/toastStore';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 import ClientImportModal from '../components/ui/ClientImportModal';
@@ -170,11 +169,10 @@ export default function Clients() {
     invoices, loadInvoices,
     profile, loadProfile,
     metricDefs, loadMetricDefs, addMetricDef, updateMetricDef, removeMetricDef,
-    metricValues, loadMetricValues, logMetricValue, removeMetricValue,
-    metricTemplates, loadMetricTemplates, saveMetricTemplate, applyMetricTemplate, removeMetricTemplate,
+    metricValues, loadMetricValues, logMetricValue,
+    metricTemplates, loadMetricTemplates, saveMetricTemplate, applyMetricTemplate,
   } = useStore();
   const addToast = useToasts((s) => s.add);
-  const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
@@ -205,7 +203,7 @@ export default function Clients() {
     Promise.all([loadClients(), loadProjects(), loadProposals(), loadInvoices(), loadProfile()])
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
-  }, [loadClients, loadProjects, loadProposals, loadInvoices, loadProfile]);
+  }, [loadClients, loadProjects, loadProposals, loadInvoices, loadProfile, addToast]);
 
   useEffect(() => {
     if (clients.length > 0 && !selectedId) {

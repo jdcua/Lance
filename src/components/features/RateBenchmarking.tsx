@@ -2,7 +2,7 @@
  * Rate Benchmarking · Writer feature.
  * Computes per-word rate trends from time_entry_words + time_entries + invoices.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../../store';
 import { getDb } from '../../db';
 import { TrendingUp, TrendingDown, Minus, DollarSign } from 'lucide-react';
@@ -33,18 +33,7 @@ export default function RateBenchmarking() {
     trend: 'flat',
   });
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      await loadTimeEntries();
-      await loadInvoices();
-      await computeRates();
-      setLoading(false);
-    };
-    load();
-  }, []);
-
-  const computeRates = async () => {
+  const computeRates = useCallback(async () => {
     try {
       const db = await getDb();
 
@@ -128,7 +117,18 @@ export default function RateBenchmarking() {
     } catch (e) {
       console.error('[RateBenchmarking] computeRates failed:', e);
     }
-  };
+  }, [invoices, timeEntries]);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      await loadTimeEntries();
+      await loadInvoices();
+      await computeRates();
+      setLoading(false);
+    };
+    load();
+  }, [computeRates, loadInvoices, loadTimeEntries]);
 
   const formatRate = (rate: number) => {
     return `$${rate.toFixed(2)}`;

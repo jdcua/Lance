@@ -2,7 +2,7 @@
  * Quality Level Log · Translator feature.
  * Single-record quality tier selection per project with notes.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Save, Shield, FileCheck, GraduationCap, Scale, Languages } from 'lucide-react';
@@ -59,7 +59,7 @@ export default function QualityLevelLog({ projectId }: { projectId: string }) {
   const [selectedTier, setSelectedTier] = useState<string>('standard');
   const [notes, setNotes] = useState('');
 
-  const loadQuality = async () => {
+  const loadQuality = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ProjectQuality & Record<string, unknown>)[]>(
@@ -85,11 +85,11 @@ export default function QualityLevelLog({ projectId }: { projectId: string }) {
       console.error('[QualityLevelLog] loadQuality failed:', e);
     }
     setLoading(false);
-  };
+  }, [projectId]);
 
   useEffect(() => {
     loadQuality();
-  }, [projectId]);
+  }, [projectId, loadQuality]);
 
   const handleSave = async () => {
     setSaving(true);

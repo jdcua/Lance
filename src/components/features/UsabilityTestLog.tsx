@@ -2,7 +2,7 @@
  * Usability Test Log · UX Designer feature.
  * Table with usability test sessions, severity badges, participants, and issues.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Users, AlertTriangle } from 'lucide-react';
@@ -33,7 +33,7 @@ export default function UsabilityTestLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ date: new Date().toISOString().split('T')[0], participants: '', tasks_tested: '', issues_found: '', severity: 'medium' });
   const [saving, setSaving] = useState(false);
 
-  const loadTests = async () => {
+  const loadTests = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(UsabilityTest & Record<string, unknown>)[]>(
@@ -51,9 +51,9 @@ export default function UsabilityTestLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[UsabilityTestLog] loadTests failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadTests(); }, [projectId]);
+  useEffect(() => { loadTests(); }, [projectId, loadTests]);
 
   const handleAdd = async () => {
     setSaving(true);

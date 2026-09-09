@@ -2,10 +2,10 @@
  * Showing Log · Real Estate feature.
  * Timeline-style list of property showings with attendee info and follow-up.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
-import { Plus, Trash2, Calendar, User } from 'lucide-react';
+import { Plus, Trash2, Calendar } from 'lucide-react';
 
 type Showing = {
   id: string;
@@ -25,7 +25,7 @@ export default function ShowingLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ date: new Date().toISOString().split('T')[0], attendee_name: '', attendee_contact: '', feedback: '', follow_up_date: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadShowings = async () => {
+  const loadShowings = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Showing & Record<string, unknown>)[]>(
@@ -43,9 +43,9 @@ export default function ShowingLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[ShowingLog] loadShowings failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadShowings(); }, [projectId]);
+  useEffect(() => { loadShowings(); }, [projectId, loadShowings]);
 
   const handleAdd = async () => {
     if (!form.attendee_name.trim()) return;

@@ -13,7 +13,7 @@ export interface WidgetDef {
   id: string;
   component: string;
   priority: number;
-  props?: Record<string, any>;
+  props?: Record<string, unknown>;
 }
 
 export interface SidebarItemDef {

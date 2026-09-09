@@ -50,7 +50,7 @@ export default function Projects() {
     Promise.all([loadProjects(), loadClients(), loadProfile(), loadProjectTemplates()])
       .catch(err => addToast(err?.toString?.() || 'Failed to load data', 'error'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [loadProjects, loadClients, loadProfile, loadProjectTemplates, addToast]);
 
   const openNewProject = () => {
     setEditingProject(null);

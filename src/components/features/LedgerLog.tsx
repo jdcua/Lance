@@ -2,7 +2,7 @@
  * Ledger Log · Accountant feature.
  * Income/expense list with summary (total income - total expenses = net).
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
@@ -26,7 +26,7 @@ export default function LedgerLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ description: '', amount: '', entry_type: 'expense', date: new Date().toISOString().split('T')[0], category: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadEntries = async () => {
+  const loadEntries = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Entry & Record<string, unknown>)[]>(
@@ -44,9 +44,9 @@ export default function LedgerLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[LedgerLog] loadEntries failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadEntries(); }, [projectId]);
+  useEffect(() => { loadEntries(); }, [projectId, loadEntries]);
 
   const handleAdd = async () => {
     if (!form.description.trim()) return;

@@ -2,7 +2,7 @@
  * Intake Form Storage · Wellness feature.
  * Single record per client. Form data as large textarea, save in place.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Save, FileText } from 'lucide-react';
@@ -21,7 +21,7 @@ export default function IntakeFormStorage({ clientId }: { clientId: string }) {
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
 
-  const loadIntake = async () => {
+  const loadIntake = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(IntakeForm & Record<string, unknown>)[]>(
@@ -41,9 +41,9 @@ export default function IntakeFormStorage({ clientId }: { clientId: string }) {
       }
     } catch (e) { console.error('[IntakeFormStorage] loadIntake failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadIntake(); }, [clientId]);
+  useEffect(() => { loadIntake(); }, [clientId, loadIntake]);
 
   const handleSave = async () => {
     setSaving(true);

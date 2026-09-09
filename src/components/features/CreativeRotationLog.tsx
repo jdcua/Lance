@@ -1,7 +1,7 @@
 /**
  * Creative Rotation Log · tracks creative asset performance with auto-calculated CTR.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2 } from 'lucide-react';
@@ -27,7 +27,7 @@ export default function CreativeRotationLog({ projectId }: { projectId: string }
   const [form, setForm] = useState({ creative_name: '', platform: PLATFORMS[0], impressions: '', clicks: '', start_date: '', end_date: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Creative & Record<string, unknown>)[]>(
@@ -47,9 +47,9 @@ export default function CreativeRotationLog({ projectId }: { projectId: string }
       })));
     } catch (e) { console.error('[CreativeRotationLog] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const handleSave = async () => {
     if (!form.creative_name.trim()) return;

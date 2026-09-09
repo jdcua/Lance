@@ -2,7 +2,7 @@
  * Deliverable Specs · Filmmaker feature.
  * Single-record-per-project deliverable specification form.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 
@@ -24,7 +24,7 @@ export default function DeliverableSpecs({ projectId }: { projectId: string }) {
   const [form, setForm] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
-  const loadSpec = async () => {
+  const loadSpec = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Spec & Record<string, unknown>)[]>('SELECT id, project_id, format, resolution, aspect_ratio, audio_spec, delivery_method, notes FROM deliverable_specs WHERE project_id = ? LIMIT 1', [projectId]);
@@ -52,9 +52,9 @@ export default function DeliverableSpecs({ projectId }: { projectId: string }) {
       }
     } catch (e) { console.error('[DeliverableSpecs] loadSpec failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadSpec(); }, [projectId]);
+  useEffect(() => { loadSpec(); }, [projectId, loadSpec]);
 
   const handleSave = async () => {
     setSaving(true);

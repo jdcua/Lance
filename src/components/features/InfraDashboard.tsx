@@ -2,7 +2,7 @@
  * Infra Dashboard · DevOps feature.
  * Track infrastructure services with provider, monthly cost, and status.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Server, DollarSign } from 'lucide-react';
@@ -31,7 +31,7 @@ export default function InfraDashboard({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ service_name: '', provider: '', cost_monthly: '', status: 'active' });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(InfraItem & Record<string, unknown>)[]>(
@@ -48,9 +48,9 @@ export default function InfraDashboard({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[InfraDashboard] loadItems failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const handleAdd = async () => {
     if (!form.service_name.trim()) return;

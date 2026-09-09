@@ -2,8 +2,7 @@
  * Roadmap View · Product Manager feature.
  * Roadmap items grouped by quarter with reordering.
  */
-import { useState, useEffect } from 'react';
-import { useStore } from '../../store';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, ChevronUp, ChevronDown, ChevronRight } from 'lucide-react';
@@ -60,7 +59,7 @@ export default function RoadmapView({ projectId }: { projectId: string }) {
   });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(RoadmapItem & Record<string, unknown>)[]>(
@@ -84,11 +83,11 @@ export default function RoadmapView({ projectId }: { projectId: string }) {
       console.error('[RoadmapView] loadItems failed:', e);
     }
     setLoading(false);
-  };
+  }, [projectId]);
 
   useEffect(() => {
     loadItems();
-  }, [projectId]);
+  }, [projectId, loadItems]);
 
   const sorted = [...items];
   const maxSort = sorted.length > 0 ? Math.max(...sorted.map((i) => i.sort_order)) : 0;
@@ -245,7 +244,7 @@ export default function RoadmapView({ projectId }: { projectId: string }) {
                 <div className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase px-1">
                   {group.quarter} ({group.items.length})
                 </div>
-                {group.items.map((item, i) => {
+                {group.items.map((item, _i) => {
                   const globalIndex = sorted.indexOf(item);
                   return (
                     <div key={item.id}>

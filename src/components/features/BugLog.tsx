@@ -2,7 +2,7 @@
  * Bug Log · Developer feature.
  * Track bugs with priority dots, status, and resolution.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Circle, CheckCircle2 } from 'lucide-react';
@@ -48,7 +48,7 @@ export default function BugLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ title: '', priority: 'medium', status: 'open' });
   const [saving, setSaving] = useState(false);
 
-  const loadBugs = async () => {
+  const loadBugs = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Bug & Record<string, unknown>)[]>(
@@ -67,9 +67,9 @@ export default function BugLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[BugLog] loadBugs failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadBugs(); }, [projectId]);
+  useEffect(() => { loadBugs(); }, [projectId, loadBugs]);
 
   const handleAdd = async () => {
     if (!form.title.trim()) return;

@@ -2,7 +2,7 @@
  * Assessment Log · Trainer feature.
  * Timeline list of assessments with date, metrics, and notes.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, ClipboardCheck, Calendar } from 'lucide-react';
@@ -22,7 +22,7 @@ export default function AssessmentLog({ clientId }: { clientId: string }) {
   const [form, setForm] = useState({ date: new Date().toISOString().split('T')[0], metrics: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadAssessments = async () => {
+  const loadAssessments = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Assessment & Record<string, unknown>)[]>(
@@ -38,9 +38,9 @@ export default function AssessmentLog({ clientId }: { clientId: string }) {
       })));
     } catch (e) { console.error('[AssessmentLog] loadAssessments failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadAssessments(); }, [clientId]);
+  useEffect(() => { loadAssessments(); }, [clientId, loadAssessments]);
 
   const handleAdd = async () => {
     if (!form.date) return;

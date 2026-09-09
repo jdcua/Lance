@@ -2,7 +2,7 @@
  * Listing Tracker · Real Estate feature.
  * Track property listings with address, type, price, status badges, and dates.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Home } from 'lucide-react';
@@ -39,7 +39,7 @@ export default function ListingTracker({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ address: '', property_type: 'Single Family', list_price: '', status: 'active', list_date: new Date().toISOString().split('T')[0], close_date: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadListings = async () => {
+  const loadListings = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Listing & Record<string, unknown>)[]>(
@@ -59,9 +59,9 @@ export default function ListingTracker({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[ListingTracker] loadListings failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadListings(); }, [projectId]);
+  useEffect(() => { loadListings(); }, [projectId, loadListings]);
 
   const handleAdd = async () => {
     if (!form.address.trim()) return;

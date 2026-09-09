@@ -240,7 +240,6 @@ export function computeExpenseForecast(
   monthlyExpenses: Record<string, number>,
   forecastMonths: ForecastMonth[],
 ): ExpenseForecastItem[] {
-  const thisMonth = forecastMonths.length > 0 ? forecastMonths[0].key : getMonthKey(new Date());
   const baseline = computeAvgMonthlyExpenses(monthlyExpenses);
 
   const knownByMonth: Record<string, number> = {};

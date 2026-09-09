@@ -2,10 +2,10 @@
  * Student Roster · Tutor feature.
  * Simple list of students per client with inline editing.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
-import { Plus, Trash2, GraduationCap, Check, X } from 'lucide-react';
+import { Plus, Trash2, GraduationCap } from 'lucide-react';
 
 type Student = {
   id: string;
@@ -32,7 +32,7 @@ export default function StudentRoster({ clientId }: { clientId: string }) {
   const [addForm, setAddForm] = useState({ grade_level: '', subject: '', hourly_rate: '', status: 'active' });
   const [saving, setSaving] = useState(false);
 
-  const loadStudents = async () => {
+  const loadStudents = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Student & Record<string, unknown>)[]>(
@@ -49,9 +49,9 @@ export default function StudentRoster({ clientId }: { clientId: string }) {
       })));
     } catch (e) { console.error('[StudentRoster] loadStudents failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadStudents(); }, [clientId]);
+  useEffect(() => { loadStudents(); }, [clientId, loadStudents]);
 
   const handleAdd = async () => {
     setSaving(true);

@@ -41,7 +41,7 @@ export default function RateCalculator() {
     if (!profile) return;
     setSaving(true);
     try {
-      await saveProfile({ ...profile, income_target: targetNum || undefined } as any);
+      await saveProfile({ ...profile, income_target: targetNum || undefined });
     } catch (e) { console.error('[RateCalculator] saveTarget failed:', e); }
     setSaving(false);
   };

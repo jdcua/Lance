@@ -1,7 +1,7 @@
 /**
  * Feedback Aggregator · client feedback with rating, source, actioned toggle, and average rating.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Star, Check, Circle } from 'lucide-react';
@@ -25,7 +25,7 @@ export default function FeedbackAggregator({ clientId }: { clientId: string }) {
   const [form, setForm] = useState({ source: SOURCES[0], rating: '3', comment: '', date: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(FeedbackEntry & Record<string, unknown>)[]>(
@@ -43,9 +43,9 @@ export default function FeedbackAggregator({ clientId }: { clientId: string }) {
       })));
     } catch (e) { console.error('[FeedbackAggregator] load failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadItems(); }, [clientId]);
+  useEffect(() => { loadItems(); }, [clientId, loadItems]);
 
   const avgRating = items.length > 0
     ? items.reduce((sum, i) => sum + i.rating, 0) / items.length

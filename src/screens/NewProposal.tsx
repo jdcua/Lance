@@ -15,21 +15,6 @@ import { checkAndNotify } from '../achievements/notify';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 import { getArchetype } from '../archetypes';
 
-const projectTypes = [
-  'Brand identity',
-  'Web design',
-  'Development',
-  'Consulting',
-  'Content writing',
-  'Photography',
-  'Marketing',
-  'Video editing',
-  'Animation',
-  'SEO audit',
-  'Social media',
-  'Other',
-];
-
 export default function NewProposal() {
   const { clients, loadClients, addProposal, profile, loadProfile } = useStore();
   const addToast = useToasts((s) => s.add);
@@ -44,7 +29,6 @@ export default function NewProposal() {
   // Get archetype config from profile's profession
   const archetype = useMemo(() => getArchetype(profile?.profession || ''), [profile?.profession]);
   const proposalTypes = useMemo(() => archetype?.proposalTypes || ['flat', 'hourly', 'project'], [archetype]);
-  const defaultRateLabel = useMemo(() => archetype?.defaultRateLabel || 'per hour', [archetype]);
 
   const [form, setForm] = useState<{
     client_id: string;
@@ -70,7 +54,7 @@ export default function NewProposal() {
     Promise.all([loadClients(), loadProfile()])
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
-  }, [loadClients, loadProfile]);
+  }, [loadClients, loadProfile, addToast]);
 
   const handleGenerate = () => {
     if (!form.scope.trim()) return;

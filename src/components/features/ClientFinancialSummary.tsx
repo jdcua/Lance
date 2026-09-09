@@ -2,7 +2,7 @@
  * Client Financial Summary · Accountant feature.
  * Timeline of financial statements with auto-calculated profit.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
@@ -27,7 +27,7 @@ export default function ClientFinancialSummary({ clientId }: { clientId: string 
   const [form, setForm] = useState({ statement_type: 'income', period: '', revenue: '', expenses: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadFinancials = async () => {
+  const loadFinancials = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Financial & Record<string, unknown>)[]>(
@@ -46,9 +46,9 @@ export default function ClientFinancialSummary({ clientId }: { clientId: string 
       })));
     } catch (e) { console.error('[ClientFinancialSummary] load failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadFinancials(); }, [clientId]);
+  useEffect(() => { loadFinancials(); }, [clientId, loadFinancials]);
 
   const handleAdd = async () => {
     if (!form.period.trim()) return;

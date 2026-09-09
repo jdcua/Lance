@@ -2,7 +2,7 @@
  * Research Log · UX Designer feature.
  * Timeline of research activities with type, date, participants, and key findings.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Search, Users, Calendar } from 'lucide-react';
@@ -51,7 +51,7 @@ export default function ResearchLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ type: 'user-interview', date: new Date().toISOString().split('T')[0], participants: '', key_findings: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadActivities = async () => {
+  const loadActivities = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ResearchActivity & Record<string, unknown>)[]>(
@@ -69,9 +69,9 @@ export default function ResearchLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[ResearchLog] loadActivities failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadActivities(); }, [projectId]);
+  useEffect(() => { loadActivities(); }, [projectId, loadActivities]);
 
   const handleAdd = async () => {
     if (!form.key_findings.trim()) return;

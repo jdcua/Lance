@@ -2,7 +2,7 @@
  * Collection Tracker · Fashion Designer feature.
  * Track fashion collections with name, season, status, pieces count, and launch date.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Palette } from 'lucide-react';
@@ -37,7 +37,7 @@ export default function CollectionTracker({ projectId }: { projectId: string }) 
   const [form, setForm] = useState({ name: '', season: 'SS', status: 'planning', pieces_count: '', launch_date: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadCollections = async () => {
+  const loadCollections = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Collection & Record<string, unknown>)[]>(
@@ -56,9 +56,9 @@ export default function CollectionTracker({ projectId }: { projectId: string }) 
       })));
     } catch (e) { console.error('[CollectionTracker] loadCollections failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadCollections(); }, [projectId]);
+  useEffect(() => { loadCollections(); }, [projectId, loadCollections]);
 
   const handleAdd = async () => {
     if (!form.name.trim()) return;

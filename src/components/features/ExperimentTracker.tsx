@@ -2,7 +2,7 @@
  * Experiment Tracker · AI Engineer feature.
  * Track experiments with type, status, metrics, and notes.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, FlaskConical } from 'lucide-react';
@@ -43,7 +43,7 @@ export default function ExperimentTracker({ projectId }: { projectId: string }) 
   const [form, setForm] = useState({ name: '', type: 'model', status: 'planned', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadExperiments = async () => {
+  const loadExperiments = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Experiment & Record<string, unknown>)[]>(
@@ -62,9 +62,9 @@ export default function ExperimentTracker({ projectId }: { projectId: string }) 
       })));
     } catch (e) { console.error('[ExperimentTracker] loadExperiments failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadExperiments(); }, [projectId]);
+  useEffect(() => { loadExperiments(); }, [projectId, loadExperiments]);
 
   const handleAdd = async () => {
     if (!form.name.trim()) return;

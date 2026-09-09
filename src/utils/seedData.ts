@@ -176,7 +176,7 @@ export async function seedSampleData(): Promise<void> {
       budget: 2800,
       notes: 'Go-to-market strategy, messaging framework, and launch timeline.',
     });
-    const proj4 = await store.addProject({
+    await store.addProject({
       client_id: client2.id,
       title: 'Marketing Site Copy',
       status: 'paused',
@@ -210,7 +210,7 @@ export async function seedSampleData(): Promise<void> {
     });
 
     // ── PROPOSALS ──
-    const prop1 = await store.addProposal({
+    await store.addProposal({
       client_id: client2.id,
       project_id: undefined,
       title: 'Q3 Content Campaign',
@@ -219,7 +219,7 @@ export async function seedSampleData(): Promise<void> {
       rate_type: 'flat',
       sent_at: daysAgo(8),
     });
-    const prop2 = await store.addProposal({
+    await store.addProposal({
       client_id: client3.id,
       project_id: undefined,
       title: 'Social Media Audit',

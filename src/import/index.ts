@@ -14,21 +14,6 @@ const IMAGE_EXTS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'];
 
 const ACCEPTED_EXTENSIONS = [...SPREADSHEET_EXTS, ...DOCUMENT_EXTS, ...IMAGE_EXTS];
 
-const ACCEPTED_MIME_TYPES = [
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'application/vnd.ms-excel',
-  'text/csv',
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/msword',
-  'image/png',
-  'image/jpeg',
-  'image/gif',
-  'image/webp',
-  'image/bmp',
-  'image/svg+xml',
-];
-
 export const ACCEPTED_EXTENSIONS_STRING = ACCEPTED_EXTENSIONS.map(e => `.${e}`).join(',');
 
 function getFileExtension(filename: string): string {

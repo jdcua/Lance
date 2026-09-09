@@ -2,7 +2,7 @@
  * Fabrication Tracker · Embedded feature.
  * Track fabrication status for items with fab house and cost.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Factory } from 'lucide-react';
@@ -35,7 +35,7 @@ export default function FabricationTracker({ projectId }: { projectId: string })
   const [form, setForm] = useState({ item_name: '', status: 'planned', start_date: '', completed_date: '', fab_house: '', cost: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(FabItem & Record<string, unknown>)[]>(
@@ -54,9 +54,9 @@ export default function FabricationTracker({ projectId }: { projectId: string })
       })));
     } catch (e) { console.error('[FabricationTracker] loadItems failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const handleAdd = async () => {
     if (!form.item_name.trim()) return;
@@ -93,7 +93,6 @@ export default function FabricationTracker({ projectId }: { projectId: string })
     try {
       const db = await getDb();
       const completedDate = status === 'received' ? new Date().toISOString().split('T')[0] : null;
-      const updates: any[] = [status, id];
       if (completedDate) {
         await db.execute('UPDATE fabrication_tracker SET status = ?, completed_date = ? WHERE id = ?', [status, completedDate, id]);
         setItems(prev => prev.map(i => i.id === id ? { ...i, status, completed_date: completedDate || i.completed_date } : i));

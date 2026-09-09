@@ -2,7 +2,7 @@
  * Tool Compute Log · Data Analyst feature.
  * Focused list of compute costs for data tools, same table as ComputeCostLog.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Cloud, DollarSign, Calendar, Cpu } from 'lucide-react';
@@ -35,7 +35,7 @@ export default function ToolComputeLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ provider: 'AWS', hours: '', cost: '', date: new Date().toISOString().split('T')[0] });
   const [saving, setSaving] = useState(false);
 
-  const loadCosts = async () => {
+  const loadCosts = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ComputeCost & Record<string, unknown>)[]>(
@@ -53,9 +53,9 @@ export default function ToolComputeLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[ToolComputeLog] loadCosts failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadCosts(); }, [projectId]);
+  useEffect(() => { loadCosts(); }, [projectId, loadCosts]);
 
   const handleAdd = async () => {
     setSaving(true);

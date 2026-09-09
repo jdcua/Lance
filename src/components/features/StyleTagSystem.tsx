@@ -2,7 +2,7 @@
  * Style Tag System · Illustrator feature.
  * Tags projects with style descriptors via predefined suggestions and custom input.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, X } from 'lucide-react';
@@ -40,7 +40,7 @@ export default function StyleTagSystem({ projectId }: { projectId: string }) {
   const [loading, setLoading] = useState(true);
   const [input, setInput] = useState('');
 
-  const loadTags = async () => {
+  const loadTags = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(StyleTag & Record<string, unknown>)[]>(
@@ -58,11 +58,11 @@ export default function StyleTagSystem({ projectId }: { projectId: string }) {
       console.error('[StyleTagSystem] loadTags failed:', e);
     }
     setLoading(false);
-  };
+  }, [projectId]);
 
   useEffect(() => {
     loadTags();
-  }, [projectId]);
+  }, [projectId, loadTags]);
 
   const handleAdd = async (tag: string) => {
     const trimmed = tag.trim().toLowerCase();

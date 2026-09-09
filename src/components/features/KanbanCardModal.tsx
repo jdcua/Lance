@@ -14,7 +14,7 @@ type Props = {
 
 const PRIORITY_OPTIONS = ['low', 'medium', 'high'] as const;
 
-export default function KanbanCardModal({ card, columns, onSave, onDelete, onClose }: Props) {
+export default function KanbanCardModal({ card, columns: _columns, onSave, onDelete, onClose }: Props) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('medium');

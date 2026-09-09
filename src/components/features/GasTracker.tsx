@@ -2,7 +2,7 @@
  * Gas Tracker · Blockchain feature.
  * Log gas usage with running total at top.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Flame, DollarSign } from 'lucide-react';
@@ -26,7 +26,7 @@ export default function GasTracker({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ network: 'ethereum', gas_used: '', cost_native: '', cost_usd: '', date: new Date().toISOString().split('T')[0] });
   const [saving, setSaving] = useState(false);
 
-  const loadEntries = async () => {
+  const loadEntries = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(GasEntry & Record<string, unknown>)[]>(
@@ -44,9 +44,9 @@ export default function GasTracker({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[GasTracker] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadEntries(); }, [projectId]);
+  useEffect(() => { loadEntries(); }, [projectId, loadEntries]);
 
   const handleAdd = async () => {
     setSaving(true);

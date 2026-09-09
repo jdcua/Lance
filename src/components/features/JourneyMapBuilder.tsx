@@ -1,7 +1,7 @@
 /**
  * Journey Map Builder · customer journey stages with priority badges.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2 } from 'lucide-react';
@@ -30,7 +30,7 @@ export default function JourneyMapBuilder({ projectId }: { projectId: string }) 
   const [form, setForm] = useState({ stage: '', touchpoint: '', pain_point: '', opportunity: '', priority: 'medium' });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(JourneyItem & Record<string, unknown>)[]>(
@@ -48,9 +48,9 @@ export default function JourneyMapBuilder({ projectId }: { projectId: string }) 
       })));
     } catch (e) { console.error('[JourneyMapBuilder] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const handleSave = async () => {
     if (!form.stage.trim() && !form.touchpoint.trim()) return;

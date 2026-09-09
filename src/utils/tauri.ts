@@ -14,6 +14,12 @@
 
 const LS_PREFIX = 'lance:store:';
 
+/**
+ * A schemaless row in the browser-mode store (parsed JSON).
+ * Property reads yield `unknown`, so access sites cast at the point of use.
+ */
+type StoreRow = Record<string, unknown>;
+
 function lsGet<T>(key: string): T[] {
   try {
     const raw = localStorage.getItem(LS_PREFIX + key);
@@ -193,16 +199,16 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
 
   // ── update_follow_up_status (persist status into follow_up_logs) ──
   if (cmd === 'update_follow_up_status') {
-    const payload = (args?.payload || {}) as Record<string, any>;
+    const payload = (args?.payload || {}) as Record<string, unknown>;
     if (payload?.id) {
       // follow_up_logs is stored as an object keyed by `entityType:entityId`,
       // each value being an array of logs (lsGet returns the raw parsed value).
-      const all = (lsGet<any>('follow_up_logs') as unknown) as Record<string, any[]>;
+      const all = (lsGet<StoreRow>('follow_up_logs') as unknown) as Record<string, StoreRow[]>;
       let updated = false;
       for (const key of Object.keys(all || {})) {
-        const list: any[] = all[key];
+const list: StoreRow[] = all[key];
         if (!Array.isArray(list)) continue;
-        const idx = list.findIndex((l: any) => l && l.id === payload.id);
+        const idx = list.findIndex((l: StoreRow) => l && l.id === payload.id);
         if (idx !== -1) {
           list[idx] = {
             ...list[idx],
@@ -213,11 +219,11 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
           updated = true;
         }
       }
-      if (updated) lsSet('follow_up_logs', all as unknown as any[]);
+      if (updated) lsSet('follow_up_logs', all as unknown as StoreRow[]);
       // Also remove from the pending list so it doesn't reappear on reload
       if (updated) {
-        const pending = lsGet<any>('pending_follow_ups');
-        const nextPending = pending.filter((l: any) => !l || l.id !== payload.id);
+        const pending = lsGet<StoreRow>('pending_follow_ups');
+        const nextPending = pending.filter((l: StoreRow) => !l || l.id !== payload.id);
         lsSet('pending_follow_ups', nextPending);
       }
     }
@@ -226,10 +232,10 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
 
   // ── get_all_follow_up_logs (bulk: all statuses) ──
   if (cmd === 'get_all_follow_up_logs') {
-    const all = (lsGet<any>('follow_up_logs') as unknown) as Record<string, any[]>;
-    const flat: any[] = [];
+    const all = (lsGet<StoreRow>('follow_up_logs') as unknown) as Record<string, StoreRow[]>;
+    const flat: StoreRow[] = [];
     for (const key of Object.keys(all || {})) {
-      const list: any[] = all[key];
+      const list: StoreRow[] = all[key];
       if (Array.isArray(list)) flat.push(...list);
     }
     return flat as unknown as T;
@@ -253,16 +259,16 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
   }
   if (cmd === 'get_share_token_for_entity') {
     const { entityType, entityId } = (args || {}) as { entityType?: string; entityId?: string };
-    const tokens = lsGet<any>('share_tokens');
+    const tokens = lsGet<StoreRow>('share_tokens');
     const found = tokens.find(
-      (t: any) => t.entity_type === entityType && t.entity_id === entityId && !t.revoked
+      (t: StoreRow) => t.entity_type === entityType && t.entity_id === entityId && !t.revoked
     );
     return (found || null) as unknown as T;
   }
   if (cmd === 'create_share_token') {
-    const payload = (args?.payload || {}) as Record<string, any>;
-    const tokens = lsGet<any>('share_tokens');
-    const token: Record<string, any> = {
+    const payload = (args?.payload || {}) as Record<string, unknown>;
+    const tokens = lsGet<StoreRow>('share_tokens');
+    const token: Record<string, unknown> = {
       id: crypto.randomUUID(),
       token: crypto.randomUUID().replace(/-/g, ''),
       entity_type: payload.entity_type || 'proposal',
@@ -278,8 +284,8 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
   }
   if (cmd === 'revoke_share_token') {
     const { token } = (args || {}) as { token?: string };
-    const tokens = lsGet<any>('share_tokens');
-    const idx = tokens.findIndex((t: any) => t.token === token);
+    const tokens = lsGet<StoreRow>('share_tokens');
+    const idx = tokens.findIndex((t: StoreRow) => t.token === token);
     if (idx !== -1) {
       tokens[idx] = { ...tokens[idx], revoked: true };
       lsSet('share_tokens', tokens);
@@ -288,19 +294,19 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
   }
   if (cmd === 'get_share_token') {
     const { token } = (args || {}) as { token?: string };
-    const tokens = lsGet<any>('share_tokens');
-    const found = tokens.find((t: any) => t.token === token && !t.revoked);
+    const tokens = lsGet<StoreRow>('share_tokens');
+    const found = tokens.find((t: StoreRow) => t.token === token && !t.revoked);
     return (found || null) as unknown as T;
   }
   if (cmd === 'record_share_view') {
     const { token } = (args || {}) as { token?: string };
-    const tokens = lsGet<any>('share_tokens');
-    const idx = tokens.findIndex((t: any) => t.token === token && !t.revoked);
+    const tokens = lsGet<StoreRow>('share_tokens');
+    const idx = tokens.findIndex((t: StoreRow) => t.token === token && !t.revoked);
     if (idx !== -1) {
       const now = new Date().toISOString();
       tokens[idx] = {
         ...tokens[idx],
-        view_count: (tokens[idx].view_count || 0) + 1,
+        view_count: ((tokens[idx].view_count as number) || 0) + 1,
         viewed_at: tokens[idx].viewed_at || now,
       };
       lsSet('share_tokens', tokens);
@@ -315,8 +321,8 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
       client_signature?: string;
       message?: string;
     };
-    const tokens = lsGet<any>('share_tokens');
-    const idx = tokens.findIndex((t: any) => t.token === payload.token && !t.revoked);
+    const tokens = lsGet<StoreRow>('share_tokens');
+    const idx = tokens.findIndex((t: StoreRow) => t.token === payload.token && !t.revoked);
     if (idx === -1) {
       throw new Error('Share link not found.');
     }
@@ -324,13 +330,13 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
     if (t.client_response) {
       throw new Error('You have already responded to this.');
     }
-    if (t.expires_at && t.expires_at < new Date().toISOString()) {
+    if (t.expires_at && (t.expires_at as string) < new Date().toISOString()) {
       throw new Error('This share link has expired.');
     }
     {
       const now = new Date().toISOString();
-      const safeName = (payload.client_name || '').trim().slice(0, 200) || 'Client';
-      const safeSig = (payload.client_signature || '').trim().slice(0, 200) || 'Unknown';
+      const safeName = String(payload.client_name || '').trim().slice(0, 200) || 'Client';
+      const safeSig = String(payload.client_signature || '').trim().slice(0, 200) || 'Unknown';
       if (t.entity_type === 'contract') {
         tokens[idx] = {
           ...t,
@@ -339,8 +345,8 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
           client_signature: safeSig,
           client_signed_at: now,
         };
-        const contracts = lsGet<any>('contracts');
-        const cIdx = contracts.findIndex((c: any) => c.id === t.entity_id);
+        const contracts = lsGet<StoreRow>('contracts');
+        const cIdx = contracts.findIndex((c: StoreRow) => c.id === t.entity_id);
         if (cIdx !== -1) {
           contracts[cIdx] = { ...contracts[cIdx], signed_at: now };
           lsSet('contracts', contracts);
@@ -353,8 +359,8 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
           client_name: safeName,
         };
         if (payload.response === 'accepted') {
-          const proposals = lsGet<any>('proposals');
-          const pIdx = proposals.findIndex((p: any) => p.id === t.entity_id);
+          const proposals = lsGet<StoreRow>('proposals');
+          const pIdx = proposals.findIndex((p: StoreRow) => p.id === t.entity_id);
           if (pIdx !== -1) {
             proposals[pIdx] = { ...proposals[pIdx], status: 'accepted' };
             lsSet('proposals', proposals);
@@ -368,9 +374,9 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
 
   // ── get_sessions (special: has optional filters) ──
   if (cmd === 'get_sessions') {
-    const all = lsGet<any>('sessions');
+    const all = lsGet<StoreRow>('sessions');
     if (args?.clientId || args?.projectId) {
-      const filtered = all.filter((s: any) => {
+      const filtered = all.filter((s: StoreRow) => {
         if (args?.clientId && s.client_id !== args.clientId) return false;
         if (args?.projectId && s.project_id !== args.projectId) return false;
         return true;
@@ -382,15 +388,15 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
 
   // ── get_all_headline_metrics (derived: JOIN metric_definitions + metric_values) ──
   if (cmd === 'get_all_headline_metrics') {
-    const defs = lsGet<any>('metric_definitions');
-    const values = lsGet<any>('metric_values');
-    const clients = lsGet<any>('clients');
-    const headlineDefs = defs.filter((d: any) => d.is_headline);
-    const result: any[] = headlineDefs.map((d: any) => {
-      const client = clients.find((c: any) => c.id === d.client_id);
+    const defs = lsGet<StoreRow>('metric_definitions');
+    const values = lsGet<StoreRow>('metric_values');
+    const clients = lsGet<StoreRow>('clients');
+    const headlineDefs = defs.filter((d: StoreRow) => d.is_headline);
+    const result: StoreRow[] = headlineDefs.map((d: StoreRow) => {
+      const client = clients.find((c: StoreRow) => c.id === d.client_id);
       const metricValues = values
-        .filter((v: any) => v.definition_id === d.id)
-        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .filter((v: StoreRow) => v.definition_id === d.id)
+        .sort((a: StoreRow, b: StoreRow) => new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime())
         .slice(0, 2);
       return {
         client_id: d.client_id,
@@ -412,7 +418,7 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
     const entity = cmdEntity(cmd);
     if (entity && ENTITIES[entity] && !ENTITIES[entity]!.isSingleton) {
       const key = ENTITIES[entity]!.listKey || listKeyFor(entity);
-      return lsGet<any>(key) as unknown as T;
+      return lsGet<StoreRow>(key) as unknown as T;
     }
     // Commands like get_milestones, get_invoice_payments (scoped)
     // get_all_invoice_payments, get_all_pending_follow_ups
@@ -420,7 +426,7 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
     // These are scoped by entityId etc. · return from localStore
     if (entity) {
       const key = ENTITIES[entity]?.listKey || listKeyFor(entity);
-      return lsGet<any>(key) as unknown as T;
+      return lsGet<StoreRow>(key) as unknown as T;
     }
     // Unknown get command · return empty array/null
     return [] as unknown as T;
@@ -431,7 +437,7 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
     const entity = cmdEntity(cmd);
     if (entity && args?.payload) {
       const key = ENTITIES[entity]?.listKey || listKeyFor(entity);
-      const payload = args.payload as Record<string, any>;
+      const payload = args.payload as Record<string, unknown>;
       // Generate id if missing
       if (!payload.id) {
         payload.id = crypto.randomUUID();
@@ -439,7 +445,7 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
       if (!payload.created_at) {
         payload.created_at = new Date().toISOString();
       }
-      const items = lsGet<any>(key);
+      const items = lsGet<StoreRow>(key);
       items.push(payload);
       lsSet(key, items);
       return payload as unknown as T;
@@ -451,10 +457,10 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
   //    'attachment_meta' does not map to a known list key, so the generic path
   //    would silently drop the update) ──
   if (cmd === 'update_attachment_meta') {
-    const payload = args?.payload as Record<string, any> | undefined;
+    const payload = args?.payload as Record<string, unknown> | undefined;
     if (payload?.id) {
-      const items = lsGet<any>('attachments');
-      const idx = items.findIndex((a: any) => a.id === payload.id);
+      const items = lsGet<StoreRow>('attachments');
+      const idx = items.findIndex((a: StoreRow) => a.id === payload.id);
       if (idx !== -1) {
         items[idx] = { ...items[idx], ...payload };
         lsSet('attachments', items);
@@ -470,19 +476,19 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
     if (entity && args?.payload) {
       const def = ENTITIES[entity];
       const key = def?.listKey || listKeyFor(entity);
-      const payload = args.payload as Record<string, any>;
+      const payload = args.payload as Record<string, unknown>;
 
       // Handle singleton entities (stored as single objects, not arrays)
       if (def?.isSingleton) {
-        const current = lsGetSingle<any>(key) || {};
+        const current = lsGetSingle<StoreRow>(key) || {};
         const updated = { ...current, ...payload };
         lsSetSingle(key, updated);
         return updated as unknown as T;
       }
 
       // Regular array entities
-      const items = lsGet<any>(key);
-      const idx = items.findIndex((i: any) => i.id === payload.id);
+      const items = lsGet<StoreRow>(key);
+      const idx = items.findIndex((i: StoreRow) => i.id === payload.id);
       if (idx !== -1) {
         items[idx] = { ...items[idx], ...payload };
         lsSet(key, items);
@@ -498,8 +504,8 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
       const key = ENTITIES[entity]?.listKey || listKeyFor(entity);
       const id = args?.id as string;
       if (id) {
-        const items = lsGet<any>(key);
-        lsSet(key, items.filter((i: any) => i.id !== id));
+        const items = lsGet<StoreRow>(key);
+        lsSet(key, items.filter((i: StoreRow) => i.id !== id));
         // Cascade: deleting a client must remove every client-scoped child
         // record (communications, metrics, recurring invoices, projects,
         // proposals, contracts, time entries, invoices + payments, follow-up
@@ -508,10 +514,10 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
         // backend.
         if (cmd === 'delete_client') {
           // Metric definitions + their values
-          const defs = lsGet<any>('metric_definitions').filter((d: any) => d.client_id !== id);
-          const defIds = new Set(lsGet<any>('metric_definitions').filter((d: any) => d.client_id === id).map((d: any) => d.id));
+          const defs = lsGet<StoreRow>('metric_definitions').filter((d: StoreRow) => d.client_id !== id);
+          const defIds = new Set(lsGet<StoreRow>('metric_definitions').filter((d: StoreRow) => d.client_id === id).map((d: StoreRow) => d.id));
           lsSet('metric_definitions', defs);
-          lsSet('metric_values', lsGet<any>('metric_values').filter((v: any) => !defIds.has(v.definition_id) && v.client_id !== id));
+          lsSet('metric_values', lsGet<StoreRow>('metric_values').filter((v: StoreRow) => !defIds.has(v.definition_id) && v.client_id !== id));
 
           // Client-scoped rows by exact 'client_id' field
           const clientScopedKeys = Object.keys(localStorage)
@@ -519,44 +525,44 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
             .map((k) => k.slice(LS_PREFIX.length));
           for (const key of clientScopedKeys) {
             if (key === 'clients' || key === 'metric_definitions' || key === 'metric_values') continue;
-            let rows: any[] = [];
+            let rows: StoreRow[] = [];
             try { rows = JSON.parse(localStorage.getItem(LS_PREFIX + key) || '[]'); } catch { continue; }
             if (!Array.isArray(rows)) continue;
-            const hasClientId = rows.some((r: any) => r && typeof r === 'object' && 'client_id' in r);
+            const hasClientId = rows.some((r: StoreRow) => r && typeof r === 'object' && 'client_id' in r);
             if (!hasClientId) continue;
-            lsSet(key, rows.filter((r: any) => r?.client_id !== id));
+            lsSet(key, rows.filter((r: StoreRow) => r?.client_id !== id));
           }
 
           // Projects belonging to this client: remove them AND their
           // project-scoped children (same logic as delete_project).
-          const clientProjects = lsGet<any>('projects').filter((p: any) => p.client_id === id);
-          const projectIds = new Set(clientProjects.map((p: any) => p.id));
+          const clientProjects = lsGet<StoreRow>('projects').filter((p: StoreRow) => p.client_id === id);
+          const projectIds = new Set(clientProjects.map((p: StoreRow) => p.id));
           if (projectIds.size > 0) {
-            lsSet('projects', lsGet<any>('projects').filter((p: any) => p.client_id !== id));
+            lsSet('projects', lsGet<StoreRow>('projects').filter((p: StoreRow) => p.client_id !== id));
             const projectScopedKeys = Object.keys(localStorage)
               .filter((k) => k.startsWith(LS_PREFIX))
               .map((k) => k.slice(LS_PREFIX.length));
             for (const key of projectScopedKeys) {
               if (key === 'projects' || key === 'clients') continue;
-              let rows: any[] = [];
+              let rows: StoreRow[] = [];
               try { rows = JSON.parse(localStorage.getItem(LS_PREFIX + key) || '[]'); } catch { continue; }
               if (!Array.isArray(rows)) continue;
-              const hasProjectId = rows.some((r: any) => r && typeof r === 'object' && 'project_id' in r);
+              const hasProjectId = rows.some((r: StoreRow) => r && typeof r === 'object' && 'project_id' in r);
               if (!hasProjectId) continue;
-              lsSet(key, rows.filter((r: any) => r?.project_id && !projectIds.has(r.project_id)));
+              lsSet(key, rows.filter((r: StoreRow) => r?.project_id && !projectIds.has(r.project_id)));
             }
           }
 
           // Invoices belonging to this client: remove their payments too.
-          const clientInvoices = lsGet<any>('invoices').filter((i: any) => i.client_id === id);
-          const invoiceIds = new Set(clientInvoices.map((i: any) => i.id));
+          const clientInvoices = lsGet<StoreRow>('invoices').filter((i: StoreRow) => i.client_id === id);
+          const invoiceIds = new Set(clientInvoices.map((i: StoreRow) => i.id));
           if (invoiceIds.size > 0) {
-            lsSet('invoice_payments', lsGet<any>('invoice_payments').filter((p: any) => !invoiceIds.has(p.invoice_id)));
+            lsSet('invoice_payments', lsGet<StoreRow>('invoice_payments').filter((p: StoreRow) => !invoiceIds.has(p.invoice_id)));
           }
         }
         // Cascade: deleting an invoice must remove its payment records.
         if (cmd === 'delete_invoice') {
-          lsSet('invoice_payments', lsGet<any>('invoice_payments').filter((p: any) => p.invoice_id !== id));
+          lsSet('invoice_payments', lsGet<StoreRow>('invoice_payments').filter((p: StoreRow) => p.invoice_id !== id));
         }
         // Cascade: deleting a project must remove its project-scoped child
         // records (milestones, sprint tasks, stack, bugs, archetype tables,
@@ -568,12 +574,12 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
             .map((k) => k.slice(LS_PREFIX.length));
           for (const key of projectScopedKeys) {
             if (key === 'projects') continue;
-            let rows: any[] = [];
+            let rows: StoreRow[] = [];
             try { rows = JSON.parse(localStorage.getItem(LS_PREFIX + key) || '[]'); } catch { continue; }
             if (!Array.isArray(rows)) continue;
-            const hasProjectId = rows.some((r: any) => r && typeof r === 'object' && 'project_id' in r);
+            const hasProjectId = rows.some((r: StoreRow) => r && typeof r === 'object' && 'project_id' in r);
             if (!hasProjectId) continue;
-            lsSet(key, rows.filter((r: any) => r?.project_id !== id));
+            lsSet(key, rows.filter((r: StoreRow) => r?.project_id !== id));
           }
         }
       }
@@ -585,10 +591,10 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
   //    'follow_up' → 'follow_ups' and would drop status/drafted_at, making
   //    follow-ups invisible and the pending guard useless → duplicates) ──
   if (cmd === 'log_follow_up') {
-    const payload = (args?.payload || {}) as Record<string, any>;
+    const payload = (args?.payload || {}) as Record<string, unknown>;
     const id = payload.id || crypto.randomUUID();
     const now = new Date().toISOString();
-    const log: Record<string, any> = {
+    const log: Record<string, unknown> = {
       id,
       entity_type: payload.entity_type || '',
       entity_id: payload.entity_id || '',
@@ -598,17 +604,17 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
       created_at: now,
       drafted_at: now,
     };
-    const key = `${log.entity_type}:${log.entity_id}`;
-    const all = (lsGet<any>('follow_up_logs') as unknown) as Record<string, any[]>;
+    const key = `${log.entity_type as string}:${log.entity_id as string}`;
+    const all = (lsGet<StoreRow>('follow_up_logs') as unknown) as Record<string, StoreRow[]>;
     if (!all || typeof all !== 'object' || Array.isArray(all)) {
       localStorage.setItem(LS_PREFIX + 'follow_up_logs', JSON.stringify({ [key]: [log] }));
     } else {
       all[key] = [...(all[key] || []), log];
-      lsSet('follow_up_logs', all as unknown as any[]);
+      lsSet('follow_up_logs', all as unknown as StoreRow[]);
     }
     // Register in the pending list so get_all_pending_follow_ups returns it
-    const pending = lsGet<any>('pending_follow_ups');
-    if (!pending.some((l: any) => l && l.id === id)) {
+    const pending = lsGet<StoreRow>('pending_follow_ups');
+    if (!pending.some((l: StoreRow) => l && l.id === id)) {
       pending.push(log);
       lsSet('pending_follow_ups', pending);
     }
@@ -620,12 +626,12 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
     const entity = cmdEntity(cmd);
     if (entity && args?.payload) {
       const key = ENTITIES[entity]?.listKey || listKeyFor(entity);
-      const payload = args.payload as Record<string, any>;
+      const payload = args.payload as Record<string, unknown>;
       if (!payload.id) payload.id = crypto.randomUUID();
       if (payload.logged_at === undefined && payload.created_at === undefined) {
         payload.created_at = new Date().toISOString();
       }
-      const items = lsGet<any>(key);
+      const items = lsGet<StoreRow>(key);
       items.unshift(payload);
       lsSet(key, items);
       return payload as unknown as T;
@@ -636,11 +642,11 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
   // ── save_metric_template (must run BEFORE the generic 'save' handler,
   //    which returns {} for any unknown save_* command) ──
   if (cmd === 'save_metric_template') {
-    const payload = args?.payload as Record<string, any> | undefined;
+    const payload = args?.payload as Record<string, unknown> | undefined;
     if (payload) {
       const id = payload.id || crypto.randomUUID();
-      const items = lsGet<any>('metric_templates');
-      const existing = items.findIndex((t: any) => t.name === payload.name);
+      const items = lsGet<StoreRow>('metric_templates');
+      const existing = items.findIndex((t: StoreRow) => t.name === payload.name);
       if (existing !== -1) {
         items[existing] = { ...items[existing], ...payload, id: items[existing].id || id };
         lsSet('metric_templates', items);
@@ -667,10 +673,10 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
   if (cmd === 'rename_attachment') {
     // Mirror the Rust command: new_filename is sanitized and written to the
     // `filename` field (payload.new_filename is NOT stored as-is).
-    const payload = args?.payload as Record<string, any> | undefined;
+    const payload = args?.payload as Record<string, unknown> | undefined;
     if (payload?.id && payload.new_filename) {
-      const items = lsGet<any>('attachments');
-      const idx = items.findIndex((a: any) => a.id === payload.id);
+      const items = lsGet<StoreRow>('attachments');
+      const idx = items.findIndex((a: StoreRow) => a.id === payload.id);
       if (idx !== -1) {
         const safeName = String(payload.new_filename).replace(/[/\\:*?"<>|]/g, '_');
         items[idx] = { ...items[idx], filename: safeName };
@@ -681,10 +687,10 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
     return {} as unknown as T;
   }
   if (cmd === 'move_attachment') {
-    const payload = args?.payload as Record<string, any> | undefined;
+    const payload = args?.payload as Record<string, unknown> | undefined;
     if (payload?.id) {
-      const items = lsGet<any>('attachments');
-      const idx = items.findIndex((a: any) => a.id === payload.id);
+      const items = lsGet<StoreRow>('attachments');
+      const idx = items.findIndex((a: StoreRow) => a.id === payload.id);
       if (idx !== -1) {
         items[idx] = { ...items[idx], ...payload };
         lsSet('attachments', items);
@@ -698,9 +704,9 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
   if (cmd === 'search_assets') {
     const query = ((args?.query as string) || '').toLowerCase();
     if (!query) return [] as unknown as T;
-    const items = lsGet<any>('attachments');
-    const results = items.filter((a: any) => {
-      const filename = (a.filename || '').toLowerCase();
+    const items = lsGet<StoreRow>('attachments');
+    const results = items.filter((a: StoreRow) => {
+      const filename = ((a.filename as string) || '').toLowerCase();
       const tags = parseTagsBrowser(a.tags);
       return filename.includes(query) || tags.some((t: string) => t.toLowerCase().includes(query));
     });
@@ -725,9 +731,9 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
 // At runtime, price IDs can also be overridden via Vite env vars:
 //   VITE_PADDLE_MONTHLY_PRICE_ID, VITE_PADDLE_YEARLY_PRICE_ID, VITE_PADDLE_ONETIME_PRICE_ID
 const PADDLE_PRICE_IDS: Record<'monthly' | 'yearly' | 'onetime', string> = {
-  monthly: (import.meta as any).env?.VITE_PADDLE_MONTHLY_PRICE_ID || '',
-  yearly: (import.meta as any).env?.VITE_PADDLE_YEARLY_PRICE_ID || '',
-  onetime: (import.meta as any).env?.VITE_PADDLE_ONETIME_PRICE_ID || '',
+  monthly: (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_PADDLE_MONTHLY_PRICE_ID || '',
+  yearly: (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_PADDLE_YEARLY_PRICE_ID || '',
+  onetime: (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_PADDLE_ONETIME_PRICE_ID || '',
 };
 
 const PADDLE_CHECKOUT_BASE = 'https://checkout.paddle.com/products/';

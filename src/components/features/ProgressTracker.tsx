@@ -2,7 +2,7 @@
  * Progress Tracker · Wellness feature.
  * Timeline list of progress notes with mood score, notes, and goals.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Smile, Frown, Meh, Calendar, Target } from 'lucide-react';
@@ -23,7 +23,7 @@ export default function ProgressTracker({ clientId }: { clientId: string }) {
   const [form, setForm] = useState({ date: new Date().toISOString().split('T')[0], mood_score: '', notes: '', goals: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadNotes = async () => {
+  const loadNotes = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ProgressNote & Record<string, unknown>)[]>(
@@ -40,9 +40,9 @@ export default function ProgressTracker({ clientId }: { clientId: string }) {
       })));
     } catch (e) { console.error('[ProgressTracker] loadNotes failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadNotes(); }, [clientId]);
+  useEffect(() => { loadNotes(); }, [clientId, loadNotes]);
 
   const handleAdd = async () => {
     if (!form.date) return;

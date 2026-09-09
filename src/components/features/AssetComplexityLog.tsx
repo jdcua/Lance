@@ -2,7 +2,7 @@
  * Asset Complexity Log · 3D Artist feature.
  * Single-record complexity tracker per project with in-place editing.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Edit3, Save, X } from 'lucide-react';
@@ -26,7 +26,7 @@ export default function AssetComplexityLog({ projectId }: { projectId: string })
   const [form, setForm] = useState({ poly_count: '', texture_count: '', rig_complexity: 'none', software: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadRecord = async () => {
+  const loadRecord = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Complexity & Record<string, unknown>)[]>(
@@ -55,9 +55,9 @@ export default function AssetComplexityLog({ projectId }: { projectId: string })
       }
     } catch (e) { console.error('[AssetComplexityLog] loadRecord failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadRecord(); }, [projectId]);
+  useEffect(() => { loadRecord(); }, [projectId, loadRecord]);
 
   const handleSave = async () => {
     setSaving(true);

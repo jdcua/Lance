@@ -3,10 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { useToasts } from '../store/toastStore';
 import { getArchetype, ARCHETYPE_LIST, ARCHETYPE_CATEGORIES } from '../archetypes';
-import type { ArchetypeConfig, ArchetypeId } from '../archetypes';
+import type { ArchetypeId } from '../archetypes';
 import { applyTheme, getTheme } from '../themes/themes';
 import Button from '../components/ui/Button';
-import Card from '../components/ui/Card';
 import { Search, Check, Sparkles, ArrowRight } from 'lucide-react';
 
 interface ArchetypePickerProps {

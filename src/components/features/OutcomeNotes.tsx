@@ -2,10 +2,10 @@
  * Outcome Notes · Consultant feature.
  * Single form per project capturing before/after state, metrics, and testimonial draft.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
-import { Save, FileText } from 'lucide-react';
+import { Save } from 'lucide-react';
 
 type Outcome = {
   id: string;
@@ -28,7 +28,7 @@ export default function OutcomeNotes({ projectId }: { projectId: string }) {
     testimonial_draft: '',
   });
 
-  const loadOutcome = async () => {
+  const loadOutcome = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Outcome & Record<string, unknown>)[]>(
@@ -60,11 +60,11 @@ export default function OutcomeNotes({ projectId }: { projectId: string }) {
       console.error('[OutcomeNotes] loadOutcome failed:', e);
     }
     setLoading(false);
-  };
+  }, [projectId]);
 
   useEffect(() => {
     loadOutcome();
-  }, [projectId]);
+  }, [projectId, loadOutcome]);
 
   const handleSave = async () => {
     setSaving(true);

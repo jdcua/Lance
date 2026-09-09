@@ -2,7 +2,7 @@
  * Content Type Library · Copywriter feature.
  * Content type definitions with category and template.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, ChevronRight } from 'lucide-react';
@@ -29,7 +29,7 @@ export default function ContentTypeLibrary({ clientId }: { clientId: string }) {
   });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ContentType & Record<string, unknown>)[]>(
@@ -50,11 +50,11 @@ export default function ContentTypeLibrary({ clientId }: { clientId: string }) {
       console.error('[ContentTypeLibrary] loadItems failed:', e);
     }
     setLoading(false);
-  };
+  }, [clientId]);
 
   useEffect(() => {
     loadItems();
-  }, [clientId]);
+  }, [clientId, loadItems]);
 
   const handleSave = async () => {
     if (!form.name.trim()) return;

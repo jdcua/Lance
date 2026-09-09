@@ -2,7 +2,7 @@
  * Client Search Tracker · Recruiter feature.
  * Simple list of client searches with search name, role, requirements, and status.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Search } from 'lucide-react';
@@ -33,7 +33,7 @@ export default function ClientSearchTracker({ clientId }: { clientId: string }) 
   const [form, setForm] = useState({ search_name: '', role: '', requirements: '', status: 'open' });
   const [saving, setSaving] = useState(false);
 
-  const loadSearches = async () => {
+  const loadSearches = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ClientSearch & Record<string, unknown>)[]>(
@@ -51,9 +51,9 @@ export default function ClientSearchTracker({ clientId }: { clientId: string }) 
       })));
     } catch (e) { console.error('[ClientSearchTracker] loadSearches failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadSearches(); }, [clientId]);
+  useEffect(() => { loadSearches(); }, [clientId, loadSearches]);
 
   const handleAdd = async () => {
     if (!form.search_name.trim()) return;

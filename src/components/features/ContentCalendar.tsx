@@ -2,10 +2,10 @@
  * Content Calendar · Social Media Manager feature.
  * Calendar grid for content posts with list view toggle and platform filter.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
-import { Plus, Trash2, LayoutGrid, List, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Trash2, LayoutGrid, List, ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 type Post = {
   id: string;
@@ -55,7 +55,7 @@ export default function ContentCalendar({ clientId }: { clientId: string }) {
   const [form, setForm] = useState({ platform: PLATFORMS[0], content_type: CONTENT_TYPES[0], status: 'planned', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadPosts = async () => {
+  const loadPosts = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Post & Record<string, unknown>)[]>(
@@ -74,9 +74,9 @@ export default function ContentCalendar({ clientId }: { clientId: string }) {
       })));
     } catch (e) { console.error('[ContentCalendar] loadPosts failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadPosts(); }, [clientId]);
+  useEffect(() => { loadPosts(); }, [clientId, loadPosts]);
 
   const handleSave = async () => {
     if (!selectedDate) return;
@@ -108,7 +108,6 @@ export default function ContentCalendar({ clientId }: { clientId: string }) {
   const month = currentDate.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfWeek = new Date(year, month, 1).getDay();
-  const monthStart = `${year}-${String(month + 1).padStart(2, '0')}`;
 
   const getPostsForDate = (day: number) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;

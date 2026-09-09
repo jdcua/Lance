@@ -2,7 +2,7 @@
  * Analysis Deliverable Log · Data Analyst feature.
  * Track deliverables with title, type, version, delivery date, and notes.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, FileText, Calendar, GitBranch } from 'lucide-react';
@@ -36,7 +36,7 @@ export default function AnalysisDeliverableLog({ projectId }: { projectId: strin
   const [form, setForm] = useState({ title: '', type: 'report', version: '', delivery_date: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadDeliverables = async () => {
+  const loadDeliverables = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Deliverable & Record<string, unknown>)[]>(
@@ -54,9 +54,9 @@ export default function AnalysisDeliverableLog({ projectId }: { projectId: strin
       })));
     } catch (e) { console.error('[AnalysisDeliverableLog] loadDeliverables failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadDeliverables(); }, [projectId]);
+  useEffect(() => { loadDeliverables(); }, [projectId, loadDeliverables]);
 
   const handleAdd = async () => {
     if (!form.title.trim()) return;

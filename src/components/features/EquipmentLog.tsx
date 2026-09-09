@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../../store';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
@@ -23,19 +23,19 @@ export default function EquipmentLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ equipment_name: '', equipment_type: 'other', shoot_id: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    loadShoots();
-    loadItems();
-  }, [projectId]);
-
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<EquipmentUsage[]>('SELECT * FROM equipment_usage WHERE project_id = $1 ORDER BY equipment_name', [projectId]);
       setItems(rows);
     } catch { /* handled */ }
     setLoading(false);
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    loadShoots();
+    loadItems();
+  }, [projectId, loadItems, loadShoots]);
 
   const projectShoots = shoots.filter(s => s.project_id === projectId);
 

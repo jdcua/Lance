@@ -2,7 +2,7 @@
  * Audition Log · Voice Actor feature.
  * Track auditions with status badges and callback dates.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Clock } from 'lucide-react';
@@ -39,7 +39,7 @@ export default function AuditionLog({ clientId }: { clientId: string }) {
   });
   const [saving, setSaving] = useState(false);
 
-  const loadAuditions = async () => {
+  const loadAuditions = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Audition & Record<string, unknown>)[]>(
@@ -61,11 +61,11 @@ export default function AuditionLog({ clientId }: { clientId: string }) {
       console.error('[AuditionLog] loadAuditions failed:', e);
     }
     setLoading(false);
-  };
+  }, [clientId]);
 
   useEffect(() => {
     loadAuditions();
-  }, [clientId]);
+  }, [clientId, loadAuditions]);
 
   const handleSave = async () => {
     if (!form.project_title.trim()) return;

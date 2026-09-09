@@ -3,7 +3,7 @@
  * Shows all retainer clients as horizontal bars: hours_used / monthly_hours.
  * Color: green (< 80%), amber (80-100%), red (> 100%).
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import { useStore } from '../../store';
 import { Clock, AlertTriangle, AlertCircle } from 'lucide-react';
@@ -28,13 +28,13 @@ type VASummary = {
 };
 
 export default function ClientLoadMonitor() {
-  const { clients, loadClients } = useStore();
+  const { loadClients } = useStore();
   const [retainers, setRetainers] = useState<RetainerRecord[]>([]);
   const [vaSummaries, setVaSummaries] = useState<VASummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [clientNames, setClientNames] = useState<Record<string, string>>({});
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       await loadClients();
       const db = await getDb();
@@ -79,11 +79,11 @@ export default function ClientLoadMonitor() {
       console.error('[ClientLoadMonitor] loadData failed:', e);
     }
     setLoading(false);
-  };
+  }, [loadClients]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const data = retainers.map((r) => {
     const minutes = vaSummaries.find((v) => v.client_id === r.client_id)?.total_minutes || 0;

@@ -2,8 +2,7 @@
  * Phase Tracker · Animator / Filmmaker / Data Analyst feature.
  * Tracks project phases with status, color, and a breakdown bar.
  */
-import { useState, useEffect } from 'react';
-import { useStore } from '../../store';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Circle, Check, X } from 'lucide-react';
@@ -21,7 +20,7 @@ export default function PhaseTracker({ projectId, defaultPhases }: { projectId: 
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
-  const loadPhases = async () => {
+  const loadPhases = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Phase & Record<string, unknown>)[]>('SELECT id, project_id, phase_name, status, color FROM project_phases WHERE project_id = ? ORDER BY id ASC', [projectId]);
@@ -41,9 +40,9 @@ export default function PhaseTracker({ projectId, defaultPhases }: { projectId: 
       }
     } catch (e) { console.error('[PhaseTracker] loadPhases failed:', e); }
     setLoading(false);
-  };
+  }, [defaultPhases, projectId]);
 
-  useEffect(() => { loadPhases(); }, [projectId]);
+  useEffect(() => { loadPhases(); }, [projectId, loadPhases]);
 
   const handleSave = async () => {
     if (!form.phase_name.trim()) return;

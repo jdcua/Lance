@@ -1,11 +1,12 @@
 import { useStore } from './index';
+import type { Update } from '@tauri-apps/plugin-updater';
 
 type UpdaterStoreShape = {
   updateAvailable: boolean;
-  updateData: any;
+  updateData: Update | null;
   isDownloading: boolean;
   downloadProgressMB: string | null;
-  setUpdateAvailable: (data: any) => void;
+  setUpdateAvailable: (data: Update) => void;
   setDownloading: (val: boolean) => void;
   setDownloadProgress: (mb: string) => void;
   dismiss: () => void;
@@ -13,7 +14,7 @@ type UpdaterStoreShape = {
 
 export function useUpdaterStore(): UpdaterStoreShape;
 export function useUpdaterStore<T>(selector: (s: UpdaterStoreShape) => T): T;
-export function useUpdaterStore(selector?: (s: any) => any) {
+export function useUpdaterStore(selector?: (s: UpdaterStoreShape) => unknown) {
   const s = useStore();
   const bundle = {
     updateAvailable: s.updateAvailable,

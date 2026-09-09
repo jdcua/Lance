@@ -3,11 +3,11 @@
  * Tracks source/target word counts and characters per time entry.
  * Supports inline editing and a summary table of recent entries.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import { useStore } from '../../store';
 import Button from '../ui/Button';
-import { Save, Edit3, X, FileText } from 'lucide-react';
+import { Save, Edit3, FileText } from 'lucide-react';
 
 type TranslationCount = {
   id: string;
@@ -15,14 +15,6 @@ type TranslationCount = {
   source_words?: number;
   target_words?: number;
   characters?: number;
-};
-
-type TimeEntryBrief = {
-  id: string;
-  description?: string;
-  client_id: string;
-  project_id: string;
-  start_time: string;
 };
 
 export default function WordCharacterCounter({ timeEntryId }: { timeEntryId?: string }) {
@@ -33,7 +25,7 @@ export default function WordCharacterCounter({ timeEntryId }: { timeEntryId?: st
   const [form, setForm] = useState({ source_words: '', target_words: '', characters: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       if (timeEntries.length === 0) {
         await loadTimeEntries();
@@ -71,11 +63,11 @@ export default function WordCharacterCounter({ timeEntryId }: { timeEntryId?: st
       console.error('[WordCharacterCounter] loadData failed:', e);
     }
     setLoading(false);
-  };
+  }, [loadTimeEntries, timeEntries, timeEntryId]);
 
   useEffect(() => {
     loadData();
-  }, [timeEntryId]);
+  }, [timeEntryId, loadData]);
 
   const recentTimeEntries = timeEntries
     .filter((te) => te.description)

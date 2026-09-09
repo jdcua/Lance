@@ -2,7 +2,7 @@
  * Licensing Tracker · Illustrator / Musician feature.
  * Tracks asset licenses with revenue totals, grouped by license type.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, DollarSign } from 'lucide-react';
@@ -40,7 +40,7 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
   });
   const [saving, setSaving] = useState(false);
 
-  const loadLicenses = async () => {
+  const loadLicenses = useCallback(async () => {
     try {
       const db = await getDb();
       let rows: (AssetLicense & Record<string, unknown>)[];
@@ -70,11 +70,11 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
       console.error('[LicensingTracker] loadLicenses failed:', e);
     }
     setLoading(false);
-  };
+  }, [assetId]);
 
   useEffect(() => {
     loadLicenses();
-  }, [assetId]);
+  }, [assetId, loadLicenses]);
 
   const handleSave = async () => {
     if (!form.license_type) return;

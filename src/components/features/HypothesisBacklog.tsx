@@ -1,7 +1,7 @@
 /**
  * Hypothesis Backlog · hypothesis tracking with status badges and test results.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2 } from 'lucide-react';
@@ -31,7 +31,7 @@ export default function HypothesisBacklog({ projectId }: { projectId: string }) 
   const [form, setForm] = useState({ hypothesis: '', test_design: '', result: '', status: 'proposed' });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Hypothesis & Record<string, unknown>)[]>(
@@ -49,9 +49,9 @@ export default function HypothesisBacklog({ projectId }: { projectId: string }) 
       })));
     } catch (e) { console.error('[HypothesisBacklog] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const counts = STATUSES.reduce((acc, s) => {
     acc[s] = items.filter(i => i.status === s).length;

@@ -9,7 +9,6 @@ import { formatCurrency, DAY_MS } from '../utils/format';
 import { useToasts } from '../store/toastStore';
 import { Lightbulb, BarChart3, TrendingUp, TrendingDown, Minus, Star } from 'lucide-react';
 import { getArchetype } from '../archetypes';
-import type { ArchetypeConfig } from '../archetypes';
 import ProInsights from '../components/features/ProInsights';
 
 export default function Insights() {
@@ -32,13 +31,12 @@ export default function Insights() {
     ])
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoaded(true));
-  }, [loadProjects, loadInvoices, loadTimeEntries, loadClients, loadProposals, loadExpenses, loadProfile]);
+  }, [loadProjects, loadInvoices, loadTimeEntries, loadClients, loadProposals, loadExpenses, loadProfile, addToast, loadHeadlineMetrics]);
 
   const activeProjects = projects.filter((p) => p.status === 'active').length;
   const completedProjects = projects.filter((p) => p.status === 'completed').length;
   const totalProjects = projects.length;
 
-  const totalInvoiced = invoices.reduce((sum, i) => sum + i.total, 0);
   const totalPaid = invoices.filter((i) => i.status === 'paid').reduce((sum, i) => sum + i.total, 0);
   const totalOutstanding = invoices.filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').reduce((sum, i) => sum + i.total, 0);
   const overdueInvoices = invoices.filter((i) => i.status === 'partial' || i.status === 'overdue').length;
@@ -53,7 +51,6 @@ export default function Insights() {
 
   const proposalsAccepted = proposals.filter((p) => p.status === 'accepted').length;
   const proposalsResolved = proposals.filter((p) => p.status !== 'draft' && p.status !== 'sent' && p.status !== 'expired').length;
-  const totalProposals = proposals.length;
   const winRate = proposalsResolved > 0 ? Math.round((proposalsAccepted / proposalsResolved) * 100) : 0;
 
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
@@ -289,7 +286,6 @@ export default function Insights() {
                       const previous = parseFloat(hm.previous_value || '');
                       const isUp = !isNaN(latest) && !isNaN(previous) && latest > previous;
                       const isDown = !isNaN(latest) && !isNaN(previous) && latest < previous;
-                      const isFlat = !isNaN(latest) && !isNaN(previous) && latest === previous;
 
                       const TrendIcon = isUp ? TrendingUp : isDown ? TrendingDown : Minus;
                       const trendColor = isUp ? 'text-[var(--accent)]' : isDown ? 'text-[var(--danger)]' : 'text-[var(--text-tertiary)]';

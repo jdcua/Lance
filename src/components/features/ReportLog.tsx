@@ -2,7 +2,7 @@
  * Report Log · SEO Specialist feature.
  * Timeline list of client reports with expandable details.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, ChevronDown, ChevronRight, FileText } from 'lucide-react';
@@ -25,7 +25,7 @@ export default function ReportLog({ clientId }: { clientId: string }) {
   const [form, setForm] = useState({ date: new Date().toISOString().split('T')[0], traffic_notes: '', ranking_notes: '', conversion_notes: '', summary: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadReports = async () => {
+  const loadReports = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Report & Record<string, unknown>)[]>(
@@ -43,9 +43,9 @@ export default function ReportLog({ clientId }: { clientId: string }) {
       })));
     } catch (e) { console.error('[ReportLog] loadReports failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadReports(); }, [clientId]);
+  useEffect(() => { loadReports(); }, [clientId, loadReports]);
 
   const handleSave = async () => {
     if (!form.date.trim()) return;

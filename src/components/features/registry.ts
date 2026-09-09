@@ -5,7 +5,7 @@
  */
 import { lazy, type ComponentType } from 'react';
 
-const FeatureComponents: Record<string, ComponentType<any>> = {
+const FeatureComponents: Record<string, unknown> = {
   // ── Kanban Board (All archetypes) ──
   KanbanBoard: lazy(() => import('./KanbanBoard')),
   KanbanBoardWidget: lazy(() => import('./KanbanBoard')),
@@ -374,8 +374,8 @@ const FeatureComponents: Record<string, ComponentType<any>> = {
   RecentInvoices: lazy(() => import('./RecentInvoicesWidget')),
 };
 
-export function getFeatureComponent(name: string): ComponentType<any> | null {
-  return FeatureComponents[name] || null;
+export function getFeatureComponent(name: string): ComponentType<Record<string, unknown>> | null {
+  return (FeatureComponents[name] as ComponentType<Record<string, unknown>> | undefined) || null;
 }
 
 export function hasFeatureComponent(name: string): boolean {

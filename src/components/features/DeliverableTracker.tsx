@@ -2,7 +2,7 @@
  * Deliverable Tracker · SEO Specialist feature.
  * Tracks SEO deliverables grouped by period with completion bars.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Check, Circle } from 'lucide-react';
@@ -26,7 +26,7 @@ export default function DeliverableTracker({ clientId }: { clientId: string }) {
   const [form, setForm] = useState({ period: new Date().toISOString().slice(0, 7), title: '', type: TYPES[0], due_date: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadDeliverables = async () => {
+  const loadDeliverables = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Deliverable & Record<string, unknown>)[]>(
@@ -44,9 +44,9 @@ export default function DeliverableTracker({ clientId }: { clientId: string }) {
       })));
     } catch (e) { console.error('[DeliverableTracker] loadDeliverables failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadDeliverables(); }, [clientId]);
+  useEffect(() => { loadDeliverables(); }, [clientId, loadDeliverables]);
 
   const handleSave = async () => {
     if (!form.title.trim() || !form.period.trim()) return;

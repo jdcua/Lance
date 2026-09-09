@@ -2,7 +2,7 @@
  * Feedback Log · Designer feature.
  * Timeline of client feedback entries with medium, summary, actioned toggle, and project filter.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../../store';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
@@ -46,7 +46,7 @@ export default function FeedbackLog({ clientId }: { clientId: string }) {
   const [saving, setSaving] = useState(false);
   const [filterProjectId, setFilterProjectId] = useState<string>('');
 
-  const loadFeedbacks = async () => {
+  const loadFeedbacks = useCallback(async () => {
     try {
       await loadProjects();
       const db = await getDb();
@@ -62,9 +62,9 @@ export default function FeedbackLog({ clientId }: { clientId: string }) {
       })));
     } catch (e) { console.error('[FeedbackLog] loadFeedbacks failed:', e); }
     setLoading(false);
-  };
+  }, [clientId, loadProjects]);
 
-  useEffect(() => { loadFeedbacks(); }, [clientId]);
+  useEffect(() => { loadFeedbacks(); }, [clientId, loadFeedbacks]);
 
   const clientProjects = projects.filter(p => p.client_id === clientId);
 

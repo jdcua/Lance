@@ -2,7 +2,7 @@
  * Shot List · Filmmaker feature.
  * Tracks project shots with status, scene, inline editing, and reordering.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
@@ -26,7 +26,7 @@ export default function ShotList({ projectId }: { projectId: string }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<{ description?: string; status?: string }>({});
 
-  const loadShots = async () => {
+  const loadShots = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Shot & Record<string, unknown>)[]>('SELECT id, project_id, scene, description, status, sort_order FROM shots WHERE project_id = ? ORDER BY sort_order ASC', [projectId]);
@@ -40,9 +40,9 @@ export default function ShotList({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[ShotList] loadShots failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadShots(); }, [projectId]);
+  useEffect(() => { loadShots(); }, [projectId, loadShots]);
 
   const handleSave = async () => {
     if (!form.scene.trim() && !form.description.trim()) return;

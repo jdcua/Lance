@@ -2,7 +2,7 @@
  * Reference Board · Illustrator feature.
  * Visual grid of reference images and URLs using the mood_board_items table.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../../store';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
@@ -27,7 +27,7 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
   const [url, setUrl] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ReferenceItem & Record<string, unknown>)[]>(
@@ -48,12 +48,12 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
       console.error('[ReferenceBoard] loadItems failed:', e);
     }
     setLoading(false);
-  };
+  }, [projectId]);
 
   useEffect(() => {
     loadItems();
     loadAllAttachments();
-  }, [projectId]);
+  }, [projectId, loadAllAttachments, loadItems]);
 
   const imageAssets = allAttachments.filter(
     (a) => a.mime_type && (a.mime_type.startsWith('image/') || a.mime_type === 'application/pdf')

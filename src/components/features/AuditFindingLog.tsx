@@ -2,7 +2,7 @@
  * Audit Finding Log · Blockchain / Cybersecurity feature.
  * Track audit findings with severity, contract reference, description, and resolution.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, AlertTriangle, CheckCircle2 } from 'lucide-react';
@@ -42,7 +42,7 @@ export default function AuditFindingLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ title: '', severity: 'medium', contract_id: '', description: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadFindings = async () => {
+  const loadFindings = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Finding & Record<string, unknown>)[]>(
@@ -61,9 +61,9 @@ export default function AuditFindingLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[AuditFindingLog] loadFindings failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadFindings(); }, [projectId]);
+  useEffect(() => { loadFindings(); }, [projectId, loadFindings]);
 
   const handleAdd = async () => {
     if (!form.title.trim()) return;

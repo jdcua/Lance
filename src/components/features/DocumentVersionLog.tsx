@@ -2,7 +2,7 @@
  * Document Version Log · Legal feature.
  * List of document versions grouped by doc_name.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, FileText, FolderOpen } from 'lucide-react';
@@ -25,7 +25,7 @@ export default function DocumentVersionLog({ clientId }: { clientId: string }) {
   const [saving, setSaving] = useState(false);
   const [collapsedDocs, setCollapsedDocs] = useState<Set<string>>(new Set());
 
-  const loadDocs = async () => {
+  const loadDocs = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(DocVersion & Record<string, unknown>)[]>(
@@ -43,9 +43,9 @@ export default function DocumentVersionLog({ clientId }: { clientId: string }) {
       })));
     } catch (e) { console.error('[DocumentVersionLog] load failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadDocs(); }, [clientId]);
+  useEffect(() => { loadDocs(); }, [clientId, loadDocs]);
 
   const handleAdd = async () => {
     if (!form.doc_name.trim()) return;

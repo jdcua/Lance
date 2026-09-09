@@ -2,7 +2,7 @@
  * CTA Library · Copywriter feature.
  * CTA performance tracking with conversion rate and CTR.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2 } from 'lucide-react';
@@ -32,7 +32,7 @@ export default function CTALibrary({ projectId }: { projectId: string }) {
   });
   const [saving, setSaving] = useState(false);
 
-  const loadCtas = async () => {
+  const loadCtas = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(CTA & Record<string, unknown>)[]>(
@@ -55,11 +55,11 @@ export default function CTALibrary({ projectId }: { projectId: string }) {
       console.error('[CTALibrary] loadCtas failed:', e);
     }
     setLoading(false);
-  };
+  }, [projectId]);
 
   useEffect(() => {
     loadCtas();
-  }, [projectId]);
+  }, [projectId, loadCtas]);
 
   const handleSave = async () => {
     if (!form.name.trim()) return;

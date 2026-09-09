@@ -2,7 +2,7 @@
  * Product Spec Builder · Product Manager feature.
  * Product spec creation with problem, solution, success metrics.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, ChevronRight } from 'lucide-react';
@@ -40,7 +40,7 @@ export default function ProductSpecBuilder({ projectId }: { projectId: string })
   });
   const [saving, setSaving] = useState(false);
 
-  const loadSpecs = async () => {
+  const loadSpecs = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ProductSpec & Record<string, unknown>)[]>(
@@ -63,11 +63,11 @@ export default function ProductSpecBuilder({ projectId }: { projectId: string })
       console.error('[ProductSpecBuilder] loadSpecs failed:', e);
     }
     setLoading(false);
-  };
+  }, [projectId]);
 
   useEffect(() => {
     loadSpecs();
-  }, [projectId]);
+  }, [projectId, loadSpecs]);
 
   const handleSave = async () => {
     if (!form.title.trim()) return;

@@ -1,7 +1,7 @@
 /**
  * Budget vs Actual Tracker · category-based budget comparison with variance display.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2 } from 'lucide-react';
@@ -22,7 +22,7 @@ export default function BudgetVsActualTracker({ projectId }: { projectId: string
   const [form, setForm] = useState({ category: '', budgeted: '', actual: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(BudgetItem & Record<string, unknown>)[]>(
@@ -39,9 +39,9 @@ export default function BudgetVsActualTracker({ projectId }: { projectId: string
       })));
     } catch (e) { console.error('[BudgetVsActualTracker] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const totalBudgeted = items.reduce((sum, i) => sum + i.budgeted, 0);
   const totalActual = items.reduce((sum, i) => sum + i.actual, 0);

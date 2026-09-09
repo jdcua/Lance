@@ -47,6 +47,7 @@ import {
   Bell,
   ChevronDown,
   ChevronUp,
+  type LucideIcon,
 } from 'lucide-react';
 import { useStore } from '../../store';
 import { trialDaysRemaining } from '../../lib/trial';
@@ -54,7 +55,7 @@ import { getArchetype } from '../../archetypes';
 import type { SidebarItemDef } from '../../archetypes';
 import { getShortcutModifierLabel } from '../../utils/shortcuts';
 
-const ICON_MAP: Record<string, any> = {
+const ICON_MAP: Record<string, LucideIcon> = {
   FileText, PenLine, FolderKanban, Clock, Receipt, Users, BarChart3, Lightbulb,
   Settings, Trophy, LayoutDashboard, Upload, Package, Camera, Monitor,
   Clapperboard, Code2, Palette, Brain, Film, Paintbrush, Box, Gamepad2,
@@ -94,7 +95,7 @@ export default function Sidebar() {
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
-  const { isLicensed, proposals, projects, invoices, allAttachments, pendingFollowUps, profile, archetypeAppliedAt, clients, contracts, timeEntries, expenses, getActiveTier } = useStore((s) => ({
+  const { isLicensed, proposals, projects, invoices, allAttachments, pendingFollowUps, profile, clients, contracts, timeEntries, expenses, getActiveTier } = useStore((s) => ({
     isLicensed: s.isLicensed,
     proposals: s.proposals,
     projects: s.projects,
@@ -102,7 +103,6 @@ export default function Sidebar() {
     allAttachments: s.allAttachments,
     pendingFollowUps: s.pendingFollowUps,
     profile: s.profile,
-    archetypeAppliedAt: s.archetypeAppliedAt,
     clients: s.clients,
     contracts: s.contracts,
     timeEntries: s.timeEntries,
@@ -140,7 +140,7 @@ export default function Sidebar() {
     localStorage.setItem('lance:sidebar-collapsed', String(next));
   };
 
-  const archetype = useMemo(() => getArchetype(profile?.profession || 'default'), [profile?.profession, archetypeAppliedAt]);
+  const archetype = useMemo(() => getArchetype(profile?.profession || 'default'), [profile?.profession]);
 
   const badgeMap: Record<string, number> = useMemo(() => ({
     draftProposals: proposals.filter((p) => p.status === 'draft').length,

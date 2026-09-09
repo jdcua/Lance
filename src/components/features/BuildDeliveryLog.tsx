@@ -2,7 +2,7 @@
  * Build Delivery Log · Game Developer feature.
  * Changelog-style list of build deliveries, most recent first.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Package, Calendar, Monitor } from 'lucide-react';
@@ -24,7 +24,7 @@ export default function BuildDeliveryLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ version: '', date: '', platform: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadDeliveries = async () => {
+  const loadDeliveries = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(BuildDelivery & Record<string, unknown>)[]>(
@@ -42,9 +42,9 @@ export default function BuildDeliveryLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[BuildDeliveryLog] loadDeliveries failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadDeliveries(); }, [projectId]);
+  useEffect(() => { loadDeliveries(); }, [projectId, loadDeliveries]);
 
   const handleAdd = async () => {
     setSaving(true);

@@ -2,8 +2,7 @@
  * Deliverable Log · Animator feature.
  * Tracks project deliverables with format, resolution, approval status.
  */
-import { useState, useEffect } from 'react';
-import { useStore } from '../../store';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Check, Film } from 'lucide-react';
@@ -19,7 +18,7 @@ export default function DeliverableLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ file_name: '', format: FORMATS[0], resolution: '', delivery_date: '', client_approved: false, notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadDeliverables = async () => {
+  const loadDeliverables = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Deliverable & Record<string, unknown>)[]>('SELECT id, project_id, file_name, format, resolution, delivery_date, client_approved, notes FROM deliverables WHERE project_id = ? ORDER BY id DESC', [projectId]);
@@ -35,9 +34,9 @@ export default function DeliverableLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[DeliverableLog] loadDeliverables failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadDeliverables(); }, [projectId]);
+  useEffect(() => { loadDeliverables(); }, [projectId, loadDeliverables]);
 
   const handleSave = async () => {
     if (!form.file_name.trim()) return;

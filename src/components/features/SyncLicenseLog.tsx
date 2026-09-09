@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, DollarSign } from 'lucide-react';
@@ -25,7 +25,7 @@ export default function SyncLicenseLog({ projectId }: { projectId?: string }) {
   const [form, setForm] = useState({ track_name: '', licensee: '', use_type: USE_TYPES[0], territory: '', term: '', fee: '', royalty: false });
   const [saving, setSaving] = useState(false);
 
-  const loadLicenses = async () => {
+  const loadLicenses = useCallback(async () => {
     try {
       const db = await getDb();
       let sql = 'SELECT id, project_id, track_name, licensee, use_type, territory, term, fee, royalty, created_at FROM sync_licenses';
@@ -50,9 +50,9 @@ export default function SyncLicenseLog({ projectId }: { projectId?: string }) {
       })));
     } catch (e) { console.error('[SyncLicenseLog] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadLicenses(); }, [projectId]);
+  useEffect(() => { loadLicenses(); }, [projectId, loadLicenses]);
 
   const handleAdd = async () => {
     if (!form.track_name.trim()) return;

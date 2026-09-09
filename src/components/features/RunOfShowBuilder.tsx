@@ -1,7 +1,7 @@
 /**
  * Run of Show Builder · ordered event timeline with up/down reorder.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
@@ -24,7 +24,7 @@ export default function RunOfShowBuilder({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ time_slot: '', activity: '', owner: '', duration_min: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(RunOfShowItem & Record<string, unknown>)[]>(
@@ -43,9 +43,9 @@ export default function RunOfShowBuilder({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[RunOfShowBuilder] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const handleSave = async () => {
     if (!form.activity.trim()) return;

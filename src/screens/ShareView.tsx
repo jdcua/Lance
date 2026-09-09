@@ -19,7 +19,7 @@ const ALLOWED_TAGS = new Set([
 ]);
 
 /** Client-side equivalent of the Rust `sanitize_html` allowlist. */
-export function sanitizeShareHtml(html: string): string {
+function sanitizeShareHtml(html: string): string {
   if (!html) return '';
   let out = html
     .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, '')

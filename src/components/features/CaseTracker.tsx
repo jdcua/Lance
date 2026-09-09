@@ -2,7 +2,7 @@
  * Case Tracker · Legal feature.
  * List of legal cases with status badges.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Briefcase } from 'lucide-react';
@@ -33,7 +33,7 @@ export default function CaseTracker({ clientId }: { clientId: string }) {
   const [form, setForm] = useState({ case_number: '', title: '', status: 'active', filed_date: '', court: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadCases = async () => {
+  const loadCases = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Case & Record<string, unknown>)[]>(
@@ -52,9 +52,9 @@ export default function CaseTracker({ clientId }: { clientId: string }) {
       })));
     } catch (e) { console.error('[CaseTracker] load failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadCases(); }, [clientId]);
+  useEffect(() => { loadCases(); }, [clientId, loadCases]);
 
   const handleAdd = async () => {
     if (!form.title.trim()) return;

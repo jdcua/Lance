@@ -2,7 +2,7 @@
  * BOM Tracker · Embedded feature.
  * Bill of materials list with total cost summary.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, DollarSign, Package } from 'lucide-react';
@@ -25,7 +25,7 @@ export default function BOMTracker({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ part_name: '', part_number: '', quantity: '1', supplier: '', cost: '', lead_time_days: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(BOMItem & Record<string, unknown>)[]>(
@@ -44,9 +44,9 @@ export default function BOMTracker({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[BOMTracker] loadItems failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const handleAdd = async () => {
     if (!form.part_name.trim()) return;

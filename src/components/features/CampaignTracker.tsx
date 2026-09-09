@@ -2,7 +2,7 @@
  * Campaign Tracker · Marketing / Social Media Manager feature.
  * Tracks campaigns with channel, dates, budget, and KPI comparison.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, TrendingUp, TrendingDown, Minus } from 'lucide-react';
@@ -37,7 +37,7 @@ export default function CampaignTracker({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ name: '', channel: CHANNELS[0], start_date: '', end_date: '', budget: '', kpi_target: '', kpi_result: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadCampaigns = async () => {
+  const loadCampaigns = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Campaign & Record<string, unknown>)[]>(
@@ -57,9 +57,9 @@ export default function CampaignTracker({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[CampaignTracker] loadCampaigns failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadCampaigns(); }, [projectId]);
+  useEffect(() => { loadCampaigns(); }, [projectId, loadCampaigns]);
 
   const handleSave = async () => {
     if (!form.name.trim()) return;

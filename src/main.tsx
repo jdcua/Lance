@@ -4,8 +4,15 @@ import { RouterProvider } from 'react-router-dom';
 import { router } from './router';
 import './index.css';
 
+interface IdleDeadline {
+  didTimeout: boolean;
+  timeRemaining: () => number;
+}
+
+type IdleCallbackFn = (deadline: IdleDeadline) => void;
+
 if (!('requestIdleCallback' in window)) {
-  (window as any).requestIdleCallback = function (cb: any) {
+  (window as unknown as { requestIdleCallback?: (cb: IdleCallbackFn) => ReturnType<typeof setTimeout> }).requestIdleCallback = function (cb: IdleCallbackFn) {
     const start = Date.now();
     return setTimeout(function () {
       cb({
@@ -19,7 +26,7 @@ if (!('requestIdleCallback' in window)) {
 }
 
 if (!('cancelIdleCallback' in window)) {
-  (window as any).cancelIdleCallback = function (id: number) {
+  (window as unknown as { cancelIdleCallback?: (handle: ReturnType<typeof setTimeout>) => void }).cancelIdleCallback = function (id: ReturnType<typeof setTimeout>) {
     clearTimeout(id);
   };
 }

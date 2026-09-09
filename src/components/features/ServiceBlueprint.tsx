@@ -1,7 +1,7 @@
 /**
  * Service Blueprint · service design components with frontstage/backstage mapping.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2 } from 'lucide-react';
@@ -23,7 +23,7 @@ export default function ServiceBlueprint({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ component: '', frontstage: '', backstage: '', support_process: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(BlueprintItem & Record<string, unknown>)[]>(
@@ -41,9 +41,9 @@ export default function ServiceBlueprint({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[ServiceBlueprint] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const handleSave = async () => {
     if (!form.component.trim()) return;

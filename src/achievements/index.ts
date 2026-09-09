@@ -116,6 +116,6 @@ export const ACHIEVEMENTS: Achievement[] = [
 ];
 
 // Unused · kept as internal helper for future use
-function getAchievementByKey(key: AchievementKey): Achievement | undefined {
+export function getAchievementByKey(key: AchievementKey): Achievement | undefined {
   return ACHIEVEMENTS.find((a) => a.key === key);
 }

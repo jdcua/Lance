@@ -2,7 +2,7 @@
  * Mood Board · Designer feature.
  * Visual grid of references: assets from library and external URLs.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../../store';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
@@ -17,13 +17,6 @@ type MoodItem = {
   sort_order: number;
 };
 
-function getTags(arr: unknown): string[] {
-  if (Array.isArray(arr)) return arr.map(String);
-  if (typeof arr === 'string') {
-    try { const parsed = JSON.parse(arr); return Array.isArray(parsed) ? parsed.map(String) : []; } catch { return []; }
-  }
-  return [];
-}
 
 export default function MoodBoard({ projectId }: { projectId: string }) {
   const { allAttachments, loadAllAttachments } = useStore();
@@ -37,7 +30,7 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
   const [saving, setSaving] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       await loadAllAttachments();
       const db = await getDb();
@@ -52,9 +45,9 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[MoodBoard] loadItems failed:', e); }
     setLoading(false);
-  };
+  }, [loadAllAttachments, projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const maxSort = items.reduce((max, i) => Math.max(max, i.sort_order), 0);
 

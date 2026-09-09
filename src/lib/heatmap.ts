@@ -147,7 +147,6 @@ export function computeStreakStats(
 
   const now = new Date();
   const checkDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  let currentStreak = 0;
   let cs = 0;
   for (let i = 0; i < 365; i++) {
     const key = getDateKey(checkDate);
@@ -158,7 +157,6 @@ export function computeStreakStats(
     }
     checkDate.setDate(checkDate.getDate() - 1);
   }
-  currentStreak = cs;
 
   const yearStart = parseLocalDateKey(`${year}-01-01`);
   const yearEnd = parseLocalDateKey(`${year + 1}-01-01`);
@@ -253,7 +251,6 @@ export function computeDayOfWeekBreakdown(
     seenDays.add(getDateKey(new Date(t.start_time)));
   }
 
-  const uniqueDays = seenDays.size || 1;
   const dowDays: Record<number, number> = {};
   for (const dk of seenDays) {
     const dw = parseLocalDateKey(dk).getDay();

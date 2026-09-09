@@ -2,7 +2,7 @@
  * Tax Deadline Calendar · Accountant feature.
  * List of tax deadlines sorted by due_date ascending. Overdue items in red.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Check, Circle, Calendar } from 'lucide-react';
@@ -24,7 +24,7 @@ export default function TaxDeadlineCalendar({ clientId }: { clientId: string }) 
   const [form, setForm] = useState({ title: '', due_date: '', tax_type: '', amount: '', filed: false });
   const [saving, setSaving] = useState(false);
 
-  const loadDeadlines = async () => {
+  const loadDeadlines = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(TaxDeadline & Record<string, unknown>)[]>(
@@ -42,9 +42,9 @@ export default function TaxDeadlineCalendar({ clientId }: { clientId: string }) 
       })));
     } catch (e) { console.error('[TaxDeadlineCalendar] load failed:', e); }
     setLoading(false);
-  };
+  }, [clientId]);
 
-  useEffect(() => { loadDeadlines(); }, [clientId]);
+  useEffect(() => { loadDeadlines(); }, [clientId, loadDeadlines]);
 
   const handleAdd = async () => {
     if (!form.title.trim()) return;

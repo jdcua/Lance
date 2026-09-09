@@ -2,7 +2,7 @@
  * Feature Scope Board · Game Developer feature.
  * Grouped list by priority (must/should/nice-to-have) with status, hours, and scope indicator.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Clock, AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
@@ -33,12 +33,6 @@ const statusBadgeClasses: Record<string, string> = {
   cut: 'bg-[#DC2626]/10 text-[#DC2626] line-through',
 };
 
-const priorityBadgeClasses: Record<string, string> = {
-  must: 'bg-[#DC2626]/15 text-[#DC2626]',
-  should: 'bg-[#D97706]/15 text-[#D97706]',
-  'nice-to-have': 'bg-[#16A34A]/15 text-[#16A34A]',
-};
-
 export default function FeatureScopeBoard({ projectId }: { projectId: string }) {
   const [features, setFeatures] = useState<GameFeature[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +43,7 @@ export default function FeatureScopeBoard({ projectId }: { projectId: string }) 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<GameFeature>>({});
 
-  const loadFeatures = async () => {
+  const loadFeatures = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(GameFeature & Record<string, unknown>)[]>(
@@ -68,9 +62,9 @@ export default function FeatureScopeBoard({ projectId }: { projectId: string }) 
       })));
     } catch (e) { console.error('[FeatureScopeBoard] loadFeatures failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadFeatures(); }, [projectId]);
+  useEffect(() => { loadFeatures(); }, [projectId, loadFeatures]);
 
   const handleAdd = async () => {
     if (!form.title.trim()) return;

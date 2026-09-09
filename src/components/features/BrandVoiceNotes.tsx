@@ -2,7 +2,7 @@
  * Brand Voice Notes · Copywriter feature.
  * Single brand voice record per client with save-in-place editing.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Save, Trash2 } from 'lucide-react';
@@ -28,7 +28,7 @@ export default function BrandVoiceNotes({ clientId }: { clientId: string }) {
     dos_donts: '',
   });
 
-  const loadBrandVoice = async () => {
+  const loadBrandVoice = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(BrandVoice & Record<string, unknown>)[]>(
@@ -59,11 +59,11 @@ export default function BrandVoiceNotes({ clientId }: { clientId: string }) {
       console.error('[BrandVoiceNotes] loadBrandVoice failed:', e);
     }
     setLoading(false);
-  };
+  }, [clientId]);
 
   useEffect(() => {
     loadBrandVoice();
-  }, [clientId]);
+  }, [clientId, loadBrandVoice]);
 
   const handleSave = async () => {
     setSaving(true);

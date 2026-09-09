@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Hash } from 'lucide-react';
@@ -19,7 +19,7 @@ export default function RevisionSetLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ date: '', changes_summary: '', distributed_to: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadSets = async () => {
+  const loadSets = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(RevisionSet & Record<string, unknown>)[]>(
@@ -36,9 +36,9 @@ export default function RevisionSetLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[RevisionSetLog] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadSets(); }, [projectId]);
+  useEffect(() => { loadSets(); }, [projectId, loadSets]);
 
   const getNextSetNumber = (): number => {
     const max = sets.reduce((max, s) => Math.max(max, s.set_number), 0);

@@ -2,9 +2,8 @@
  * Platform Log · Game Developer feature.
  * Multi-select tag panel for engines and target platforms.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
-import Button from '../ui/Button';
 import { X } from 'lucide-react';
 
 type PlatformRecord = {
@@ -38,7 +37,7 @@ export default function PlatformLog({ projectId }: { projectId: string }) {
   const [records, setRecords] = useState<PlatformRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadRecords = async () => {
+  const loadRecords = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(PlatformRecord & Record<string, unknown>)[]>(
@@ -53,9 +52,9 @@ export default function PlatformLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[PlatformLog] loadRecords failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadRecords(); }, [projectId]);
+  useEffect(() => { loadRecords(); }, [projectId, loadRecords]);
 
   const engines = records.filter(r => r.engine).map(r => r.engine!);
   const platforms = records.filter(r => r.target_platform).map(r => r.target_platform!);

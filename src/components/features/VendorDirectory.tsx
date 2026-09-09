@@ -1,7 +1,7 @@
 /**
  * Vendor Directory · searchable vendor list with service, contact, cost, and status.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Search } from 'lucide-react';
@@ -34,7 +34,7 @@ export default function VendorDirectory({ projectId }: { projectId: string }) {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Vendor & Record<string, unknown>)[]>(
@@ -53,9 +53,9 @@ export default function VendorDirectory({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[VendorDirectory] load failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const filtered = search.trim()
     ? items.filter(v =>

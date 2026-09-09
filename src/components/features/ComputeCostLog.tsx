@@ -2,7 +2,7 @@
  * Compute Cost Log · AI Engineer feature.
  * Track compute costs with provider, instance type, hours, cost, and date.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Cloud, DollarSign, Calendar } from 'lucide-react';
@@ -35,7 +35,7 @@ export default function ComputeCostLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ provider: 'AWS', instance_type: '', hours: '', cost: '', date: new Date().toISOString().split('T')[0] });
   const [saving, setSaving] = useState(false);
 
-  const loadCosts = async () => {
+  const loadCosts = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(ComputeCost & Record<string, unknown>)[]>(
@@ -53,9 +53,9 @@ export default function ComputeCostLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[ComputeCostLog] loadCosts failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadCosts(); }, [projectId]);
+  useEffect(() => { loadCosts(); }, [projectId, loadCosts]);
 
   const handleAdd = async () => {
     setSaving(true);

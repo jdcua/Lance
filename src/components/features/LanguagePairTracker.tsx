@@ -2,7 +2,7 @@
  * Language Pair Tracker · Translator feature.
  * Multi-select language pairs per project with common pair suggestions and custom entry.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { X, Globe } from 'lucide-react';
@@ -80,7 +80,7 @@ export default function LanguagePairTracker({ projectId }: { projectId: string }
   const [customTarget, setCustomTarget] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const loadPairs = async () => {
+  const loadPairs = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(LanguagePair & Record<string, unknown>)[]>(
@@ -99,11 +99,11 @@ export default function LanguagePairTracker({ projectId }: { projectId: string }
       console.error('[LanguagePairTracker] loadPairs failed:', e);
     }
     setLoading(false);
-  };
+  }, [projectId]);
 
   useEffect(() => {
     loadPairs();
-  }, [projectId]);
+  }, [projectId, loadPairs]);
 
   const pairKey = (source: string, target: string) => `${source}→${target}`;
 

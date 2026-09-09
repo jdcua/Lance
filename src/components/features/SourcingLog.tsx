@@ -2,10 +2,10 @@
  * Sourcing Log · Fashion Designer feature.
  * Track material sourcing with supplier, cost, MOQ, lead time, and status.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
-import { Plus, Trash2, Package } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 type SourcingItem = {
   id: string;
@@ -35,7 +35,7 @@ export default function SourcingLog({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ material: '', supplier: '', cost: '', moq: '', lead_time_days: '', status: 'researching' });
   const [saving, setSaving] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(SourcingItem & Record<string, unknown>)[]>(
@@ -54,9 +54,9 @@ export default function SourcingLog({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[SourcingLog] loadItems failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId]);
+  useEffect(() => { loadItems(); }, [projectId, loadItems]);
 
   const handleAdd = async () => {
     if (!form.material.trim()) return;

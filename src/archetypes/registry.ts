@@ -1,4 +1,4 @@
-import type { ArchetypeConfig, ArchetypeId } from './types';
+import type { ArchetypeConfig } from './types';
 import defaultArchetype from './default';
 import animator from './animator';
 import developer from './developer';

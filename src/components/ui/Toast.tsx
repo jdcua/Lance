@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
 import { useToasts } from '../../store/toastStore';
-import { X, CheckCircle, AlertCircle, Info, Sparkles } from 'lucide-react';
+import { X, CheckCircle, AlertCircle, AlertTriangle, Info, Sparkles } from 'lucide-react';
 
 const icons = {
   success: CheckCircle,
   error: AlertCircle,
   info: Info,
+  warning: AlertTriangle,
   unlock: Sparkles,
 };
 
@@ -13,6 +13,7 @@ const colors = {
   success: 'bg-[var(--accent-bg)] text-[var(--accent)] border-[var(--accent)]/20',
   error: 'bg-[var(--danger-bg)] text-[var(--danger)] border-[var(--danger)]/20',
   info: 'bg-[var(--info-bg)] text-[var(--info)] border-[var(--info)]/20',
+  warning: 'bg-[var(--medium-conf-bg)] text-[var(--medium-conf-text)] border-[var(--medium-conf-text)]/20',
   unlock: 'bg-[var(--accent)] text-white border-[var(--accent)]',
 };
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { ExternalLink, CheckCircle, AlertCircle, Clock } from 'lucide-react';
@@ -20,9 +20,7 @@ export default function DeliveryTracker({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ selects_count: '', delivered_count: '', gallery_link: '', delivery_date: '', notes: '' });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { loadDelivery(); }, [projectId]);
-
-  const loadDelivery = async () => {
+  const loadDelivery = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<Delivery[]>('SELECT * FROM project_deliveries WHERE project_id = $1 LIMIT 1', [projectId]);
@@ -38,7 +36,9 @@ export default function DeliveryTracker({ projectId }: { projectId: string }) {
       }
     } catch { /* handled */ }
     setLoading(false);
-  };
+  }, [projectId]);
+
+  useEffect(() => { loadDelivery(); }, [projectId, loadDelivery]);
 
   const handleSave = async () => {
     setSaving(true);

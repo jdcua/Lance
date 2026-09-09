@@ -2,7 +2,7 @@
  * Meal Plan Builder · Nutritionist feature.
  * Meal plan creation with expandable detail view.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, ChevronRight } from 'lucide-react';
@@ -30,7 +30,7 @@ export default function MealPlanBuilder({ clientId }: { clientId: string }) {
   });
   const [saving, setSaving] = useState(false);
 
-  const loadPlans = async () => {
+  const loadPlans = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(MealPlan & Record<string, unknown>)[]>(
@@ -52,11 +52,11 @@ export default function MealPlanBuilder({ clientId }: { clientId: string }) {
       console.error('[MealPlanBuilder] loadPlans failed:', e);
     }
     setLoading(false);
-  };
+  }, [clientId]);
 
   useEffect(() => {
     loadPlans();
-  }, [clientId]);
+  }, [clientId, loadPlans]);
 
   const handleSave = async () => {
     if (!form.title.trim()) return;

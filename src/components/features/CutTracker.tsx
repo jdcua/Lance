@@ -2,7 +2,7 @@
  * Cut Tracker · Filmmaker feature.
  * Tracks project cuts with duration, format, approval, and summary stats.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Check } from 'lucide-react';
@@ -32,7 +32,7 @@ export default function CutTracker({ projectId }: { projectId: string }) {
   const [form, setForm] = useState({ cut_name: '', duration_mmss: '', format: '', delivery_date: '', client_approved: false, notes: '' });
   const [saving, setSaving] = useState(false);
 
-  const loadCuts = async () => {
+  const loadCuts = useCallback(async () => {
     try {
       const db = await getDb();
       const rows = await db.select<(Cut & Record<string, unknown>)[]>('SELECT id, project_id, cut_name, duration_seconds, format, client_approved, delivery_date, notes FROM cuts WHERE project_id = ? ORDER BY id DESC', [projectId]);
@@ -48,9 +48,9 @@ export default function CutTracker({ projectId }: { projectId: string }) {
       })));
     } catch (e) { console.error('[CutTracker] loadCuts failed:', e); }
     setLoading(false);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadCuts(); }, [projectId]);
+  useEffect(() => { loadCuts(); }, [projectId, loadCuts]);
 
   const handleSave = async () => {
     if (!form.cut_name.trim()) return;

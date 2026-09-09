@@ -16,7 +16,7 @@ import { getFeatureFlags } from '../lib/constants';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
-import { Plus, Trash2, Send, Eye, Download, FileText, Search, ArrowUpDown, Bell, Check, X, Copy, Clock, Mail, Share2, Link, Flame } from 'lucide-react';
+import { Plus, Trash2, Send, Eye, Download, FileText, Search, Bell, Check, X, Copy, Clock, Mail, Share2, Link, Flame } from 'lucide-react';
 import ShareModal from '../components/ShareModal';
 import { generateFollowUpDraft, generateSubjectLine, openMailTo } from '../utils/followUpTemplates';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
@@ -77,20 +77,19 @@ export default function Proposals() {
   const [shareTokenIds, setShareTokenIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    const loadShareTokens = async () => {
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        const tokens = await invoke<ShareToken[]>('get_all_share_tokens');
+        const ids = new Set(tokens.filter(t => t.entity_type === 'proposal').map(t => t.entity_id));
+        setShareTokenIds(ids);
+      } catch { /* ignore */ }
+    };
     Promise.all([loadProposals(), loadClients(), loadProfile(), loadShareTokens(), loadPortalActivity()])
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
     loadPendingFollowUps();
-  }, [loadProposals, loadClients, loadProfile, loadPendingFollowUps, loadPortalActivity]);
-
-  const loadShareTokens = async () => {
-    try {
-      const { invoke } = await import('@tauri-apps/api/core');
-      const tokens = await invoke<ShareToken[]>('get_all_share_tokens');
-      const ids = new Set(tokens.filter(t => t.entity_type === 'proposal').map(t => t.entity_id));
-      setShareTokenIds(ids);
-    } catch { /* ignore */ }
-  };
+  }, [loadProposals, loadClients, loadProfile, loadPendingFollowUps, loadPortalActivity, addToast]);
 
   useEffect(() => {
     if (!exportDropdown) return;
