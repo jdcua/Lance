@@ -334,7 +334,7 @@ export default function ShareView() {
                   <button className="share-btn share-btn-primary" disabled={submitting || name.trim().length === 0} onClick={() => handleRespond('accepted')}>
                     {submitting ? 'Sending…' : 'Accept proposal'}
                   </button>
-                  <button className="share-btn share-btn-danger" disabled={submitting} onClick={() => handleRespond('declined')}>
+                  <button className="share-btn share-btn-danger" disabled={submitting || name.trim().length === 0} onClick={() => handleRespond('declined')}>
                     Decline
                   </button>
                 </div>

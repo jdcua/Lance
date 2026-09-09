@@ -56,6 +56,7 @@ export default function Invoices() {
   const [editing, setEditing] = useState<Invoice | null>(null);
   const [saving, setSaving] = useState(false);
   const [exportDropdown, setExportDropdown] = useState<string | null>(null);
+  const [feeConfirm, setFeeConfirm] = useState<string | null>(null);
   const [selectedTimeIds, setSelectedTimeIds] = useState<Set<string>>(new Set());
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'recurring'>('all');
@@ -115,6 +116,11 @@ export default function Invoices() {
   const handleAddLateFee = async (inv: Invoice) => {
     const fee = computeLateFee(inv.total, inv.due_date, lateFeePercent);
     if (fee.fee <= 0) return;
+    if (feeConfirm !== inv.id) {
+      setFeeConfirm(inv.id);
+      return;
+    }
+    setFeeConfirm(null);
     const item = {
       id: crypto.randomUUID(),
       description: `Late fee (${fee.periods} period${fee.periods === 1 ? '' : 's'} overdue, ${fee.percentPerPeriod}%/mo)`,
@@ -667,7 +673,7 @@ export default function Invoices() {
           <Card className="text-center py-16 flex flex-col items-center">
             <Receipt size={40} className="text-[var(--text-tertiary)] mb-4" />
             <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No invoices yet</h3>
-            <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Create your first invoice to get paid.</p>
+            <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Create your first invoice to start getting paid.</p>
             {clients.length === 0 ? (
               <div className="text-center">
                 <p className="text-xs text-[var(--warning-text)] mb-3">Add at least one client before creating an invoice.</p>
@@ -729,9 +735,9 @@ export default function Invoices() {
                                   handleAddLateFee(inv);
                                 }}
                                 className="text-[var(--accent)] hover:underline"
-                                title="Add the accrued late fee as a line item"
+                                title={feeConfirm === inv.id ? 'Click again to confirm adding the fee' : 'Add the accrued late fee as a line item'}
                               >
-                                Add to invoice
+                                {feeConfirm === inv.id ? 'Confirm add?' : 'Add to invoice'}
                               </button>
                             </>
                           );
@@ -765,7 +771,7 @@ export default function Invoices() {
                         return (
                           <div className="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-[var(--border-color)]/50">
                             <Bell size={10} className="text-[var(--accent)]" />
-                            <span className="text-[10px] text-[var(--accent)]">Follow-up ready · {daysElapsed}d overdue</span>
+                            <span className="text-[10px] text-[var(--accent)]">{daysElapsed > 0 ? `Follow-up ready · ${daysElapsed}d overdue` : 'Follow-up ready'}</span>
                             {!hasEmail && (
                               <span className="flex items-center gap-0.5 text-[10px] text-[var(--warning-text)]">
                                 <AlertTriangle size={9} /> No email

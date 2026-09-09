@@ -89,7 +89,7 @@ export default function SearchScreen() {
         label: c.name,
         sublabel: c.company ? `Company: ${c.company}` : 'Client',
         type: 'client',
-        path: '/clients',
+        path: `/clients?selected=${c.id}`,
       }));
 
     groups.proposal = proposals
@@ -225,7 +225,7 @@ export default function SearchScreen() {
           Search results for "<span className="text-[var(--accent)]">{query}</span>"
         </h2>
         <p className="text-sm text-[var(--text-secondary)]">
-          {totalResults} result{totalResults !== 1 ? 's' : ''} across {SECTIONS.filter((s) => (results[s.type]?.length || 0) > 0).length} categor{totalResults !== 1 ? 'ies' : 'y'}
+          {totalResults} result{totalResults !== 1 ? 's' : ''} across {(() => { const n = SECTIONS.filter((s) => (results[s.type]?.length || 0) > 0).length; return `${n} categor${n !== 1 ? 'ies' : 'y'}`; })()}
         </p>
       </div>
 

@@ -277,7 +277,7 @@ export default function FollowUps() {
         </div>
         {tab === 'pending' && pendingFiltered.length > 0 && (
           <Button size="sm" onClick={() => setBulkConfirm(true)}>
-            <Send size={12} className="mr-1" /> Send All ({pendingFiltered.filter((f) => f.clientEmail).length})
+            <Send size={12} className="mr-1" /> Draft All ({pendingFiltered.filter((f) => f.clientEmail).length})
           </Button>
         )}
       </div>
@@ -438,7 +438,7 @@ export default function FollowUps() {
       </div>
 
       {/* Bulk send confirmation */}
-      <Modal open={bulkConfirm} onClose={() => setBulkConfirm(false)} title="Send All Follow-ups" size="sm">
+      <Modal open={bulkConfirm} onClose={() => setBulkConfirm(false)} title="Draft All Follow-ups" size="sm">
         <div className="space-y-4">
           <p className="text-sm text-[var(--text-secondary)]">
             This will open{' '}

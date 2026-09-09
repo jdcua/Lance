@@ -119,6 +119,9 @@ export default function Proposals() {
         expires_at: expiry.expiresAt ?? undefined,
       });
       checkAndNotify(useStore.getState(), addToast);
+      // Sending completes via the share link: open it so the proposal
+      // actually reaches the client instead of only flipping status.
+      setShareModal({ entityType: 'proposal', entityId: p.id });
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to send', 'error');
     }
@@ -134,6 +137,7 @@ export default function Proposals() {
         expires_at: expiry.expiresAt ?? undefined,
       });
       addToast('Proposal resent', 'success');
+      setShareModal({ entityType: 'proposal', entityId: p.id });
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to resend', 'error');
     }
@@ -511,7 +515,7 @@ export default function Proposals() {
                   {p.status === 'sent' && (
                     <>
                       <button onClick={() => handleAccept(p)} aria-label="Accept proposal" className="p-1.5 rounded-[8px] text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors" title="Accept">
-                        <Send size={14} />
+                        <Check size={14} />
                       </button>
                       <button onClick={() => setShareModal({ entityType: 'proposal', entityId: p.id })} aria-label="Share proposal" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors" title="Share">
                         <Share2 size={14} />
@@ -587,8 +591,9 @@ export default function Proposals() {
                           </div>
                           <textarea
                             value={draft}
-                            onChange={() => {}}
+                            readOnly
                             rows={5}
+                            title="Draft preview · copy it to your mail app to edit and send"
                             className="w-full px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] resize-none leading-relaxed mb-2"
                           />
                           <div className="flex items-center gap-1.5">

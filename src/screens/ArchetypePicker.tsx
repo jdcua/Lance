@@ -60,6 +60,7 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
   const handleApply = async () => {
     const archetype = getArchetype(selected);
     if (!profile) {
+      addToast('Still loading your profile · try again in a moment', 'info');
       return;
     }
 

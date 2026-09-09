@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useStore } from '../store';
 import type { Attachment } from '../types';
 import Button from '../components/ui/Button';
@@ -48,6 +49,9 @@ export default function Assets() {
   const addToast = useToasts((s) => s.add);
 
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  // Deep-link highlight from search: /assets?highlight=<id>
+  const [searchParams] = useSearchParams();
+  const highlightedId = searchParams.get('highlight');
   const [searchQuery, setSearchQuery] = useState('');
   const [scope, setScope] = useState<SelectedScope>({ type: 'library', id: 'root' });
   const [dragOver, setDragOver] = useState(false);
@@ -109,6 +113,7 @@ export default function Assets() {
 
   const handleUpload = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
+    let ok = 0;
     for (const file of fileArray) {
       try {
         const filePath = await saveAssetFile(file);
@@ -121,13 +126,20 @@ export default function Assets() {
           size_bytes: file.size,
           tags: '[]',
         });
+        ok += 1;
       } catch {
         addToast(`Failed to upload ${file.name}`, 'error');
       }
     }
     await loadAllAttachments();
     await loadAssetStats();
-    addToast(`${fileArray.length} file${fileArray.length !== 1 ? 's' : ''} uploaded`, 'success');
+    if (ok === 0) {
+      addToast('No files uploaded', 'error');
+    } else if (ok < fileArray.length) {
+      addToast(`${ok} of ${fileArray.length} files uploaded`, 'info');
+    } else {
+      addToast(`${ok} file${ok !== 1 ? 's' : ''} uploaded`, 'success');
+    }
   }, [scope, saveAssetFile, addAttachment, loadAllAttachments, loadAssetStats, addToast]);
 
   const handleSearch = useCallback(async (q: string) => {
@@ -213,6 +225,7 @@ export default function Assets() {
             onClick={() => setPreviewAsset(asset)}
             onContextMenu={(e) => { e.preventDefault(); setContextMenu({ asset, x: e.clientX, y: e.clientY }); }}
             className={`group relative flex flex-col rounded-[12px] border overflow-hidden transition-all duration-150 hover:border-[var(--accent)]/40 hover:shadow-sm text-left ${
+              highlightedId === asset.id ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/40' :
               isUnclassified ? 'border-[var(--medium-conf-text)]/30 bg-[var(--medium-conf-bg)]/50' : 'border-[var(--border-color)] bg-[var(--bg-card)]'
             }`}
           >
@@ -229,7 +242,7 @@ export default function Assets() {
                   }}
                 />
               ) : null}
-              <Icon size={isImage(asset.mime_type) ? 0 : 32} className={`text-[var(--text-tertiary)] ${isImage(asset.mime_type) ? 'hidden' : ''}`} />
+              <Icon size={isImage(asset.mime_type) ? 32 : 32} className={`text-[var(--text-tertiary)] ${isImage(asset.mime_type) ? 'hidden' : ''}`} />
             </div>
             {/* Info */}
             <div className="p-2.5 space-y-0.5 min-w-0">
@@ -272,7 +285,7 @@ export default function Assets() {
           <div
             key={asset.id}
             onClick={() => setPreviewAsset(asset)}
-            className="grid grid-cols-[1fr_100px_120px_80px] items-center px-4 py-2.5 hover:bg-[var(--bg-secondary)]/50 cursor-pointer border-b border-[var(--border-color)] last:border-b-0 transition-colors"
+            className={`grid grid-cols-[1fr_100px_120px_80px] items-center px-4 py-2.5 hover:bg-[var(--bg-secondary)]/50 cursor-pointer border-b border-[var(--border-color)] last:border-b-0 transition-colors group ${highlightedId === asset.id ? 'bg-[var(--accent-bg)] ring-1 ring-inset ring-[var(--accent)]/40' : ''}`}
           >
             <div className="flex items-center gap-2.5 min-w-0">
               <Icon size={16} className="text-[var(--text-tertiary)] flex-shrink-0" />
@@ -451,7 +464,7 @@ export default function Assets() {
           Drop files here to add to <strong className="text-[var(--text-primary)]">{scopeLabel}</strong>
         </p>
         <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
-          Any file type supported · stored locally in ~/Documents/Lance/Assets/
+          Any file type supported · stored locally in your assets folder (see Settings for location)
         </p>
       </div>
 

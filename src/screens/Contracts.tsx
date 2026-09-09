@@ -145,15 +145,25 @@ export default function Contracts() {
       const client = clients.find((c) => c.id === form.client_id);
       const contactName = client?.email || client?.name || 'Client';
       const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      let currencySymbol = '$';
+      try {
+        const part = new Intl.NumberFormat('en-CA', { style: 'currency', currency: profile?.currency || 'CAD' }).formatToParts(0).find((p) => p.type === 'currency');
+        if (part?.value) currencySymbol = part.value;
+      } catch { /* fall back to $ */ }
       const filledBody = (form.body || '')
         .replace(/\{client_name\}/g, client?.name || 'Client')
         .replace(/\{client_contact\}/g, contactName)
         .replace(/\{date\}/g, today)
-        .replace(/\{freelancer_name\}/g, profile?.name || '');
+        .replace(/\{freelancer_name\}/g, profile?.name || '')
+        .replace(/\$\s(?=\{)/g, `${currencySymbol} `);
       if (editing) {
         await updateContract({ ...editing, ...form, title: title.slice(0, MAX_LENGTHS.title), body: filledBody });
       } else {
         await addContract({ ...form, title: title.slice(0, MAX_LENGTHS.title), body: filledBody, status: 'draft' });
+      }
+      const leftover = filledBody.match(/\{[a-z_]+\}/);
+      if (leftover) {
+        addToast(`Saved, but the contract still has an unfilled field (${leftover[0]}) · edit before sending`, 'info');
       }
       setShowModal(false);
       await checkAndNotify(useStore.getState(), addToast);
@@ -185,6 +195,8 @@ export default function Contracts() {
       tryUnlock('first_export', addToast);
     } else if (!client) {
       addToast('Contract has no client on file', 'error');
+    } else {
+      addToast('Complete your profile before exporting', 'info');
     }
     setExportDropdown(null);
   };
@@ -196,6 +208,8 @@ export default function Contracts() {
       tryUnlock('first_export', addToast);
     } else if (!client) {
       addToast('Contract has no client on file', 'error');
+    } else {
+      addToast('Complete your profile before exporting', 'info');
     }
     setExportDropdown(null);
   };

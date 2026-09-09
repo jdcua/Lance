@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useStore } from '../store';
 import type { Client, Communication, MetricDefinition } from '../types';
 import Button from '../components/ui/Button';
@@ -202,6 +203,13 @@ export default function Clients() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [phoneCountry, setPhoneCountry] = useState(detectCountry);
 
+  /** Persist the displayed dial code with the number (skip if already international). */
+  const normalizePhone = (raw: string, dialCode: string): string => {
+    const clean = sanitizeInput(raw).trim();
+    if (/^\+/.test(clean)) return clean;
+    return `${dialCode}${clean.replace(/^[0\s]+/, '')}`;
+  };
+
   useEffect(() => {
     Promise.all([loadClients(), loadProjects(), loadProposals(), loadInvoices(), loadProfile()])
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
@@ -213,6 +221,15 @@ export default function Clients() {
       setSelectedId(clients[0].id);
     }
   }, [clients, selectedId]);
+
+  // Deep links (search results) can pre-select a record: /clients?selected=<id>
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    const sel = searchParams.get('selected');
+    if (sel && clients.some((c) => c.id === sel)) {
+      setSelectedId(sel);
+    }
+  }, [searchParams, clients]);
 
   useEffect(() => {
     loadCommunications();
@@ -302,7 +319,7 @@ export default function Clients() {
       const sanitized = {
         name: sanitizedName.slice(0, MAX_LENGTHS.name),
         email: form.email ? sanitizeInput(form.email).slice(0, MAX_LENGTHS.email) : undefined,
-        phone: form.phone ? sanitizeInput(form.phone).slice(0, MAX_LENGTHS.phone) : undefined,
+        phone: form.phone ? normalizePhone(form.phone, selectedCountry.dialCode).slice(0, MAX_LENGTHS.phone) : undefined,
         company: form.company ? sanitizeInput(form.company).slice(0, MAX_LENGTHS.company) : undefined,
         notes: form.notes ? sanitizeInput(form.notes).slice(0, MAX_LENGTHS.notes) : undefined,
         preferred_currency: form.preferred_currency || undefined,

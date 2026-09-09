@@ -420,8 +420,8 @@ export default function Dashboard() {
                     <button onClick={async () => { await updateFollowUpStatus(fu.id, 'dismissed', 'dismissed'); }} className="p-1 rounded-[6px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)]" title="Dismiss"><X size={12} /></button>
                     <button onClick={async () => {
                       await navigator.clipboard.writeText(draft);
-                      await updateFollowUpStatus(fu.id, 'sent', 'sent');
-                      addToast('Copied to clipboard', 'success');
+                      await updateFollowUpStatus(fu.id, 'dismissed', 'dismissed');
+                      addToast('Copied to clipboard · dismissed from queue', 'success');
                     }} className="p-1 rounded-[6px] text-[var(--accent)] hover:bg-[var(--accent-bg)]" title="Copy & dismiss"><Send size={12} /></button>
                   </div>
                 </div>
@@ -514,7 +514,7 @@ function DashboardWidgets({ archetype, recentInvoices, recentTime, profile, proj
           <div className="text-center py-8">
             <Receipt size={32} className="text-[var(--text-tertiary)] mx-auto mb-2" />
             <p className="text-xs text-[var(--text-tertiary)]">No invoices yet.</p>
-            <Button onClick={() => navigate('/invoices')} size="sm" variant="secondary" className="mt-3">
+            <Button onClick={() => { navigate('/invoices'); setTimeout(() => document.dispatchEvent(new CustomEvent('lance:add-invoice')), 350); }} size="sm" variant="secondary" className="mt-3">
               <Plus size={12} /> New Invoice
             </Button>
           </div>
@@ -528,7 +528,7 @@ function DashboardWidgets({ archetype, recentInvoices, recentTime, profile, proj
                 </div>
                 <div className="text-right">
                   <p className={`text-xs font-medium ${inv.status === 'overdue' ? 'text-[var(--danger)]' : inv.status === 'paid' ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'}`}>
-                    {formatCurrency(inv.total, profile?.currency)}
+                    {formatCurrency(inv.total, inv.currency || profile?.currency)}
                   </p>
                   <p className="text-[10px] text-[var(--text-tertiary)] capitalize">{inv.status}</p>
                 </div>
@@ -548,7 +548,7 @@ function DashboardWidgets({ archetype, recentInvoices, recentTime, profile, proj
             <Clock size={32} className="text-[var(--text-tertiary)] mx-auto mb-2" />
             <p className="text-xs text-[var(--text-tertiary)]">No time tracked yet.</p>
             <Button onClick={() => navigate('/time')} size="sm" variant="secondary" className="mt-3">
-              <Play size={12} /> Start Timer
+              <Play size={12} /> Track Time
             </Button>
           </div>
         ) : (

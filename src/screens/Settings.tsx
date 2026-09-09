@@ -596,8 +596,14 @@ export default function Settings() {
       
       // Finally, delete the user profile itself
       await tauriInvoke('delete_user_profile');
-      
-      localStorage.clear();
+
+      // Scope to our own keys (never wipe unrelated storage).
+      const ownedKeys: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('lance:')) ownedKeys.push(k);
+      }
+      ownedKeys.forEach((k) => localStorage.removeItem(k));
       setShowResetModal(false);
       addToast('All data has been reset', 'info');
       
@@ -1364,7 +1370,7 @@ export default function Settings() {
                     <div className="border-t border-[var(--border-color)] pt-3 flex items-center justify-between">
                       <div>
                         <p className="text-sm text-[var(--text-primary)]">Assets folder</p>
-                        <p className="text-xs text-[var(--text-tertiary)]">Open attached files in your file manager</p>
+                        <p className="text-xs text-[var(--text-tertiary)]">Open attached files in your file manager{isTauriApp() ? '' : ' · desktop app only'}</p>
                       </div>
                       {isTauriApp() && (
                       <Button variant="secondary" onClick={async () => {
@@ -1384,7 +1390,7 @@ export default function Settings() {
                     <div className="border-t border-[var(--border-color)] pt-3 flex items-center justify-between">
                       <div>
                         <p className="text-sm text-[var(--text-primary)]">Imports folder</p>
-                        <p className="text-xs text-[var(--text-tertiary)]">Where imported source files are kept</p>
+                        <p className="text-xs text-[var(--text-tertiary)]">Where imported source files are kept{isTauriApp() ? '' : ' · desktop app only'}</p>
                       </div>
                       {isTauriApp() && (
                       <Button variant="secondary" onClick={async () => {

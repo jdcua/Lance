@@ -310,6 +310,7 @@ export default function TimeScreen() {
                     }}
                     className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     disabled={!!activeTimer}
+                    title={activeTimer ? 'Stop the running timer to change project' : 'Project'}
                   >
                     <option value="">Project...</option>
                     {projects.map((p) => (
