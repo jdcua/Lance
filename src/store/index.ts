@@ -365,7 +365,7 @@ export interface UnifiedStore {
   getActiveContracts: () => Contract[]
   getUpcomingFollowUps: (days?: number) => FollowUpLog[]
   getProjectMetrics: (projectId: string) => { totalTime: number; totalBillable: number; totalInvoiced: number; milestoneProgress: number }
-  getFinanceSummary: () => { revenue: number; expenses: number; outstanding: number; forecast: number; totalPaid: number }
+  getFinanceSummary: () => { paidFromPayments: number; totalExpenses: number; totalPaidRevenue: number; totalInvoiced: number; totalOutstanding: number; profit: number }
 
   // ── License / Trial / Grace ──
   initLicenseFlow: () => Promise<void>
@@ -1489,14 +1489,17 @@ export const useStore = create<UnifiedStore>((set, get) => {
       return { totalTime, totalBillable, totalInvoiced, milestoneProgress };
     },
     getFinanceSummary: () => {
-      const revenue = get().invoices.filter((i) => i.status === 'paid').reduce((s, i) => s + i.total, 0);
-      const expenses = get().expenses.reduce((s, e) => s + e.amount, 0);
-      const outstanding = get().invoices.filter((i) => i.status === 'sent' || i.status === 'overdue' || i.status === 'partial').reduce((s, i) => s + i.total, 0);
-      const totalPaid = get().payments.reduce((s, p) => s + p.amount, 0);
-      const paidInvoices = get().invoices.filter((i) => i.status === 'paid');
-      const avgPayment = paidInvoices.length > 0 ? paidInvoices.reduce((s, i) => s + i.total, 0) / paidInvoices.length : 0;
-      const forecast = outstanding + (avgPayment * 2);
-      return { revenue, expenses, outstanding, forecast, totalPaid };
+      // Canonical money summary. Mirrors the Finance screen exactly:
+      // actual payments win over invoice status, outstanding is what was
+      // billed minus what arrived, profit is arrivals minus expenses.
+      const paidFromPayments = get().payments.reduce((s, p) => s + p.amount, 0);
+      const totalExpenses = get().expenses.reduce((s, e) => s + e.amount, 0);
+      const totalPaid = get().invoices.filter((i) => i.status === 'paid').reduce((s, i) => s + i.total, 0);
+      const totalPaidRevenue = paidFromPayments > 0 ? paidFromPayments : totalPaid;
+      const totalInvoiced = get().invoices.filter((i) => i.status !== 'draft').reduce((s, i) => s + i.total, 0);
+      const totalOutstanding = totalInvoiced - totalPaidRevenue;
+      const profit = totalPaidRevenue - totalExpenses;
+      return { paidFromPayments, totalExpenses, totalPaidRevenue, totalInvoiced, totalOutstanding, profit };
     },
   };
 });

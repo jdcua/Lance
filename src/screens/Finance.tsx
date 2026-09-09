@@ -30,7 +30,7 @@ import { Plus, Pencil, Trash2, BarChart3, TrendingUp, AlertTriangle, Check, Doll
 const categories = ['Software', 'Equipment', 'Office', 'Travel', 'Marketing', 'Taxes', 'Other'];
 
 export default function Finance() {
-  const { expenses, loadExpenses, addExpense, updateExpense, removeExpense, invoices, loadInvoices, profile, recurringInvoices, loadRecurringInvoices, projects, loadProjects, milestones, loadMilestones, payments, loadAllPayments, addPayment, updateInvoice, clients, loadClients } = useStore();
+  const { expenses, loadExpenses, addExpense, updateExpense, removeExpense, invoices, loadInvoices, profile, recurringInvoices, loadRecurringInvoices, projects, loadProjects, milestones, loadMilestones, payments, loadAllPayments, addPayment, updateInvoice, clients, loadClients, getFinanceSummary } = useStore();
   const addToast = useToasts((s) => s.add);
   const currency = profile?.currency;
   const fmt = (amount: number) => formatCurrency(amount, currency);
@@ -110,13 +110,7 @@ export default function Finance() {
     }
   };
 
-  const paidFromPayments = Object.values(payments).flat().reduce((sum, p) => sum + p.amount, 0);
-  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const totalPaid = invoices.filter((i) => i.status === 'paid').reduce((sum, i) => sum + i.total, 0);
-  const totalPaidRevenue = paidFromPayments > 0 ? paidFromPayments : totalPaid;
-  const totalInvoiced = invoices.filter((i) => i.status !== 'draft').reduce((sum, i) => sum + i.total, 0);
-  const totalOutstanding = totalInvoiced - totalPaidRevenue;
-  const profit = totalPaidRevenue - totalExpenses;
+  const { paidFromPayments, totalExpenses, totalPaidRevenue, totalOutstanding, profit } = getFinanceSummary();
 
   const expensesByCategory = categories.map((cat) => {
     const total = expenses.filter((e) => e.category === cat).reduce((s, e) => s + e.amount, 0);
