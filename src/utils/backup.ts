@@ -149,9 +149,34 @@ const TABLE_ORDER = [
   'archetype_datasets',
   'import_log',
   'app_events',
+  'kanban_boards',
+  'kanban_columns',
+  'kanban_cards',
 ];
 
-const TABLE_INSERT_MAP: Record<string, { table: string; columns: string[] }> = {
+export const BACKUP_TABLES = TABLE_ORDER;
+
+/**
+ * Read every user table via the db layer (works in Tauri and browser).
+ * Missing tables yield []. share_tokens is browser-only (no SQLite table):
+ * included best-effort, skipped on restore (no mapping by design).
+ */
+export async function fetchBackupTables(): Promise<Record<string, unknown[]>> {
+  const { getDb } = await import('../db');
+  const db = await getDb();
+  const data: Record<string, unknown[]> = {};
+  for (const table of [...TABLE_ORDER, 'share_tokens']) {
+    try {
+      const rows = await db.select<Record<string, unknown>[]>(`SELECT * FROM ${table}`);
+      data[table] = Array.isArray(rows) ? rows : [];
+    } catch {
+      data[table] = [];
+    }
+  }
+  return data;
+}
+
+export const TABLE_INSERT_MAP: Record<string, { table: string; columns: string[] }> = {
   clients: {
     table: 'clients',
     columns: ['id', 'user_id', 'name', 'email', 'phone', 'company', 'notes', 'preferred_currency', 'seeded', 'created_at'],
@@ -275,6 +300,18 @@ const TABLE_INSERT_MAP: Record<string, { table: string; columns: string[] }> = {
   app_events: {
     table: 'app_events',
     columns: ['id', 'event_type', 'payload', 'created_at'],
+  },
+  kanban_boards: {
+    table: 'kanban_boards',
+    columns: ['id', 'project_id', 'name', 'created_at'],
+  },
+  kanban_columns: {
+    table: 'kanban_columns',
+    columns: ['id', 'board_id', 'name', 'color', 'sort_order', 'wip_limit', 'created_at'],
+  },
+  kanban_cards: {
+    table: 'kanban_cards',
+    columns: ['id', 'column_id', 'project_id', 'title', 'description', 'priority', 'hours_estimated', 'hours_actual', 'due_date', 'labels', 'assignee', 'sort_order', 'created_at'],
   },
 };
 
@@ -497,37 +534,7 @@ export async function runAutoBackup(): Promise<{ success: boolean; error?: strin
       }
     }
 
-    const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
-    const data: Record<string, unknown[]> = {};
-
-    const tables = [
-      'clients', 'projects', 'proposals', 'contracts',
-      'time_entries', 'invoices', 'expenses',
-    ] as const;
-
-    for (const table of tables) {
-      try {
-        const cmdMap: Record<string, string> = {
-          clients: 'get_clients',
-          projects: 'get_projects',
-          proposals: 'get_proposals',
-          contracts: 'get_contracts',
-          time_entries: 'get_time_entries',
-          invoices: 'get_invoices',
-          expenses: 'get_expenses',
-        };
-        data[table] = await tauriInvoke(cmdMap[table]);
-      } catch {
-        data[table] = [];
-      }
-    }
-
-    try {
-      const profile = await tauriInvoke<UserProfile | null>('get_user_profile');
-      data.user_profile = profile ? [profile] : [];
-    } catch {
-      data.user_profile = [];
-    }
+    const data: Record<string, unknown[]> = await fetchBackupTables();
 
     const { getVersion } = await import('@tauri-apps/api/app');
     const APP_VERSION = await getVersion();

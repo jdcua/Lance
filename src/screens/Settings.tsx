@@ -372,17 +372,8 @@ export default function Settings() {
 
   const doExportData = async () => {
     try {
-      const data: Record<string, unknown[]> = {};
-      // Wrapper resolves via localStorage in browser mode, Tauri IPC in app.
-      const { tauriInvoke, isTauri } = await import('../utils/tauri');
-      data.clients = await tauriInvoke('get_clients');
-      data.projects = await tauriInvoke('get_projects');
-      data.proposals = await tauriInvoke('get_proposals');
-      data.contracts = await tauriInvoke('get_contracts');
-      data.time_entries = await tauriInvoke('get_time_entries');
-      data.invoices = await tauriInvoke('get_invoices');
-      data.expenses = await tauriInvoke('get_expenses');
-      data.user_profile = profile ? [profile] : [];
+      const { fetchBackupTables } = await import('../utils/backup');
+      const data = await fetchBackupTables();
 
       const { getRuntimeVersion } = await import('../lib/version');
       const APP_VERSION = await getRuntimeVersion();
@@ -391,7 +382,7 @@ export default function Settings() {
 
       const json = JSON.stringify(envelope, null, 2);
       const filename = `Lance_Backup_${new Date().toISOString().split('T')[0]}.json`;
-      if (isTauri()) {
+      if (isTauriApp()) {
         const filePath = await save({ defaultPath: filename });
         if (!filePath) return;
         await writeFile(filePath, new TextEncoder().encode(json));
@@ -561,59 +552,42 @@ export default function Settings() {
 
   const handleResetData = async () => {
     try {
-      // Browser mode (no Tauri): clear all persisted local-storage keys directly.
-      const isTauri =
-        typeof window !== 'undefined' &&
-        typeof (window as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ === 'object';
-      if (!isTauri) {
-        const keys: string[] = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const k = localStorage.key(i);
-          if (k && k.startsWith('lance:')) keys.push(k);
+      // One wipe path for both modes: the db layer is real SQLite in the
+      // app and a localStorage mock in the browser. Children first
+      // (reverse import order); config tables are preserved.
+      const { getDb } = await import('../db');
+      const { BACKUP_TABLES } = await import('../utils/backup');
+      const db = await getDb();
+      await db.execute('BEGIN TRANSACTION');
+      try {
+        for (const table of [...BACKUP_TABLES].reverse()) {
+          try {
+            await db.execute(`DELETE FROM ${table}`);
+          } catch {
+            /* table may not exist yet */
+          }
         }
-        keys.forEach((k) => localStorage.removeItem(k));
-        setShowResetModal(false);
-        addToast('All data has been reset', 'info');
-        setTimeout(() => window.location.reload(), 500);
-        return;
-      }
-      const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
-      const tables = [
-        { list: 'get_clients', name: 'clients', del: 'delete_client' },
-        { list: 'get_projects', name: 'projects', del: 'delete_project' },
-        { list: 'get_proposals', name: 'proposals', del: 'delete_proposal' },
-        { list: 'get_contracts', name: 'contracts', del: 'delete_contract' },
-        { list: 'get_time_entries', name: 'time_entries', del: 'delete_time_entry' },
-        { list: 'get_invoices', name: 'invoices', del: 'delete_invoice' },
-        { list: 'get_expenses', name: 'expenses', del: 'delete_expense' },
-      ];
-      for (const t of tables) {
-        const records: { id: string }[] = await tauriInvoke(t.list);
-        for (const r of records) {
-          await tauriInvoke(t.del, { id: r.id });
+        try {
+          await db.execute('DELETE FROM share_tokens');
+        } catch {
+          /* browser-only table */
         }
+        await db.execute('COMMIT');
+      } catch {
+        try { await db.execute('ROLLBACK'); } catch { /* ignore */ }
+        throw new Error('Reset failed');
       }
-      
-      // Finally, delete the user profile itself
-      await tauriInvoke('delete_user_profile');
-
-      // Scope to our own keys (never wipe unrelated storage).
-      const ownedKeys: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith('lance:')) ownedKeys.push(k);
-      }
-      ownedKeys.forEach((k) => localStorage.removeItem(k));
+      // Browser-derived caches the tables do not cover.
+      try {
+        localStorage.removeItem('lance:store:pending_follow_ups');
+        localStorage.removeItem('lance:store:follow_up_logs');
+      } catch { /* private mode */ }
       setShowResetModal(false);
       addToast('All data has been reset', 'info');
-      
-      // Reload the application to force it back to the onboarding screen
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
+      setTimeout(() => window.location.reload(), 500);
     } catch {
       addToast('Reset failed', 'error');
-    } /* reset is best-effort; errors surface as toast */
+    }
   };
 
   const handleActivateLicense = async () => {
