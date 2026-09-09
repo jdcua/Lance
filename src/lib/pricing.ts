@@ -5,8 +5,8 @@
  */
 export const PRO_PRICES = {
   monthly: 14,
-  yearly: 120,
-  lifetime: 120,
+  yearly: 99,
+  lifetime: 249,
 } as const;
 
 export const TRIAL_DAYS = 30;

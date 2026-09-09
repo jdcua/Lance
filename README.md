@@ -57,12 +57,12 @@ Built by [Placeholder Labs Incorporated Limited](https://lance.cuajuandiego.work
 
 Lance core is **free forever**. No time limit, no client caps, no subscription, no cloud. Your data stays on your machine.
 
-**Lance Pro** ($120/yr recommended, or $14/mo) unlocks archetype depth:
+**Lance Pro** ($99/yr recommended, or $14/mo) unlocks archetype depth:
 - Archetype-specific proposals, contracts, invoices
 - Scope-creep protection (revision caps)
 - Advanced insights panels
 
-**Lance Lifetime** ($120 one-time): everything in Pro, forever, no subscription.
+**Lance Lifetime** ($249 one-time): everything in Pro, forever, no subscription.
 
 [Buy Pro / Lifetime](https://checkout.paddle.com/products/<REPLACE_WITH_ONETIME_PRICE_ID>)
 
