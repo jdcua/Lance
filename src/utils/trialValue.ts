@@ -3,9 +3,9 @@
  * is recorded locally (never leaves the machine). At purchase time the
  * upgrade modal shows the user their own number instead of a pitch.
  */
+import { PRO_PRICES } from '../lib/pricing';
 
 export type TrialValueKind = 'change-order' | 'late-fee' | 'topup';
-
 export interface TrialValueEvent {
   kind: TrialValueKind;
   amount: number;
@@ -84,7 +84,7 @@ export interface ProRoi {
  * Cost basis defaults to the $14/mo plan; pass the user's actual
  * equivalent (yearly ≈ $8.25/mo, lifetime amortized) when known.
  */
-export function computeProRoi(earned: number, monthlyCost = 14): ProRoi {
+export function computeProRoi(earned: number, monthlyCost: number = PRO_PRICES.monthly): ProRoi {
   if (!(earned > 0) || !(monthlyCost > 0)) {
     return { earned: Math.max(0, earned || 0), monthlyCost, multiple: null, monthsCovered: 0 };
   }

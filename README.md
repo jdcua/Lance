@@ -2,7 +2,7 @@
 
 Lance is a desktop app that runs your entire freelance business: clients, projects, proposals, contracts, time tracking, invoices, expenses, and financial insights, all in one place. Everything lives on your machine. No cloud, no subscription, no vendor lock-in. Built for freelancers who want to own their data and their tools.
 
-Built by [Placeholder Labs Incorporated Limited](https://github.com/jdcua).
+Built by [Placeholder Labs Incorporated Limited](https://lance.cuajuandiego.workers.dev).
 
 ## Why Lance, in plain words
 
@@ -57,7 +57,7 @@ Built by [Placeholder Labs Incorporated Limited](https://github.com/jdcua).
 
 Lance core is **free forever**. No time limit, no client caps, no subscription, no cloud. Your data stays on your machine.
 
-**Lance Pro** ($14/mo or $120/yr) unlocks archetype depth:
+**Lance Pro** ($120/yr recommended, or $14/mo) unlocks archetype depth:
 - Archetype-specific proposals, contracts, invoices
 - Scope-creep protection (revision caps)
 - Advanced insights panels

@@ -6,6 +6,7 @@ import { trialDaysRemaining } from '../lib/trial';
 import { getFeatureFlags } from '../lib/constants';
 import { resolveDunningTone } from '../utils/followUpTemplates';
 import { getCurrencySymbol } from '../lib/currency';
+import { PRO_PRICES } from '../lib/pricing';
 import { getTrialValue } from '../utils/trialValue';
 import { eventCounts, getTelemetryEvents, clearTelemetry } from '../utils/telemetry';
 import { downloadTextFile } from '../utils/taxPack';
@@ -741,8 +742,8 @@ export default function Settings() {
                         <Button variant="primary" onClick={() => { setLicenseKey(''); setLicenseError(''); setShowLicenseModal(true); }} size="sm">
                           Enter license key
                         </Button>
-                        <Button variant="secondary" onClick={() => { openCheckout('monthly').then((ok) => { if (!ok) addToast('Checkout is not configured in this build', 'info'); }); }} size="sm">
-                          Get a license ($14/mo)
+                        <Button variant="secondary" onClick={() => { openCheckout('yearly').then((ok) => { if (!ok) addToast('Checkout is not configured in this build', 'info'); }); }} size="sm">
+                          Get Pro (${PRO_PRICES.yearly}/yr)
                         </Button>
                       </div>
                     </div>

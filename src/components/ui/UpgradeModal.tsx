@@ -4,6 +4,7 @@ import { useStore } from '../../store';
 import { useToasts } from '../../store/toastStore';
 import { openCheckout } from '../../utils/tauri';
 import { getTrialValue, computeProRoi, type TrialValueSummary } from '../../utils/trialValue';
+import { PRO_PRICES } from '../../lib/pricing';
 import { recordTelemetry } from '../../utils/telemetry';
 import { formatCurrency } from '../../utils/format';
 import Button from '../ui/Button';
@@ -18,7 +19,7 @@ interface UpgradeModalProps {
 export default function UpgradeModal({ isOpen, onClose, triggerFeature }: UpgradeModalProps) {
   const { getActiveTier } = useStore();
   const addToast = useToasts((s) => s.add);
-  const [activeTab, setActiveTab] = useState<'monthly' | 'yearly' | 'onetime'>('monthly');
+  const [activeTab, setActiveTab] = useState<'monthly' | 'yearly' | 'onetime'>('yearly');
   const [loading, setLoading] = useState<string | null>(null);
   const [currentTier, setCurrentTier] = useState<LicenseTier>('free');
   const [checkoutNotice, setCheckoutNotice] = useState('');
@@ -87,30 +88,30 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
 
   const plans = [
     {
-      id: 'monthly' as const,
-      label: 'Monthly',
-      price: '$14',
-      period: '/mo',
-      description: 'Billed monthly. Cancel anytime.',
-      badge: 'Popular',
+      id: 'yearly' as const,
+      label: 'Yearly',
+      price: `$${PRO_PRICES.yearly}`,
+      period: '/yr',
+      description: 'Save 29% vs monthly. Cancel anytime.',
+      badge: 'Recommended',
       cta: 'Start 30-day free trial',
     },
     {
-      id: 'yearly' as const,
-      label: 'Yearly',
-      price: '$120',
-      period: '/yr',
-      description: 'Save 29% vs monthly. Cancel anytime.',
-      badge: 'Best value',
+      id: 'monthly' as const,
+      label: 'Monthly',
+      price: `$${PRO_PRICES.monthly}`,
+      period: '/mo',
+      description: 'Billed monthly. Cancel anytime.',
+      badge: '',
       cta: 'Start 30-day free trial',
     },
     {
       id: 'onetime' as const,
       label: 'Lifetime',
-      price: '$120',
+      price: `$${PRO_PRICES.lifetime}`,
       period: ' one-time',
       description: 'Pay once. Own Pro forever. All future updates.',
-      badge: 'Lifetime',
+      badge: '',
       cta: 'Buy lifetime license',
     },
   ];

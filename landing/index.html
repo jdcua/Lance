@@ -718,9 +718,9 @@ footer a:hover{color:var(--d-t1)}
         <svg class="pricing-border-svg" viewBox="0 0 440 420" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
           <rect class="pb-path" x="1" y="1" width="438" height="418" rx="17"/>
         </svg>
-        <div class="pricing-badge">Pro</div>
+        <div class="pricing-badge">Recommended</div>
         <div class="pricing-name">Lance Pro</div>
-        <div class="pricing-price"><span>$</span>14<span>/mo</span></div>
+        <div class="pricing-price"><span>$</span>120<span>/yr</span></div>
         <ul class="pricing-perks">
           <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Everything in Free</li>
           <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Archetype proposals, contracts, invoices</li>
@@ -733,13 +733,12 @@ footer a:hover{color:var(--d-t1)}
         <button class="btn btn-green btn-xl pricing-cta" onclick="window.location.href='#download'">
           Start 30-day free trial
         </button>
-        <p class="pricing-note">Billed monthly. Cancel anytime. 30 days free. Checkout opens after you download.</p>
+        <p class="pricing-note">Billed yearly. Monthly at $14/mo. Cancel anytime. 30 days free. Checkout opens after you download.</p>
       </div>
-      <div class="pricing-card reveal lifetime" id="lifetimeCard">
+      <div class="pricing-card reveal lifetime" id="lifetimeCard" style="opacity:.88">
         <svg class="pricing-border-svg" viewBox="0 0 440 420" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
           <rect class="pb-path" x="1" y="1" width="438" height="418" rx="17"/>
         </svg>
-        <div class="pricing-badge">Lifetime</div>
         <div class="pricing-name">Lance Lifetime</div>
         <div class="pricing-price"><span>$</span>120<span> one-time</span></div>
         <ul class="pricing-perks">
@@ -1489,7 +1488,12 @@ const priceObs = new IntersectionObserver(entries => {
   });
 }, { threshold: .3 });
 const pc = document.getElementById('pricingCard');
-if (pc) priceObs.observe(pc);
+if (pc) {
+  priceObs.observe(pc);
+} else {
+  // No wrapper id: trace each pricing card as it scrolls in.
+  document.querySelectorAll('#freeCard, #proCard, #lifetimeCard').forEach(c => priceObs.observe(c));
+}
 
 /* ══════════════════════════════════════════════════════
    DOWNLOAD: stagger + OS detect
@@ -1545,9 +1549,9 @@ if (dlGrid) dlObs.observe(dlGrid);
     const isWin = /Windows/i.test(ua);
     const heroBtn = document.getElementById('heroBtn');
     if (heroBtn) {
-      if (isMac && macAsset)       heroBtn.href = macAsset.browser_download_url;
-      else if (isWin && winAsset)  heroBtn.href = winAsset.browser_download_url;
-      else if (linuxAsset)         heroBtn.href = linuxAsset.browser_download_url;
+      if (isMac && macAsset)       { heroBtn.href = macAsset.browser_download_url; heroBtn.textContent = '↓ Download for Mac'; }
+      else if (isWin && winAsset)  { heroBtn.href = winAsset.browser_download_url; heroBtn.textContent = '↓ Download for Windows'; }
+      else if (linuxAsset)         { heroBtn.href = linuxAsset.browser_download_url; heroBtn.textContent = '↓ Download for Linux'; }
     }
 
     if (version) {

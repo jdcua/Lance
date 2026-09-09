@@ -5,6 +5,7 @@ import { useToasts } from '../../store/toastStore';
 import Button from '../ui/Button';
 import { getRuntimeVersion } from '../../lib/version';
 import { openCheckout } from '../../utils/tauri';
+import { PRO_PRICES } from '../../lib/pricing';
 
 interface SplashScreenProps {
   onDismiss: () => void;
@@ -105,7 +106,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
 
         <div className="flex items-center justify-center gap-3 mb-6">
           <Button variant="primary" onClick={handleTryPro} size="md">
-            Try Pro free for 30 days ($14/mo)
+            Try Pro free for 30 days
           </Button>
           <Button variant="secondary" onClick={onDismiss} size="md">
             Continue free
@@ -116,7 +117,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
           <p className="text-[11px] text-[var(--warning-text)] mb-3">{checkoutNotice}</p>
         )}
 
-        <p className="text-xs text-[var(--text-tertiary)]">Try free 30 days • $14/mo or $120/yr • Lifetime license available</p>
+        <p className="text-xs text-[var(--text-tertiary)]">{`Try free 30 days • $${PRO_PRICES.yearly}/yr or $${PRO_PRICES.monthly}/mo • Lifetime license available`}</p>
       </div>
     </div>
   );
