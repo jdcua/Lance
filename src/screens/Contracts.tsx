@@ -81,6 +81,7 @@ export default function Contracts() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string } | null>(null);
+  const [confirmTemplate, setConfirmTemplate] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [search, setSearch] = useState('');
   const [shareModal, setShareModal] = useState<{ entityType: 'contract'; entityId: string } | null>(null);
@@ -525,7 +526,7 @@ export default function Contracts() {
                       )}
                       {!isPrebuilt && (
                         <button
-                          onClick={() => handleDeleteTemplate(t.id)}
+                          onClick={() => setConfirmTemplate({ id: t.id, name: t.name })}
                           className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
                         >
                           <Trash2 size={14} />
@@ -612,6 +613,13 @@ export default function Contracts() {
         title="Delete Contract"
         message={`Are you sure you want to delete "${confirmDelete?.title}"? This cannot be undone.`}
         loading={deleting}
+      />
+      <ConfirmDialog
+        open={!!confirmTemplate}
+        onClose={() => setConfirmTemplate(null)}
+        onConfirm={async () => { if (confirmTemplate) { await handleDeleteTemplate(confirmTemplate.id); setConfirmTemplate(null); } }}
+        title="Delete Template"
+        message={`Are you sure you want to delete template "${confirmTemplate?.name}"? This cannot be undone.`}
       />
       {shareModal && (
         <ShareModal

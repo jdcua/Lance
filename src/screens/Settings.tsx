@@ -72,6 +72,7 @@ export default function Settings() {
   const [licenseActivating, setLicenseActivating] = useState(false);
   const [licenseSuccess, setLicenseSuccess] = useState(false);
   const [showRemoveLicenseConfirm, setShowRemoveLicenseConfirm] = useState(false);
+  const [showClearSampleConfirm, setShowClearSampleConfirm] = useState(false);
   const licenseInputRef = useRef<HTMLInputElement>(null);
   const [isSeeded, setIsSeeded] = useState(localStorage.getItem('lance:seeded') === 'true');
   const [showAssetWarning, setShowAssetWarning] = useState(false);
@@ -1354,7 +1355,7 @@ export default function Settings() {
                           <p className="text-sm text-[var(--text-primary)]">Clear sample data</p>
                           <p className="text-xs text-[var(--text-tertiary)]">Remove all records tagged as sample data</p>
                         </div>
-                        <Button variant="secondary" onClick={handleClearSampleData} size="sm">
+                        <Button variant="secondary" onClick={() => setShowClearSampleConfirm(true)} size="sm">
                           <Trash2 size={14} />
                           Clear
                         </Button>
@@ -1934,6 +1935,15 @@ export default function Settings() {
         confirmLabel="Remove license"
         variant="danger"
       />
+      <ConfirmDialog
+        open={showClearSampleConfirm}
+        onClose={() => setShowClearSampleConfirm(false)}
+        onConfirm={async () => { setShowClearSampleConfirm(false); await handleClearSampleData(); }}
+        title="Clear Sample Data"
+        message="Remove all records tagged as sample data and reload? This cannot be undone."
+        confirmLabel="Clear sample data"
+        variant="danger"
+      />
     </>
   );
 }
@@ -1967,6 +1977,7 @@ function ExportTemplatesSection() {
   const { exportTemplates, loadExportTemplates, addExportTemplate, updateExportTemplate, removeExportTemplate } = useStore();
   const addToast = useToasts((s) => s.add);
   const [loaded, setLoaded] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<ExportTemplate | null>(null);
   const [saving, setSaving] = useState(false);
@@ -2027,6 +2038,11 @@ function ExportTemplatesSection() {
   };
 
   const handleDelete = async (id: string) => {
+    if (deleteConfirm !== id) {
+      setDeleteConfirm(id);
+      return;
+    }
+    setDeleteConfirm(null);
     try {
       await removeExportTemplate(id);
       addToast('Template deleted', 'info');
@@ -2075,12 +2091,29 @@ function ExportTemplatesSection() {
                 >
                   Edit
                 </button>
+                {deleteConfirm === t.id ? (
+                  <>
+                    <button
+                      onClick={() => handleDelete(t.id)}
+                      className="px-2 py-1 text-[10px] text-white bg-[var(--danger)] rounded-[6px]"
+                    >
+                      Sure?
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm(null)}
+                      className="px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] rounded-[6px]"
+                    >
+                      No
+                    </button>
+                  </>
+                ) : (
                 <button
                   onClick={() => handleDelete(t.id)}
                   className="px-2 py-1 text-[10px] text-[var(--danger)] hover:bg-[var(--danger-bg)] rounded-[6px]"
                 >
                   Delete
                 </button>
+                )}
               </div>
             </div>
           ))}

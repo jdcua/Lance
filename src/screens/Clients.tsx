@@ -185,6 +185,7 @@ export default function Clients() {
   const [confirmDialog, setConfirmDialog] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [hoveredComm, setHoveredComm] = useState<string | null>(null);
+  const [metricDeleteConfirm, setMetricDeleteConfirm] = useState<string | null>(null);
   const [editingCommId, setEditingCommId] = useState<string | null>(null);
   const [editCommText, setEditCommText] = useState('');
   const [loading, setLoading] = useState(true);
@@ -839,20 +840,39 @@ export default function Clients() {
                             key={tpl.id}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] border border-[var(--border-color)] text-xs text-[var(--text-secondary)] hover:border-[var(--accent)]/30 hover:text-[var(--text-primary)] transition-colors bg-[var(--bg-secondary)]"
                           >
-                            <button
-                              onClick={() => handleApplyTemplate(tpl.name)}
-                              className="flex items-center gap-1.5"
-                            >
-                              <Copy size={12} />
-                              {tpl.name}
-                            </button>
-                            <button
-                              onClick={async () => { await removeMetricTemplate(tpl.id); }}
-                              aria-label={`Delete template ${tpl.name}`}
-                              className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"
-                            >
-                              <X size={12} />
-                            </button>
+                                <button
+                                  onClick={() => handleApplyTemplate(tpl.name)}
+                                  className="flex items-center gap-1.5"
+                                >
+                                  <Copy size={12} />
+                                  {tpl.name}
+                                </button>
+                                {metricDeleteConfirm === `tpl:${tpl.id}` ? (
+                                  <>
+                                    <button
+                                      onClick={async () => { await removeMetricTemplate(tpl.id); setMetricDeleteConfirm(null); }}
+                                      aria-label={`Confirm delete template ${tpl.name}`}
+                                      className="text-[var(--danger)] hover:text-[var(--danger-hover)]"
+                                    >
+                                      <Check size={12} />
+                                    </button>
+                                    <button
+                                      onClick={() => setMetricDeleteConfirm(null)}
+                                      aria-label="Cancel delete"
+                                      className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                                    >
+                                      <X size={12} />
+                                    </button>
+                                  </>
+                                ) : (
+                                <button
+                                  onClick={() => setMetricDeleteConfirm(`tpl:${tpl.id}`)}
+                                  aria-label={`Delete template ${tpl.name}`}
+                                  className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"
+                                >
+                                  <X size={12} />
+                                </button>
+                                )}
                           </span>
                         ))}
                       </div>
@@ -900,14 +920,31 @@ export default function Clients() {
                               >
                                 <Pencil size={12} />
                               </button>
+                              {metricDeleteConfirm === def.id ? (
+                                <>
+                                  <button
+                                    onClick={async () => { await removeMetricDef(def.id, selectedId); setMetricDeleteConfirm(null); }}
+                                    aria-label="Confirm delete metric"
+                                    className="p-1 rounded-[6px] text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
+                                  >
+                                    <Check size={12} />
+                                  </button>
+                                  <button
+                                    onClick={() => setMetricDeleteConfirm(null)}
+                                    aria-label="Cancel delete metric"
+                                    className="p-1 rounded-[6px] text-[var(--text-tertiary)] hover:bg-[var(--bg-secondary)] transition-colors"
+                                  >
+                                    <X size={12} />
+                                  </button>
+                                </>
+                              ) : (
                               <button
-                                onClick={async () => {
-                                  await removeMetricDef(def.id, selectedId);
-                                }}
+                                onClick={() => setMetricDeleteConfirm(def.id)}
                                 className="p-1 rounded-[6px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
                               >
                                 <Trash2 size={12} />
                               </button>
+                              )}
                             </div>
                           </div>
 
@@ -938,13 +975,32 @@ export default function Clients() {
                                 <span className="text-[var(--text-secondary)] tabular-nums">
                                   {v.value}{def.unit_label ? ` ${def.unit_label}` : ''} · <span className="text-[var(--text-tertiary)]">{v.period || relativeDate(v.created_at)}</span>
                                 </span>
+                                {metricDeleteConfirm === `val:${v.id}` ? (
+                                  <span className="flex items-center gap-1">
+                                    <button
+                                      onClick={async () => { await removeMetricValue(v.id, def.id); setMetricDeleteConfirm(null); }}
+                                      aria-label={`Confirm delete value ${v.value}`}
+                                      className="text-[var(--danger)] hover:text-[var(--danger-hover)]"
+                                    >
+                                      <Check size={12} />
+                                    </button>
+                                    <button
+                                      onClick={() => setMetricDeleteConfirm(null)}
+                                      aria-label="Cancel delete"
+                                      className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                                    >
+                                      <X size={12} />
+                                    </button>
+                                  </span>
+                                ) : (
                                 <button
-                                  onClick={async () => { await removeMetricValue(v.id, def.id); }}
+                                  onClick={() => setMetricDeleteConfirm(`val:${v.id}`)}
                                   aria-label={`Delete value ${v.value}`}
                                   className="text-[var(--text-tertiary)] hover:text-[var(--danger)] opacity-0 group-hover/val:opacity-100 transition-opacity"
                                 >
                                   <X size={12} />
                                 </button>
+                                )}
                               </div>
                             ))}
                           </div>

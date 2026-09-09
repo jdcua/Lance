@@ -35,6 +35,7 @@ export default function Projects() {
   const [pform, setPForm] = useState({ client_id: '', title: '', status: 'active', start_date: '', end_date: '', budget: '', notes: '' });
   const [mform, setMForm] = useState({ title: '', due_date: '', invoice_on_completion: false });
   const [invoicePrompt, setInvoicePrompt] = useState<{ milestone: Milestone; project: Project } | null>(null);
+  const [milestoneDeleteConfirm, setMilestoneDeleteConfirm] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('date');
@@ -311,6 +312,11 @@ export default function Projects() {
   };
 
   const handleDeleteMilestone = async (id: string) => {
+    if (milestoneDeleteConfirm !== id) {
+      setMilestoneDeleteConfirm(id);
+      return;
+    }
+    setMilestoneDeleteConfirm(null);
     try {
       await removeMilestone(id);
     } catch (err) {
@@ -528,8 +534,8 @@ export default function Projects() {
                               <button onClick={handleInvoicePromptNo} className="text-[10px] px-1.5 py-0.5 rounded-[6px] bg-[var(--bg-secondary)] text-[var(--text-secondary)] font-medium">Skip</button>
                             </div>
                           )}
-                          <button onClick={() => handleDeleteMilestone(m.id)} aria-label="Delete milestone" className="text-[var(--text-tertiary)] hover:text-[var(--danger)]">
-                            <Trash2 size={12} />
+                          <button onClick={() => handleDeleteMilestone(m.id)} aria-label={milestoneDeleteConfirm === m.id ? 'Confirm delete milestone' : 'Delete milestone'} title={milestoneDeleteConfirm === m.id ? 'Click again to confirm' : 'Delete milestone'} className={milestoneDeleteConfirm === m.id ? 'text-[var(--danger)] font-semibold text-[10px] px-1.5 py-0.5 rounded-[6px] bg-[var(--danger-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--danger)]'}>
+                            {milestoneDeleteConfirm === m.id ? 'Sure?' : <Trash2 size={12} />}
                           </button>
                         </div>
                       ))
