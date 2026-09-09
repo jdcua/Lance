@@ -919,7 +919,7 @@ export default function Clients() {
                               <Sparkline values={[...numericValues].reverse()} width={100} height={28} />
                               <div>
                                 <span className="text-sm font-semibold text-[var(--text-primary)]">
-                                  {def.metric_type === 'currency' ? `$${numericValues[0]?.toFixed(2) || '--'}` :
+                                  {def.metric_type === 'currency' ? (numericValues[0] != null ? formatCurrency(numericValues[0], profile?.currency) : '--') :
                                    def.metric_type === 'percentage' ? `${numericValues[0]?.toFixed(1) || '--'}%` :
                                    values[0]?.value || '--'}
                                 </span>

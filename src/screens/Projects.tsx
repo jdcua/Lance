@@ -100,6 +100,10 @@ export default function Projects() {
         budget: pform.budget ? parseFloat(pform.budget) : undefined,
         notes: pform.notes ? sanitizeInput(pform.notes).slice(0, MAX_LENGTHS.notes) : undefined,
       };
+      if (data.budget !== undefined && (!isFinite(data.budget) || data.budget < 0)) {
+        addToast('Budget must be a valid non-negative number', 'error');
+        return;
+      }
       if (editingProject) {
         await updateProject({ ...editingProject, ...data, status: data.status });
       } else {
@@ -245,6 +249,11 @@ export default function Projects() {
       const projectMilestones = milestones.filter((m) => m.project_id === project.id);
       const totalMs = projectMilestones.length || 1;
       const unitPrice = (project.budget || 0) / totalMs;
+      if (!(unitPrice > 0)) {
+        await updateMilestone({ ...milestone, completed: true });
+        addToast('Milestone completed · project has no budget, so no invoice was created', 'info');
+        return;
+      }
       await loadInvoices();
       const currentInvoices = useStore.getState().invoices;
       // Guard against duplicate invoices for the same milestone (e.g. when a

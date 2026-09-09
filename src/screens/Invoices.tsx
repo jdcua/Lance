@@ -576,6 +576,17 @@ export default function Invoices() {
 
   const totalOutstanding = invoices.filter(i => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').reduce((s, i) => s + i.total, 0);
   const totalPaid = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.total, 0);
+  const invCurrency = (i: { currency?: string }) => i.currency || profile?.currency || 'CAD';
+  const sumByCurrency = (list: { currency?: string; total: number }[]) => {
+    const by: Record<string, number> = {};
+    list.forEach((i) => { by[invCurrency(i)] = (by[invCurrency(i)] || 0) + i.total; });
+    return by;
+  };
+  const mixedCurrencies = new Set(invoices.filter((i) => i.status !== 'draft').map(invCurrency)).size > 1;
+  const moneyValue = (list: { currency?: string; total: number }[], single: number) =>
+    mixedCurrencies
+      ? Object.entries(sumByCurrency(list)).map(([cur, amt]) => `${formatCurrency(amt, cur)} ${cur}`).join(' · ')
+      : formatCurrency(single, invCurrency(list[0] || {}));
 
   const filteredInvoices = invoices.filter(inv => {
     if (!search) return true;
@@ -620,9 +631,9 @@ export default function Invoices() {
   return (
     <div className="p-6">
       <div className="grid grid-cols-3 gap-3 mb-6">
-        <MetricCard label="Outstanding" value={formatCurrency(totalOutstanding)} subtext={`${invoices.filter(i => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').length} invoices`} color="amber" />
-        <MetricCard label="Paid" value={formatCurrency(totalPaid)} subtext={`${invoices.filter(i => i.status === 'paid').length} invoices`} trend="up" color="green" />
-        <MetricCard label="Overdue" value={formatCurrency(invoices.filter(i => i.status === 'overdue').reduce((s, i) => s + i.total, 0))} subtext="needs attention" trend={invoices.filter(i => i.status === 'overdue').length > 0 ? 'down' : 'neutral'} color={invoices.filter(i => i.status === 'overdue').length > 0 ? 'red' : 'gray'} />
+        <MetricCard label="Outstanding" value={moneyValue(invoices.filter(i => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue'), totalOutstanding)} subtext={`${invoices.filter(i => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').length} invoices`} color="amber" />
+        <MetricCard label="Paid" value={moneyValue(invoices.filter(i => i.status === 'paid'), totalPaid)} subtext={`${invoices.filter(i => i.status === 'paid').length} invoices`} trend="up" color="green" />
+        <MetricCard label="Overdue" value={moneyValue(invoices.filter(i => i.status === 'overdue'), invoices.filter(i => i.status === 'overdue').reduce((s, i) => s + i.total, 0))} subtext="needs attention" trend={invoices.filter(i => i.status === 'overdue').length > 0 ? 'down' : 'neutral'} color={invoices.filter(i => i.status === 'overdue').length > 0 ? 'red' : 'gray'} />
       </div>
 
       {/* Tab bar + search + sort */}

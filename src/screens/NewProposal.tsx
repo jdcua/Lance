@@ -67,7 +67,7 @@ export default function NewProposal() {
         scope: form.scope,
         timeline: form.timeline,
         rate: form.rate ? parseFloat(form.rate) : 0,
-        rateType: (form.rate_type === 'hourly' || form.rate_type === 'per-shoot' || form.rate_type === 'per-session' || form.rate_type === 'per-track' || form.rate_type === 'per-word' || form.rate_type === 'per-track' || form.rate_type === 'per-look' || form.rate_type === 'per-event' || form.rate_type === 'per-commission' || form.rate_type === 'per-plan' || form.rate_type === 'per-closing' || form.rate_type === 'per-campaign' || form.rate_type === 'per-placement' || form.rate_type === 'per-project' || form.rate_type === 'per-track' || form.rate_type === 'milestone' || form.rate_type === 'retainer' || form.rate_type === 'commission-based') ? 'hourly' : 'flat',
+        rateType: form.rate_type === 'hourly' ? 'hourly' : 'flat',
         currency: profile?.currency || 'CAD',
         freelancerName: profile?.name || 'Freelancer',
         writingVoice: profile?.writing_style || profile?.writing_voice || 'professional',
@@ -84,9 +84,7 @@ export default function NewProposal() {
   };
 
   const handleRegenerate = () => {
-    setForm({ ...form, body: '' });
-    setWarnings([]);
-    setDismissedWarnings(new Set());
+    handleGenerate();
   };
 
   const dismissWarning = (pattern: string) => {
@@ -102,6 +100,11 @@ export default function NewProposal() {
 
   const handleSave = async (status: 'draft' | 'sent') => {
     if (!form.title.trim() || !form.client_id) return;
+    const rateNum = form.rate ? parseFloat(form.rate) : undefined;
+    if (form.rate && (rateNum === undefined || !isFinite(rateNum) || rateNum < 0)) {
+      addToast('Rate must be a valid non-negative number', 'error');
+      return;
+    }
     setSaving(true);
     try {
       const expiry = status === 'sent' ? computeExpiry() : { expiresAt: undefined };
@@ -111,8 +114,8 @@ export default function NewProposal() {
         status,
         scope: form.scope ? sanitizeInput(form.scope).slice(0, MAX_LENGTHS.description) : undefined,
         timeline: form.timeline ? sanitizeInput(form.timeline).slice(0, 200) : undefined,
-        rate: form.rate ? Math.max(0, parseFloat(form.rate)) : undefined,
-        rate_type: (form.rate_type === 'hourly' || form.rate_type === 'per-shoot' || form.rate_type === 'per-session' || form.rate_type === 'per-track' || form.rate_type === 'per-word' || form.rate_type === 'per-track' || form.rate_type === 'per-look' || form.rate_type === 'per-event' || form.rate_type === 'per-commission' || form.rate_type === 'per-plan' || form.rate_type === 'per-closing' || form.rate_type === 'per-campaign' || form.rate_type === 'per-placement' || form.rate_type === 'per-project' || form.rate_type === 'per-track' || form.rate_type === 'milestone' || form.rate_type === 'retainer' || form.rate_type === 'commission-based') ? 'hourly' : 'flat',
+        rate: rateNum !== undefined ? Math.max(0, rateNum) : undefined,
+        rate_type: form.rate_type === 'hourly' ? 'hourly' : 'flat',
         body: form.body,
         expires_at: expiry.expiresAt,
       });
@@ -129,7 +132,7 @@ export default function NewProposal() {
     ? (() => {
         const d = new Date();
         d.setDate(d.getDate() + profile.proposal_expiry_days);
-        return `This proposal will expire on ${formatDate(d.toISOString())}`;
+        return `This proposal will expire on ${formatDate(d.toISOString())} once sent (drafts do not expire)`;
       })()
     : null;
 

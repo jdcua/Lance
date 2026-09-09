@@ -55,6 +55,18 @@ export default function Insights() {
 
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const profitMargin = totalPaid > 0 ? Math.round(((totalPaid - totalExpenses) / totalPaid) * 100) : 0;
+  const invCur = (i: { currency?: string }) => i.currency || profile?.currency || 'CAD';
+  const mixedInvoiceCurrencies = new Set(invoices.filter((i) => i.status !== 'draft').map(invCur)).size > 1;
+  const moneyByCurrency = (list: { currency?: string; total: number }[]) => {
+    const by: Record<string, number> = {};
+    list.forEach((i) => { by[invCur(i)] = (by[invCur(i)] || 0) + i.total; });
+    return Object.entries(by).map(([cur, amt]) => `${formatCurrency(amt, cur)} ${cur}`).join(' · ');
+  };
+  const formatMetricCurrency = (v: string) => {
+    const n = parseFloat(v);
+    if (isNaN(n)) return v;
+    return formatCurrency(n, profile?.currency);
+  };
 
   // Client revenue ranking
   const clientRevenue: Record<string, { name: string; total: number; count: number }> = {};
@@ -115,10 +127,15 @@ export default function Insights() {
     <div className="p-6">
       <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-6">{archetype.insights.headline}</h2>
 
+      {mixedInvoiceCurrencies && (
+        <p className="text-[11px] text-[var(--text-tertiary)] mb-3">
+          Invoices span multiple currencies · totals are shown per currency, not converted.
+        </p>
+      )}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <MetricCard label="Active Projects" value={activeProjects} subtext={`${completedProjects} completed`} color="gray" />
-        <MetricCard label="Total Revenue" value={formatCurrency(totalPaid, profile?.currency)} subtext={`${invoices.filter((i) => i.status === 'paid').length} paid invoices`} trend="up" color="green" />
-        <MetricCard label="Outstanding" value={formatCurrency(totalOutstanding, profile?.currency)} subtext={overdueInvoices > 0 ? `${overdueInvoices} overdue` : 'all current'} trend={overdueInvoices > 0 ? 'down' : 'neutral'} color={overdueInvoices > 0 ? 'red' : 'amber'} />
+        <MetricCard label="Total Revenue" value={mixedInvoiceCurrencies ? moneyByCurrency(invoices.filter((i) => i.status === 'paid')) : formatCurrency(totalPaid, profile?.currency)} subtext={`${invoices.filter((i) => i.status === 'paid').length} paid invoices`} trend="up" color="green" />
+        <MetricCard label="Outstanding" value={mixedInvoiceCurrencies ? moneyByCurrency(invoices.filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue')) : formatCurrency(totalOutstanding, profile?.currency)} subtext={overdueInvoices > 0 ? `${overdueInvoices} overdue` : 'all current'} trend={overdueInvoices > 0 ? 'down' : 'neutral'} color={overdueInvoices > 0 ? 'red' : 'amber'} />
         <MetricCard label="Win Rate" value={`${winRate}%`} subtext={`${proposalsAccepted}/${proposalsResolved} resolved`} trend={winRate >= 50 ? 'up' : 'down'} color={winRate >= 50 ? 'green' : 'gray'} />
       </div>
 
@@ -313,14 +330,14 @@ export default function Insights() {
                           </td>
                           <td className="px-4 py-3 text-right font-medium text-[var(--text-primary)]">
                             {hm.latest_value
-                              ? hm.metric_type === 'currency' ? `$${formatMetricVal(hm.latest_value)}` :
+                              ? hm.metric_type === 'currency' ? formatMetricCurrency(hm.latest_value) :
                                 hm.metric_type === 'percentage' ? `${formatMetricVal(hm.latest_value)}%` :
                                 hm.latest_value
                               : '--'}
                           </td>
                           <td className="px-4 py-3 text-right text-[var(--text-tertiary)]">
                             {hm.previous_value
-                              ? hm.metric_type === 'currency' ? `$${formatMetricVal(hm.previous_value)}` :
+                              ? hm.metric_type === 'currency' ? formatMetricCurrency(hm.previous_value) :
                                 hm.metric_type === 'percentage' ? `${formatMetricVal(hm.previous_value)}%` :
                                 hm.previous_value
                               : '--'}

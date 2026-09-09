@@ -883,10 +883,21 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
 
   const handleRecordPayment = async () => {
     if (!paymentInvId || !paymentForm.amount) return;
+    const amount = parseFloat(paymentForm.amount);
+    const inv = invoices.find((i) => i.id === paymentInvId);
+    if (!isFinite(amount) || amount <= 0) {
+      addToast('Payment amount must be a positive number', 'error');
+      return;
+    }
+    if (inv) {
+      const alreadyPaid = (payments[paymentInvId] || []).reduce((s, p) => s + p.amount, 0);
+      if (amount > Math.max(0, inv.total - alreadyPaid) + 0.005) {
+        addToast(`Payment exceeds the remaining balance of ${fmt(inv.total - alreadyPaid)}`, 'error');
+        return;
+      }
+    }
     setPaymentSaving(true);
     try {
-      const amount = parseFloat(paymentForm.amount);
-      const inv = invoices.find((i) => i.id === paymentInvId);
       await addPayment({
         invoice_id: paymentInvId,
         amount,
