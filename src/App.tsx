@@ -94,7 +94,7 @@ export default function App() {
     };
     document.addEventListener('lance:open-upgrade', handler);
     return () => document.removeEventListener('lance:open-upgrade', handler);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   // Time entries are logged through the global quick-log modal (the Time

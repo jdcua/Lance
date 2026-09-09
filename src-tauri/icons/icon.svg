@@ -1,15 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <g stroke="#1EC98A" stroke-width="20" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="256" cy="256" r="180" fill="none" stroke-width="22"/>
-    <polygon points="256,60 220,200 292,200" fill="#1EC98A" stroke="none"/>
-    <polygon points="256,452 220,312 292,312" fill="none"/>
-    <polygon points="452,256 312,220 312,292" fill="#1EC98A" stroke="none"/>
-    <polygon points="60,256 200,220 200,292" fill="none"/>
-    <polygon points="312,200 256,60 200,200" fill="#1EC98A" opacity="0.25" stroke="none"/>
-    <polygon points="200,312 256,452 312,312" fill="#1EC98A" opacity="0.25" stroke="none"/>
-    <polygon points="200,200 60,256 200,312" fill="#1EC98A" opacity="0.25" stroke="none"/>
-    <polygon points="312,312 452,256 312,200" fill="#1EC98A" opacity="0.25" stroke="none"/>
-    <line x1="180" y1="180" x2="332" y2="332" stroke-width="16" fill="none"/>
-    <line x1="332" y1="180" x2="180" y2="332" stroke-width="16" fill="none"/>
+  <mask id="pierce">
+    <rect width="512" height="512" fill="#FFFFFF"/>
+    <path d="M252 290 L434 108" stroke="#000000" stroke-width="88" stroke-linecap="round"/>
+  </mask>
+  <rect x="32" y="32" width="448" height="448" rx="112" fill="#FFFFFF"/>
+  <rect x="32" y="32" width="448" height="448" rx="112" fill="none" stroke="#0B3B2A" stroke-width="14" opacity="0.25"/>
+  <g transform="translate(249,263.5) scale(0.92) translate(-271,-271)">
+    <g fill="none">
+      <circle cx="202" cy="340" r="110" stroke="#0E9F6E" stroke-width="30" opacity="0.35" mask="url(#pierce)"/>
+      <path d="M150 392 V252 h52 v88 h84 v52 Z" fill="#0B3B2A" stroke="none"/>
+      <path d="M436 106 L413 185 L357 129 Z" fill="#0E9F6E" stroke="none"/>
+      <path d="M252 290 L408 134" stroke="#0E9F6E" stroke-width="48" stroke-linecap="butt"/>
+    </g>
   </g>
 </svg>
