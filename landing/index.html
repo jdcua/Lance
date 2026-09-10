@@ -341,9 +341,8 @@ footer{background:var(--d-bg);border-top:1px solid var(--d-bd);padding:80px 32px
 #foot-strings{position:absolute;inset:0;pointer-events:none;z-index:0}
 .footer-inner{position:relative;z-index:1}
 .footer-logo-wrap{display:flex;justify-content:center;margin-bottom:40px}
-#footer-logo{width:100px;height:100px}
-#footer-logo path{stroke:var(--green);stroke-width:1.8;fill:none;stroke-dasharray:800;stroke-dashoffset:800;transition:stroke-dashoffset 1.6s cubic-bezier(.4,0,.2,1)}
-#footer-logo.drawn path{stroke-dashoffset:0}
+#footer-logo{width:100px;height:100px;opacity:0;transform:scale(.92);transition:opacity .8s ease,transform .8s cubic-bezier(.4,0,.2,1)}
+#footer-logo.drawn{opacity:1;transform:scale(1)}
 .footer-brand{display:inline-flex;align-items:center;gap:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:var(--d-t1);text-decoration:none;margin-bottom:14px}
 .footer-brand svg{color:var(--green)}
 footer p{font-size:13px;color:var(--d-t2);line-height:1.8}
@@ -385,7 +384,7 @@ footer a:hover{color:var(--d-t1)}
 <nav id="nav">
   <div class="nav-inner">
     <a href="#" class="nav-brand">
-      <svg class="icon-md brand-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="12 2 15 9 12 7.5 9 9 12 2"/><polyline points="12 22 9 15 12 16.5 15 15 12 22"/><polyline points="2 12 9 9 7.5 12 9 15 2 12"/><polyline points="22 12 15 15 16.5 12 15 9 22 12"/></svg>
+      <svg class="icon-md brand-arrow" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#FFFFFF"/><path d="M7 18 V9.5 h2.6 v5.9 h4.9 V18 Z" fill="#0B3B2A"/><path d="M18.6 6.4 L17 9.9 L15.1 8 Z" fill="#0E9F6E"/><path d="M12.1 12.9 L17.2 7.8" stroke="#0E9F6E" stroke-width="2.2" stroke-linecap="butt"/></svg>
       Lance
     </a>
     <ul class="nav-links" id="navLinks">
@@ -461,7 +460,7 @@ footer a:hover{color:var(--d-t1)}
       </div>
       <div class="hc-body">
         <div class="hc-sidebar">
-          <div class="hcs-brand"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="12 2 15 9 12 7.5 9 9 12 2"/><polyline points="12 22 9 15 12 16.5 15 15 12 22"/><polyline points="2 12 9 9 7.5 12 9 15 2 12"/><polyline points="22 12 15 15 16.5 12 15 9 22 12"/></svg>Lance</div>
+          <div class="hcs-brand"><svg width="12" height="12" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#FFFFFF"/><path d="M7 18 V9.5 h2.6 v5.9 h4.9 V18 Z" fill="#0B3B2A"/><path d="M18.6 6.4 L17 9.9 L15.1 8 Z" fill="#0E9F6E"/><path d="M12.1 12.9 L17.2 7.8" stroke="#0E9F6E" stroke-width="2.2" stroke-linecap="butt"/></svg>Lance</div>
           <div class="hcs-group">Win</div>
           <div class="hcs-item active" data-pane="proposals"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>Proposals</div>
           <div class="hcs-item" data-pane="contracts"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>Contracts</div>
@@ -589,7 +588,7 @@ footer a:hover{color:var(--d-t1)}
         </div>
         <div class="dm-body">
           <div class="dm-sidebar">
-            <div class="dm-brand"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="12 2 15 9 12 7.5 9 9 12 2"/><polyline points="12 22 9 15 12 16.5 15 15 12 22"/><polyline points="2 12 9 9 7.5 12 9 15 2 12"/><polyline points="22 12 15 15 16.5 12 15 9 22 12"/></svg>Lance</div>
+            <div class="dm-brand"><svg width="12" height="12" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#FFFFFF"/><path d="M7 18 V9.5 h2.6 v5.9 h4.9 V18 Z" fill="#0B3B2A"/><path d="M18.6 6.4 L17 9.9 L15.1 8 Z" fill="#0E9F6E"/><path d="M12.1 12.9 L17.2 7.8" stroke="#0E9F6E" stroke-width="2.2" stroke-linecap="butt"/></svg>Lance</div>
             <div class="dm-item on" id="dmNav0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>Proposals</div>
             <div class="dm-item" id="dmNav1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Time</div>
             <div class="dm-item" id="dmNav2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8h7"/><path d="M9 12h7"/><path d="M9 16h5"/></svg>Invoices</div>
@@ -825,12 +824,24 @@ footer a:hover{color:var(--d-t1)}
   </svg>
   <div class="footer-inner">
     <div class="footer-logo-wrap">
-      <svg id="footer-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <path d="M50 12 L50 88 M32 28 L50 12 L68 28 M32 72 L50 88 L68 72"/>
+      <svg id="footer-logo" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+        <mask id="footPierce">
+          <rect width="512" height="512" fill="#FFFFFF"/>
+          <path d="M252 290 L434 108" stroke="#000000" stroke-width="88" stroke-linecap="round"/>
+        </mask>
+        <rect x="32" y="32" width="448" height="448" rx="112" fill="#FFFFFF"/>
+        <g transform="translate(249,263.5) scale(0.92) translate(-271,-271)">
+          <g fill="none">
+            <circle cx="202" cy="340" r="110" stroke="#0E9F6E" stroke-width="30" opacity="0.35" mask="url(#footPierce)"/>
+            <path d="M150 392 V252 h52 v88 h84 v52 Z" fill="#0B3B2A" stroke="none"/>
+            <path d="M436 106 L413 185 L357 129 Z" fill="#0E9F6E" stroke="none"/>
+            <path d="M252 290 L408 134" stroke="#0E9F6E" stroke-width="48" stroke-linecap="butt"/>
+          </g>
+        </g>
       </svg>
     </div>
     <a href="#" class="footer-brand">
-      <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="12 2 15 9 12 7.5 9 9 12 2"/><polyline points="12 22 9 15 12 16.5 15 15 12 22"/><polyline points="2 12 9 9 7.5 12 9 15 2 12"/><polyline points="22 12 15 15 16.5 12 15 9 22 12"/></svg>
+      <svg class="icon-sm" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#FFFFFF"/><path d="M7 18 V9.5 h2.6 v5.9 h4.9 V18 Z" fill="#0B3B2A"/><path d="M18.6 6.4 L17 9.9 L15.1 8 Z" fill="#0E9F6E"/><path d="M12.1 12.9 L17.2 7.8" stroke="#0E9F6E" stroke-width="2.2" stroke-linecap="butt"/></svg>
       Lance
     </a>
     <p>Built by <a href="https://github.com/jdcua">Placeholder Labs Incorporated Limited</a></p>
