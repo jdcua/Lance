@@ -59,6 +59,7 @@ jobs:
           VITE_PADDLE_MONTHLY_PRICE_ID: ${{ secrets.PADDLE_MONTHLY_PRICE_ID }}
           VITE_PADDLE_YEARLY_PRICE_ID: ${{ secrets.PADDLE_YEARLY_PRICE_ID }}
           VITE_PADDLE_ONETIME_PRICE_ID: ${{ secrets.PADDLE_ONETIME_PRICE_ID }}
+          VITE_PADDLE_CHECKOUT_URL: ${{ secrets.PADDLE_CHECKOUT_URL }}
 
       - name: Collect artifacts
         shell: bash

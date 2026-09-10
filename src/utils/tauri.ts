@@ -761,25 +761,35 @@ const PADDLE_PRICE_IDS: Record<'monthly' | 'yearly' | 'onetime', string> = {
   onetime: (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_PADDLE_ONETIME_PRICE_ID || '',
 };
 
-const PADDLE_CHECKOUT_BASE = 'https://checkout.paddle.com/products/';
+// Hosted checkout launch URL, e.g. https://pay.paddle.io/checkout/hsc_...
+// Created once in Paddle > Checkout > Hosted checkout; the price id for the
+// chosen tier is appended as ?price_id=. Baked in at build time via
+// VITE_PADDLE_CHECKOUT_URL (GitHub Secret PADDLE_CHECKOUT_URL).
+const PADDLE_CHECKOUT_BASE =
+  (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_PADDLE_CHECKOUT_URL || '';
 
 export function isCheckoutConfigured(): boolean {
-  return PADDLE_PRICE_IDS.monthly.length > 0 && !PADDLE_PRICE_IDS.monthly.startsWith('<');
+  return (
+    PADDLE_CHECKOUT_BASE.length > 0 &&
+    PADDLE_PRICE_IDS.monthly.length > 0 &&
+    !PADDLE_PRICE_IDS.monthly.startsWith('<')
+  );
 }
 
 /**
- * Opens the Paddle checkout for the requested tier.
+ * Opens the Paddle hosted checkout for the requested tier.
  * Returns `true` if checkout was opened. Returns `false` (without alerting)
- * when the price IDs are not configured in this build · callers should show
- * a friendly message and keep the user on the pricing/upgrade UI.
+ * when the launch URL or price IDs are not configured in this build ·
+ * callers should show a friendly message and keep the user on the
+ * pricing/upgrade UI.
  */
 export async function openCheckout(tier: 'monthly' | 'yearly' | 'onetime'): Promise<boolean> {
   const priceId = PADDLE_PRICE_IDS[tier];
-  if (!priceId || priceId.startsWith('<')) {
-    console.warn('[paddle] Price ID not configured for', tier);
+  if (!PADDLE_CHECKOUT_BASE || !priceId || priceId.startsWith('<')) {
+    console.warn('[paddle] Checkout not configured for', tier);
     return false;
   }
-  const url = `${PADDLE_CHECKOUT_BASE}${priceId}`;
+  const url = `${PADDLE_CHECKOUT_BASE}?price_id=${priceId}`;
 
   if (isTauri()) {
     const { openUrl } = await import('@tauri-apps/plugin-opener');
