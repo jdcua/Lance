@@ -351,6 +351,16 @@ footer a{color:var(--d-t2);text-decoration:underline;text-underline-offset:2px;t
 footer a:hover{color:var(--d-t1)}
 .footer-links{display:flex;justify-content:center;gap:20px;margin-top:12px}
 .footer-copy{font-size:12px;color:var(--d-t3);margin-top:16px;font-family:'DM Mono',monospace}
+.footer-contact-title{font-size:15px;font-weight:700;color:var(--d-t1);margin:0 0 4px}
+.footer-contact-sub{font-size:13px;color:var(--d-t3);margin:0 0 14px}
+.footer-contact-form{display:flex;flex-direction:column;gap:8px;max-width:420px;margin:0 auto 28px;text-align:left}
+.footer-contact-form input,.footer-contact-form textarea{background:var(--d-s1);border:1px solid var(--d-bd);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--d-t1);font-family:'Inter',sans-serif;width:100%;box-sizing:border-box}
+.footer-contact-form input:focus,.footer-contact-form textarea:focus{outline:none;border-color:var(--green)}
+.footer-contact-form textarea{resize:vertical}
+.hp-trap{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
+.footer-contact-status{font-size:12px;min-height:16px;margin:0}
+.footer-contact-status.ok{color:var(--green)}
+.footer-contact-status.err{color:#e5484d}
 
 /* icon helpers */
 .icon-sm{width:16px;height:16px}.icon-md{width:20px;height:20px}.icon-lg{width:24px;height:24px}
@@ -794,6 +804,18 @@ footer a:hover{color:var(--d-t1)}
 
 <!-- Footer -->
 <footer>
+  <div class="footer-inner" id="contact">
+    <p class="footer-contact-title">Contact</p>
+    <p class="footer-contact-sub">Questions, refunds, or just saying hi. Replies land in a real inbox.</p>
+    <form id="contact-form" class="footer-contact-form" novalidate>
+      <input type="text" id="cf-name" name="name" placeholder="Your name" maxlength="100" autocomplete="name" required />
+      <input type="email" id="cf-email" name="email" placeholder="you@example.com" maxlength="200" autocomplete="email" required />
+      <textarea id="cf-message" name="message" placeholder="What's up?" rows="3" maxlength="2000" required></textarea>
+      <input type="text" id="cf-company" name="company_hp" class="hp-trap" tabindex="-1" autocomplete="off" aria-hidden="true" />
+      <button type="submit" id="cf-submit" class="btn btn-green">Send message</button>
+      <p id="cf-status" class="footer-contact-status" role="status"></p>
+    </form>
+  </div>
   <canvas id="footer-canvas"></canvas>
   <svg id="foot-strings" viewBox="0 0 1200 500" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
     <path id="fs0" fill="none" stroke="#1EC98A" stroke-width="0.8" opacity=".1"/>
@@ -816,6 +838,7 @@ footer a:hover{color:var(--d-t1)}
       <a href="https://github.com/jdcua/lance/blob/main/PRIVACY.md" target="_blank" rel="noopener">Privacy Policy</a>
       <a href="https://github.com/jdcua/lance/blob/main/LICENSE.md" target="_blank" rel="noopener">License Terms</a>
       <a href="https://github.com/jdcua/lance/blob/main/REFUNDS.md" target="_blank" rel="noopener">Refund Policy</a>
+      <a href="#contact">Contact</a>
       <a href="https://github.com/jdcua/Lance" target="_blank" rel="noopener">GitHub</a>
     </div>
     <p class="footer-copy">&copy; 2026 Placeholder Labs Incorporated Limited. Lance is free to use, with a proprietary license.<br>Your business data stays on your device.</p>
@@ -1650,6 +1673,48 @@ document.getElementById('hamburger').addEventListener('click', () => {
 document.querySelectorAll('.nav-links a').forEach(l => {
   l.addEventListener('click', () => document.getElementById('navLinks').classList.remove('open'));
 });
+
+/* ══════════════════════════════════════════════════════
+   CONTACT FORM → /api/contact (Resend)
+══════════════════════════════════════════════════════ */
+(function () {
+  const form = document.getElementById('contact-form');
+  if (!form) return;
+  const status = document.getElementById('cf-status');
+  const submit = document.getElementById('cf-submit');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('cf-name').value.trim();
+    const email = document.getElementById('cf-email').value.trim();
+    const message = document.getElementById('cf-message').value.trim();
+    const company_hp = document.getElementById('cf-company').value;
+    if (!name || !email || !message) {
+      status.textContent = 'Please fill in your name, email, and message.';
+      status.className = 'footer-contact-status err';
+      return;
+    }
+    submit.disabled = true;
+    submit.textContent = 'Sending…';
+    status.textContent = '';
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, message, company_hp }),
+      });
+      if (!res.ok) throw new Error();
+      status.textContent = 'Message sent. Talk soon.';
+      status.className = 'footer-contact-status ok';
+      form.reset();
+    } catch {
+      status.textContent = 'Could not send. Try again in a bit.';
+      status.className = 'footer-contact-status err';
+    } finally {
+      submit.disabled = false;
+      submit.textContent = 'Send message';
+    }
+  });
+})();
 
 /* ══════════════════════════════════════════════════════
    EASTER EGG: type LANCE
