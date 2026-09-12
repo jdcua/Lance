@@ -1,6 +1,6 @@
 # Lance License
 
-Copyright © 2026 Juan Diego Cua. All rights reserved.
+Copyright © 2026 Lance. All rights reserved.
 
 Lance is proprietary software. You may use it freely under the following terms:
 

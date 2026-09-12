@@ -2,7 +2,7 @@
 
 Lance is a desktop app that runs your entire freelance business: clients, projects, proposals, contracts, time tracking, invoices, expenses, and financial insights, all in one place. Everything lives on your machine. No cloud, no subscription, no vendor lock-in. Built for freelancers who want to own their data and their tools.
 
-Built by [Juan Diego Cua](https://lance.cuajuandiego.workers.dev).
+Built by [Lance freelancers](https://lance.cuajuandiego.workers.dev).
 
 ## Why Lance, in plain words
 
@@ -70,6 +70,6 @@ Lance core is **free forever**. No time limit, no client caps, no subscription, 
 
 Tauri · React · TypeScript · SQLite · Rust
 
-## From Juan Diego Cua
+## From Lance
 
 Juan Diego Cua builds decentralized software tools that run on your machine, not someone else's server. [placeholderlabsincorporatedlimited.yabbadabbadoo](https://placeholderlabsincorporatedlimited.yabbadabbadoo)
