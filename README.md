@@ -2,7 +2,7 @@
 
 Lance is a desktop app that runs your entire freelance business: clients, projects, proposals, contracts, time tracking, invoices, expenses, and financial insights, all in one place. Everything lives on your machine. No cloud, no subscription, no vendor lock-in. Built for freelancers who want to own their data and their tools.
 
-Built by [Placeholder Labs Incorporated Limited](https://lance.cuajuandiego.workers.dev).
+Built by [Juan Diego Cua](https://lance.cuajuandiego.workers.dev).
 
 ## Why Lance, in plain words
 
@@ -64,12 +64,12 @@ Lance core is **free forever**. No time limit, no client caps, no subscription, 
 
 **Lance Lifetime** ($249 one-time): everything in Pro, forever, no subscription.
 
-[Buy Pro / Lifetime](https://checkout.paddle.com/products/<REPLACE_WITH_ONETIME_PRICE_ID>)
+[Buy Pro / Lifetime](https://lance.cuajuandiego.workers.dev/#pricing) — checkout opens in the app after download.
 
 ## Built with
 
 Tauri · React · TypeScript · SQLite · Rust
 
-## From Placeholder Labs Incorporated Limited
+## From Juan Diego Cua
 
-Placeholder Labs Incorporated Limited builds decentralized software tools that run on your machine, not someone else's server. [placeholderlabsincorporatedlimited.yabbadabbadoo](https://placeholderlabsincorporatedlimited.yabbadabbadoo)
+Juan Diego Cua builds decentralized software tools that run on your machine, not someone else's server. [placeholderlabsincorporatedlimited.yabbadabbadoo](https://placeholderlabsincorporatedlimited.yabbadabbadoo)

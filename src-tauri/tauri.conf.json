@@ -23,7 +23,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.bunny.net; font-src 'self' https://fonts.bunny.net; img-src 'self' asset: data:; connect-src 'self' https://api.anthropic.com https://checkout.paddle.com https://*.paddle.com https://*.placeholderlabsincorporatedlimited.yabbadabbadoo; frame-ancestors 'none'"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.bunny.net; font-src 'self' https://fonts.bunny.net; img-src 'self' asset: data:; connect-src 'self' https://api.anthropic.com https://pay.paddle.io https://*.paddle.com https://*.placeholderlabsincorporatedlimited.yabbadabbadoo; frame-ancestors 'none'"
     }
   },
   "bundle": {

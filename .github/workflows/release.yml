@@ -54,6 +54,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ env.TAURI_SIGNING_PRIVATE_KEY_CLEAN }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           LANCE_LICENSE_SECRET: ${{ secrets.LANCE_LICENSE_SECRET }}
+          # License worker URL for online validation (GitHub Secret LANCE_LICENSE_WORKER_URL).
+          # Empty/missing falls back to the placeholder and only offline HMAC applies.
+          LANCE_LICENSE_WORKER_URL: ${{ secrets.LANCE_LICENSE_WORKER_URL }}
           # Paddle price IDs are baked in at build time (Vite). Without these,
           # every checkout button in the shipped app reports "not configured".
           VITE_PADDLE_MONTHLY_PRICE_ID: ${{ secrets.PADDLE_MONTHLY_PRICE_ID }}

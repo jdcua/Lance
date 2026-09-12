@@ -19,8 +19,8 @@ Go to `github.com/jdcua/lance` → Settings → Secrets and variables → Action
 | `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | the password you set in step 1 |
 | `LANCE_LICENSE_SECRET` | shared secret matching the license server (HMAC key validation) |
 | `PADDLE_MONTHLY_PRICE_ID` | Paddle price ID for the $14/mo plan |
-| `PADDLE_YEARLY_PRICE_ID` | Paddle price ID for the $120/yr plan |
-| `PADDLE_ONETIME_PRICE_ID` | Paddle price ID for the $120 lifetime plan |
+| `PADDLE_YEARLY_PRICE_ID` | Paddle price ID for the $99/yr plan |
+| `PADDLE_ONETIME_PRICE_ID` | Paddle price ID for the $249 lifetime plan |
 
 Without the three `PADDLE_*` secrets, release builds compile fine but every
 checkout button reports "not configured". Verify after release: open the

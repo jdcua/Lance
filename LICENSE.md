@@ -1,6 +1,6 @@
 # Lance License
 
-Copyright © 2026 Placeholder Labs Incorporated Limited. All rights reserved.
+Copyright © 2026 Juan Diego Cua. All rights reserved.
 
 Lance is proprietary software. You may use it freely under the following terms:
 

@@ -14,8 +14,9 @@ pub fn validate_license(key: String) -> Result<bool, String> {
 #[tauri::command]
 pub async fn validate_license_online(key: String) -> Result<OnlineValidationResult, String> {
     // Worker endpoint - will be configured via env var or config
+    // Empty string counts as unset (CI passes empty strings for missing secrets).
     let worker_url = option_env!("LANCE_LICENSE_WORKER_URL")
-        .or(Some("https://lance-license.your-subdomain.workers.dev"))
+        .filter(|url| !url.is_empty())
         .unwrap_or("https://lance-license.your-subdomain.workers.dev");
     
     let url = format!("{}/validate?key={}", worker_url, key);
