@@ -56,9 +56,84 @@ async function handleDownload(os, env) {
   return new Response(upstream.body, { status: 200, headers });
 }
 
+// Updater bundles mirror scripts/generate-latest-json.cjs. The worker
+// rebuilds latest.json on the fly so platform URLs point at the public
+// proxy instead of the private repo.
+const UPDATER_BUNDLES = [
+  { platforms: ['darwin-aarch64', 'darwin-x86_64'], suffix: '.app.tar.gz' },
+  { platforms: ['linux-x86_64'], suffix: '.AppImage' },
+  { platforms: ['windows-x86_64'], suffix: '-setup.exe' },
+];
+
+async function handleUpdatesLatest(request, env) {
+  if (!env.GITHUB_TOKEN) {
+    return Response.json({ error: 'server misconfigured' }, { status: 500 });
+  }
+  const release = await getLatestRelease(env);
+  if (!release) {
+    return Response.json({ error: 'upstream unavailable' }, { status: 502 });
+  }
+  const assets = release.assets || [];
+  const byName = new Map(assets.map((a) => [a.name, a]));
+  const origin = new URL(request.url).origin;
+  const platforms = {};
+  for (const { platforms: keys, suffix } of UPDATER_BUNDLES) {
+    const bundle = assets.find((a) => (a.name || '').endsWith(suffix));
+    const sig = bundle && byName.get(`${bundle.name}.sig`);
+    if (!bundle || !sig) continue;
+    const sigRes = await fetch(sig.url, { headers: githubHeaders(env, 'application/octet-stream') });
+    if (!sigRes.ok) continue;
+    const signature = (await sigRes.text()).trim();
+    if (!signature) continue;
+    const url = `${origin}/api/updates/download/${encodeURIComponent(bundle.name)}`;
+    for (const key of keys) platforms[key] = { url, signature };
+  }
+  if (Object.keys(platforms).length === 0) {
+    return Response.json({ error: 'no signed updater bundles yet' }, { status: 404 });
+  }
+  const version = String(release.tag_name || '').replace(/^v/, '');
+  const notes = String(release.body || 'Bug fixes and improvements').replace(/[\n\r]+/g, ' ').trim();
+  return Response.json(
+    { version, notes, pub_date: release.published_at || null, platforms },
+    { headers: { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=300, s-maxage=600' } },
+  );
+}
+
+async function handleUpdatesDownload(filename, env) {
+  if (!env.GITHUB_TOKEN) {
+    return Response.json({ error: 'server misconfigured' }, { status: 500 });
+  }
+  const name = decodeURIComponent(filename || '');
+  const release = await getLatestRelease(env);
+  // Exact-name match against the latest release only: no path traversal,
+  // no arbitrary-URL proxying.
+  const asset = (release && (release.assets || []).find((a) => a.name === name)) || null;
+  if (!asset) {
+    return Response.json({ error: 'asset not found' }, { status: 404 });
+  }
+  const upstream = await fetch(asset.url, { headers: githubHeaders(env, 'application/octet-stream') });
+  if (!upstream.ok || !upstream.body) {
+    return Response.json({ error: 'upstream unavailable' }, { status: 502 });
+  }
+  const headers = new Headers();
+  headers.set('Content-Type', asset.content_type || upstream.headers.get('Content-Type') || 'application/octet-stream');
+  headers.set('Content-Disposition', `attachment; filename="${asset.name}"`);
+  headers.set('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+  return new Response(upstream.body, { status: 200, headers });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    if (url.pathname === '/api/updates/latest.json') {
+      return handleUpdatesLatest(request, env);
+    }
+
+    if (url.pathname.startsWith('/api/updates/download/')) {
+      const filename = url.pathname.slice('/api/updates/download/'.length).split('/')[0];
+      return handleUpdatesDownload(filename, env);
+    }
 
     if (url.pathname.startsWith('/api/download/')) {
       const os = url.pathname.slice('/api/download/'.length).split('/')[0];
