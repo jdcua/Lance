@@ -814,6 +814,17 @@ footer a:hover{color:var(--d-t1)}
       <button type="submit" id="cf-submit" class="btn btn-green">Send message</button>
       <p id="cf-status" class="footer-contact-status" role="status"></p>
     </form>
+    <p class="footer-contact-title" style="margin-top:40px">Found a bug?</p>
+    <p class="footer-contact-sub">File it straight to the tracker. Include what you did, what you expected, and what happened.</p>
+    <form id="issue-form" class="footer-contact-form" novalidate>
+      <input type="text" id="ir-name" name="name" placeholder="Your name" maxlength="100" autocomplete="name" required />
+      <input type="email" id="ir-email" name="email" placeholder="you@example.com" maxlength="200" autocomplete="email" required />
+      <input type="text" id="ir-title" name="title" placeholder="Short summary (e.g. invoice PDF export is blank)" maxlength="120" required />
+      <textarea id="ir-details" name="details" placeholder="Steps to reproduce, expected vs actual, app version, macOS/Windows/Linux…" rows="4" maxlength="3000" required></textarea>
+      <input type="text" id="ir-company" name="company_hp" class="hp-trap" tabindex="-1" autocomplete="off" aria-hidden="true" />
+      <button type="submit" id="ir-submit" class="btn btn-green">Report issue</button>
+      <p id="ir-status" class="footer-contact-status" role="status"></p>
+    </form>
   </div>
   <canvas id="footer-canvas"></canvas>
   <svg id="foot-strings" viewBox="0 0 1200 500" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
@@ -1726,6 +1737,50 @@ document.querySelectorAll('.nav-links a').forEach(l => {
     } finally {
       submit.disabled = false;
       submit.textContent = 'Send message';
+    }
+  });
+})();
+
+/* ══════════════════════════════════════════════════════
+   ISSUE FORM → /api/issues (files a GitHub issue)
+══════════════════════════════════════════════════════ */
+(function () {
+  const form = document.getElementById('issue-form');
+  if (!form) return;
+  const status = document.getElementById('ir-status');
+  const submit = document.getElementById('ir-submit');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('ir-name').value.trim();
+    const email = document.getElementById('ir-email').value.trim();
+    const title = document.getElementById('ir-title').value.trim();
+    const details = document.getElementById('ir-details').value.trim();
+    const company_hp = document.getElementById('ir-company').value;
+    if (!name || !email || title.length < 5 || details.length < 10) {
+      status.textContent = 'Please add your name, email, a short summary, and a few details.';
+      status.className = 'footer-contact-status err';
+      return;
+    }
+    submit.disabled = true;
+    submit.textContent = 'Filing…';
+    status.textContent = '';
+    try {
+      const res = await fetch('/api/issues', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, title, details, company_hp }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || '');
+      status.textContent = 'Issue filed. Thanks for reporting it.';
+      status.className = 'footer-contact-status ok';
+      form.reset();
+    } catch (err) {
+      status.textContent = err.message || 'Could not file. Try again in a bit.';
+      status.className = 'footer-contact-status err';
+    } finally {
+      submit.disabled = false;
+      submit.textContent = 'Report issue';
     }
   });
 })();
