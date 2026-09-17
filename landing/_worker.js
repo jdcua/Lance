@@ -1,6 +1,69 @@
+const RELEASE_API = 'https://api.github.com/repos/jdcua/Lance/releases/latest';
+
+// The repo is private, so github.com download links 404 for the public.
+// The worker fetches with a server-side GITHUB_TOKEN and streams the
+// installer bytes back, keeping the code private while downloads stay public.
+const OS_ASSET_SUFFIX = {
+  mac: ['.dmg'],
+  win: ['-setup.exe', '.msi'],
+  linux: ['.AppImage'],
+};
+
+function githubHeaders(env, accept) {
+  return {
+    Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+    Accept: accept || 'application/vnd.github+json',
+    'User-Agent': 'Lance-Landing',
+  };
+}
+
+async function getLatestRelease(env) {
+  const res = await fetch(RELEASE_API, { headers: githubHeaders(env) });
+  if (!res.ok) return null;
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+function findAsset(release, os) {
+  const suffixes = OS_ASSET_SUFFIX[os];
+  if (!release || !suffixes) return null;
+  const assets = release.assets || [];
+  return assets.find((a) => suffixes.some((s) => (a.name || '').endsWith(s))) || null;
+}
+
+async function handleDownload(os, env) {
+  if (!OS_ASSET_SUFFIX[os]) {
+    return Response.json({ error: 'unknown platform' }, { status: 404 });
+  }
+  if (!env.GITHUB_TOKEN) {
+    return Response.json({ error: 'server misconfigured' }, { status: 500 });
+  }
+  const asset = findAsset(await getLatestRelease(env), os);
+  if (!asset) {
+    return Response.json({ error: 'no installer for this platform yet' }, { status: 404 });
+  }
+  const upstream = await fetch(asset.url, { headers: githubHeaders(env, 'application/octet-stream') });
+  if (!upstream.ok || !upstream.body) {
+    return Response.json({ error: 'upstream unavailable' }, { status: 502 });
+  }
+  const headers = new Headers();
+  headers.set('Content-Type', asset.content_type || upstream.headers.get('Content-Type') || 'application/octet-stream');
+  headers.set('Content-Disposition', `attachment; filename="${asset.name}"`);
+  headers.set('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+  return new Response(upstream.body, { status: 200, headers });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    if (url.pathname.startsWith('/api/download/')) {
+      const os = url.pathname.slice('/api/download/'.length).split('/')[0];
+      return handleDownload(os, env);
+    }
 
     if (url.pathname === '/api/contact' && request.method === 'POST') {
       const RESEND_API_KEY = env.RESEND_API_KEY;
@@ -55,16 +118,12 @@ export default {
       }
 
       try {
-        const res = await fetch('https://api.github.com/repos/jdcua/Lance/releases/latest', {
-          headers: {
-            Authorization: `Bearer ${GITHUB_TOKEN}`,
-            Accept: 'application/vnd.github+json',
-            'User-Agent': 'Lance-Landing',
-          },
-        });
-        const body = await res.text();
-        return new Response(body, {
-          status: res.status,
+        const release = await getLatestRelease(env);
+        if (!release) {
+          return Response.json({ error: 'upstream unavailable' }, { status: 502 });
+        }
+        return new Response(JSON.stringify(release), {
+          status: 200,
           headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',

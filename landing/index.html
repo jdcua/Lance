@@ -776,21 +776,21 @@ footer a:hover{color:var(--d-t1)}
   <h2 class="sec-title sec-title-d" style="margin-bottom:8px">Free to download. Free to use.</h2>
   <p class="download-sub"><span id="dlVer"></span> · macOS · Windows · Linux</p>
   <div class="dl-grid">
-    <a href="https://github.com/jdcua/lance/releases/latest" class="dl-btn" id="dl-mac">
+    <a href="/api/download/mac" class="dl-btn" id="dl-mac">
       <div class="dl-left">
         <svg class="dl-icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
         <div><div class="dl-name">Download for macOS</div><div class="dl-ver">Apple Silicon · macOS 11+</div></div>
       </div>
       <svg class="dl-arr icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
     </a>
-    <a href="https://github.com/jdcua/lance/releases/latest" class="dl-btn" id="dl-win">
+    <a href="/api/download/win" class="dl-btn" id="dl-win">
       <div class="dl-left">
         <svg class="dl-icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
         <div><div class="dl-name">Download for Windows</div><div class="dl-ver">64-bit installer · Windows 10+</div></div>
       </div>
       <svg class="dl-arr icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
     </a>
-    <a href="https://github.com/jdcua/lance/releases/latest" class="dl-btn" id="dl-linux">
+    <a href="/api/download/linux" class="dl-btn" id="dl-linux">
       <div class="dl-left">
         <svg class="dl-icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         <div><div class="dl-name">Download for Linux</div><div class="dl-ver">AppImage · Ubuntu 20.04+</div></div>
@@ -1563,30 +1563,33 @@ if (dlGrid) dlObs.observe(dlGrid);
 ══════════════════════════════════════════════════════ */
 (async function() {
   try {
-    // GitHub API works from any static host (CORS-enabled). Falls back to
-    // the releases page links above when offline or rate-limited.
-    const res = await fetch('https://api.github.com/jdcua/lance/releases/latest');
+    // Same-origin worker endpoint: the repo is private, so the page can't
+    // use the public GitHub API (it 404s). The worker serves release
+    // metadata with a server-side token. Buttons already point at
+    // /api/download/* which streams the installers, so they work even if
+    // this fetch fails.
+    const res = await fetch('/api/release');
     if (!res.ok) return;
     const release = await res.json();
     const assets = release.assets || [];
     const version = release.tag_name;
 
-    const winAsset   = assets.find(a => a.name.endsWith('-setup.exe'));
-    const macAsset   = assets.find(a => a.name.endsWith('.dmg'));
-    const linuxAsset = assets.find(a => a.name.endsWith('.AppImage'));
+    const winAsset   = assets.find(a => (a.name || '').endsWith('-setup.exe'));
+    const macAsset   = assets.find(a => (a.name || '').endsWith('.dmg'));
+    const linuxAsset = assets.find(a => (a.name || '').endsWith('.AppImage'));
 
-    if (winAsset)   { const b = document.getElementById('dl-win');   if (b) b.href = winAsset.browser_download_url; }
-    if (macAsset)   { const b = document.getElementById('dl-mac');   if (b) b.href = macAsset.browser_download_url; }
-    if (linuxAsset) { const b = document.getElementById('dl-linux'); if (b) b.href = linuxAsset.browser_download_url; }
+    if (winAsset)   { const b = document.getElementById('dl-win');   if (b) b.href = '/api/download/win'; }
+    if (macAsset)   { const b = document.getElementById('dl-mac');   if (b) b.href = '/api/download/mac'; }
+    if (linuxAsset) { const b = document.getElementById('dl-linux'); if (b) b.href = '/api/download/linux'; }
 
     const ua = navigator.userAgent || '';
     const isMac = /Mac|iPhone|iPad/i.test(ua) && !/Windows/i.test(ua);
     const isWin = /Windows/i.test(ua);
     const heroBtn = document.getElementById('heroBtn');
     if (heroBtn) {
-      if (isMac && macAsset)       { heroBtn.href = macAsset.browser_download_url; heroBtn.textContent = '↓ Download for Mac'; }
-      else if (isWin && winAsset)  { heroBtn.href = winAsset.browser_download_url; heroBtn.textContent = '↓ Download for Windows'; }
-      else if (linuxAsset)         { heroBtn.href = linuxAsset.browser_download_url; heroBtn.textContent = '↓ Download for Linux'; }
+      if (isMac && macAsset)       { heroBtn.href = '/api/download/mac'; heroBtn.textContent = '↓ Download for Mac'; }
+      else if (isWin && winAsset)  { heroBtn.href = '/api/download/win'; heroBtn.textContent = '↓ Download for Windows'; }
+      else if (linuxAsset)         { heroBtn.href = '/api/download/linux'; heroBtn.textContent = '↓ Download for Linux'; }
     }
 
     if (version) {
