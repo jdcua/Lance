@@ -1756,11 +1756,14 @@ document.querySelectorAll('.nav-links a').forEach(l => {
     const title = document.getElementById('ir-title').value.trim();
     const details = document.getElementById('ir-details').value.trim();
     const company_hp = document.getElementById('ir-company').value;
-    if (!name || !email || title.length < 5 || details.length < 10) {
-      status.textContent = 'Please add your name, email, a short summary, and a few details.';
+    const fail = (msg) => {
+      status.textContent = msg;
       status.className = 'footer-contact-status err';
-      return;
-    }
+    };
+    if (!name) return fail('Please add your name.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail('Please add a valid email so we can follow up.');
+    if (title.length < 5) return fail('The summary needs at least 5 characters.');
+    if (details.length < 10) return fail('Details need at least 10 characters — steps to reproduce help most.');
     submit.disabled = true;
     submit.textContent = 'Filing…';
     status.textContent = '';
