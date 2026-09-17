@@ -66,31 +66,40 @@ const UPDATER_BUNDLES = [
 ];
 
 async function handleUpdatesLatest(request, env) {
-  // Temporary local-release override merges with GitHub data: mac entries
-  // come from landing/downloads/manifest.json when present, win/linux still
-  // come from the latest GitHub release.
+  // Temporary local-release mode: when landing/downloads/manifest.json
+  // exists, serve ONLY what it provides. Unsigned builds offer no updater
+  // entries (mac users install via the download button); win/linux entries
+  // are omitted rather than mislabeled with a version they don't match.
+  // No manifest → full matrix from the latest GitHub release.
   const manifest = await getLocalManifest(request, env);
-  let release = null;
-  if (env.GITHUB_TOKEN) release = await getLatestRelease(env);
-  if (!release && !manifest?.mac) {
-    if (!env.GITHUB_TOKEN) {
-      return Response.json({ error: 'server misconfigured' }, { status: 500 });
+  const origin = new URL(request.url).origin;
+  if (manifest) {
+    const platforms = {};
+    const localMac = manifest.mac && manifest.mac.bundle && manifest.mac.bundleSignature;
+    if (localMac) {
+      const url = `${origin}/api/updates/download-local/${encodeURIComponent(manifest.mac.bundle)}`;
+      for (const key of UPDATER_BUNDLES[0].platforms) platforms[key] = { url, signature: manifest.mac.bundleSignature };
     }
+    if (Object.keys(platforms).length === 0) {
+      return Response.json({ error: 'no signed updater bundles yet' }, { status: 404 });
+    }
+    const notes = String(manifest.notes || 'Bug fixes and improvements').replace(/[\n\r]+/g, ' ').trim();
+    return Response.json(
+      { version: manifest.version, notes, pub_date: null, platforms },
+      { headers: { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=300, s-maxage=600' } },
+    );
+  }
+  if (!env.GITHUB_TOKEN) {
+    return Response.json({ error: 'server misconfigured' }, { status: 500 });
+  }
+  const release = await getLatestRelease(env);
+  if (!release) {
     return Response.json({ error: 'upstream unavailable' }, { status: 502 });
   }
-  const assets = (release && release.assets) || [];
+  const assets = release.assets || [];
   const byName = new Map(assets.map((a) => [a.name, a]));
-  const origin = new URL(request.url).origin;
   const platforms = {};
-
-  const localMac = manifest && manifest.mac && manifest.mac.bundle && manifest.mac.bundleSignature;
-  if (localMac) {
-    const url = `${origin}/api/updates/download-local/${encodeURIComponent(manifest.mac.bundle)}`;
-    for (const key of UPDATER_BUNDLES[0].platforms) platforms[key] = { url, signature: manifest.mac.bundleSignature };
-  }
-
   for (const { platforms: keys, suffix } of UPDATER_BUNDLES) {
-    if (localMac && suffix === UPDATER_BUNDLES[0].suffix) continue; // overridden above
     const bundle = assets.find((a) => (a.name || '').endsWith(suffix));
     const sig = bundle && byName.get(`${bundle.name}.sig`);
     if (!bundle || !sig) continue;
@@ -104,9 +113,8 @@ async function handleUpdatesLatest(request, env) {
   if (Object.keys(platforms).length === 0) {
     return Response.json({ error: 'no signed updater bundles yet' }, { status: 404 });
   }
-  const version = (manifest && manifest.version) || String((release && release.tag_name) || '').replace(/^v/, '');
-  const rawNotes = (manifest && manifest.notes) || (release && release.body) || 'Bug fixes and improvements';
-  const notes = String(rawNotes).replace(/[\n\r]+/g, ' ').trim();
+  const version = String(release.tag_name || '').replace(/^v/, '');
+  const notes = String(release.body || 'Bug fixes and improvements').replace(/[\n\r]+/g, ' ').trim();
   return Response.json(
     { version, notes, pub_date: release.published_at || null, platforms },
     { headers: { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=300, s-maxage=600' } },
@@ -341,6 +349,13 @@ export default {
         const release = await getLatestRelease(env);
         if (!release) {
           return Response.json({ error: 'upstream unavailable' }, { status: 502 });
+        }
+        // Temporary local-release mode: surface the local version/notes so
+        // the page label matches what mac users actually download.
+        const manifest = await getLocalManifest(request, env);
+        if (manifest) {
+          if (manifest.version) release.tag_name = `v${String(manifest.version).replace(/^v/, '')}`;
+          if (manifest.notes) release.body = manifest.notes;
         }
         return new Response(JSON.stringify(release), {
           status: 200,

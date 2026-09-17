@@ -39,11 +39,14 @@ if (tarballs.length === 0) {
 }
 const dmg = dmgs[0];
 const bundle = tarballs[0];
+// Signing needs TAURI_SIGNING_PRIVATE_KEY at build time. Without a .sig the
+// .dmg still ships via the download button, but there are no auto-update
+// entries for mac until a signed build is published.
 const sigPath = `${bundle}.sig`;
-if (!fs.existsSync(sigPath)) {
-  console.error(`Missing signature file: ${sigPath}`);
-  console.error('The updater needs it — build with TAURI_SIGNING_PRIVATE_KEY set.');
-  process.exit(1);
+const signed = fs.existsSync(sigPath);
+if (!signed) {
+  console.warn(`WARNING: no signature file at ${sigPath}`);
+  console.warn('The .dmg will be downloadable, but mac auto-update stays off for this release.');
 }
 
 const outDir = path.join(root, 'landing', 'downloads');
@@ -52,19 +55,16 @@ for (const file of [dmg, bundle]) {
   fs.copyFileSync(file, path.join(outDir, path.basename(file)));
 }
 
-const manifest = {
-  version,
-  notes,
-  mac: {
-    dmg: path.basename(dmg),
-    bundle: path.basename(bundle),
-    bundleSignature: fs.readFileSync(sigPath, 'utf8').trim(),
-  },
-};
+const mac = { dmg: path.basename(dmg) };
+if (signed) {
+  mac.bundle = path.basename(bundle);
+  mac.bundleSignature = fs.readFileSync(sigPath, 'utf8').trim();
+}
+const manifest = { version, notes, mac };
 fs.writeFileSync(path.join(outDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 
 console.log('Local release staged:');
 console.log(`  version: ${version}`);
-console.log(`  dmg:     ${manifest.mac.dmg}`);
-console.log(`  bundle:  ${manifest.mac.bundle}`);
+console.log(`  dmg:     ${mac.dmg}`);
+console.log(`  updater: ${signed ? `signed (${mac.bundle})` : 'OFF — unsigned build'}`);
 console.log('Next: git add landing/downloads && git commit -m "chore: publish local mac release" && git push');
