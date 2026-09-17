@@ -155,7 +155,8 @@ async function getLocalManifest(request, env) {
   const now = Date.now();
   if (manifestCache && now - manifestCache.at < 5 * 60 * 1000) return manifestCache.data;
   try {
-    const res = await env.ASSETS.fetch(new Request(new URL('/downloads/manifest.json', request.url)));
+    const assetUrl = new URL('/downloads/manifest.json', request.url).href;
+    const res = await env.ASSETS.fetch(assetUrl);
     if (!res.ok) {
       manifestCache = { at: now, data: null };
       return null;
