@@ -4,10 +4,10 @@
 Tauri 2 + React 18 + TypeScript + SQLite + Zustand + Tailwind
 
 ## What this is
-A freelancer OS. 42 archetypes. One unified brain underneath.
+A freelancer OS. 41 archetypes. One unified brain underneath.
 
 ## The law
-- The existing 32-table schema is the foundation. Extend it, don't replace it
+- The existing 37-table schema is the foundation. Extend it, don't replace it
 - One Zustand store, not 25 slices. One source of truth.
 - Features share data. Time feeds invoicing. Invoices feed forecasting.
   Forecasting feeds follow-ups. Nothing is a silo.
@@ -18,7 +18,7 @@ A freelancer OS. 42 archetypes. One unified brain underneath.
 
 ## Build order
 1. Lock the unified store shape first. Nothing else starts
-2. Wire all 32 tables through it
+2. Wire all 37 tables through it
 3. Refactor screens one by one against the store
 4. Archetype system stays config-driven. Improve the configs, not the pattern
 5. Playwright test per screen before moving to the next

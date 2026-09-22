@@ -1,4 +1,5 @@
 import { useEffect, useState, Suspense, useRef, useMemo } from 'react';
+import type { CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { recordTelemetry } from '../utils/telemetry';
@@ -197,6 +198,15 @@ export default function Dashboard() {
   const recentInvoices = [...invoices].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5);
   const recentTime = [...timeEntries].filter(t => t.duration_minutes).sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime()).slice(0, 5);
 
+  // Hero money stats: sorted by money at risk, computed from live data.
+  const UNPAID = ['sent', 'partial', 'overdue'];
+  const unpaidInvoices = invoices.filter((i) => UNPAID.includes(i.status));
+  const outstandingTotal = unpaidInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
+  const overdueCount = invoices.filter((i) => i.status === 'overdue').length;
+  const activeProjects = projects.filter((p) => p.status === 'active').length;
+  const draftProposals = proposals.filter((p) => p.status === 'draft').length;
+  const todayLabel = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+
   const hasData = clients.length > 0 || invoices.length > 0 || projects.length > 0;
   const effectiveArchetype = archetype || getArchetype('default');
 
@@ -253,15 +263,58 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-1">
-        {effectiveArchetype.dashboard.greeting}
-      </h2>
-      <p className="text-sm text-[var(--text-secondary)] mb-6">
-        {profile?.name?.trim()
-          ? `${effectiveArchetype.dashboard.subgreeting.replace('Your', `${profile.name.split(' ')[0]}'s`)}`
-          : effectiveArchetype.dashboard.subgreeting}
-      </p>
+    <div className="p-6 max-w-[1120px]">
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-6 animate-rise">
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.8px] text-[var(--text-tertiary)] mb-1.5">{todayLabel}</p>
+          <h2 className="text-[26px] leading-tight font-bold tracking-tight text-[var(--text-primary)]">
+            {effectiveArchetype.dashboard.greeting}
+          </h2>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
+            {profile?.name?.trim()
+              ? `${effectiveArchetype.dashboard.subgreeting.replace('Your', `${profile.name.split(' ')[0]}'s`)}`
+              : effectiveArchetype.dashboard.subgreeting}
+          </p>
+          {hasData && (
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              <span className="text-xs font-semibold tnum px-2.5 py-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
+                {formatCurrency(outstandingTotal, profile?.currency)} outstanding
+              </span>
+              {overdueCount > 0 && (
+                <span className="text-xs font-semibold tnum px-2.5 py-1 rounded-full bg-[var(--danger-bg)] text-[var(--danger)]">
+                  {overdueCount} overdue
+                </span>
+              )}
+              {activeProjects > 0 && (
+                <span className="text-xs font-medium tnum px-2.5 py-1 rounded-full bg-[var(--bg-secondary)] text-[var(--text-secondary)]">
+                  {activeProjects} active
+                </span>
+              )}
+              {draftProposals > 0 && (
+                <span className="text-xs font-medium tnum px-2.5 py-1 rounded-full bg-[var(--bg-secondary)] text-[var(--text-secondary)]">
+                  {draftProposals} drafts
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => document.dispatchEvent(new CustomEvent('lance:add-time'))}
+          >
+            <Clock size={13} /> Log time
+          </Button>
+          <Button
+            size="sm"
+            variant="primary"
+            onClick={() => { navigate('/invoices'); setTimeout(() => document.dispatchEvent(new CustomEvent('lance:add-invoice')), 350); }}
+          >
+            <Plus size={13} /> New invoice
+          </Button>
+        </div>
+      </div>
 
       {showChecklist && (
         <Card className="mb-6 border-[var(--accent)]/20 bg-[var(--accent-bg)]">
@@ -347,7 +400,7 @@ export default function Dashboard() {
         </Card>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6 animate-rise" style={{ '--d': '70ms' } as CSSProperties}>
         {effectiveArchetype.dashboard.metricCards.map((card) => (
           <MetricCard
             key={card.id}

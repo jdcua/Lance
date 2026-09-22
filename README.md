@@ -13,7 +13,7 @@ Built by [Lance freelancers](https://lance.cuajuandiego.workers.dev).
 
 ## What's inside
 
-**Pick your archetype.** Lance knows that a photographer, a developer, and a consultant run their businesses differently. Choose from 44 profession profiles and Lance customizes your sidebar, dashboard metrics, and insight panels to match how you work. You can switch anytime. Your data stays the same.
+**Pick your archetype.** Lance knows that a photographer, a developer, and a consultant run their businesses differently. Choose from 41 profession profiles and Lance customizes your sidebar, dashboard metrics, and insight panels to match how you work. You can switch anytime. Your data stays the same.
 
 **Clients.** A full CRM with contact details, communication history, custom metrics, and file attachments. Add headline KPIs per client (like MRR or follower count) and track them over time.
 

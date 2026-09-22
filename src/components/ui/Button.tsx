@@ -11,10 +11,10 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] active:bg-[var(--accent-active)]',
-  secondary: 'bg-[var(--bg-secondary)] text-[var(--text-primary)] border border-[var(--border-color)] hover:opacity-80',
-  ghost: 'bg-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]',
-  danger: 'bg-[var(--danger)] text-white hover:bg-[var(--danger-hover)]',
+  primary: 'bg-gradient-to-b from-[var(--accent)] to-[var(--accent-hover)] text-white shadow-[0_1px_2px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.22)] hover:brightness-[1.06] active:brightness-[0.96] active:scale-[0.98]',
+  secondary: 'bg-[var(--bg-card)] text-[var(--text-primary)] border border-[var(--border-color)] shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:border-[var(--text-tertiary)] active:scale-[0.98]',
+  ghost: 'bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] active:scale-[0.98]',
+  danger: 'bg-gradient-to-b from-[var(--danger)] to-[var(--danger-hover)] text-white shadow-[0_1px_2px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.18)] hover:brightness-[1.06] active:brightness-[0.96] active:scale-[0.98]',
 };
 
 const sizeClasses: Record<ButtonSize, string> = {

@@ -247,18 +247,18 @@ export default function Sidebar() {
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-3">
+      <nav className="flex-1 overflow-y-auto py-2 px-2">
         <NavLink
           to="/"
           end
           data-tour="nav-dashboard"
           className={({ isActive }) =>
-            `flex items-center gap-2.5 px-4 h-[36px] text-sm transition-colors mb-1 ${
+            `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors mb-1 ${
               !isExpanded ? 'justify-center px-0' : ''
             } ${
               isActive
-                ? 'border-l-[3px] border-[var(--accent)] text-[var(--accent)] font-medium pl-[13px] bg-[var(--accent-bg)]'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] border-l-[3px] border-transparent'
+                ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
             }`
           }
           style={{ fontFamily: "'Syne', sans-serif" }}
@@ -271,7 +271,7 @@ export default function Sidebar() {
         {sidebarItems.groups.map((group) => (
           <div key={group.label} className="mb-4">
             {isExpanded && (
-              <p className="px-4 mb-1 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.8px]" style={{ fontFamily: "'Syne', sans-serif" }}>
+              <p className="px-3 mb-1.5 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.8px]" style={{ fontFamily: "'Syne', sans-serif" }}>
                 {group.label}
               </p>
             )}
@@ -289,10 +289,10 @@ export default function Sidebar() {
                   to={item.path}
                   data-tour={`nav-${item.id}`}
                   className={({ isActive }) =>
-                    `flex items-center gap-2.5 px-4 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
+                    `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
                       isActive
-                        ? 'border-l-[3px] border-[var(--accent)] text-[var(--accent)] font-medium pl-[13px] bg-[var(--accent-bg)]'
-                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] border-l-[3px] border-transparent'
+                        ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px]'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
                     }`
                   }
                   style={{ fontFamily: "'Syne', sans-serif" }}
@@ -322,14 +322,14 @@ export default function Sidebar() {
         {/* Always-available items (progressively disclosed) */}
         <div className="mb-4">
           {isExpanded && (
-            <p className="px-4 mb-1 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.8px]" style={{ fontFamily: "'Syne', sans-serif" }}>
+            <p className="px-3 mb-1.5 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.8px]" style={{ fontFamily: "'Syne', sans-serif" }}>
               MORE
             </p>
           )}
           {showImport &&
           <button
             onClick={() => document.dispatchEvent(new CustomEvent('lance:open-import'))}
-            className={`w-full flex items-center gap-2.5 px-4 h-[36px] text-sm transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] border-l-[3px] border-transparent ${!isExpanded ? 'justify-center px-0' : ''}`}
+            className={`w-full flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px] ${!isExpanded ? 'justify-center px-0' : ''}`}
             style={{ fontFamily: "'Syne', sans-serif" }}
             title="Import"
           >
@@ -340,10 +340,10 @@ export default function Sidebar() {
           <NavLink
             to="/search"
             className={({ isActive }) =>
-              `flex items-center gap-2.5 px-4 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
+              `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
                 isActive
-                  ? 'border-l-[3px] border-[var(--accent)] text-[var(--accent)] font-medium pl-[13px] bg-[var(--accent-bg)]'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] border-l-[3px] border-transparent'
+                  ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px]'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
               }`
             }
             style={{ fontFamily: "'Syne', sans-serif" }}
@@ -356,10 +356,10 @@ export default function Sidebar() {
           <NavLink
             to="/follow-ups"
             className={({ isActive }) =>
-              `flex items-center gap-2.5 px-4 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
+              `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
                 isActive
-                  ? 'border-l-[3px] border-[var(--accent)] text-[var(--accent)] font-medium pl-[13px] bg-[var(--accent-bg)]'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] border-l-[3px] border-transparent'
+                  ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px]'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
               }`
             }
             style={{ fontFamily: "'Syne', sans-serif" }}
@@ -378,10 +378,10 @@ export default function Sidebar() {
           <NavLink
             to="/achievements"
             className={({ isActive }) =>
-              `flex items-center gap-2.5 px-4 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
+              `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
                 isActive
-                  ? 'border-l-[3px] border-[var(--accent)] text-[var(--accent)] font-medium pl-[13px] bg-[var(--accent-bg)]'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] border-l-[3px] border-transparent'
+                  ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px]'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
               }`
             }
             style={{ fontFamily: "'Syne', sans-serif" }}
@@ -395,10 +395,10 @@ export default function Sidebar() {
           <NavLink
             to="/archetype"
             className={({ isActive }) =>
-              `flex items-center gap-2.5 px-4 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
+              `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
                 isActive
-                  ? 'border-l-[3px] border-[var(--accent)] text-[var(--accent)] font-medium pl-[13px] bg-[var(--accent-bg)]'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] border-l-[3px] border-transparent'
+                  ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px]'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
               }`
             }
             style={{ fontFamily: "'Syne', sans-serif" }}
@@ -431,10 +431,10 @@ export default function Sidebar() {
         <NavLink
           to="/settings"
           className={({ isActive }) =>
-            `flex items-center gap-2.5 px-4 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
+            `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
               isActive
-                ? 'border-l-[3px] border-[var(--accent)] text-[var(--accent)] font-medium pl-[13px] bg-[var(--accent-bg)]'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] border-l-[3px] border-transparent'
+                ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
             }`
           }
           style={{ fontFamily: "'Syne', sans-serif" }}

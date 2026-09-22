@@ -11,624 +11,242 @@
 <link rel="canonical" href="https://lance.cuajuandiego.workers.dev/">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="preconnect" href="https://fonts.bunny.net">
-<link href="https://fonts.bunny.net/css?family=syne:400,600,700,800|inter:400,500|dm-mono:400,500" rel="stylesheet">
-<style>
-/* ── Reset ─────────────────────────────────── */
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{font-family:'Inter',sans-serif;background:var(--l-bg);color:var(--l-t1);-webkit-font-smoothing:antialiased;overflow-x:hidden}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-
-/* ── Tokens ─────────────────────────────────── */
-:root{
-  --green:#1EC98A;--green-h:#18B47C;--green-dim:rgba(30,201,138,.10);
-  --green-glow:0 0 48px rgba(30,201,138,.18);--green-rgb:30,201,138;
-  --d-bg:#111110;--d-s1:#1A1918;--d-s2:#222120;--d-bd:#2D2C2A;
-  --d-t1:#F0EFE8;--d-t2:#7C7B75;--d-t3:#3A3937;
-  --l-bg:#F8F7F3;--l-s1:#FFFFFF;--l-bd:#E3E2DB;--l-t1:#181716;--l-t2:#68675F;
-}
-body,nav,.feat-card,.why-card,.pricing-card,.btn,.hc-body,.hc-sidebar,
-.ms-body,.ms-sidebar,.ms-stat,.ms-proposal,.marquee-strip,
-.bento-card,footer{transition:background-color .4s ease,color .4s ease,border-color .4s ease}
-
-/* ── Cursor glow ─────────────────────────────────── */
-#cglow{width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(var(--green-rgb),.07) 0%,transparent 70%);position:fixed;pointer-events:none;z-index:1;transform:translate(-50%,-50%);top:-999px;left:-999px;transition:opacity .3s}
-
-/* ── Scroll bar ─────────────────────────────────── */
-#sbar{position:fixed;top:0;left:0;height:2px;width:0%;background:var(--green);z-index:200;box-shadow:0 0 8px rgba(var(--green-rgb),.6);transition:width .05s linear}
-
-/* ── Nav ─────────────────────────────────── */
-nav{position:sticky;top:0;z-index:100;background:var(--d-bg);border-bottom:1px solid var(--d-bd);transition:background .3s,border-color .3s,backdrop-filter .3s,box-shadow .3s}
-nav.scrolled{background:rgba(17,17,16,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 1px 0 rgba(var(--green-rgb),.12),0 8px 32px rgba(0,0,0,.4)}
-.nav-inner{max-width:1180px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:60px;padding:0 32px}
-.nav-brand{display:flex;align-items:center;gap:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:var(--d-t1);text-decoration:none;letter-spacing:-.2px}
-.brand-arrow{color:var(--green)}
-.nav-links{display:flex;align-items:center;gap:28px;list-style:none}
-.nav-links a{text-decoration:none;font-size:14px;color:var(--d-t2);transition:color .15s}
-.nav-links a:hover{color:var(--d-t1)}
-#sound-btn{background:none;border:1px solid var(--d-bd);border-radius:6px;padding:5px 8px;cursor:pointer;color:var(--d-t2);transition:all .2s;display:flex;align-items:center}
-#sound-btn:hover{color:var(--d-t1);border-color:var(--d-t2)}
-#sound-btn.on{color:var(--green);border-color:rgba(var(--green-rgb),.4)}
-.btn{padding:8px 18px;font-size:14px;border-radius:8px;font-weight:500;cursor:pointer;border:none;text-decoration:none;transition:all .15s;display:inline-flex;align-items:center;gap:6px;font-family:'Inter',sans-serif;letter-spacing:-.1px}
-.btn:active{transform:scale(.97)}
-.btn-green{background:var(--green);color:#08150E}
-.btn-green:hover{background:var(--green-h);box-shadow:0 0 20px rgba(var(--green-rgb),.3)}
-.btn-ghost{background:transparent;color:var(--d-t1);border:1px solid var(--d-bd)}
-.btn-ghost:hover{border-color:var(--d-t2);background:var(--d-s1)}
-.btn-xl{padding:14px 28px;font-size:15px;border-radius:10px;font-weight:600}
-.hamburger{display:none;background:none;border:none;cursor:pointer;color:var(--d-t1);padding:4px}
-@media(max-width:767px){
-  .nav-inner{padding:0 20px}
-  .nav-links{position:fixed;top:60px;left:0;right:0;background:var(--d-bg);border-bottom:1px solid var(--d-bd);flex-direction:column;padding:20px 24px;gap:16px;display:none;box-shadow:0 16px 40px rgba(0,0,0,.5)}
-  .nav-links.open{display:flex}
-  .hamburger{display:block}
-  .nav-links a{font-size:15px;color:var(--d-t1)}
-}
-
-/* ── Hero ─────────────────────────────────── */
-.hero{background:var(--d-bg);padding:80px 32px 100px;position:relative;overflow:hidden;min-height:100vh;display:flex;align-items:center}
-.hero-mesh{position:absolute;inset:0;pointer-events:none;z-index:0;will-change:transform}
-.hero-mesh svg{width:100%;height:120%;opacity:.055}
-.orb{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0}
-.orb-a{width:500px;height:500px;background:radial-gradient(circle,rgba(var(--green-rgb),.16) 0%,transparent 70%);top:-150px;left:-100px;animation:orb1 18s ease-in-out infinite}
-.orb-b{width:320px;height:320px;background:radial-gradient(circle,rgba(var(--green-rgb),.10) 0%,transparent 70%);bottom:-50px;right:80px;animation:orb2 22s ease-in-out infinite}
-.orb-c{width:180px;height:180px;background:radial-gradient(circle,rgba(var(--green-rgb),.08) 0%,transparent 70%);top:40%;left:45%;animation:orb3 14s ease-in-out infinite}
-@keyframes orb1{0%,100%{transform:translate(0,0)}33%{transform:translate(80px,60px)}66%{transform:translate(-40px,110px)}}
-@keyframes orb2{0%,100%{transform:translate(0,0)}50%{transform:translate(-120px,-80px)}}
-@keyframes orb3{0%,100%{transform:translate(-50%,-50%)}33%{transform:translate(-30%,-65%)}66%{transform:translate(-70%,-40%)}}
-.hero-noise{position:absolute;inset:0;opacity:.35;pointer-events:none;z-index:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E")}
-#hero-strings{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden}
-.hero-inner{max-width:1180px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr 420px;align-items:center;gap:64px;position:relative;z-index:2}
-@media(max-width:1023px){.hero-inner{grid-template-columns:1fr;gap:48px}}
-
-/* hero text */
-.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--d-s1);border:1px solid var(--d-bd);border-radius:6px;padding:5px 12px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.4px;color:var(--green);margin-bottom:28px;opacity:0;transform:translateY(12px);animation:slideup .6s ease 1.5s forwards}
-.hero-eyebrow-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;animation:blink 2.4s ease-in-out infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-@keyframes slideup{to{opacity:1;transform:translateY(0)}}
-.hero-hl{font-family:'Syne',sans-serif;font-size:clamp(48px,6.5vw,84px);font-weight:800;line-height:1.0;letter-spacing:-2px;margin-bottom:28px}
-.hl-line{display:block;overflow:hidden;position:relative}
-.hl-inner{display:block;transform:translateY(105%);animation:linerev .75s cubic-bezier(.4,0,.2,1) forwards}
-.hl-line:nth-child(1) .hl-inner{color:var(--d-t1);animation-delay:1.6s}
-.hl-line:nth-child(2) .hl-inner{color:var(--d-t2);animation-delay:1.75s}
-.hl-line:nth-child(3) .hl-inner{color:var(--green);animation-delay:1.9s}
-@keyframes linerev{to{transform:translateY(0)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.hero-sub{font-size:18px;line-height:1.75;color:var(--d-t2);max-width:440px;margin-bottom:36px;opacity:0;transform:translateY(12px);animation:slideup .6s ease 2.05s forwards}
-.hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;align-items:center;opacity:0;transform:translateY(12px);animation:slideup .6s ease 2.2s forwards}
-.hero-trust{display:flex;gap:20px;flex-wrap:wrap;font-family:'DM Mono',monospace;font-size:11px;color:var(--d-t3);opacity:0;animation:slideup .6s ease 2.35s forwards}
-.trust-item{display:flex;align-items:center;gap:7px}
-.trust-dot{width:4px;height:4px;border-radius:50%;background:var(--green);flex-shrink:0}
-
-/* hero card */
-.hero-card{background:var(--d-s1);border:1px solid var(--d-bd);border-radius:14px;box-shadow:0 28px 80px rgba(0,0,0,.45),var(--green-glow);overflow:hidden;opacity:0;transform:perspective(1000px) rotateX(6deg) rotateY(-4deg) translateY(24px);animation:cardapp .9s cubic-bezier(.4,0,.2,1) 2s forwards;will-change:transform}
-@keyframes cardapp{to{opacity:1;transform:perspective(1000px) rotateX(2deg) rotateY(-1deg) translateY(0)}}
-@media(max-width:1023px){.hero-card{display:none}}
-.hc-chrome{height:36px;background:var(--d-s2);border-bottom:1px solid var(--d-bd);display:flex;align-items:center;padding:0 12px;gap:6px}
-.hc-dot{width:10px;height:10px;border-radius:50%}
-.hc-r{background:#FF5F57}.hc-y{background:#FEBC2E}.hc-g{background:#28C840}
-.hc-title{flex:1;text-align:center;font-family:'DM Mono',monospace;font-size:11px;color:var(--d-t3)}
-.hc-body{display:flex;height:340px}
-.hc-sidebar{width:144px;border-right:1px solid var(--d-bd);padding:12px 0;background:var(--d-bg);flex-shrink:0}
-.hcs-brand{display:flex;align-items:center;gap:7px;padding:0 12px 12px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--d-t1);border-bottom:1px solid var(--d-bd);margin-bottom:10px}
-.hcs-brand svg{color:var(--green)}
-.hcs-group{font-size:9px;color:var(--d-t3);text-transform:uppercase;letter-spacing:.8px;font-family:'DM Mono',monospace;padding:0 12px;margin:10px 0 3px}
-.hcs-item{display:flex;align-items:center;gap:7px;padding:7px 12px;font-size:11px;color:var(--d-t2);cursor:pointer;transition:background .15s,color .15s}
-.hcs-item:hover{background:var(--d-s1);color:var(--d-t1)}
-.hcs-item svg{color:var(--d-t3);flex-shrink:0}
-.hcs-item.active{color:var(--green);background:var(--green-dim);border-left:2px solid var(--green)}
-.hcs-item.active svg{color:var(--green)}
-.hc-main{flex:1;display:flex;flex-direction:column;min-width:0}
-.hc-topbar{height:36px;border-bottom:1px solid var(--d-bd);display:flex;align-items:center;padding:0 12px;justify-content:space-between;flex-shrink:0}
-.hc-topbar-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--d-t1)}
-.hc-badge{font-size:9px;padding:2px 7px;border-radius:4px;background:var(--green-dim);color:var(--green);font-family:'DM Mono',monospace}
-.hc-content{padding:10px;display:flex;flex-direction:column;gap:7px;flex:1;overflow:hidden}
-.hc-pane{display:none!important}
-.hc-pane.active{display:flex!important;flex-direction:column;gap:7px;animation:panein .35s ease}
-@keyframes panein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.hc-stats{display:flex;gap:6px}
-.hc-stat{flex:1;background:var(--d-s2);border:1px solid var(--d-bd);border-radius:8px;padding:9px 8px;text-align:center}
-.hc-stat-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--d-t1);line-height:1}
-.hc-stat-val.g{color:var(--green)}
-.hc-stat-lbl{font-size:8px;color:var(--d-t2);margin-top:3px;font-family:'DM Mono',monospace}
-.hc-card{background:var(--d-s2);border:1px solid var(--d-bd);border-radius:8px;padding:9px 10px;display:flex;align-items:center;justify-content:space-between;transition:border-color .15s}
-.hc-card:hover{border-color:rgba(var(--green-rgb),.3)}
-.hc-card-name{font-size:11px;font-weight:600;color:var(--d-t1);font-family:'Syne',sans-serif}
-.hc-card-meta{font-size:9px;color:var(--d-t2);margin-top:2px;font-family:'DM Mono',monospace}
-.hc-card-right{text-align:right}
-.hc-card-amt{font-size:13px;font-weight:700;color:var(--d-t1);font-family:'Syne',sans-serif}
-.hc-chip{display:inline-block;font-size:8px;padding:2px 6px;border-radius:4px;margin-top:3px;font-family:'DM Mono',monospace}
-.chip-sent{background:var(--green-dim);color:var(--green)}
-.chip-draft{background:var(--d-bd);color:var(--d-t2)}
-.chip-viewed{background:rgba(96,165,250,.12);color:#60A5FA}
-
-/* ── Marquee ─────────────────────────────────── */
-.marquee-strip{background:var(--d-bg);border-top:1px solid var(--d-bd);border-bottom:1px solid var(--d-bd);padding:13px 0;overflow:hidden;position:relative;z-index:5}
-.marquee-track{display:flex;white-space:nowrap;width:max-content;animation:mq 30s linear infinite}
-.marquee-strip.rev .marquee-track{animation:mqr 30s linear infinite}
-.m-item{display:inline-flex;align-items:center;gap:14px;font-family:'DM Mono',monospace;font-size:10px;color:var(--d-t3);text-transform:uppercase;letter-spacing:1.8px;padding:0 20px;flex-shrink:0}
-.m-dot{color:var(--green);font-size:7px}
-@keyframes mq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@keyframes mqr{from{transform:translateX(-50%)}to{transform:translateX(0)}}
-
-/* ── Wave Dividers ─────────────────────────────────── */
-.wave-div{display:block;width:100%;overflow:hidden;line-height:0;position:relative;z-index:5}
-.wave-div svg{display:block;width:100%}
-
-/* ── Layout helpers ─────────────────────────────────── */
-.section{padding:96px 32px;position:relative}
-.container{max-width:1140px;margin:0 auto}
-.eyebrow{text-align:center;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:1.2px;text-transform:uppercase;color:var(--green);margin-bottom:12px}
-.eyebrow-l{text-align:left}
-.sec-title{text-align:center;font-family:'Syne',sans-serif;font-size:clamp(26px,3vw,38px);font-weight:700;letter-spacing:-.6px;margin-bottom:56px}
-.sec-title-d{color:var(--d-t1)}.sec-title-l{color:var(--l-t1)}
-.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease-out,transform .7s ease-out}
-.reveal.vis{opacity:1;transform:translateY(0)}
-@media(max-width:767px){.section{padding:64px 20px}.sec-title{margin-bottom:40px}}
-
-/* ── Features Bento ─────────────────────────────────── */
-.features-section{background:var(--l-bg);overflow:hidden;padding-bottom:0}
-.features-section .container{padding-bottom:0}
-.bento-outer{overflow:hidden;cursor:grab;position:relative;padding:0 0 40px}
-.bento-outer:active{cursor:grabbing}
-.bento-outer::-webkit-scrollbar{display:none}
-.bento-track{display:flex;gap:16px;width:max-content;align-items:stretch;will-change:transform}
-.bc{background:var(--l-s1);border:1px solid var(--l-bd);border-radius:16px;padding:28px 24px;flex-shrink:0;transition:border-color .25s,box-shadow .25s;will-change:transform;position:relative;overflow:hidden;display:flex;flex-direction:column}
-.bc::before{content:'';position:absolute;inset:-1px;border-radius:16px;background:linear-gradient(135deg,rgba(var(--green-rgb),.12),transparent 60%);opacity:0;transition:opacity .3s;pointer-events:none}
-.bc:hover::before{opacity:1}
-.bc:hover{border-color:rgba(var(--green-rgb),.35);box-shadow:0 8px 40px rgba(var(--green-rgb),.09),0 2px 8px rgba(0,0,0,.06)}
-.bc-wide{width:460px}.bc-med{width:320px}.bc-sm{width:250px}
-.bc-icon{width:44px;height:44px;border-radius:10px;background:var(--green-dim);display:flex;align-items:center;justify-content:center;color:var(--green);margin-bottom:16px;flex-shrink:0}
-.bc:hover .bc-icon svg{animation:ibounce .4s cubic-bezier(.4,0,.2,1)}
-@keyframes ibounce{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
-.bc-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:var(--l-t1);margin-bottom:8px;letter-spacing:-.2px}
-.bc-desc{font-size:13px;line-height:1.65;color:var(--l-t2);margin-bottom:16px;flex:1}
-.bc-list{list-style:none;margin-top:auto}
-.bc-list li{font-size:12px;color:var(--l-t2);padding:3px 0;display:flex;align-items:center;gap:8px}
-.bc-list li::before{content:'';width:3px;height:3px;border-radius:50%;background:var(--green);flex-shrink:0}
-.bc-accent{position:absolute;right:0;top:0;bottom:0;width:160px;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:.06}
-.bento-hint{display:flex;align-items:center;justify-content:center;gap:10px;padding:16px 32px 0;font-family:'DM Mono',monospace;font-size:11px;color:var(--l-t2)}
-.bdots{display:flex;gap:5px}
-.bdot{width:6px;height:6px;border-radius:50%;background:var(--l-bd);transition:background .2s,transform .2s;cursor:pointer}
-.bdot.on{background:var(--green);transform:scale(1.3)}
-.ai-fn{font-size:11px;color:var(--l-t2);margin-top:0;font-family:'DM Mono',monospace;text-align:center;padding:0 32px 56px}
-
-/* ── Apple Scroll Demo ─────────────────────────────────── */
-.demo-outer{background:var(--d-bg);position:relative}
-.demo-sticky{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.demo-inner{max-width:1180px;width:100%;padding:0 32px;display:grid;grid-template-columns:1fr 500px;gap:80px;align-items:center}
-@media(max-width:1023px){.demo-inner{grid-template-columns:1fr}.demo-mockup{display:none!important}}
-.anno-eyebrow{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--green);margin-bottom:16px;display:flex;align-items:center;gap:10px}
-.anno-step{color:var(--d-t3);font-size:10px;letter-spacing:.5px}
-.anno-title{font-family:'Syne',sans-serif;font-size:clamp(28px,3.5vw,46px);font-weight:800;line-height:1.08;letter-spacing:-1.5px;color:var(--d-t1);margin-bottom:16px}
-.anno-body{font-size:16px;line-height:1.75;color:var(--d-t2);max-width:380px}
-.spd-dots{display:flex;gap:8px;margin-top:32px}
-.spd{width:8px;height:8px;border-radius:50%;background:var(--d-bd);transition:background .3s,transform .3s,width .3s;cursor:pointer}
-.spd.on{background:var(--green);transform:scale(1.3);width:24px;border-radius:4px}
-.anno-content{transition:opacity .35s ease,transform .35s ease}
-.anno-content.exit{opacity:0;transform:translateX(-18px)}
-/* Demo mockup */
-.demo-mockup{background:var(--d-s1);border:1px solid var(--d-bd);border-radius:14px;box-shadow:0 40px 80px rgba(0,0,0,.6),var(--green-glow);overflow:hidden;transform:perspective(1200px) rotateY(-3deg);transition:transform .5s ease}
-.demo-mockup:hover{transform:perspective(1200px) rotateY(0deg)}
-.dm-chrome{height:36px;background:var(--d-s2);border-bottom:1px solid var(--d-bd);display:flex;align-items:center;padding:0 14px;gap:6px}
-.dm-dot{width:10px;height:10px;border-radius:50%}
-.dm-body{display:flex;height:340px}
-.dm-sidebar{width:150px;background:var(--d-bg);border-right:1px solid var(--d-bd);padding:12px 0;flex-shrink:0}
-.dm-brand{display:flex;align-items:center;gap:7px;padding:0 12px 12px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--d-t1);border-bottom:1px solid var(--d-bd);margin-bottom:10px}
-.dm-brand svg{color:var(--green)}
-.dm-item{display:flex;align-items:center;gap:8px;padding:7px 12px;font-size:11px;color:var(--d-t2);transition:all .15s}
-.dm-item svg{color:var(--d-t3);flex-shrink:0;width:11px;height:11px}
-.dm-item.on{color:var(--green);background:var(--green-dim);border-left:2px solid var(--green)}
-.dm-item.on svg{color:var(--green)}
-.dm-main{flex:1;display:flex;flex-direction:column;min-width:0}
-.dm-header{height:36px;border-bottom:1px solid var(--d-bd);display:flex;align-items:center;padding:0 12px;justify-content:space-between;flex-shrink:0}
-.dm-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--d-t1)}
-.dm-btn{padding:3px 10px;border-radius:5px;font-size:10px;font-family:'Inter',sans-serif;font-weight:500;border:none;background:var(--green);color:#08150E;cursor:default}
-.dm-content{padding:12px;flex:1;overflow:hidden}
-.dm-pane{display:none!important}
-.dm-pane.on{display:flex!important;flex-direction:column;gap:8px;animation:panein .3s ease}
-.dm-stats{display:flex;gap:8px}
-.dm-stat{flex:1;background:var(--d-s2);border:1px solid var(--d-bd);border-radius:8px;padding:8px;text-align:center}
-.dm-sv{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--green);line-height:1}
-.dm-sl{font-size:8px;color:var(--d-t2);margin-top:2px;font-family:'DM Mono',monospace}
-.dm-row{background:var(--d-s2);border:1px solid var(--d-bd);border-radius:7px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center}
-.dm-rn{font-family:'Syne',sans-serif;font-size:11px;font-weight:600;color:var(--d-t1)}
-.dm-rm{font-size:9px;color:var(--d-t2);margin-top:1px;font-family:'DM Mono',monospace}
-.dm-chip{font-size:8px;padding:2px 6px;border-radius:4px;font-family:'DM Mono',monospace}
-.dm-g{background:var(--green-dim);color:var(--green)}
-.dm-b{background:rgba(96,165,250,.12);color:#60A5FA}
-.dm-e{background:rgba(168,45,45,.15);color:#FB6B6B}
-
-/* ── Why Section ─────────────────────────────────── */
-.why-section{background:var(--l-bg)}
-.why-section .container{display:grid;grid-template-columns:240px 1fr;gap:80px;align-items:start}
-@media(max-width:767px){.why-section .container{grid-template-columns:1fr;gap:40px}}
-.why-left{position:sticky;top:120px}
-.why-left-title{font-family:'Syne',sans-serif;font-size:clamp(28px,3vw,42px);font-weight:800;color:var(--l-t1);letter-spacing:-1.2px;line-height:1.05;margin-bottom:16px}
-.why-left-body{font-size:14px;line-height:1.7;color:var(--l-t2)}
-.why-stack{display:flex;flex-direction:column;gap:0}
-.why-card-wrap{position:sticky;top:80px;margin-bottom:12px}
-.why-card-wrap:nth-child(1){z-index:3}
-.why-card-wrap:nth-child(2){z-index:2;top:104px}
-.why-card-wrap:nth-child(3){z-index:1;top:128px}
-.why-card{background:var(--l-s1);border:1px solid var(--l-bd);border-radius:18px;padding:36px 40px;box-shadow:0 2px 12px rgba(0,0,0,.05);transition:box-shadow .3s}
-.why-card.lit{box-shadow:0 12px 40px rgba(0,0,0,.1)}
-.why-num{font-family:'Syne',sans-serif;font-size:56px;font-weight:800;color:var(--green);line-height:1;opacity:.18;margin-bottom:14px;transition:opacity .4s}
-.why-card.lit .why-num{opacity:.35}
-.why-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--l-t1);margin-bottom:10px;letter-spacing:-.3px;overflow:hidden}
-.why-title-i{display:block;transform:translateX(-16px);opacity:0;transition:transform .5s ease,opacity .5s ease}
-.why-card.lit .why-title-i{transform:translateX(0);opacity:1}
-.why-body{font-size:14px;line-height:1.8;color:var(--l-t2)}
-.why-body .w{display:inline;transition:color .15s}
-.why-body .w.lit{color:var(--l-t1)}
-@media(max-width:767px){.why-card-wrap{position:relative;top:auto!important;z-index:auto!important}.why-card{padding:24px}}
-
-/* ── Themes ─────────────────────────────────── */
-.themes-section{background:var(--d-bg);padding:96px 32px}
-.theme-tabs{display:flex;justify-content:center;gap:6px;margin-bottom:32px;flex-wrap:wrap}
-.theme-tab{padding:7px 20px;font-size:13px;border-radius:8px;border:1px solid var(--d-bd);background:transparent;cursor:pointer;font-family:'Inter',sans-serif;color:var(--d-t2);transition:all .2s;position:relative;overflow:hidden}
-.theme-tab::after{content:'';position:absolute;inset:0;background:var(--green);border-radius:inherit;transform:scale(0);opacity:.1;transition:transform .3s,opacity .3s;pointer-events:none}
-.theme-tab:hover{background:var(--d-s1);color:var(--d-t1)}
-.theme-tab.active{background:var(--d-s1);color:var(--d-t1);border-color:var(--d-t2)}
-.theme-tab.active::after{transform:scale(1)}
-.theme-preview{display:none}
-.theme-preview.active{display:block;animation:tpanim .3s ease}
-@keyframes tpanim{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
-.theme-frame{max-width:560px;margin:0 auto;border-radius:14px;padding:28px;text-align:center;border:1px solid transparent}
-.theme-frame h4{font-size:16px;font-weight:600;margin-bottom:6px}
-.theme-frame p{font-size:13px;margin-bottom:20px}
-.theme-chips{display:flex;gap:8px;justify-content:center}
-.theme-chip{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:500}
-.t-default{background:#fff;border-color:#E3E2DB}.t-default h4{font-family:'Syne',sans-serif;color:#181716}.t-default p{color:#6B6A65}.t-default .theme-chip{background:#1EC98A;color:#08150E}
-.t-studio{background:#FDFAF5;border-color:#E0D8C8}.t-studio h4{font-family:'Georgia',serif;color:#2C1810}.t-studio p{color:#7A6A5A}.t-studio .theme-chip{background:#C4622D;color:#fff}
-.t-terminal{background:#0D1117;border-color:#30363D}.t-terminal h4{font-family:'DM Mono',monospace;color:#E6EDF3}.t-terminal p{color:#8B949E}.t-terminal .theme-chip{background:#3FB950;color:#0D1117}
-.t-craft{background:#FAFAF8;border-color:#E0DDD8}.t-craft h4{font-family:'Georgia',serif;color:#1A1A18}.t-craft p{color:#6B6A65}.t-craft .theme-chip{background:#4A7FA5;color:#fff}
-.t-motion{background:#FAFAFE;border-color:#E4E0F4}.t-motion h4{color:#1A1530}.t-motion p{color:#6B6585}.t-motion .theme-chip{background:#8B5CF6;color:#fff}
-.t-lens{background:#1C1814;border-color:#3D3630}.t-lens h4{font-family:'Georgia',serif;color:#F5F0E8}.t-lens p{color:#B0A898}.t-lens .theme-chip{background:#D97706;color:#1C1814}
-.t-scale{background:#F8F9FC;border-color:#E0E4EE}.t-scale h4{color:#0F172A}.t-scale p{color:#5B6478}.t-scale .theme-chip{background:#1E40AF;color:#fff}
-.theme-note{text-align:center;font-size:12px;font-family:'DM Mono',monospace;color:var(--d-t2);margin-top:20px}
-
-/* ── Pricing ─────────────────────────────────── */
-.pricing-section{background:var(--l-bg)}
-.pricing-intro{text-align:center;font-size:17px;color:var(--l-t2);line-height:1.75;max-width:520px;margin:0 auto 48px}
-.pricing-card{max-width:440px;margin:0 auto;background:var(--l-s1);border-radius:18px;padding:40px;box-shadow:0 2px 24px rgba(0,0,0,.05);text-align:center;position:relative;overflow:hidden}
-.pricing-border-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;border-radius:18px}
-.pb-path{fill:none;stroke:var(--green);stroke-width:1.5;stroke-dasharray:1400;stroke-dashoffset:1400;opacity:.7;transition:stroke-dashoffset 1.8s cubic-bezier(.4,0,.2,1)}
-.pricing-card.traced .pb-path{stroke-dashoffset:0}
-.pricing-name{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--l-t1);letter-spacing:-.2px}
-.pricing-sub{font-size:13px;color:var(--l-t2);margin-top:2px;margin-bottom:24px}
-.pricing-price{font-family:'Syne',sans-serif;font-size:56px;font-weight:800;color:var(--l-t1);letter-spacing:-2px;line-height:1;margin-bottom:28px;display:inline-block;position:relative;overflow:hidden}
-.pricing-price span{font-size:24px;font-weight:400;color:var(--l-t2);vertical-align:top;margin-top:10px;display:inline-block}
-.pricing-price::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);animation:glint 10s ease 4s infinite}
-@keyframes glint{0%,100%{left:-100%}10%{left:120%}}
-.pricing-perks{list-style:none;text-align:left;margin-bottom:28px}
-.pricing-perks li{font-size:14px;color:var(--l-t2);padding:7px 0;border-bottom:1px solid var(--l-bd);display:flex;align-items:center;gap:10px}
-.pricing-perks li:last-child{border-bottom:none}
-.perk-check{width:18px;height:18px;border-radius:50%;background:var(--green-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.perk-check svg{color:var(--green)}
-.pricing-cta{width:100%;text-align:center;justify-content:center;margin-bottom:14px;font-size:15px}
-.pricing-note{font-size:12px;color:var(--l-t2);font-family:'DM Mono',monospace}
-.pricing-free-note{text-align:center;font-size:15px;color:var(--l-t2);margin-top:28px}
-
-/* ── Download ─────────────────────────────────── */
-.download-section{background:var(--d-bg);padding:96px 32px 112px;text-align:center;position:relative;overflow:hidden}
-#dl-strings{position:absolute;inset:0;pointer-events:none;z-index:0}
-.download-section .eyebrow,.download-section .sec-title,.download-sub,.dl-grid,.dl-sysreq{position:relative;z-index:1}
-.download-sub{font-size:16px;color:var(--d-t2);margin-bottom:48px;font-family:'DM Mono',monospace}
-.dl-grid{display:flex;flex-direction:column;gap:10px;max-width:480px;margin:0 auto 28px}
-.dl-btn{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-radius:12px;text-decoration:none;border:1px solid var(--d-bd);background:var(--d-s1);transition:all .2s;color:var(--d-t1);opacity:0;transform:translateY(16px)}
-.dl-btn.vis{opacity:1;transform:translateY(0)}
-.dl-btn:hover{border-color:var(--d-t2);background:var(--d-s2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
-.dl-btn:active{transform:scale(.98)}
-.dl-btn.hi{background:var(--green-dim);border-color:rgba(var(--green-rgb),.35);box-shadow:var(--green-glow);animation:dlpulse 3s ease infinite}
-.dl-btn.hi:hover{background:rgba(var(--green-rgb),.15)}
-@keyframes dlpulse{0%,100%{box-shadow:var(--green-glow),0 0 0 0 rgba(var(--green-rgb),.3)}50%{box-shadow:var(--green-glow),0 0 0 6px rgba(var(--green-rgb),0)}}
-.dl-left{display:flex;align-items:center;gap:12px}
-.dl-icon{color:var(--d-t2);flex-shrink:0;transition:transform .2s}
-.dl-btn:hover .dl-icon{transform:translateY(2px)}
-.dl-btn.hi .dl-icon{color:var(--green)}
-.dl-name{font-size:14px;font-weight:600;font-family:'Syne',sans-serif;letter-spacing:-.1px}
-.dl-btn.hi .dl-name{color:var(--green)}
-.dl-ver{font-size:11px;color:var(--d-t2);font-family:'DM Mono',monospace;margin-top:1px}
-.dl-arr{color:var(--d-t3);transition:transform .2s}
-.dl-btn:hover .dl-arr{transform:translateY(3px)}
-.dl-btn.hi .dl-arr{color:var(--green)}
-.dl-sysreq{font-size:11px;color:var(--d-t3);font-family:'DM Mono',monospace}
-
-/* ── Footer ─────────────────────────────────── */
-footer{background:var(--d-bg);border-top:1px solid var(--d-bd);padding:80px 32px 48px;position:relative;overflow:hidden;text-align:center}
-#footer-canvas{position:absolute;inset:0;pointer-events:none;z-index:0}
-#foot-strings{position:absolute;inset:0;pointer-events:none;z-index:0}
-.footer-inner{position:relative;z-index:1}
-.footer-logo-wrap{display:flex;justify-content:center;margin-bottom:40px}
-#footer-logo{width:100px;height:100px;opacity:0;transform:scale(.92);transition:opacity .8s ease,transform .8s cubic-bezier(.4,0,.2,1)}
-#footer-logo.drawn{opacity:1;transform:scale(1)}
-.footer-brand{display:inline-flex;align-items:center;gap:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:var(--d-t1);text-decoration:none;margin-bottom:14px}
-.footer-brand svg{color:var(--green)}
-footer p{font-size:13px;color:var(--d-t2);line-height:1.8}
-footer a{color:var(--d-t2);text-decoration:underline;text-underline-offset:2px;transition:color .15s}
-footer a:hover{color:var(--d-t1)}
-.footer-links{display:flex;justify-content:center;gap:20px;margin-top:12px}
-.footer-copy{font-size:12px;color:var(--d-t3);margin-top:16px;font-family:'DM Mono',monospace}
-.footer-contact-title{font-size:15px;font-weight:700;color:var(--d-t1);margin:0 0 4px}
-.footer-contact-sub{font-size:13px;color:var(--d-t3);margin:0 0 14px}
-.footer-contact-form{display:flex;flex-direction:column;gap:8px;max-width:420px;margin:0 auto 28px;text-align:left}
-.footer-contact-form input,.footer-contact-form textarea{background:var(--d-s1);border:1px solid var(--d-bd);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--d-t1);font-family:'Inter',sans-serif;width:100%;box-sizing:border-box}
-.footer-contact-form input:focus,.footer-contact-form textarea:focus{outline:none;border-color:var(--green)}
-.footer-contact-form textarea{resize:vertical}
-.hp-trap{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
-.footer-contact-status{font-size:12px;min-height:16px;margin:0}
-.footer-contact-status.ok{color:var(--green)}
-.footer-contact-status.err{color:#e5484d}
-
-/* icon helpers */
-.icon-sm{width:16px;height:16px}.icon-md{width:20px;height:20px}.icon-lg{width:24px;height:24px}
-
-/* ── Easter egg overlay ─────────────────────────────────── */
-#egg-overlay{position:fixed;inset:0;pointer-events:none;z-index:8000;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .3s}
-#egg-overlay.show{opacity:1}
-#egg-msg{font-family:'DM Mono',monospace;font-size:12px;color:var(--green);letter-spacing:2px;text-transform:uppercase;background:var(--d-s1);border:1px solid var(--green);border-radius:8px;padding:10px 20px;animation:egganim .5s cubic-bezier(.4,0,.2,1)}
-@keyframes egganim{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
-</style>
+<link href="https://fonts.bunny.net/css?family=space-grotesk:500,600,700|inter:400,500,600|jetbrains-mono:400,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<!--
+  MOTION DNA (all adapted line-by-line to vanilla CSS/JS, no frameworks):
+  - Magic UI (MIT, magicuidesign/magicui): shimmer-button, border-beam,
+    marquee, aurora-text, number-ticker, text-reveal, particles,
+    retro-grid (CSS fallback), meteors, flickering-grid
+  - Motion Primitives (motion-primitives.com): text-effect blur preset,
+    animated-group stagger, magnetic, in-view
+  - ObsidianUI (MIT, obsidianui.dev): dotted-grid cursor glow (kept light)
+-->
 </head>
 <body>
 
-<!-- Cursor glow -->
-<div id="cglow"></div>
-<!-- Scroll bar -->
 <div id="sbar"></div>
-<!-- Easter egg overlay -->
-<div id="egg-overlay"><div id="egg-msg">⚡ LANCE MODE</div></div>
+<div id="cursorGlow" aria-hidden="true"></div>
 
-<!-- Nav -->
+<!-- ═══ NAV ═══ -->
 <nav id="nav">
   <div class="nav-inner">
-    <a href="#" class="nav-brand">
-      <svg class="icon-md brand-arrow" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#FFFFFF"/><path d="M7 18 V9.5 h2.6 v5.9 h4.9 V18 Z" fill="#0B3B2A"/><path d="M18.6 6.4 L17 9.9 L15.1 8 Z" fill="#0E9F6E"/><path d="M12.1 12.9 L17.2 7.8" stroke="#0E9F6E" stroke-width="2.2" stroke-linecap="butt"/></svg>
+    <a href="#top" class="nav-brand" aria-label="Lance home">
+      <svg class="brand-mark" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#FFFFFF"/><path d="M7 18 V9.5 h2.6 v5.9 h4.9 V18 Z" fill="#0B3B2A"/><path d="M18.6 6.4 L17 9.9 L15.1 8 Z" fill="#0E9F6E"/><path d="M12.1 12.9 L17.2 7.8" stroke="#0E9F6E" stroke-width="2.2" stroke-linecap="butt"/></svg>
       Lance
     </a>
     <ul class="nav-links" id="navLinks">
       <li><a href="#features">Features</a></li>
+      <li><a href="#showcase">Showcase</a></li>
+      <li><a href="#themes">Themes</a></li>
       <li><a href="#pricing">Pricing</a></li>
-      <li>
-        <button id="sound-btn" aria-label="Toggle sound">
-          <svg id="sound-icon-on" class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-          <svg id="sound-icon-off" class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
-        </button>
-      </li>
-      <li><a href="#download" class="btn btn-green">Free Download</a></li>
+      <li><a href="#download" class="shimmer shimmer-sm"><span class="shimmer-label">Free Download</span><span class="spark" aria-hidden="true"><span class="spark-inner"><span class="spark-rotor"></span></span></span><span class="shimmer-hi" aria-hidden="true"></span><span class="shimmer-bg" aria-hidden="true"></span></a></li>
     </ul>
     <button class="hamburger" id="hamburger" aria-label="Menu">
-      <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
     </button>
   </div>
 </nav>
 
-<!-- Hero -->
-<section class="hero" id="hero">
-  <div class="hero-mesh" id="heroMesh">
-    <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
-          <path d="M 48 0 L 0 0 0 48" fill="none" stroke="currentColor" stroke-width="0.5"/>
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#grid)" color="#1EC98A"/>
-    </svg>
+<!-- ═══ HERO ═══ -->
+<header class="hero" id="top">
+  <canvas id="particles" aria-hidden="true"></canvas>
+  <div class="retro-floor" aria-hidden="true">
+    <div class="retro-tilt"><div class="retro-scroll"></div></div>
+    <div class="retro-fade"></div>
   </div>
-  <div class="orb orb-a"></div>
-  <div class="orb orb-b"></div>
-  <div class="orb orb-c"></div>
-  <div class="hero-noise"></div>
-  <svg id="hero-strings" viewBox="0 0 1200 900" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-    <path id="hs0" fill="none" stroke="#1EC98A" stroke-width="1" opacity=".12"/>
-    <path id="hs1" fill="none" stroke="#1EC98A" stroke-width="0.8" opacity=".09"/>
-    <path id="hs2" fill="none" stroke="#1EC98A" stroke-width="1.2" opacity=".08"/>
-    <path id="hs3" fill="none" stroke="#1EC98A" stroke-width="0.6" opacity=".10"/>
-    <path id="hs4" fill="none" stroke="#1EC98A" stroke-width="0.8" opacity=".07"/>
-    <path id="hs5" fill="none" stroke="#1EC98A" stroke-width="1" opacity=".06"/>
-  </svg>
+  <div id="meteors" aria-hidden="true"></div>
+  <div class="orb orb-a" aria-hidden="true"></div>
+  <div class="orb orb-b" aria-hidden="true"></div>
+  <div class="hero-noise" aria-hidden="true"></div>
 
   <div class="hero-inner">
-    <div class="hero-text">
-      <div class="hero-eyebrow">
-        <span class="hero-eyebrow-dot"></span>
-        Freelancer OS <span id="heroVer"></span>
+    <div class="hero-copy">
+      <div class="hero-badge blur-in" style="--d:0ms">
+        <span class="pulse-dot"></span>
+        <span class="mono">Freelancer OS</span>
+        <span class="hero-ver mono" id="heroVer"></span>
       </div>
       <h1 class="hero-hl">
-        <span class="hl-line"><span class="hl-inner">Win work.</span></span>
-        <span class="hl-line"><span class="hl-inner">Run projects.</span></span>
-        <span class="hl-line"><span class="hl-inner">Get paid.</span></span>
+        <span class="hl-line blur-in" style="--d:80ms"><span>Win work.</span></span>
+        <span class="hl-line blur-in" style="--d:180ms"><span>Run projects.</span></span>
+        <span class="hl-line blur-in" style="--d:280ms"><span class="aurora">Get paid.</span></span>
       </h1>
-      <p class="hero-sub">The freelancer OS that keeps proposals, contracts, invoicing, time tracking, and client metrics in one app. None of your data in the cloud.</p>
-      <div class="hero-cta">
-        <a href="#download" class="btn btn-green btn-xl" id="heroBtn">↓ Download for Mac</a>
-        <a href="#features" class="btn btn-ghost btn-xl">See features</a>
+      <p class="hero-sub blur-in" style="--d:380ms">Proposals, contracts, time tracking, invoices and client insights in one fast app. Your data never touches the cloud.</p>
+      <div class="hero-cta blur-in" style="--d:480ms">
+        <a href="#download" class="shimmer magnetic" id="heroBtn"><span class="shimmer-label" id="heroBtnLabel">Download for Mac</span><span class="spark" aria-hidden="true"><span class="spark-inner"><span class="spark-rotor"></span></span></span><span class="shimmer-hi" aria-hidden="true"></span><span class="shimmer-bg" aria-hidden="true"></span></a>
+        <a href="#showcase" class="ghost-btn magnetic">See it in action</a>
       </div>
-      <div class="hero-trust">
-        <span class="trust-item"><span class="trust-dot"></span>Free forever</span>
-        <span class="trust-item"><span class="trust-dot"></span>Works offline</span>
-        <span class="trust-item"><span class="trust-dot"></span>Your data stays yours</span>
-      </div>
-    </div>
-
-    <!-- Mini mockup -->
-    <div class="hero-card" id="heroCard">
-      <div class="hc-chrome">
-        <span class="hc-dot hc-r"></span><span class="hc-dot hc-y"></span><span class="hc-dot hc-g"></span>
-        <span class="hc-title" id="hcTitle">Proposals</span>
-      </div>
-      <div class="hc-body">
-        <div class="hc-sidebar">
-          <div class="hcs-brand"><svg width="12" height="12" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#FFFFFF"/><path d="M7 18 V9.5 h2.6 v5.9 h4.9 V18 Z" fill="#0B3B2A"/><path d="M18.6 6.4 L17 9.9 L15.1 8 Z" fill="#0E9F6E"/><path d="M12.1 12.9 L17.2 7.8" stroke="#0E9F6E" stroke-width="2.2" stroke-linecap="butt"/></svg>Lance</div>
-          <div class="hcs-group">Win</div>
-          <div class="hcs-item active" data-pane="proposals"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>Proposals</div>
-          <div class="hcs-item" data-pane="contracts"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>Contracts</div>
-          <div class="hcs-group">Run</div>
-          <div class="hcs-item" data-pane="projects"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Projects</div>
-          <div class="hcs-item" data-pane="time"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Time</div>
-          <div class="hcs-group">Get Paid</div>
-          <div class="hcs-item" data-pane="invoices"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8h7"/><path d="M9 12h7"/><path d="M9 16h5"/></svg>Invoices</div>
-        </div>
-        <div class="hc-main">
-          <div class="hc-topbar">
-            <span class="hc-topbar-title" id="hcTopTitle">Proposals</span>
-            <span class="hc-badge" id="hcBadge">3 active</span>
-          </div>
-          <div class="hc-content hc-pane active" id="hcp-proposals">
-            <div class="hc-stats">
-              <div class="hc-stat"><div class="hc-stat-val g">$12.4k</div><div class="hc-stat-lbl">Revenue</div></div>
-              <div class="hc-stat"><div class="hc-stat-val">72%</div><div class="hc-stat-lbl">Win rate</div></div>
-              <div class="hc-stat"><div class="hc-stat-val">5</div><div class="hc-stat-lbl">Active</div></div>
-            </div>
-            <div class="hc-card"><div><div class="hc-card-name">Brand Refresh</div><div class="hc-card-meta">Acme Corp · Flat</div></div><div class="hc-card-right"><div class="hc-card-amt">$4,500</div><span class="hc-chip chip-sent">Sent</span></div></div>
-            <div class="hc-card"><div><div class="hc-card-name">Web Retainer</div><div class="hc-card-meta">Studio 12 · Monthly</div></div><div class="hc-card-right"><div class="hc-card-amt">$2,200</div><span class="hc-chip chip-viewed">Viewed</span></div></div>
-            <div class="hc-card"><div><div class="hc-card-name">Landing Page</div><div class="hc-card-meta">Northside · Hourly</div></div><div class="hc-card-right"><div class="hc-card-amt">$85/hr</div><span class="hc-chip chip-draft">Draft</span></div></div>
-          </div>
-          <div class="hc-content hc-pane" id="hcp-contracts">
-            <div class="hc-stats">
-              <div class="hc-stat"><div class="hc-stat-val g">2</div><div class="hc-stat-lbl">Active</div></div>
-              <div class="hc-stat"><div class="hc-stat-val">1</div><div class="hc-stat-lbl">Pending</div></div>
-              <div class="hc-stat"><div class="hc-stat-val">$18.5k</div><div class="hc-stat-lbl">Value</div></div>
-            </div>
-            <div class="hc-card"><div><div class="hc-card-name">Brand Refresh</div><div class="hc-card-meta">Acme Corp · Signed</div></div><div class="hc-card-right"><div class="hc-card-amt">$12,000</div><span class="hc-chip chip-sent">Active</span></div></div>
-            <div class="hc-card"><div><div class="hc-card-name">Web Retainer</div><div class="hc-card-meta">Studio 12 · Awaiting</div></div><div class="hc-card-right"><div class="hc-card-amt">$6,500</div><span class="hc-chip chip-viewed">Pending</span></div></div>
-          </div>
-          <div class="hc-content hc-pane" id="hcp-projects">
-            <div class="hc-stats">
-              <div class="hc-stat"><div class="hc-stat-val g">3</div><div class="hc-stat-lbl">Active</div></div>
-              <div class="hc-stat"><div class="hc-stat-val">2</div><div class="hc-stat-lbl">Done</div></div>
-              <div class="hc-stat"><div class="hc-stat-val">$22k</div><div class="hc-stat-lbl">Budget</div></div>
-            </div>
-            <div class="hc-card"><div><div class="hc-card-name">Brand Refresh</div><div class="hc-card-meta">Acme Corp · Oct 30</div></div><div class="hc-card-right"><span class="hc-chip chip-sent">On track</span></div></div>
-            <div class="hc-card"><div><div class="hc-card-name">Web Retainer</div><div class="hc-card-meta">Studio 12 · Ongoing</div></div><div class="hc-card-right"><span class="hc-chip chip-sent">Active</span></div></div>
-            <div class="hc-card"><div><div class="hc-card-name">Landing Page</div><div class="hc-card-meta">Northside · Nov 15</div></div><div class="hc-card-right"><span class="hc-chip chip-draft">Behind</span></div></div>
-          </div>
-          <div class="hc-content hc-pane" id="hcp-time">
-            <div class="hc-stats">
-              <div class="hc-stat"><div class="hc-stat-val g">9.3h</div><div class="hc-stat-lbl">This week</div></div>
-              <div class="hc-stat"><div class="hc-stat-val">32.5h</div><div class="hc-stat-lbl">Month</div></div>
-              <div class="hc-stat"><div class="hc-stat-val">12h</div><div class="hc-stat-lbl">Unbilled</div></div>
-            </div>
-            <div class="hc-card"><div><div class="hc-card-name">Brand Refresh</div><div class="hc-card-meta">Acme Corp</div></div><div class="hc-card-right"><div class="hc-card-amt" style="color:var(--green);font-size:11px;animation:pulse 2s infinite">2:14:32</div></div></div>
-            <div class="hc-card"><div><div class="hc-card-name">Northside Web</div><div class="hc-card-meta">Landing Page</div></div><div class="hc-card-right"><div class="hc-card-amt" style="font-size:11px">1:20:00</div></div></div>
-            <div class="hc-card"><div><div class="hc-card-name">Studio 12 Consult</div><div class="hc-card-meta">Web Retainer</div></div><div class="hc-card-right"><div class="hc-card-amt" style="font-size:11px">3:45:00</div></div></div>
-          </div>
-          <div class="hc-content hc-pane" id="hcp-invoices">
-            <div class="hc-stats">
-              <div class="hc-stat"><div class="hc-stat-val g">$4.5k</div><div class="hc-stat-lbl">Paid</div></div>
-              <div class="hc-stat"><div class="hc-stat-val">$6.7k</div><div class="hc-stat-lbl">Owed</div></div>
-              <div class="hc-stat"><div class="hc-stat-val" style="color:#FB6B6B">$2.2k</div><div class="hc-stat-lbl">Late</div></div>
-            </div>
-            <div class="hc-card"><div><div class="hc-card-name">INV-003</div><div class="hc-card-meta">Acme Corp · Oct 1</div></div><div class="hc-card-right"><div class="hc-card-amt">$4,500</div><span class="hc-chip chip-sent">Sent</span></div></div>
-            <div class="hc-card"><div><div class="hc-card-name">INV-002</div><div class="hc-card-meta">Studio 12 · Sep 15</div></div><div class="hc-card-right"><div class="hc-card-amt">$2,200</div><span class="hc-chip chip-draft">Late</span></div></div>
-            <div class="hc-card"><div><div class="hc-card-name">INV-001</div><div class="hc-card-meta">Northside · Paid</div></div><div class="hc-card-right"><div class="hc-card-amt">$1,200</div><span class="hc-chip chip-viewed">Paid</span></div></div>
-          </div>
-        </div>
+      <div class="hero-stats blur-in" style="--d:580ms">
+        <div class="hstat"><div class="hstat-val"><span class="ticker" data-ticker="41">0</span></div><div class="hstat-lbl mono">crafts built-in</div></div>
+        <div class="hstat"><div class="hstat-val"><span class="ticker" data-ticker="100">0</span>%</div><div class="hstat-lbl mono">offline-first</div></div>
+        <div class="hstat"><div class="hstat-val">$<span class="ticker" data-ticker="0">0</span></div><div class="hstat-lbl mono">cloud spend</div></div>
       </div>
     </div>
-  </div>
-</section>
 
-<!-- Marquee 1 -->
-<div class="marquee-strip">
-  <div class="marquee-track" id="mq1"></div>
-</div>
-
-<!-- Wave divider: dark → light -->
-<div class="wave-div">
-  <svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" height="48">
-    <path d="M0,0 C360,48 1080,0 1440,48 L1440,0 L0,0 Z" fill="#F8F7F3"/>
-  </svg>
-</div>
-
-<!-- Features Bento -->
-<section class="features-section" id="features">
-  <div class="container">
-    <div class="eyebrow">Everything you need</div>
-    <h2 class="sec-title sec-title-l">Run your business in one place.</h2>
-  </div>
-  <div class="bento-outer" id="bentoScroll">
-    <div class="bento-track" id="bentoTrack"><!-- Populated by JS --></div>
-  </div>
-  <div class="bento-hint"><span>Drag to explore</span><div class="bdots" id="bdots"></div></div>
-  <p class="ai-fn">* AI features are optional, off by default, and togglable anytime.</p>
-</section>
-
-<!-- Marquee 2 (reverse) -->
-<div class="marquee-strip rev">
-  <div class="marquee-track" id="mq2"></div>
-</div>
-
-<!-- Wave: light → dark -->
-<div class="wave-div" style="background:var(--l-bg)">
-  <svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" height="48">
-    <path d="M0,48 C360,0 1080,48 1440,0 L1440,48 L0,48 Z" fill="#111110"/>
-  </svg>
-</div>
-
-<!-- Apple Scroll Demo -->
-<div class="demo-outer" id="demoOuter">
-  <div class="demo-sticky" id="demoSticky">
-    <div class="demo-inner">
-      <div class="demo-annotation">
-        <div class="anno-content" id="annoContent">
-          <div class="anno-eyebrow">
-            <span id="annoEyebrow">Proposals &amp; Contracts</span>
-            <span class="anno-step" id="annoStep">01 / 05</span>
+    <div class="hero-visual blur-in" style="--d:400ms" id="heroVisual">
+      <div class="mock-tilt" id="mockTilt">
+        <div class="mock">
+          <div class="mock-chrome">
+            <span class="mdot r"></span><span class="mdot y"></span><span class="mdot g"></span>
+            <span class="mock-url mono">lance — proposals</span>
           </div>
-          <div class="anno-title" id="annoTitle">Win work before your competition.</div>
-          <div class="anno-body" id="annoBody">Write proposals with scope warnings built in. Track your win rate across every client. Know exactly what&apos;s working.</div>
-          <div class="spd-dots" id="spdDots"></div>
-        </div>
-      </div>
-      <div class="demo-mockup" id="demoMockup">
-        <div class="dm-chrome">
-          <span class="dm-dot hc-r"></span><span class="dm-dot hc-y"></span><span class="dm-dot hc-g"></span>
-        </div>
-        <div class="dm-body">
-          <div class="dm-sidebar">
-            <div class="dm-brand"><svg width="12" height="12" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#FFFFFF"/><path d="M7 18 V9.5 h2.6 v5.9 h4.9 V18 Z" fill="#0B3B2A"/><path d="M18.6 6.4 L17 9.9 L15.1 8 Z" fill="#0E9F6E"/><path d="M12.1 12.9 L17.2 7.8" stroke="#0E9F6E" stroke-width="2.2" stroke-linecap="butt"/></svg>Lance</div>
-            <div class="dm-item on" id="dmNav0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>Proposals</div>
-            <div class="dm-item" id="dmNav1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Time</div>
-            <div class="dm-item" id="dmNav2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8h7"/><path d="M9 12h7"/><path d="M9 16h5"/></svg>Invoices</div>
-            <div class="dm-item" id="dmNav3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>Insights</div>
-            <div class="dm-item" id="dmNav4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Privacy</div>
-          </div>
-          <div class="dm-main">
-            <div class="dm-header"><span class="dm-title" id="dmHeadTitle">Proposals</span><span class="dm-btn">+ New</span></div>
-            <div class="dm-content">
-              <div class="dm-pane on" id="dmp0">
-                <div class="dm-stats"><div class="dm-stat"><div class="dm-sv">72%</div><div class="dm-sl">Win rate</div></div><div class="dm-stat"><div class="dm-sv">$12.4k</div><div class="dm-sl">Revenue</div></div><div class="dm-stat"><div class="dm-sv">5</div><div class="dm-sl">Active</div></div></div>
-                <div class="dm-row"><div><div class="dm-rn">Brand Refresh</div><div class="dm-rm">Acme Corp · $4,500</div></div><span class="dm-chip dm-g">Sent</span></div>
-                <div class="dm-row"><div><div class="dm-rn">Web Retainer</div><div class="dm-rm">Studio 12 · $2,200/mo</div></div><span class="dm-chip dm-b">Viewed</span></div>
-                <div class="dm-row"><div><div class="dm-rn">Landing Page</div><div class="dm-rm">Northside · $85/hr</div></div><span class="dm-chip" style="background:var(--d-bd);color:var(--d-t2)">Draft</span></div>
-              </div>
-              <div class="dm-pane" id="dmp1">
-                <div class="dm-stats"><div class="dm-stat"><div class="dm-sv">9.3h</div><div class="dm-sl">This week</div></div><div class="dm-stat"><div class="dm-sv">12h</div><div class="dm-sl">Unbilled</div></div></div>
-                <div class="dm-row"><div><div class="dm-rn">Brand Refresh</div><div class="dm-rm">Acme Corp</div></div><div style="display:flex;align-items:center;gap:6px"><div style="width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite"></div><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--green)">2:14:32</span></div></div>
-                <div class="dm-row"><div><div class="dm-rn">Northside Web</div><div class="dm-rm">Landing Page</div></div><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--d-t2)">1:20:00</span></div>
-                <div class="dm-row"><div><div class="dm-rn">Studio 12 Consult</div><div class="dm-rm">Web Retainer</div></div><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--d-t2)">3:45:00</span></div>
-              </div>
-              <div class="dm-pane" id="dmp2">
-                <div class="dm-stats"><div class="dm-stat"><div class="dm-sv">$4.5k</div><div class="dm-sl">Paid</div></div><div class="dm-stat"><div class="dm-sv">$6.7k</div><div class="dm-sl">Owed</div></div><div class="dm-stat"><div class="dm-sv" style="color:#FB6B6B">$2.2k</div><div class="dm-sl">Overdue</div></div></div>
-                <div class="dm-row"><div><div class="dm-rn">INV-003</div><div class="dm-rm">Acme Corp · Due Oct 1</div></div><div><div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--d-t1);text-align:right">$4,500</div><span class="dm-chip dm-g">Sent</span></div></div>
-                <div class="dm-row"><div><div class="dm-rn">INV-002</div><div class="dm-rm">Studio 12 · Due Sep 15</div></div><div><div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--d-t1);text-align:right">$2,200</div><span class="dm-chip dm-e">Late</span></div></div>
-              </div>
-              <div class="dm-pane" id="dmp3">
-                <div class="dm-stats"><div class="dm-stat"><div class="dm-sv">72%</div><div class="dm-sl">Win rate</div></div><div class="dm-stat"><div class="dm-sv">$12.4k</div><div class="dm-sl">Revenue</div></div><div class="dm-stat"><div class="dm-sv">$8.2k</div><div class="dm-sl">Profit</div></div></div>
-                <div class="dm-row"><div><div class="dm-rn">Brand Refresh</div><div class="dm-rm">On track · Due Oct 30</div></div><span class="dm-chip dm-g">Healthy</span></div>
-                <div class="dm-row"><div><div class="dm-rn">Acme Corp</div><div class="dm-rm">Top client · 3 projects</div></div><div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--green)">$16.5k</div></div>
-              </div>
-              <div class="dm-pane" id="dmp4">
-                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;padding:16px 0">
-                  <div style="width:56px;height:56px;border-radius:50%;background:var(--green-dim);display:flex;align-items:center;justify-content:center;animation:orb1 4s ease-in-out infinite">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                  </div>
-                  <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--d-t1);text-align:center">100% Local</div>
-                  <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--d-t2);text-align:center;line-height:1.6">No cloud. No accounts.<br>No breach risk. Ever.</div>
+          <div class="mock-body">
+            <div class="mock-side">
+              <div class="ms-brand"><svg width="12" height="12" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#FFFFFF"/><path d="M7 18 V9.5 h2.6 v5.9 h4.9 V18 Z" fill="#0B3B2A"/><path d="M18.6 6.4 L17 9.9 L15.1 8 Z" fill="#0E9F6E"/><path d="M12.1 12.9 L17.2 7.8" stroke="#0E9F6E" stroke-width="2.2" stroke-linecap="butt"/></svg>Lance</div>
+              <div class="ms-item active" data-pane="proposals">Proposals</div>
+              <div class="ms-item" data-pane="contracts">Contracts</div>
+              <div class="ms-item" data-pane="projects">Projects</div>
+              <div class="ms-item" data-pane="time">Time</div>
+              <div class="ms-item" data-pane="invoices">Invoices</div>
+            </div>
+            <div class="mock-main">
+              <div class="mock-top"><span class="mock-title" id="mockTitle">Proposals</span><span class="mock-badge mono" id="mockBadge">3 active</span></div>
+              <div class="mock-pane active" id="mock-proposals">
+                <div class="mock-stats">
+                  <div class="mstat"><div class="mstat-v">$12.4k</div><div class="mstat-l mono">Revenue</div></div>
+                  <div class="mstat"><div class="mstat-v">72%</div><div class="mstat-l mono">Win rate</div></div>
+                  <div class="mstat"><div class="mstat-v">5</div><div class="mstat-l mono">Active</div></div>
                 </div>
+                <div class="mrow"><div><div class="mrow-n">Brand Refresh</div><div class="mrow-m mono">Acme Corp · $4,500</div></div><span class="chip c-sent">Sent</span></div>
+                <div class="mrow"><div><div class="mrow-n">Web Retainer</div><div class="mrow-m mono">Studio 12 · $2,200/mo</div></div><span class="chip c-viewed">Viewed</span></div>
+                <div class="mrow"><div><div class="mrow-n">Landing Page</div><div class="mrow-m mono">Northside · $85/hr</div></div><span class="chip c-draft">Draft</span></div>
               </div>
+              <div class="mock-pane" id="mock-contracts">
+                <div class="mock-stats">
+                  <div class="mstat"><div class="mstat-v">2</div><div class="mstat-l mono">Active</div></div>
+                  <div class="mstat"><div class="mstat-v">1</div><div class="mstat-l mono">Pending</div></div>
+                  <div class="mstat"><div class="mstat-v">$18.5k</div><div class="mstat-l mono">Value</div></div>
+                </div>
+                <div class="mrow"><div><div class="mrow-n">Brand Refresh</div><div class="mrow-m mono">Acme Corp · Signed</div></div><span class="chip c-sent">Active</span></div>
+                <div class="mrow"><div><div class="mrow-n">Web Retainer</div><div class="mrow-m mono">Studio 12 · Awaiting</div></div><span class="chip c-viewed">Pending</span></div>
+              </div>
+              <div class="mock-pane" id="mock-projects">
+                <div class="mock-stats">
+                  <div class="mstat"><div class="mstat-v">3</div><div class="mstat-l mono">Active</div></div>
+                  <div class="mstat"><div class="mstat-v">2</div><div class="mstat-l mono">Done</div></div>
+                  <div class="mstat"><div class="mstat-v">$22k</div><div class="mstat-l mono">Budget</div></div>
+                </div>
+                <div class="mrow"><div><div class="mrow-n">Brand Refresh</div><div class="mrow-m mono">Due Oct 30</div></div><span class="chip c-sent">On track</span></div>
+                <div class="mrow"><div><div class="mrow-n">Web Retainer</div><div class="mrow-m mono">Ongoing</div></div><span class="chip c-sent">Active</span></div>
+                <div class="mrow"><div><div class="mrow-n">Landing Page</div><div class="mrow-m mono">Due Nov 15</div></div><span class="chip c-draft">Behind</span></div>
+              </div>
+              <div class="mock-pane" id="mock-time">
+                <div class="mock-stats">
+                  <div class="mstat"><div class="mstat-v">9.3h</div><div class="mstat-l mono">This week</div></div>
+                  <div class="mstat"><div class="mstat-v">32.5h</div><div class="mstat-l mono">Month</div></div>
+                  <div class="mstat"><div class="mstat-v">12h</div><div class="mstat-l mono">Unbilled</div></div>
+                </div>
+                <div class="mrow"><div><div class="mrow-n">Brand Refresh</div><div class="mrow-m mono">Acme Corp</div></div><span class="mono live-timer js-tick" data-base="8072">2:14:32</span></div>
+                <div class="mrow"><div><div class="mrow-n">Northside Web</div><div class="mrow-m mono">Landing Page</div></div><span class="mono dim">1:20:00</span></div>
+                <div class="mrow"><div><div class="mrow-n">Studio 12 Consult</div><div class="mrow-m mono">Web Retainer</div></div><span class="mono dim">3:45:00</span></div>
+              </div>
+              <div class="mock-pane" id="mock-invoices">
+                <div class="mock-stats">
+                  <div class="mstat"><div class="mstat-v">$4.5k</div><div class="mstat-l mono">Paid</div></div>
+                  <div class="mstat"><div class="mstat-v">$6.7k</div><div class="mstat-l mono">Owed</div></div>
+                  <div class="mstat"><div class="mstat-v neg">$2.2k</div><div class="mstat-l mono">Overdue</div></div>
+                </div>
+                <div class="mrow"><div><div class="mrow-n">INV-003</div><div class="mrow-m mono">Acme Corp · Due Oct 1</div></div><span class="chip c-sent">Sent</span></div>
+                <div class="mrow"><div><div class="mrow-n">INV-002</div><div class="mrow-m mono">Studio 12 · Due Sep 15</div></div><span class="chip c-late">Late</span></div>
+                <div class="mrow"><div><div class="mrow-n">INV-001</div><div class="mrow-m mono">Northside · Paid</div></div><span class="chip c-viewed">Paid</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="float-chip fc-a"><span class="fc-dot"></span><span>Invoice paid <b>+$1,800</b></span></div>
+        <div class="float-chip fc-b"><span class="fc-eye">◎</span><span>Proposal viewed <b>3×</b></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-fade"></div>
+  <div class="scroll-cue mono" aria-hidden="true"><span>SCROLL</span><span>↓</span></div>
+</header>
+
+<!-- ═══ MARQUEE ═══ -->
+<div class="mq-strip">
+  <div class="mq" id="mq1"><div class="mq-row" id="mqRow1"></div><div class="mq-row" id="mqRow1b" aria-hidden="true"></div></div>
+</div>
+<div class="mq-strip mq-strip-2">
+  <div class="mq reverse" id="mq2"><div class="mq-row" id="mqRow2"></div><div class="mq-row" id="mqRow2b" aria-hidden="true"></div></div>
+</div>
+
+<!-- ═══ BENTO ═══ -->
+<section class="section bento-sec" id="features">
+  <div class="container">
+    <div class="kicker mono blur-in">Everything you need</div>
+    <h2 class="sec-title blur-in" style="--d:80ms">One app. Your whole business.</h2>
+    <p class="sec-sub blur-in" style="--d:160ms">No tabs. No subscriptions. No copy-pasting between five tools.</p>
+    <div class="bento" id="bento"></div>
+    <p class="ai-note mono">* AI features are optional, off by default, and togglable anytime.</p>
+  </div>
+  <canvas class="flicker" id="flicker" aria-hidden="true"></canvas>
+</section>
+
+<!-- ═══ TEXT REVEAL MANIFESTO ═══ -->
+<div class="treveal" id="treveal">
+  <div class="treveal-sticky">
+    <p class="treveal-text" id="trevealText">Your business lives on your machine. No cloud. No accounts. No one watching.</p>
+  </div>
+</div>
+
+<!-- ═══ SHOWCASE ═══ -->
+<div class="show-outer" id="showcase">
+  <div class="show-sticky">
+    <div class="show-inner">
+      <div class="show-copy">
+        <div class="anno-content" id="annoContent">
+          <div class="anno-eyebrow mono"><span id="annoEyebrow">Proposals &amp; Contracts</span><span class="anno-step" id="annoStep">01 / 05</span></div>
+          <div class="anno-title" id="annoTitle">Win work before your competition.</div>
+          <p class="anno-body" id="annoBody">Write proposals with scope warnings built in. Track your win rate across every client. Know exactly what&apos;s working.</p>
+          <div class="show-dots" id="showDots"></div>
+        </div>
+      </div>
+      <div class="show-mock">
+        <div class="show-screen">
+          <div class="show-head"><span class="show-title" id="showHeadTitle">Proposals</span><span class="show-btn">+ New</span></div>
+          <div class="show-pane on" id="show0">
+            <div class="mock-stats">
+              <div class="mstat"><div class="mstat-v">72%</div><div class="mstat-l mono">Win rate</div></div>
+              <div class="mstat"><div class="mstat-v">$12.4k</div><div class="mstat-l mono">Revenue</div></div>
+              <div class="mstat"><div class="mstat-v">5</div><div class="mstat-l mono">Active</div></div>
+            </div>
+            <div class="mrow"><div><div class="mrow-n">Brand Refresh</div><div class="mrow-m mono">Acme Corp · $4,500</div></div><span class="chip c-sent">Sent</span></div>
+            <div class="mrow"><div><div class="mrow-n">Web Retainer</div><div class="mrow-m mono">Studio 12 · $2,200/mo</div></div><span class="chip c-viewed">Viewed</span></div>
+            <div class="mrow"><div><div class="mrow-n">Landing Page</div><div class="mrow-m mono">Northside · $85/hr</div></div><span class="chip c-draft">Draft</span></div>
+          </div>
+          <div class="show-pane" id="show1">
+            <div class="mock-stats">
+              <div class="mstat"><div class="mstat-v">9.3h</div><div class="mstat-l mono">This week</div></div>
+              <div class="mstat"><div class="mstat-v">12h</div><div class="mstat-l mono">Unbilled</div></div>
+            </div>
+            <div class="mrow"><div><div class="mrow-n">Brand Refresh</div><div class="mrow-m mono">Acme Corp</div></div><span class="mono live-timer js-tick" data-base="8072">2:14:32</span></div>
+            <div class="mrow"><div><div class="mrow-n">Northside Web</div><div class="mrow-m mono">Landing Page</div></div><span class="mono dim">1:20:00</span></div>
+            <div class="mrow"><div><div class="mrow-n">Studio 12 Consult</div><div class="mrow-m mono">Web Retainer</div></div><span class="mono dim">3:45:00</span></div>
+          </div>
+          <div class="show-pane" id="show2">
+            <div class="mock-stats">
+              <div class="mstat"><div class="mstat-v">$4.5k</div><div class="mstat-l mono">Paid</div></div>
+              <div class="mstat"><div class="mstat-v">$6.7k</div><div class="mstat-l mono">Owed</div></div>
+              <div class="mstat"><div class="mstat-v neg">$2.2k</div><div class="mstat-l mono">Overdue</div></div>
+            </div>
+            <div class="mrow"><div><div class="mrow-n">INV-003</div><div class="mrow-m mono">Acme Corp · Due Oct 1</div></div><span class="chip c-sent">Sent</span></div>
+            <div class="mrow"><div><div class="mrow-n">INV-002</div><div class="mrow-m mono">Studio 12 · Due Sep 15</div></div><span class="chip c-late">Late</span></div>
+          </div>
+          <div class="show-pane" id="show3">
+            <div class="mock-stats">
+              <div class="mstat"><div class="mstat-v">72%</div><div class="mstat-l mono">Win rate</div></div>
+              <div class="mstat"><div class="mstat-v">$12.4k</div><div class="mstat-l mono">Revenue</div></div>
+              <div class="mstat"><div class="mstat-v">$8.2k</div><div class="mstat-l mono">Profit</div></div>
+            </div>
+            <div class="mrow"><div><div class="mrow-n">Brand Refresh</div><div class="mrow-m mono">On track · Due Oct 30</div></div><span class="chip c-sent">Healthy</span></div>
+            <div class="mrow"><div><div class="mrow-n">Acme Corp</div><div class="mrow-m mono">Top client · 3 projects</div></div><span class="chip c-sent">$16.5k</span></div>
+          </div>
+          <div class="show-pane" id="show4">
+            <div class="privacy-hero">
+              <div class="privacy-orb">◈</div>
+              <div class="privacy-title">100% Local</div>
+              <div class="privacy-sub mono">No cloud. No accounts.<br>No breach risk. Ever.</div>
             </div>
           </div>
         </div>
@@ -637,1182 +255,163 @@ footer a:hover{color:var(--d-t1)}
   </div>
 </div>
 
-<!-- Wave: dark → light -->
-<div class="wave-div" style="background:var(--d-bg)">
-  <svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" height="48">
-    <path d="M0,0 C360,48 1080,0 1440,48 L1440,0 L0,0 Z" fill="#F8F7F3"/>
-  </svg>
-</div>
-
-<!-- Why Section -->
-<section class="section why-section">
-  <div class="container">
-    <div class="why-left">
-      <div class="eyebrow eyebrow-l">Why Lance</div>
-      <div class="why-left-title">Built different.<br>On purpose.</div>
-      <p class="why-left-body">Other tools sprawl across tabs and subscriptions. Lance collapses your entire operation into one fast, local, opinionated app.</p>
-    </div>
-    <div class="why-stack">
-      <div class="why-card-wrap">
-        <div class="why-card" id="wc0">
-          <div class="why-num" id="wn0">01</div>
-          <div class="why-content">
-            <div class="why-title"><span class="why-title-i">Everything talks to each other.</span></div>
-            <p class="why-body">A client you add once flows into proposals, contracts, invoices, and insights. No re-entry. No copy-pasting. Ever.</p>
-          </div>
-        </div>
-      </div>
-      <div class="why-card-wrap">
-        <div class="why-card" id="wc1">
-          <div class="why-num" id="wn1">02</div>
-          <div class="why-content">
-            <div class="why-title"><span class="why-title-i">Your data stays on your machine.</span></div>
-            <p class="why-body">Local-first by design. Works completely offline. No internet required. Your client list and financials stay on your machine, always.</p>
-          </div>
-        </div>
-      </div>
-      <div class="why-card-wrap">
-        <div class="why-card" id="wc2">
-          <div class="why-num" id="wn2">03</div>
-          <div class="why-content">
-            <div class="why-title"><span class="why-title-i">The AI sharpens your judgment.*</span></div>
-            <p class="why-body">Not replacing your instincts. Supporting them. Scope warnings, pricing analysis, win rate patterns. Your edge, amplified.</p>
-          </div>
-        </div>
-      </div>
-    </div>
+<!-- ═══ STATS BAND ═══ -->
+<section class="stats-sec">
+  <div class="container stats-grid">
+    <div class="stat blur-in"><div class="stat-v"><span class="ticker" data-ticker="41">0</span></div><div class="stat-l mono">profession profiles</div></div>
+    <div class="stat blur-in" style="--d:100ms"><div class="stat-v"><span class="ticker" data-ticker="7">0</span></div><div class="stat-l mono">workspace themes</div></div>
+    <div class="stat blur-in"><div class="stat-v"><span class="ticker" data-ticker="37">0</span></div><div class="stat-l mono">linked data tables</div></div>
+    <div class="stat blur-in" style="--d:300ms"><div class="stat-v"><span class="ticker" data-ticker="0">0</span></div><div class="stat-l mono">trackers. zero.</div></div>
   </div>
 </section>
 
-<!-- Marquee 3 -->
-<div class="marquee-strip">
-  <div class="marquee-track" id="mq3"></div>
-</div>
-
-<!-- Themes -->
-<section class="themes-section">
+<!-- ═══ THEMES ═══ -->
+<section class="section themes-sec" id="themes">
   <div class="container">
-    <div class="eyebrow" id="themeEyebrow">7 themes</div>
-    <h2 class="sec-title sec-title-d">Your workspace. Your style.</h2>
-    <div class="theme-tabs" id="themeTabs"></div>
+    <div class="kicker mono blur-in" id="themeEyebrow">7 themes</div>
+    <h2 class="sec-title blur-in" style="--d:80ms">Your workspace. Your style.</h2>
+    <div class="theme-tabs blur-in" style="--d:160ms" id="themeTabs"></div>
+    <p class="theme-hint mono blur-in" style="--d:220ms">👆 click one — this entire page re-themes live. go on.</p>
     <div id="themePreviews"></div>
-    <p class="theme-note">Themes unlock as you use Lance, or unlock all instantly with a license.</p>
+    <p class="theme-note mono">Themes unlock as you use Lance, or unlock all instantly with a license.</p>
   </div>
 </section>
 
-<!-- Pricing -->
-<section class="section pricing-section" id="pricing">
+<!-- ═══ PRICING ═══ -->
+<section class="section pricing-sec" id="pricing">
   <div class="container">
-    <div class="eyebrow">Pricing</div>
-    <h2 class="sec-title sec-title-l">Core free forever. Pro optional.</h2>
-    <p class="pricing-intro">Lance core is free. No time limits, no client caps, no nag screens. <strong>Pro</strong> unlocks archetype-specific proposals, contracts, invoices, and scope-creep protection. Either way, client payments go straight to you. Lance never takes a cut.</p>
+    <div class="kicker mono blur-in">Pricing</div>
+    <h2 class="sec-title blur-in" style="--d:80ms">Core free forever. Pro optional.</h2>
+    <p class="pricing-intro blur-in" style="--d:160ms">Lance core is free. No time limits, no client caps, no nag screens. <strong>Pro</strong> unlocks archetype-specific proposals, contracts, invoices, and scope-creep protection. Either way, client payments go straight to you. Lance never takes a cut.</p>
+    <div class="pricing-toggle-wrap blur-in" style="--d:220ms">
+      <div class="price-toggle" role="tablist" aria-label="Billing period">
+        <button id="billMo" role="tab" aria-selected="false">Monthly</button>
+        <button id="billYr" class="on" role="tab" aria-selected="true">Yearly<span class="save">−41%</span></button>
+      </div>
+    </div>
     <div class="pricing-grid">
-      <div class="pricing-card reveal free" id="freeCard">
-        <svg class="pricing-border-svg" viewBox="0 0 440 420" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-          <rect class="pb-path" x="1" y="1" width="438" height="418" rx="17"/>
-        </svg>
-        <div class="pricing-badge">Free</div>
-        <div class="pricing-name">Lance Core</div>
-        <div class="pricing-price"><span>$</span>0<span>/mo</span></div>
-        <ul class="pricing-perks">
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Unlimited clients, projects, proposals</li>
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Contracts, invoices, time tracking</li>
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Client portal (local, offline-first)</li>
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Recurring invoices, expenses, metrics</li>
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>All current themes</li>
+      <div class="price-card blur-in" id="freeCard">
+        <div class="price-badge mono">Free</div>
+        <div class="price-name">Lance Core</div>
+        <div class="price-val"><span class="cur">$</span>0<span class="per">/mo</span></div>
+        <ul class="price-perks">
+          <li>Unlimited clients, projects, proposals</li>
+          <li>Contracts, invoices, time tracking</li>
+          <li>Client portal (local, offline-first)</li>
+          <li>Recurring invoices, expenses, metrics</li>
+          <li>All current themes</li>
         </ul>
-        <p class="pricing-note">Forever free. No account. No cloud.</p>
+        <p class="price-note mono">Forever free. No account. No cloud.</p>
       </div>
-      <div class="pricing-card reveal pro" id="proCard">
-        <svg class="pricing-border-svg" viewBox="0 0 440 420" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-          <rect class="pb-path" x="1" y="1" width="438" height="418" rx="17"/>
-        </svg>
-        <div class="pricing-badge">Recommended</div>
-        <div class="pricing-name">Lance Pro</div>
-        <div class="pricing-price"><span>$</span>99<span>/yr</span></div>
-        <ul class="pricing-perks">
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Everything in Free</li>
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Archetype proposals, contracts, invoices</li>
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Revenue forecasts and rate-leak alerts</li>
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Change orders that bill scope creep</li>
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Hot proposals and open alerts</li>
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Smart dunning and late fees</li>
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Tax pack CSV and trial countdown</li>
+      <div class="price-card pro blur-in beam-host" style="--d:120ms" id="proCard">
+        <div class="border-beam" aria-hidden="true"><span></span></div>
+        <div class="price-badge mono hot">Recommended</div>
+        <div class="price-name">Lance Pro</div>
+        <div class="price-val"><span class="cur">$</span><span id="proNum">99</span><span class="per" id="proPer">/yr</span></div>
+        <ul class="price-perks">
+          <li>Everything in Free</li>
+          <li>Archetype proposals, contracts, invoices</li>
+          <li>Revenue forecasts and rate-leak alerts</li>
+          <li>Change orders that bill scope creep</li>
+          <li>Hot proposals and open alerts</li>
+          <li>Smart dunning and late fees</li>
+          <li>Tax pack CSV and trial countdown</li>
         </ul>
-        <button class="btn btn-green btn-xl pricing-cta" onclick="window.location.href='#download'">
-          Start 30-day free trial
-        </button>
-        <p class="pricing-note">Billed yearly. Monthly at $14/mo. Cancel anytime. 30 days free. Checkout opens after you download.</p>
+        <a href="#download" class="shimmer shimmer-block"><span class="shimmer-label">Start 30-day free trial</span><span class="spark" aria-hidden="true"><span class="spark-inner"><span class="spark-rotor"></span></span></span><span class="shimmer-hi" aria-hidden="true"></span><span class="shimmer-bg" aria-hidden="true"></span></a>
+        <p class="price-note mono" id="proNote">Billed yearly. Save 41% vs monthly. 30 days free. Checkout opens after you download.</p>
       </div>
-      <div class="pricing-card reveal lifetime" id="lifetimeCard" style="opacity:.88">
-        <svg class="pricing-border-svg" viewBox="0 0 440 420" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-          <rect class="pb-path" x="1" y="1" width="438" height="418" rx="17"/>
-        </svg>
-        <div class="pricing-name">Lance Lifetime</div>
-        <div class="pricing-price"><span>$</span>249<span> one-time</span></div>
-        <ul class="pricing-perks">
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Everything in Pro, forever</li>
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>No subscription, ever</li>
-          <li><span class="perk-check"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>Future updates included</li>
+      <div class="price-card blur-in" style="--d:240ms;opacity:.92" id="lifetimeCard">
+        <div class="price-badge mono">One-time</div>
+        <div class="price-name">Lance Lifetime</div>
+        <div class="price-val"><span class="cur">$</span>249<span class="per"> once</span></div>
+        <ul class="price-perks">
+          <li>Everything in Pro, forever</li>
+          <li>No subscription, ever</li>
+          <li>Future updates included</li>
         </ul>
-        <button class="btn btn-green btn-xl pricing-cta" onclick="window.location.href='#download'">
-          Buy lifetime license
-        </button>
-        <p class="pricing-note">One payment. Yours forever. Checkout opens after you download.</p>
+        <a href="#download" class="ghost-btn ghost-block">Buy lifetime license</a>
+        <p class="price-note mono">One payment. Yours forever.</p>
       </div>
     </div>
     <p class="pricing-free-note">Core is genuinely free. Pro is depth, not gates.</p>
   </div>
 </section>
 
-<!-- Download -->
-<section class="download-section" id="download">
-  <svg id="dl-strings" viewBox="0 0 1200 400" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-    <path id="dls0" fill="none" stroke="#1EC98A" stroke-width="0.8" opacity=".08"/>
-    <path id="dls1" fill="none" stroke="#1EC98A" stroke-width="0.6" opacity=".06"/>
-    <path id="dls2" fill="none" stroke="#1EC98A" stroke-width="1" opacity=".07"/>
-  </svg>
-  <div class="eyebrow">Get Lance</div>
-  <h2 class="sec-title sec-title-d" style="margin-bottom:8px">Free to download. Free to use.</h2>
-  <p class="download-sub"><span id="dlVer"></span> · macOS · Windows · Linux</p>
-  <div class="dl-grid">
-    <a href="/api/download/mac" class="dl-btn" id="dl-mac">
-      <div class="dl-left">
-        <svg class="dl-icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-        <div><div class="dl-name">Download for macOS</div><div class="dl-ver">Apple Silicon · macOS 11+</div></div>
-      </div>
-      <svg class="dl-arr icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-    </a>
-    <a href="/api/download/win" class="dl-btn" id="dl-win">
-      <div class="dl-left">
-        <svg class="dl-icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        <div><div class="dl-name">Download for Windows</div><div class="dl-ver">64-bit installer · Windows 10+</div></div>
-      </div>
-      <svg class="dl-arr icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-    </a>
-    <a href="/api/download/linux" class="dl-btn" id="dl-linux">
-      <div class="dl-left">
-        <svg class="dl-icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        <div><div class="dl-name">Download for Linux</div><div class="dl-ver">AppImage · Ubuntu 20.04+</div></div>
-      </div>
-      <svg class="dl-arr icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-    </a>
+<!-- ═══ DOWNLOAD ═══ -->
+<div class="hairline" aria-hidden="true"></div>
+<section class="dl-sec" id="download">
+  <div id="dlMeteors" aria-hidden="true"></div>
+  <div class="container dl-inner">
+    <div class="kicker mono blur-in">Get Lance</div>
+    <h2 class="sec-title blur-in" style="--d:80ms">Free to download.<br>Free to use.</h2>
+    <p class="dl-sub mono blur-in" style="--d:160ms"><span id="dlVer"></span> · macOS · Windows · Linux</p>
+    <div class="dl-grid">
+      <a href="/api/download/mac" class="dl-btn blur-in" id="dl-mac">
+        <span class="dl-left"><span class="dl-icon">▣</span><span><span class="dl-name">Download for macOS</span><span class="dl-ver mono">Apple Silicon · macOS 11+</span></span></span>
+        <span class="dl-arr">↓</span>
+      </a>
+      <a href="/api/download/win" class="dl-btn blur-in" style="--d:120ms" id="dl-win">
+        <span class="dl-left"><span class="dl-icon">▦</span><span><span class="dl-name">Download for Windows</span><span class="dl-ver mono">64-bit installer · Windows 10+</span></span></span>
+        <span class="dl-arr">↓</span>
+      </a>
+      <a href="/api/download/linux" class="dl-btn blur-in" style="--d:240ms" id="dl-linux">
+        <span class="dl-left"><span class="dl-icon">◉</span><span><span class="dl-name">Download for Linux</span><span class="dl-ver mono">AppImage · Ubuntu 20.04+</span></span></span>
+        <span class="dl-arr">↓</span>
+      </a>
+    </div>
+    <p class="dl-sysreq mono">macOS 11+ · Windows 10+ · Ubuntu 20.04+</p>
   </div>
-  <p class="dl-sysreq">macOS 11+ &nbsp;·&nbsp; Windows 10+ &nbsp;·&nbsp; Ubuntu 20.04+</p>
 </section>
 
-<!-- Footer -->
+<!-- ═══ FOOTER ═══ -->
 <footer>
-  <div class="footer-inner" id="contact">
-    <p class="footer-contact-title">Contact</p>
-    <p class="footer-contact-sub">Questions, refunds, or just saying hi. Replies land in a real inbox.</p>
-    <form id="contact-form" class="footer-contact-form" novalidate>
-      <input type="text" id="cf-name" name="name" placeholder="Your name" maxlength="100" autocomplete="name" required />
-      <input type="email" id="cf-email" name="email" placeholder="you@example.com" maxlength="200" autocomplete="email" required />
-      <textarea id="cf-message" name="message" placeholder="What's up?" rows="3" maxlength="2000" required></textarea>
-      <input type="text" id="cf-company" name="company_hp" class="hp-trap" tabindex="-1" autocomplete="off" aria-hidden="true" />
-      <button type="submit" id="cf-submit" class="btn btn-green">Send message</button>
-      <p id="cf-status" class="footer-contact-status" role="status"></p>
-    </form>
-    <p class="footer-contact-title" style="margin-top:40px">Found a bug?</p>
-    <p class="footer-contact-sub">File it straight to the tracker. Include what you did, what you expected, and what happened.</p>
-    <form id="issue-form" class="footer-contact-form" novalidate>
-      <input type="text" id="ir-name" name="name" placeholder="Your name" maxlength="100" autocomplete="name" required />
-      <input type="email" id="ir-email" name="email" placeholder="you@example.com" maxlength="200" autocomplete="email" required />
-      <input type="text" id="ir-title" name="title" placeholder="Short summary (e.g. invoice PDF export is blank)" maxlength="120" required />
-      <textarea id="ir-details" name="details" placeholder="Steps to reproduce, expected vs actual, app version, macOS/Windows/Linux…" rows="4" maxlength="3000" required></textarea>
-      <input type="text" id="ir-company" name="company_hp" class="hp-trap" tabindex="-1" autocomplete="off" aria-hidden="true" />
-      <button type="submit" id="ir-submit" class="btn btn-green">Report issue</button>
-      <p id="ir-status" class="footer-contact-status" role="status"></p>
-    </form>
-  </div>
-  <canvas id="footer-canvas"></canvas>
-  <svg id="foot-strings" viewBox="0 0 1200 500" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-    <path id="fs0" fill="none" stroke="#1EC98A" stroke-width="0.8" opacity=".1"/>
-    <path id="fs1" fill="none" stroke="#1EC98A" stroke-width="0.6" opacity=".08"/>
-    <path id="fs2" fill="none" stroke="#1EC98A" stroke-width="1" opacity=".09"/>
-    <path id="fs3" fill="none" stroke="#1EC98A" stroke-width="0.5" opacity=".07"/>
-  </svg>
-  <div class="footer-inner">
-    <div class="footer-logo-wrap">
-      <svg id="footer-logo" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-        <mask id="footPierce">
-          <rect width="512" height="512" fill="#FFFFFF"/>
-          <path d="M252 290 L434 108" stroke="#000000" stroke-width="88" stroke-linecap="round"/>
-        </mask>
-        <rect x="32" y="32" width="448" height="448" rx="112" fill="#FFFFFF"/>
-        <g transform="translate(249,263.5) scale(0.92) translate(-271,-271)">
-          <g fill="none">
-            <circle cx="202" cy="340" r="110" stroke="#0E9F6E" stroke-width="30" opacity="0.35" mask="url(#footPierce)"/>
-            <path d="M150 392 V252 h52 v88 h84 v52 Z" fill="#0B3B2A" stroke="none"/>
-            <path d="M436 106 L413 185 L357 129 Z" fill="#0E9F6E" stroke="none"/>
-            <path d="M252 290 L408 134" stroke="#0E9F6E" stroke-width="48" stroke-linecap="butt"/>
-          </g>
-        </g>
-      </svg>
+  <div class="foot-word" aria-hidden="true">LANCE</div>
+  <div class="container footer-grid">
+    <div class="foot-brand">
+      <a href="#top" class="nav-brand">
+        <svg class="brand-mark" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#FFFFFF"/><path d="M7 18 V9.5 h2.6 v5.9 h4.9 V18 Z" fill="#0B3B2A"/><path d="M18.6 6.4 L17 9.9 L15.1 8 Z" fill="#0E9F6E"/><path d="M12.1 12.9 L17.2 7.8" stroke="#0E9F6E" stroke-width="2.2" stroke-linecap="butt"/></svg>
+        Lance
+      </a>
+      <p>Built by a team of independent freelancers.</p>
+      <div class="footer-links">
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="/refunds">Refunds</a>
+        <a href="https://github.com/jdcua/Lance" target="_blank" rel="noopener">GitHub</a>
+      </div>
+      <p class="footer-copy mono">© 2026 Lance. Your business data stays on your device.</p>
     </div>
-    <a href="#" class="footer-brand">
-      <svg class="icon-sm" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#FFFFFF"/><path d="M7 18 V9.5 h2.6 v5.9 h4.9 V18 Z" fill="#0B3B2A"/><path d="M18.6 6.4 L17 9.9 L15.1 8 Z" fill="#0E9F6E"/><path d="M12.1 12.9 L17.2 7.8" stroke="#0E9F6E" stroke-width="2.2" stroke-linecap="butt"/></svg>
-      Lance
-    </a>
-    <p>Built by a team of independent freelancers</p>
-    <div class="footer-links">
-      <a href="/privacy">Privacy Policy</a>
-      <a href="/terms">License Terms</a>
-      <a href="/refunds">Refund Policy</a>
-      <a href="#contact">Contact</a>
-      <a href="https://github.com/jdcua/Lance" target="_blank" rel="noopener">GitHub</a>
+    <div class="foot-forms">
+      <div class="foot-form-block">
+        <p class="foot-form-title">Contact</p>
+        <p class="foot-form-sub">Questions, refunds, or just saying hi.</p>
+        <form id="contact-form" class="mini-form" novalidate>
+          <input type="text" id="cf-name" name="name" placeholder="Your name" maxlength="100" autocomplete="name" required>
+          <input type="email" id="cf-email" name="email" placeholder="you@example.com" maxlength="200" autocomplete="email" required>
+          <textarea id="cf-message" name="message" placeholder="What's up?" rows="3" maxlength="2000" required></textarea>
+          <input type="text" id="cf-company" name="company_hp" class="hp-trap" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button type="submit" id="cf-submit" class="ghost-btn ghost-sm">Send message</button>
+          <p id="cf-status" class="form-status" role="status"></p>
+        </form>
+      </div>
+      <div class="foot-form-block">
+        <p class="foot-form-title">Found a bug?</p>
+        <p class="foot-form-sub">File it straight to the tracker.</p>
+        <form id="issue-form" class="mini-form" novalidate>
+          <input type="text" id="ir-name" name="name" placeholder="Your name" maxlength="100" autocomplete="name" required>
+          <input type="email" id="ir-email" name="email" placeholder="you@example.com" maxlength="200" autocomplete="email" required>
+          <input type="text" id="ir-title" name="title" placeholder="Short summary" maxlength="120" required>
+          <textarea id="ir-details" name="details" placeholder="Steps to reproduce, expected vs actual…" rows="3" maxlength="3000" required></textarea>
+          <input type="text" id="ir-company" name="company_hp" class="hp-trap" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button type="submit" id="ir-submit" class="ghost-btn ghost-sm">Report issue</button>
+          <p id="ir-status" class="form-status" role="status"></p>
+        </form>
+      </div>
     </div>
-    <p class="footer-copy">&copy; 2026 Lance. Made by independent freelancers.<br>Your business data stays on your device.</p>
   </div>
 </footer>
 
-<script>
-/* ══════════════════════════════════════════════════════
-   DATA
-══════════════════════════════════════════════════════ */
-const FEATURES = [
-  { title:'Win work', desc:'Write proposals and contracts that look professional and convert.', list:['Proposals with scope warnings','Contract builder','AI-assisted writing*','Win rate tracking'], size:'bc-sm' },
-  { title:'Run projects', desc:'Track what\'s happening, what\'s overdue, and where your time is going.', list:['Project tracking','Milestones','Time tracker','One-click flows'], size:'bc-sm' },
-  { title:'Get paid', desc:'Send invoices that look sharp and follow up automatically so you don\'t have to.', list:['Invoices in PDF + DOCX','Recurring invoices','Automated follow-ups','Payment tracking'], size:'bc-med' },
-  { title:'Local & private', desc:'Your business data stays on your machine. Fast, secure, offline-first.', list:['Local-first architecture','Zero cloud lock-in','Instant load times','Works completely offline'], size:'bc-wide' },
-  { title:'Import anything', desc:'Drag-and-drop client lists, invoices, and contracts. Lance classifies and routes them automatically.', list:['XLSX, CSV, PDF, DOCX','Auto-classification','Column mapping tool','5-step review'], size:'bc-med' },
-  { title:'Asset library', desc:'Logos, templates, briefs, references, all organized by client and project.', list:['Global + per-client folders','Grid/list view, tagging','Quick preview pane','Attach to any entity'], size:'bc-sm' },
-  { title:'Custom metrics', desc:'Track what matters to your craft: CPM, ROAS, revision rounds, or anything you define.', list:['Define any metric per client','Log values per project','Sparkline history charts','Headline metric on client cards'], size:'bc-med' },
-  { title:'See the picture', desc:'Revenue, pipeline, client performance, always visible without a spreadsheet.', list:['Finance overview','Client performance insights','Client CRM','Metric templates per craft'], size:'bc-sm' },
-  { title:'Keyboard first', desc:'Fly through your workflow without touching the mouse. Built for speed and power users.', list:['Global command palette','Shortcuts everywhere','Frictionless data entry','Quick-add from any screen'], size:'bc-sm' },
-];
-
-const THEMES_PREVIEW = {
-  default:  { name:'Default',   desc:'Balanced and modern. Works for every kind of freelancer.',          frame:'t-default',  body:'Clean and professional',           color:'#1EC98A' },
-  studio:   { name:'Studio',    desc:'Sienna accents on warm cream. Inspired by print.',                   frame:'t-studio',   body:'Warm and editorial, for designers', color:'#C4622D' },
-  terminal: { name:'Terminal',  desc:'GitHub-dark base with terminal green.',                              frame:'t-terminal', body:'Dark and sharp, for developers',    color:'#3FB950' },
-  craft:    { name:'Craft',     desc:'Slate blue accents on near-white. Generous spacing.',               frame:'t-craft',    body:'Quiet and readable, for writers',   color:'#4A7FA5' },
-  motion:   { name:'Motion',    desc:'Electric violet on cool white. High energy.',                       frame:'t-motion',   body:'High-energy motion, for animators',color:'#8B5CF6' },
-  lens:     { name:'Lens',      desc:'Amber gold on deep shadow. Darkroom mood.',                         frame:'t-lens',     body:'Dark and cinematic, for photographers',color:'#D97706' },
-  scale:    { name:'Scale',     desc:'Deep navy on cool grey. Boardroom-ready.',                          frame:'t-scale',    body:'Precise and commanding, for consultants',color:'#1E40AF' },
-};
-
-const THEME_VARS = {
-  default:  { colors:{ '--green':'#1EC98A','--green-h':'#18B47C','--green-dim':'rgba(30,201,138,.10)','--green-rgb':'30,201,138','--d-bg':'#111110','--d-s1':'#1A1918','--d-s2':'#222120','--d-bd':'#2D2C2A','--d-t1':'#F0EFE8','--d-t2':'#7C7B75','--d-t3':'#3A3937','--l-bg':'#F8F7F3','--l-s1':'#FFFFFF','--l-bd':'#E3E2DB','--l-t1':'#181716','--l-t2':'#68675F' }, hFont:'Syne, sans-serif', bFont:'Inter, sans-serif', mFont:'DM Mono, monospace', fonts:null },
-  studio:   { colors:{ '--green':'#C4622D','--green-h':'#A84E22','--green-dim':'rgba(196,98,45,.10)','--green-rgb':'196,98,45','--d-bg':'#2C1810','--d-s1':'#3A2015','--d-s2':'#48281A','--d-bd':'#5A3522','--d-t1':'#FDFAF5','--d-t2':'#C4A99A','--d-t3':'#7A6255','--l-bg':'#FDFAF5','--l-s1':'#FFFFFF','--l-bd':'#E8E0D0','--l-t1':'#2C1810','--l-t2':'#7A6255' }, hFont:'Playfair Display, serif', bFont:'Source Serif 4, serif', mFont:'DM Mono, monospace', fonts:'playfair-display:400,500,600|source-serif-4:400,500' },
-  terminal: { colors:{ '--green':'#3FB950','--green-h':'#2EA043','--green-dim':'rgba(63,185,80,.10)','--green-rgb':'63,185,80','--d-bg':'#0D1117','--d-s1':'#161B22','--d-s2':'#21262D','--d-bd':'#30363D','--d-t1':'#E6EDF3','--d-t2':'#8B949E','--d-t3':'#484F58','--l-bg':'#161B22','--l-s1':'#21262D','--l-bd':'#30363D','--l-t1':'#E6EDF3','--l-t2':'#8B949E' }, hFont:'JetBrains Mono, monospace', bFont:'JetBrains Mono, monospace', mFont:'JetBrains Mono, monospace', fonts:'jetbrains-mono:400,500' },
-  craft:    { colors:{ '--green':'#4A7FA5','--green-h':'#3A6A8C','--green-dim':'rgba(74,127,165,.10)','--green-rgb':'74,127,165','--d-bg':'#1A1A18','--d-s1':'#242420','--d-s2':'#2E2E28','--d-bd':'#3C3C36','--d-t1':'#FAFAF8','--d-t2':'#A8A59E','--d-t3':'#6B6860','--l-bg':'#FAFAF8','--l-s1':'#FFFFFF','--l-bd':'#E8E6E0','--l-t1':'#1A1A18','--l-t2':'#6B6860' }, hFont:'Lora, serif', bFont:'Source Sans 3, sans-serif', mFont:'DM Mono, monospace', fonts:'lora:400,500,600|source-sans-3:400,500' },
-  motion:   { colors:{ '--green':'#8B5CF6','--green-h':'#7C3AED','--green-dim':'rgba(139,92,246,.10)','--green-rgb':'139,92,246','--d-bg':'#1A1530','--d-s1':'#241F3D','--d-s2':'#2E2848','--d-bd':'#3D3560','--d-t1':'#FAFAFE','--d-t2':'#A09AB5','--d-t3':'#6B6585','--l-bg':'#FAFAFE','--l-s1':'#FFFFFF','--l-bd':'#E4E0F4','--l-t1':'#1A1530','--l-t2':'#6B6585' }, hFont:'Space Grotesk, sans-serif', bFont:'Inter, sans-serif', mFont:'DM Mono, monospace', fonts:'space-grotesk:400,500,600|inter:400,500' },
-  lens:     { colors:{ '--green':'#D97706','--green-h':'#B45309','--green-dim':'rgba(217,119,6,.12)','--green-rgb':'217,119,6','--d-bg':'#1C1814','--d-s1':'#2A2520','--d-s2':'#322D27','--d-bd':'#3D3630','--d-t1':'#F5F0E8','--d-t2':'#B0A898','--d-t3':'#6B6560','--l-bg':'#2A2520','--l-s1':'#322D27','--l-bd':'#3D3630','--l-t1':'#F5F0E8','--l-t2':'#B0A898' }, hFont:'Cormorant Garamond, serif', bFont:'Inter, sans-serif', mFont:'DM Mono, monospace', fonts:'cormorant-garamond:400,500,600|inter:400,500' },
-  scale:    { colors:{ '--green':'#1E40AF','--green-h':'#1E3A8A','--green-dim':'rgba(30,64,175,.10)','--green-rgb':'30,64,175','--d-bg':'#0F172A','--d-s1':'#1A2440','--d-s2':'#243054','--d-bd':'#33406A','--d-t1':'#F8F9FC','--d-t2':'#94A0B8','--d-t3':'#5B6478','--l-bg':'#F8F9FC','--l-s1':'#FFFFFF','--l-bd':'#E0E4EE','--l-t1':'#0F172A','--l-t2':'#5B6478' }, hFont:'Inter, sans-serif', bFont:'Inter, sans-serif', mFont:'DM Mono, monospace', fonts:'inter:400,500,600' },
-};
-
-const DEMO_STEPS = [
-  { eyebrow:'Proposals & Contracts', title:'Win work before your competition.', body:'Write proposals with scope warnings built in. Track your win rate across every client. Know exactly what\'s working.', pane:0, nav:0, header:'Proposals' },
-  { eyebrow:'Time Tracking', title:'Track time without leaving your flow.', body:'One-click timers tied to every project. Unbilled hours always visible. Never lose track of a billable minute again.', pane:1, nav:1, header:'Time' },
-  { eyebrow:'Invoicing', title:'Get paid. On time, every time.', body:'Invoices that look sharp and follow up automatically. Late payments get nudged, so you don\'t have to.', pane:2, nav:2, header:'Invoices' },
-  { eyebrow:'Insights', title:'Know your numbers cold.', body:'Revenue, pipeline, win rate, client performance, all visible without a spreadsheet. Your business at a glance.', pane:3, nav:3, header:'Insights' },
-  { eyebrow:'Local-First', title:'Your data. Your machine.', body:'Business records stay local. No accounts, no cloud lock-in. Lance works completely offline.', pane:4, nav:4, header:'Privacy' },
-];
-
-const MARQUEE_WORDS = ['WIN WORK','RUN PROJECTS','GET PAID','LOCAL FIRST','100% OFFLINE','YOUR DATA','FREE FOREVER','NO CLOUD','NO ACCOUNTS','KEYBOARD FIRST'];
-
-/* ══════════════════════════════════════════════════════
-   STATE
-══════════════════════════════════════════════════════ */
-let mouseX = -999, mouseY = -999;
-let scrollY = 0;
-let rafTime = 0;
-let heroCardBaseX = 2, heroCardBaseY = -1;
-let currentTheme = 'default';
-let demoStep = 0;
-let eggSeq = '', eggCrazy = false, eggTimer = null;
-let soundOn = false;
-let audioCtx = null;
-let loadedFonts = {};
-let bentoScrollPos = 0;
-let bentoTotalWidth = 0;
-let bentoUserDragging = false;
-let bentoDragTimeout = null;
-
-/* ══════════════════════════════════════════════════════
-   THEME SYSTEM
-══════════════════════════════════════════════════════ */
-function applyTheme(id) {
-  const theme = THEME_VARS[id];
-  if (!theme) return;
-  currentTheme = id;
-  const root = document.documentElement;
-
-  // Apply color variables
-  Object.entries(theme.colors).forEach(([k, v]) => root.style.setProperty(k, v));
-
-  // Apply font variables
-  root.style.setProperty('--heading-font', theme.hFont);
-  root.style.setProperty('--body-font', theme.bFont);
-  root.style.setProperty('--mono-font', theme.mFont);
-
-  // Apply body font
-  document.body.style.fontFamily = theme.bFont;
-
-  // Update heading elements
-  document.querySelectorAll('.hero-hl,.sec-title,.sec-title-d,.sec-title-l,.nav-brand,.footer-brand,.bc-title,.why-title,.why-num,.why-left-title,.pricing-name,.pricing-price,.hc-card-name,.hc-stat-val,.hc-topbar-title,.hcs-brand,.dm-brand,.dm-title,.dm-rn,.dm-sv,.dl-name,.anno-title').forEach(el => {
-    el.style.fontFamily = theme.hFont;
-  });
-
-  // Update mono elements
-  document.querySelectorAll('.eyebrow,.eyebrow-l,.hero-eyebrow,.hero-trust,.hc-badge,.hc-chip,.hc-stat-lbl,.hc-card-meta,.hc-title,.hcs-group,.theme-note,.pricing-note,.download-sub,.dl-ver,.dl-sysreq,.footer-copy,.pricing-free-note,.ai-fn,.bento-hint,.m-item,.anno-eyebrow,.anno-step,.dm-sl,.dm-rm,.dm-chip,.spd,#egg-msg').forEach(el => {
-    el.style.fontFamily = theme.mFont;
-  });
-
-  // Update theme tabs
-  document.querySelectorAll('.theme-tab').forEach(t => t.classList.toggle('active', t.dataset.theme === id));
-
-  // Update theme previews
-  document.querySelectorAll('.theme-preview').forEach(p => p.classList.toggle('active', p.id === 'tp-' + id));
-
-  // Load fonts if needed
-  if (theme.fonts && !loadedFonts[id]) {
-    const link = document.createElement('link');
-    link.href = 'https://fonts.bunny.net/css?family=' + theme.fonts;
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-    loadedFonts[id] = true;
-  }
-
-  playWhoosh();
-  try { localStorage.setItem('lance-theme', id); } catch(e) {}
-}
-
-// Init saved theme
-(function() {
-  let saved;
-  try { saved = localStorage.getItem('lance-theme'); } catch(e) {}
-  const valid = saved && THEME_VARS[saved];
-  applyTheme(valid ? saved : 'default');
-  if (!valid) applyTheme('default');
-})();
-
-/* ══════════════════════════════════════════════════════
-   SOUND
-══════════════════════════════════════════════════════ */
-function getAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  return audioCtx;
-}
-function playTick(freq, dur, vol) {
-  if (!soundOn) return;
-  try {
-    const ctx = getAudio();
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.connect(g); g.connect(ctx.destination);
-    o.frequency.value = freq || 440;
-    g.gain.setValueAtTime(vol || 0.04, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (dur || 0.06));
-    o.start(); o.stop(ctx.currentTime + (dur || 0.06));
-  } catch(e){}
-}
-function playWhoosh() {
-  if (!soundOn) return;
-  try {
-    const ctx = getAudio();
-    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * Math.exp(-i/4000);
-    const s = ctx.createBufferSource();
-    const g = ctx.createGain();
-    const f = ctx.createBiquadFilter();
-    f.type = 'bandpass'; f.frequency.value = 1200;
-    s.buffer = buf; s.connect(f); f.connect(g); g.connect(ctx.destination);
-    g.gain.setValueAtTime(0.08, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-    s.start();
-  } catch(e){}
-}
-
-document.getElementById('sound-btn').addEventListener('click', () => {
-  soundOn = !soundOn;
-  document.getElementById('sound-btn').classList.toggle('on', soundOn);
-  document.getElementById('sound-icon-on').style.display = soundOn ? '' : 'none';
-  document.getElementById('sound-icon-off').style.display = soundOn ? 'none' : '';
-  if (soundOn) { getAudio(); playTick(880, 0.1, 0.05); }
-});
-
-/* ══════════════════════════════════════════════════════
-   CURSOR GLOW
-══════════════════════════════════════════════════════ */
-let cgx = -999, cgy = -999;
-const cgEl = document.getElementById('cglow');
-document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
-document.addEventListener('mouseleave', () => { cgEl.style.opacity = '0'; });
-document.addEventListener('mouseenter', () => { cgEl.style.opacity = '1'; });
-
-/* ══════════════════════════════════════════════════════
-   SCROLL
-══════════════════════════════════════════════════════ */
-document.addEventListener('scroll', () => { scrollY = window.scrollY; }, { passive: true });
-
-/* ══════════════════════════════════════════════════════
-   ENERGY STRINGS: Hero
-══════════════════════════════════════════════════════ */
-const heroStringDefs = [
-  { x1:20,  y1:80,  x2:1180, y2:320, cp1x:350, cp1y:20,  cp2x:850, cp2y:400, phase:0,    speed:.0005, amp:60 },
-  { x1:0,   y1:420, x2:900,  y2:200, cp1x:200, cp1y:600, cp2x:700, cp2y:80,  phase:1.2,  speed:.0007, amp:45 },
-  { x1:100, y1:700, x2:1200, y2:500, cp1x:400, cp1y:900, cp2x:900, cp2y:350, phase:2.4,  speed:.0004, amp:70 },
-  { x1:500, y1:0,   x2:1200, y2:700, cp1x:550, cp1y:200, cp2x:1100,cp2y:400, phase:0.8,  speed:.0006, amp:40 },
-  { x1:0,   y1:550, x2:600,  y2:100, cp1x:100, cp1y:400, cp2x:500, cp2y:200, phase:3.1,  speed:.0005, amp:50 },
-  { x1:300, y1:880, x2:1100, y2:100, cp1x:600, cp1y:700, cp2x:900, cp2y:300, phase:1.8,  speed:.0008, amp:35 },
-];
-
-function updateHeroStrings(t) {
-  const crazy = eggCrazy;
-  const mx = mouseX, my = mouseY;
-  const heroEl = document.querySelector('.hero');
-  const hRect = heroEl ? heroEl.getBoundingClientRect() : null;
-
-  heroStringDefs.forEach((s, i) => {
-    const amp = crazy ? s.amp * 6 : s.amp;
-    let cp1y = s.cp1y + Math.sin(t * s.speed + s.phase) * amp;
-    let cp2y = s.cp2y + Math.cos(t * s.speed + s.phase + 1.3) * amp;
-    let cp1x = s.cp1x + Math.cos(t * s.speed * .7 + s.phase) * (amp * .4);
-    let cp2x = s.cp2x + Math.sin(t * s.speed * .5 + s.phase + 2) * (amp * .3);
-
-    if (hRect && mx > 0) {
-      const relX = (mx - hRect.left) / hRect.width * 1200;
-      const relY = (my - hRect.top) / hRect.height * 900;
-      const midX = (s.x1 + s.x2) / 2;
-      const midY = (s.y1 + s.y2) / 2;
-      const dx = relX - midX, dy = relY - midY;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist < 300) {
-        const pull = (1 - dist / 300) * 30;
-        cp1x += (relX - cp1x) / Math.max(dist, 1) * pull;
-        cp1y += (relY - cp1y) / Math.max(dist, 1) * pull;
-        cp2x += (relX - cp2x) / Math.max(dist, 1) * pull * .6;
-        cp2y += (relY - cp2y) / Math.max(dist, 1) * pull * .6;
-      }
-    }
-
-    const el = document.getElementById('hs' + i);
-    if (el) el.setAttribute('d', `M${s.x1},${s.y1} C${cp1x},${cp1y} ${cp2x},${cp2y} ${s.x2},${s.y2}`);
-  });
-}
-
-/* Download section strings */
-const dlStringDefs = [
-  { x1:0, y1:100, x2:1200, y2:300, cp1x:300, cp1y:0, cp2x:900, cp2y:400, phase:0.5, speed:.0006, amp:40 },
-  { x1:0, y1:300, x2:1200, y2:100, cp1x:400, cp1y:400, cp2x:800, cp2y:50, phase:1.5, speed:.0004, amp:50 },
-  { x1:100, y1:0, x2:1100, y2:400, cp1x:500, cp1y:200, cp2x:700, cp2y:300, phase:2.5, speed:.0007, amp:30 },
-];
-function updateDLStrings(t) {
-  dlStringDefs.forEach((s, i) => {
-    const amp = eggCrazy ? s.amp * 5 : s.amp;
-    const cp1y = s.cp1y + Math.sin(t * s.speed + s.phase) * amp;
-    const cp2y = s.cp2y + Math.cos(t * s.speed + s.phase + 1) * amp;
-    const el = document.getElementById('dls' + i);
-    if (el) el.setAttribute('d', `M${s.x1},${s.y1} C${s.cp1x},${cp1y} ${s.cp2x},${cp2y} ${s.x2},${s.y2}`);
-  });
-}
-
-/* Footer strings */
-const footStringDefs = [
-  { x1:0,    y1:400, x2:600, y2:50, cp1x:100, cp1y:300, cp2x:500, cp2y:150, phase:0,   speed:.0005, amp:35 },
-  { x1:1200, y1:400, x2:600, y2:50, cp1x:1100,cp1y:250, cp2x:700, cp2y:150, phase:1.1, speed:.0006, amp:30 },
-  { x1:0,    y1:200, x2:600, y2:50, cp1x:150, cp1y:100, cp2x:450, cp2y:200, phase:2.2, speed:.0004, amp:45 },
-  { x1:1200, y1:100, x2:600, y2:50, cp1x:1050,cp1y:0,   cp2x:750, cp2y:100, phase:0.7, speed:.0007, amp:25 },
-];
-function updateFootStrings(t) {
-  footStringDefs.forEach((s, i) => {
-    const amp = eggCrazy ? s.amp * 5 : s.amp;
-    const cp1y = s.cp1y + Math.sin(t * s.speed + s.phase) * amp;
-    const cp2y = s.cp2y + Math.cos(t * s.speed + s.phase + 1.4) * amp;
-    const el = document.getElementById('fs' + i);
-    if (el) el.setAttribute('d', `M${s.x1},${s.y1} C${s.cp1x},${cp1y} ${s.cp2x},${cp2y} ${s.x2},${s.y2}`);
-  });
-}
-
-/* ══════════════════════════════════════════════════════
-   HERO MESH PARALLAX
-══════════════════════════════════════════════════════ */
-const heroMesh = document.getElementById('heroMesh');
-function updateMesh() {
-  if (!heroMesh) return;
-  heroMesh.style.transform = `translateY(${scrollY * .2}px)`;
-}
-
-/* ══════════════════════════════════════════════════════
-   HERO CARD TILT ON SCROLL
-══════════════════════════════════════════════════════ */
-const heroCardEl = document.getElementById('heroCard');
-function updateHeroCard(t) {
-  if (!heroCardEl) return;
-  const heroH = document.querySelector('.hero')?.offsetHeight || 800;
-  const pct = Math.min(scrollY / heroH, 1);
-  const rx = heroCardBaseX * (1 - pct * .8);
-  const ry = heroCardBaseY * (1 - pct * .8);
-  const sway = Math.sin(t * .0004) * .3;
-  heroCardEl.style.transform = `perspective(1000px) rotateX(${rx + sway}deg) rotateY(${ry + sway * .5}deg)`;
-}
-
-/* ══════════════════════════════════════════════════════
-   MAIN RAF LOOP
-══════════════════════════════════════════════════════ */
-function raf(t) {
-  rafTime = t;
-  cgx += (mouseX - cgx) * .08;
-  cgy += (mouseY - cgy) * .08;
-  cgEl.style.left = cgx + 'px';
-  cgEl.style.top  = cgy + 'px';
-
-  const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-  document.getElementById('sbar').style.width = (maxScroll > 0 ? scrollY / maxScroll * 100 : 0) + '%';
-
-  document.getElementById('nav').classList.toggle('scrolled', scrollY > 80);
-
-  updateMesh();
-  updateHeroStrings(t);
-  updateDLStrings(t);
-  updateFootStrings(t);
-  updateHeroCard(t);
-  updateScrollDemo();
-  updateBentoScroll(t);
-
-  requestAnimationFrame(raf);
-}
-requestAnimationFrame(raf);
-
-/* ══════════════════════════════════════════════════════
-   HERO MINI-MOCKUP AUTO CYCLE
-══════════════════════════════════════════════════════ */
-const HC_PANES = ['proposals','contracts','projects','time','invoices'];
-const HC_BADGES = { proposals:'3 active', contracts:'2 active', projects:'5 total', time:'9.3h this week', invoices:'$6.7k owed' };
-let hcIdx = 0;
-function cycleHero() {
-  hcIdx = (hcIdx + 1) % HC_PANES.length;
-  const p = HC_PANES[hcIdx];
-  document.querySelectorAll('.hcs-item').forEach(el => el.classList.toggle('active', el.dataset.pane === p));
-  document.querySelectorAll('.hc-pane').forEach(el => el.classList.toggle('active', el.id === 'hcp-' + p));
-  document.getElementById('hcTitle').textContent = p.charAt(0).toUpperCase() + p.slice(1);
-  document.getElementById('hcTopTitle').textContent = p.charAt(0).toUpperCase() + p.slice(1);
-  document.getElementById('hcBadge').textContent = HC_BADGES[p] || '';
-  playTick(660, 0.05, 0.03);
-}
-document.querySelectorAll('.hcs-item').forEach(el => {
-  el.addEventListener('click', () => {
-    const p = el.dataset.pane;
-    hcIdx = HC_PANES.indexOf(p);
-    document.querySelectorAll('.hcs-item').forEach(x => x.classList.toggle('active', x.dataset.pane === p));
-    document.querySelectorAll('.hc-pane').forEach(x => x.classList.toggle('active', x.id === 'hcp-' + p));
-    document.getElementById('hcTitle').textContent = p.charAt(0).toUpperCase() + p.slice(1);
-    document.getElementById('hcTopTitle').textContent = p.charAt(0).toUpperCase() + p.slice(1);
-    document.getElementById('hcBadge').textContent = HC_BADGES[p] || '';
-  });
-});
-setInterval(cycleHero, 3500);
-
-/* ══════════════════════════════════════════════════════
-   MARQUEES
-══════════════════════════════════════════════════════ */
-function buildMarquee(id, words) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const content = words.map(w => `<span class="m-item">${w}<span class="m-dot">\u25C6</span></span>`).join('');
-  el.innerHTML = content + content;
-}
-buildMarquee('mq1', MARQUEE_WORDS);
-buildMarquee('mq2', [...MARQUEE_WORDS].reverse());
-buildMarquee('mq3', ['PROPOSALS','CONTRACTS','INVOICES','PROJECTS','TIME','ASSETS','METRICS','CLIENTS','INSIGHTS','KEYBOARD FIRST']);
-
-/* ══════════════════════════════════════════════════════
-   FEATURES BENTO: infinite scroll
-══════════════════════════════════════════════════════ */
-function getBentoIcon(i) {
-  const icons = [
-    '<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/>',
-    '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
-    '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8h7"/><path d="M9 12h7"/><path d="M9 16h7"/>',
-    '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
-    '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
-    '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><path d="M9 21V9"/>',
-    '<line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/>',
-    '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>',
-    '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 16h10"/>',
-  ];
-  return icons[i] || icons[0];
-}
-
-function buildBento() {
-  const track = document.getElementById('bentoTrack');
-  const dotsEl = document.getElementById('bdots');
-  if (!track) return;
-  track.innerHTML = '';
-  dotsEl.innerHTML = '';
-
-   // Build cards 3 times for a gapless infinite loop
-  for (let dup = 0; dup < 3; dup++) {
-    FEATURES.forEach((f, i) => {
-      const card = document.createElement('div');
-      card.className = 'bc ' + f.size;
-      card.innerHTML = `
-        <div class="bc-icon">
-          <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            ${getBentoIcon(i)}
-          </svg>
-        </div>
-        <div class="bc-title">${f.title}</div>
-        <p class="bc-desc">${f.desc}</p>
-        <ul class="bc-list">${f.list.map(l=>`<li>${l}</li>`).join('')}</ul>
-      `;
-      track.appendChild(card);
-      if (dup === 0) {
-        const dot = document.createElement('div');
-        dot.className = 'bdot' + (i === 0 ? ' on' : '');
-        dot.addEventListener('click', () => jumpBento(i));
-        dotsEl.appendChild(dot);
-      }
-    });
-  }
-
-  // Magnetic hover
-  track.querySelectorAll('.bc').forEach(card => {
-    card.addEventListener('mousemove', e => {
-      const r = card.getBoundingClientRect();
-      const cx = (e.clientX - r.left) / r.width - .5;
-      const cy = (e.clientY - r.top) / r.height - .5;
-      card.style.transform = `perspective(800px) rotateY(${cx * 8}deg) rotateX(${cy * -6}deg) scale(1.02)`;
-    });
-    card.addEventListener('mouseleave', () => { card.style.transform = ''; });
-  });
-
-  // Defer width calculation until after browser layout
-  requestAnimationFrame(() => {
-    const singleSetWidth = track.scrollWidth / 3;
-    bentoTotalWidth = singleSetWidth;
-  });
-
-  // Drag handling
-  const outer = document.getElementById('bentoScroll');
-  let isDown = false, sx = 0, sl = 0;
-
-  outer.addEventListener('mousedown', e => {
-    isDown = true; bentoUserDragging = true;
-    if (bentoDragTimeout) clearTimeout(bentoDragTimeout);
-    sx = e.pageX;
-    sl = bentoScrollPos;
-    outer.style.userSelect = 'none';
-  });
-
-  window.addEventListener('mouseup', () => {
-    isDown = false; outer.style.userSelect = '';
-    bentoDragTimeout = setTimeout(() => { bentoUserDragging = false; }, 1500);
-  });
-
-  outer.addEventListener('mousemove', e => {
-    if (!isDown) return;
-    bentoUserDragging = true;
-    if (bentoDragTimeout) clearTimeout(bentoDragTimeout);
-    const dx = e.pageX - sx;
-    bentoScrollPos = sl - dx;
-    if (bentoScrollPos < -bentoTotalWidth) bentoScrollPos += bentoTotalWidth;
-    if (bentoScrollPos > bentoTotalWidth) bentoScrollPos -= bentoTotalWidth;
-    track.style.transform = `translateX(${-bentoScrollPos}px)`;
-    updateBentoDots();
-  });
-
-  // Touch handling
-  outer.addEventListener('touchstart', e => {
-    bentoUserDragging = true;
-    if (bentoDragTimeout) clearTimeout(bentoDragTimeout);
-    sx = e.touches[0].pageX;
-    sl = bentoScrollPos;
-  }, { passive: true });
-
-  outer.addEventListener('touchmove', e => {
-    bentoUserDragging = true;
-    if (bentoDragTimeout) clearTimeout(bentoDragTimeout);
-    const dx = e.touches[0].pageX - sx;
-    bentoScrollPos = sl - dx;
-    if (bentoScrollPos < -bentoTotalWidth) bentoScrollPos += bentoTotalWidth;
-    if (bentoScrollPos > bentoTotalWidth) bentoScrollPos -= bentoTotalWidth;
-    track.style.transform = `translateX(${-bentoScrollPos}px)`;
-    updateBentoDots();
-  });
-
-  outer.addEventListener('touchend', () => {
-    bentoDragTimeout = setTimeout(() => { bentoUserDragging = false; }, 1500);
-  });
-}
-buildBento();
-
-function jumpBento(idx) {
-  if (bentoTotalWidth <= 0) return;
-  bentoUserDragging = true;
-  if (bentoDragTimeout) clearTimeout(bentoDragTimeout);
-  const cardWidth = bentoTotalWidth / FEATURES.length;
-  const target = idx * cardWidth;
-  bentoScrollPos = target;
-  const track = document.getElementById('bentoTrack');
-  if (track) track.style.transform = `translateX(${-bentoScrollPos}px)`;
-  bentoDragTimeout = setTimeout(() => { bentoUserDragging = false; }, 1500);
-}
-
-function updateBentoDots() {
-  if (bentoTotalWidth <= 0) return;
-  const dotsEl = document.getElementById('bdots');
-  if (!dotsEl) return;
-  const pos = ((bentoScrollPos % bentoTotalWidth) + bentoTotalWidth) % bentoTotalWidth;
-  const cardsPerSet = FEATURES.length;
-  const cardWidth = bentoTotalWidth / cardsPerSet;
-  const activeIdx = Math.round(pos / cardWidth) % cardsPerSet;
-  dotsEl.querySelectorAll('.bdot').forEach((d, i) => d.classList.toggle('on', i === activeIdx));
-}
-
-function updateBentoScroll(t) {
-  if (bentoUserDragging || bentoTotalWidth <= 0) return;
-  const speed = 1.0;
-  bentoScrollPos += speed / 16;
-  if (bentoScrollPos >= bentoTotalWidth) bentoScrollPos -= bentoTotalWidth;
-  if (bentoScrollPos < 0) bentoScrollPos += bentoTotalWidth;
-  const track = document.getElementById('bentoTrack');
-  if (track) track.style.transform = `translateX(${-bentoScrollPos}px)`;
-  updateBentoDots();
-}
-
-/* ══════════════════════════════════════════════════════
-   APPLE SCROLL DEMO
-══════════════════════════════════════════════════════ */
-function buildDemo() {
-  const demoOuter = document.getElementById('demoOuter');
-  if (!demoOuter) return;
-  const demoSectionHeight = (DEMO_STEPS.length + 1) * window.innerHeight;
-  demoOuter.style.height = demoSectionHeight + 'px';
-
-  const spdDotsEl = document.getElementById('spdDots');
-  DEMO_STEPS.forEach((_, i) => {
-    const d = document.createElement('div');
-    d.className = 'spd' + (i === 0 ? ' on' : '');
-    d.addEventListener('click', () => jumpDemo(i));
-    spdDotsEl.appendChild(d);
-  });
-}
-buildDemo();
-
-window.addEventListener('resize', () => {
-  const demoOuter = document.getElementById('demoOuter');
-  if (demoOuter) demoOuter.style.height = ((DEMO_STEPS.length + 1) * window.innerHeight) + 'px';
-});
-
-function jumpDemo(idx) {
-  const demoOuter = document.getElementById('demoOuter');
-  const target = demoOuter.offsetTop + idx * window.innerHeight;
-  window.scrollTo({ top: target, behavior: 'smooth' });
-}
-
-function updateScrollDemo() {
-  const demoOuter = document.getElementById('demoOuter');
-  if (!demoOuter) return;
-  const top = demoOuter.getBoundingClientRect().top;
-  const demoSectionHeight = parseFloat(demoOuter.style.height) || (DEMO_STEPS.length + 1) * window.innerHeight;
-  const total = demoSectionHeight - window.innerHeight;
-  if (top > window.innerHeight || -top > total) return;
-
-  const progress = Math.max(0, Math.min(-top / total, 1));
-  const rawStep = progress * DEMO_STEPS.length;
-  const newStep = Math.min(Math.floor(rawStep), DEMO_STEPS.length - 1);
-
-  if (newStep !== demoStep) {
-    demoStep = newStep;
-    applyDemoStep(demoStep);
-  }
-
-  document.querySelectorAll('.spd').forEach((d, i) => d.classList.toggle('on', i === demoStep));
-}
-
-function applyDemoStep(idx) {
-  const step = DEMO_STEPS[idx];
-  const content = document.getElementById('annoContent');
-  if (!content) return;
-  content.classList.add('exit');
-
-  setTimeout(() => {
-    document.getElementById('annoEyebrow').textContent = step.eyebrow;
-    document.getElementById('annoStep').textContent = String(idx + 1).padStart(2,'0') + ' / 0' + DEMO_STEPS.length;
-    document.getElementById('annoTitle').textContent = step.title;
-    document.getElementById('annoBody').textContent = step.body;
-    content.classList.remove('exit');
-    playTick(500 + idx * 60, 0.06, 0.03);
-  }, 200);
-
-  for (let i = 0; i < DEMO_STEPS.length; i++) {
-    const pane = document.getElementById('dmp' + i);
-    const nav = document.getElementById('dmNav' + i);
-    if (pane) pane.classList.toggle('on', i === idx);
-    if (nav) nav.classList.toggle('on', i === idx);
-  }
-  const headerTitles = ['Proposals','Time','Invoices','Insights','Privacy'];
-  const h = document.getElementById('dmHeadTitle');
-  if (h) h.textContent = headerTitles[idx] || '';
-}
-
-/* ══════════════════════════════════════════════════════
-   WHY SECTION: sticky, word highlight
-══════════════════════════════════════════════════════ */
-function initWhy() {
-  [0,1,2].forEach(i => {
-    const body = document.querySelector('#wc' + i + ' .why-body');
-    if (!body) return;
-    const text = body.textContent;
-    body.innerHTML = text.trim().split(/\s+/).map(w => `<span class="w">${w}</span>`).join(' ');
-  });
-}
-initWhy();
-
-let whyLitState = [-1, -1, -1];
-const whyObs = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    const card = e.target;
-    const idx = parseInt(card.id.replace('wc',''));
-    card.classList.toggle('lit', e.isIntersecting && e.intersectionRatio > .3);
-    if (e.isIntersecting && e.intersectionRatio > .3 && whyLitState[idx] !== 1) {
-      whyLitState[idx] = 1;
-      const numEl = document.getElementById('wn' + idx);
-      if (numEl) {
-        let count = 0;
-        const target = idx + 1;
-        const tick = () => {
-          count++;
-          numEl.textContent = String(count).padStart(2, '0');
-          if (count < target) setTimeout(tick, 80);
-        };
-        tick();
-      }
-      const words = card.querySelectorAll('.w');
-      words.forEach((w, wi) => {
-        setTimeout(() => { w.classList.add('lit'); }, wi * 40 + 200);
-      });
-    }
-  });
-}, { threshold: [0, .3, .7] });
-[0,1,2].forEach(i => {
-  const c = document.getElementById('wc' + i);
-  if (c) whyObs.observe(c);
-});
-
-/* ══════════════════════════════════════════════════════
-   THEMES UI BUILDER
-══════════════════════════════════════════════════════ */
-function buildThemes() {
-  const tabsEl = document.getElementById('themeTabs');
-  const prevsEl = document.getElementById('themePreviews');
-  Object.entries(THEMES_PREVIEW).forEach(([id, t], i) => {
-    const tab = document.createElement('button');
-    tab.className = 'theme-tab' + (i === 0 ? ' active' : '');
-    tab.dataset.theme = id;
-    tab.textContent = t.name;
-    tab.addEventListener('click', () => applyTheme(id));
-    tabsEl.appendChild(tab);
-
-    const prev = document.createElement('div');
-    prev.className = 'theme-preview' + (i === 0 ? ' active' : '');
-    prev.id = 'tp-' + id;
-    prev.innerHTML = `<div class="theme-frame ${t.frame}"><h4>${t.body}</h4><p>${t.desc}</p><div class="theme-chips"><span class="theme-chip">Proposal</span><span class="theme-chip">Invoice</span><span class="theme-chip">Client</span></div></div>`;
-    prevsEl.appendChild(prev);
-  });
-}
-buildThemes();
-
-// Update theme eyebrow dynamically
-const themeEyebrowEl = document.getElementById('themeEyebrow');
-if (themeEyebrowEl) themeEyebrowEl.textContent = Object.keys(THEMES_PREVIEW).length + ' themes';
-
-/* ══════════════════════════════════════════════════════
-   PRICING: border trace
-══════════════════════════════════════════════════════ */
-const priceObs = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      e.target.classList.add('traced');
-      priceObs.disconnect();
-    }
-  });
-}, { threshold: .3 });
-const pc = document.getElementById('pricingCard');
-if (pc) {
-  priceObs.observe(pc);
-} else {
-  // No wrapper id: trace each pricing card as it scrolls in.
-  document.querySelectorAll('#freeCard, #proCard, #lifetimeCard').forEach(c => priceObs.observe(c));
-}
-
-/* ══════════════════════════════════════════════════════
-   DOWNLOAD: stagger + OS detect
-══════════════════════════════════════════════════════ */
-const dlBtns = ['dl-mac','dl-win','dl-linux'];
-const dlObs = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      dlBtns.forEach((id, i) => {
-        setTimeout(() => document.getElementById(id)?.classList.add('vis'), i * 120);
-      });
-      dlObs.disconnect();
-    }
-  });
-}, { threshold: .2 });
-const dlGrid = document.querySelector('.dl-grid');
-if (dlGrid) dlObs.observe(dlGrid);
-
-(function() {
-  const ua = navigator.userAgent || '';
-  const isMac = /Mac|iPhone|iPad/i.test(ua) && !/Windows/i.test(ua);
-  const isWin = /Windows/i.test(ua);
-  const heroBtn = document.getElementById('heroBtn');
-  function highlight(id) { dlBtns.forEach(d => document.getElementById(d)?.classList.remove('hi')); document.getElementById(id)?.classList.add('hi'); }
-  if (isMac) { if (heroBtn) heroBtn.textContent = '\u2193 Download for Mac'; highlight('dl-mac'); }
-  else if (isWin) { if (heroBtn) heroBtn.textContent = '\u2193 Download for Windows'; highlight('dl-win'); }
-  else { if (heroBtn) heroBtn.textContent = '\u2193 Download for Linux'; highlight('dl-linux'); }
-})();
-
-/* ══════════════════════════════════════════════════════
-   WIRE UP: fetch latest release + set download URLs
-══════════════════════════════════════════════════════ */
-(async function() {
-  try {
-    // Same-origin worker endpoint: the repo is private, so the page can't
-    // use the public GitHub API (it 404s). The worker serves release
-    // metadata with a server-side token. Buttons already point at
-    // /api/download/* which streams the installers, so they work even if
-    // this fetch fails.
-    const res = await fetch('/api/release');
-    if (!res.ok) return;
-    const release = await res.json();
-    const assets = release.assets || [];
-    const version = release.tag_name;
-
-    const winAsset   = assets.find(a => (a.name || '').endsWith('-setup.exe'));
-    const macAsset   = assets.find(a => (a.name || '').endsWith('.dmg'));
-    const linuxAsset = assets.find(a => (a.name || '').endsWith('.AppImage'));
-
-    if (winAsset)   { const b = document.getElementById('dl-win');   if (b) b.href = '/api/download/win'; }
-    if (macAsset)   { const b = document.getElementById('dl-mac');   if (b) b.href = '/api/download/mac'; }
-    if (linuxAsset) { const b = document.getElementById('dl-linux'); if (b) b.href = '/api/download/linux'; }
-
-    const ua = navigator.userAgent || '';
-    const isMac = /Mac|iPhone|iPad/i.test(ua) && !/Windows/i.test(ua);
-    const isWin = /Windows/i.test(ua);
-    const heroBtn = document.getElementById('heroBtn');
-    if (heroBtn) {
-      if (isMac && macAsset)       { heroBtn.href = '/api/download/mac'; heroBtn.textContent = '↓ Download for Mac'; }
-      else if (isWin && winAsset)  { heroBtn.href = '/api/download/win'; heroBtn.textContent = '↓ Download for Windows'; }
-      else if (linuxAsset)         { heroBtn.href = '/api/download/linux'; heroBtn.textContent = '↓ Download for Linux'; }
-    }
-
-    if (version) {
-      const vEl = document.getElementById('dlVer');
-      if (vEl) vEl.textContent = version;
-      const hEl = document.getElementById('heroVer');
-      if (hEl) hEl.textContent = version;
-    }
-  } catch (_) { /* page still works with # fallback links */ }
-})();
-
-/* ══════════════════════════════════════════════════════
-   FOOTER: logo draw + particles
-══════════════════════════════════════════════════════ */
-const footLogoEl = document.getElementById('footer-logo');
-let particlesBurst = false;
-const particles = [];
-
-const footObs = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      setTimeout(() => {
-        footLogoEl.classList.add('drawn');
-        const path = footLogoEl.querySelector('path');
-        if (path) {
-          const len = path.getTotalLength();
-          path.style.strokeDasharray = len;
-          path.style.strokeDashoffset = len;
-          setTimeout(() => { path.style.strokeDashoffset = '0'; }, 50);
-        }
-        setTimeout(() => { burstParticles(); }, 1600);
-      }, 200);
-      footObs.disconnect();
-    }
-  });
-}, { threshold: .4 });
-if (footLogoEl) footObs.observe(footLogoEl);
-
-function burstParticles() {
-  if (particlesBurst) return;
-  particlesBurst = true;
-  const canvas = document.getElementById('footer-canvas');
-  const footer = document.querySelector('footer');
-  if (!canvas || !footer) return;
-  canvas.width = footer.offsetWidth;
-  canvas.height = footer.offsetHeight;
-  const ctx = canvas.getContext('2d');
-  const logoWrap = document.querySelector('.footer-logo-wrap');
-  if (!logoWrap) return;
-  const wr = logoWrap.getBoundingClientRect();
-  const fr = footer.getBoundingClientRect();
-  const cx = wr.left - fr.left + wr.width / 2;
-  const cy = wr.top - fr.top + wr.height / 2;
-  const col = getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#1EC98A';
-
-  for (let i = 0; i < 55; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = Math.random() * 5 + 1.5;
-    particles.push({ x: cx, y: cy, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 2.5, life: 1, decay: Math.random() * .018 + .012, size: Math.random() * 3 + 1, col });
-  }
-  animParticles(ctx, canvas);
-}
-
-function animParticles(ctx, canvas) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  let alive = false;
-  particles.forEach(p => {
-    if (p.life <= 0) return;
-    alive = true;
-    p.x += p.vx; p.y += p.vy; p.vy += .12; p.life -= p.decay;
-    ctx.globalAlpha = Math.max(0, p.life);
-    ctx.fillStyle = p.col;
-    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
-  });
-  ctx.globalAlpha = 1;
-  if (alive) requestAnimationFrame(() => animParticles(ctx, canvas));
-}
-
-/* ══════════════════════════════════════════════════════
-   GENERAL REVEAL
-══════════════════════════════════════════════════════ */
-const revObs = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) e.target.classList.add('vis');
-  });
-}, { threshold: .12 });
-document.querySelectorAll('.reveal').forEach(el => revObs.observe(el));
-
-/* ══════════════════════════════════════════════════════
-   HAMBURGER
-══════════════════════════════════════════════════════ */
-document.getElementById('hamburger').addEventListener('click', () => {
-  document.getElementById('navLinks').classList.toggle('open');
-});
-document.querySelectorAll('.nav-links a').forEach(l => {
-  l.addEventListener('click', () => document.getElementById('navLinks').classList.remove('open'));
-});
-
-/* ══════════════════════════════════════════════════════
-   CONTACT FORM → /api/contact (Resend)
-══════════════════════════════════════════════════════ */
-(function () {
-  const form = document.getElementById('contact-form');
-  if (!form) return;
-  const status = document.getElementById('cf-status');
-  const submit = document.getElementById('cf-submit');
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('cf-name').value.trim();
-    const email = document.getElementById('cf-email').value.trim();
-    const message = document.getElementById('cf-message').value.trim();
-    const company_hp = document.getElementById('cf-company').value;
-    if (!name || !email || !message) {
-      status.textContent = 'Please fill in your name, email, and message.';
-      status.className = 'footer-contact-status err';
-      return;
-    }
-    submit.disabled = true;
-    submit.textContent = 'Sending…';
-    status.textContent = '';
-    try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, message, company_hp }),
-      });
-      if (!res.ok) throw new Error();
-      status.textContent = 'Message sent. Talk soon.';
-      status.className = 'footer-contact-status ok';
-      form.reset();
-    } catch {
-      status.textContent = 'Could not send. Try again in a bit.';
-      status.className = 'footer-contact-status err';
-    } finally {
-      submit.disabled = false;
-      submit.textContent = 'Send message';
-    }
-  });
-})();
-
-/* ══════════════════════════════════════════════════════
-   ISSUE FORM → /api/issues (files a GitHub issue)
-══════════════════════════════════════════════════════ */
-(function () {
-  const form = document.getElementById('issue-form');
-  if (!form) return;
-  const status = document.getElementById('ir-status');
-  const submit = document.getElementById('ir-submit');
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('ir-name').value.trim();
-    const email = document.getElementById('ir-email').value.trim();
-    const title = document.getElementById('ir-title').value.trim();
-    const details = document.getElementById('ir-details').value.trim();
-    const company_hp = document.getElementById('ir-company').value;
-    const fail = (msg) => {
-      status.textContent = msg;
-      status.className = 'footer-contact-status err';
-    };
-    if (!name) return fail('Please add your name.');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail('Please add a valid email so we can follow up.');
-    if (title.length < 5) return fail('The summary needs at least 5 characters.');
-    if (details.length < 10) return fail('Details need at least 10 characters — steps to reproduce help most.');
-    submit.disabled = true;
-    submit.textContent = 'Filing…';
-    status.textContent = '';
-    try {
-      const res = await fetch('/api/issues', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, title, details, company_hp }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || '');
-      status.textContent = 'Issue filed. Thanks for reporting it.';
-      status.className = 'footer-contact-status ok';
-      form.reset();
-    } catch (err) {
-      status.textContent = err.message || 'Could not file. Try again in a bit.';
-      status.className = 'footer-contact-status err';
-    } finally {
-      submit.disabled = false;
-      submit.textContent = 'Report issue';
-    }
-  });
-})();
-
-/* ══════════════════════════════════════════════════════
-   EASTER EGG: type LANCE
-══════════════════════════════════════════════════════ */
-document.addEventListener('keydown', e => {
-  eggSeq += e.key.toUpperCase();
-  if (eggSeq.length > 5) eggSeq = eggSeq.slice(-5);
-  if (eggSeq === 'LANCE') {
-    triggerEgg();
-    eggSeq = '';
-  }
-});
-
-function triggerEgg() {
-  eggCrazy = true;
-  const overlay = document.getElementById('egg-overlay');
-  overlay.classList.add('show');
-  playTick(220, .3, .1);
-  setTimeout(() => playTick(440, .2, .1), 150);
-  setTimeout(() => playTick(880, .2, .1), 300);
-  if (eggTimer) clearTimeout(eggTimer);
-  eggTimer = setTimeout(() => {
-    eggCrazy = false;
-    overlay.classList.remove('show');
-  }, 2200);
-}
-</script>
+<div id="egg-overlay"><div id="egg-msg">⚡ LANCE MODE</div></div>
+<script src="app.js" defer></script>
 </body>
 </html>

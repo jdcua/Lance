@@ -799,6 +799,13 @@ export default function App() {
     return () => document.removeEventListener('lance:toggle-timer', handler);
   }, [toggleTimer]);
 
+  // Open command palette from Topbar search
+  useEffect(() => {
+    const handler = () => setShowCommandPalette(true);
+    document.addEventListener('lance:open-command', handler);
+    return () => document.removeEventListener('lance:open-command', handler);
+  }, []);
+
   // Keyboard shortcuts
   const isEditing = useCallback((): boolean => {
     const tag = (document.activeElement?.tagName || '').toLowerCase();

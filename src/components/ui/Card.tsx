@@ -20,7 +20,7 @@ export default function Card({ children, className = '', onClick }: CardProps) {
       onKeyDown={onClick ? handleKeyDown : undefined}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
-      className={`bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[12px] py-5 px-6 shadow-[var(--card-shadow)] transition-all duration-150 ${onClick ? 'cursor-pointer hover:shadow-lg hover:-translate-y-px' : ''} ${className}`}
+      className={`bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[14px] py-5 px-6 shadow-[var(--card-shadow)] transition-all duration-200 ${onClick ? 'cursor-pointer hover:shadow-[var(--card-hover-shadow)] hover:-translate-y-[1px] hover:border-[var(--text-tertiary)]' : ''} ${className}`}
     >
       {children}
     </div>
