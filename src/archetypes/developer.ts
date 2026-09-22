@@ -12,7 +12,7 @@ const developer: ArchetypeConfig = {
 
   dashboard: {
     greeting: "What's shipping today?",
-    subgreeting: 'Your utilization, velocity, and active work at a glance.',
+    subgreeting: 'Your projects, time, and money at a glance.',
     metricCards: [
       { id: 'utilizationRate', label: 'Utilization rate this month', query: null, format: 'percent', color: 'green' },
       { id: 'effectiveHourlyRate', label: 'Effective hourly rate', query: null, format: 'currency', color: 'blue' },

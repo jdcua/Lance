@@ -16,12 +16,55 @@ interface GitHubRelease {
 }
 
 /**
+ * User-facing sanitizer for release notes.
+ * GitHub bodies and git logs are written for developers; the "What's new"
+ * modal is for freelancers. Drop internal lines (license-key formats,
+ * console noise, handler fixes, plumbing) and strip markdown artifacts.
+ * When nothing survives, fall back to one plain line so the modal never
+ * shows an empty version or leaks internals.
+ */
+const INTERNAL_PATTERNS = [
+  /licen[cs]e key/i,
+  /LANCE-[A-Z0-9-]{8,}/,
+  /HMAC/i,
+  /singleton/i,
+  /console/i,
+  /\b404\b/,
+  /noisy/i,
+  /cache fallback/i,
+  /dynamic changelog/i,
+  /handler fix/i,
+  /modal title is dynamic/i,
+  /git log/i,
+  /invoke\(/i,
+  /\btauri\b/i,
+  /no longer noisy/i,
+];
+
+export function sanitizeChangelogItems(items: string[]): string[] {
+  const clean = (items || [])
+    .map((line) =>
+      String(line)
+        .replace(/^[-*]\s*/, '')
+        .replace(/`([^`]*)`/g, '$1')
+        .replace(/\*\*([^*]*)\*\*/g, '$1')
+        .replace(/__([^_]*)__/g, '$1')
+        .trim(),
+    )
+    .filter((line) => line.length > 0 && !INTERNAL_PATTERNS.some((re) => re.test(line)));
+  return clean.slice(0, 6);
+}
+
+/**
  * Dynamic changelog loader.
  * Priority:
  * 1. GitHub Releases API (production, when online)
  * 2. Local git log parsing (development, offline)
  * 3. Cached localStorage (fast repeat loads)
  * 4. Hardcoded fallback
+ *
+ * Every source passes through sanitizeChangelogItems so the modal stays
+ * plain and user-facing.
  */
 export async function loadChangelog(): Promise<ChangelogEntry[]> {
   const cacheKey = 'lance:changelog-cache';
@@ -53,10 +96,13 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
       .map((r) => ({
         version: r.tag_name.replace(/^v/, ''),
         date: r.published_at.split('T')[0],
-        items: r.body
-          ?.split('\n')
-          .map((line: string) => line.replace(/^[-*]\s*/, '').trim())
-          .filter((line: string) => line.length > 0) || [],
+        items: sanitizeChangelogItems(
+          r.body?.split('\n').map((line: string) => line.replace(/^[-*]\s*/, '').trim()) || [],
+        ),
+      }))
+      .map((e) => ({
+        ...e,
+        items: e.items.length > 0 ? e.items : ['Small fixes and polish in this release.'],
       }));
   } catch {
     /* GitHub API failed · fall through to git log */
@@ -73,43 +119,32 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
     }
   }
 
-  // 4. Hardcoded fallback for current version
+  // 4. Hardcoded fallback for current version — plain words only.
   if (entries.length === 0) {
     entries = [
       {
         version: '0.9.3',
         date: new Date().toISOString().split('T')[0],
         items: [
-          'Monetization: license tiers, Pro upgrade flow, and archetype depth',
-          'Dynamic changelog from GitHub Releases API with local cache fallback',
-          'License key format aligned to 4 groups (LANCE-XXXX-XXXX-XXXX-XXXX)',
-          'Auto-backup singleton update handler fix',
-          'GitHub API 404 no longer noisy in console; changelog modal title is dynamic',
+          'Pro licenses and a smoother upgrade flow',
+          'New profession profiles with tailored dashboards',
+          'Auto-backup keeps working quietly in the background',
+          'Faster, quieter update checks',
         ],
       },
       {
         version: '0.9.1',
         date: new Date().toISOString().split('T')[0],
-        items: [
-          'Dynamic changelog from GitHub Releases API with local cache fallback',
-          '"What\'s new" modal now pulls latest release notes automatically',
-        ],
+        items: ['"What\'s new" notes now update themselves'],
       },
       {
         version: '0.9.0',
         date: new Date().toISOString().split('T')[0],
         items: [
-          'Auto-backup toggle now persists across reloads (browser + Tauri)',
-          'Contract/Export templates persist in browser mode',
-          'Follow-ups "Add" button navigates to Clients for no-email clients',
-          'Relative timestamps now use created_at (fixes "13h ago" bug)',
-          'Client status dot shows "Has communication log" when applicable',
-          'Phases counter decrements correctly on delete',
-          'Negative metric values rejected with error toast',
-          'Empty contract body shows helpful empty-state message',
-          'Email field validates format on blur',
-          'Invoice payment card shows "Paid: just now"',
-          '37 bugs fixed in v0.9.0 sprint',
+          'Auto-backup remembers your settings',
+          'Contract and export templates that stick around',
+          'Smoother follow-ups, timestamps, and empty states',
+          '37 small fixes in one sprint',
         ],
       },
     ];
@@ -172,7 +207,10 @@ function parseGitLog(log: string): ChangelogEntry[] {
     }
   }
   if (current) entries.push(current);
-  return entries;
+  return entries.map((e) => {
+    const items = sanitizeChangelogItems(e.items);
+    return { ...e, items: items.length > 0 ? items : ['Small fixes and polish in this release.'] };
+  });
 }
 
 /**

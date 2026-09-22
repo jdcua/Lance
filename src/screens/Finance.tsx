@@ -8,7 +8,7 @@ import Modal from '../components/ui/Modal';
 import { formatCurrency, formatDate, formatMonth, parseDateString, DAY_MS } from '../utils/format';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import BankImportModal from '../components/features/BankImportModal';
-import TaxPack from '../components/features/TaxPack';
+import YearSummary from '../components/features/YearSummary';
 import RetainerBurnDown from '../components/features/RetainerBurnDown';
 import { useToasts } from '../store/toastStore';
 import type { ToastType } from '../store/toastStore';
@@ -27,7 +27,7 @@ import {
 } from '../lib/forecast';
 import { Plus, Pencil, Trash2, BarChart3, TrendingUp, AlertTriangle, Check, DollarSign, ArrowUpDown, ChevronUp, ChevronDown, Upload } from 'lucide-react';
 
-const categories = ['Software', 'Equipment', 'Office', 'Travel', 'Marketing', 'Taxes', 'Other'];
+const categories = ['Software', 'Equipment', 'Office', 'Travel', 'Marketing', 'Fees', 'Other'];
 
 export default function Finance() {
   const { expenses, loadExpenses, addExpense, updateExpense, removeExpense, invoices, loadInvoices, profile, recurringInvoices, loadRecurringInvoices, projects, loadProjects, milestones, loadMilestones, payments, loadAllPayments, addPayment, updateInvoice, clients, loadClients, getFinanceSummary } = useStore();
@@ -405,7 +405,7 @@ export default function Finance() {
             </div>
           )}
           <div className="mt-6">
-            <TaxPack />
+            <YearSummary />
           </div>
           <div className="mt-6">
             <RetainerBurnDown />

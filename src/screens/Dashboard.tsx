@@ -11,7 +11,7 @@ import MetricCard from '../components/ui/MetricCard';
 import Button from '../components/ui/Button';
 import { relativeDate, formatCurrency, DAY_MS } from '../utils/format';
 import { useToasts } from '../store/toastStore';
-import { Play, Receipt, FileText, Users, FolderKanban, Clock, Plus, ArrowRight, CheckCircle2, Circle, Bell, Send, X, Link } from 'lucide-react';
+import { Play, Receipt, FileText, Users, FolderKanban, Clock, Plus, ArrowRight, CheckCircle2, Circle, Bell, Send, X, Link, Banknote, Clock3, Target } from 'lucide-react';
 import { generateFollowUpDraft } from '../utils/followUpTemplates';
 import { getArchetype } from '../archetypes';
 import type { ArchetypeConfig } from '../archetypes';
@@ -207,6 +207,53 @@ export default function Dashboard() {
   const draftProposals = proposals.filter((p) => p.status === 'draft').length;
   const todayLabel = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
 
+  // Six-month trend series for KPI sparklines, computed from live data.
+  // A series is only attached when it actually contains values.
+  const monthBuckets = (() => {
+    const now = new Date();
+    return Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    });
+  })();
+  const bucketize = <T,>(items: T[], dateOf: (t: T) => string, valueOf: (t: T) => number): number[] =>
+    monthBuckets.map((m) =>
+      items
+        .filter((t) => (dateOf(t) || '').slice(0, 7) === m)
+        .reduce((sum, t) => sum + valueOf(t), 0),
+    );
+  const revenueSeries = bucketize(
+    invoices.filter((i) => i.status === 'paid'),
+    (i) => i.created_at,
+    (i) => i.total || 0,
+  );
+  const hoursSeries = bucketize(
+    timeEntries.filter((t) => t.billable),
+    (t) => t.start_time,
+    (t) => (t.duration_minutes || 0) / 60,
+  );
+  const pipelineSeries = bucketize(proposals, (p) => p.created_at, () => 1);
+  const pickSeries = (s: number[]): number[] | undefined =>
+    s.reduce((a, b) => a + b, 0) > 0 ? s : undefined;
+  function cardIcon(id: string) {
+    const k = id.toLowerCase();
+    if (/revenue|income|profit|paid|outstanding|money|earning/.test(k)) return <Banknote size={15} />;
+    if (/hour|time|unbilled|utiliz|billable/.test(k)) return <Clock3 size={15} />;
+    if (/win|rate|conversion/.test(k)) return <Target size={15} />;
+    if (/proposal/.test(k)) return <FileText size={15} />;
+    if (/client/.test(k)) return <Users size={15} />;
+    if (/project/.test(k)) return <FolderKanban size={15} />;
+    if (/invoice|expense|payment/.test(k)) return <Receipt size={15} />;
+    return undefined;
+  }
+  function cardSpark(id: string): number[] | undefined {
+    const k = id.toLowerCase();
+    if (/revenue|income|profit|paid|outstanding|money|earning/.test(k)) return pickSeries(revenueSeries);
+    if (/hour|time|unbilled|utiliz|billable/.test(k)) return pickSeries(hoursSeries);
+    if (/win|rate|proposal|client|project|invoice|expense/.test(k)) return pickSeries(pipelineSeries);
+    return undefined;
+  }
+
   const hasData = clients.length > 0 || invoices.length > 0 || projects.length > 0;
   const effectiveArchetype = archetype || getArchetype('default');
 
@@ -267,7 +314,7 @@ export default function Dashboard() {
       <div className="flex flex-wrap items-end justify-between gap-4 mb-6 animate-rise">
         <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-[0.8px] text-[var(--text-tertiary)] mb-1.5">{todayLabel}</p>
-          <h2 className="text-[26px] leading-tight font-bold tracking-tight text-[var(--text-primary)]">
+          <h2 className="text-[30px] leading-[1.1] font-bold tracking-tight text-balance text-[var(--text-primary)]">
             {effectiveArchetype.dashboard.greeting}
           </h2>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
@@ -323,8 +370,19 @@ export default function Dashboard() {
               <Play size={20} className="text-[var(--accent)]" />
             </div>
             <div className="flex-1">
-              <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Let's get you set up</h3>
-              <p className="text-xs text-[var(--text-secondary)] mb-3">Everything in Lance starts with a client. Each step opens the real thing.</p>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-sm font-semibold text-[var(--text-primary)]">Let's get you set up</h3>
+                <span className="text-[10px] font-semibold tnum px-1.5 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)]">
+                  {steps.filter((s) => s.done).length}/{steps.length}
+                </span>
+              </div>
+              <p className="text-xs text-[var(--text-secondary)] mb-2.5">Everything in Lance starts with a client. Each step opens the real thing.</p>
+              <div className="h-1 rounded-full bg-[var(--bg-secondary)] overflow-hidden mb-3">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-hover)] transition-all duration-500"
+                  style={{ width: `${Math.round((steps.filter((s) => s.done).length / steps.length) * 100)}%` }}
+                />
+              </div>
               <div className="space-y-2 mb-1">
                 {steps.map((s, i) => (
                   <button
@@ -408,6 +466,8 @@ export default function Dashboard() {
             value={metricValues[card.id] ?? '...'}
             color={card.color || 'gray'}
             tooltip={card.tooltip}
+            icon={cardIcon(card.id)}
+            sparkData={cardSpark(card.id)}
           />
         ))}
       </div>

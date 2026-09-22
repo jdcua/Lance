@@ -899,7 +899,7 @@ export default function App() {
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
         <AIBar />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto bg-[radial-gradient(70%_380px_at_50%_-120px,var(--accent-bg),transparent)]">
           <Outlet key={location.pathname} />
         </main>
       </div>

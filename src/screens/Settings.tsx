@@ -17,7 +17,7 @@ import {
   type TrashEntry,
 } from '../utils/trash';
 import { eventCounts, getTelemetryEvents, clearTelemetry } from '../utils/telemetry';
-import { downloadTextFile } from '../utils/taxPack';
+import { downloadTextFile } from '../utils/yearSummary';
 import { formatCurrency } from '../utils/format';
 import type { UserProfile, ExportTemplate } from '../types';
 import Card from '../components/ui/Card';
@@ -395,7 +395,7 @@ export default function Settings() {
         if (!filePath) return;
         await writeFile(filePath, new TextEncoder().encode(json));
       } else {
-        const { downloadTextFile } = await import('../utils/taxPack');
+        const { downloadTextFile } = await import('../utils/yearSummary');
         downloadTextFile(filename, json, 'application/json;charset=utf-8');
       }
       addToast('Data exported successfully', 'success');
@@ -815,7 +815,7 @@ export default function Settings() {
                       </div>
                     </div>
                     <div>
-                      <label className={labelClass}>Default tax rate (%)</label>
+                      <label className={labelClass}>Default VAT / sales tax (%)</label>
                       <input
                         type="number"
                         min={0}
@@ -829,6 +829,7 @@ export default function Settings() {
                         placeholder="0"
                         className={inputClass}
                       />
+                      <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Invoice math only — applied to new invoices as entered. Not tax advice.</p>
                     </div>
                     <div>
                       <label className={labelClass}>Payment terms (days)</label>

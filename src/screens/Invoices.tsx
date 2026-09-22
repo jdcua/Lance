@@ -1009,7 +1009,7 @@ export default function Invoices() {
           <div className="border-t border-[var(--border-color)] pt-3 space-y-1 text-sm">
             <div className="flex justify-between"><span className="text-[var(--text-secondary)]">Subtotal</span><span className="text-[var(--text-primary)] font-medium">{formatCurrency(subtotal)}</span></div>
             <div className="flex justify-between items-center">
-              <span className="text-[var(--text-secondary)]">Tax Rate (%)</span>
+              <span className="text-[var(--text-secondary)]">VAT / sales tax (%)</span>
               <input type="number" min={0} value={form.tax_rate} onChange={(e) => { const v = e.target.value; setForm({ ...form, tax_rate: Number(v) < 0 ? '0' : v }); }} placeholder="0" className="w-20 px-2 py-1 text-xs text-right border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
             </div>
             <div className="flex justify-between pt-1 border-t border-[var(--border-color)]"><span className="font-medium text-[var(--text-primary)]">Total</span><span className="font-semibold text-[var(--text-primary)]">{formatCurrency(total)}</span></div>
@@ -1071,7 +1071,7 @@ export default function Invoices() {
           <div className="border-t border-[var(--border-color)] pt-3 space-y-1 text-sm">
             <div className="flex justify-between"><span className="text-[var(--text-secondary)]">Subtotal</span><span className="text-[var(--text-primary)] font-medium">{formatCurrency(riSubtotal)}</span></div>
             <div className="flex justify-between items-center">
-              <span className="text-[var(--text-secondary)]">Tax Rate (%)</span>
+              <span className="text-[var(--text-secondary)]">VAT / sales tax (%)</span>
               <input type="number" min={0} value={riForm.tax_rate} onChange={(e) => { const v = e.target.value; setRiForm({ ...riForm, tax_rate: Number(v) < 0 ? '0' : v }); }} placeholder="0" className="w-20 px-2 py-1 text-xs text-right border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
             </div>
             <div className="flex justify-between pt-1 border-t border-[var(--border-color)]"><span className="font-medium text-[var(--text-primary)]">Total</span><span className="font-semibold text-[var(--text-primary)]">{formatCurrency(riTotal)}</span></div>

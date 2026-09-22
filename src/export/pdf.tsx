@@ -179,7 +179,7 @@ export function InvoicePDF({ invoice, client, profile }: { invoice: Invoice; cli
 
         {showTax && (
           <View style={pdfStyles.totalRow}>
-            <Text style={pdfStyles.totalRowLabel}>Tax ({invoice.tax_rate}%):  </Text>
+            <Text style={pdfStyles.totalRowLabel}>VAT / sales tax ({invoice.tax_rate}%):  </Text>
             <Text style={pdfStyles.value}>{formatCurrency(taxAmount, currency)}</Text>
           </View>
         )}

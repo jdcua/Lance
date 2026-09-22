@@ -257,7 +257,7 @@ export default function Sidebar() {
               !isExpanded ? 'justify-center px-0' : ''
             } ${
               isActive
-                ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px]'
+                ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px] [&>svg]:text-[var(--accent)]'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
             }`
           }
@@ -291,7 +291,7 @@ export default function Sidebar() {
                   className={({ isActive }) =>
                     `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
                       isActive
-                        ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px]'
+                        ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px] [&>svg]:text-[var(--accent)]'
                         : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
                     }`
                   }
@@ -342,7 +342,7 @@ export default function Sidebar() {
             className={({ isActive }) =>
               `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
                 isActive
-                  ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px]'
+                  ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px] [&>svg]:text-[var(--accent)]'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
               }`
             }
@@ -358,7 +358,7 @@ export default function Sidebar() {
             className={({ isActive }) =>
               `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
                 isActive
-                  ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px]'
+                  ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px] [&>svg]:text-[var(--accent)]'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
               }`
             }
@@ -380,7 +380,7 @@ export default function Sidebar() {
             className={({ isActive }) =>
               `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
                 isActive
-                  ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px]'
+                  ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px] [&>svg]:text-[var(--accent)]'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
               }`
             }
@@ -397,7 +397,7 @@ export default function Sidebar() {
             className={({ isActive }) =>
               `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
                 isActive
-                  ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px]'
+                  ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px] [&>svg]:text-[var(--accent)]'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
               }`
             }
@@ -433,7 +433,7 @@ export default function Sidebar() {
           className={({ isActive }) =>
             `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
               isActive
-                ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px]'
+                ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px] [&>svg]:text-[var(--accent)]'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
             }`
           }
