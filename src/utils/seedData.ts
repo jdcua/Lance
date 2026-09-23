@@ -271,11 +271,16 @@ export async function seedSampleData(): Promise<void> {
     ];
     for (const te of timeEntries) {
       const d = daysAgo(te.daysAgo);
+      const start = new Date(`${d}T09:00:00.000Z`);
+      // Closed entries carry an end_time: without one the app (correctly)
+      // reads the entry as a still-running timer and counts from its start.
+      const end = new Date(start.getTime() + te.mins * 60000);
       await store.addTimeEntry({
         project_id: te.proj,
         client_id: te.cl,
         description: te.desc,
-        start_time: `${d}T09:00:00.000Z`,
+        start_time: start.toISOString(),
+        end_time: end.toISOString(),
         duration_minutes: te.mins,
         billable: te.billable === 1,
       });

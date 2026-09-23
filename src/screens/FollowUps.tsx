@@ -383,7 +383,7 @@ export default function FollowUps() {
                       </>
                     )}
                     {item.log.status === 'pending' && (
-                      <span className="text-[var(--accent)]">{item.daysElapsed}d elapsed</span>
+                      <span className="text-[var(--accent-ink,var(--accent))]">{item.daysElapsed}d elapsed</span>
                     )}
                   </div>
                 </div>

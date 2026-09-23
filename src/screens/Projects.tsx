@@ -422,7 +422,7 @@ export default function Projects() {
         <Card className="text-center py-16 flex flex-col items-center">
           <FolderKanban size={40} className="text-[var(--text-tertiary)] mb-4" />
           <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No projects yet</h3>
-          <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Create your first project to start tracking work.</p>
+          <p className="text-[13px] text-[var(--text-secondary)] max-w-xs mb-5">Create your first project to start tracking work.</p>
           {clients.length === 0 ? (
             <div className="text-center">
               <p className="text-xs text-[var(--warning-text)] mb-3">Add at least one client before creating a project.</p>

@@ -32,12 +32,10 @@ const tintFg: Record<string, string> = {
 };
 
 export default function MetricCard({ label, value, subtext, trend, color = 'gray', tooltip, icon, delta, sparkData }: MetricCardProps) {
-  const trendColor = trend === 'up' ? 'text-[var(--accent)]' : trend === 'down' ? 'text-[var(--danger)]' : 'text-[var(--text-secondary)]';
-  const trendArrow = trend === 'up' ? '↑' : trend === 'down' ? '↓' : '';
-  // When a directional trend exists without an explicit delta, the subtext
-  // rides inside the pill. Otherwise it renders underneath as before.
-  const merged = !!subtext && !!trend && trend !== 'neutral' && !delta;
-  const showDelta = delta ?? (trendArrow || '');
+  const trendColor = trend === 'up' ? 'text-[var(--accent-ink,var(--accent))]' : trend === 'down' ? 'text-[var(--danger)]' : 'text-[var(--text-secondary)]';
+  // Pills carry explicit deltas only — never a bare arrow. The trend color
+  // on the subtext below already communicates direction.
+  const showDelta = delta ?? '';
 
   return (
     <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[14px] p-5 shadow-[var(--card-shadow)] transition-all duration-200 hover:border-[var(--text-tertiary)] hover:shadow-[var(--card-hover-shadow)] min-w-0 group" title={tooltip}>
@@ -50,19 +48,18 @@ export default function MetricCard({ label, value, subtext, trend, color = 'gray
             {icon}
           </span>
         )}
-        <p className="text-[11px] font-medium text-[var(--text-tertiary)] uppercase tracking-[0.6px] break-words flex-1 min-w-0">{label}</p>
+        <p className="text-[11px] font-medium text-[var(--text-secondary)] uppercase tracking-[0.6px] break-words flex-1 min-w-0">{label}</p>
         {showDelta && (
           <span
             className="text-[11px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 tnum"
             style={{ background: tintBg[trend === 'down' ? 'red' : color], color: tintFg[trend === 'down' ? 'red' : color] }}
           >
             {showDelta}
-            {merged ? ` ${subtext}` : ''}
           </span>
         )}
       </div>
       <p className="text-[26px] font-semibold text-[var(--text-primary)] mb-1 break-words leading-tight tracking-tight tnum">{value}</p>
-      {subtext && !merged && (
+      {subtext && (
         <p className={`text-xs ${trendColor} break-words`}>{subtext}</p>
       )}
       {sparkData && sparkData.length >= 2 && (

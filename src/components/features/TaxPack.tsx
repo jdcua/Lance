@@ -66,19 +66,19 @@ export default function TaxPack() {
 
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div>
-          <p className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide">Revenue</p>
-          <p className="text-lg font-bold text-[var(--accent)]" style={{ fontFamily: "'Syne', sans-serif" }}>
+          <p className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wide">Revenue</p>
+          <p className="text-lg font-bold text-[var(--accent-ink,var(--accent))]" style={{ fontFamily: "'Syne', sans-serif" }}>
             {formatCurrency(Math.round(pack.revenuePaid), currency)}
           </p>
         </div>
         <div>
-          <p className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide">Expenses</p>
+          <p className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wide">Expenses</p>
           <p className="text-lg font-bold text-[var(--danger)]" style={{ fontFamily: "'Syne', sans-serif" }}>
             {formatCurrency(Math.round(pack.expenses), currency)}
           </p>
         </div>
         <div>
-          <p className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide">Profit</p>
+          <p className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wide">Profit</p>
           <p className="text-lg font-bold text-[var(--text-primary)]" style={{ fontFamily: "'Syne', sans-serif" }}>
             {formatCurrency(Math.round(pack.profit), currency)}
           </p>
@@ -101,7 +101,7 @@ export default function TaxPack() {
 
       {pack.perClient.length > 0 && (
         <div className="mb-4">
-          <p className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide mb-2">Top clients</p>
+          <p className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wide mb-2">Top clients</p>
           <div className="space-y-1.5">
             {pack.perClient.slice(0, 4).map((c) => (
               <div key={c.name} className="flex items-center justify-between text-xs">

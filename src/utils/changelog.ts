@@ -84,28 +84,41 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
 
   let entries: ChangelogEntry[] = [];
 
-  // 2. Try GitHub Releases API (works in browser via CORS)
-  try {
-    const response = await fetch('https://api.github.com/repos/jdcua/Lance/releases?per_page=20', {
-      headers: { Accept: 'application/vnd.github.v3+json' },
-    });
-    if (!response.ok) throw new Error(`GitHub API ${response.status}`);
-    const releases = (await response.json()) as GitHubRelease[];
-    entries = releases
-      .filter((r) => !r.draft && !r.prerelease)
-      .map((r) => ({
-        version: r.tag_name.replace(/^v/, ''),
-        date: r.published_at.split('T')[0],
-        items: sanitizeChangelogItems(
-          r.body?.split('\n').map((line: string) => line.replace(/^[-*]\s*/, '').trim()) || [],
-        ),
-      }))
-      .map((e) => ({
-        ...e,
-        items: e.items.length > 0 ? e.items : ['Small fixes and polish in this release.'],
-      }));
-  } catch {
-    /* GitHub API failed · fall through to git log */
+  // 2. Release notes, newest source first. The repo is private, so the
+  // public GitHub API always 404s — prefer our worker proxy (identical
+  // payload shape), keep direct GitHub for collaborators, then git log.
+  // Fully offline clients skip the network entirely with zero console noise.
+  const releaseEndpoints = [
+    'https://lance.cuajuandiego.workers.dev/api/release',
+    'https://api.github.com/repos/jdcua/Lance/releases?per_page=20',
+  ];
+  if (typeof navigator === 'undefined' || navigator.onLine !== false) {
+    for (const url of releaseEndpoints) {
+      try {
+        const response = await fetch(url, {
+          headers: { Accept: 'application/vnd.github.v3+json' },
+        });
+        if (!response.ok) throw new Error(`release notes ${response.status}`);
+        const data = (await response.json()) as GitHubRelease | GitHubRelease[];
+        const releases = (Array.isArray(data) ? data : [data]).filter((r) => !r.draft && !r.prerelease);
+        const mapped = releases.map((r) => ({
+          version: r.tag_name.replace(/^v/, ''),
+          date: (r.published_at || '').split('T')[0],
+          items: sanitizeChangelogItems(
+            (r.body || '').split('\n').map((line: string) => line.replace(/^[-*]\s*/, '').trim()),
+          ),
+        })).map((e) => ({
+          ...e,
+          items: e.items.length > 0 ? e.items : ['Small fixes and polish in this release.'],
+        }));
+        if (mapped.length > 0) {
+          entries = mapped;
+          break;
+        }
+      } catch {
+        /* try the next source, silently */
+      }
+    }
   }
 
   // 3. Fallback: parse local git tags (dev mode, Tauri only)

@@ -72,6 +72,15 @@ export default function App() {
   // Upsell frequency cap: free users see the splash at most SPLASH_MAX_VIEWS
   // times per app version, then silence until the next release. Counted in
   // SplashScreen on mount; loaded here once the runtime version resolves.
+  // Launch-only: captured at mount so finishing onboarding mid-session
+  // doesn't trigger a splash the moment onboarding closes.
+  const [splashAtMount] = useState(() => {
+    try {
+      return localStorage.getItem('lance:onboarding-completed') === 'true';
+    } catch {
+      return true;
+    }
+  });
   const [splashViews, setSplashViews] = useState<number | null>(null);
   // Guard against double-processing recurring invoices when invoices.length
   // changes mid-generation and re-triggers the idle-callback effect.
@@ -908,7 +917,7 @@ export default function App() {
           onboarding or the tour is active so modals never stack (tour is
           z-60, splash is z-100 and would bury it). Capped at SPLASH_MAX_VIEWS
           views per version so free users aren't nagged every launch. */}
-      {showSplash && !isLicensed && !showOnboarding && !showWalkthrough && splashViews !== null && splashViews < SPLASH_MAX_VIEWS && (
+      {showSplash && splashAtMount && !isLicensed && !showOnboarding && !showWalkthrough && splashViews !== null && splashViews < SPLASH_MAX_VIEWS && (
         <SplashScreen onDismiss={() => setShowSplash(false)} />
       )}
 
@@ -1233,7 +1242,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
                   }`}
                 >
                   <span className="text-base flex-shrink-0">{archetype.emoji}</span>
-                  <span className="truncate">{archetype.label}</span>
+                  <span className="leading-snug line-clamp-2">{archetype.label}</span>
                 </button>
               ))}
             </div>

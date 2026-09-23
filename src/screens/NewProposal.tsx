@@ -180,15 +180,13 @@ export default function NewProposal() {
 
           <div>
             <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Project Type</label>
-            <select
+            <input
+              type="text"
               value={form.project_type}
               onChange={(e) => setForm({ ...form, project_type: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
-            >
-              {proposalTypes.map((pt) => (
-                <option key={pt} value={pt}>{pt}</option>
-              ))}
-            </select>
+              placeholder="e.g. Brand refresh, Retainer, Audit"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+            />
           </div>
 
           <div>
@@ -207,6 +205,7 @@ export default function NewProposal() {
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Rate Type</label>
               <select
                 value={form.rate_type}
+                aria-label="Rate Type"
                 onChange={(e) => setForm({ ...form, rate_type: e.target.value })}
                 className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               >
@@ -255,7 +254,7 @@ export default function NewProposal() {
               )}
             </Button>
             {!aiEnabled && (
-              <p className="text-xs text-[var(--text-tertiary)]">
+              <p className="text-xs text-[var(--text-secondary)]">
                 AI features are off. Enable them in Settings &rarr; AI features.
               </p>
             )}
@@ -274,6 +273,7 @@ export default function NewProposal() {
               <span className="flex-1">{w.warning}</span>
               <button
                 onClick={() => dismissWarning(w.pattern)}
+                aria-label="Dismiss warning"
                 className="text-[var(--warning-text)]/60 hover:text-[var(--warning-text)] flex-shrink-0"
               >
                 <X size={14} />

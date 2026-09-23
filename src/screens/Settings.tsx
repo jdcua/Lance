@@ -660,7 +660,7 @@ export default function Settings() {
                     section === item.id
                       ? item.danger
                         ? 'bg-[var(--danger-bg)] text-[var(--danger)] font-medium'
-                        : 'bg-[var(--accent-bg)] text-[var(--accent)] font-medium'
+                        : 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] font-medium'
                       : item.danger
                       ? 'text-[var(--danger)] hover:bg-[var(--danger-bg)] hover:text-[var(--danger)]'
                       : 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]'
@@ -677,7 +677,7 @@ export default function Settings() {
             {section === 'general' && (
               <>
                 {/* Profile section header */}
-                <div className="text-xs uppercase tracking-widest text-[var(--text-tertiary)] font-semibold mb-4">Profile</div>
+                <div className="text-xs uppercase tracking-widest text-[var(--text-secondary)] font-semibold mb-4">Profile</div>
 
                 {/* License */}
                 <Card className="mb-6">
@@ -711,7 +711,7 @@ export default function Settings() {
                     <div>
                       {getActiveTier() === 'trial' && (
                         <p className="text-sm text-[var(--text-primary)] mb-2">
-                          Pro trial: <strong className="text-[var(--accent)]">{trialDaysRemaining(profile?.trial_started_at)} days left</strong>. Everything is unlocked. Keep it with a license before it ends.
+                          Pro trial: <strong className="text-[var(--accent-ink,var(--accent))]">{trialDaysRemaining(profile?.trial_started_at)} days left</strong>. Everything is unlocked. Keep it with a license before it ends.
                           {getTrialValue().total > 0 && (
                             <span className="block text-xs text-[var(--text-secondary)] mt-1">
                               It has already earned you {formatCurrency(getTrialValue().total)}.
@@ -778,6 +778,7 @@ export default function Settings() {
                       <label className={labelClass}>Default currency</label>
                       <select
                         value={form.currency}
+                        aria-label="Default currency"
                         onChange={(e) => autoSave({ currency: e.target.value }, 'Your profile')}
                         className={inputClass}
                       >
@@ -785,7 +786,7 @@ export default function Settings() {
                           <option key={c} value={c}>{c}</option>
                         ))}
                       </select>
-                      <p className="text-[10px] text-[var(--text-tertiary)] mt-1">You can override this per-client or per-invoice.</p>
+                      <p className="text-[10px] text-[var(--text-secondary)] mt-1">You can override this per-client or per-invoice.</p>
                     </div>
                   </div>
                 </Card>
@@ -797,7 +798,7 @@ export default function Settings() {
                     <div>
                       <label className={labelClass}>Default hourly rate</label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-tertiary)]">{getCurrencySymbol(form.currency || profile?.currency || 'CAD')}</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-secondary)]">{getCurrencySymbol(form.currency || profile?.currency || 'CAD')}</span>
                         <input
                           type="number"
                           min={0}
@@ -829,7 +830,7 @@ export default function Settings() {
                         placeholder="0"
                         className={inputClass}
                       />
-                      <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Invoice math only — applied to new invoices as entered. Not tax advice.</p>
+                      <p className="text-[10px] text-[var(--text-secondary)] mt-1">Invoice math only — applied to new invoices as entered. Not tax advice.</p>
                     </div>
                     <div>
                       <label className={labelClass}>Payment terms (days)</label>
@@ -837,6 +838,7 @@ export default function Settings() {
                         type="number"
                         min={0}
                         max={365}
+                        aria-label="Payment terms (days)"
                         value={form.payment_terms ?? 14}
                         onChange={(e) => {
                           const v = parseInt(e.target.value);
@@ -869,6 +871,7 @@ export default function Settings() {
                       <label className={labelClass}>Writing style</label>
                       <select
                         value={form.writing_style || 'professional'}
+                        aria-label="Writing style"
                         onChange={(e) => autoSave({ writing_style: e.target.value }, 'Proposal voice')}
                         className={inputClass}
                       >
@@ -925,6 +928,7 @@ export default function Settings() {
                       <label className={labelClass}>Proposals expire after</label>
                       <select
                         value={form.proposal_expiry_days ?? ''}
+                        aria-label="Proposals expire after"
                         onChange={(e) => {
                           const v = e.target.value ? parseInt(e.target.value) : undefined;
                           setForm({ ...form, proposal_expiry_days: v });
@@ -1000,7 +1004,7 @@ export default function Settings() {
             {section === 'appearance' && (
               <>
                 {/* Preferences section header */}
-                <div className="text-xs uppercase tracking-widest text-[var(--text-tertiary)] font-semibold mb-4">Preferences</div>
+                <div className="text-xs uppercase tracking-widest text-[var(--text-secondary)] font-semibold mb-4">Preferences</div>
 
                 {/* Appearance (light/dark, density) */}
                 <Card className="mb-6">
@@ -1142,7 +1146,7 @@ export default function Settings() {
             {section === 'notifications' && (
               <>
                 {/* Preferences section header */}
-                <div className="text-xs uppercase tracking-widest text-[var(--text-tertiary)] font-semibold mb-4">Notifications</div>
+                <div className="text-xs uppercase tracking-widest text-[var(--text-secondary)] font-semibold mb-4">Notifications</div>
 
                 {/* AI features */}
                 <Card className="mb-6">
@@ -1303,7 +1307,7 @@ export default function Settings() {
             {section === 'data' && (
               <>
                 {/* Data & Backup section header */}
-                <div className="text-xs uppercase tracking-widest text-[var(--text-tertiary)] font-semibold mb-4">Data &amp; Backup</div>
+                <div className="text-xs uppercase tracking-widest text-[var(--text-secondary)] font-semibold mb-4">Data &amp; Backup</div>
 
                 {/* Data (export, import, assets, project templates) */}
                 <Card className="mb-6">
@@ -1483,9 +1487,10 @@ export default function Settings() {
                       {autoBackupEnabled && (
                         <>
                           <div>
-                            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Frequency</label>
-                            <select
-                              value={autoBackupFreq}
+                        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Frequency</label>
+                        <select
+                          value={autoBackupFreq}
+                          aria-label="Auto-backup frequency"
                               onChange={(e) => {
                                 const freq = e.target.value as 'daily' | 'weekly' | 'monthly';
                                 setAutoBackupFreq(freq);
@@ -2209,6 +2214,7 @@ function ExportTemplatesSection() {
             <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Document type</label>
             <select
               value={form.type}
+              aria-label="Document type"
               onChange={(e) => setForm({ ...form, type: e.target.value as ExportTemplate['type'], sections: [] })}
               className={inputClass}
             >

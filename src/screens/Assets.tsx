@@ -326,12 +326,16 @@ export default function Assets() {
           <div className="flex bg-[var(--bg-secondary)] rounded-[8px] p-0.5">
             <button
               onClick={() => setViewMode('grid')}
+              aria-label="Grid view"
+              aria-pressed={viewMode === 'grid'}
               className={`p-1.5 rounded-[6px] transition-colors ${viewMode === 'grid' ? 'bg-[var(--bg-card)] shadow-sm text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}
             >
               <Grid3X3 size={14} />
             </button>
             <button
               onClick={() => setViewMode('list')}
+              aria-label="List view"
+              aria-pressed={viewMode === 'list'}
               className={`p-1.5 rounded-[6px] transition-colors ${viewMode === 'list' ? 'bg-[var(--bg-card)] shadow-sm text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}
             >
               <List size={14} />

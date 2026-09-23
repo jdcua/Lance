@@ -82,11 +82,12 @@ export default function ClientSelect({ clients, value, onChange, placeholder = '
         role="combobox"
         aria-expanded={open}
         aria-haspopup="listbox"
+        aria-label={placeholder || 'Select a client'}
         onClick={() => { setOpen(!open); setActiveIndex(0); }}
         onKeyDown={handleKeyDown}
         className={`${inputClass} text-left flex items-center justify-between`}
       >
-        <span className={selected ? 'text-[var(--text-primary)]' : 'text-[var(--text-tertiary)] truncate'}>
+        <span className={selected ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)] truncate'}>
           {selected ? `${selected.name}${selected.company ? ` (${selected.company})` : ''}` : placeholder}
         </span>
         <ChevronDown size={14} className={`text-[var(--text-tertiary)] flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />

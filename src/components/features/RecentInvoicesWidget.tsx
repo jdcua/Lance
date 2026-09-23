@@ -10,7 +10,7 @@ export default function RecentInvoicesWidget() {
     .slice(0, 5);
 
   if (recent.length === 0) {
-    return <p className="text-xs text-[var(--text-tertiary)] py-2">No invoices yet.</p>;
+    return <p className="text-xs text-[var(--text-secondary)] py-2">No invoices yet.</p>;
   }
 
   const statusColor = (status: string) => {

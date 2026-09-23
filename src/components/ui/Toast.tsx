@@ -36,8 +36,8 @@ export default function ToastContainer() {
               const Icon = icons[toast.type];
               return <Icon size={16} className="flex-shrink-0" />;
             })()}
-            <span className="flex-1">{toast.message}</span>
-            <button onClick={() => remove(toast.id)} className="opacity-50 hover:opacity-100">
+            <span className="flex-1 text-[var(--text-primary)]">{toast.message}</span>
+            <button onClick={() => remove(toast.id)} aria-label="Dismiss notification" className="opacity-50 hover:opacity-100">
               <X size={14} />
             </button>
           </div>

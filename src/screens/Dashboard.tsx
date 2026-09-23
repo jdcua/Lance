@@ -319,7 +319,7 @@ export default function Dashboard() {
         <div aria-hidden className="pointer-events-none absolute -bottom-28 -left-10 w-72 h-72 rounded-full bg-[var(--accent)] opacity-[0.07] blur-[80px]" />
         <div className="relative flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.8px] text-[var(--text-tertiary)] mb-1.5">{todayLabel}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.8px] text-[var(--text-secondary)] mb-1.5">{todayLabel}</p>
           <h2 className="text-[30px] leading-[1.1] font-bold tracking-tight text-balance text-[var(--text-primary)]">
             {effectiveArchetype.dashboard.greeting}
           </h2>
@@ -434,7 +434,7 @@ export default function Dashboard() {
               {digest.hasActivity ? (
                 <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                   {digest.paidCount > 0 && (
-                    <>Got paid <strong className="text-[var(--accent)]">{digest.paidCount}x</strong>{' '}</>
+                    <>Got paid <strong className="text-[var(--accent-ink,var(--accent))]">{digest.paidCount}x</strong>{' '}</>
                   )}
                   {digest.hoursLogged > 0 && (
                     <>{digest.hoursLogged}h logged{' '}</>
@@ -631,12 +631,12 @@ function DashboardWidgets({ archetype, recentInvoices, recentTime, profile, proj
       <Card>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-[var(--text-primary)]">Recent Invoices</h3>
-          <button onClick={() => navigate('/invoices')} className="text-xs text-[var(--accent)] hover:underline">View all</button>
+          <button onClick={() => navigate('/invoices')} className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline">View all</button>
         </div>
         {recentInvoices.length === 0 ? (
           <div className="text-center py-8">
             <Receipt size={32} className="text-[var(--text-tertiary)] mx-auto mb-2" />
-            <p className="text-xs text-[var(--text-tertiary)]">No invoices yet.</p>
+            <p className="text-xs text-[var(--text-secondary)]">No invoices yet.</p>
             <Button onClick={() => { navigate('/invoices'); setTimeout(() => document.dispatchEvent(new CustomEvent('lance:add-invoice')), 350); }} size="sm" variant="secondary" className="mt-3">
               <Plus size={12} /> New Invoice
             </Button>
@@ -650,7 +650,7 @@ function DashboardWidgets({ archetype, recentInvoices, recentTime, profile, proj
                   <p className="text-[10px] text-[var(--text-tertiary)]">{relativeDate(inv.created_at)}</p>
                 </div>
                 <div className="text-right">
-                  <p className={`text-xs font-medium ${inv.status === 'overdue' ? 'text-[var(--danger)]' : inv.status === 'paid' ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'}`}>
+                    <p className={`text-xs font-medium ${inv.status === 'overdue' ? 'text-[var(--danger)]' : inv.status === 'paid' ? 'text-[var(--accent-ink,var(--accent))]' : 'text-[var(--text-primary)]'}`}>
                     {formatCurrency(inv.total, inv.currency || profile?.currency)}
                   </p>
                   <p className="text-[10px] text-[var(--text-tertiary)] capitalize">{inv.status}</p>
@@ -664,12 +664,12 @@ function DashboardWidgets({ archetype, recentInvoices, recentTime, profile, proj
       <Card>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-[var(--text-primary)]">Recent Time</h3>
-          <button onClick={() => navigate('/time')} className="text-xs text-[var(--accent)] hover:underline">View all</button>
+          <button onClick={() => navigate('/time')} className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline">View all</button>
         </div>
         {recentTime.length === 0 ? (
           <div className="text-center py-8">
             <Clock size={32} className="text-[var(--text-tertiary)] mx-auto mb-2" />
-            <p className="text-xs text-[var(--text-tertiary)]">No time tracked yet.</p>
+            <p className="text-xs text-[var(--text-secondary)]">No time tracked yet.</p>
             <Button onClick={() => navigate('/time')} size="sm" variant="secondary" className="mt-3">
               <Play size={12} /> Track Time
             </Button>

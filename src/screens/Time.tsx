@@ -355,7 +355,7 @@ export default function TimeScreen() {
               <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No time entries yet</h3>
               {projects.length === 0 ? (
                 <>
-                  <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">
+                  <p className="text-[13px] text-[var(--text-secondary)] max-w-xs mb-5">
                     Time tracking runs on projects. Create your first project to start logging hours.
                   </p>
                   <Button onClick={() => navigate('/projects')} variant="secondary" size="sm">

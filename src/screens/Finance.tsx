@@ -295,9 +295,17 @@ export default function Finance() {
             <Card>
               <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Monthly Overview{hasMixedCurrencies ? ' · per currency' : ''}</h3>
               {allMonths.length === 0 ? (
-                <p className="text-xs text-[var(--text-tertiary)]">No data yet.</p>
+                <p className="text-xs text-[var(--text-secondary)]">No data yet.</p>
               ) : (
                 <div className="space-y-2">
+                  <div className="flex items-center justify-between text-[10px] uppercase tracking-wide text-[var(--text-secondary)]">
+                    <span>Month</span>
+                    <div className="grid grid-cols-3 gap-3 w-64 text-right">
+                      <span>Income</span>
+                      <span>Expenses</span>
+                      <span>Net</span>
+                    </div>
+                  </div>
                   {allMonths.map((month) => {
                     const expense = monthlyExpenses[month] || 0;
                     const income = monthlyPaid[month] || 0;
@@ -306,10 +314,10 @@ export default function Finance() {
                       return (
                         <div key={month} className="flex items-center justify-between text-xs">
                           <span className="text-[var(--text-secondary)]">{formatMonth(month)}</span>
-                          <div className="flex items-center gap-4">
-                            <span className="text-[var(--accent)]">+{fmt(income)}</span>
-                            <span className="text-[var(--danger)]">-{fmt(expense)}</span>
-                            <span className={`font-medium ${net >= 0 ? 'text-[var(--accent)]' : 'text-[var(--danger)]'}`}>
+                          <div className="grid grid-cols-3 gap-3 w-64 text-right">
+                            <span className="text-[var(--accent-ink,var(--accent))] truncate" title={`Income ${fmt(income)}`}>+{fmt(income)}</span>
+                            <span className="text-[var(--danger)] truncate" title={`Expenses ${fmt(expense)}`}>-{fmt(expense)}</span>
+                            <span className={`font-medium truncate ${net >= 0 ? 'text-[var(--accent-ink,var(--accent))]' : 'text-[var(--danger)]'}`} title={`Net ${fmt(net)}`}>
                               {fmt(net)}
                             </span>
                           </div>
@@ -323,10 +331,10 @@ export default function Finance() {
                     return (
                       <div key={month} className="flex items-center justify-between text-xs">
                         <span className="text-[var(--text-secondary)]">{formatMonth(month)}</span>
-                        <div className="flex items-center gap-4">
-                          <span className="text-[var(--accent)]">+{Object.entries(byCur).map(([cur, amt]) => `${formatCurrency(amt, cur)} ${cur}`).join(' · ')}</span>
-                          <span className="text-[var(--danger)]">-{fmt(expense)}</span>
-                          <span className="font-medium text-[var(--text-primary)]">
+                        <div className="grid grid-cols-3 gap-3 w-64 text-right">
+                          <span className="text-[var(--accent-ink,var(--accent))] truncate" title="Income">{Object.entries(byCur).map(([cur, amt]) => `${formatCurrency(amt, cur)} ${cur}`).join(' · ')}</span>
+                          <span className="text-[var(--danger)] truncate" title={`Expenses ${fmt(expense)}`}>-{fmt(expense)}</span>
+                          <span className="font-medium text-[var(--text-primary)] truncate" title={netParts}>
                             {netParts}
                           </span>
                         </div>
@@ -341,7 +349,7 @@ export default function Finance() {
             <Card>
               <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Expenses by Category</h3>
               {expensesByCategory.length === 0 ? (
-                <p className="text-xs text-[var(--text-tertiary)]">No expenses recorded yet.</p>
+                <p className="text-xs text-[var(--text-secondary)]">No expenses recorded yet.</p>
               ) : (
                 <div className="space-y-2">
                   {expensesByCategory.map((cat) => (
@@ -376,7 +384,7 @@ export default function Finance() {
             <Card className="text-center py-16 flex flex-col items-center">
               <BarChart3 size={40} className="text-[var(--text-tertiary)] mb-4" />
               <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No expenses yet</h3>
-              <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Add an expense or mark an invoice paid to see your numbers.</p>
+              <p className="text-[13px] text-[var(--text-secondary)] max-w-xs mb-5">Add an expense or mark an invoice paid to see your numbers.</p>
               <Button onClick={openNew} size="sm" variant="secondary">Add Expense</Button>
             </Card>
           ) : (

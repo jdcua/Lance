@@ -203,7 +203,7 @@ html.dark * {
   --sb-text: #9d9da8;
   --sb-text-active: #f4f4f6;
   --sb-border: rgba(255,255,255,.07);
-  --sb-label: #5e5e69;
+  --sb-label: #8e8e99;
 }
 
 .tnum { font-variant-numeric: tabular-nums; }

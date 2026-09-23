@@ -26,8 +26,11 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
   // dismiss and the focus trap, and a blanket stopPropagation here made
   // Escape a no-op in every Modal-based dialog whenever focus was inside it
   // (Modal auto-focuses its first button on open, so that was always).
+  // Cmd/Ctrl chords also propagate: global chrome (palette, new-item,
+  // timer) must stay reachable from inside dialogs.
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Escape' || e.key === 'Tab') return;
+    if (e.metaKey || e.ctrlKey) return;
     e.stopPropagation();
   }, []);
 

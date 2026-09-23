@@ -10,7 +10,7 @@ export default function RecentTimeWidget() {
     .slice(0, 5);
 
   if (recent.length === 0) {
-    return <p className="text-xs text-[var(--text-tertiary)] py-2">No time entries yet.</p>;
+    return <p className="text-xs text-[var(--text-secondary)] py-2">No time entries yet.</p>;
   }
 
   return (

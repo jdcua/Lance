@@ -118,7 +118,7 @@ export default function Insights() {
         <Card className="text-center py-16 flex flex-col items-center">
           <Lightbulb size={40} className="text-[var(--text-tertiary)] mb-4" />
           <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">Not enough data yet</h3>
-          <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Insights appear after you create an invoice or project. Start tracking to see your data.</p>
+          <p className="text-[13px] text-[var(--text-secondary)] max-w-xs mb-5">Insights appear after you create an invoice or project. Start tracking to see your data.</p>
         </Card>
       </div>
     );
@@ -149,16 +149,8 @@ export default function Insights() {
               <p className="text-xs text-[var(--text-tertiary)]">No projects yet.</p>
             ) : (
               <div className="space-y-4">
-                <div className="flex justify-between text-xs">
-                  <span className="text-[var(--text-secondary)]">Active</span>
-                  <span className="font-medium text-[var(--text-primary)]">{activeProjects}</span>
-                </div>
-                <ProgressBar value={activeProjects} max={totalProjects || 1} label="Active" className="insight-bar-animate insight-bar-0" />
-                <div className="flex justify-between text-xs">
-                  <span className="text-[var(--text-secondary)]">Completed</span>
-                  <span className="font-medium text-[var(--text-primary)]">{completedProjects}</span>
-                </div>
-                <ProgressBar value={completedProjects} max={totalProjects || 1} label="Completed" className="insight-bar-animate insight-bar-1" />
+                <ProgressBar value={activeProjects} max={totalProjects || 1} label={`Active · ${activeProjects}`} className="insight-bar-animate insight-bar-0" />
+                <ProgressBar value={completedProjects} max={totalProjects || 1} label={`Completed · ${completedProjects}`} className="insight-bar-animate insight-bar-1" />
                 <div className="flex justify-between text-xs mt-4 pt-3 border-t border-[var(--border-color)]">
                   <span className="text-[var(--text-secondary)]">Total Tracked</span>
                   <span className="font-medium text-[var(--text-primary)]">{Math.round(totalHoursTracked / 60)} hours</span>
@@ -185,11 +177,9 @@ export default function Insights() {
                 <span className="text-[var(--text-secondary)]">Expenses</span>
                 <span className="font-medium text-[var(--danger)]">{formatCurrency(totalExpenses, profile?.currency)}</span>
               </div>
-              <div className="flex justify-between text-xs pt-3 border-t border-[var(--border-color)]">
-                <span className="text-[var(--text-secondary)]">Profit Margin</span>
-                <span className={`font-medium ${profitMargin >= 0 ? 'text-[var(--accent)]' : 'text-[var(--danger)]'}`}>{profitMargin}%</span>
+              <div className="pt-3 border-t border-[var(--border-color)]">
+                <ProgressBar value={Math.max(profitMargin, 0)} max={100} label="Profit margin" className="insight-bar-animate insight-bar-2" />
               </div>
-              <ProgressBar value={Math.max(profitMargin, 0)} max={100} label="Margin %" className="insight-bar-animate insight-bar-2" />
               <div className="flex justify-between text-xs pt-3 border-t border-[var(--border-color)]">
                 <span className="text-[var(--text-secondary)]">Outstanding</span>
                 <span className="font-medium text-[var(--warning-text)]">{formatCurrency(totalOutstanding, profile?.currency)}</span>

@@ -139,7 +139,7 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
               onClick={() => setCategory(cat)}
               className={`px-3 py-1.5 text-xs rounded-full font-medium transition-colors ${
                 category === cat
-                  ? 'bg-[var(--accent)] text-white'
+                  ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] ring-1 ring-[var(--accent)]/40 font-semibold'
                   : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--border-color)]'
               }`}
             >
@@ -197,7 +197,7 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
                   <h3 className="text-sm font-semibold text-[var(--text-primary)] truncate">
                     {archetype.label}
                   </h3>
-                  <p className="text-xs text-[var(--text-tertiary)] truncate mt-0.5">
+                  <p className="text-xs text-[var(--text-secondary)] truncate mt-0.5">
                     {archetype.tagline}
                   </p>
                 </div>
@@ -235,7 +235,7 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
             <p className="text-xs text-[var(--text-secondary)]">
               Selected: <span className="font-medium text-[var(--text-primary)]">{getArchetype(selected).label}</span>
             </p>
-            <p className="text-[10px] text-[var(--text-tertiary)]">
+            <p className="text-[10px] text-[var(--text-secondary)]">
               This will reorder your sidebar and dashboard. Your data stays the same.
             </p>
           </div>

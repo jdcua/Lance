@@ -673,7 +673,7 @@ export default function Invoices() {
           <Card className="text-center py-16 flex flex-col items-center">
             <Receipt size={40} className="text-[var(--text-tertiary)] mb-4" />
             <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No invoices yet</h3>
-            <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Create your first invoice to start getting paid.</p>
+            <p className="text-[13px] text-[var(--text-secondary)] max-w-xs mb-5">Create your first invoice to start getting paid.</p>
             {clients.length === 0 ? (
               <div className="text-center">
                 <p className="text-xs text-[var(--warning-text)] mb-3">Add at least one client before creating an invoice.</p>
@@ -703,7 +703,7 @@ export default function Invoices() {
               return (
                 <div key={inv.id}>
                   <div className={`flex items-center gap-3 px-4 py-3 bg-[var(--bg-card)] border rounded-[8px] ${isExpanded ? 'rounded-b-none border-b-0' : ''} ${inv.status === 'overdue' ? 'border-l-[3px] border-l-[var(--danger)] border-[var(--border-color)]' : 'border-[var(--border-color)]'}`}>
-                    <button onClick={toggleExpand} className="p-0.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] flex-shrink-0">
+                    <button onClick={toggleExpand} aria-label={isExpanded ? 'Collapse invoice details' : 'Expand invoice details'} title={isExpanded ? 'Collapse' : 'Expand'} className="p-0.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] flex-shrink-0">
                       {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                     </button>
                     <div className="flex-1 min-w-0">
@@ -769,9 +769,9 @@ export default function Invoices() {
                         }, followUpSettings.subject_templates, dunningTone);
                         const hasEmail = !!client?.email;
                         return (
-                          <div className="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-[var(--border-color)]/50">
+                          <div className="flex items-center gap-1.5 mt-1.5">
                             <Bell size={10} className="text-[var(--accent)]" />
-                            <span className="text-[10px] text-[var(--accent)]">{daysElapsed > 0 ? `Follow-up ready · ${daysElapsed}d overdue` : 'Follow-up ready'}</span>
+                            <span className="text-[10px] text-[var(--accent-ink,var(--accent))]">{daysElapsed > 0 ? `Follow-up ready · ${daysElapsed}d overdue` : 'Follow-up ready'}</span>
                             {!hasEmail && (
                               <span className="flex items-center gap-0.5 text-[10px] text-[var(--warning-text)]">
                                 <AlertTriangle size={9} /> No email
@@ -800,6 +800,8 @@ export default function Invoices() {
                                 addToast('Marked as sent', 'success');
                               }}
                               className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] px-1 flex-shrink-0"
+                              aria-label="Mark follow-up as sent"
+                              title="Mark as sent"
                             >
                               <Check size={10} />
                             </button>
@@ -810,6 +812,8 @@ export default function Invoices() {
                                 addToast('Dismissed', 'info');
                               }}
                               className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] px-1 flex-shrink-0"
+                              aria-label="Dismiss follow-up"
+                              title="Dismiss"
                             >
                               <X size={10} />
                             </button>
@@ -830,7 +834,7 @@ export default function Invoices() {
                       {inv.status === 'draft' && <button onClick={() => handleMarkSent(inv)} className="text-[10px] text-[var(--accent)] hover:underline px-1">Mark Sent</button>}
                       {(inv.status === 'sent' || inv.status === 'overdue' || inv.status === 'partial') && (
                         <>
-                          <button onClick={() => openReminderModal(inv)} className="text-[10px] text-[var(--accent)] hover:underline px-1 flex items-center gap-0.5"><Mail size={10} /> Remind</button>
+                          <button onClick={() => openReminderModal(inv)} className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline px-1 flex items-center gap-0.5"><Mail size={10} /> Remind</button>
                           <button onClick={() => openPaymentModal(inv)} className="text-[10px] text-[var(--accent)] hover:underline px-1">Record Payment</button>
                         </>
                       )}
@@ -852,14 +856,13 @@ export default function Invoices() {
                     <div className="border border-t-0 border-[var(--border-color)] rounded-b-[8px] bg-[var(--bg-secondary)]/30 px-4 py-3">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5"><DollarSign size={12} />Payments</h4>
-                        <button onClick={() => openPaymentModal(inv)} className="text-[10px] text-[var(--accent)] hover:underline">+ Record Payment</button>
                       </div>
                        <div className="flex items-center gap-4 mb-2 text-[10px]">
-                         <span className="text-[var(--text-secondary)]">Total paid: <span className="font-medium text-[var(--accent)]">{fmtInv(paidTotal, inv)}</span></span>
-                         <span className="text-[var(--text-secondary)]">Remaining: <span className={`font-medium ${remaining > 0 ? 'text-[var(--warning-text)]' : 'text-[var(--accent)]'}`}>{fmtInv(remaining, inv)}</span></span>
+                          <span className="text-[var(--text-secondary)]">Total paid: <span className="font-medium text-[var(--accent-ink,var(--accent))]">{fmtInv(paidTotal, inv)}</span></span>
+                          <span className="text-[var(--text-secondary)]">Remaining: <span className={`font-medium ${remaining > 0 ? 'text-[var(--warning-text)]' : 'text-[var(--accent-ink,var(--accent))]'}`}>{fmtInv(remaining, inv)}</span></span>
                       </div>
                       {invPayments.length === 0 ? (
-                        <p className="text-[10px] text-[var(--text-tertiary)]">No payments recorded yet.</p>
+                        <p className="text-[10px] text-[var(--text-secondary)]">No payments recorded yet.</p>
                       ) : (
                         <div className="space-y-1">
                           {invPayments.map((p) => (
@@ -867,8 +870,8 @@ export default function Invoices() {
                               <div className="flex items-center gap-3 text-[10px]">
                                 <span className="text-[var(--text-primary)] font-medium">{fmtInv(p.amount, inv)}</span>
                                 <span className="text-[var(--text-secondary)]">{relativeDate(p.created_at || p.payment_date)}</span>
-                                <span className="text-[var(--text-tertiary)]">{p.payment_method}</span>
-                                {p.reference && <span className="text-[var(--text-tertiary)]">Ref: {p.reference}</span>}
+                                <span className="text-[var(--text-secondary)]">{p.payment_method}</span>
+                                {p.reference && <span className="text-[var(--text-secondary)]">Ref: {p.reference}</span>}
                               </div>
                               <button
                                 onClick={() => setConfirmDeletePayment({ id: p.id, invoiceId: inv.id })}

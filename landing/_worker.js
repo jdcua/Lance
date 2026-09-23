@@ -371,6 +371,17 @@ export default {
       }
     }
 
+    // Pretty legal URLs: /privacy, /terms and /refunds resolve to their
+    // static .html files (the footer links here, not at *.html paths).
+    const STATIC_PAGES = {
+      '/privacy': '/privacy.html',
+      '/terms': '/terms.html',
+      '/refunds': '/refunds.html',
+    };
+    if (STATIC_PAGES[url.pathname]) {
+      return env.ASSETS.fetch(new Request(new URL(STATIC_PAGES[url.pathname], request.url)));
+    }
+
     return env.ASSETS.fetch(request);
   },
 };
