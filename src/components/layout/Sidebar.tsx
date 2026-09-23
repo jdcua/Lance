@@ -51,6 +51,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useStore } from '../../store';
+import { usePrefs } from '../../lib/prefs';
 import { trialDaysRemaining } from '../../lib/trial';
 import { getArchetype } from '../../archetypes';
 import type { SidebarItemDef } from '../../archetypes';
@@ -111,6 +112,8 @@ export default function Sidebar() {
     getActiveTier: s.getActiveTier,
   }));
   const isTrial = getActiveTier() === 'trial';
+  const prefs = usePrefs();
+  const showBadges = prefs.badges;
 
   // Remember every section the user visits (palette, deep link, tour CTA…).
   // Visited sections stay visible: nothing the user found gets taken away.
@@ -286,13 +289,13 @@ export default function Sidebar() {
                   expanded={isExpanded}
                   badge={
                     <>
-                      {isExpanded && item.badge === 'new' && (
+                      {showBadges && isExpanded && item.badge === 'new' && (
                         <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">New</span>
                       )}
-                      {isExpanded && item.badge === 'alert' && badgeMap.unpaidInvoices > 0 && (
+                      {showBadges && isExpanded && item.badge === 'alert' && badgeMap.unpaidInvoices > 0 && (
                         <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--danger-bg)] text-[var(--danger)]">{badgeMap.unpaidInvoices}</span>
                       )}
-                      {isExpanded && badgeKey && badgeMap[badgeKey] > 0 && (
+                      {showBadges && isExpanded && badgeKey && badgeMap[badgeKey] > 0 && (
                         <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
                           badgeKey === 'unpaidInvoices' ? 'bg-[var(--danger-bg)] text-[var(--danger)]' : 'bg-[var(--accent-bg)] text-[var(--accent)]'
                         }`}>
@@ -340,7 +343,7 @@ export default function Sidebar() {
             label="Follow-ups"
             expanded={isExpanded}
             badge={
-              isExpanded && pendingFollowUps.length > 0 ? (
+              showBadges && isExpanded && pendingFollowUps.length > 0 ? (
                 <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
                   {pendingFollowUps.length}
                 </span>

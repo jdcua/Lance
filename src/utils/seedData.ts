@@ -269,9 +269,12 @@ export async function seedSampleData(): Promise<void> {
       { desc: 'Launch strategy workshop', proj: proj3.id, cl: client3.id, mins: 120, daysAgo: 8, billable: 1 },
       { desc: 'Messaging framework draft', proj: proj3.id, cl: client3.id, mins: 150, daysAgo: 5, billable: 1 },
     ];
-    for (const te of timeEntries) {
+    for (const [idx, te] of timeEntries.entries()) {
       const d = daysAgo(te.daysAgo);
-      const start = new Date(`${d}T09:00:00.000Z`);
+      // Stagger start times across the workday so seeded days read human.
+      const startHour = 8 + ((idx * 37) % 10);
+      const startMin = (idx * 53) % 60;
+      const start = new Date(`${d}T${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}:00.000Z`);
       // Closed entries carry an end_time: without one the app (correctly)
       // reads the entry as a still-running timer and counts from its start.
       const end = new Date(start.getTime() + te.mins * 60000);

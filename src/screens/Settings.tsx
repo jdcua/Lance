@@ -6,6 +6,7 @@ import { trialDaysRemaining } from '../lib/trial';
 import { getFeatureFlags } from '../lib/constants';
 import { resolveDunningTone } from '../utils/followUpTemplates';
 import { getCurrencySymbol } from '../lib/currency';
+import { setPref, usePrefs, type MotionPref } from '../lib/prefs';
 import { PRO_PRICES } from '../lib/pricing';
 import { getTrialValue } from '../utils/trialValue';
 import { relativeDate } from '../utils/format';
@@ -22,6 +23,7 @@ import { formatCurrency } from '../utils/format';
 import type { UserProfile, ExportTemplate } from '../types';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import PrefToggle from '../components/ui/PrefToggle';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useToasts } from '../store/toastStore';
@@ -71,6 +73,7 @@ export default function Settings() {
   const { profile, loadProfile, saveProfile, isLicensed, activateLicense, removeLicense, followUpSettings, loadFollowUpSettings, saveFollowUpSettings, getActiveTier, getAssetsDir, getImportsDir } = useStore();
   const addToast = useToasts((s) => s.add);
   const [saved, setSaved] = useState<Set<string>>(new Set());
+  const prefs = usePrefs();
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState('');
   const [loading, setLoading] = useState(true);
@@ -1171,6 +1174,39 @@ export default function Settings() {
                       {form.ai_enabled ? 'AI features on' : 'AI features off'}
                     </span>
                   </label>
+                </Card>
+
+                {/* Personalize */}
+                <Card className="mb-6">
+                  <SectionHead title="Personalize" isSaved={saved.has("Personalize")} />
+                  <div className="space-y-3">
+                    <p className="text-xs text-[var(--text-tertiary)]">Motion, glow, badges and nudges. Everything here is local and applies instantly.</p>
+                    <div>
+                      <p className="text-sm text-[var(--text-primary)]">Motion</p>
+                      <p className="text-xs text-[var(--text-tertiary)] mt-0.5 mb-2">Auto follows your operating system setting.</p>
+                      <div className="inline-flex gap-1 rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-secondary)] p-1" role="group" aria-label="Motion preference">
+                        {(['auto', 'full', 'off'] as MotionPref[]).map((m) => (
+                          <button
+                            key={m}
+                            onClick={() => { setPref('motion', m); setSaved((prev) => new Set([...prev, 'Personalize'])); }}
+                            aria-pressed={prefs.motion === m}
+                            className={`px-3 py-1.5 text-xs font-medium rounded-[7px] capitalize transition-colors ${
+                              prefs.motion === m
+                                ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm'
+                                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                            }`}
+                          >
+                            {m === 'auto' ? 'Auto' : m === 'full' ? 'Full' : 'Off'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <PrefToggle checked={prefs.glow} onChange={(v) => { setPref('glow', v); setSaved((prev) => new Set([...prev, 'Personalize'])); }} label="Ambient glow" hint="Soft accent wash behind app content" />
+                    <PrefToggle checked={prefs.sparklines} onChange={(v) => { setPref('sparklines', v); setSaved((prev) => new Set([...prev, 'Personalize'])); }} label="KPI sparklines" hint="Six-month trend lines under dashboard metrics" />
+                    <PrefToggle checked={prefs.badges} onChange={(v) => { setPref('badges', v); setSaved((prev) => new Set([...prev, 'Personalize'])); }} label="Sidebar badges" hint="Unread and count pills on navigation" />
+                    <PrefToggle checked={prefs.digest} onChange={(v) => { setPref('digest', v); setSaved((prev) => new Set([...prev, 'Personalize'])); }} label="Weekly digest" hint="Your-week summary card on the dashboard" />
+                    <PrefToggle checked={prefs.coachTips} onChange={(v) => { setPref('coachTips', v); setSaved((prev) => new Set([...prev, 'Personalize'])); }} label="Coach tips" hint="One-time nudges when you seem stuck. Never leaves your machine." />
+                  </div>
                 </Card>
 
                 {/* Follow-up settings */}

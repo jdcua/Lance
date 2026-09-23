@@ -12,6 +12,7 @@ import Fade from '../components/motion/Fade';
 import { StaggerGroup, StaggerItem } from '../components/motion/Stagger';
 import AnimatedNumber from '../components/motion/AnimatedNumber';
 import Magnetic from '../components/motion/Magnetic';
+import { usePrefs } from '../lib/prefs';
 import { relativeDate, formatCurrency, DAY_MS } from '../utils/format';
 import { useToasts } from '../store/toastStore';
 import { Play, Receipt, FileText, Users, FolderKanban, Clock, Plus, ArrowRight, CheckCircle2, Circle, Bell, Send, X, Link, Banknote, Clock3, Target } from 'lucide-react';
@@ -27,6 +28,7 @@ export default function Dashboard() {
   const { invoices, loadInvoices, proposals, loadProposals, projects, loadProjects, clients, loadClients, timeEntries, loadTimeEntries, profile, loadProfile, loadExpenses, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings, loadContracts, portalActivity, loadPortalActivity } = useStore();
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
+  const prefs = usePrefs();
   const [loading, setLoading] = useState(true);
   const [archetype, setArchetype] = useState<ArchetypeConfig | null>(null);
   const [metricValues, setMetricValues] = useState<Record<string, string | number>>({});
@@ -114,9 +116,10 @@ export default function Dashboard() {
   }, []);
 
   // Coach nudges: local telemetry spots struggle and helps once each.
-  // Never nags: every tip fires a single time, ever.
+  // Never nags: every tip fires a single time, ever. Off switch lives in
+  // Settings → Personalize.
   useEffect(() => {
-    if (loading) return;
+    if (loading || !prefs.coachTips) return;
     const launches = getTelemetryEvents().filter((e) => e.event === 'app_launch').length;
     const checklistDone =
       (clients.length > 0 ? 1 : 0) +
@@ -148,7 +151,7 @@ export default function Dashboard() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading]);
+  }, [loading, prefs.coachTips]);
 
   useEffect(() => {
     if (!profile) return;
@@ -250,6 +253,7 @@ export default function Dashboard() {
     return undefined;
   }
   function cardSpark(id: string): number[] | undefined {
+    if (!prefs.sparklines) return undefined;
     const k = id.toLowerCase();
     if (/revenue|income|profit|paid|outstanding|money|earning/.test(k)) return pickSeries(revenueSeries);
     if (/hour|time|unbilled|utiliz|billable/.test(k)) return pickSeries(hoursSeries);
@@ -304,7 +308,7 @@ export default function Dashboard() {
 
   // Weekly digest: a Monday habit loop. Shows once the checklist is out of
   // the way (or dismissed), hides for the rest of the week on dismiss.
-  const showDigest = !showChecklist && digestDismissedWeek !== digestWeek;
+  const showDigest = prefs.digest && !showChecklist && digestDismissedWeek !== digestWeek;
   const dismissDigest = () => {
     try {
       localStorage.setItem('lance:digest-dismissed', digestWeek);

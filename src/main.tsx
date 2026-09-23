@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { MotionConfig } from 'motion/react';
+import { usePrefs } from './lib/prefs';
 import { router } from './router';
 import './index.css';
 
@@ -32,10 +33,17 @@ if (!('cancelIdleCallback' in window)) {
   };
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <MotionConfig reducedMotion="user">
+function Root() {
+  const prefs = usePrefs();
+  return (
+    <MotionConfig reducedMotion={prefs.motion === 'off' ? 'always' : prefs.motion === 'full' ? 'never' : 'user'}>
       <RouterProvider router={router} />
     </MotionConfig>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <Root />
   </React.StrictMode>
 );

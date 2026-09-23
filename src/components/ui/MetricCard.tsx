@@ -60,7 +60,9 @@ export default function MetricCard({ label, value, subtext, trend, color = 'gray
       </div>
       <p className="text-[26px] font-semibold text-[var(--text-primary)] mb-1 break-words leading-tight tracking-tight tnum">{value}</p>
       {subtext && (
-        <p className={`text-xs ${trendColor} break-words`}>{subtext}</p>
+        <p className={`text-xs ${trendColor} break-words`}>
+          {trend === 'up' ? '↑ ' : trend === 'down' ? '↓ ' : ''}{subtext}
+        </p>
       )}
       {sparkData && sparkData.length >= 2 && (
         <div className="mt-2 -mb-1">
