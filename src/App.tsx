@@ -31,6 +31,7 @@ import { useAutoUpdater } from './hooks/useAutoUpdater';
 import { shouldGenerate, getNextDueDate, countCyclesBehind, getCatchUpCount, shouldShowCatchUpWarning } from './utils/recurringEngine';
 import { generateInvoiceNumber } from './utils/invoiceNumber';
 import { useChangelog } from './utils/changelog';
+import { usePrefs } from './lib/prefs';
 import { applyTheme, getTheme, THEMES } from './themes/themes';
 import { getShortcutModifierLabel } from './utils/shortcuts';
 import type { Profession } from './themes';
@@ -74,14 +75,47 @@ export default function App() {
   // SplashScreen on mount; loaded here once the runtime version resolves.
   // Launch-only: captured at mount so finishing onboarding mid-session
   // doesn't trigger a splash the moment onboarding closes.
+  // First-launch grace: brand-new users meet the app before the upsell.
+  // The splash appears from the second launch on, still capped per version.
+  // NOTE: the initializer must stay a pure read — StrictMode double-invokes
+  // it in dev, so writing localStorage here flips the result on the second
+  // pass. The marker write lives in the passive effect below (idempotent).
   const [splashAtMount] = useState(() => {
     try {
-      return localStorage.getItem('lance:onboarding-completed') === 'true';
+      return (
+        localStorage.getItem('lance:onboarding-completed') === 'true' &&
+        localStorage.getItem('lance:has-launched') === 'true'
+      );
     } catch {
       return true;
     }
   });
+  useEffect(() => {
+    // Only mark returning sessions: a mount with onboarding still open is
+    // somebody's first session, and marking it would burn the first-launch
+    // grace before they ever see the app.
+    try {
+      if (localStorage.getItem('lance:onboarding-completed') === 'true') {
+        localStorage.setItem('lance:has-launched', 'true');
+      }
+    } catch {
+      /* private mode */
+    }
+  }, []);
   const [splashViews, setSplashViews] = useState<number | null>(null);
+  // Anti-ambush: if the user starts interacting before the async version
+  // check resolves, never pop the splash over their work. A modal that
+  // appears seconds after load, mid-click, is worse than no upsell.
+  const [userInteracted, setUserInteracted] = useState(false);
+  useEffect(() => {
+    const mark = () => setUserInteracted(true);
+    window.addEventListener('pointerdown', mark, { once: true });
+    window.addEventListener('keydown', mark, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', mark);
+      window.removeEventListener('keydown', mark);
+    };
+  }, []);
   // Guard against double-processing recurring invoices when invoices.length
   // changes mid-generation and re-triggers the idle-callback effect.
   const autoGenProcessedRef = useRef<Set<string>>(new Set());
@@ -172,6 +206,7 @@ export default function App() {
 
   const [appVersion, setAppVersion] = useState<string>('');
   const { changelog } = useChangelog();
+  const prefs = usePrefs();
 
   useEffect(() => {
     getRuntimeVersion().then(setAppVersion);
@@ -193,18 +228,32 @@ export default function App() {
   // resolves after mount, so an empty-deps effect bails on the initial ''
   // and the "What's new" modal never appears. Re-running is safe: dismiss
   // persists changelog-seen, which stops repeat shows.
+  // Brand-new users (no seen version AND no previous run on record) have
+  // nothing to catch up on: mark the current version seen silently instead
+  // of ambushing them with release notes on first launch.
   useEffect(() => {
     if (!appVersion) return;
     const seen = localStorage.getItem('lance:changelog-seen');
-    if (seen !== appVersion) {
-      // If onboarding hasn't been completed yet, defer changelog to next session
-      const onboardingCompleted = localStorage.getItem('lance:onboarding-completed') === 'true';
-      if (onboardingCompleted) {
-        setShowChangelog(true);
-      }
-      // Otherwise, the changelog will show on the next app load
-      // (the version check will still find it unseen)
+    const lastRun = localStorage.getItem('lance:last-run-version');
+    try {
+      localStorage.setItem('lance:last-run-version', appVersion);
+    } catch {
+      /* private mode */
     }
+    if (seen === appVersion) return;
+    // If onboarding hasn't been completed yet, defer changelog to next session
+    // (the version check will still find it unseen)
+    const onboardingCompleted = localStorage.getItem('lance:onboarding-completed') === 'true';
+    if (!onboardingCompleted) return;
+    if (!seen && !lastRun) {
+      try {
+        localStorage.setItem('lance:changelog-seen', appVersion);
+      } catch {
+        /* private mode */
+      }
+      return;
+    }
+    setShowChangelog(true);
   }, [appVersion]);
 
   const dismissChangelog = () => {
@@ -908,7 +957,7 @@ export default function App() {
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
         <AIBar />
-        <main className="flex-1 overflow-y-auto bg-[radial-gradient(70%_380px_at_50%_-120px,var(--accent-bg),transparent)]">
+        <main className={`flex-1 overflow-y-auto ${prefs.glow ? 'bg-[radial-gradient(70%_380px_at_50%_-120px,var(--accent-bg),transparent)]' : ''}`}>
           <Outlet key={location.pathname} />
         </main>
       </div>
@@ -917,7 +966,7 @@ export default function App() {
           onboarding or the tour is active so modals never stack (tour is
           z-60, splash is z-100 and would bury it). Capped at SPLASH_MAX_VIEWS
           views per version so free users aren't nagged every launch. */}
-      {showSplash && splashAtMount && !isLicensed && !showOnboarding && !showWalkthrough && splashViews !== null && splashViews < SPLASH_MAX_VIEWS && (
+      {showSplash && splashAtMount && !userInteracted && !isLicensed && !showOnboarding && !showWalkthrough && splashViews !== null && splashViews < SPLASH_MAX_VIEWS && (
         <SplashScreen onDismiss={() => setShowSplash(false)} />
       )}
 
@@ -1130,10 +1179,12 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
   }, [setShowOnboarding]);
 
   // Explicit opt-out, offered as a "Skip setup" link in the header.
+  // Skipping means "leave me alone": no tour is queued, so the user lands
+  // straight in a usable app instead of behind a second modal.
   const handleOnboardingSkip = useCallback(() => {
     localStorage.setItem('lance:onboarding-step', 'complete');
     localStorage.setItem('lance:onboarding-completed', 'true');
-    localStorage.setItem('lance:tour-pending', 'true');
+    localStorage.removeItem('lance:tour-pending');
     setShowOnboarding(false);
   }, [setShowOnboarding]);
 
