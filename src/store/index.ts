@@ -33,6 +33,23 @@ const invoke = async <T>(cmd: string, args?: Record<string, unknown>): Promise<T
   return tauriInvoke<T>(cmd, args);
 };
 
+/**
+ * Best-effort teardown of share links when their entity is deleted.
+ * Without this, links die as a confusing "not found" — revoked links say
+ * "revoked". Loops because several live links can exist per entity.
+ */
+async function revokeTokensForEntity(entityType: 'proposal' | 'contract', entityId: string): Promise<void> {
+  for (let i = 0; i < 10; i++) {
+    try {
+      const tok = await invoke<{ token: string } | null>('get_share_token_for_entity', { entityType, entityId });
+      if (!tok) return;
+      await invoke('revoke_share_token', { token: tok.token });
+    } catch {
+      return;
+    }
+  }
+}
+
 type ToastType = 'success' | 'error' | 'info' | 'warning' | 'unlock';
 
 type ToastAction = {
@@ -555,6 +572,24 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ clients: get().clients.map((c) => (c.id === data.id ? data : c)) });
     },
     deleteClient: async (id) => {
+      // Neither backend cascades core tables (the browser mock has no FK
+      // enforcement; SQLite FKs mostly lack ON DELETE CASCADE), so blocking
+      // here keeps both backends identical: no silent orphans in browser,
+      // no raw constraint errors in Tauri. Lists are (re)loaded first so the
+      // check never passes on stale/empty state.
+      await Promise.all([get().loadProjects(), get().loadInvoices(), get().loadProposals(), get().loadContracts()]);
+      const s = get();
+      const linked: string[] = [];
+      const count = (n: number, one: string, many: string) => {
+        if (n > 0) linked.push(`${n} ${n === 1 ? one : many}`);
+      };
+      count(s.projects.filter((p) => p.client_id === id).length, 'project', 'projects');
+      count(s.invoices.filter((i) => i.client_id === id).length, 'invoice', 'invoices');
+      count(s.proposals.filter((p) => p.client_id === id).length, 'proposal', 'proposals');
+      count(s.contracts.filter((c) => c.client_id === id).length, 'contract', 'contracts');
+      if (linked.length > 0) {
+        throw new Error(`Cannot delete this client — ${linked.join(', ')} still linked. Delete those first.`);
+      }
       snapshotForTrash('clients', id, get().clients.find((c) => c.id === id));
       await invoke('delete_client', { id });
       set({ clients: get().clients.filter((c) => c.id !== id) });
@@ -577,6 +612,19 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ projects: get().projects.map((p) => (p.id === data.id ? data : p)) });
     },
     deleteProject: async (id) => {
+      await Promise.all([get().loadMilestones(), get().loadTimeEntries(), get().loadInvoices(), get().loadProposals()]);
+      const s = get();
+      const linked: string[] = [];
+      const count = (n: number, one: string, many: string) => {
+        if (n > 0) linked.push(`${n} ${n === 1 ? one : many}`);
+      };
+      count(s.milestones.filter((m) => m.project_id === id).length, 'milestone', 'milestones');
+      count(s.timeEntries.filter((t) => t.project_id === id).length, 'time entry', 'time entries');
+      count(s.invoices.filter((i) => i.project_id === id).length, 'invoice', 'invoices');
+      count(s.proposals.filter((p) => p.project_id === id).length, 'proposal', 'proposals');
+      if (linked.length > 0) {
+        throw new Error(`Cannot delete this project — ${linked.join(', ')} still linked. Delete those first.`);
+      }
       snapshotForTrash('projects', id, get().projects.find((p) => p.id === id));
       await invoke('delete_project', { id });
       set({ projects: get().projects.filter((p) => p.id !== id) });
@@ -624,6 +672,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       snapshotForTrash('proposals', id, get().proposals.find((p) => p.id === id));
       await invoke('delete_proposal', { id });
       set({ proposals: get().proposals.filter((p) => p.id !== id) });
+      await revokeTokensForEntity('proposal', id);
     },
 
     // ── Contracts ──
@@ -646,6 +695,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       snapshotForTrash('contracts', id, get().contracts.find((c) => c.id === id));
       await invoke('delete_contract', { id });
       set({ contracts: get().contracts.filter((c) => c.id !== id) });
+      await revokeTokensForEntity('contract', id);
     },
 
     // ── Time Entries ──
@@ -692,6 +742,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ invoices: get().invoices.map((i) => (i.id === data.id ? data : i)) });
     },
     deleteInvoice: async (id) => {
+      // Payments are money records: resurrecting an invoice without them
+      // (trash holds only the invoice row) would corrupt paid status, and
+      // no backend cascades them — so block until they are removed first.
+      await get().loadPayments();
+      const n = get().payments.filter((p) => p.invoice_id === id).length;
+      if (n > 0) {
+        throw new Error(`Cannot delete this invoice — ${n} payment${n === 1 ? '' : 's'} recorded. Delete the payment${n === 1 ? '' : 's'} first.`);
+      }
       snapshotForTrash('invoices', id, get().invoices.find((i) => i.id === id));
       await invoke('delete_invoice', { id });
       set({ invoices: get().invoices.filter((i) => i.id !== id) });
