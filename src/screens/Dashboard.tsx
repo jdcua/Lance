@@ -1,5 +1,4 @@
 import { useEffect, useState, Suspense, useRef, useMemo } from 'react';
-import type { CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { recordTelemetry } from '../utils/telemetry';
@@ -9,6 +8,10 @@ import type { Invoice, TimeEntry, UserProfile, Project } from '../types';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import Button from '../components/ui/Button';
+import Fade from '../components/motion/Fade';
+import { StaggerGroup, StaggerItem } from '../components/motion/Stagger';
+import AnimatedNumber from '../components/motion/AnimatedNumber';
+import Magnetic from '../components/motion/Magnetic';
 import { relativeDate, formatCurrency, DAY_MS } from '../utils/format';
 import { useToasts } from '../store/toastStore';
 import { Play, Receipt, FileText, Users, FolderKanban, Clock, Plus, ArrowRight, CheckCircle2, Circle, Bell, Send, X, Link, Banknote, Clock3, Target } from 'lucide-react';
@@ -311,7 +314,10 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 max-w-[1120px]">
-      <div className="flex flex-wrap items-end justify-between gap-4 mb-6 animate-rise">
+      <Fade className="relative overflow-hidden rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-card)] shadow-[var(--card-shadow)] p-6 mb-6" y={18}>
+        <div aria-hidden className="pointer-events-none absolute -top-24 -right-16 w-72 h-72 rounded-full bg-[var(--accent)] opacity-[0.13] blur-[80px]" />
+        <div aria-hidden className="pointer-events-none absolute -bottom-28 -left-10 w-72 h-72 rounded-full bg-[var(--accent)] opacity-[0.07] blur-[80px]" />
+        <div className="relative flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-[0.8px] text-[var(--text-tertiary)] mb-1.5">{todayLabel}</p>
           <h2 className="text-[30px] leading-[1.1] font-bold tracking-tight text-balance text-[var(--text-primary)]">
@@ -325,7 +331,7 @@ export default function Dashboard() {
           {hasData && (
             <div className="flex flex-wrap items-center gap-2 mt-3">
               <span className="text-xs font-semibold tnum px-2.5 py-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
-                {formatCurrency(outstandingTotal, profile?.currency)} outstanding
+                <AnimatedNumber value={outstandingTotal} format={(n) => formatCurrency(n, profile?.currency)} /> outstanding
               </span>
               {overdueCount > 0 && (
                 <span className="text-xs font-semibold tnum px-2.5 py-1 rounded-full bg-[var(--danger-bg)] text-[var(--danger)]">
@@ -353,15 +359,18 @@ export default function Dashboard() {
           >
             <Clock size={13} /> Log time
           </Button>
-          <Button
-            size="sm"
-            variant="primary"
-            onClick={() => { navigate('/invoices'); setTimeout(() => document.dispatchEvent(new CustomEvent('lance:add-invoice')), 350); }}
-          >
-            <Plus size={13} /> New invoice
-          </Button>
+          <Magnetic className="inline-flex">
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={() => { navigate('/invoices'); setTimeout(() => document.dispatchEvent(new CustomEvent('lance:add-invoice')), 350); }}
+            >
+              <Plus size={13} /> New invoice
+            </Button>
+          </Magnetic>
         </div>
       </div>
+      </Fade>
 
       {showChecklist && (
         <Card className="mb-6 border-[var(--accent)]/20 bg-[var(--accent-bg)]">
@@ -458,10 +467,10 @@ export default function Dashboard() {
         </Card>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6 animate-rise" style={{ '--d': '70ms' } as CSSProperties}>
+      <StaggerGroup className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6" stagger={0.08}>
         {effectiveArchetype.dashboard.metricCards.map((card) => (
+          <StaggerItem key={card.id}>
           <MetricCard
-            key={card.id}
             label={card.label}
             value={metricValues[card.id] ?? '...'}
             color={card.color || 'gray'}
@@ -469,8 +478,9 @@ export default function Dashboard() {
             icon={cardIcon(card.id)}
             sparkData={cardSpark(card.id)}
           />
+          </StaggerItem>
         ))}
-      </div>
+      </StaggerGroup>
 
       {/* Portal Activity */}
       {portalActivity.length > 0 && (

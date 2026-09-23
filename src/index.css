@@ -196,6 +196,14 @@ html.dark * {
   --radius-card: 14px;
   --radius-control: 8px;
   --shadow-pop: 0 8px 28px rgba(0,0,0,.14), 0 2px 6px rgba(0,0,0,.08);
+  /* Signature dark rail — fixed across themes, the app's anchor */
+  --sb-bg: #141417;
+  --sb-bg-hover: rgba(255,255,255,.055);
+  --sb-bg-active: rgba(255,255,255,.085);
+  --sb-text: #9d9da8;
+  --sb-text-active: #f4f4f6;
+  --sb-border: rgba(255,255,255,.07);
+  --sb-label: #5e5e69;
 }
 
 .tnum { font-variant-numeric: tabular-nums; }

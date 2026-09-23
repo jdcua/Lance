@@ -1,6 +1,8 @@
 import { useLocation } from 'react-router-dom';
 import { Search, Timer } from 'lucide-react';
 import { getShortcutModifierLabel } from '../../utils/shortcuts';
+import Fade from '../motion/Fade';
+import Magnetic from '../motion/Magnetic';
 
 const pageTitles: Record<string, string> = {
   '/': 'Dashboard',
@@ -27,7 +29,7 @@ export default function Topbar() {
   const mod = getShortcutModifierLabel();
 
   return (
-    <div className="h-[52px] bg-[var(--bg-card)]/85 backdrop-blur-md border-b border-[var(--border-color)] flex items-center gap-3 px-4 flex-shrink-0">
+    <Fade className="h-[52px] bg-[var(--bg-card)]/85 backdrop-blur-md border-b border-[var(--border-color)] flex items-center gap-3 px-4 flex-shrink-0" y={-10}>
       <nav className="flex items-center gap-1.5 text-[13px] min-w-0" aria-label="Breadcrumb">
         <span className="text-[var(--text-tertiary)] flex-shrink-0">Workspace</span>
         <span className="text-[var(--text-tertiary)] flex-shrink-0">/</span>
@@ -36,9 +38,10 @@ export default function Topbar() {
 
       <div className="flex-1" />
 
+      <Magnetic className="hidden sm:block min-w-[200px]">
       <button
         onClick={() => document.dispatchEvent(new CustomEvent('lance:open-command'))}
-        className="hidden sm:flex items-center gap-2 text-[13px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] bg-[var(--bg-secondary)]/60 hover:bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-[8px] pl-2.5 pr-1.5 py-1.5 min-w-[200px] transition-colors"
+        className="flex w-full items-center gap-2 text-[13px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] bg-[var(--bg-secondary)]/60 hover:bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-[8px] pl-2.5 pr-1.5 py-1.5 transition-colors"
         title={`Search and commands (${mod}K)`}
       >
         <Search size={13} />
@@ -47,6 +50,7 @@ export default function Topbar() {
           {mod}K
         </kbd>
       </button>
+      </Magnetic>
 
       <button
         onClick={() => document.dispatchEvent(new CustomEvent('lance:toggle-timer'))}
@@ -56,6 +60,6 @@ export default function Topbar() {
         <Timer size={14} />
         <span className="hidden md:inline">Timer</span>
       </button>
-    </div>
+    </Fade>
   );
 }

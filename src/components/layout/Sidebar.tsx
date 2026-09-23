@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { NavLink, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import SideLink from './SideLink';
 import BrandLogo from '../ui/BrandLogo';
 import {
   FileText,
@@ -204,38 +205,38 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`${isExpanded ? 'w-[220px]' : 'w-[52px]'} h-full flex flex-col bg-[var(--bg-card)] border-r border-[var(--border-color)] flex-shrink-0 transition-[width] duration-200`}
+      className={`${isExpanded ? 'w-[248px]' : 'w-[60px]'} h-full flex flex-col bg-[var(--sb-bg)] border-r border-[var(--sb-border)] flex-shrink-0 transition-[width] duration-200`}
       onMouseEnter={() => collapsed && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div className="flex items-center gap-2 px-3 h-[56px] border-b border-[var(--border-color)]">
+      <div className="flex items-center gap-2 px-3 h-[60px] border-b border-[var(--sb-border)]">
         {isExpanded && (
           <>
             <button
               onClick={() => navigate('/')}
-              className="flex-shrink-0 p-1 hover:bg-[var(--bg-secondary)] rounded-[6px] transition-colors"
+              className="flex-shrink-0 p-1 hover:bg-[var(--sb-bg-hover)] rounded-[8px] transition-colors"
               title="Dashboard"
               aria-label="Dashboard"
             >
-              <BrandLogo size={20} className="text-[var(--accent)]" />
+              <BrandLogo size={22} className="text-[var(--accent)]" />
             </button>
-            <span className="font-semibold text-sm text-[var(--text-primary)] flex-1" style={{ fontFamily: "'Syne', sans-serif" }}>Lance</span>
+            <span className="font-bold text-[15px] text-[var(--sb-text-active)] flex-1 tracking-tight" style={{ fontFamily: "'Syne', sans-serif" }}>Lance</span>
           </>
         )}
         {!isExpanded && (
           <button
             onClick={() => navigate('/')}
-            className="mx-auto p-1 hover:bg-[var(--bg-secondary)] rounded-[6px] transition-colors"
+            className="mx-auto p-1 hover:bg-[var(--sb-bg-hover)] rounded-[8px] transition-colors"
             title="Dashboard"
             aria-label="Dashboard"
           >
-            <BrandLogo size={20} className="text-[var(--accent)]" />
+            <BrandLogo size={22} className="text-[var(--accent)]" />
           </button>
         )}
         {isExpanded && (
           <button
             onClick={toggleCollapsed}
-            className="p-1 rounded-[6px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+            className="p-1 rounded-[6px] text-[var(--sb-label)] hover:text-[var(--sb-text-active)] hover:bg-[var(--sb-bg-hover)] transition-colors"
             title="Collapse sidebar"
             aria-label="Collapse sidebar"
           >
@@ -248,30 +249,21 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto py-2 px-2">
-        <NavLink
+        <SideLink
           to="/"
           end
-          data-tour="nav-dashboard"
-          className={({ isActive }) =>
-            `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors mb-1 ${
-              !isExpanded ? 'justify-center px-0' : ''
-            } ${
-              isActive
-                ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px] [&>svg]:text-[var(--accent)]'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
-            }`
-          }
-          style={{ fontFamily: "'Syne', sans-serif" }}
+          tour="nav-dashboard"
           title="Dashboard"
-        >
-          <LayoutDashboard size={16} />
-          {isExpanded && 'Dashboard'}
-        </NavLink>
+          icon={LayoutDashboard}
+          label="Dashboard"
+          expanded={isExpanded}
+          className="mb-1"
+        />
 
         {sidebarItems.groups.map((group) => (
           <div key={group.label} className="mb-4">
             {isExpanded && (
-              <p className="px-3 mb-1.5 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.8px]" style={{ fontFamily: "'Syne', sans-serif" }}>
+              <p className="px-3 mb-1.5 text-[10px] font-semibold text-[var(--sb-label)] uppercase tracking-[1px]" style={{ fontFamily: "'Syne', sans-serif" }}>
                 {group.label}
               </p>
             )}
@@ -284,36 +276,32 @@ export default function Sidebar() {
                 : null;
 
               return (
-                <NavLink
+                <SideLink
                   key={item.path}
                   to={item.path}
-                  data-tour={`nav-${item.id}`}
-                  className={({ isActive }) =>
-                    `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
-                      isActive
-                        ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px] [&>svg]:text-[var(--accent)]'
-                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
-                    }`
-                  }
-                  style={{ fontFamily: "'Syne', sans-serif" }}
+                  tour={`nav-${item.id}`}
                   title={item.label}
-                >
-                  <Icon size={16} />
-                  {isExpanded && <span className="flex-1">{item.label}</span>}
-                  {isExpanded && item.badge === 'new' && (
-                    <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">New</span>
-                  )}
-                  {isExpanded && item.badge === 'alert' && badgeMap.unpaidInvoices > 0 && (
-                    <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--danger-bg)] text-[var(--danger)]">{badgeMap.unpaidInvoices}</span>
-                  )}
-                  {isExpanded && badgeKey && badgeMap[badgeKey] > 0 && (
-                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
-                      badgeKey === 'unpaidInvoices' ? 'bg-[var(--danger-bg)] text-[var(--danger)]' : 'bg-[var(--accent-bg)] text-[var(--accent)]'
-                    }`}>
-                      {badgeMap[badgeKey]}
-                    </span>
-                  )}
-                </NavLink>
+                  icon={Icon}
+                  label={item.label}
+                  expanded={isExpanded}
+                  badge={
+                    <>
+                      {isExpanded && item.badge === 'new' && (
+                        <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">New</span>
+                      )}
+                      {isExpanded && item.badge === 'alert' && badgeMap.unpaidInvoices > 0 && (
+                        <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--danger-bg)] text-[var(--danger)]">{badgeMap.unpaidInvoices}</span>
+                      )}
+                      {isExpanded && badgeKey && badgeMap[badgeKey] > 0 && (
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                          badgeKey === 'unpaidInvoices' ? 'bg-[var(--danger-bg)] text-[var(--danger)]' : 'bg-[var(--accent-bg)] text-[var(--accent)]'
+                        }`}>
+                          {badgeMap[badgeKey]}
+                        </span>
+                      )}
+                    </>
+                  }
+                />
               );
             })}
           </div>
@@ -322,14 +310,14 @@ export default function Sidebar() {
         {/* Always-available items (progressively disclosed) */}
         <div className="mb-4">
           {isExpanded && (
-            <p className="px-3 mb-1.5 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.8px]" style={{ fontFamily: "'Syne', sans-serif" }}>
+            <p className="px-3 mb-1.5 text-[10px] font-semibold text-[var(--sb-label)] uppercase tracking-[1px]" style={{ fontFamily: "'Syne', sans-serif" }}>
               MORE
             </p>
           )}
           {showImport &&
           <button
             onClick={() => document.dispatchEvent(new CustomEvent('lance:open-import'))}
-            className={`w-full flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px] ${!isExpanded ? 'justify-center px-0' : ''}`}
+            className={`w-full flex items-center gap-2.5 px-3 h-[38px] text-[13.5px] font-medium transition-all duration-150 text-[var(--sb-text)] hover:text-[var(--sb-text-active)] hover:bg-[var(--sb-bg-hover)] rounded-[10px] ${!isExpanded ? 'justify-center px-0' : ''}`}
             style={{ fontFamily: "'Syne', sans-serif" }}
             title="Import"
           >
@@ -337,76 +325,46 @@ export default function Sidebar() {
             {isExpanded && 'Import'}
           </button>
           }
-          <NavLink
+          <SideLink
             to="/search"
-            className={({ isActive }) =>
-              `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
-                isActive
-                  ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px] [&>svg]:text-[var(--accent)]'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
-              }`
-            }
-            style={{ fontFamily: "'Syne', sans-serif" }}
             title="Search"
-          >
-            <Search size={16} />
-            {isExpanded && <span className="flex-1">Search</span>}
-          </NavLink>
+            icon={Search}
+            label="Search"
+            expanded={isExpanded}
+          />
           {showFollowUps &&
-          <NavLink
+          <SideLink
             to="/follow-ups"
-            className={({ isActive }) =>
-              `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
-                isActive
-                  ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px] [&>svg]:text-[var(--accent)]'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
-              }`
-            }
-            style={{ fontFamily: "'Syne', sans-serif" }}
             title="Follow-ups"
-          >
-            <Bell size={16} />
-            {isExpanded && <span className="flex-1">Follow-ups</span>}
-            {isExpanded && pendingFollowUps.length > 0 && (
-              <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
-                {pendingFollowUps.length}
-              </span>
-            )}
-          </NavLink>
+            icon={Bell}
+            label="Follow-ups"
+            expanded={isExpanded}
+            badge={
+              isExpanded && pendingFollowUps.length > 0 ? (
+                <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
+                  {pendingFollowUps.length}
+                </span>
+              ) : undefined
+            }
+          />
           }
           {showAchievements &&
-          <NavLink
+          <SideLink
             to="/achievements"
-            className={({ isActive }) =>
-              `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
-                isActive
-                  ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px] [&>svg]:text-[var(--accent)]'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
-              }`
-            }
-            style={{ fontFamily: "'Syne', sans-serif" }}
             title="Achievements"
-          >
-            <Trophy size={16} />
-            {isExpanded && 'Achievements'}
-          </NavLink>
+            icon={Trophy}
+            label="Achievements"
+            expanded={isExpanded}
+          />
           }
           {showArchetype &&
-          <NavLink
+          <SideLink
             to="/archetype"
-            className={({ isActive }) =>
-              `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
-                isActive
-                  ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px] [&>svg]:text-[var(--accent)]'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
-              }`
-            }
-            style={{ fontFamily: "'Syne', sans-serif" }}
             title="Archetype"
-          >
-            <Sparkles size={16} />
-            {isExpanded && 'Archetype'}
-          </NavLink>
+            icon={Sparkles}
+            label="Archetype"
+            expanded={isExpanded}
+          />
           }
         </div>
 
@@ -415,7 +373,7 @@ export default function Sidebar() {
           <div className="px-2 pb-2">
             <button
               onClick={toggleShowAll}
-              className={`w-full flex items-center gap-2.5 px-4 h-[32px] text-xs transition-colors text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px] ${!isExpanded ? 'justify-center px-0' : ''}`}
+              className={`w-full flex items-center gap-2.5 px-3 h-[32px] text-xs transition-colors text-[var(--sb-label)] hover:text-[var(--sb-text-active)] hover:bg-[var(--sb-bg-hover)] rounded-[10px] ${!isExpanded ? 'justify-center px-0' : ''}`}
               style={{ fontFamily: "'Syne', sans-serif" }}
               title={showAll ? 'Show fewer sections' : `Show all sections (${hiddenTotal} more)`}
               aria-label={showAll ? 'Show fewer sections' : `Show all sections (${hiddenTotal} more)`}
@@ -427,51 +385,48 @@ export default function Sidebar() {
         ) : null}
       </nav>
 
-      <div className="border-t border-[var(--border-color)]">
-        <NavLink
+      <div className="border-t border-[var(--sb-border)] p-2">
+        <SideLink
           to="/settings"
-          className={({ isActive }) =>
-            `flex items-center gap-2.5 px-3 h-[36px] text-sm transition-colors ${!isExpanded ? 'justify-center px-0' : ''} ${
-              isActive
-                ? 'bg-[var(--accent-bg)] text-[var(--text-primary)] font-medium rounded-[8px] [&>svg]:text-[var(--accent)]'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]'
-            }`
-          }
-          style={{ fontFamily: "'Syne', sans-serif" }}
           title="Settings"
-        >
-          <Settings size={16} />
-          {isExpanded && 'Settings'}
-        </NavLink>
+          icon={Settings}
+          label="Settings"
+          expanded={isExpanded}
+        />
         {isExpanded && (
-          <div className="px-4 py-2">
-            <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
+          <div className="mt-1">
+            <button
+              onClick={() => navigate('/settings')}
+              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-[10px] hover:bg-[var(--sb-bg-hover)] transition-colors text-left"
+              title="Profile & settings"
+            >
+              <span className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--accent)] to-[#0ea5e9] text-[#06281d] text-[11px] font-bold grid place-items-center flex-shrink-0">
+                {(profile?.name?.trim()?.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase() || 'L')}
+              </span>
+              <span className="flex-1 min-w-0">
+                <span className="block text-[13px] font-semibold text-[var(--sb-text-active)] truncate">
+                  {profile?.name?.trim() || 'Freelancer'}
+                </span>
+                <span className={`flex items-center gap-1 text-[10.5px] font-medium ${isLicensed || (isTrial && trialDaysRemaining(profile?.trial_started_at) > 0) ? 'text-[var(--accent)]' : 'text-[var(--sb-label)]'}`}>
+                  <Sparkles size={9} />
+                  {isLicensed
+                    ? 'Pro licensed'
+                    : isTrial
+                      ? `Trial · ${trialDaysRemaining(profile?.trial_started_at)}d left`
+                      : getActiveTier() === 'expired' ? 'Trial ended' : 'Free plan'}
+                </span>
+              </span>
+              <Settings size={13} className="text-[var(--sb-label)] flex-shrink-0" />
+            </button>
+            <p className="text-[10px] text-[var(--sb-label)] leading-relaxed px-2.5 pt-2">
               <span className="font-medium">{getShortcutModifierLabel()}1</span>-8 navigate &middot; <span className="font-medium">{getShortcutModifierLabel()}N</span> new
             </p>
-            {isLicensed && (
-              <p className="text-[10px] text-[var(--accent)] font-medium mt-1 flex items-center gap-1">
-                <Sparkles size={10} />
-                Licensed
-              </p>
-            )}
-            {!isLicensed && isTrial && (
-              <p className="text-[10px] text-[var(--accent)] font-medium mt-1 flex items-center gap-1">
-                <Sparkles size={10} />
-                Trial: {trialDaysRemaining(profile?.trial_started_at)} days left
-              </p>
-            )}
-            {!isLicensed && getActiveTier() === 'expired' && (
-              <p className="text-[10px] text-[var(--text-tertiary)] font-medium mt-1 flex items-center gap-1">
-                <Sparkles size={10} />
-                Trial ended
-              </p>
-            )}
           </div>
         )}
         {!isExpanded && (
           <button
             onClick={toggleCollapsed}
-            className="w-full flex items-center justify-center h-[36px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+            className="w-full flex items-center justify-center h-[36px] text-[var(--sb-label)] hover:text-[var(--sb-text-active)] hover:bg-[var(--sb-bg-hover)] rounded-[10px] transition-colors"
             title="Expand sidebar"
             aria-label="Expand sidebar"
           >
