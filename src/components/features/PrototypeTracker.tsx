@@ -175,7 +175,7 @@ export default function PrototypeTracker({ projectId }: { projectId: string }) {
               {prototypes.map((p) => (
                 <tr key={p.id} className="border-b border-[var(--border-color)]/50 hover:bg-[var(--bg-hover)]">
                   <td className="py-1.5 px-2">
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-[10px] font-semibold">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent-ink,var(--accent))] text-[10px] font-semibold">
                       <Layers size={10} />
                       v{p.iteration}
                     </span>
@@ -188,7 +188,7 @@ export default function PrototypeTracker({ projectId }: { projectId: string }) {
                   </td>
                   <td className="py-1.5 px-2">
                     {p.link ? (
-                      <a href={p.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[var(--accent)] hover:underline">
+                      <a href={p.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[var(--accent-ink,var(--accent))] hover:underline">
                         <ExternalLink size={10} />
                         Open
                       </a>

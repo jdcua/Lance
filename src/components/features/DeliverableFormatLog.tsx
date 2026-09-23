@@ -112,7 +112,7 @@ export default function DeliverableFormatLog({ projectId }: { projectId: string 
       <div className="flex items-center justify-between">
         <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
           Format Deliverables ({items.length})
-          {deliveredCount > 0 && <span className="ml-1 text-[var(--accent)]">{deliveredCount} delivered</span>}
+          {deliveredCount > 0 && <span className="ml-1 text-[var(--accent-ink,var(--accent))]">{deliveredCount} delivered</span>}
         </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Add Format
@@ -166,7 +166,7 @@ export default function DeliverableFormatLog({ projectId }: { projectId: string 
               <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
                 <button
                   onClick={() => handleToggleDelivered(item)}
-                  className={item.delivered ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)] hover:text-[var(--accent)]'}
+                  className={item.delivered ? 'text-[var(--accent-ink,var(--accent))]' : 'text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))]'}
                   title={item.delivered ? 'Mark undelivered' : 'Mark delivered'}
                 >
                   {item.delivered ? <CheckCircle2 size={12} /> : <Check size={12} />}

@@ -111,7 +111,7 @@ export default function ComponentInventory({ projectId }: { projectId: string })
       {items.length > 0 && (
         <div className="flex items-center gap-3 px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[6px] text-xs">
           <div className="flex items-center gap-1.5 text-[var(--text-secondary)]">
-            <Database size={12} className="text-[var(--accent)]" />
+            <Database size={12} className="text-[var(--accent-ink,var(--accent))]" />
             <span>{items.length} types · {totalQty} units</span>
           </div>
           <div className="h-4 w-px bg-[var(--border-color)]" />

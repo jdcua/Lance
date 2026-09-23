@@ -236,7 +236,7 @@ export default function SOPStore({ clientId }: { clientId: string }) {
                 <div className="flex items-center gap-1 ml-2 flex-shrink-0">
                   <button
                     onClick={() => handleEdit(sop)}
-                    className="text-[var(--text-tertiary)] hover:text-[var(--accent)] p-0.5"
+                    className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] p-0.5"
                   >
                     <Edit2 size={12} />
                   </button>

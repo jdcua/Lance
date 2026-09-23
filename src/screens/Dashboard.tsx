@@ -334,7 +334,7 @@ export default function Dashboard() {
           </p>
           {hasData && (
             <div className="flex flex-wrap items-center gap-2 mt-3">
-              <span className="text-xs font-semibold tnum px-2.5 py-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
+              <span className="text-xs font-semibold tnum px-2.5 py-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">
                 <AnimatedNumber value={outstandingTotal} format={(n) => formatCurrency(n, profile?.currency)} /> outstanding
               </span>
               {overdueCount > 0 && (
@@ -380,12 +380,12 @@ export default function Dashboard() {
         <Card className="mb-6 border-[var(--accent)]/20 bg-[var(--accent-bg)]">
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-full bg-[var(--accent)]/10 flex items-center justify-center flex-shrink-0">
-              <Play size={20} className="text-[var(--accent)]" />
+              <Play size={20} className="text-[var(--accent-ink,var(--accent))]" />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <h3 className="text-sm font-semibold text-[var(--text-primary)]">Let's get you set up</h3>
-                <span className="text-[10px] font-semibold tnum px-1.5 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)]">
+                <span className="text-[10px] font-semibold tnum px-1.5 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent-ink,var(--accent))]">
                   {steps.filter((s) => s.done).length}/{steps.length}
                 </span>
               </div>
@@ -408,8 +408,8 @@ export default function Dashboard() {
                     }`}
                     disabled={s.done}
                   >
-                    {s.done ? <CheckCircle2 size={14} className="text-[var(--accent)]" /> : <Circle size={14} className="text-[var(--text-tertiary)]" />}
-                    <s.icon size={14} className={s.done ? 'text-[var(--text-tertiary)]' : 'text-[var(--accent)]'} />
+                    {s.done ? <CheckCircle2 size={14} className="text-[var(--accent-ink,var(--accent))]" /> : <Circle size={14} className="text-[var(--text-tertiary)]" />}
+                    <s.icon size={14} className={s.done ? 'text-[var(--text-tertiary)]' : 'text-[var(--accent-ink,var(--accent))]'} />
                     {s.label}
                     {!s.done && <ArrowRight size={12} className="ml-auto text-[var(--text-tertiary)]" />}
                   </button>
@@ -490,7 +490,7 @@ export default function Dashboard() {
       {portalActivity.length > 0 && (
         <Card className="mb-6 border-[var(--accent)]/20">
           <div className="flex items-center gap-2 mb-3">
-            <Link size={14} className="text-[var(--accent)]" />
+            <Link size={14} className="text-[var(--accent-ink,var(--accent))]" />
             <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Portal Activity</h3>
           </div>
           <div className="space-y-1.5">
@@ -508,9 +508,9 @@ export default function Dashboard() {
       {pendingFollowUps.length > 0 && (
         <Card className="mb-6 border-[var(--accent)]/20">
           <div className="flex items-center gap-2 mb-3">
-            <Bell size={14} className="text-[var(--accent)]" />
+            <Bell size={14} className="text-[var(--accent-ink,var(--accent))]" />
             <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Needs Attention</h3>
-            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">{pendingFollowUps.length}</span>
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">{pendingFollowUps.length}</span>
           </div>
           <div className="space-y-2">
             {pendingFollowUps.slice(0, 3).map((fu) => {
@@ -549,7 +549,7 @@ export default function Dashboard() {
                       await navigator.clipboard.writeText(draft);
                       await updateFollowUpStatus(fu.id, 'dismissed', 'dismissed');
                       addToast('Copied to clipboard · dismissed from queue', 'success');
-                    }} className="p-1 rounded-[6px] text-[var(--accent)] hover:bg-[var(--accent-bg)]" title="Copy & dismiss"><Send size={12} /></button>
+                    }} className="p-1 rounded-[6px] text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)]" title="Copy & dismiss"><Send size={12} /></button>
                   </div>
                 </div>
               );

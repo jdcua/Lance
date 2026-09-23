@@ -50,7 +50,7 @@ export default function TimelineView({ projectId }: { projectId: string }) {
                   ) : isPast ? (
                     <Circle size={14} className="text-[#DC2626]" />
                   ) : (
-                    <Circle size={14} className="text-[var(--accent)]" />
+                    <Circle size={14} className="text-[var(--accent-ink,var(--accent))]" />
                   )}
                 </div>
                 <div className="ml-2">

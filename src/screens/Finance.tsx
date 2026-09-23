@@ -256,7 +256,7 @@ export default function Finance() {
         onClick={() => setTab('overview')}
         className={`text-sm font-medium pb-1.5 border-b-2 transition-colors ${
           tab === 'overview'
-            ? 'text-[var(--accent)] border-[var(--accent)]'
+            ? 'text-[var(--accent-ink,var(--accent))] border-[var(--accent)]'
             : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
         }`}
       >
@@ -266,7 +266,7 @@ export default function Finance() {
         onClick={() => setTab('aging')}
         className={`text-sm font-medium pb-1.5 border-b-2 transition-colors flex items-center gap-1.5 ${
           tab === 'aging'
-            ? 'text-[var(--accent)] border-[var(--accent)]'
+            ? 'text-[var(--accent-ink,var(--accent))] border-[var(--accent)]'
             : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
         }`}
       >
@@ -669,7 +669,7 @@ export default function Finance() {
                     />
                   </div>
                   <span className="text-[10px] text-[var(--text-secondary)] font-medium truncate max-w-full">{cf.month.label}</span>
-                  <span className={`text-[10px] font-medium truncate max-w-full ${cf.net >= 0 ? 'text-[var(--accent)]' : 'text-[var(--danger)]'}`}>{fmt(cf.net)}</span>
+                  <span className={`text-[10px] font-medium truncate max-w-full ${cf.net >= 0 ? 'text-[var(--accent-ink,var(--accent))]' : 'text-[var(--danger)]'}`}>{fmt(cf.net)}</span>
                   {cf.runningBalance !== undefined && (
                     <span className={`text-[9px] truncate max-w-full ${cf.runningBalance >= 0 ? 'text-[var(--text-secondary)]' : 'text-[var(--danger)]'}`}>Bal: {fmt(cf.runningBalance)}</span>
                   )}
@@ -741,7 +741,7 @@ export default function Finance() {
                       onClick={() => setScenario({ ...scenario, mode })}
                       className={`px-3 py-1.5 text-xs rounded-[8px] border transition-colors ${
                         scenario.mode === mode
-                          ? 'bg-[var(--accent)]/10 border-[var(--accent)] text-[var(--accent)] font-medium'
+                          ? 'bg-[var(--accent)]/10 border-[var(--accent)] text-[var(--accent-ink,var(--accent))] font-medium'
                           : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                       }`}
                     >
@@ -1094,7 +1094,7 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
   if (agingInvoices.length === 0) {
     return (
       <Card className="text-center py-16 flex flex-col items-center">
-        <Check size={40} className="text-[var(--accent)] mb-4" />
+        <Check size={40} className="text-[var(--accent-ink,var(--accent))] mb-4" />
         <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">All invoices are paid. Nice work.</h3>
       </Card>
     );
@@ -1164,7 +1164,7 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
                     </span>
                   </td>
                   <td className="px-3 py-2 text-right">
-                    <button onClick={() => openPaymentModal(inv.id)} className="text-[10px] text-[var(--accent)] hover:underline whitespace-nowrap">
+                    <button onClick={() => openPaymentModal(inv.id)} className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline whitespace-nowrap">
                       <DollarSign size={10} className="inline mr-0.5" />Record Payment
                     </button>
                   </td>

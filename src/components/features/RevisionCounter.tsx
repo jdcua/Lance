@@ -165,7 +165,7 @@ export default function RevisionCounter({ projectId }: { projectId: string }) {
                 </span>
                 <span className="text-[var(--text-primary)]">{r.change_summary || 'No summary'}</span>
               </div>
-              {r.approved && <span className="text-[10px] text-[var(--accent)]">Approved</span>}
+              {r.approved && <span className="text-[10px] text-[var(--accent-ink,var(--accent))]">Approved</span>}
             </div>
           ))}
         </div>

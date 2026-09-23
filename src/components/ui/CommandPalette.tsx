@@ -77,6 +77,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const aiEnabled = profile?.ai_enabled ?? false;
   const [debouncedQuery, setDebouncedQuery] = useState('');
 
@@ -134,8 +135,12 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
       }
     });
     invoices.forEach((inv) => {
-      if ((inv.invoice_number || '').toLowerCase().includes(q)) {
-        items.push({ id: inv.id, label: inv.invoice_number, sublabel: 'Invoice', type: 'invoice', path: `/invoices` });
+      const clientName = clients.find((c) => c.id === inv.client_id)?.name || '';
+      if (
+        (inv.invoice_number || '').toLowerCase().includes(q) ||
+        clientName.toLowerCase().includes(q)
+      ) {
+        items.push({ id: inv.id, label: inv.invoice_number, sublabel: `Invoice${clientName ? ` · ${clientName}` : ''}`, type: 'invoice', path: `/invoices` });
       }
     });
     contracts.forEach((c) => {
@@ -163,7 +168,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
         items.push({
           id: e.id,
           label: e.description,
-          sublabel: `${e.category} · ${formatCurrency(e.amount)} on ${formatDateShort(e.date)}`,
+          sublabel: `${e.category} · ${formatCurrency(e.amount, profile?.currency)} on ${formatDateShort(e.date)}`,
           type: 'expense',
           path: '/finance',
         });
@@ -206,7 +211,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
     }
 
     return flat;
-  }, [debouncedQuery, clients, proposals, projects, invoices, contracts, timeEntries, expenses, allAttachments, aiEnabled]);
+  }, [debouncedQuery, clients, proposals, projects, invoices, contracts, timeEntries, expenses, allAttachments, aiEnabled, profile?.currency]);
 
   const grouped = useMemo(() => {
     const groups: Record<string, ResultItem[]> = {};
@@ -218,6 +223,17 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
   }, [results]);
 
   const flatResults = results;
+  // Results can shrink under a stale highlight (async loads landing after
+  // typing). Clamp so Enter/keyboard never addresses an out-of-range row.
+  const safeIndex = flatResults.length === 0 ? 0 : Math.min(selectedIndex, flatResults.length - 1);
+
+  // Keep the keyboard highlight visible inside the scrollable list.
+  useEffect(() => {
+    if (!open) return;
+    listRef.current
+      ?.querySelector('[data-selected="true"]')
+      ?.scrollIntoView({ block: 'nearest' });
+  }, [safeIndex, open, debouncedQuery]);
 
   const handleSelect = (item: ResultItem) => {
     navigate(item.path);
@@ -231,8 +247,8 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setSelectedIndex((prev) => Math.max(prev - 1, 0));
-    } else if (e.key === 'Enter' && flatResults[selectedIndex]) {
-      handleSelect(flatResults[selectedIndex]);
+    } else if (e.key === 'Enter' && flatResults[safeIndex]) {
+      handleSelect(flatResults[safeIndex]);
     } else if (e.key === 'Escape') {
       onClose();
     }
@@ -248,6 +264,9 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
       <div
         className="relative bg-[var(--bg-card)] rounded-[12px] shadow-2xl border border-[var(--border-color)] w-[560px] max-h-[420px] flex flex-col overflow-hidden animate-fade-scale-in"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Command palette"
       >
         <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--border-color)]">
           <Search size={16} className="text-[var(--text-tertiary)]" />
@@ -258,11 +277,17 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
             onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
             onKeyDown={handleKeyDown}
             placeholder="Search Lance..."
+            aria-label="Search clients, projects, invoices and more"
+            aria-expanded={flatResults.length > 0}
+            aria-controls="cmd-palette-listbox"
+            aria-activedescendant={flatResults[safeIndex] ? `cmd-palette-option-${flatResults[safeIndex].id}` : undefined}
+            role="combobox"
+            aria-autocomplete="list"
             className="flex-1 text-sm outline-none bg-transparent placeholder:text-[var(--text-tertiary)]"
           />
           <kbd className="text-[10px] text-[var(--text-tertiary)] border border-[var(--border-color)] rounded-[4px] px-1.5 py-0.5">{modifier}K</kbd>
         </div>
-        <div className="flex-1 overflow-y-auto py-2">
+        <div ref={listRef} className="flex-1 overflow-y-auto py-2" role="listbox" id="cmd-palette-listbox" aria-label="Search results">
           {!debouncedQuery ? (
             <div className="px-4 py-4 space-y-4">
               <div>
@@ -308,17 +333,20 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
                       const Icon = typeIcons[item.type] || Users;
                       const idx = flatResults.indexOf(item);
                       const isFooter = item.type === 'footer';
+                      const isSelected = idx === safeIndex;
                       return (
                         <button
                           key={item.id}
+                          id={`cmd-palette-option-${item.id}`}
+                          role="option"
+                          aria-selected={isSelected}
+                          data-selected={isSelected || undefined}
                           onClick={() => handleSelect(item)}
                           className={`w-full flex items-center gap-3 px-4 py-2 text-left text-sm ${
-                            isFooter
-                              ? idx === selectedIndex ? 'bg-[var(--accent-bg)]' : 'hover:bg-[var(--bg-secondary)]'
-                              : idx === selectedIndex ? 'bg-[var(--accent-bg)]' : 'hover:bg-[var(--bg-secondary)]'
+                            isSelected ? 'bg-[var(--accent-bg)]' : 'hover:bg-[var(--bg-secondary)]'
                           }`}
                         >
-                          <Icon size={14} className={`flex-shrink-0 ${isFooter ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)]'}`} />
+                          <Icon size={14} className={`flex-shrink-0 ${isFooter ? 'text-[var(--accent-ink,var(--accent))]' : 'text-[var(--text-tertiary)]'}`} />
                           <span className="flex-1 text-[var(--text-primary)]">{item.label}</span>
                           {!isFooter && <span className="text-xs text-[var(--text-tertiary)]">{item.sublabel}</span>}
                         </button>

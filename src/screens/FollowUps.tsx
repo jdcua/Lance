@@ -276,7 +276,7 @@ export default function FollowUps() {
         <div className="flex items-center gap-3">
           <h1 className="text-lg font-semibold text-[var(--text-primary)]">Follow-ups</h1>
           {pendingCount > 0 && (
-            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">
               {pendingCount} pending
             </span>
           )}
@@ -296,14 +296,14 @@ export default function FollowUps() {
             onClick={() => setTab(t)}
             className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
               tab === t
-                ? 'border-[var(--accent)] text-[var(--accent)]'
+                ? 'border-[var(--accent)] text-[var(--accent-ink,var(--accent))]'
                 : 'border-transparent text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'
             }`}
           >
             {t.charAt(0).toUpperCase() + t.slice(1)}
             {tabCounts[t] > 0 && (
               <span className={`ml-1.5 text-[9px] px-1.5 py-0.5 rounded-full ${
-                t === 'pending' ? 'bg-[var(--accent-bg)] text-[var(--accent)]' : 'bg-[var(--bg-secondary)] text-[var(--text-tertiary)]'
+                t === 'pending' ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]' : 'bg-[var(--bg-secondary)] text-[var(--text-tertiary)]'
               }`}>
                 {tabCounts[t]}
               </span>
@@ -428,7 +428,7 @@ export default function FollowUps() {
                   {item.log.status === 'dismissed' && (
                     <button
                       onClick={() => handleRestore(item.log.id)}
-                      className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--accent)] hover:bg-[var(--accent-bg)] rounded-[6px] transition-colors"
+                      className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] rounded-[6px] transition-colors"
                     >
                       <RefreshCw size={10} /> Restore
                     </button>
@@ -538,7 +538,7 @@ function FilterDropdown({ filter, setFilter }: { filter: Filter; setFilter: (f: 
               onClick={() => { setFilter(o.value); setOpen(false); }}
               className={`w-full text-left px-3 py-1.5 text-[10px] transition-colors ${
                 filter === o.value
-                  ? 'text-[var(--accent)] bg-[var(--accent-bg)]'
+                  ? 'text-[var(--accent-ink,var(--accent))] bg-[var(--accent-bg)]'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
               }`}
             >

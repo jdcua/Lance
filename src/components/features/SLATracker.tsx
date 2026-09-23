@@ -99,7 +99,7 @@ export default function SLATracker({ projectId }: { projectId: string }) {
 
       {totalCount > 0 && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-[6px] bg-[var(--bg-secondary)] text-xs">
-          <TrendingUp size={10} className="text-[var(--accent)]" />
+          <TrendingUp size={10} className="text-[var(--accent-ink,var(--accent))]" />
           <span className="text-[var(--text-primary)]">{metCount}/{totalCount} metrics meeting target</span>
         </div>
       )}

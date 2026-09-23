@@ -236,7 +236,7 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
                     className="flex flex-col items-center justify-center gap-1 aspect-square p-2 text-center hover:bg-[var(--border-color)]/30 transition-colors"
                   >
                     <LinkIcon size={20} className="text-[var(--text-tertiary)]" />
-                    <span className="text-[10px] text-[var(--accent)] underline break-all line-clamp-3">
+                    <span className="text-[10px] text-[var(--accent-ink,var(--accent))] underline break-all line-clamp-3">
                       {item.url}
                     </span>
                     <ExternalLink size={10} className="text-[var(--text-tertiary)]" />

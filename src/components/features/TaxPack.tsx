@@ -42,7 +42,7 @@ export default function TaxPack() {
           <ReceiptText size={16} className="text-[var(--text-tertiary)]" />
           <h3 className="text-sm font-semibold text-[var(--text-primary)]">Tax Pack</h3>
           {!unlocked && (
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">
               CSV: PRO
             </span>
           )}

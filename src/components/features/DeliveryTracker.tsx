@@ -72,7 +72,7 @@ export default function DeliveryTracker({ projectId }: { projectId: string }) {
   const statusConfig = {
     pending: { icon: Clock, label: 'Pending', color: 'text-[var(--warning)]' },
     partial: { icon: AlertCircle, label: 'Partial', color: 'text-[var(--warning)]' },
-    complete: { icon: CheckCircle, label: 'Complete', color: 'text-[var(--accent)]' },
+    complete: { icon: CheckCircle, label: 'Complete', color: 'text-[var(--accent-ink,var(--accent))]' },
   } as const;
   const StatusIcon = statusConfig[status].icon;
 
@@ -118,7 +118,7 @@ export default function DeliveryTracker({ projectId }: { projectId: string }) {
             </span>
           </div>
           {delivery?.gallery_link && (
-            <a href={delivery.gallery_link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[var(--accent)] hover:underline">
+            <a href={delivery.gallery_link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[var(--accent-ink,var(--accent))] hover:underline">
               <ExternalLink size={10} /> Gallery
             </a>
           )}

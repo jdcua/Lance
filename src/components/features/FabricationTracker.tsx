@@ -132,7 +132,7 @@ export default function FabricationTracker({ projectId }: { projectId: string })
 
       {items.length > 0 && totalCost > 0 && (
         <div className="flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--text-secondary)]">
-          <Factory size={12} className="text-[var(--accent)]" />
+          <Factory size={12} className="text-[var(--accent-ink,var(--accent))]" />
           <span>Total fab cost: <span className="font-semibold text-[var(--text-primary)]">${totalCost.toFixed(2)}</span></span>
         </div>
       )}

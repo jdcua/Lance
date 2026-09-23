@@ -163,7 +163,7 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
                 <span className={`ml-2 px-1.5 py-0.5 text-[10px] font-semibold rounded-full ${
                   activeTab === plan.id
                     ? 'bg-white/20 text-white'
-                    : 'bg-[var(--accent-bg)] text-[var(--accent)]'
+                    : 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]'
                 }`}>
                   {plan.badge}
                 </span>
@@ -260,7 +260,7 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
             Current: <strong className="text-[var(--text-primary)] capitalize">{currentTier}</strong>
             {currentTier === 'trial' && (
               <>
-                <span className="ml-1 px-1.5 py-0.5 text-[10px] font-semibold bg-[var(--accent-bg)] text-[var(--accent)] rounded-full">
+                <span className="ml-1 px-1.5 py-0.5 text-[10px] font-semibold bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] rounded-full">
                   Trial
                 </span>
               </>

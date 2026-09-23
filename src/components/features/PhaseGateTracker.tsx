@@ -197,7 +197,7 @@ export default function PhaseGateTracker({ projectId }: { projectId: string }) {
                   <span className={`font-medium ${phase.completed ? 'line-through text-[var(--text-tertiary)]' : 'text-[var(--text-primary)]'}`}>{phase.phase_name}</span>
                   <span className="text-[10px] text-[var(--text-tertiary)]">{phase.completion_percent}%</span>
                   {phase.invoice_trigger && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)]">invoice</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent-ink,var(--accent))]">invoice</span>
                   )}
                 </div>
                 <div className="flex items-center gap-2">

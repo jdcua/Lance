@@ -171,7 +171,7 @@ export default function AutomationTracker({ projectId }: { projectId: string }) 
                 )}
               </div>
               <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
-                <button onClick={() => handleToggleStatus(a.id, a.status)} className="text-[var(--text-tertiary)] hover:text-[var(--accent)]" title={a.status === 'active' ? 'Deactivate' : 'Activate'}>
+                <button onClick={() => handleToggleStatus(a.id, a.status)} className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))]" title={a.status === 'active' ? 'Deactivate' : 'Activate'}>
                   {a.status === 'active' ? <Pause size={12} /> : <Play size={12} />}
                 </button>
                 <button onClick={() => handleDelete(a.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">

@@ -121,9 +121,9 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
       {/* Total */}
       {items.length > 0 && (
         <div className="flex items-center gap-2 px-3 py-2 bg-[var(--accent)]/10 rounded-[6px] text-xs">
-          <Box size={14} className="text-[var(--accent)]" />
+          <Box size={14} className="text-[var(--accent-ink,var(--accent))]" />
           <span className="text-[var(--text-primary)] font-medium">Total components:</span>
-          <span className="text-[var(--accent)] font-bold">{totalComponents}</span>
+          <span className="text-[var(--accent-ink,var(--accent))] font-bold">{totalComponents}</span>
         </div>
       )}
 
@@ -190,7 +190,7 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
                 ) : (
                   <>
                     <span className="font-semibold text-[var(--text-primary)] min-w-[24px] text-right">{item.count}</span>
-                    <button onClick={() => startEdit(item)} className="text-[var(--text-tertiary)] hover:text-[var(--accent)]">
+                    <button onClick={() => startEdit(item)} className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))]">
                       <Edit3 size={11} />
                     </button>
                     <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">

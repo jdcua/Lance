@@ -23,7 +23,7 @@ const tintBg: Record<string, string> = {
 };
 
 const tintFg: Record<string, string> = {
-  green: 'var(--accent)',
+  green: 'var(--accent-ink,var(--accent))',
   amber: 'var(--warning-text)',
   red: 'var(--danger)',
   gray: 'var(--text-tertiary)',

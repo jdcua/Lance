@@ -149,7 +149,7 @@ export default function FeedbackLog({ clientId }: { clientId: string }) {
       {/* Counts */}
       <div className="flex items-center gap-3 text-[11px]">
         <span className="flex items-center gap-1 text-[var(--text-secondary)]">
-          <Check size={11} className="text-[var(--accent)]" />
+          <Check size={11} className="text-[var(--accent-ink,var(--accent))]" />
           <span className="font-medium">{actionedCount}</span> actioned
         </span>
         <span className="flex items-center gap-1 text-[var(--text-secondary)]">
@@ -192,7 +192,7 @@ export default function FeedbackLog({ clientId }: { clientId: string }) {
             {clientProjects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
           </select>
           {filterProjectId && (
-            <button onClick={() => setFilterProjectId('')} className="text-[10px] text-[var(--accent)] hover:underline">Clear</button>
+            <button onClick={() => setFilterProjectId('')} className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline">Clear</button>
           )}
         </div>
       )}
@@ -209,7 +209,7 @@ export default function FeedbackLog({ clientId }: { clientId: string }) {
               <div key={f.id} className={`flex items-start gap-2 px-3 py-2 rounded-[6px] text-xs border-l-[3px] ${f.actioned ? 'border-[var(--accent)]/30 bg-[var(--bg-secondary)]' : 'border-[var(--accent)] bg-[var(--bg-secondary)]'}`}>
                 <button
                   onClick={() => handleToggleActioned(f.id, f.actioned)}
-                  className={`mt-0.5 flex-shrink-0 p-0.5 rounded-full ${f.actioned ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)] hover:text-[var(--accent)]'}`}
+                  className={`mt-0.5 flex-shrink-0 p-0.5 rounded-full ${f.actioned ? 'text-[var(--accent-ink,var(--accent))]' : 'text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))]'}`}
                   title={f.actioned ? 'Mark as pending' : 'Mark actioned'}
                 >
                   {f.actioned ? <Check size={14} /> : <Circle size={14} />}

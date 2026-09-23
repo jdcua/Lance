@@ -222,7 +222,7 @@ export default function SearchScreen() {
         <>
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-1">
-          Search results for "<span className="text-[var(--accent)]">{query}</span>"
+          Search results for "<span className="text-[var(--accent-ink,var(--accent))]">{query}</span>"
         </h2>
         <p className="text-sm text-[var(--text-secondary)]">
           {totalResults} result{totalResults !== 1 ? 's' : ''} across {(() => { const n = SECTIONS.filter((s) => (results[s.type]?.length || 0) > 0).length; return `${n} categor${n !== 1 ? 'ies' : 'y'}`; })()}

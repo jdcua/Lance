@@ -57,7 +57,7 @@ export default function UpdaterModal() {
     <Modal open={updateAvailable} onClose={isDownloading ? () => {} : handleLater} title="Software Update Available" size="sm">
       <div className="space-y-4">
         <div className="flex items-start gap-3 p-3 rounded-[8px] bg-[var(--bg-secondary)] border border-[var(--border-color)]">
-          <Sparkles size={18} className="text-[var(--accent)] flex-shrink-0 mt-0.5" />
+          <Sparkles size={18} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-medium text-[var(--text-primary)]">Lance {updateData.version} is here</p>
             <p className="text-xs text-[var(--text-tertiary)] mt-1">
@@ -76,8 +76,8 @@ export default function UpdaterModal() {
           <div className="flex items-center gap-3 p-3 rounded-[8px] bg-[var(--accent-bg)] border border-[var(--accent)]/30">
             <div className="animate-spin rounded-full h-4 w-4 border-2 border-[var(--accent)] border-t-transparent flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-[var(--accent)]">Downloading update...</p>
-              {downloadProgressMB && <p className="text-[10px] text-[var(--accent)]/80 mt-0.5">{downloadProgressMB} MB downloaded</p>}
+              <p className="text-xs font-medium text-[var(--accent-ink,var(--accent))]">Downloading update...</p>
+              {downloadProgressMB && <p className="text-[10px] text-[var(--accent-ink,var(--accent))]/80 mt-0.5">{downloadProgressMB} MB downloaded</p>}
             </div>
           </div>
         )}

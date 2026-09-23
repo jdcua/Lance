@@ -212,7 +212,7 @@ export default function PublicationLog({ projectId }: { projectId: string }) {
                       href={p.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[var(--accent)] hover:underline font-medium flex items-center gap-1 truncate"
+                      className="text-[var(--accent-ink,var(--accent))] hover:underline font-medium flex items-center gap-1 truncate"
                     >
                       {p.outlet_name || p.url}
                       <ExternalLink size={9} className="flex-shrink-0" />

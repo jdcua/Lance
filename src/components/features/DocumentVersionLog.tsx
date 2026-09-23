@@ -160,7 +160,7 @@ export default function DocumentVersionLog({ clientId }: { clientId: string }) {
                       <div key={v.id} className="flex items-center justify-between px-3 py-1.5 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
                         <div className="flex-1 min-w-0 flex items-center gap-2">
                           <FileText size={10} className="text-[var(--text-tertiary)] flex-shrink-0" />
-                          <span className="text-[var(--accent)] font-medium flex-shrink-0">{v.version || '--'}</span>
+                          <span className="text-[var(--accent-ink,var(--accent))] font-medium flex-shrink-0">{v.version || '--'}</span>
                           <span className="text-[var(--text-tertiary)] flex-shrink-0">{v.date || '--'}</span>
                           {v.file_ref && (
                             <span className="text-[10px] text-[var(--text-tertiary)] truncate">{v.file_ref}</span>

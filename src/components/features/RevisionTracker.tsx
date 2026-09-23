@@ -64,7 +64,7 @@ export default function RevisionTracker({ projectId }: { projectId: string }) {
                 <span className={`${r.approved ? 'text-[var(--text-tertiary)]' : 'text-[var(--text-primary)]'}`}>{r.change_summary || '--'}</span>
               </div>
               <div className="flex items-center gap-1">
-                {r.approved ? <Check size={12} className="text-[var(--accent)]" /> : <RotateCcw size={12} className="text-[var(--text-tertiary)]" />}
+                {r.approved ? <Check size={12} className="text-[var(--accent-ink,var(--accent))]" /> : <RotateCcw size={12} className="text-[var(--text-tertiary)]" />}
                 <button onClick={() => removeRevision(r.id, projectId)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-1">
                   <Trash2 size={12} />
                 </button>

@@ -12,7 +12,7 @@ const variantClasses: Record<BadgeVariant, string> = {
   warning: 'bg-[var(--warning-bg)] text-[var(--warning)]',
   danger: 'bg-[var(--danger-bg)] text-[var(--danger)]',
   info: 'bg-[var(--info-bg)] text-[var(--info-ink,var(--info))]',
-  success: 'bg-[var(--accent-bg)] text-[var(--accent)]',
+  success: 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]',
   dark: 'bg-[var(--bg-card)] text-[var(--text-secondary)] border border-[var(--neutral-border)]',
 };
 

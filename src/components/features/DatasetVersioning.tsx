@@ -125,7 +125,7 @@ export default function DatasetVersioning({ projectId }: { projectId: string }) 
                   <Database size={10} className="inline mr-1" />
                   {v.dataset_id}
                 </span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] flex-shrink-0">{v.version}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent-ink,var(--accent))] flex-shrink-0">{v.version}</span>
                 {v.description && (
                   <span className="text-[var(--text-tertiary)] truncate">{v.description}</span>
                 )}

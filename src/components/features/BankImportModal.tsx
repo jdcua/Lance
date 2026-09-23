@@ -217,7 +217,7 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
       {step === 3 && (
         <div className="space-y-4 text-center py-6">
           <div className="w-12 h-12 rounded-full bg-[var(--accent-bg)] flex items-center justify-center mx-auto">
-            <Check size={20} className="text-[var(--accent)]" />
+            <Check size={20} className="text-[var(--accent-ink,var(--accent))]" />
           </div>
           <p className="text-sm text-[var(--text-primary)] font-medium">
             Imported {imported} expense{imported === 1 ? '' : 's'}

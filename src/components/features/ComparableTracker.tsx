@@ -114,7 +114,7 @@ export default function ComparableTracker({ projectId }: { projectId: string }) 
       {comps.length > 0 && (
         <div className="flex items-center gap-3 px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[6px] text-xs">
           <div className="flex items-center gap-1.5 text-[var(--text-secondary)]">
-            <Building2 size={12} className="text-[var(--accent)]" />
+            <Building2 size={12} className="text-[var(--accent-ink,var(--accent))]" />
             <span>{comps.length} comps</span>
           </div>
           <div className="h-4 w-px bg-[var(--border-color)]" />

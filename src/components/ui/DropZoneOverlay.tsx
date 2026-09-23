@@ -24,7 +24,7 @@ export default function DropZoneOverlay({ visible }: DropZoneOverlayProps) {
           <div className="relative mx-auto w-24 h-24 mb-6">
             <div className="absolute inset-0 rounded-full border-2 border-dashed border-[var(--accent)] drop-zone-ring-spin" />
             <div className="absolute inset-2 rounded-full bg-[var(--accent)]/10 flex items-center justify-center drop-zone-icon-pulse">
-              <Upload size={32} className="text-[var(--accent)]" />
+              <Upload size={32} className="text-[var(--accent-ink,var(--accent))]" />
             </div>
           </div>
 
@@ -43,7 +43,7 @@ export default function DropZoneOverlay({ visible }: DropZoneOverlayProps) {
             {['.xlsx', '.csv', '.pdf', '.docx', '.png', '.jpg'].map((ext) => (
               <span
                 key={ext}
-                className="px-2 py-0.5 text-[10px] font-mono font-medium rounded-full bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20"
+                className="px-2 py-0.5 text-[10px] font-mono font-medium rounded-full bg-[var(--accent)]/10 text-[var(--accent-ink,var(--accent))] border border-[var(--accent)]/20"
               >
                 {ext}
               </span>

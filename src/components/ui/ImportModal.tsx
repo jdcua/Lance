@@ -482,7 +482,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                     <div key={h.id} className="flex items-center justify-between text-xs px-2 py-1 rounded-[6px] hover:bg-[var(--bg-secondary)]">
                       <span className="truncate text-[var(--text-secondary)]" title={h.filename}>{h.filename}</span>
                       <span className={`flex-shrink-0 ml-2 text-[10px] font-medium ${
-                        h.status === 'imported' ? 'text-[var(--accent)]'
+                        h.status === 'imported' ? 'text-[var(--accent-ink,var(--accent))]'
                         : h.status === 'error' ? 'text-[var(--danger)]'
                         : 'text-[var(--text-tertiary)]'
                       }`}>
@@ -500,7 +500,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
         {step === 2 && (
           <div className="space-y-4">
             <div className="text-center py-8">
-              <Loader2 size={36} className="animate-spin mx-auto mb-4 text-[var(--accent)]" />
+              <Loader2 size={36} className="animate-spin mx-auto mb-4 text-[var(--accent-ink,var(--accent))]" />
               <p className="text-sm text-[var(--text-primary)] font-medium">
                 Scanning files...
               </p>
@@ -581,7 +581,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                   <div className="flex items-center gap-2">
                     {(() => {
                       const Icon = fileIcon(currentDetection.fileType);
-                      return <Icon size={18} className="text-[var(--accent)]" />;
+                      return <Icon size={18} className="text-[var(--accent-ink,var(--accent))]" />;
                     })()}
                     <div>
                       <p className="text-sm font-medium text-[var(--text-primary)]">
@@ -597,7 +597,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                     {currentDetection.fileType !== 'image' && (
                       <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
                         currentDetection.confidence >= 0.7
-                          ? 'bg-[var(--accent-bg)] text-[var(--accent)]'
+                          ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]'
                           : currentDetection.confidence >= 0.3
                           ? 'bg-[var(--medium-conf-bg)] text-[var(--medium-conf-text)]'
                           : 'bg-[var(--danger-bg)] text-[var(--danger)]'
@@ -624,7 +624,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                           <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Detected as:</span>
                           <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                             currentDetection.confidence >= 0.7
-                              ? 'bg-[var(--accent-bg)] text-[var(--accent)]'
+                              ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]'
                               : currentDetection.confidence >= 0.3
                               ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300'
                               : 'bg-[var(--danger-bg)] text-[var(--danger)]'
@@ -795,7 +795,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
         {/* Step 4 · Importing progress */}
         {step === 4 && (
           <div className="space-y-4 text-center py-6">
-            <Loader2 size={36} className="animate-spin mx-auto mb-4 text-[var(--accent)]" />
+            <Loader2 size={36} className="animate-spin mx-auto mb-4 text-[var(--accent-ink,var(--accent))]" />
             <p className="text-sm text-[var(--text-primary)] font-medium">
               Importing {activeDetections.length} file{activeDetections.length !== 1 ? 's' : ''}...
             </p>
@@ -809,7 +809,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
         {step === 5 && (
           <div className="space-y-4 text-center py-6">
             <div className="w-14 h-14 rounded-full bg-[var(--accent-bg)] flex items-center justify-center mx-auto mb-3">
-              <Check size={28} className="text-[var(--accent)]" />
+              <Check size={28} className="text-[var(--accent-ink,var(--accent))]" />
             </div>
             <h3 className="text-lg font-semibold text-[var(--text-primary)]" style={{ fontFamily: "'Syne', sans-serif" }}>
               Import Complete
@@ -817,7 +817,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
             <div className="flex justify-center gap-6 text-xs">
               {importedCount > 0 && (
                 <div className="text-center">
-                  <span className="block text-lg font-bold text-[var(--accent)]">{importedCount}</span>
+                  <span className="block text-lg font-bold text-[var(--accent-ink,var(--accent))]">{importedCount}</span>
                   <span className="text-[var(--text-tertiary)]">Imported</span>
                 </div>
               )}

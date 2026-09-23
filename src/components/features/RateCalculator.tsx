@@ -111,7 +111,7 @@ export default function RateCalculator() {
           <div className="space-y-2 mt-1">
             <div className="flex items-center gap-3 px-3 py-2 bg-[var(--bg-card)] rounded-[6px]">
               <div className="flex items-center gap-1.5">
-                <DollarSign size={14} className="text-[var(--accent)]" />
+                <DollarSign size={14} className="text-[var(--accent-ink,var(--accent))]" />
                 <div>
                   <div className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide">Required Rate</div>
                   <div className="text-sm font-semibold text-[var(--text-primary)]">
@@ -121,7 +121,7 @@ export default function RateCalculator() {
               </div>
               <div className="h-8 w-px bg-[var(--border-color)]" />
               <div className="flex items-center gap-1.5">
-                <TrendingUp size={14} className="text-[var(--accent)]" />
+                <TrendingUp size={14} className="text-[var(--accent-ink,var(--accent))]" />
                 <div>
                   <div className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide">Annual Equivalent</div>
                   <div className="text-sm font-semibold text-[var(--text-primary)]">
@@ -133,7 +133,7 @@ export default function RateCalculator() {
                 <>
                   <div className="h-8 w-px bg-[var(--border-color)]" />
                   <div className="flex items-center gap-1.5">
-                    <Clock size={14} className="text-[var(--accent)]" />
+                    <Clock size={14} className="text-[var(--accent-ink,var(--accent))]" />
                     <div>
                       <div className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide">At ${currentRate}/hr</div>
                       <div className="text-sm font-semibold text-[var(--text-primary)]">

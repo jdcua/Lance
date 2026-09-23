@@ -127,7 +127,7 @@ export default function CollectionTracker({ projectId }: { projectId: string }) 
 
       {collections.length > 0 && (
         <div className="flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--text-secondary)]">
-          <Palette size={12} className="text-[var(--accent)]" />
+          <Palette size={12} className="text-[var(--accent-ink,var(--accent))]" />
           <span>{collections.length} collections · {totalPieces} total pieces</span>
         </div>
       )}
@@ -163,14 +163,14 @@ export default function CollectionTracker({ projectId }: { projectId: string }) 
             <div key={col.id}>
               <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <Palette size={10} className="text-[var(--accent)] flex-shrink-0" />
+                  <Palette size={10} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0" />
                   <button
                     onClick={() => setExpanded(expanded === col.id ? null : col.id)}
                     className="font-medium text-[var(--text-primary)] truncate hover:underline text-left"
                   >
                     {col.name}
                   </button>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] flex-shrink-0">{col.season}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent-ink,var(--accent))] flex-shrink-0">{col.season}</span>
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0 ${statusBadgeClasses[col.status] || ''}`}>
                     {col.status.replace('_', ' ')}
                   </span>

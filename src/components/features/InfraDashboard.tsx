@@ -107,7 +107,7 @@ export default function InfraDashboard({ projectId }: { projectId: string }) {
 
       {items.length > 0 && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-[6px] bg-[var(--bg-secondary)] text-xs">
-          <DollarSign size={10} className="text-[var(--accent)]" />
+          <DollarSign size={10} className="text-[var(--accent-ink,var(--accent))]" />
           <span className="text-[var(--text-primary)]">Total monthly cost: <span className="font-semibold">${totalMonthly.toFixed(2)}</span></span>
         </div>
       )}

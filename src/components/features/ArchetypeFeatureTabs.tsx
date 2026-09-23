@@ -65,7 +65,7 @@ function FeatureTabBar({ features, context }: { features: ArchetypeFeatureDef[];
             onClick={() => setActiveTab(f.id)}
             className={`px-3 py-1.5 text-xs font-medium transition-colors border-b-2 -mb-px ${
               activeTab === f.id
-                ? 'border-[var(--accent)] text-[var(--accent)]'
+                ? 'border-[var(--accent)] text-[var(--accent-ink,var(--accent))]'
                 : 'border-transparent text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
             }`}
           >

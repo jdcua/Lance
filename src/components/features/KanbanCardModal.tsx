@@ -117,7 +117,7 @@ export default function KanbanCardModal({ card, columns: _columns, onSave, onDel
           <label className="text-[10px] font-medium text-[var(--text-tertiary)] block mb-1">Labels</label>
           <div className="flex flex-wrap gap-1 mb-1">
             {labels.map((l, i) => (
-              <span key={i} className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] flex items-center gap-1">
+              <span key={i} className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent-ink,var(--accent))] flex items-center gap-1">
                 {l}
                 <button onClick={() => setLabels(prev => prev.filter((_, j) => j !== i))} className="hover:text-[#DC2626]">&times;</button>
               </span>

@@ -393,7 +393,7 @@ export default function ClientImportModal({
             <div className="flex items-center justify-between">
               <button
                 onClick={handleDownloadSample}
-                className="flex items-center gap-1.5 text-xs text-[var(--accent)] hover:underline"
+                className="flex items-center gap-1.5 text-xs text-[var(--accent-ink,var(--accent))] hover:underline"
               >
                 <Download size={12} />
                 Download sample CSV
@@ -408,7 +408,7 @@ export default function ClientImportModal({
         {/* Step 2 · Parsing */}
         {step === 2 && (
           <div className="space-y-4 text-center py-6">
-            <Loader2 size={36} className="animate-spin mx-auto mb-4 text-[var(--accent)]" />
+            <Loader2 size={36} className="animate-spin mx-auto mb-4 text-[var(--accent-ink,var(--accent))]" />
             <p className="text-sm text-[var(--text-primary)] font-medium">
               Parsing file...
             </p>
@@ -423,7 +423,7 @@ export default function ClientImportModal({
           <div className="space-y-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <FileSpreadsheet size={16} className="text-[var(--accent)]" />
+                <FileSpreadsheet size={16} className="text-[var(--accent-ink,var(--accent))]" />
                 <div>
                   <p className="text-sm font-medium text-[var(--text-primary)]">
                     Column Mapping
@@ -521,7 +521,7 @@ export default function ClientImportModal({
         {/* Step 4 · Import progress (overlay during import, or step indicator during review) */}
         {step === 4 && importing && (
           <div className="space-y-4 text-center py-6">
-            <Loader2 size={36} className="animate-spin mx-auto mb-4 text-[var(--accent)]" />
+            <Loader2 size={36} className="animate-spin mx-auto mb-4 text-[var(--accent-ink,var(--accent))]" />
             <p className="text-sm text-[var(--text-primary)] font-medium">
               Importing clients...
             </p>
@@ -617,7 +617,7 @@ export default function ClientImportModal({
                             {dr.matchReason}
                           </span>
                         ) : (
-                          <span className="text-[10px] text-[var(--accent)]">
+                          <span className="text-[10px] text-[var(--accent-ink,var(--accent))]">
                             <Check size={10} className="inline mr-0.5" />
                             New
                           </span>
@@ -670,7 +670,7 @@ export default function ClientImportModal({
         {step === 5 && (
           <div className="space-y-4 text-center py-6">
             <div className="w-14 h-14 rounded-full bg-[var(--accent-bg)] flex items-center justify-center mx-auto mb-3">
-              <Check size={28} className="text-[var(--accent)]" />
+              <Check size={28} className="text-[var(--accent-ink,var(--accent))]" />
             </div>
             <h3
               className="text-lg font-semibold text-[var(--text-primary)]"
@@ -681,7 +681,7 @@ export default function ClientImportModal({
             <div className="flex justify-center gap-6 text-xs">
               {summary.imported > 0 && (
                 <div className="text-center">
-                  <span className="block text-lg font-bold text-[var(--accent)]">
+                  <span className="block text-lg font-bold text-[var(--accent-ink,var(--accent))]">
                     {summary.imported}
                   </span>
                   <span className="text-[var(--text-tertiary)]">Imported</span>

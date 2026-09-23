@@ -30,7 +30,7 @@ export default function AchievementsPage() {
   return (
     <div className="p-6">
       <div className="flex items-center gap-2 mb-6">
-        <Trophy size={20} className="text-[var(--accent)]" />
+        <Trophy size={20} className="text-[var(--accent-ink,var(--accent))]" />
         <h2 className="text-lg font-semibold text-[var(--text-primary)]">Achievements</h2>
         <Badge variant="info">{unlocked.size} / {ACHIEVEMENTS.length}</Badge>
       </div>
@@ -54,7 +54,7 @@ export default function AchievementsPage() {
                     isUnlocked ? 'bg-[var(--accent-bg)]' : 'bg-[var(--bg-secondary)]'
                   }`}>
                     {isUnlocked ? (
-                      <Sparkles size={18} className="text-[var(--accent)]" />
+                      <Sparkles size={18} className="text-[var(--accent-ink,var(--accent))]" />
                     ) : (
                       <Lock size={16} className="text-[var(--text-tertiary)]" />
                     )}
@@ -62,7 +62,7 @@ export default function AchievementsPage() {
                   <div>
                     <h3 className="text-sm font-semibold text-[var(--text-primary)]">{ach.title}</h3>
                     <p className="text-xs text-[var(--text-secondary)] mt-0.5">{ach.description}</p>
-                    <p className="text-[10px] text-[var(--accent)] mt-1.5 font-medium">{ach.reward}</p>
+                    <p className="text-[10px] text-[var(--accent-ink,var(--accent))] mt-1.5 font-medium">{ach.reward}</p>
                   </div>
                 </div>
               </Card>

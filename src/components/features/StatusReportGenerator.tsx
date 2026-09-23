@@ -51,7 +51,7 @@ export default function StatusReportGenerator({ projectId }: { projectId: string
       <div className="space-y-2">
         <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px]">
           <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
-            <Clock size={14} className="text-[var(--accent)]" />
+            <Clock size={14} className="text-[var(--accent-ink,var(--accent))]" />
             Total Hours
           </div>
           <span className="text-sm font-semibold text-[var(--text-primary)]">{totalHours.toFixed(1)}h</span>

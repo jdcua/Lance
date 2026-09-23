@@ -121,10 +121,10 @@ export default function StudioCostTracker() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-[10px] text-[var(--text-tertiary)]">
-              Software: <span className="text-[var(--accent)]">${softwareTotal.toFixed(2)}</span>
+              Software: <span className="text-[var(--accent-ink,var(--accent))]">${softwareTotal.toFixed(2)}</span>
             </span>
             <span className="text-[10px] text-[var(--text-tertiary)]">
-              Equipment: <span className="text-[var(--accent)]">${equipmentTotal.toFixed(2)}</span>
+              Equipment: <span className="text-[var(--accent-ink,var(--accent))]">${equipmentTotal.toFixed(2)}</span>
             </span>
           </div>
         </div>
@@ -156,10 +156,10 @@ export default function StudioCostTracker() {
             <div key={e.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
               <div className="flex-1 min-w-0 flex items-center gap-2">
                 <span className="font-medium text-[var(--text-primary)]">{e.description}</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${e.category === 'Software' ? 'bg-[var(--accent)]/15 text-[var(--accent)]' : 'bg-[#D97706]/15 text-[#D97706]'}`}>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${e.category === 'Software' ? 'bg-[var(--accent)]/15 text-[var(--accent-ink,var(--accent))]' : 'bg-[#D97706]/15 text-[#D97706]'}`}>
                   {e.category}
                 </span>
-                <span className="text-[var(--accent)] font-medium">${e.amount.toFixed(2)}</span>
+                <span className="text-[var(--accent-ink,var(--accent))] font-medium">${e.amount.toFixed(2)}</span>
                 <span className="text-[var(--text-tertiary)] flex items-center gap-0.5">
                   <Calendar size={9} />
                   {e.date}

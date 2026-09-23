@@ -48,7 +48,7 @@ export default function CommissionCalculator() {
             <div className="grid grid-cols-2 gap-2">
               <div className="p-2 bg-[var(--bg-card)] rounded-[6px]">
                 <div className="flex items-center gap-1.5 mb-1">
-                  <TrendingUp size={12} className="text-[var(--accent)]" />
+                  <TrendingUp size={12} className="text-[var(--accent-ink,var(--accent))]" />
                   <p className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide">Total Commission</p>
                 </div>
                 <p className="text-sm font-bold text-[var(--text-primary)] tabular-nums">${totalCommission.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>

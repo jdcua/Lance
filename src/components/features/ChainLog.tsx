@@ -131,7 +131,7 @@ export default function ChainLog({ projectId }: { projectId: string }) {
                   <span className="font-medium text-[var(--text-primary)]">{event.event_type}</span>
                 )}
                 {event.tx_hash && (
-                  <span className="text-[10px] text-[var(--accent)] truncate max-w-[120px] flex-shrink" title={event.tx_hash}>
+                  <span className="text-[10px] text-[var(--accent-ink,var(--accent))] truncate max-w-[120px] flex-shrink" title={event.tx_hash}>
                     {event.tx_hash.slice(0, 8)}...
                   </span>
                 )}

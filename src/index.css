@@ -206,6 +206,11 @@ html.dark * {
   --sb-label: #8e8e99;
 }
 
+/* Rail-safe accent text: the sidebar rail is fixed-dark across themes, so
+   the readable-on-light accent-ink fails here. Mix the theme accent toward
+   white — hue identity kept, ≥4.5:1 on --sb-bg for every theme (5.6–11.4). */
+.sb-accent-text { color: color-mix(in srgb, var(--accent) 60%, white); }
+
 .tnum { font-variant-numeric: tabular-nums; }
 
 ::selection { background: var(--accent-bg); }

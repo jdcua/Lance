@@ -328,7 +328,7 @@ export default function WordCharacterCounter({ timeEntryId }: { timeEntryId?: st
                           <span>C: <span className="text-[var(--text-primary)]">{cnt?.characters ?? '--'}</span></span>
                           <button
                             onClick={() => handleEdit(te.id)}
-                            className="text-[var(--text-tertiary)] hover:text-[var(--accent)] p-0.5"
+                            className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] p-0.5"
                           >
                             <Edit3 size={12} />
                           </button>

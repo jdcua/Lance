@@ -400,7 +400,7 @@ export default function Projects() {
               key={k}
               onClick={() => toggleSort(k)}
               className={`text-[10px] px-2 py-0.5 rounded-[4px] transition-colors capitalize ${
-                sortKey === k ? 'bg-[var(--accent-bg)] text-[var(--accent)] font-medium' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'
+                sortKey === k ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] font-medium' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'
               }`}
             >
               {k}
@@ -475,7 +475,7 @@ export default function Projects() {
                     <button
                       onClick={() => openMilestones(project.id)}
                       aria-label="Expand milestones"
-                      className={`p-1.5 rounded-[8px] transition-colors ${selectedProject === project.id ? 'text-[var(--accent)] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`}
+                      className={`p-1.5 rounded-[8px] transition-colors ${selectedProject === project.id ? 'text-[var(--accent-ink,var(--accent))] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`}
                     >
                       <ChevronRight size={14} className={`transition-transform ${selectedProject === project.id ? 'rotate-90' : ''}`} />
                     </button>
@@ -502,7 +502,7 @@ export default function Projects() {
                       <span className="text-xs font-medium text-[var(--text-secondary)]">Milestones</span>
                       <button
                         onClick={() => { setShowMilestoneModal(true); setMForm({ title: '', due_date: '', invoice_on_completion: false }); }}
-                        className="text-xs text-[var(--accent)] hover:underline"
+                        className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline"
                       >
                         + Add
                       </button>
@@ -514,7 +514,7 @@ export default function Projects() {
                         <div key={m.id} className="flex items-center gap-2 pl-2">
                           <button onClick={() => handleToggleMilestone(m, project)} aria-label="Toggle milestone" className="flex-shrink-0">
                             {m.completed ? (
-                              <CheckCircle2 size={16} className="text-[var(--accent)]" />
+                              <CheckCircle2 size={16} className="text-[var(--accent-ink,var(--accent))]" />
                             ) : (
                               <Circle size={16} className="text-[var(--neutral-border)]" />
                             )}
@@ -696,7 +696,7 @@ export default function Projects() {
               type="checkbox"
               checked={mform.invoice_on_completion}
               onChange={(e) => setMForm({ ...mform, invoice_on_completion: e.target.checked })}
-              className="w-4 h-4 rounded border-[var(--neutral-border)] text-[var(--accent)] focus:ring-[var(--accent)]"
+              className="w-4 h-4 rounded border-[var(--neutral-border)] text-[var(--accent-ink,var(--accent))] focus:ring-[var(--accent)]"
             />
             <span className="text-xs text-[var(--text-secondary)]">Trigger invoice on completion</span>
           </label>

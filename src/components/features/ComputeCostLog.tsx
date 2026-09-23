@@ -123,7 +123,7 @@ export default function ComputeCostLog({ projectId }: { projectId: string }) {
       {costs.length > 0 && (
         <div className="flex items-center gap-3 px-3 py-2 rounded-[6px] bg-[var(--bg-secondary)] text-xs">
           <span className="flex items-center gap-1 text-[var(--text-primary)]">
-            <DollarSign size={10} className="text-[var(--accent)]" />
+            <DollarSign size={10} className="text-[var(--accent-ink,var(--accent))]" />
             <span className="font-semibold">${totalCost.toFixed(2)}</span> total
           </span>
           <span className="text-[var(--text-tertiary)]">{totalHours.toFixed(1)}h used</span>

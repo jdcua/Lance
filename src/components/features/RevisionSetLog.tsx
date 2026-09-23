@@ -126,7 +126,7 @@ export default function RevisionSetLog({ projectId }: { projectId: string }) {
             <div key={s.id} className="flex items-start justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
               <div className="flex-1 min-w-0 space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1 text-[var(--accent)] font-bold text-sm">
+                  <span className="flex items-center gap-1 text-[var(--accent-ink,var(--accent))] font-bold text-sm">
                     <Hash size={12} />
                     {s.set_number}
                   </span>

@@ -363,11 +363,11 @@ export default function Proposals() {
                     {p.rate && profile ? `${formatCurrency(p.rate, profile.currency)} · ` : ''}{daysStale(p)}d stale
                   </span>
                   {queued ? (
-                    <span className="flex-shrink-0 text-[10px] font-medium text-[var(--accent)]">Nudge queued</span>
+                    <span className="flex-shrink-0 text-[10px] font-medium text-[var(--accent-ink,var(--accent))]">Nudge queued</span>
                   ) : (
                     <button
                       onClick={() => handleRescueNudge(p)}
-                      className="flex-shrink-0 text-[11px] font-medium text-[var(--accent)] hover:underline"
+                      className="flex-shrink-0 text-[11px] font-medium text-[var(--accent-ink,var(--accent))] hover:underline"
                     >
                       Draft nudge
                     </button>
@@ -393,7 +393,7 @@ export default function Proposals() {
             <button
               key={k}
               onClick={() => setStatusFilter(k)}
-              className={`text-[10px] px-2 py-0.5 rounded-[4px] transition-colors capitalize ${statusFilter === k ? 'bg-[var(--accent-bg)] text-[var(--accent)] font-medium' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}
+              className={`text-[10px] px-2 py-0.5 rounded-[4px] transition-colors capitalize ${statusFilter === k ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] font-medium' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}
             >
               {statusLabels[k]}
             </button>
@@ -402,19 +402,19 @@ export default function Proposals() {
         <div className="flex items-center gap-1">
           <span className="text-[10px] text-[var(--text-tertiary)]">Sort:</span>
           {(['date', 'title', 'client', 'status'] as SortKey[]).map(k => (
-            <button key={k} onClick={() => toggleSort(k)} className={`text-[10px] px-2 py-0.5 rounded-[4px] transition-colors capitalize ${sortKey === k ? 'bg-[var(--accent-bg)] text-[var(--accent)] font-medium' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}>
+            <button key={k} onClick={() => toggleSort(k)} className={`text-[10px] px-2 py-0.5 rounded-[4px] transition-colors capitalize ${sortKey === k ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] font-medium' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}>
               {k}{sortKey === k && <span className="ml-0.5">{sortDir === 'asc' ? '↑' : '↓'}</span>}
             </button>
           ))}
           <button
             onClick={() => toggleSort('heat')}
             title={heatOn ? 'Sort by buy-intent' : 'Hot-first ranking is a Pro feature'}
-            className={`text-[10px] px-2 py-0.5 rounded-[4px] transition-colors capitalize flex items-center gap-0.5 ${sortKey === 'heat' ? 'bg-[var(--accent-bg)] text-[var(--accent)] font-medium' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}
+            className={`text-[10px] px-2 py-0.5 rounded-[4px] transition-colors capitalize flex items-center gap-0.5 ${sortKey === 'heat' ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] font-medium' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}
           >
             <Flame size={10} />
             heat
             {!heatOn && (
-              <span className="text-[8px] font-semibold px-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">PRO</span>
+              <span className="text-[8px] font-semibold px-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">PRO</span>
             )}
           </button>
         </div>
@@ -442,7 +442,7 @@ export default function Proposals() {
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="text-sm font-semibold text-[var(--text-primary)]">{p.title}</h3>
                       {shareTokenIds.has(p.id) && (
-                        <Link size={12} className="text-[var(--accent)] flex-shrink-0" />
+                        <Link size={12} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0" />
                       )}
                       <Badge variant={statusBadge[p.status]}>{p.status}</Badge>
                       {(() => {
@@ -461,7 +461,7 @@ export default function Proposals() {
                               </>
                             )}
                             {heat === 'hot' && (
-                              <span className="inline-flex items-center gap-0.5 font-semibold px-1 py-px rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
+                              <span className="inline-flex items-center gap-0.5 font-semibold px-1 py-px rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">
                                 <Flame size={9} />
                                 HOT
                               </span>
@@ -508,22 +508,22 @@ export default function Proposals() {
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0 ml-3">
                   {p.status === 'draft' && (
-                    <button onClick={() => handleSend(p)} aria-label="Send proposal" className="p-1.5 rounded-[8px] text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors" title="Send">
+                    <button onClick={() => handleSend(p)} aria-label="Send proposal" className="p-1.5 rounded-[8px] text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] transition-colors" title="Send">
                       <Send size={14} />
                     </button>
                   )}
                   {p.status === 'sent' && (
                     <>
-                      <button onClick={() => handleAccept(p)} aria-label="Accept proposal" className="p-1.5 rounded-[8px] text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors" title="Accept">
+                      <button onClick={() => handleAccept(p)} aria-label="Accept proposal" className="p-1.5 rounded-[8px] text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] transition-colors" title="Accept">
                         <Check size={14} />
                       </button>
-                      <button onClick={() => setShareModal({ entityType: 'proposal', entityId: p.id })} aria-label="Share proposal" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors" title="Share">
+                      <button onClick={() => setShareModal({ entityType: 'proposal', entityId: p.id })} aria-label="Share proposal" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] transition-colors" title="Share">
                         <Share2 size={14} />
                       </button>
                     </>
                   )}
                   {p.status === 'expired' && (
-                    <button onClick={() => handleResend(p)} aria-label="Resend proposal" className="p-1.5 rounded-[8px] text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors" title="Resend">
+                    <button onClick={() => handleResend(p)} aria-label="Resend proposal" className="p-1.5 rounded-[8px] text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] transition-colors" title="Resend">
                       <Send size={14} />
                     </button>
                   )}
@@ -538,7 +538,7 @@ export default function Proposals() {
                       </div>
                     )}
                   </div>
-                  <button onClick={() => setExpanded(expanded === p.id ? null : p.id)} aria-label="View proposal body" className={`p-1.5 rounded-[8px] transition-colors ${expanded === p.id ? 'text-[var(--accent)] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`} title="View body">
+                  <button onClick={() => setExpanded(expanded === p.id ? null : p.id)} aria-label="View proposal body" className={`p-1.5 rounded-[8px] transition-colors ${expanded === p.id ? 'text-[var(--accent-ink,var(--accent))] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`} title="View body">
                     <Eye size={14} />
                   </button>
                   <button onClick={() => handleDuplicate(p)} aria-label="Duplicate proposal" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors" title="Duplicate">
@@ -582,8 +582,8 @@ export default function Proposals() {
                       return (
                         <div className="px-3 py-2.5 rounded-[8px] bg-[var(--accent-bg)]/30 border border-[var(--accent)]/20">
                           <div className="flex items-center gap-1.5 mb-1.5">
-                            <Bell size={12} className="text-[var(--accent)]" />
-                            <span className="text-[10px] font-semibold text-[var(--accent)] uppercase tracking-wide">Follow-up Draft · Stage {fu.stage}</span>
+                            <Bell size={12} className="text-[var(--accent-ink,var(--accent))]" />
+                            <span className="text-[10px] font-semibold text-[var(--accent-ink,var(--accent))] uppercase tracking-wide">Follow-up Draft · Stage {fu.stage}</span>
                             <span className="text-[10px] text-[var(--text-tertiary)]">{daysElapsed}d since sent</span>
                             {!hasEmail && (
                               <span className="text-[10px] text-[var(--warning-text)]">No email</span>
@@ -635,7 +635,7 @@ export default function Proposals() {
                             </button>
                             <button
                               onClick={async () => { await updateFollowUpStatus(fu.id, 'responded', 'responded_to'); addToast('Marked as responded', 'success'); }}
-                              className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--accent)] hover:bg-[var(--accent-bg)] rounded-[6px] transition-colors ml-auto"
+                              className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] rounded-[6px] transition-colors ml-auto"
                             >
                               <Check size={10} /> Mark Responded
                             </button>

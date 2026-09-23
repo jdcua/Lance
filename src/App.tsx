@@ -82,10 +82,11 @@ export default function App() {
   // pass. The marker write lives in the passive effect below (idempotent).
   const [splashAtMount] = useState(() => {
     try {
-      return (
-        localStorage.getItem('lance:onboarding-completed') === 'true' &&
-        localStorage.getItem('lance:has-launched') === 'true'
-      );
+      // Either completion marker counts — legacy runs wrote step=complete
+      // without onboarding-completed, and those users are still first-launch.
+      const done = localStorage.getItem('lance:onboarding-completed') === 'true'
+        || localStorage.getItem('lance:onboarding-step') === 'complete';
+      return done && localStorage.getItem('lance:has-launched') === 'true';
     } catch {
       return true;
     }
@@ -95,7 +96,8 @@ export default function App() {
     // somebody's first session, and marking it would burn the first-launch
     // grace before they ever see the app.
     try {
-      if (localStorage.getItem('lance:onboarding-completed') === 'true') {
+      if (localStorage.getItem('lance:onboarding-completed') === 'true'
+        || localStorage.getItem('lance:onboarding-step') === 'complete') {
         localStorage.setItem('lance:has-launched', 'true');
       }
     } catch {
@@ -981,13 +983,13 @@ export default function App() {
             changelog.map((entry: { version: string; date: string; items: string[] }, i: number) => (
               <div key={i} className="space-y-2">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-xs font-semibold text-[var(--accent)]">v{entry.version}</span>
+                  <span className="text-xs font-semibold text-[var(--accent-ink,var(--accent))]">v{entry.version}</span>
                   <span className="text-xs text-[var(--text-tertiary)]">{entry.date}</span>
                 </div>
                 <ul className="space-y-1.5 ml-6">
                   {entry.items.map((item: string, j: number) => (
                     <li key={j} className="flex items-start gap-2 text-sm text-[var(--text-primary)]">
-                      <span className="text-[var(--accent)] mt-0.5 flex-shrink-0">&bull;</span>
+                      <span className="text-[var(--accent-ink,var(--accent))] mt-0.5 flex-shrink-0">&bull;</span>
                       {item}
                     </li>
                   ))}
@@ -1045,7 +1047,7 @@ export default function App() {
               ['Escape', 'Close modal / palette'],
             ].map(([key, desc]) => (
               <div key={key} className="flex items-center justify-between col-span-2 px-3 py-1.5 rounded-[6px] hover:bg-[var(--bg-secondary)]">
-                <kbd className="text-[11px] font-mono text-[var(--accent)] bg-[var(--accent-bg)] px-1.5 py-0.5 rounded-[4px]">{key}</kbd>
+                <kbd className="text-[11px] font-mono text-[var(--accent-ink,var(--accent))] bg-[var(--accent-bg)] px-1.5 py-0.5 rounded-[4px]">{key}</kbd>
                 <span className="text-[var(--text-secondary)]">{desc}</span>
               </div>
             ))}
@@ -1497,7 +1499,7 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
                     checked={onboardingForm.ai_enabled}
                     onChange={() => {}}
                     onClick={() => setOnboardingForm({ ...onboardingForm, ai_enabled: !onboardingForm.ai_enabled })}
-                    className="w-4 h-4 rounded border-[var(--border-color)] text-[var(--accent)] focus:ring-[var(--accent)]"
+                    className="w-4 h-4 rounded border-[var(--border-color)] text-[var(--accent-ink,var(--accent))] focus:ring-[var(--accent)]"
                   />
                 </div>
                 <div>

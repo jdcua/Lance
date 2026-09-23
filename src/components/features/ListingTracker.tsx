@@ -139,7 +139,7 @@ export default function ListingTracker({ projectId }: { projectId: string }) {
       {listings.length > 0 && (
         <div className="flex items-center gap-3 px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[6px] text-xs">
           <div className="flex items-center gap-1.5 text-[var(--text-secondary)]">
-            <Home size={12} className="text-[var(--accent)]" />
+            <Home size={12} className="text-[var(--accent-ink,var(--accent))]" />
             <span>{activeCount} active</span>
           </div>
           <div className="h-4 w-px bg-[var(--border-color)]" />
@@ -181,7 +181,7 @@ export default function ListingTracker({ projectId }: { projectId: string }) {
             <div key={listing.id}>
               <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <Home size={10} className="text-[var(--accent)] flex-shrink-0" />
+                  <Home size={10} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0" />
                   <button
                     onClick={() => setExpanded(expanded === listing.id ? null : listing.id)}
                     className="font-medium text-[var(--text-primary)] truncate hover:underline text-left"

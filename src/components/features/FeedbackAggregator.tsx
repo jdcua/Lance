@@ -148,7 +148,7 @@ export default function FeedbackAggregator({ clientId }: { clientId: string }) {
             <div key={item.id} className={`flex items-start gap-2 px-3 py-2 rounded-[6px] text-xs border-l-[3px] ${item.actioned ? 'border-[var(--accent)]/30 bg-[var(--bg-secondary)]' : 'border-[var(--accent)] bg-[var(--bg-secondary)]'}`}>
               <button
                 onClick={() => handleToggleActioned(item.id, item.actioned)}
-                className={`mt-0.5 flex-shrink-0 p-0.5 rounded-full ${item.actioned ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)] hover:text-[var(--accent)]'}`}
+                className={`mt-0.5 flex-shrink-0 p-0.5 rounded-full ${item.actioned ? 'text-[var(--accent-ink,var(--accent))]' : 'text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))]'}`}
               >
                 {item.actioned ? <Check size={14} /> : <Circle size={14} />}
               </button>

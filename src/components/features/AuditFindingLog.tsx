@@ -166,7 +166,7 @@ export default function AuditFindingLog({ projectId }: { projectId: string }) {
                   >
                     {finding.title}
                   </button>
-                  {finding.contract_id && <span className="text-[10px] font-mono text-[var(--accent)] flex-shrink-0">{finding.contract_id}</span>}
+                  {finding.contract_id && <span className="text-[10px] font-mono text-[var(--accent-ink,var(--accent))] flex-shrink-0">{finding.contract_id}</span>}
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0 ${severityBadgeClasses[finding.severity] || severityBadgeClasses.medium}`}>
                     {finding.severity}
                   </span>

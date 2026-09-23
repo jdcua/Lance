@@ -139,7 +139,7 @@ export default function Lookbook({ clientId }: { clientId: string }) {
                       key={asset.id}
                       onClick={() => handleSelectAsset(asset.id)}
                       className={`flex items-center gap-2 px-2 py-1 rounded-[4px] text-xs cursor-pointer ${
-                        selected ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
+                        selected ? 'bg-[var(--accent)]/10 text-[var(--accent-ink,var(--accent))]' : 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
                       }`}
                     >
                       <Image size={10} />

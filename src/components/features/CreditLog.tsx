@@ -126,7 +126,7 @@ export default function CreditLog({ projectId }: { projectId: string }) {
                 <span className="font-medium text-[var(--text-primary)]">{c.artist}</span>
                 {c.role && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)]">{c.role}</span>}
                 {c.release_link && (
-                  <a href={c.release_link} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] inline-flex items-center gap-0.5 hover:underline">
+                  <a href={c.release_link} target="_blank" rel="noopener noreferrer" className="text-[var(--accent-ink,var(--accent))] inline-flex items-center gap-0.5 hover:underline">
                     <ExternalLink size={10} /> release
                   </a>
                 )}

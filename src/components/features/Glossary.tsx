@@ -287,7 +287,7 @@ export default function Glossary({ clientId }: { clientId: string }) {
                   <div className="flex items-center gap-1 ml-2 flex-shrink-0">
                     <button
                       onClick={() => handleStartEdit(t)}
-                      className="text-[var(--text-tertiary)] hover:text-[var(--accent)] p-0.5"
+                      className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] p-0.5"
                     >
                       <Edit3 size={12} />
                     </button>

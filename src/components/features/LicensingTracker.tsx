@@ -167,7 +167,7 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
     <div className="space-y-3">
       {licenses.length > 0 && (
         <div className="flex items-center gap-2 px-3 py-2 bg-[var(--bg-secondary)] rounded-[8px] text-xs">
-          <DollarSign size={14} className="text-[var(--accent)]" />
+          <DollarSign size={14} className="text-[var(--accent-ink,var(--accent))]" />
           <span className="text-[var(--text-secondary)]">Total licensing revenue:</span>
           <span className="font-semibold text-[var(--text-primary)]">
             {new Intl.NumberFormat('en-CA', {
@@ -278,7 +278,7 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
                         <span className="text-[10px] text-[var(--text-tertiary)]">{l.term}</span>
                       )}
                       {l.fee != null && (
-                        <span className="text-[10px] font-semibold text-[var(--accent)]">
+                        <span className="text-[10px] font-semibold text-[var(--accent-ink,var(--accent))]">
                           {new Intl.NumberFormat('en-CA', {
                             style: 'currency',
                             currency: l.currency,

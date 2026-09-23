@@ -124,7 +124,7 @@ export default function SyncLicenseLog({ projectId }: { projectId?: string }) {
         <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-[8px] text-xs">
           <span className="text-[var(--text-tertiary)]">
             <DollarSign size={10} className="inline mr-0.5" />
-            Total licensing revenue: <span className="font-medium text-[var(--accent)]">${totalRevenue.toFixed(2)}</span>
+            Total licensing revenue: <span className="font-medium text-[var(--accent-ink,var(--accent))]">${totalRevenue.toFixed(2)}</span>
           </span>
         </div>
       )}
@@ -168,8 +168,8 @@ export default function SyncLicenseLog({ projectId }: { projectId?: string }) {
                     {l.licensee && <span className="text-[var(--text-tertiary)]">{l.licensee}</span>}
                     {l.territory && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)]">{l.territory}</span>}
                     {l.term && <span className="text-[10px] text-[var(--text-tertiary)]">{l.term}</span>}
-                    {l.fee != null && <span className="text-[var(--accent)] font-medium">${l.fee.toFixed(2)}</span>}
-                    {l.royalty && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)]">royalty</span>}
+                    {l.fee != null && <span className="text-[var(--accent-ink,var(--accent))] font-medium">${l.fee.toFixed(2)}</span>}
+                    {l.royalty && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent-ink,var(--accent))]">royalty</span>}
                   </div>
                   <button onClick={() => handleDelete(l.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                     <Trash2 size={12} />

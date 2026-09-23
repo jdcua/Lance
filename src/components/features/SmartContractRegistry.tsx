@@ -154,7 +154,7 @@ export default function SmartContractRegistry({ projectId }: { projectId: string
                 {contract.address && (
                   <button
                     onClick={() => handleAddressClick(contract.address)}
-                    className="text-[var(--accent)] hover:underline flex items-center gap-0.5 truncate max-w-[160px] flex-shrink ml-auto"
+                    className="text-[var(--accent-ink,var(--accent))] hover:underline flex items-center gap-0.5 truncate max-w-[160px] flex-shrink ml-auto"
                     title={contract.address}
                   >
                     <span className="truncate">{contract.address.slice(0, 10)}...{contract.address.slice(-6)}</span>

@@ -118,7 +118,7 @@ export default function SoftwareSubscriptionTracker() {
           </span>
           {recurringTotal > 0 && (
             <span className="text-[var(--text-tertiary)]">
-              Recurring: <span className="font-medium text-[var(--accent)]">${recurringTotal.toFixed(2)}</span>
+              Recurring: <span className="font-medium text-[var(--accent-ink,var(--accent))]">${recurringTotal.toFixed(2)}</span>
             </span>
           )}
         </div>
@@ -174,9 +174,9 @@ export default function SoftwareSubscriptionTracker() {
             <div key={e.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
               <div className="flex-1 min-w-0 flex items-center gap-2">
                 <span className="font-medium text-[var(--text-primary)]">{e.description}</span>
-                <span className="text-[var(--accent)] font-medium">${e.amount.toFixed(2)}</span>
+                <span className="text-[var(--accent-ink,var(--accent))] font-medium">${e.amount.toFixed(2)}</span>
                 {e.recurring ? (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)]">recurring</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent-ink,var(--accent))]">recurring</span>
                 ) : (
                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)]">one-time</span>
                 )}

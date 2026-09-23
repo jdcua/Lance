@@ -32,7 +32,7 @@ function LockedPanel({
       <div className="flex items-center gap-2 mb-3">
         <Lock size={14} className="text-[var(--text-tertiary)]" />
         <h3 className="text-sm font-semibold text-[var(--text-primary)]">{title}</h3>
-        <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
+        <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">
           PRO
         </span>
       </div>
@@ -150,9 +150,9 @@ export default function ProInsights() {
   return (
     <div className="mt-6">
       <div className="flex items-center gap-2 mb-4">
-        <TrendingUp size={16} className="text-[var(--accent)]" />
+        <TrendingUp size={16} className="text-[var(--accent-ink,var(--accent))]" />
         <h3 className="text-sm font-semibold text-[var(--text-primary)]">Projections and Signals</h3>
-        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
+        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">
           PRO
         </span>
       </div>
@@ -219,7 +219,7 @@ export default function ProInsights() {
                   </div>
                 ) : (
                   <div className="flex items-start gap-2 p-3 rounded-[8px] bg-[var(--accent-bg)]">
-                    <CheckCircle2 size={14} className="text-[var(--accent)] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 size={14} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0 mt-0.5" />
                     <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                       {rate.stated !== null
                         ? 'Holding at or above your stated rate. Keep it there.'

@@ -141,7 +141,7 @@ export default function SpotlightTour({ open, onClose }: SpotlightTourProps) {
         style={cardStyle}
       >
         <div className="flex items-start justify-between mb-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.8px] text-[var(--accent)]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.8px] text-[var(--accent-ink,var(--accent))]">
             Step {idx + 1} of {steps.length}
           </p>
           <button onClick={onClose} aria-label="Skip tour" className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">

@@ -213,7 +213,7 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
                     <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">Key Features</p>
                     {archetype.archetypeFeatures.slice(0, 3).map((f) => (
                       <div key={f.id} className="flex items-center gap-1.5">
-                        <Sparkles size={10} className="text-[var(--accent)] flex-shrink-0" />
+                        <Sparkles size={10} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0" />
                         <span className="text-xs text-[var(--text-secondary)]">{f.name}</span>
                       </div>
                     ))}

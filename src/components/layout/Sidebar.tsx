@@ -290,14 +290,14 @@ export default function Sidebar() {
                   badge={
                     <>
                       {showBadges && isExpanded && item.badge === 'new' && (
-                        <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">New</span>
+                        <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] sb-accent-text">New</span>
                       )}
                       {showBadges && isExpanded && item.badge === 'alert' && badgeMap.unpaidInvoices > 0 && (
                         <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--danger-bg)] text-[var(--danger)]">{badgeMap.unpaidInvoices}</span>
                       )}
                       {showBadges && isExpanded && badgeKey && badgeMap[badgeKey] > 0 && (
                         <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
-                          badgeKey === 'unpaidInvoices' ? 'bg-[var(--danger-bg)] text-[var(--danger)]' : 'bg-[var(--accent-bg)] text-[var(--accent)]'
+                          badgeKey === 'unpaidInvoices' ? 'bg-[var(--danger-bg)] text-[var(--danger)]' : 'bg-[var(--accent-bg)] sb-accent-text'
                         }`}>
                           {badgeMap[badgeKey]}
                         </span>
@@ -344,7 +344,7 @@ export default function Sidebar() {
             expanded={isExpanded}
             badge={
               showBadges && isExpanded && pendingFollowUps.length > 0 ? (
-                <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
+                <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] sb-accent-text">
                   {pendingFollowUps.length}
                 </span>
               ) : undefined
@@ -410,7 +410,7 @@ export default function Sidebar() {
                 <span className="block text-[13px] font-semibold text-[var(--sb-text-active)] truncate">
                   {profile?.name?.trim() || 'Freelancer'}
                 </span>
-                <span className={`flex items-center gap-1 text-[10.5px] font-medium ${isLicensed || (isTrial && trialDaysRemaining(profile?.trial_started_at) > 0) ? 'text-[var(--accent)]' : 'text-[var(--sb-label)]'}`}>
+                <span className={`flex items-center gap-1 text-[10.5px] font-medium ${isLicensed || (isTrial && trialDaysRemaining(profile?.trial_started_at) > 0) ? 'sb-accent-text' : 'text-[var(--sb-label)]'}`}>
                   <Sparkles size={9} />
                   {isLicensed
                     ? 'Pro licensed'

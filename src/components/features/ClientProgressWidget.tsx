@@ -107,7 +107,7 @@ export default function ClientProgressWidget({ clientId }: { clientId: string })
       {latest && (
         <div className="p-3 bg-[var(--bg-card)] border border-[var(--accent)]/30 rounded-[8px] space-y-1">
           <div className="flex items-center gap-2 text-xs">
-            <TrendingUp size={14} className="text-[var(--accent)]" />
+            <TrendingUp size={14} className="text-[var(--accent-ink,var(--accent))]" />
             <span className="font-semibold text-[var(--text-primary)]">Most Recent</span>
             <span className="text-[10px] text-[var(--text-tertiary)]">
               <Calendar size={10} className="inline mr-0.5" />

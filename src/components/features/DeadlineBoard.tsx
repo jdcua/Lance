@@ -161,7 +161,7 @@ export default function DeadlineBoard() {
                   {!isEditing && (
                     <button
                       onClick={() => handleStartEdit(project)}
-                      className="text-[var(--text-tertiary)] hover:text-[var(--accent)] flex-shrink-0"
+                      className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] flex-shrink-0"
                     >
                       <Clock size={12} />
                     </button>

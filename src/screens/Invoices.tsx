@@ -645,8 +645,8 @@ export default function Invoices() {
       {/* Tab bar + search + sort */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <div className="flex items-center gap-2 border-b border-[var(--border-color)] flex-shrink-0 min-w-max">
-          <button onClick={() => setActiveTab('all')} className={`whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-[1px] ${activeTab === 'all' ? 'text-[var(--accent)] border-[var(--accent)]' : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'}`}>All invoices</button>
-          <button onClick={() => setActiveTab('recurring')} className={`whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-[1px] ${activeTab === 'recurring' ? 'text-[var(--accent)] border-[var(--accent)]' : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'}`}>Recurring</button>
+          <button onClick={() => setActiveTab('all')} className={`whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-[1px] ${activeTab === 'all' ? 'text-[var(--accent-ink,var(--accent))] border-[var(--accent)]' : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'}`}>All invoices</button>
+          <button onClick={() => setActiveTab('recurring')} className={`whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-[1px] ${activeTab === 'recurring' ? 'text-[var(--accent-ink,var(--accent))] border-[var(--accent)]' : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'}`}>Recurring</button>
         </div>
         <div className="relative max-w-[180px] flex-shrink-0">
           <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
@@ -657,7 +657,7 @@ export default function Invoices() {
             <div className="flex items-center gap-1">
               <span className="text-[10px] text-[var(--text-tertiary)]">Sort:</span>
               {(['date', 'number', 'client', 'status', 'total'] as InvSortKey[]).map(k => (
-                <button key={k} onClick={() => toggleSort(k)} className={`text-[10px] px-2 py-0.5 rounded-[4px] transition-colors capitalize ${sortKey === k ? 'bg-[var(--accent-bg)] text-[var(--accent)] font-medium' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}>{k}{sortKey === k && <span className="ml-0.5">{sortDir === 'asc' ? '↑' : '↓'}</span>}</button>
+                <button key={k} onClick={() => toggleSort(k)} className={`text-[10px] px-2 py-0.5 rounded-[4px] transition-colors capitalize ${sortKey === k ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] font-medium' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}>{k}{sortKey === k && <span className="ml-0.5">{sortDir === 'asc' ? '↑' : '↓'}</span>}</button>
               ))}
             </div>
             <Button onClick={handleCreateFromEmptyState} size="sm" disabled={clients.length === 0}><Plus size={14} />New Invoice</Button>
@@ -734,7 +734,7 @@ export default function Invoices() {
                                   e.stopPropagation();
                                   handleAddLateFee(inv);
                                 }}
-                                className="text-[var(--accent)] hover:underline"
+                                className="text-[var(--accent-ink,var(--accent))] hover:underline"
                                 title={feeConfirm === inv.id ? 'Click again to confirm adding the fee' : 'Add the accrued late fee as a line item'}
                               >
                                 {feeConfirm === inv.id ? 'Confirm add?' : 'Add to invoice'}
@@ -770,7 +770,7 @@ export default function Invoices() {
                         const hasEmail = !!client?.email;
                         return (
                           <div className="flex items-center gap-1.5 mt-1.5">
-                            <Bell size={10} className="text-[var(--accent)]" />
+                            <Bell size={10} className="text-[var(--accent-ink,var(--accent))]" />
                             <span className="text-[10px] text-[var(--accent-ink,var(--accent))]">{daysElapsed > 0 ? `Follow-up ready · ${daysElapsed}d overdue` : 'Follow-up ready'}</span>
                             {!hasEmail && (
                               <span className="flex items-center gap-0.5 text-[10px] text-[var(--warning-text)]">
@@ -822,7 +822,7 @@ export default function Invoices() {
                                 e.stopPropagation();
                                 openPaymentModal(inv);
                               }}
-                              className="text-[10px] text-[var(--accent)] hover:underline ml-auto flex-shrink-0"
+                              className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline ml-auto flex-shrink-0"
                             >
                               Record Payment
                             </button>
@@ -831,11 +831,11 @@ export default function Invoices() {
                       })()}
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
-                      {inv.status === 'draft' && <button onClick={() => handleMarkSent(inv)} className="text-[10px] text-[var(--accent)] hover:underline px-1">Mark Sent</button>}
+                      {inv.status === 'draft' && <button onClick={() => handleMarkSent(inv)} className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline px-1">Mark Sent</button>}
                       {(inv.status === 'sent' || inv.status === 'overdue' || inv.status === 'partial') && (
                         <>
                           <button onClick={() => openReminderModal(inv)} className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline px-1 flex items-center gap-0.5"><Mail size={10} /> Remind</button>
-                          <button onClick={() => openPaymentModal(inv)} className="text-[10px] text-[var(--accent)] hover:underline px-1">Record Payment</button>
+                          <button onClick={() => openPaymentModal(inv)} className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline px-1">Record Payment</button>
                         </>
                       )}
                       <div className="relative" ref={exportDropdown === inv.id ? dropdownRef : undefined}>
@@ -916,7 +916,7 @@ export default function Invoices() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button onClick={() => handleToggleActive(ri)} className={`w-2 h-2 rounded-full ${ri.active ? 'bg-[var(--accent)]' : 'bg-[var(--neutral-border)]'}`} title={ri.active ? 'Active · click to pause' : 'Paused · click to resume'} />
-                    <span className={`text-[10px] ${ri.active ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)]'}`}>{ri.active ? 'Active' : 'Paused'}</span>
+                    <span className={`text-[10px] ${ri.active ? 'text-[var(--accent-ink,var(--accent))]' : 'text-[var(--text-tertiary)]'}`}>{ri.active ? 'Active' : 'Paused'}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0 ml-3">
@@ -968,7 +968,7 @@ export default function Invoices() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs font-medium text-[var(--text-secondary)] flex items-center gap-1.5"><Clock size={13} /> Import unbilled time</label>
-                {selectedTimeIds.size > 0 && <button onClick={importSelectedTime} className="text-xs text-[var(--accent)] hover:underline">Import {selectedTimeIds.size} selected</button>}
+                {selectedTimeIds.size > 0 && <button onClick={importSelectedTime} className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline">Import {selectedTimeIds.size} selected</button>}
               </div>
               {hourlyRate <= 0 ? (
                 <p className="text-xs text-[var(--warning-text)] bg-[var(--warning-bg)] px-3 py-2 rounded-[6px]">Set your hourly rate in profile to use time import.</p>
@@ -981,10 +981,10 @@ export default function Invoices() {
                     const amount = Math.round(hours * hourlyRate * 100) / 100;
                     return (
                       <label key={t.id} className={`flex items-center gap-2 px-2 py-1.5 rounded-[6px] cursor-pointer text-xs ${selectedTimeIds.has(t.id) ? 'bg-[var(--accent-bg)]' : 'hover:bg-[var(--bg-secondary)]'}`}>
-                        <input type="checkbox" checked={selectedTimeIds.has(t.id)} onChange={() => toggleTimeSelection(t.id)} className="w-3.5 h-3.5 rounded border-[var(--neutral-border)] text-[var(--accent)]" />
+                        <input type="checkbox" checked={selectedTimeIds.has(t.id)} onChange={() => toggleTimeSelection(t.id)} className="w-3.5 h-3.5 rounded border-[var(--neutral-border)] text-[var(--accent-ink,var(--accent))]" />
                         <span className="flex-1 truncate">{t.description || 'No description'}</span>
                         <span className="text-[var(--text-secondary)] flex-shrink-0">{formatMinutes(t.duration_minutes || 0)}</span>
-                        <span className="text-[var(--accent)] font-medium flex-shrink-0 w-16 text-right">{formatCurrency(amount)}</span>
+                        <span className="text-[var(--accent-ink,var(--accent))] font-medium flex-shrink-0 w-16 text-right">{formatCurrency(amount)}</span>
                       </label>
                     );
                   })}
@@ -995,7 +995,7 @@ export default function Invoices() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-medium text-[var(--text-secondary)]">Line Items</label>
-              <button onClick={addItem} className="text-xs text-[var(--accent)] hover:underline">+ Add Line</button>
+              <button onClick={addItem} className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline">+ Add Line</button>
             </div>
             <div className="space-y-2">
               {items.map((item, i) => (
@@ -1057,7 +1057,7 @@ export default function Invoices() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-medium text-[var(--text-secondary)]">Line Items</label>
-              <button onClick={addRiItem} className="text-xs text-[var(--accent)] hover:underline">+ Add Line</button>
+              <button onClick={addRiItem} className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline">+ Add Line</button>
             </div>
             <div className="space-y-2">
               {riItems.map((item, i) => (
@@ -1172,7 +1172,7 @@ export default function Invoices() {
                 type="checkbox"
                 checked={reminderForm.markFollowedUp}
                 onChange={(e) => setReminderForm({ ...reminderForm, markFollowedUp: e.target.checked })}
-                className="w-3.5 h-3.5 rounded border-[var(--border-color)] text-[var(--accent)] focus:ring-[var(--accent)]"
+                className="w-3.5 h-3.5 rounded border-[var(--border-color)] text-[var(--accent-ink,var(--accent))] focus:ring-[var(--accent)]"
               />
               Mark as followed up (logs a communication entry)
             </label>

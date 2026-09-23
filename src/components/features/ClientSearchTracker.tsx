@@ -122,7 +122,7 @@ export default function ClientSearchTracker({ clientId }: { clientId: string }) 
 
       {searches.length > 0 && (
         <div className="flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--text-secondary)]">
-          <Search size={12} className="text-[var(--accent)]" />
+          <Search size={12} className="text-[var(--accent-ink,var(--accent))]" />
           <span>{openCount} open searches</span>
         </div>
       )}
@@ -152,7 +152,7 @@ export default function ClientSearchTracker({ clientId }: { clientId: string }) 
             <div key={search.id}>
               <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <Search size={10} className="text-[var(--accent)] flex-shrink-0" />
+                  <Search size={10} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0" />
                   <button
                     onClick={() => setExpanded(expanded === search.id ? null : search.id)}
                     className="font-medium text-[var(--text-primary)] truncate hover:underline text-left"

@@ -111,7 +111,7 @@ export default function ConsultantLog({ projectId }: { projectId: string }) {
         <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-[8px] text-xs">
           <span className="text-[var(--text-tertiary)]">
             <DollarSign size={10} className="inline mr-0.5" />
-            Total consultant cost: <span className="font-medium text-[var(--accent)]">${totalCost.toFixed(2)}</span>
+            Total consultant cost: <span className="font-medium text-[var(--accent-ink,var(--accent))]">${totalCost.toFixed(2)}</span>
           </span>
         </div>
       )}
@@ -149,7 +149,7 @@ export default function ConsultantLog({ projectId }: { projectId: string }) {
                 <span className="font-medium text-[var(--text-primary)]">{c.name}</span>
                 {c.discipline && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)]">{c.discipline}</span>}
                 {c.fee_type && <span className="text-[10px] text-[var(--text-tertiary)]">{c.fee_type}</span>}
-                {c.fee != null && <span className="text-[var(--accent)] font-medium">${c.fee.toFixed(2)}</span>}
+                {c.fee != null && <span className="text-[var(--accent-ink,var(--accent))] font-medium">${c.fee.toFixed(2)}</span>}
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusBadgeClasses[c.status] || statusBadgeClasses.contracted}`}>{c.status}</span>
               </div>
               <button onClick={() => handleDelete(c.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">

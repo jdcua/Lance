@@ -45,6 +45,21 @@ describe('bank CSV importing', () => {
     expect(split.parsed[0]).toMatchObject({ amount: -50, direction: 'out' });
   });
 
+  it('parses US thousands, EU decimals, and parentheses negatives', () => {
+    const rows = parseBankRows(
+      [
+        { D: '2026-09-01', M: 'US thousands', A: '1,200.00' },
+        { D: '2026-09-02', M: 'EU decimal', A: '1.200,00' },
+        { D: '2026-09-03', M: 'EU cents', A: '-4,50' },
+        { D: '2026-09-04', M: 'Parens refund', A: '($25.00)' },
+        { D: '2026-09-05', M: 'Bare thousands', A: '1,200' },
+      ],
+      { date: 'D', description: 'M', amount: 'A' },
+    );
+    expect(rows.skipped).toBe(0);
+    expect(rows.parsed.map((r) => r.amount)).toEqual([1200, 1200, -4.5, -25, 1200]);
+  });
+
   it('fingerprints duplicates deterministically', () => {
     expect(expenseFingerprint('2026-09-01', -4.5, ' Coffee ')).toBe(
       expenseFingerprint('2026-09-01', 4.5, 'coffee'),

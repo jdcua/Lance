@@ -129,12 +129,12 @@ export default function ClientSelect({ clients, value, onChange, placeholder = '
                   }`}
                 >
                   <div className="min-w-0">
-                    <span className={`truncate block ${c.id === value ? 'text-[var(--accent)] font-medium' : 'text-[var(--text-primary)]'}`}>
+                    <span className={`truncate block ${c.id === value ? 'text-[var(--accent-ink,var(--accent))] font-medium' : 'text-[var(--text-primary)]'}`}>
                       {c.name}
                     </span>
                     {c.company && <span className="text-[10px] text-[var(--text-tertiary)]">{c.company}</span>}
                   </div>
-                  {c.id === value && <Check size={14} className="text-[var(--accent)] flex-shrink-0 ml-2" />}
+                  {c.id === value && <Check size={14} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0 ml-2" />}
                 </button>
               ))
             )}

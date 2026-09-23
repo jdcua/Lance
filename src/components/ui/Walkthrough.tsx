@@ -34,7 +34,7 @@ export default function Walkthrough({ open, onClose, onStartTour }: WalkthroughP
         <div className="px-8 pt-10 pb-8">
           <div className="flex flex-col items-center text-center">
             <div className="w-16 h-16 rounded-full bg-[var(--accent-bg)] flex items-center justify-center mb-5 ring-4 ring-[var(--accent)]/10">
-              <Rocket size={28} className="text-[var(--accent)]" />
+              <Rocket size={28} className="text-[var(--accent-ink,var(--accent))]" />
             </div>
             <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
               {plan.greeting}

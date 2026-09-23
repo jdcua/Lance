@@ -149,7 +149,7 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
                     onClick={() => setExpiry(opt.value)}
                     className={`px-3 py-1.5 text-xs rounded-[6px] border transition-colors ${
                       expiry === opt.value
-                        ? 'border-[var(--accent)] bg-[var(--accent-bg)] text-[var(--accent)] font-medium'
+                        ? 'border-[var(--accent)] bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] font-medium'
                         : 'border-[var(--border-color)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'
                     }`}
                   >

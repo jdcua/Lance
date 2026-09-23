@@ -58,9 +58,26 @@ function parseMoney(raw: unknown): number | null {
   const s = String(raw).trim();
   if (!s) return null;
   const neg = /^\(.*\)$/.test(s) || s.startsWith('-');
-  const num = parseFloat(s.replace(/[^0-9.]/g, ''));
-  if (isNaN(num)) return null;
-  return neg ? -Math.abs(num) : num;
+  // Keep only digits and separators, then let the RIGHTMOST separator win
+  // as the decimal mark: US "1,200.00" vs EU "1.200,00" vs plain "4,50".
+  let num = s.replace(/[^0-9.,]/g, '');
+  if (!num) return null;
+  const lastDot = num.lastIndexOf('.');
+  const lastComma = num.lastIndexOf(',');
+  if (lastComma > lastDot) {
+    // Comma is last: EU decimal ("4,50", "1.200,00") — except US thousands
+    // with no decimal part ("1,200", "12,345,678").
+    if (/,\d{3}($|,)/.test(num) && !num.includes('.')) {
+      num = num.replace(/,/g, '');
+    } else {
+      num = num.replace(/\./g, '').replace(',', '.');
+    }
+  } else {
+    num = num.replace(/,/g, '');
+  }
+  const val = parseFloat(num);
+  if (isNaN(val)) return null;
+  return neg ? -Math.abs(val) : val;
 }
 
 /** Parse ambiguous bank dates: ISO, US (M/D/Y), EU (D/M/Y), dotted. */

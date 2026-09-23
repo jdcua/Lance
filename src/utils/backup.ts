@@ -75,10 +75,16 @@ export function validateImportEnvelope(raw: unknown): ImportValidationResult {
     }
     if (value.length > 0) {
       const first = value[0] as Record<string, unknown>;
-      if (!first.id) {
+      // user_profile is a singleton row and may predate the id column —
+      // its shape check below is the real gate, not a generic id.
+      if (key !== 'user_profile' && !first.id) {
         return { valid: false, error: `Invalid record in "${key}": missing "id" field` };
       }
-      validateTableShape(key, first);
+      try {
+        validateTableShape(key, first);
+      } catch (e) {
+        return { valid: false, error: (e as Error)?.message || `Invalid record in "${key}"` };
+      }
     }
     tableCounts[key] = value.length;
   }

@@ -171,7 +171,7 @@ export default function Insights() {
             <div className="space-y-4">
               <div className="flex justify-between text-xs">
                 <span className="text-[var(--text-secondary)]">Revenue</span>
-                <span className="font-medium text-[var(--accent)]">{formatCurrency(totalPaid, profile?.currency)}</span>
+                <span className="font-medium text-[var(--accent-ink,var(--accent))]">{formatCurrency(totalPaid, profile?.currency)}</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-[var(--text-secondary)]">Expenses</span>
@@ -299,7 +299,7 @@ export default function Insights() {
                       const isDown = !isNaN(latest) && !isNaN(previous) && latest < previous;
 
                       const TrendIcon = isUp ? TrendingUp : isDown ? TrendingDown : Minus;
-                      const trendColor = isUp ? 'text-[var(--accent)]' : isDown ? 'text-[var(--danger)]' : 'text-[var(--text-tertiary)]';
+                      const trendColor = isUp ? 'text-[var(--accent-ink,var(--accent))]' : isDown ? 'text-[var(--danger)]' : 'text-[var(--text-tertiary)]';
 
                       return (
                         <tr key={`${hm.client_id}:${hm.definition_id}`} className="border-t border-[var(--border-color)] hover:bg-[var(--bg-secondary)]/50 transition-colors">

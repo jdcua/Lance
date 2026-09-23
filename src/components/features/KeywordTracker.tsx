@@ -41,7 +41,7 @@ export default function KeywordTracker({ clientId }: { clientId: string }) {
 
   const positionIcon = (current: number | undefined, target: number | undefined) => {
     if (current == null || target == null) return <Minus size={10} className="text-[var(--text-tertiary)]" />;
-    if (current <= target) return <Checkmark size={10} className="text-[var(--accent)]" />;
+    if (current <= target) return <Checkmark size={10} className="text-[var(--accent-ink,var(--accent))]" />;
     if (current <= target * 1.5) return <Minus size={10} className="text-amber-500" />;
     return <TrendingUp size={10} className="text-[#A32D2D]" />;
   };
@@ -97,7 +97,7 @@ export default function KeywordTracker({ clientId }: { clientId: string }) {
                   <button
                     onClick={() => { setEditingId(k.id); setEditPos(k.position_current != null ? String(k.position_current) : ''); }}
                     title="Update current position"
-                    className="hover:text-[var(--accent)]"
+                    className="hover:text-[var(--accent-ink,var(--accent))]"
                   >
                     {k.position_current != null ? `#${k.position_current}` : '--'}
                   </button>

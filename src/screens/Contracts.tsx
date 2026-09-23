@@ -385,7 +385,7 @@ export default function Contracts() {
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="text-sm font-semibold text-[var(--text-primary)]">{c.title}</h3>
                         {shareTokenIds.has(c.id) && (
-                          <Link size={12} className="text-[var(--accent)] flex-shrink-0" />
+                          <Link size={12} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0" />
                         )}
                         <Badge variant={statusBadge[c.status]}>{c.status}</Badge>
                       </div>
@@ -401,7 +401,7 @@ export default function Contracts() {
                         <button
                           onClick={() => setShareModal({ entityType: 'contract', entityId: c.id })}
                           aria-label="Share contract"
-                          className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors"
+                          className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] transition-colors"
                           title="Share"
                         >
                           <Share2 size={14} />
@@ -426,7 +426,7 @@ export default function Contracts() {
                       {c.status === 'draft' && (
                         <button
                           onClick={() => handleActivate(c)}
-                          className="text-xs text-[var(--accent)] hover:underline px-1"
+                          className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline px-1"
                         >
                           Activate
                         </button>
@@ -434,7 +434,7 @@ export default function Contracts() {
                       {c.status === 'active' && (
                         <button
                           onClick={() => handleComplete(c)}
-                          className="text-xs text-[var(--accent)] hover:underline px-1"
+                          className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline px-1"
                         >
                           Complete
                         </button>
@@ -442,7 +442,7 @@ export default function Contracts() {
                       <button
                         onClick={() => setExpanded(expanded === c.id ? null : c.id)}
                         aria-label="View contract body"
-                        className={`p-1.5 rounded-[8px] transition-colors ${expanded === c.id ? 'text-[var(--accent)] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`}
+                        className={`p-1.5 rounded-[8px] transition-colors ${expanded === c.id ? 'text-[var(--accent-ink,var(--accent))] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`}
                       >
                         <Eye size={14} />
                       </button>
@@ -457,7 +457,7 @@ export default function Contracts() {
                         <button
                           onClick={() => handleSaveAsTemplate(c)}
                           aria-label="Save as template"
-                          className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors"
+                          className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] transition-colors"
                           title="Save as template"
                         >
                           <Copy size={14} />
@@ -531,7 +531,7 @@ export default function Contracts() {
                       {clients.length > 0 ? (
                         <button
                           onClick={() => openNewFromTemplate(t)}
-                          className="text-xs text-[var(--accent)] hover:underline px-1"
+                          className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline px-1"
                         >
                           Use template
                         </button>

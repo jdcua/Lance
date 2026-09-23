@@ -157,7 +157,7 @@ export default function FilingDeadlineCalendar({ clientId }: { clientId: string 
                 <div className="flex-1 min-w-0 flex items-center gap-2">
                   <button
                     onClick={() => handleToggleFiled(d.id, d.filed)}
-                    className={`flex-shrink-0 p-0.5 rounded-full ${d.filed ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)] hover:text-[var(--accent)]'}`}
+                    className={`flex-shrink-0 p-0.5 rounded-full ${d.filed ? 'text-[var(--accent-ink,var(--accent))]' : 'text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))]'}`}
                     title={d.filed ? 'Mark as unfiled' : 'Mark as filed'}
                   >
                     {d.filed ? <Check size={14} /> : <Circle size={14} />}

@@ -539,7 +539,7 @@ export default function Clients() {
               }`}
             >
               <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getClientStatus(c.id)}`} title={projects.some(p => p.client_id === c.id && p.status === 'active') ? 'Active project' : proposals.some(p => p.client_id === c.id && (p.status === 'sent' || p.status === 'draft')) ? 'Proposal open' : communications.some(co => co.client_id === c.id) ? 'Has communication log' : 'No activity'} />
-              <span className={`text-xs truncate ${selectedId === c.id ? 'text-[var(--accent)] font-medium' : 'text-[var(--text-primary)]'}`}>
+              <span className={`text-xs truncate ${selectedId === c.id ? 'text-[var(--accent-ink,var(--accent))] font-medium' : 'text-[var(--text-primary)]'}`}>
                 {c.name}
               </span>
             </button>
@@ -633,7 +633,7 @@ export default function Clients() {
                     onClick={() => setActiveTab(tab)}
                     className={`px-3 py-2 text-xs font-medium transition-colors relative ${
                       activeTab === tab
-                        ? 'text-[var(--accent)]'
+                        ? 'text-[var(--accent-ink,var(--accent))]'
                         : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
                     }`}
                     style={{ fontFamily: "'Syne', sans-serif" }}
@@ -695,7 +695,7 @@ export default function Clients() {
                       <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Communication log</h3>
                       <button
                         onClick={() => { setShowLogForm(!showLogForm); setLogForm({ type: 'note', date: new Date().toISOString().split('T')[0], summary: '' }); }}
-                        className="text-xs text-[var(--accent)] hover:underline flex items-center gap-1"
+                        className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline flex items-center gap-1"
                       >
                         <Plus size={12} /> Log interaction
                       </button>
@@ -782,7 +782,7 @@ export default function Clients() {
                                       <button onClick={() => setEditingCommId(null)} aria-label="Cancel edit" className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
                                         <X size={14} />
                                       </button>
-                                      <button onClick={() => handleSaveCommEdit(comm.id)} aria-label="Save edit" disabled={!editCommText.trim()} className="text-[var(--accent)] hover:text-[var(--accent-hover)] disabled:opacity-40">
+                                      <button onClick={() => handleSaveCommEdit(comm.id)} aria-label="Save edit" disabled={!editCommText.trim()} className="text-[var(--accent-ink,var(--accent))] hover:text-[var(--accent-hover)] disabled:opacity-40">
                                         <Check size={14} />
                                       </button>
                                     </div>
@@ -805,7 +805,7 @@ export default function Clients() {
                                     </div>
                                   ) : (
                                     <>
-                                      <button onClick={() => { setEditingCommId(comm.id); setEditCommText(comm.summary); setDeleteConfirm(null); }} aria-label="Edit communication" className="text-[var(--text-tertiary)] hover:text-[var(--accent)]">
+                                      <button onClick={() => { setEditingCommId(comm.id); setEditCommText(comm.summary); setDeleteConfirm(null); }} aria-label="Edit communication" className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))]">
                                         <Pencil size={13} />
                                       </button>
                                       <button onClick={() => handleDeleteComm(comm.id)} aria-label="Delete communication" className="text-[var(--text-tertiary)] hover:text-[var(--danger)]">
@@ -834,7 +834,7 @@ export default function Clients() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => { setShowTemplatePrompt(false); setShowTemplateModal(true); }}
-                          className="text-xs text-[var(--accent)] font-medium hover:underline"
+                          className="text-xs text-[var(--accent-ink,var(--accent))] font-medium hover:underline"
                         >
                           Save template
                         </button>
@@ -915,7 +915,7 @@ export default function Clients() {
                                 <span className="text-[10px] text-[var(--text-tertiary)]">{def.unit_label}</span>
                               )}
                               {def.is_headline && (
-                                <Star size={12} className="text-[var(--accent)]" />
+                                <Star size={12} className="text-[var(--accent-ink,var(--accent))]" />
                               )}
                               <Badge variant="default">
                                 {def.metric_type}
@@ -1058,7 +1058,7 @@ export default function Clients() {
                                 setShowValueForm(def.id);
                                 setValueForm({ value: '', period: new Date().toISOString().split('T')[0], notes: '' });
                               }}
-                              className="mt-2 text-[10px] text-[var(--accent)] hover:underline flex items-center gap-1"
+                              className="mt-2 text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline flex items-center gap-1"
                             >
                               <Plus size={10} /> Log value
                             </button>
@@ -1075,7 +1075,7 @@ export default function Clients() {
                           setMetricForm({ name: '', metric_type: 'number', unit_label: '', is_headline: false });
                           setShowMetricForm(true);
                         }}
-                        className="w-full flex items-center justify-center gap-1.5 py-3 border border-dashed border-[var(--border-color)] rounded-[10px] text-xs text-[var(--text-tertiary)] hover:border-[var(--accent)]/30 hover:text-[var(--accent)] transition-colors"
+                        className="w-full flex items-center justify-center gap-1.5 py-3 border border-dashed border-[var(--border-color)] rounded-[10px] text-xs text-[var(--text-tertiary)] hover:border-[var(--accent)]/30 hover:text-[var(--accent-ink,var(--accent))] transition-colors"
                       >
                         <Plus size={14} /> Add metric
                       </button>
@@ -1119,7 +1119,7 @@ export default function Clients() {
                                 type="checkbox"
                                 checked={metricForm.is_headline}
                                 onChange={(e) => setMetricForm({ ...metricForm, is_headline: e.target.checked })}
-                                className="rounded border-[var(--border-color)] text-[var(--accent)] focus:ring-[var(--accent)]"
+                                className="rounded border-[var(--border-color)] text-[var(--accent-ink,var(--accent))] focus:ring-[var(--accent)]"
                               />
                               Headline
                             </label>

@@ -688,9 +688,9 @@ export default function Settings() {
                   {isLicensed ? (
                     <div>
                       <div className="flex items-center gap-2 mb-3">
-                        <Sparkles size={14} className="text-[var(--accent)]" />
-                        <span className="text-sm font-medium text-[var(--accent)]">Licensed</span>
-                        <span className="text-[10px] text-[var(--accent)] bg-[var(--accent-bg)] px-1.5 py-0.5 rounded-full">Licensed</span>
+                        <Sparkles size={14} className="text-[var(--accent-ink,var(--accent))]" />
+                        <span className="text-sm font-medium text-[var(--accent-ink,var(--accent))]">Licensed</span>
+                        <span className="text-[10px] text-[var(--accent-ink,var(--accent))] bg-[var(--accent-bg)] px-1.5 py-0.5 rounded-full">Licensed</span>
                       </div>
                       <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-2">
                         All themes unlocked. Thank you for supporting Lance.
@@ -1276,7 +1276,7 @@ export default function Settings() {
                       <div className="flex items-center gap-2 mb-1">
                         <p className="text-sm font-medium text-[var(--text-primary)]">Late fees</p>
                         {getFeatureFlags(getActiveTier()).smartDunning !== true && (
-                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">
                             PRO
                           </span>
                         )}
@@ -1307,7 +1307,7 @@ export default function Settings() {
                                   setFuLateFeeEnabled(on);
                                   saveFollowUpSettings({ lateFeeEnabled: on });
                                 })}
-                                className="w-4 h-4 rounded border-[var(--border-color)] text-[var(--accent)] focus:ring-[var(--accent)]"
+                                className="w-4 h-4 rounded border-[var(--border-color)] text-[var(--accent-ink,var(--accent))] focus:ring-[var(--accent)]"
                               />
                               Enable late fees
                             </label>
@@ -1595,7 +1595,7 @@ export default function Settings() {
                       <div className="flex items-center gap-2 mb-1">
                         <p className="text-sm font-medium text-[var(--text-primary)]">Dunning voice</p>
                         {getFeatureFlags(getActiveTier()).smartDunning !== true && (
-                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">
                             PRO
                           </span>
                         )}
@@ -1850,7 +1850,7 @@ export default function Settings() {
                   setShowAssetWarning(false);
                 }
               }}
-              className="w-4 h-4 rounded border-[var(--border-color)] text-[var(--accent)] focus:ring-[var(--accent)]"
+              className="w-4 h-4 rounded border-[var(--border-color)] text-[var(--accent-ink,var(--accent))] focus:ring-[var(--accent)]"
             />
             <span className="text-xs text-[var(--text-secondary)]">Got it, don't show again</span>
           </label>
@@ -1983,7 +1983,7 @@ const SectionHead = ({ title, isSaved }: { title: string; isSaved: boolean }) =>
     <div className="flex items-center gap-2 mb-4">
       <h3 className="text-sm font-semibold text-[var(--text-primary)] ">{title}</h3>
       {isSaved && (
-        <span className="flex items-center gap-1 text-[10px] text-[var(--accent)] animate-pulse">
+        <span className="flex items-center gap-1 text-[10px] text-[var(--accent-ink,var(--accent))] animate-pulse">
           <Check size={12} /> Saved
         </span>
       )}
@@ -2060,7 +2060,7 @@ function TrashBinSection() {
             <button
               onClick={() => handleRestore(e)}
               disabled={restoring === e.trashId}
-              className="flex-shrink-0 text-[11px] font-medium text-[var(--accent)] hover:underline disabled:opacity-40"
+              className="flex-shrink-0 text-[11px] font-medium text-[var(--accent-ink,var(--accent))] hover:underline disabled:opacity-40"
             >
               {restoring === e.trashId ? 'Restoring…' : 'Restore'}
             </button>
@@ -2192,7 +2192,7 @@ function ExportTemplatesSection() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => openEdit(t)}
-                  className="px-2 py-1 text-[10px] text-[var(--accent)] hover:bg-[var(--accent-bg)] rounded-[6px]"
+                  className="px-2 py-1 text-[10px] text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] rounded-[6px]"
                 >
                   Edit
                 </button>
@@ -2298,7 +2298,7 @@ function ExportTemplatesSection() {
                     type="checkbox"
                     checked={form.sections.includes(section)}
                     onChange={() => toggleSection(section)}
-                    className="w-3.5 h-3.5 rounded border-[var(--neutral-border)] text-[var(--accent)]"
+                    className="w-3.5 h-3.5 rounded border-[var(--neutral-border)] text-[var(--accent-ink,var(--accent))]"
                   />
                   <span className="text-xs text-[var(--text-primary)]">{section}</span>
                 </label>
@@ -2402,7 +2402,7 @@ function ProjectTemplatesSection() {
                         className="w-full px-2 py-1 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
                       />
                       <div className="flex items-center gap-1">
-                        <button onClick={() => handleSaveEdit(tpl.id)} className="text-[10px] text-[var(--accent)] hover:underline">Save</button>
+                        <button onClick={() => handleSaveEdit(tpl.id)} className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline">Save</button>
                         <button onClick={() => setEditing(null)} className="text-[10px] text-[var(--text-tertiary)] hover:underline">Cancel</button>
                       </div>
                     </div>
@@ -2415,7 +2415,7 @@ function ProjectTemplatesSection() {
                           <p className="text-[10px] text-[var(--text-tertiary)]">${tpl.default_budget}</p>
                         )}
                         {tpl.is_default && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">Built-in</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">Built-in</span>
                         )}
                       </div>
                     </div>
@@ -2430,7 +2430,7 @@ function ProjectTemplatesSection() {
                       </button>
                       <button
                         onClick={() => handleEdit(tpl.id, tpl.name, tpl.description)}
-                        className="text-[10px] text-[var(--accent)] hover:underline px-1"
+                        className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline px-1"
                       >
                         Edit
                       </button>
@@ -2462,7 +2462,7 @@ function ProjectTemplatesSection() {
                             <span className="text-[var(--text-tertiary)] w-5 text-right">{m.days_from_start}d</span>
                             <span className="text-[var(--text-primary)]">{m.title}</span>
                             {m.invoice_on_completion && (
-                              <span className="text-[9px] px-1 py-0.5 bg-[var(--accent-bg)] text-[var(--accent)] rounded-[3px]">invoice</span>
+                              <span className="text-[9px] px-1 py-0.5 bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] rounded-[3px]">invoice</span>
                             )}
                           </div>
                         ))}

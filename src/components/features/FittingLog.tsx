@@ -145,7 +145,7 @@ export default function FittingLog({ projectId }: { projectId: string }) {
             <div key={fitting.id}>
               <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <Scissors size={10} className="text-[var(--accent)] flex-shrink-0" />
+                  <Scissors size={10} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0" />
                   <button
                     onClick={() => setExpanded(expanded === fitting.id ? null : fitting.id)}
                     className="font-medium text-[var(--text-primary)] truncate hover:underline text-left"

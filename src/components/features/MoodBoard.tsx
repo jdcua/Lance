@@ -223,7 +223,7 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
                   </div>
                 ) : item.url ? (
                   <div className="h-16 bg-[var(--bg-card)] flex flex-col items-center justify-center px-2">
-                    <Link size={14} className="text-[var(--accent)] mb-0.5" />
+                    <Link size={14} className="text-[var(--accent-ink,var(--accent))] mb-0.5" />
                     <p className="text-[10px] text-[var(--text-tertiary)] truncate w-full text-center">{item.url}</p>
                   </div>
                 ) : null}
@@ -271,7 +271,7 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
 
                 {/* External link indicator */}
                 {item.url && (
-                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="absolute bottom-1.5 right-1.5 p-0.5 rounded-[4px] bg-[var(--bg-card)]/60 text-[var(--text-tertiary)] hover:text-[var(--accent)]">
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="absolute bottom-1.5 right-1.5 p-0.5 rounded-[4px] bg-[var(--bg-card)]/60 text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))]">
                     <ArrowUpRight size={10} />
                   </a>
                 )}

@@ -249,7 +249,7 @@ export default function ActionItemTracker({ clientId }: { clientId: string }) {
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <button onClick={() => handleToggle(item)} className="flex-shrink-0">
                     {item.completed ? (
-                      <Check size={14} className="text-[var(--accent)]" />
+                      <Check size={14} className="text-[var(--accent-ink,var(--accent))]" />
                     ) : (
                       <Circle size={14} className="text-[var(--text-tertiary)]" />
                     )}

@@ -125,7 +125,7 @@ export default function ShowingLog({ projectId }: { projectId: string }) {
             <div key={showing.id}>
               <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <Calendar size={10} className="text-[var(--accent)] flex-shrink-0" />
+                  <Calendar size={10} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0" />
                   <button
                     onClick={() => setExpanded(expanded === showing.id ? null : showing.id)}
                     className="font-medium text-[var(--text-primary)] truncate hover:underline text-left"
@@ -135,7 +135,7 @@ export default function ShowingLog({ projectId }: { projectId: string }) {
                   {showing.attendee_contact && <span className="text-[10px] text-[var(--text-tertiary)] flex-shrink-0">{showing.attendee_contact}</span>}
                   {showing.date && <span className="text-[10px] text-[var(--text-tertiary)] flex-shrink-0">{showing.date}</span>}
                   {showing.follow_up_date && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] flex-shrink-0">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent-ink,var(--accent))] flex-shrink-0">
                       follow-up: {showing.follow_up_date}
                     </span>
                   )}

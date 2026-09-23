@@ -50,7 +50,7 @@ export default function ColumnMapper({
         <span className="text-[10px] text-[var(--text-tertiary)]">
           {mappedCount} of {headers.length} columns mapped
           {mappedCount > 0 && totalFields > 0 && (
-            <span className="text-[var(--accent)] ml-1">
+            <span className="text-[var(--accent-ink,var(--accent))] ml-1">
               → {Math.min(mappedCount, totalFields)} field{Math.min(mappedCount, totalFields) !== 1 ? 's' : ''}
             </span>
           )}
@@ -86,7 +86,7 @@ export default function ColumnMapper({
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   {isMatched ? (
-                    <Check size={12} className="text-[var(--accent)] flex-shrink-0" />
+                    <Check size={12} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0" />
                   ) : (
                     <AlertCircle size={12} className="text-[var(--text-tertiary)] flex-shrink-0" />
                   )}
@@ -107,7 +107,7 @@ export default function ColumnMapper({
 
               {/* Arrow */}
               <div className="flex justify-center">
-                <ArrowRight size={12} className={isMatched ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)] opacity-30'} />
+                <ArrowRight size={12} className={isMatched ? 'text-[var(--accent-ink,var(--accent))]' : 'text-[var(--text-tertiary)] opacity-30'} />
               </div>
 
               {/* Lance field dropdown */}
@@ -147,7 +147,7 @@ export default function ColumnMapper({
                   {Object.entries(columnMapping)
                     .filter(([, field]) => field)
                     .map(([header, field]) => (
-                      <th key={header} className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--accent)] uppercase tracking-wide whitespace-nowrap border-b border-[var(--border-color)]">
+                      <th key={header} className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--accent-ink,var(--accent))] uppercase tracking-wide whitespace-nowrap border-b border-[var(--border-color)]">
                         {field.replace(/_/g, ' ')}
                       </th>
                     ))}

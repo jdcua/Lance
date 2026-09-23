@@ -253,7 +253,7 @@ export default function Assets() {
                   {tags.slice(0, 3).map(tag => (
                     <span key={tag} className={`px-1.5 py-0.5 text-[9px] font-medium rounded-full ${
                       tag === 'unclassified' ? 'bg-[var(--medium-conf-text)]/10 text-[var(--medium-conf-text)]' :
-                      tag === 'imported' ? 'bg-[var(--accent-bg)] text-[var(--accent)]' :
+                      tag === 'imported' ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]' :
                       'bg-[var(--bg-secondary)] text-[var(--text-tertiary)]'
                     }`}>
                       {tag}
@@ -647,7 +647,7 @@ export default function Assets() {
             onClick={() => handleAttachTo('library', 'root')}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[8px] hover:bg-[var(--bg-secondary)] text-left transition-colors"
           >
-            <FolderOpen size={16} className="text-[var(--accent)]" />
+            <FolderOpen size={16} className="text-[var(--accent-ink,var(--accent))]" />
             <div>
               <p className="text-xs font-medium text-[var(--text-primary)]">Asset Library</p>
               <p className="text-[10px] text-[var(--text-tertiary)]">Root library</p>

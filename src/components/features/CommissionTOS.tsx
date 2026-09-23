@@ -181,7 +181,7 @@ export default function CommissionTOS() {
                   </button>
                   <span className="font-medium text-[var(--text-primary)] truncate">{t.title}</span>
                   {activeTOSId === t.id && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent)]/20 text-[var(--accent)] font-medium">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent)]/20 text-[var(--accent-ink,var(--accent))] font-medium">
                       Active
                     </span>
                   )}
@@ -190,7 +190,7 @@ export default function CommissionTOS() {
                   {activeTOSId !== t.id && (
                     <button
                       onClick={() => handleSetActive(t.id)}
-                      className="text-[var(--text-tertiary)] hover:text-[var(--accent)]"
+                      className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))]"
                       title="Set as active TOS"
                     >
                       <Check size={12} />
