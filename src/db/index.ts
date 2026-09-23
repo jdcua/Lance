@@ -1103,12 +1103,6 @@ async function runMigrations(database: Database): Promise<void> {
     )
   `);
   await database.execute(`
-    CREATE TABLE IF NOT EXISTS tax_deadlines (
-      id TEXT PRIMARY KEY, client_id TEXT NOT NULL, user_id INTEGER NOT NULL DEFAULT 1,
-      title TEXT, due_date TEXT, tax_type TEXT, amount REAL, filed INTEGER
-    )
-  `);
-  await database.execute(`
     CREATE TABLE IF NOT EXISTS client_financials (
       id TEXT PRIMARY KEY, client_id TEXT NOT NULL, user_id INTEGER NOT NULL DEFAULT 1,
       statement_type TEXT, period TEXT, revenue REAL, expenses REAL, profit REAL, notes TEXT
@@ -1575,7 +1569,6 @@ async function runMigrations(database: Database): Promise<void> {
     'CREATE INDEX IF NOT EXISTS idx_client_progress_client ON client_progress(client_id)',
     'CREATE INDEX IF NOT EXISTS idx_ledger_entries_project ON ledger_entries(project_id)',
     'CREATE INDEX IF NOT EXISTS idx_reconciliations_project ON reconciliations(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_tax_deadlines_client ON tax_deadlines(client_id)',
     'CREATE INDEX IF NOT EXISTS idx_client_financials_client ON client_financials(client_id)',
     'CREATE INDEX IF NOT EXISTS idx_smart_contracts_project ON smart_contracts(project_id)',
     'CREATE INDEX IF NOT EXISTS idx_audit_findings_project ON audit_findings(project_id)',

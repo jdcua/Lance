@@ -12,7 +12,7 @@ import {
   type BankColumnMap,
 } from '../../utils/bankCsv';
 
-const CATEGORIES = ['Software', 'Equipment', 'Office', 'Travel', 'Marketing', 'Taxes', 'Other'];
+const CATEGORIES = ['Software', 'Equipment', 'Office', 'Travel', 'Marketing', 'Fees', 'Other'];
 
 /**
  * Bank statement import: maps any bank CSV to expenses. Outflows import

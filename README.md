@@ -27,7 +27,7 @@ Built by [Lance freelancers](https://lance.cuajuandiego.workers.dev).
 
 **Invoices.** Create one-off or recurring invoices. Recurring invoices auto-generate on schedule so you don't have to remember. Track payments, partial payments, and overdue status. Export as PDF.
 
-**Expenses.** Log business expenses with categories and receipts. See profit trends and tax summaries.
+**Expenses.** Log business expenses with categories and receipts. See profit trends and year-end summaries.
 
 **Finance dashboard.** Income, expenses, profit, outstanding invoices, unbilled hours, all in one view. Filter by date range and see where your money is going.
 

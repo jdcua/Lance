@@ -139,7 +139,7 @@ All tables use `CREATE TABLE IF NOT EXISTS`. Migrations are inline in `src-tauri
 | `metric_definitions` | Dashboard metric schemas (domain-specific: renders, sessions, etc.) |
 | `metric_values` | Time-series metric data points |
 | `metric_templates` | Reusable metric templates |
-| `user_profile` | Single-row user profile (name, company, currency, tax rate, etc.) |
+| `user_profile` | Single-row user profile (name, company, currency, default VAT rate, etc.) |
 | `achievements` | Unlocked achievement tracking |
 | `export_templates` | User-defined PDF/DOCX export layouts |
 | `contract_templates` | Saved contract templates |

@@ -272,7 +272,7 @@ export async function exportInvoiceDOCX(
     totalRows.push(
       new Paragraph({
         children: [
-          new TextRun({ text: `Tax (${invoice.tax_rate}%):  `, size: 22, color: '#68675F' }),
+          new TextRun({ text: `VAT / sales tax (${invoice.tax_rate}%):  `, size: 22, color: '#68675F' }),
           new TextRun({ text: formatCurrency(taxAmount, currency), size: 22 }),
         ],
         alignment: AlignmentType.RIGHT,

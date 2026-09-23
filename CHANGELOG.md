@@ -7,7 +7,7 @@
 - **Change orders**: extra revision rounds convert to draft invoices with one click
 - **Smart reminders**: overdue nudges rewritten in your voice, with optional late fees that add to the invoice
 - **Proposal radar**: open tracking, hot/cooling signals, and instant alerts with one-click follow-ups
-- **Tax pack**: year summary, quarterly bars, top clients, and an accountant-ready CSV
+- **Year summary**: yearly revenue overview, quarterly bars, top clients, and a records CSV
 - **Retainer burn-down**: monthly burn bars with one-click top-up invoices
 - **Trial clock**: visible countdown, friendly expired state, and an upgrade screen that shows what Pro already earned you
 - **Bank statement import**: any-bank CSV to expenses with duplicate detection

@@ -23,14 +23,6 @@ export interface YearSummary {
   expenseCategories: { category: string; total: number }[];
 }
 
-// Backwards-compatible aliases (deprecated, will be removed).
-/** @deprecated Use YearQuarter instead. */
-export type TaxQuarter = YearQuarter;
-/** @deprecated Use YearClientRow instead. */
-export type TaxClientRow = YearClientRow;
-/** @deprecated Use YearSummary instead. */
-export type TaxPack = YearSummary;
-
 function yearOf(iso: string | undefined): number | null {
   if (!iso) return null;
   const d = new Date(iso);

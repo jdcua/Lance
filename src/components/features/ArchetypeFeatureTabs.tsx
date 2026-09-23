@@ -166,7 +166,7 @@ function resolveProps(feature: ArchetypeFeatureDef, context: Record<string, stri
     'TaskLog', 'SOPStore', 'Glossary', 'ContentCalendar', 'PlatformTracker',
     'CommissionTOS',
     // Accountant
-    'TaxDeadlineCalendar', 'TaxDeadlineWidget', 'ClientFinancialSummary',
+    'ClientFinancialSummary',
     // Copywriter
     'ContentTypeLibrary', 'ContentTypeWidget', 'BrandVoiceNotes',
     // CX Strategist

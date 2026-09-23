@@ -210,7 +210,6 @@ const FeatureComponents: Record<string, unknown> = {
   // ── Accountant ──
   LedgerLog: lazy(() => import('./LedgerLog')),
   ReconciliationTracker: lazy(() => import('./ReconciliationTracker')),
-  TaxDeadlineCalendar: lazy(() => import('./TaxDeadlineCalendar')),
   ClientFinancialSummary: lazy(() => import('./ClientFinancialSummary')),
 
   // ── Advertiser ──
@@ -324,7 +323,6 @@ const FeatureComponents: Record<string, unknown> = {
 
   // ── Widget aliases ──
   LedgerWidget: lazy(() => import('./LedgerLog')),
-  TaxDeadlineWidget: lazy(() => import('./TaxDeadlineCalendar')),
   BudgetPacingWidget: lazy(() => import('./SpendPacing')),
   CreativeFatigueWidget: lazy(() => import('./CreativeRotationLog')),
   ContractRegistryWidget: lazy(() => import('./SmartContractRegistry')),
