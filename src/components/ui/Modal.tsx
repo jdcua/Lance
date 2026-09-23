@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, type ReactNode } from 'react';
 import { X } from 'lucide-react';
+import { useDialogFocus } from './useDialogFocus';
 
 interface ModalProps {
   open: boolean;
@@ -21,6 +22,10 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
   const onCloseRef = useRef(onClose);
   useEffect(() => { onCloseRef.current = onClose; });
 
+  // Trap + initial focus + focus return live in the shared hook. Escape is
+  // handled here (not in the hook) because every dialog dismisses on it.
+  useDialogFocus(modalRef, open);
+
   // Swallow keys so global shortcuts (Cmd+K, Cmd+N, …) don't fire mid-modal.
   // Escape and Tab MUST propagate: document-level handlers implement modal
   // dismiss and the focus trap, and a blanket stopPropagation here made
@@ -36,45 +41,15 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
 
   useEffect(() => {
     if (open) {
-      const el = modalRef.current;
-      if (!el) return;
-
-      const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-
       const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key !== 'Escape' && e.key !== 'Tab') return;
-        if (e.key === 'Escape') {
-          e.preventDefault();
-          e.stopPropagation();
-          // Close even when an input is focused
-          onCloseRef.current();
-          return;
-        }
-        if (e.key === 'Tab') {
-          const focusable = el.querySelectorAll<HTMLElement>(focusableSelector);
-          if (focusable.length === 0) return;
-          const first = focusable[0];
-          const last = focusable[focusable.length - 1];
-          if (e.shiftKey) {
-            if (document.activeElement === first) {
-              e.preventDefault();
-              last.focus();
-            }
-          } else {
-            if (document.activeElement === last) {
-              e.preventDefault();
-              first.focus();
-            }
-          }
-        }
+        if (e.key !== 'Escape') return;
+        e.preventDefault();
+        e.stopPropagation();
+        // Close even when an input is focused
+        onCloseRef.current();
       };
 
       document.addEventListener('keydown', handleKeyDown);
-
-      requestAnimationFrame(() => {
-        const focusable = el.querySelectorAll<HTMLElement>(focusableSelector);
-        if (focusable.length > 0) focusable[0].focus();
-      });
 
       document.body.style.overflow = 'hidden';
 

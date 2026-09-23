@@ -955,11 +955,21 @@ export default function App() {
   return (
     <ErrorBoundary>
     <div className="h-full flex bg-[var(--bg-primary)]">
+      <a
+        href="#main-content"
+        onClick={(e) => {
+          e.preventDefault();
+          document.getElementById('main-content')?.focus();
+        }}
+        className="sr-only focus:not-sr-only focus:absolute focus:z-[200] focus:m-3 focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:rounded-[8px] focus:bg-[var(--bg-card)] focus:text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--accent)]"
+      >
+        Skip to main content
+      </a>
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
         <AIBar />
-        <main tabIndex={0} aria-label="Main content" className={`flex-1 overflow-y-auto ${prefs.glow ? 'bg-[radial-gradient(70%_380px_at_50%_-120px,var(--accent-bg),transparent)]' : ''}`}>
+        <main tabIndex={0} id="main-content" aria-label="Main content" className={`flex-1 overflow-y-auto ${prefs.glow ? 'bg-[radial-gradient(70%_380px_at_50%_-120px,var(--accent-bg),transparent)]' : ''}`}>
           <Outlet key={location.pathname} />
         </main>
       </div>

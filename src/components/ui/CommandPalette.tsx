@@ -78,6 +78,15 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const wasOpen = useRef(false);
+  // Return focus to the main region on close — the input unmounts, and
+  // without this keyboard users are dropped on <body>.
+  useEffect(() => {
+    if (wasOpen.current && !open) {
+      document.getElementById('main-content')?.focus({ preventScroll: true });
+    }
+    wasOpen.current = open;
+  }, [open]);
   const aiEnabled = profile?.ai_enabled ?? false;
   const [debouncedQuery, setDebouncedQuery] = useState('');
 

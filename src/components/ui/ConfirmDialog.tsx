@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import Button from './Button';
+import { useDialogFocus } from './useDialogFocus';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -23,7 +24,8 @@ export default function ConfirmDialog({
   variant = 'danger',
   loading = false,
 }: ConfirmDialogProps) {
-  const confirmRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogFocus(dialogRef, open);
 
   useEffect(() => {
     if (open) {
@@ -35,7 +37,8 @@ export default function ConfirmDialog({
         }
       };
       document.addEventListener('keydown', handler);
-      confirmRef.current?.focus();
+      // Initial focus goes to Cancel (first button) via the shared hook —
+      // destructive confirms must not invite an accidental Enter.
       return () => document.removeEventListener('keydown', handler);
     }
   }, [open, onClose]);
@@ -49,8 +52,20 @@ export default function ConfirmDialog({
         onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       />
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         className="relative bg-[var(--bg-card)] rounded-[12px] shadow-xl w-full max-w-sm mx-4 animate-fade-scale-in"
-        onKeyDown={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          // Escape and Tab MUST reach the document handlers (dismiss + the
+          // shared focus trap); Cmd/Ctrl chords stay available to chrome.
+          // Same policy as Modal — a blanket stopPropagation here would
+          // silently disable the trap.
+          if (e.key === 'Escape' || e.key === 'Tab') return;
+          if (e.metaKey || e.ctrlKey) return;
+          e.stopPropagation();
+        }}
       >
         <div className="px-6 pt-6 pb-4">
           <div className="flex items-start gap-3">
