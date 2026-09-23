@@ -211,6 +211,18 @@ html.dark * {
    white — hue identity kept, ≥4.5:1 on --sb-bg for every theme (5.6–11.4). */
 .sb-accent-text { color: color-mix(in srgb, var(--accent) 60%, white); }
 
+/* Theme-proof primary button: white text fails on raw accent in every theme
+   (brightest accent is 2.5:1), and no single text color works on all seven
+   solid accents. Darken the readable ink toward black instead — hue kept,
+   white text passes everywhere (6.2–14.6). */
+.btn-accent {
+  background-color: color-mix(in srgb, var(--accent-ink) 55%, black);
+  color: #fff;
+}
+.btn-accent:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--accent-ink) 42%, black);
+}
+
 .tnum { font-variant-numeric: tabular-nums; }
 
 ::selection { background: var(--accent-bg); }

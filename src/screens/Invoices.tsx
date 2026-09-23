@@ -789,7 +789,7 @@ export default function Invoices() {
                                   addToast('Email opened in your default mail client', 'success');
                                 } catch { addToast('Failed to open email client', 'error'); }
                               }}
-                              className="text-[10px] text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] px-1.5 py-0.5 rounded-[4px] transition-colors flex-shrink-0"
+                              className="text-[10px] btn-accent px-1.5 py-0.5 rounded-[4px] transition-colors flex-shrink-0"
                             >
                               <Mail size={10} className="inline mr-0.5" /> Email
                             </button>

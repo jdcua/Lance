@@ -48,13 +48,13 @@ export default function KanbanColumnComponent({
           />
           <span className="text-[11px] font-semibold text-[var(--text-primary)]">{column.name}</span>
           <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
-            exceedsWip ? 'bg-[#DC2626]/15 text-[#DC2626]' : 'bg-[var(--bg-secondary)] text-[var(--text-tertiary)]'
+            exceedsWip ? 'bg-[#DC2626]/15 text-[#DC2626]' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
           }`}>
             {cards.length}{wipLimit != null ? `/${wipLimit}` : ''}
           </span>
         </div>
         <div className="flex items-center gap-0.5">
-          <button onClick={() => onEditColumn(column)} className="p-1 rounded-[4px] hover:bg-[var(--bg-secondary)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors">
+          <button onClick={() => onEditColumn(column)} className="p-1 rounded-[4px] hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
             <Settings2 size={11} />
           </button>
           <button onClick={() => onDeleteColumn(column.id)} className="p-1 rounded-[4px] hover:bg-[#DC2626]/10 text-[var(--text-tertiary)] hover:text-[#DC2626] transition-colors">

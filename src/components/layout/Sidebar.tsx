@@ -208,6 +208,7 @@ export default function Sidebar() {
 
   return (
     <aside
+      aria-label="Primary navigation"
       className={`${isExpanded ? 'w-[248px]' : 'w-[60px]'} h-full flex flex-col bg-[var(--sb-bg)] border-r border-[var(--sb-border)] flex-shrink-0 transition-[width] duration-200`}
       onMouseEnter={() => collapsed && setHovered(true)}
       onMouseLeave={() => setHovered(false)}

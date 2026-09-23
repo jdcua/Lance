@@ -515,7 +515,7 @@ export default function Clients() {
       {/* Left panel · client list */}
       <div className="w-[240px] border-r border-[var(--border-color)] bg-[var(--bg-card)] flex-shrink-0 flex flex-col">
         <div className="px-4 py-3 border-b border-[var(--border-color)] space-y-2">
-          <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Clients</h3>
+          <h2 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Clients</h2>
           <div className="relative">
             <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
             <input

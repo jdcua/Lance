@@ -70,8 +70,8 @@ export default function DeliveryTracker({ projectId }: { projectId: string }) {
   else if (delivered >= selects && selects > 0) status = 'complete';
 
   const statusConfig = {
-    pending: { icon: Clock, label: 'Pending', color: 'text-[var(--warning)]' },
-    partial: { icon: AlertCircle, label: 'Partial', color: 'text-[var(--warning)]' },
+    pending: { icon: Clock, label: 'Pending', color: 'text-[var(--warning-text)]' },
+    partial: { icon: AlertCircle, label: 'Partial', color: 'text-[var(--warning-text)]' },
     complete: { icon: CheckCircle, label: 'Complete', color: 'text-[var(--accent-ink,var(--accent))]' },
   } as const;
   const StatusIcon = statusConfig[status].icon;

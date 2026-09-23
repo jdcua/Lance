@@ -299,7 +299,7 @@ export default function Finance() {
         <>
           {hasMixedCurrencies && (
             <div className="mb-4 px-3 py-2 rounded-[8px] bg-[var(--info-bg)] border border-[var(--info)]/20 flex items-start gap-2 text-xs">
-              <span className="text-[var(--info)] mt-px flex-shrink-0">ⓘ</span>
+              <span className="text-[var(--info-ink,var(--info))] mt-px flex-shrink-0">ⓘ</span>
               <span className="text-[var(--text-secondary)]">
                 Revenue and outstanding are shown per currency — never converted, never summed. Expenses are tracked in {profCur}.
               </span>
@@ -359,7 +359,7 @@ export default function Finance() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <Card>
-              <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Monthly Overview{hasMixedCurrencies ? ' · per currency' : ''}</h3>
+              <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Monthly Overview{hasMixedCurrencies ? ' · per currency' : ''}</h2>
               {allMonths.length === 0 ? (
                 <p className="text-xs text-[var(--text-secondary)]">No data yet.</p>
               ) : (
@@ -452,7 +452,7 @@ export default function Finance() {
             </Card>
 
             <Card>
-              <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Expenses by Category</h3>
+              <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Expenses by Category</h2>
               {expensesByCategory.length === 0 ? (
                 <p className="text-xs text-[var(--text-secondary)]">No expenses recorded yet.</p>
               ) : (
@@ -473,7 +473,7 @@ export default function Finance() {
 
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Expenses</h3>
+              <h2 className="text-sm font-semibold text-[var(--text-primary)]">Expenses</h2>
               {foreignFiltered && (
                 <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">Tracked in {profCur} · invoices filtered to {curFilter}</p>
               )}
@@ -493,7 +493,7 @@ export default function Finance() {
           {expenses.length === 0 ? (
             <Card className="text-center py-16 flex flex-col items-center">
               <BarChart3 size={40} className="text-[var(--text-tertiary)] mb-4" />
-              <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No expenses yet</h3>
+              <h2 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No expenses yet</h2>
               <p className="text-[13px] text-[var(--text-secondary)] max-w-xs mb-5">Add an expense or mark an invoice paid to see your numbers.</p>
               <Button onClick={openNew} size="sm" variant="secondary">Add Expense</Button>
             </Card>
@@ -536,7 +536,7 @@ export default function Finance() {
         <>
           {hasMixedCurrencies && (
             <div className="mb-4 px-3 py-2 rounded-[8px] bg-[var(--info-bg)] border border-[var(--info)]/20 flex items-start gap-2 text-xs">
-              <span className="text-[var(--info)] mt-px flex-shrink-0">ⓘ</span>
+              <span className="text-[var(--info-ink,var(--info))] mt-px flex-shrink-0">ⓘ</span>
               <span className="text-[var(--text-secondary)]">
                 Projections blend all currencies without conversion — treat them as directional, and use the {profCur} filter on Overview for exact figures.
               </span>
@@ -577,7 +577,7 @@ export default function Finance() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             {/* PANEL 1 · Revenue Forecast */}
             <Card>
-              <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Revenue Forecast</h3>
+              <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Revenue Forecast</h2>
               <p className="text-xs text-[var(--text-tertiary)] mb-4">Projected revenue based on recurring invoices, milestones, sent invoices, and historical trends.</p>
               <div className="flex items-end gap-2" style={{ minHeight: '160px' }}>
                 {revenueForecast.map((m) => (
@@ -612,7 +612,7 @@ export default function Finance() {
 
             {/* PANEL 2 · Expense Forecast */}
             <Card>
-              <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Expense Forecast</h3>
+              <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Expense Forecast</h2>
               <p className="text-xs text-[var(--text-tertiary)] mb-4">Projected expenses based on known recurring expenses and historical averages.</p>
               <div className="flex items-end gap-2" style={{ minHeight: '160px' }}>
                 {expenseForecast.map((m) => (
@@ -644,7 +644,7 @@ export default function Finance() {
           <Card className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h3 className="text-sm font-semibold text-[var(--text-primary)]">Cash Flow Projection</h3>
+                <h2 className="text-sm font-semibold text-[var(--text-primary)]">Cash Flow Projection</h2>
                 <p className="text-xs text-[var(--text-tertiary)]">Estimated. Month-by-month net: income - expenses.</p>
               </div>
               <div className="flex items-center gap-2">
@@ -680,7 +680,7 @@ export default function Finance() {
 
           {/* PANEL 4 · Scenario Modeling */}
           <Card className="mb-6">
-            <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Scenario Modeling</h3>
+            <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Scenario Modeling</h2>
             <p className="text-xs text-[var(--text-tertiary)] mb-4">Adjust sliders to see how changes affect projections. All values are estimates.</p>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4">
@@ -1095,7 +1095,7 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
     return (
       <Card className="text-center py-16 flex flex-col items-center">
         <Check size={40} className="text-[var(--accent-ink,var(--accent))] mb-4" />
-        <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">All invoices are paid. Nice work.</h3>
+        <h2 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">All invoices are paid. Nice work.</h2>
       </Card>
     );
   }
@@ -1117,7 +1117,7 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
 
       {/* Total */}
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-[var(--text-primary)]">Outstanding & Partial Invoices</h3>
+        <h2 className="text-sm font-semibold text-[var(--text-primary)]">Outstanding & Partial Invoices</h2>
         <span className="text-xs text-[var(--text-secondary)]">Total: <strong className="text-[var(--text-primary)]">{agingMoney(agingInvoices, totalAging, (a) => a.remaining)}</strong> across {agingInvoices.length} invoice{agingInvoices.length !== 1 ? 's' : ''}</span>
       </div>
 

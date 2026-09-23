@@ -120,9 +120,9 @@ export default function RetainerBurnDown() {
     <Card>
       <div className="flex items-center gap-2 mb-1">
         <Flame size={16} className="text-[var(--text-tertiary)]" />
-        <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+        <h2 className="text-sm font-semibold text-[var(--text-primary)]">
           Retainer burn-down ({bounds.label})
-        </h3>
+        </h2>
       </div>
       <p className="text-xs text-[var(--text-tertiary)] mb-4">
         Monthly hours used per active retainer. Over 80% deserves attention; past 100% is billable.

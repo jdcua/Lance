@@ -562,7 +562,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                       isCurrent
                         ? 'bg-[var(--accent)]/10 text-[var(--text-primary)] border border-[var(--accent)]/30'
                         : isSkipped
-                        ? 'bg-[var(--bg-secondary)] text-[var(--text-tertiary)] line-through border border-transparent'
+                        ? 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] line-through border border-transparent'
                         : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-transparent'
                     }`}
                   >

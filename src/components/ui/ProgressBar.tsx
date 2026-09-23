@@ -23,6 +23,7 @@ export default function ProgressBar({ value, max = 100, label, showPercent = tru
       <div className={`w-full bg-[var(--bg-secondary)] rounded-full ${height}`}>
         <div
           role="progressbar"
+          aria-label={label || `${pct}% complete`}
           aria-valuenow={value}
           aria-valuemin={0}
           aria-valuemax={safeMax}

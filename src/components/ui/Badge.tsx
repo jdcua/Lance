@@ -9,7 +9,7 @@ interface BadgeProps {
 
 const variantClasses: Record<BadgeVariant, string> = {
   default: 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]',
-  warning: 'bg-[var(--warning-bg)] text-[var(--warning)]',
+  warning: 'bg-[var(--warning-bg)] text-[var(--warning-text)]',
   danger: 'bg-[var(--danger-bg)] text-[var(--danger)]',
   info: 'bg-[var(--info-bg)] text-[var(--info-ink,var(--info))]',
   success: 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]',

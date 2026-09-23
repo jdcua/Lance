@@ -467,7 +467,7 @@ export default function Proposals() {
                               </span>
                             )}
                             {heat === 'cooling' && (
-                              <span className="font-medium px-1 py-px rounded-full bg-[var(--bg-secondary)] text-[var(--text-tertiary)]">
+                              <span className="font-medium px-1 py-px rounded-full bg-[var(--bg-secondary)] text-[var(--text-secondary)]">
                                 Cooling
                               </span>
                             )}
@@ -487,7 +487,7 @@ export default function Proposals() {
                     <button
                       onClick={() => handleConvertToContract(p)}
                       disabled={convertingId === p.id}
-                      className="inline-flex items-center gap-1.5 text-xs font-medium text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] px-3 py-1.5 rounded-[8px] transition-colors disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 text-xs font-medium btn-accent px-3 py-1.5 rounded-[8px] transition-colors disabled:opacity-50"
                     >
                       <FileText size={13} />
                       {convertingId === p.id ? 'Creating...' : 'Convert to contract'}
@@ -608,7 +608,7 @@ export default function Proposals() {
                                   addToast('Email opened in your default mail client', 'success');
                                 } catch { addToast('Failed to open email client', 'error'); }
                               }}
-                              className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] rounded-[6px] transition-colors"
+                              className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium btn-accent rounded-[6px] transition-colors"
                             >
                               <Mail size={10} /> Open in Email
                             </button>

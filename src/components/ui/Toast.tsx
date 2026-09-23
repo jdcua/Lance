@@ -12,7 +12,7 @@ const icons = {
 const colors = {
   success: 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] border-[var(--accent)]/20',
   error: 'bg-[var(--danger-bg)] text-[var(--danger)] border-[var(--danger)]/20',
-  info: 'bg-[var(--info-bg)] text-[var(--info)] border-[var(--info)]/20',
+  info: 'bg-[var(--info-bg)] text-[var(--info-ink,var(--info))] border-[var(--info)]/20',
   warning: 'bg-[var(--medium-conf-bg)] text-[var(--medium-conf-text)] border-[var(--medium-conf-text)]/20',
   unlock: 'bg-[var(--accent)] text-white border-[var(--accent)]',
 };

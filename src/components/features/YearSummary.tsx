@@ -42,7 +42,7 @@ export default function YearSummary() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <ReceiptText size={16} className="text-[var(--text-tertiary)]" />
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Year Summary</h3>
+          <h2 className="text-sm font-semibold text-[var(--text-primary)]">Year Summary</h2>
           {!unlocked && (
             <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">
               CSV: PRO

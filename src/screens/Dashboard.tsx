@@ -403,7 +403,7 @@ export default function Dashboard() {
                     onClick={() => runStep(s.to, s.event, i + 1)}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[8px] text-left text-xs transition-colors ${
                       s.done
-                        ? 'bg-[var(--bg-secondary)] text-[var(--text-tertiary)] line-through cursor-default'
+                        ? 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] line-through cursor-default'
                         : 'bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] border border-[var(--border-color)]'
                     }`}
                     disabled={s.done}

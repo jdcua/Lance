@@ -254,7 +254,7 @@ export default function Assets() {
                     <span key={tag} className={`px-1.5 py-0.5 text-[9px] font-medium rounded-full ${
                       tag === 'unclassified' ? 'bg-[var(--medium-conf-text)]/10 text-[var(--medium-conf-text)]' :
                       tag === 'imported' ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]' :
-                      'bg-[var(--bg-secondary)] text-[var(--text-tertiary)]'
+                      'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
                     }`}>
                       {tag}
                     </span>

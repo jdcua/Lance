@@ -213,7 +213,7 @@ export default function SearchScreen() {
       {!query.trim() ? (
         <div className="text-center py-16 flex flex-col items-center">
           <Search size={40} className="text-[var(--text-tertiary)] mb-4" />
-          <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">Start typing to search</h3>
+          <h2 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">Start typing to search</h2>
           <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs">
             Results across clients, proposals, projects, invoices, contracts, time entries, expenses, and assets will appear here.
           </p>
@@ -232,7 +232,7 @@ export default function SearchScreen() {
       {totalResults === 0 ? (
         <div className="text-center py-16 flex flex-col items-center">
           <Search size={40} className="text-[var(--text-tertiary)] mb-4" />
-          <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No results found</h3>
+          <h2 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No results found</h2>
           <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs">Try a different search term or browse from the sidebar.</p>
         </div>
       ) : (
@@ -245,7 +245,7 @@ export default function SearchScreen() {
               <div key={section.type}>
                 <div className="flex items-center gap-2 mb-3">
                   <Icon size={14} className="text-[var(--text-tertiary)]" />
-                  <h3 className="text-sm font-semibold text-[var(--text-primary)]">{section.label}</h3>
+                  <h2 className="text-sm font-semibold text-[var(--text-primary)]">{section.label}</h2>
                   <span className="text-xs text-[var(--text-tertiary)]">({items.length})</span>
                 </div>
                 <div className="space-y-1.5">

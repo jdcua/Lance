@@ -653,8 +653,8 @@ export default function Settings() {
       <Modal open={true} onClose={handleCloseModal} title="Settings" size="full">
         <div className="flex h-full">
           {/* Sidebar */}
-          <aside className="w-[200px] shrink-0 border-r border-[var(--border-color)] p-4">
-            <nav className="space-y-0.5">
+          <aside aria-label="Settings sections" className="w-[200px] shrink-0 border-r border-[var(--border-color)] p-4">
+            <nav aria-label="Settings section links" className="space-y-0.5">
               {NAV_ITEMS.map((item) => (
                 <button
                   key={item.id}
@@ -676,7 +676,7 @@ export default function Settings() {
           </aside>
 
           {/* Content area */}
-          <main className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-6">
             {section === 'general' && (
               <>
                 {/* Profile section header */}
@@ -1547,7 +1547,7 @@ export default function Settings() {
                                 value={autoBackupPath}
                                 readOnly
                                 placeholder="Choose a folder..."
-                                className="flex-1 px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-secondary)] text-[var(--text-tertiary)] truncate"
+                                className="flex-1 px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-secondary)] text-[var(--text-secondary)] truncate"
                               />
                               <Button
                                 variant="secondary"
@@ -1729,7 +1729,7 @@ export default function Settings() {
                 </Card>
               </>
             )}
-          </main>
+          </div>
         </div>
       </Modal>
 

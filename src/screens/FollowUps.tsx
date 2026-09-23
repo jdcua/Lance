@@ -303,7 +303,7 @@ export default function FollowUps() {
             {t.charAt(0).toUpperCase() + t.slice(1)}
             {tabCounts[t] > 0 && (
               <span className={`ml-1.5 text-[9px] px-1.5 py-0.5 rounded-full ${
-                t === 'pending' ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]' : 'bg-[var(--bg-secondary)] text-[var(--text-tertiary)]'
+                t === 'pending' ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
               }`}>
                 {tabCounts[t]}
               </span>
@@ -396,7 +396,7 @@ export default function FollowUps() {
                         disabled={!hasEmail}
                         className={`flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-medium rounded-[6px] transition-colors ${
                           hasEmail
-                            ? 'text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)]'
+                            ? 'btn-accent'
                             : 'text-[var(--text-tertiary)] bg-[var(--bg-secondary)] cursor-not-allowed'
                         }`}
                       >

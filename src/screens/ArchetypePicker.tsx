@@ -186,7 +186,7 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
 
               {/* Pro badge: depth features gated on free tier */}
               {!isFirstRun && !isProTier && (archetype.archetypeFeatures?.length || 0) > 0 && (
-                <div className="absolute top-3 left-3 px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-[var(--bg-secondary)] text-[var(--text-tertiary)] border border-[var(--border-color)]">
+                <div className="absolute top-3 left-3 px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-color)]">
                   Pro
                 </div>
               )}

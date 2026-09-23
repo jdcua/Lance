@@ -301,8 +301,9 @@ export default function TimeScreen() {
             <Card className="mb-6">
               <div className="flex items-end gap-4">
                 <div className="flex-1">
-                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Project</label>
+                  <label htmlFor="time-entry-project" className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Project</label>
                   <select
+                    id="time-entry-project"
                     value={entryForm.project_id}
                     onChange={(e) => {
                       const project = projects.find((p) => p.id === e.target.value);
@@ -386,7 +387,7 @@ export default function TimeScreen() {
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <button
                       onClick={() => toggleEntryBillable(entry)}
-                      className={`text-[10px] px-1.5 py-0.5 rounded-full border ${entry.billable ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] border-[var(--accent)]/20' : 'bg-[var(--bg-secondary)] text-[var(--text-tertiary)] border-[var(--neutral-border)]'}`}
+                      className={`text-[10px] px-1.5 py-0.5 rounded-full border ${entry.billable ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] border-[var(--accent)]/20' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--neutral-border)]'}`}
                     >
                       {entry.billable ? 'billable' : 'non-billable'}
                     </button>
