@@ -22,7 +22,7 @@ cloud subscriptions. Built by independent freelancers.
 
 - Lance Core: free forever. Unlimited clients, projects, proposals. No account.
 - Lance Pro: $99/year ($14/mo monthly). Archetype proposals/contracts/invoices,
-  revenue forecasts, change orders, hot-proposal alerts, tax pack CSV. 30-day free trial.
+  revenue forecasts, change orders, hot-proposal alerts, year-summary CSV. 30-day free trial.
 - Lance Lifetime: $249 one-time. Everything in Pro, forever.
 
 Client payments go straight to the freelancer. Lance never takes a cut.

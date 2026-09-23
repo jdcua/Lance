@@ -1,0 +1,24 @@
+name: Laya Gate
+
+on:
+  push:
+    branches: [main]
+    paths: ["landing/**", "scripts/laya-gate.py"]
+  pull_request:
+    branches: [main]
+    paths: ["landing/**", "scripts/laya-gate.py"]
+
+jobs:
+  laya-gate:
+    name: Laya deterministic audit (stdlib only, <30s)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # No deps: scripts/laya-gate.py is stdlib-only (no torch, no weights).
+      # Full Laya judgments run locally via Developer/laya-audit/audit.py;
+      # every MCP-server decision is logged to decisions.jsonl for the
+      # fine-tune flywheel (log first, LLM labels later).
+      - run: python scripts/laya-gate.py landing

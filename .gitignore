@@ -55,6 +55,8 @@ lint.txt
 
 # Screenshots & snapshots
 *.png
+!landing/og-image.png
+!landing/favicon.png
 *.jpg
 *.jpeg
 *.webp
