@@ -45,17 +45,17 @@ export const THEMES: Theme[] = [
       '--bg-card': '#222120',
       '--border-color': '#2D2C2A',
       '--text-primary': '#F0EFE8',
-      '--text-secondary': '#7C7B75',
+      '--text-secondary': '#898883',
       '--text-tertiary': '#8E8D88',
       '--accent': '#1EC98A',
       '--accent-ink': '#1EC98A',
       '--accent-hover': '#18B47C',
       '--accent-bg': 'rgba(30,201,138,0.1)',
       '--warning': '#F59E0B',
-      '--danger': '#A32D2D',
-      '--danger-bg': '#FCEBEB',
+      '--danger': '#FB6B6B',
+      '--danger-bg': '#3D1518',
       '--info-bg': '#0D1F3D',
-      '--warning-bg': '#FAEEDA',
+      '--warning-bg': '#3D2E0D',
       '--card-shadow': '0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2)',
       '--card-hover-shadow': '0 4px 12px rgba(0,0,0,0.4)',
       '--info': '#60A5FA',
@@ -118,7 +118,7 @@ export const THEMES: Theme[] = [
       '--text-secondary': '#C4A99A',
       '--text-tertiary': '#A68B7C',
       '--accent': '#C4622D',
-      '--accent-ink': '#C4622D',
+      '--accent-ink': '#DA9370',
       '--accent-hover': '#A84E22',
       '--accent-bg': 'rgba(196,98,45,0.12)',
       '--warning': '#D97706',
@@ -199,7 +199,7 @@ export const THEMES: Theme[] = [
       '--card-shadow': '0 1px 3px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.15)',
       '--card-hover-shadow': '0 4px 12px rgba(0,0,0,0.35)',
       '--info': '#60A5FA',
-      '--info-ink': '#3B82F6',
+      '--info-ink': '#7DAFFC',
       '--info-border': '#60A5FA',
       '--warning-text': '#F59E0B',
       '--danger-hover': '#CC4444',
@@ -258,7 +258,7 @@ export const THEMES: Theme[] = [
       '--text-secondary': '#A0A098',
       '--text-tertiary': '#9A9990',
       '--accent': '#5B9ABD',
-      '--accent-ink': '#5B9ABD',
+      '--accent-ink': '#7AADCA',
       '--accent-hover': '#4A7FA5',
       '--accent-bg': 'rgba(74,127,165,0.12)',
       '--warning': '#D97706',
@@ -328,7 +328,7 @@ export const THEMES: Theme[] = [
       '--text-secondary': '#A09AB5',
       '--text-tertiary': '#8F88AD',
       '--accent': '#8B5CF6',
-      '--accent-ink': '#8B5CF6',
+      '--accent-ink': '#B191F9',
       '--accent-hover': '#7C3AED',
       '--accent-bg': 'rgba(139,92,246,0.12)',
       '--warning': '#D97706',
@@ -398,7 +398,7 @@ export const THEMES: Theme[] = [
       '--text-secondary': '#B0A898',
       '--text-tertiary': '#A39E93',
       '--accent': '#D97706',
-      '--accent-ink': '#D97706',
+      '--accent-ink': '#E6A256',
       '--accent-hover': '#B45309',
       '--accent-bg': 'rgba(217,119,6,0.12)',
       '--warning': '#F59E0B',
@@ -468,7 +468,7 @@ export const THEMES: Theme[] = [
       '--text-secondary': '#94A0B8',
       '--text-tertiary': '#8B96B3',
       '--accent': '#3B6FE0',
-      '--accent-ink': '#3B6FE0',
+      '--accent-ink': '#769AE9',
       '--accent-hover': '#1E40AF',
       '--accent-bg': 'rgba(59,111,224,0.12)',
       '--warning': '#D97706',
@@ -500,8 +500,14 @@ export function getTheme(id: string): Theme {
 export function applyTheme(theme: Theme): void {
   const root = document.documentElement;
 
-  // Light mode variables
-  Object.entries(theme.colors).forEach(([key, value]) => {
+  // Write the ACTIVE palette inline. A previous implementation always wrote
+  // the light palette inline and kept dark values in a `.dark` stylesheet
+  // block — but inline custom properties beat stylesheet rules in the
+  // cascade, so dark mode silently never applied. Reading the live `.dark`
+  // flag here makes every caller (App effect, Settings toggle, onboarding)
+  // correct as long as it toggles the class first, which they all do.
+  const active = root.classList.contains('dark') ? theme.darkColors : theme.colors;
+  Object.entries(active).forEach(([key, value]) => {
     root.style.setProperty(key, value);
   });
 

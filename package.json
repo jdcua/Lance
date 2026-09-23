@@ -18,6 +18,9 @@
     "test:watch": "vitest",
     "format": "prettier --write src/",
     "format:check": "prettier --check src/",
+    "promo:build": "node scripts/promo/build.mjs",
+    "promo:shots": "node scripts/promo/shots.mjs",
+    "promo:exp-eval": "node scripts/promo/exp-eval.mjs",
     "gen-license": "node scripts/generate-license.cjs",
     "scripts:sign-update": "echo 'Use: npx tauri signer generate -k ~/.tauri/updater.key -p ~/.tauri/updater.pub --json > scripts/updater-endpoint-template.json'",
     "version:bump": "node scripts/bump-version.cjs"

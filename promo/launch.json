@@ -1,0 +1,7 @@
+{
+  "release": "v1.0.0",
+  "date": "2026-10-01",
+  "mode": "countdown",
+  "modes": ["tease", "countdown", "live", "post", "evergreen"],
+  "notes": "Build injects mode into landing. countdown = badge timer + launch-price ribbon. live = video embed + takeover. Flip to evergreen after T+7."
+}

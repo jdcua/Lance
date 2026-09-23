@@ -1,0 +1,21 @@
+{
+  "name": "lance-promo-video",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render:hero": "remotion render src/index.ts Hero30s out/hero30s.mp4 --props=src/props/hero.json",
+    "render:short": "remotion render src/index.ts Short9x16 out/short9x16.mp4 --props=src/props/craft-photographer.json",
+    "render:stills": "remotion still src/index.ts Stills out/still.png --props=src/props/hero.json"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.0"
+  },
+  "devDependencies": {
+    "@remotion/cli": "^4.0.0",
+    "typescript": "^5.4.5"
+  }
+}

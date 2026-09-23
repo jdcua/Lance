@@ -323,7 +323,7 @@ export default function Dashboard() {
         <div aria-hidden className="pointer-events-none absolute -bottom-28 -left-10 w-72 h-72 rounded-full bg-[var(--accent)] opacity-[0.07] blur-[80px]" />
         <div className="relative flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.8px] text-[var(--text-secondary)] mb-1.5">{todayLabel}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.8px] text-[var(--text-primary)] mb-1.5">{todayLabel}</p>
           <h2 className="text-[30px] leading-[1.1] font-bold tracking-tight text-balance text-[var(--text-primary)]">
             {effectiveArchetype.dashboard.greeting}
           </h2>

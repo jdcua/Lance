@@ -9,6 +9,13 @@ import { getDb } from '../../db';
 const DEFER_DURATION = 24 * 60 * 60 * 1000;
 const LATER_KEY = 'lance_update_deferred_until';
 
+// NOTE: this modal is intentionally dormant — nothing calls setUpdateAvailable
+// yet. The update CHECK (plugin-updater `check()`) lives only in the packaged
+// Tauri shell and can't be QA'd from a browser harness, so the trigger stays
+// unwired rather than shipping an untestable auto-nudge. Browser safety is
+// verified instead: null-guarded render, type-only updater import, and the
+// `relaunch` import below is never called outside the download handler.
+
 async function logAppEvent(eventType: string, payload?: Record<string, unknown>): Promise<void> {
   try {
     const db = await getDb();

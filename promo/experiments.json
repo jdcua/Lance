@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "trafficDefault": 1.0,
+  "minConversionsToCall": 200,
+  "experiments": [
+    {
+      "id": "hero-cta",
+      "status": "running",
+      "goal": "dl-click",
+      "traffic": 1.0,
+      "variants": {
+        "A": { "heroBtnLabel": "Download for Mac", "note": "control, OS-detected" },
+        "B": { "heroBtnLabel": "Free Download — No account", "note": "challenger, friction-first" }
+      }
+    },
+    {
+      "id": "hero-h1",
+      "status": "draft",
+      "goal": "dl-click",
+      "traffic": 0.5,
+      "variants": {
+        "A": { "h1": "Win work. Run projects. Get paid." },
+        "B": { "h1": "Your freelance business, on your machine." }
+      }
+    },
+    {
+      "id": "pricing-order",
+      "status": "draft",
+      "goal": "trial-cta",
+      "traffic": 1.0,
+      "variants": {
+        "A": { "order": ["free", "pro", "lifetime"] },
+        "B": { "order": ["lifetime", "pro", "free"], "ribbon": "Launch $149" }
+      }
+    }
+  ]
+}
