@@ -3,7 +3,7 @@ import '@testing-library/jest-dom';
 // jsdom lacks IntersectionObserver (used by motion's whileInView) and
 // matchMedia (used by MotionConfig reducedMotion="user"). Provide minimal
 // mocks so component tests render instead of crashing.
-class MockIntersectionObserver implements IntersectionObserver {
+class MockIntersectionObserver {
   readonly root: Element | null = null;
   readonly rootMargin = '';
   readonly thresholds: ReadonlyArray<number> = [];
@@ -23,7 +23,7 @@ class MockIntersectionObserver implements IntersectionObserver {
           intersectionRatio: 1,
         } as IntersectionObserverEntry,
       ],
-      this,
+      this as unknown as IntersectionObserver,
     );
   }
 
@@ -38,18 +38,15 @@ class MockIntersectionObserver implements IntersectionObserver {
   takeRecords(): IntersectionObserverEntry[] {
     return [];
   }
-
-  static toString(): string {
-    return 'function IntersectionObserver() { [native code] }';
-  }
 }
 
-if (typeof window !== 'undefined' && !('IntersectionObserver' in window)) {
-  window.IntersectionObserver = MockIntersectionObserver;
+const w = window as unknown as Record<string, unknown>;
+if (!w.IntersectionObserver) {
+  w.IntersectionObserver = MockIntersectionObserver;
 }
 
-if (typeof window !== 'undefined' && !('matchMedia' in window)) {
-  window.matchMedia = (query: string): MediaQueryList =>
+if (!w.matchMedia) {
+  w.matchMedia = (query: string): MediaQueryList =>
     ({
       matches: false,
       media: query,
