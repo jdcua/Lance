@@ -48,7 +48,7 @@ export default function MetricCard({ label, value, subtext, trend, color = 'gray
             {icon}
           </span>
         )}
-        <p className="text-[11px] font-medium text-[var(--text-secondary)] uppercase tracking-[0.6px] break-words flex-1 min-w-0">{label}</p>
+        <p className="text-[11px] max-sm:text-[10px] font-medium text-[var(--text-secondary)] uppercase tracking-[0.6px] break-words flex-1 min-w-0">{label}</p>
         {showDelta && (
           <span
             className="text-[11px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 tnum"

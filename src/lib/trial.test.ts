@@ -20,4 +20,11 @@ describe('trial countdown', () => {
     const now = new Date('2026-10-20T12:00:00Z');
     expect(trialDaysRemaining('2026-08-01T00:00:00Z', now)).toBe(0);
   });
+
+  it('hits zero exactly at day 30 and clamps future clocks', () => {
+    const now = new Date('2026-09-08T12:00:00Z');
+    expect(trialDaysRemaining('2026-08-09T12:00:00Z', now)).toBe(0);
+    // Clock skew (start date in the future) never grants extra days.
+    expect(trialDaysRemaining('2026-09-20T12:00:00Z', now)).toBe(TRIAL.FULL_DAYS);
+  });
 });
