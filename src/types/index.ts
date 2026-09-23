@@ -141,6 +141,12 @@ export type UserProfile = {
   accent_color?: string;
   proposal_expiry_days?: number;
   income_target?: number;
+  /**
+   * Manual exchange rates: 1 unit of the key currency = value units of the
+   * profile currency (e.g. { USD: 1.36 } with a CAD profile). Optional —
+   * absent means "do not convert" and the UI stays per-currency.
+   */
+  exchange_rates?: Record<string, number>;
   license_tier?: string;
   license_expires_at?: string;
   license_validated_at?: string;

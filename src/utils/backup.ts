@@ -225,7 +225,7 @@ export const TABLE_INSERT_MAP: Record<string, { table: string; columns: string[]
   },
   user_profile: {
     table: 'user_profile',
-    columns: ['id', 'name', 'email', 'hourly_rate', 'currency', 'writing_voice', 'tax_rate', 'payment_terms', 'tagline', 'always_include', 'writing_style', 'theme', 'license_key', 'licensed_at', 'ai_enabled', 'profession', 'custom_archetype_config', 'density', 'accent_color', 'proposal_expiry_days'],
+    columns: ['id', 'name', 'email', 'hourly_rate', 'currency', 'writing_voice', 'tax_rate', 'payment_terms', 'tagline', 'always_include', 'writing_style', 'theme', 'license_key', 'licensed_at', 'ai_enabled', 'profession', 'custom_archetype_config', 'density', 'accent_color', 'proposal_expiry_days', 'exchange_rates'],
   },
   communications: {
     table: 'communications',

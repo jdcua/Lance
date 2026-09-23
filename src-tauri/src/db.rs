@@ -172,6 +172,7 @@ CREATE TABLE IF NOT EXISTS user_profile (
             accent_color TEXT,
             proposal_expiry_days INTEGER,
             income_target REAL,
+            exchange_rates TEXT,
             license_tier TEXT,
             license_expires_at TEXT,
             license_validated_at TEXT,
@@ -646,6 +647,7 @@ CREATE TABLE IF NOT EXISTS user_profile (
         "ALTER TABLE project_templates ADD COLUMN is_default INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE user_profile ADD COLUMN income_target REAL",
         "ALTER TABLE user_profile ADD COLUMN payment_instructions TEXT",
+        "ALTER TABLE user_profile ADD COLUMN exchange_rates TEXT",
         "ALTER TABLE recurring_invoices ADD COLUMN last_catch_up_warning TEXT",
     ];
     for sql in &seed_columns {

@@ -3,6 +3,7 @@ import { useStore } from '../../store';
 import { getFeatureFlags } from '../../lib/constants';
 import { buildYearSummary, yearSummaryCsv, yearSummaryYears, downloadTextFile } from '../../utils/yearSummary';
 import { formatCurrency } from '../../utils/format';
+import { convertByCurrency } from '../../lib/currency';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import ProgressBar from '../ui/ProgressBar';
@@ -28,6 +29,25 @@ export default function YearSummary() {
 
   const maxQ = Math.max(1, ...pack.quarters.map((q) => Math.max(q.revenue, q.expenses)));
   const mixedCurrencies = new Set(invoices.filter((i) => i.status !== 'draft').map((i) => i.currency || currency || 'CAD')).size > 1;
+  // Converted year revenue, computed with the same paid-in-year rule as the
+  // pack (status paid, paid_at fallback created_at) so the ≈ line agrees
+  // with the headline. Shown only when rates cover every currency present.
+  const convertedRevenue = useMemo(() => {
+    if (!mixedCurrencies) return null;
+    const profCur = currency || 'CAD';
+    const rates = profile?.exchange_rates || {};
+    const byCur: Record<string, number> = {};
+    for (const inv of invoices) {
+      if (inv.status !== 'paid') continue;
+      const d = inv.paid_at || inv.created_at;
+      // UTC year, matching the pack's yearOf (date-only strings are UTC).
+      const dt = d ? new Date(d) : null;
+      if (!dt || isNaN(dt.getTime()) || dt.getUTCFullYear() !== pack.year) continue;
+      const cur = inv.currency || profCur;
+      byCur[cur] = (byCur[cur] || 0) + (inv.total || 0);
+    }
+    return convertByCurrency(byCur, profCur, rates);
+  }, [invoices, mixedCurrencies, currency, profile?.exchange_rates, pack.year]);
 
   const handleDownload = () => {
     if (!unlocked) {
@@ -73,6 +93,11 @@ export default function YearSummary() {
           <p className="text-lg font-bold text-[var(--accent-ink,var(--accent))]" style={{ fontFamily: "'Syne', sans-serif" }}>
             {formatCurrency(Math.round(pack.revenuePaid), currency)}
           </p>
+          {convertedRevenue != null && (
+            <p className="text-[11px] text-[var(--text-secondary)] tnum" title="Converted at your manual exchange rates">
+              ≈ {formatCurrency(Math.round(convertedRevenue), currency || 'CAD')}
+            </p>
+          )}
         </div>
         <div>
           <p className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wide">Expenses</p>

@@ -45,3 +45,83 @@ export function formatCurrency(amount: number, currency: string): string {
     currency,
   }).format(amount);
 }
+
+/**
+ * Manual exchange rates (see UserProfile.exchange_rates).
+ * Key: foreign currency code. Value: 1 unit of it in profile-currency units.
+ * The profile currency itself is never listed — it converts at exactly 1.
+ */
+
+/** Drop garbage: unknown keys, non-finite or non-positive rates. */
+export function sanitizeRates(raw: unknown): Record<string, number> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const out: Record<string, number> = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    const code = String(k).trim().toUpperCase();
+    const rate = typeof v === 'string' ? parseFloat(v) : (v as number);
+    if (!/^[A-Z]{3}$/.test(code)) continue;
+    if (typeof rate !== 'number' || !isFinite(rate) || rate <= 0) continue;
+    out[code] = rate;
+  }
+  return out;
+}
+
+/** Accept the TEXT-column form (Tauri) as well as the object form. */
+export function normalizeRates(raw: unknown): Record<string, number> {
+  if (typeof raw === 'string') {
+    try {
+      return sanitizeRates(JSON.parse(raw));
+    } catch {
+      return {};
+    }
+  }
+  return sanitizeRates(raw);
+}
+
+/** True when every non-profile currency in the list has a usable rate. */
+export function ratesCover(
+  currencies: Iterable<string>,
+  profileCurrency: string,
+  rates: Record<string, number>,
+): boolean {
+  const clean = sanitizeRates(rates);
+  for (const cur of currencies) {
+    if (cur === profileCurrency) continue;
+    if (!(clean[cur] > 0)) return false;
+  }
+  return true;
+}
+
+/** Convert one amount into the profile currency. Returns null without a rate. */
+export function convertAmount(
+  amount: number,
+  fromCurrency: string,
+  profileCurrency: string,
+  rates: Record<string, number>,
+): number | null {
+  if (fromCurrency === profileCurrency) return amount;
+  const rate = sanitizeRates(rates)[fromCurrency];
+  if (!(rate > 0)) return null;
+  return amount * rate;
+}
+
+/** Sum a per-currency map into the profile currency. Null unless fully covered. */
+export function convertByCurrency(
+  byCurrency: Record<string, number>,
+  profileCurrency: string,
+  rates: Record<string, number>,
+): number | null {
+  const clean = sanitizeRates(rates);
+  let total = 0;
+  for (const [cur, amt] of Object.entries(byCurrency)) {
+    if (amt === 0) continue;
+    if (cur === profileCurrency) {
+      total += amt;
+      continue;
+    }
+    const rate = clean[cur];
+    if (!(rate > 0)) return null;
+    total += amt * rate;
+  }
+  return total;
+}

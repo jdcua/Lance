@@ -26,6 +26,7 @@ import {
   type ScenarioParams,
 } from '../lib/forecast';
 import { Plus, Pencil, Trash2, BarChart3, TrendingUp, AlertTriangle, Check, DollarSign, ArrowUpDown, ChevronUp, ChevronDown, Upload } from 'lucide-react';
+import { convertAmount, convertByCurrency, ratesCover, sanitizeRates } from '../lib/currency';
 
 const categories = ['Software', 'Equipment', 'Office', 'Travel', 'Marketing', 'Fees', 'Other'];
 
@@ -64,7 +65,7 @@ function MoneyLines({ byCurrency, size = 'md', fallbackCur = 'CAD' }: { byCurren
 }
 
 export default function Finance() {
-  const { expenses, loadExpenses, addExpense, updateExpense, removeExpense, invoices, loadInvoices, profile, recurringInvoices, loadRecurringInvoices, projects, loadProjects, milestones, loadMilestones, payments, loadAllPayments, addPayment, updateInvoice, clients, loadClients, getFinanceSummary } = useStore();
+  const { expenses, loadExpenses, addExpense, updateExpense, removeExpense, invoices, loadInvoices, profile, saveProfile, recurringInvoices, loadRecurringInvoices, projects, loadProjects, milestones, loadMilestones, payments, loadAllPayments, addPayment, updateInvoice, clients, loadClients, getFinanceSummary } = useStore();
   const addToast = useToasts((s) => s.add);
   const currency = profile?.currency;
   const fmt = (amount: number) => formatCurrency(amount, currency);
@@ -79,6 +80,9 @@ export default function Finance() {
   const [tab, setTab] = useState<'overview' | 'aging' | 'forecast'>('overview');
   const [curFilter, setCurFilter] = useState<string>('all');
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
+  const [showRates, setShowRates] = useState(false);
+  const [rateDrafts, setRateDrafts] = useState<Record<string, string>>({});
+  const [savingRates, setSavingRates] = useState(false);
   const [currentBalance, setCurrentBalance] = useState('');
   const [scenario, setScenario] = useState<ScenarioParams>({ newClientsPerMonth: 0, rateIncrease: 0, expenseGrowth: 0, mode: 'base' });
 
@@ -166,6 +170,18 @@ export default function Finance() {
   const finvoices = curFilter === 'all' ? invoices : invoices.filter((i) => invCurOf(i) === curFilter);
   const finIds = new Set(finvoices.map((i) => i.id));
   const foreignFiltered = curFilter !== 'all' && curFilter !== profCur;
+  // Manual exchange rates: 1 foreign unit = N profile units. When every
+  // non-draft invoice currency is covered, summary totals convert honestly
+  // (forecast included); otherwise everything stays per-currency — never a
+  // partial conversion. Converted display only applies to the unfiltered
+  // view; a currency filter is already exact on its own.
+  const rates = profile?.exchange_rates || {};
+  const invoiceCurrencies = new Set(invoices.filter(i => i.status !== 'draft').map(invCurOf));
+  const hasMixedCurrencies = invoiceCurrencies.size > 1;
+  const ratesCoverAll = ratesCover(invoiceCurrencies, profCur, rates);
+  const showConverted = hasMixedCurrencies && ratesCoverAll && curFilter === 'all';
+  const foreignCurs = [...invoiceCurrencies].filter((c) => c !== profCur).sort();
+  const toProf = (amt: number, cur: string) => convertAmount(amt, cur, profCur, rates) ?? amt;
   const monthlyPaidByCurrency: Record<string, Record<string, number>> = {};
   const addMonthlyPaid = (month: string, cur: string, amount: number) => {
     monthlyPaidByCurrency[month] = monthlyPaidByCurrency[month] || {};
@@ -178,13 +194,16 @@ export default function Finance() {
       const inv = invoices.find((i) => i.id === p.invoice_id);
       if (inv && !finIds.has(inv.id)) return;
       const month = p.payment_date.substring(0, 7);
-      monthlyPaid[month] = (monthlyPaid[month] || 0) + p.amount;
-      addMonthlyPaid(month, inv ? invCurOf(inv) : (currency || 'CAD'), p.amount);
+      const cur = inv ? invCurOf(inv) : (currency || 'CAD');
+      // Converted when rates cover everything so the forecast engine works
+      // in one currency; otherwise the legacy mixed sum (marked directional).
+      monthlyPaid[month] = (monthlyPaid[month] || 0) + (showConverted ? toProf(p.amount, cur) : p.amount);
+      addMonthlyPaid(month, cur, p.amount);
     });
   } else {
     finvoices.filter((i) => i.status === 'paid' && i.paid_at).forEach((i) => {
       const month = i.paid_at!.substring(0, 7);
-      monthlyPaid[month] = (monthlyPaid[month] || 0) + i.total;
+      monthlyPaid[month] = (monthlyPaid[month] || 0) + (showConverted ? toProf(i.total, invCurOf(i)) : i.total);
       addMonthlyPaid(month, invCurOf(i), i.total);
     });
   }
@@ -223,9 +242,6 @@ export default function Finance() {
   const maxRevenue = Math.max(1, ...revenueForecast.map((d) => Math.max(d.confirmed, d.probable, d.projected, d.baseline)));
   const maxExpense = Math.max(1, ...expenseForecast.map((d) => Math.max(d.known, d.projected, d.baseline)));
 
-  const invoiceCurrencies = new Set(invoices.filter(i => i.status !== 'draft').map(i => i.currency || currency || 'CAD'));
-  const hasMixedCurrencies = invoiceCurrencies.size > 1;
-
   const outstandingByCurrency: Record<string, number> = {};
   finvoices.filter(i => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').forEach(i => {
     const cur = i.currency || currency || 'CAD';
@@ -237,6 +253,39 @@ export default function Finance() {
     const cur = i.currency || currency || 'CAD';
     revenueByCurrency[cur] = (revenueByCurrency[cur] || 0) + i.total;
   });
+
+  const convRevenue = showConverted ? convertByCurrency(revenueByCurrency, profCur, rates) : null;
+  const convOutstanding = showConverted ? convertByCurrency(outstandingByCurrency, profCur, rates) : null;
+  const convProfit = showConverted && convRevenue != null ? convRevenue - totalExpenses : null;
+
+  const saveRate = async (cur: string, raw: string) => {
+    if (!profile) return;
+    const clean = sanitizeRates(rates);
+    if (raw.trim() === '') {
+      delete clean[cur];
+    } else {
+      const v = parseFloat(raw);
+      if (!isFinite(v) || v <= 0) {
+        addToast(`Rate for ${cur} must be a positive number`, 'error');
+        setRateDrafts((d) => ({ ...d, [cur]: clean[cur]?.toString() || '' }));
+        return;
+      }
+      clean[cur] = v;
+    }
+    setSavingRates(true);
+    try {
+      await saveProfile({ ...profile, exchange_rates: clean });
+      setRateDrafts((d) => {
+        const next = { ...d };
+        delete next[cur];
+        return next;
+      });
+    } catch {
+      addToast('Could not save exchange rate', 'error');
+    } finally {
+      setSavingRates(false);
+    }
+  };
 
   if (loading) return (
     <div className="p-6">
@@ -301,7 +350,9 @@ export default function Finance() {
             <div className="mb-4 px-3 py-2 rounded-[8px] bg-[var(--info-bg)] border border-[var(--info)]/20 flex items-start gap-2 text-xs">
               <span className="text-[var(--info-ink,var(--info))] mt-px flex-shrink-0">ⓘ</span>
               <span className="text-[var(--text-secondary)]">
-                Revenue and outstanding are shown per currency — never converted, never summed. Expenses are tracked in {profCur}.
+                {showConverted
+                  ? <>Totals converted to {profCur} at your manual rates (≈). Per-currency lines stay exact. Expenses are tracked in {profCur}.</>
+                  : <>Revenue and outstanding are shown per currency — never converted, never summed. Expenses are tracked in {profCur}.</>}
               </span>
             </div>
           )}
@@ -323,36 +374,85 @@ export default function Finance() {
               ))}
             </div>
           )}
+          {hasMixedCurrencies && (
+            <div className="mb-4">
+              <button
+                onClick={() => setShowRates((s) => !s)}
+                aria-expanded={showRates}
+                className="text-xs font-medium text-[var(--accent-ink,var(--accent))] hover:underline"
+              >
+                {showRates ? 'Hide exchange rates' : ratesCoverAll ? 'Edit exchange rates' : 'Add exchange rates to convert totals'}
+              </button>
+              {showRates && (
+                <div className="mt-2 p-3 rounded-[8px] bg-[var(--bg-secondary)] space-y-2 max-w-sm">
+                  {foreignCurs.map((c) => (
+                    <label key={c} className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+                      <span className="tnum font-medium text-[var(--text-primary)]">1 {c} =</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        disabled={savingRates}
+                        value={rateDrafts[c] ?? rates[c]?.toString() ?? ''}
+                        onChange={(e) => setRateDrafts((d) => ({ ...d, [c]: e.target.value }))}
+                        onBlur={(e) => saveRate(c, e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                        aria-label={`Exchange rate: 1 ${c} in ${profCur}`}
+                        placeholder="—"
+                        className="w-24 px-2 py-1 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] tnum"
+                      />
+                      <span>{profCur}</span>
+                    </label>
+                  ))}
+                  <p className="text-[11px] text-[var(--text-tertiary)]">Manual rates · display totals only, never changed automatically. Clear a field to remove its rate.</p>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-            <MetricCard label="Revenue (Paid)" value={hasMixedCurrencies
-              ? <MoneyLines byCurrency={revenueByCurrency} fallbackCur={curFilter !== 'all' ? curFilter : profCur} />
-              : fmt(totalPaidRevenue)
-            } color="green" />
+            <MetricCard label="Revenue (Paid)" value={showConverted && convRevenue != null
+              ? <span className="inline-flex flex-col gap-1">
+                  <span title={`Converted to ${profCur} at your manual rates`}>≈ {fmt(convRevenue)}</span>
+                  <MoneyLines byCurrency={revenueByCurrency} size="sm" fallbackCur={profCur} />
+                </span>
+              : hasMixedCurrencies
+                ? <MoneyLines byCurrency={revenueByCurrency} fallbackCur={curFilter !== 'all' ? curFilter : profCur} />
+                : fmt(totalPaidRevenue)
+            } color="green" subtext={showConverted ? `converted to ${profCur} at your rates` : undefined} />
             <MetricCard label={`Expenses · ${profCur}`} value={fmt(totalExpenses)} color="red" />
             <MetricCard
               label="Profit"
-              value={hasMixedCurrencies
-                ? (curFilter !== 'all' && curFilter !== profCur
-                    ? <MoneyLines byCurrency={revenueByCurrency} fallbackCur={curFilter} />
-                    : fmt((revenueByCurrency[profCur] || 0) - totalExpenses))
-                : fmt(profit)
+              value={showConverted && convProfit != null
+                ? fmt(convProfit)
+                : hasMixedCurrencies
+                  ? (curFilter !== 'all' && curFilter !== profCur
+                      ? <MoneyLines byCurrency={revenueByCurrency} fallbackCur={curFilter} />
+                      : fmt((revenueByCurrency[profCur] || 0) - totalExpenses))
+                  : fmt(profit)
               }
               trend={!hasMixedCurrencies ? (profit >= 0 ? 'up' : 'down') : undefined}
-              subtext={hasMixedCurrencies
-                ? (curFilter !== 'all' && curFilter !== profCur
-                    ? `before expenses · tracked in ${profCur}`
-                    : `after ${fmt(totalExpenses)} expenses · other currencies untouched`)
-                : (profit >= 0 ? 'positive' : 'negative')}
-              color={(hasMixedCurrencies ? (revenueByCurrency[profCur] || 0) - totalExpenses : profit) >= 0 ? 'green' : 'red'}
+              subtext={showConverted
+                ? `after ${fmt(totalExpenses)} expenses · converted at your rates`
+                : hasMixedCurrencies
+                  ? (curFilter !== 'all' && curFilter !== profCur
+                      ? `before expenses · tracked in ${profCur}`
+                      : `after ${fmt(totalExpenses)} expenses · other currencies untouched`)
+                  : (profit >= 0 ? 'positive' : 'negative')}
+              color={((showConverted && convProfit != null ? convProfit : hasMixedCurrencies ? (revenueByCurrency[profCur] || 0) - totalExpenses : profit)) >= 0 ? 'green' : 'red'}
             />
             <MetricCard
               label="Outstanding"
-              value={hasMixedCurrencies
-                ? <MoneyLines byCurrency={outstandingByCurrency} fallbackCur={curFilter !== 'all' ? curFilter : profCur} />
-                : fmt(totalOutstanding)
+              value={showConverted && convOutstanding != null
+                ? <span className="inline-flex flex-col gap-1">
+                    <span title={`Converted to ${profCur} at your manual rates`}>≈ {fmt(convOutstanding)}</span>
+                    <MoneyLines byCurrency={outstandingByCurrency} size="sm" fallbackCur={profCur} />
+                  </span>
+                : hasMixedCurrencies
+                  ? <MoneyLines byCurrency={outstandingByCurrency} fallbackCur={curFilter !== 'all' ? curFilter : profCur} />
+                  : fmt(totalOutstanding)
               }
-              subtext="unpaid invoices"
+              subtext={showConverted ? `converted to ${profCur} at your rates` : 'unpaid invoices'}
               color="amber"
             />
           </div>
@@ -538,7 +638,11 @@ export default function Finance() {
             <div className="mb-4 px-3 py-2 rounded-[8px] bg-[var(--info-bg)] border border-[var(--info)]/20 flex items-start gap-2 text-xs">
               <span className="text-[var(--info-ink,var(--info))] mt-px flex-shrink-0">ⓘ</span>
               <span className="text-[var(--text-secondary)]">
-                Projections blend all currencies without conversion — treat them as directional, and use the {profCur} filter on Overview for exact figures.
+                {showConverted
+                  ? <>Projections converted to {profCur} at your manual rates (≈). Tweak them under Overview → exchange rates.</>
+                  : curFilter !== 'all'
+                    ? <>Projections scoped to {curFilter} by the Overview currency filter — switch it to All currencies for the full picture.</>
+                    : <>Projections blend all currencies without conversion — treat them as directional, and use the {profCur} filter on Overview for exact figures.</>}
               </span>
             </div>
           )}

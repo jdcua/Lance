@@ -17,6 +17,7 @@ import type { LicenseTier } from '../lib/constants';
 import type { Update } from '@tauri-apps/plugin-updater';
 import { TRIAL } from '../lib/constants';
 import { pushTrashEntry, trashLabel, restoreTrashEntry as restoreTrashRow, type TrashEntry } from '../utils/trash';
+import { sanitizeRates, normalizeRates } from '../lib/currency';
 
 const licenseCache = new Map<string, boolean>();
 
@@ -754,6 +755,11 @@ export const useStore = create<UnifiedStore>((set, get) => {
       startLoad('profile');
       try {
         const profile = await invoke<UserProfile | null>('get_user_profile');
+        // Tauri stores rates as a TEXT column (JSON string); browser mode
+        // keeps the object. Normalize once so the UI always sees an object.
+        if (profile && profile.exchange_rates !== undefined) {
+          profile.exchange_rates = normalizeRates(profile.exchange_rates);
+        }
         const licensed = !!(profile?.license_key && await cachedValidateLicense(profile.license_key));
         set({ profile, profileLoaded: true, isLicensed: licensed });
         return profile;
@@ -776,6 +782,9 @@ export const useStore = create<UnifiedStore>((set, get) => {
         hourly_rate: data.hourly_rate != null && isFinite(data.hourly_rate) ? Math.max(0, data.hourly_rate) : data.hourly_rate,
         tax_rate: data.tax_rate != null && isFinite(data.tax_rate) ? Math.min(100, Math.max(0, data.tax_rate)) : data.tax_rate,
         payment_terms: data.payment_terms != null && isFinite(data.payment_terms) ? Math.max(0, Math.round(data.payment_terms)) : data.payment_terms,
+        // Rates are manual multipliers (1 foreign unit = N profile units).
+        // Sanitize on the way in; the Tauri backend stores them as TEXT.
+        exchange_rates: data.exchange_rates !== undefined ? sanitizeRates(data.exchange_rates) : data.exchange_rates,
       };
       await invoke('upsert_user_profile', { payload: sanitized });
       const licensed = !!(sanitized.license_key && await cachedValidateLicense(sanitized.license_key));

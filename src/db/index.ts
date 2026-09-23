@@ -498,6 +498,7 @@ async function runMigrations(database: Database): Promise<void> {
     'ALTER TABLE projects ADD COLUMN color TEXT',
     'ALTER TABLE user_profile ADD COLUMN profession TEXT',
     'ALTER TABLE user_profile ADD COLUMN custom_archetype_config TEXT',
+    'ALTER TABLE user_profile ADD COLUMN exchange_rates TEXT',
   ];
   for (const sql of newColumns) {
     try { await database.execute(sql); } catch { /* column already exists */ }
