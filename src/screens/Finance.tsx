@@ -29,6 +29,40 @@ import { Plus, Pencil, Trash2, BarChart3, TrendingUp, AlertTriangle, Check, Doll
 
 const categories = ['Software', 'Equipment', 'Office', 'Travel', 'Marketing', 'Fees', 'Other'];
 
+/**
+ * Per-currency money lines. Never converts, never sums across currencies —
+ * each line is one currency's honest total, largest first. Skips zeroes so
+ * a filtered single-currency view stays compact. Empty means "nothing in
+ * this filter", so render an explicit zero instead of a blank card.
+ */
+function MoneyLines({ byCurrency, size = 'md', fallbackCur = 'CAD' }: { byCurrency: Record<string, number>; size?: 'md' | 'sm'; fallbackCur?: string }) {
+  const rows = Object.entries(byCurrency)
+    .filter(([, amt]) => amt !== 0)
+    .sort((a, b) => b[1] - a[1]);
+  if (rows.length === 0) {
+    return (
+      <span className={`inline-flex tnum ${size === 'md' ? 'text-[19px] leading-snug' : 'text-xs'} font-semibold text-[var(--text-primary)] whitespace-nowrap`}>
+        {formatCurrency(0, fallbackCur)}{' '}
+        <span className={`${size === 'md' ? 'text-[11px]' : 'text-[10px]'} font-medium text-[var(--text-secondary)]`}>{fallbackCur}</span>
+      </span>
+    );
+  }
+  return (
+    <span className={`inline-flex flex-col tnum ${size === 'md' ? 'gap-1' : 'gap-0.5'}`}>
+      {rows.map(([cur, amt]) => (
+        <span
+          key={cur}
+          className={`${size === 'md' ? 'text-[19px] leading-snug' : 'text-xs'} font-semibold text-[var(--text-primary)] whitespace-nowrap`}
+          title={`${formatCurrency(amt, cur)} ${cur}`}
+        >
+          {formatCurrency(amt, cur)}{' '}
+          <span className={`${size === 'md' ? 'text-[11px]' : 'text-[10px]'} font-medium text-[var(--text-secondary)]`}>{cur}</span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
 export default function Finance() {
   const { expenses, loadExpenses, addExpense, updateExpense, removeExpense, invoices, loadInvoices, profile, recurringInvoices, loadRecurringInvoices, projects, loadProjects, milestones, loadMilestones, payments, loadAllPayments, addPayment, updateInvoice, clients, loadClients, getFinanceSummary } = useStore();
   const addToast = useToasts((s) => s.add);
@@ -43,6 +77,8 @@ export default function Finance() {
   const [form, setForm] = useState({ category: 'Other', description: '', amount: '', date: new Date().toISOString().split('T')[0], recurring: false, frequency: 'monthly' });
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'overview' | 'aging' | 'forecast'>('overview');
+  const [curFilter, setCurFilter] = useState<string>('all');
+  const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
   const [currentBalance, setCurrentBalance] = useState('');
   const [scenario, setScenario] = useState<ScenarioParams>({ newClientsPerMonth: 0, rateIncrease: 0, expenseGrowth: 0, mode: 'base' });
 
@@ -124,6 +160,12 @@ export default function Finance() {
   });
 
   const invCurOf = (i: { currency?: string }) => i.currency || currency || 'CAD';
+  const profCur = currency || 'CAD';
+  // Currency filter scopes every invoice-derived number below. Expenses
+  // carry no currency of their own and always stay in the profile currency.
+  const finvoices = curFilter === 'all' ? invoices : invoices.filter((i) => invCurOf(i) === curFilter);
+  const finIds = new Set(finvoices.map((i) => i.id));
+  const foreignFiltered = curFilter !== 'all' && curFilter !== profCur;
   const monthlyPaidByCurrency: Record<string, Record<string, number>> = {};
   const addMonthlyPaid = (month: string, cur: string, amount: number) => {
     monthlyPaidByCurrency[month] = monthlyPaidByCurrency[month] || {};
@@ -133,13 +175,14 @@ export default function Finance() {
   const monthlyPaid: Record<string, number> = {};
   if (paidFromPayments > 0) {
     Object.values(payments).flat().forEach((p) => {
+      const inv = invoices.find((i) => i.id === p.invoice_id);
+      if (inv && !finIds.has(inv.id)) return;
       const month = p.payment_date.substring(0, 7);
       monthlyPaid[month] = (monthlyPaid[month] || 0) + p.amount;
-      const inv = invoices.find((i) => i.id === p.invoice_id);
       addMonthlyPaid(month, inv ? invCurOf(inv) : (currency || 'CAD'), p.amount);
     });
   } else {
-    invoices.filter((i) => i.status === 'paid' && i.paid_at).forEach((i) => {
+    finvoices.filter((i) => i.status === 'paid' && i.paid_at).forEach((i) => {
       const month = i.paid_at!.substring(0, 7);
       monthlyPaid[month] = (monthlyPaid[month] || 0) + i.total;
       addMonthlyPaid(month, invCurOf(i), i.total);
@@ -184,13 +227,13 @@ export default function Finance() {
   const hasMixedCurrencies = invoiceCurrencies.size > 1;
 
   const outstandingByCurrency: Record<string, number> = {};
-  invoices.filter(i => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').forEach(i => {
+  finvoices.filter(i => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').forEach(i => {
     const cur = i.currency || currency || 'CAD';
     outstandingByCurrency[cur] = (outstandingByCurrency[cur] || 0) + i.total;
   });
 
   const revenueByCurrency: Record<string, number> = {};
-  invoices.filter(i => i.status === 'paid').forEach(i => {
+  finvoices.filter(i => i.status === 'paid').forEach(i => {
     const cur = i.currency || currency || 'CAD';
     revenueByCurrency[cur] = (revenueByCurrency[cur] || 0) + i.total;
   });
@@ -258,32 +301,55 @@ export default function Finance() {
             <div className="mb-4 px-3 py-2 rounded-[8px] bg-[var(--info-bg)] border border-[var(--info)]/20 flex items-start gap-2 text-xs">
               <span className="text-[var(--info)] mt-px flex-shrink-0">ⓘ</span>
               <span className="text-[var(--text-secondary)]">
-                Your finances include invoices in multiple currencies. Amounts are shown in their original currency · totals may not reflect actual value.
+                Revenue and outstanding are shown per currency — never converted, never summed. Expenses are tracked in {profCur}.
               </span>
+            </div>
+          )}
+          {hasMixedCurrencies && (
+            <div className="flex flex-wrap gap-1.5 mb-4" role="group" aria-label="Currency filter">
+              {['all', ...Array.from(invoiceCurrencies).sort()].map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setCurFilter(c)}
+                  aria-pressed={curFilter === c}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-full transition-colors ${
+                    curFilter === c
+                      ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] ring-1 ring-[var(--accent)]/40 font-semibold'
+                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  {c === 'all' ? 'All currencies' : c}
+                </button>
+              ))}
             </div>
           )}
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
             <MetricCard label="Revenue (Paid)" value={hasMixedCurrencies
-              ? Object.entries(revenueByCurrency).map(([cur, amt]) => `${formatCurrency(amt, cur)} ${cur}`).join(' · ')
+              ? <MoneyLines byCurrency={revenueByCurrency} fallbackCur={curFilter !== 'all' ? curFilter : profCur} />
               : fmt(totalPaidRevenue)
             } color="green" />
-            <MetricCard label="Expenses" value={fmt(totalExpenses)} color="red" />
+            <MetricCard label={`Expenses · ${profCur}`} value={fmt(totalExpenses)} color="red" />
             <MetricCard
               label="Profit"
               value={hasMixedCurrencies
-                ? Object.entries(revenueByCurrency).map(([cur, amt]) =>
-                    `${formatCurrency(amt - (cur === (currency || 'CAD') ? totalExpenses : 0), cur)} ${cur}`).join(' · ')
+                ? (curFilter !== 'all' && curFilter !== profCur
+                    ? <MoneyLines byCurrency={revenueByCurrency} fallbackCur={curFilter} />
+                    : fmt((revenueByCurrency[profCur] || 0) - totalExpenses))
                 : fmt(profit)
               }
-              trend={profit >= 0 ? 'up' : 'down'}
-              subtext={hasMixedCurrencies ? `expenses ${fmt(totalExpenses)} counted in ${currency || 'CAD'}` : (profit >= 0 ? 'positive' : 'negative')}
-              color={profit >= 0 ? 'green' : 'red'}
+              trend={!hasMixedCurrencies ? (profit >= 0 ? 'up' : 'down') : undefined}
+              subtext={hasMixedCurrencies
+                ? (curFilter !== 'all' && curFilter !== profCur
+                    ? `before expenses · tracked in ${profCur}`
+                    : `after ${fmt(totalExpenses)} expenses · other currencies untouched`)
+                : (profit >= 0 ? 'positive' : 'negative')}
+              color={(hasMixedCurrencies ? (revenueByCurrency[profCur] || 0) - totalExpenses : profit) >= 0 ? 'green' : 'red'}
             />
             <MetricCard
               label="Outstanding"
               value={hasMixedCurrencies
-                ? Object.entries(outstandingByCurrency).filter(([, amt]) => amt > 0).map(([cur, amt]) => `${formatCurrency(amt, cur)} ${cur}`).join(' · ')
+                ? <MoneyLines byCurrency={outstandingByCurrency} fallbackCur={curFilter !== 'all' ? curFilter : profCur} />
                 : fmt(totalOutstanding)
               }
               subtext="unpaid invoices"
@@ -300,11 +366,15 @@ export default function Finance() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-[10px] uppercase tracking-wide text-[var(--text-secondary)]">
                     <span>Month</span>
-                    <div className="grid grid-cols-3 gap-3 w-64 text-right">
-                      <span>Income</span>
-                      <span>Expenses</span>
-                      <span>Net</span>
-                    </div>
+                    {hasMixedCurrencies ? (
+                      <span className="text-right">Income by currency</span>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-3 w-64 text-right">
+                        <span>Income</span>
+                        <span>Expenses</span>
+                        <span>Net</span>
+                      </div>
+                    )}
                   </div>
                   {allMonths.map((month) => {
                     const expense = monthlyExpenses[month] || 0;
@@ -325,19 +395,54 @@ export default function Finance() {
                       );
                     }
                     const byCur = monthlyPaidByCurrency[month] || {};
-                    const profCur = currency || 'CAD';
-                    const netParts = Object.entries(byCur).map(([cur, amt]) =>
-                      `${formatCurrency(amt - (cur === profCur ? expense : 0), cur)} ${cur}`).join(' · ');
+                    const curs = Object.keys(byCur).sort();
+                    const isOpen = expandedMonth === month;
+                    const monthExpense = monthlyExpenses[month] || 0;
                     return (
-                      <div key={month} className="flex items-center justify-between text-xs">
-                        <span className="text-[var(--text-secondary)]">{formatMonth(month)}</span>
-                        <div className="grid grid-cols-3 gap-3 w-64 text-right">
-                          <span className="text-[var(--accent-ink,var(--accent))] truncate" title="Income">{Object.entries(byCur).map(([cur, amt]) => `${formatCurrency(amt, cur)} ${cur}`).join(' · ')}</span>
-                          <span className="text-[var(--danger)] truncate" title={`Expenses ${fmt(expense)}`}>-{fmt(expense)}</span>
-                          <span className="font-medium text-[var(--text-primary)] truncate" title={netParts}>
-                            {netParts}
+                      <div key={month}>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => setExpandedMonth(isOpen ? null : month)}
+                              aria-label={isOpen ? `Collapse ${month}` : `Expand ${month} per-currency breakdown`}
+                              aria-expanded={isOpen}
+                              className="p-0.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] rounded-[4px]"
+                            >
+                              <ChevronDown size={13} className={`transition-transform ${isOpen ? '' : '-rotate-90'}`} />
+                            </button>
+                            <span className="text-[var(--text-secondary)]">{formatMonth(month)}</span>
+                            <span className="text-[10px] text-[var(--text-tertiary)] tnum">{curs.length === 0 ? 'no income' : `${curs.length} ${curs.length === 1 ? 'currency' : 'currencies'}`}</span>
                           </span>
+                          <MoneyLines byCurrency={byCur} size="sm" fallbackCur={curFilter !== 'all' ? curFilter : profCur} />
                         </div>
+                        {isOpen && (
+                          <div className="mt-1.5 ml-5 pl-3 border-l-2 border-[var(--border-color)] space-y-1.5">
+                            {curs.map((cur) => {
+                              const inc = byCur[cur];
+                              const exp = cur === profCur ? monthExpense : 0;
+                              const net = inc - exp;
+                              return (
+                                <div key={cur} className="flex items-center justify-between text-xs">
+                                  <span className="text-[10px] font-bold text-[var(--text-secondary)] bg-[var(--bg-secondary)] rounded-[4px] px-1.5 py-0.5 tnum">{cur}</span>
+                                  <div className="grid grid-cols-3 gap-3 w-64 text-right">
+                                    <span className="text-[var(--accent-ink,var(--accent))] truncate" title={`Income ${formatCurrency(inc, cur)}`}>+{formatCurrency(inc, cur)}</span>
+                                    {cur === profCur ? (
+                                      <span className="text-[var(--danger)] truncate" title={`Expenses ${fmt(exp)}`}>-{fmt(exp)}</span>
+                                    ) : (
+                                      <span className="text-[var(--text-tertiary)] truncate" title={`Expenses tracked in ${profCur}`}>—</span>
+                                    )}
+                                    <span className={`font-medium truncate ${net >= 0 ? 'text-[var(--accent-ink,var(--accent))]' : 'text-[var(--danger)]'}`} title={`Net ${formatCurrency(net, cur)}`}>
+                                      {formatCurrency(net, cur)}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            {monthExpense > 0 && !curs.includes(profCur) && (
+                              <p className="text-[10px] text-[var(--text-tertiary)]">+ {fmt(monthExpense)} expenses tracked in {profCur}</p>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -367,7 +472,12 @@ export default function Finance() {
           </div>
 
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Expenses</h3>
+            <div>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Expenses</h3>
+              {foreignFiltered && (
+                <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">Tracked in {profCur} · invoices filtered to {curFilter}</p>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <Button variant="secondary" onClick={() => setShowBankImport(true)} size="sm">
                 <Upload size={14} />
@@ -420,10 +530,18 @@ export default function Finance() {
           </div>
         </>
       ) : tab === 'aging' ? (
-        <AgingReport invoices={invoices} payments={payments.reduce<Record<string, InvoicePayment[]>>((acc, p) => { (acc[p.invoice_id] ??= []).push(p); return acc; }, {})} getClientName={(id: string) => clients.find((c) => c.id === id)?.name || 'Unknown'} fmt={fmt} addPayment={addPayment} updateInvoice={updateInvoice} addToast={(msg: string, type?: ToastType) => addToast(msg, type)} />
+        <AgingReport invoices={finvoices} payments={payments.reduce<Record<string, InvoicePayment[]>>((acc, p) => { (acc[p.invoice_id] ??= []).push(p); return acc; }, {})} getClientName={(id: string) => clients.find((c) => c.id === id)?.name || 'Unknown'} fmt={fmt} addPayment={addPayment} updateInvoice={updateInvoice} addToast={(msg: string, type?: ToastType) => addToast(msg, type)} curFallback={profCur} />
       ) : (
         /* ── Forecast tab ── */
         <>
+          {hasMixedCurrencies && (
+            <div className="mb-4 px-3 py-2 rounded-[8px] bg-[var(--info-bg)] border border-[var(--info)]/20 flex items-start gap-2 text-xs">
+              <span className="text-[var(--info)] mt-px flex-shrink-0">ⓘ</span>
+              <span className="text-[var(--text-secondary)]">
+                Projections blend all currencies without conversion — treat them as directional, and use the {profCur} filter on Overview for exact figures.
+              </span>
+            </div>
+          )}
           {/* Metric cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
             <MetricCard
@@ -818,7 +936,7 @@ const bucketBg: Record<AgingBucket, string> = {
 
 type AgingSortKey = 'number' | 'client' | 'total' | 'remaining' | 'due_date' | 'days_overdue' | 'status';
 
-function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updateInvoice, addToast }: {
+function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updateInvoice, addToast, curFallback = 'CAD' }: {
   invoices: Invoice[];
   payments: Record<string, InvoicePayment[]>;
   getClientName: (id: string) => string;
@@ -826,6 +944,7 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
   addPayment: (data: { invoice_id: string; amount: number; payment_date: string; payment_method: string; reference?: string; notes?: string }) => Promise<InvoicePayment>;
   updateInvoice: (data: Invoice) => Promise<void>;
   addToast: (msg: string, type?: ToastType) => void;
+  curFallback?: string;
 }) {
   const [sortKey, setSortKey] = useState<AgingSortKey>('days_overdue');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
@@ -876,15 +995,15 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
   }
 
   const totalAging = Object.values(bucketTotals).reduce((s, v) => s + v, 0);
-  const agingMixed = new Set(agingInvoices.map((a) => a.invoice.currency || 'CAD')).size > 1;
+  const agingMixed = new Set(agingInvoices.map((a) => a.invoice.currency || curFallback)).size > 1;
   const agingMoney = (list: AgingInvoice[], single: number, pick: (a: AgingInvoice) => number) => {
     if (!agingMixed) return fmt(single);
     const by: Record<string, number> = {};
     list.forEach((a) => {
-      const cur = a.invoice.currency || 'CAD';
+      const cur = a.invoice.currency || curFallback;
       by[cur] = (by[cur] || 0) + pick(a);
     });
-    return Object.entries(by).map(([cur, amt]) => `${formatCurrency(amt, cur)} ${cur}`).join(' · ');
+    return <MoneyLines byCurrency={by} size="sm" fallbackCur={curFallback} />;
   };
 
   const sorted = [...agingInvoices].sort((a, b) => {

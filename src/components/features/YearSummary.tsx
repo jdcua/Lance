@@ -27,6 +27,7 @@ export default function YearSummary() {
   );
 
   const maxQ = Math.max(1, ...pack.quarters.map((q) => Math.max(q.revenue, q.expenses)));
+  const mixedCurrencies = new Set(invoices.filter((i) => i.status !== 'draft').map((i) => i.currency || currency || 'CAD')).size > 1;
 
   const handleDownload = () => {
     if (!unlocked) {
@@ -63,6 +64,7 @@ export default function YearSummary() {
       </div>
           <p className="text-[10px] text-[var(--text-secondary)] mb-4">
         Summaries for your own records only. Not financial, tax, or legal advice — confirm everything with a qualified professional.
+        {mixedCurrencies && ' Amounts span multiple currencies and are shown without conversion.'}
       </p>
 
       <div className="grid grid-cols-3 gap-3 mb-4">

@@ -3,7 +3,7 @@ import Sparkline from './Sparkline';
 
 interface MetricCardProps {
   label: string;
-  value: string | number;
+  value: ReactNode;
   subtext?: string;
   trend?: 'up' | 'down' | 'neutral';
   color?: 'green' | 'amber' | 'red' | 'gray' | 'blue' | 'purple';
@@ -58,7 +58,7 @@ export default function MetricCard({ label, value, subtext, trend, color = 'gray
           </span>
         )}
       </div>
-      <p className="text-[26px] font-semibold text-[var(--text-primary)] mb-1 break-words leading-tight tracking-tight tnum">{value}</p>
+      <div className="text-[26px] font-semibold text-[var(--text-primary)] mb-1 break-words leading-tight tracking-tight tnum">{value}</div>
       {subtext && (
         <p className={`text-xs ${trendColor} break-words`}>
           {trend === 'up' ? '↑ ' : trend === 'down' ? '↓ ' : ''}{subtext}
