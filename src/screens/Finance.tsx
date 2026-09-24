@@ -124,6 +124,9 @@ export default function Finance() {
         frequency: form.recurring ? form.frequency : undefined,
       };
       if (data.amount <= 0) { setSaving(false); addToast('Expense amount must be greater than zero', 'error'); return; }
+      // Typo guard: no real expense approaches a billion. Bank imports bypass
+      // this (bank data is authoritative); the manual form does not.
+      if (data.amount > 999999999.99) { setSaving(false); addToast('That amount looks off — please check for typos', 'error'); return; }
       if (editing) {
         await updateExpense({ ...editing, ...data });
       } else {

@@ -236,6 +236,12 @@ export default function Invoices() {
       addToast('Select a client before saving the invoice', 'error');
       return;
     }
+    // Typo guard (mirrors the expense form): computed totals can only be
+    // absurd via a mistyped rate/quantity.
+    if (total > 999999999.99 || !(total >= 0)) {
+      addToast('That total looks off — please check rates and quantities for typos', 'error');
+      return;
+    }
     const invoice_number = sanitizeInvoiceNumber(form.invoice_number);
     if (!invoice_number) {
       setForm((f) => ({ ...f, invoice_number: generateInvoiceNumber(invoices || []) }));
