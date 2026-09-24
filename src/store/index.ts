@@ -577,7 +577,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       // here keeps both backends identical: no silent orphans in browser,
       // no raw constraint errors in Tauri. Lists are (re)loaded first so the
       // check never passes on stale/empty state.
-      await Promise.all([get().loadProjects(), get().loadInvoices(), get().loadProposals(), get().loadContracts()]);
+      await Promise.all([get().loadProjects(), get().loadInvoices(), get().loadProposals(), get().loadContracts(), get().loadRecurringInvoices()]);
       const s = get();
       const linked: string[] = [];
       const count = (n: number, one: string, many: string) => {
@@ -587,6 +587,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       count(s.invoices.filter((i) => i.client_id === id).length, 'invoice', 'invoices');
       count(s.proposals.filter((p) => p.client_id === id).length, 'proposal', 'proposals');
       count(s.contracts.filter((c) => c.client_id === id).length, 'contract', 'contracts');
+      count(s.recurringInvoices.filter((r) => r.client_id === id).length, 'recurring invoice', 'recurring invoices');
       if (linked.length > 0) {
         throw new Error(`Cannot delete this client — ${linked.join(', ')} still linked. Delete those first.`);
       }
@@ -612,7 +613,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ projects: get().projects.map((p) => (p.id === data.id ? data : p)) });
     },
     deleteProject: async (id) => {
-      await Promise.all([get().loadMilestones(), get().loadTimeEntries(), get().loadInvoices(), get().loadProposals()]);
+      await Promise.all([get().loadMilestones(), get().loadTimeEntries(), get().loadInvoices(), get().loadProposals(), get().loadRecurringInvoices()]);
       const s = get();
       const linked: string[] = [];
       const count = (n: number, one: string, many: string) => {
@@ -622,6 +623,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       count(s.timeEntries.filter((t) => t.project_id === id).length, 'time entry', 'time entries');
       count(s.invoices.filter((i) => i.project_id === id).length, 'invoice', 'invoices');
       count(s.proposals.filter((p) => p.project_id === id).length, 'proposal', 'proposals');
+      count(s.recurringInvoices.filter((r) => r.project_id === id).length, 'recurring invoice', 'recurring invoices');
       if (linked.length > 0) {
         throw new Error(`Cannot delete this project — ${linked.join(', ')} still linked. Delete those first.`);
       }

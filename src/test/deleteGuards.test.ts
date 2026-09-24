@@ -34,8 +34,7 @@ describe('delete guards', () => {
     expect(useStore.getState().clients).toHaveLength(0);
   });
 
-  it('blocks client delete with linked records and names them', async () => {
-    set('projects', [{ id: 'p1', client_id: 'c1', title: 'Site', created_at: '2026-01-02' }]);
+  it('blocks client delete with linked records and names them', async () => {    set('projects', [{ id: 'p1', client_id: 'c1', title: 'Site', created_at: '2026-01-02' }]);
     set('invoices', [
       { id: 'i1', client_id: 'c1', invoice_number: 'INV-1', created_at: '2026-01-03' },
       { id: 'i2', client_id: 'c1', invoice_number: 'INV-2', created_at: '2026-01-04' },
@@ -61,6 +60,13 @@ describe('delete guards', () => {
     set('invoice_payments', []);
     await useStore.getState().deleteInvoice('i1');
     expect(JSON.parse(localStorage.getItem(P + 'invoices') || '[]')).toHaveLength(0);
+  });
+
+  it('blocks deletes when recurring templates point at the record', async () => {
+    set('recurring_invoices', [{ id: 'r1', client_id: 'c1', project_id: 'p1', title: 'Retainer', frequency: 'monthly', active: true, next_due: '2026-01-01', created_at: '2026-01-01' }]);
+    await expect(useStore.getState().deleteClient('c1')).rejects.toThrow(/1 recurring invoice/);
+    set('projects', [{ id: 'p1', client_id: 'c1', title: 'Site', created_at: '2026-01-02' }]);
+    await expect(useStore.getState().deleteProject('p1')).rejects.toThrow(/1 recurring invoice/);
   });
 
   it('revokes share links when their proposal is deleted', async () => {

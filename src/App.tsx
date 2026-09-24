@@ -28,7 +28,7 @@ import UpgradeModal from './components/ui/UpgradeModal';
 import { useStore } from './store';
 import { useToasts } from './store/toastStore';
 import { useAutoUpdater } from './hooks/useAutoUpdater';
-import { shouldGenerate, getNextDueDate, countCyclesBehind, getCatchUpCount, shouldShowCatchUpWarning } from './utils/recurringEngine';
+import { shouldGenerate, getNextDueDate, countCyclesBehind, getCatchUpCount, shouldShowCatchUpWarning, effectiveDueDate } from './utils/recurringEngine';
 import { generateInvoiceNumber } from './utils/invoiceNumber';
 import { useChangelog } from './utils/changelog';
 import { usePrefs } from './lib/prefs';
@@ -519,7 +519,15 @@ export default function App() {
       const due = recurringInvoices.filter(shouldGenerate).filter((ri) => !autoGenProcessedRef.current.has(ri.id));
       for (const ri of due) {
         autoGenProcessedRef.current.add(ri.id);
-        const cyclesBehind = countCyclesBehind(ri);
+        // Never orphan invoices: legacy rows can outlive their client
+        // (they predate the delete guards that now block that).
+        const client = useStore.getState().clients.find((c) => c.id === ri.client_id);
+        if (!client) continue;
+        // Running cursor (not the stale closure row): each generated cycle
+        // must advance from the previous one, or catch-up only ever moves
+        // a single cycle per launch and warns forever.
+        let cursor = effectiveDueDate(ri);
+        const cyclesBehind = countCyclesBehind({ ...ri, next_due: cursor.toISOString() });
         const { generate, capped } = getCatchUpCount(cyclesBehind);
 
         for (let i = 0; i < generate; i++) {
@@ -527,7 +535,16 @@ export default function App() {
           const invNumber = generateInvoiceNumber(currentInvoices);
           const dueDate = new Date();
           dueDate.setDate(dueDate.getDate() + paymentTerms);
+          const now = new Date();
+          cursor = getNextDueDate(ri.frequency, cursor);
           try {
+            // Claim the cycle BEFORE creating: a failed insert then skips
+            // (with a toast) instead of duplicating next launch.
+            await updateRecurringInvoice({
+              ...ri,
+              next_due: cursor.toISOString(),
+              last_generated: now.toISOString(),
+            });
             await addInvoice({
               client_id: ri.client_id,
               project_id: ri.project_id,
@@ -540,16 +557,9 @@ export default function App() {
               due_date: dueDate.toISOString().split('T')[0],
               notes: ri.notes,
             });
-            const now = new Date();
-            await updateRecurringInvoice({
-              ...ri,
-              next_due: getNextDueDate(ri.frequency, new Date(ri.next_due)).toISOString(),
-              last_generated: now.toISOString(),
-            });
-            const client = useStore.getState().clients.find((c) => c.id === ri.client_id);
-            addToast(`Invoice generated for ${client?.name || ri.client_id}`, 'success');
+            addToast(`Invoice generated for ${client.name || ri.client_id}`, 'success');
           } catch {
-            /* non-critical */
+            addToast(`Could not generate invoice for ${client.name || ri.client_id}`, 'error');
           }
         }
 
