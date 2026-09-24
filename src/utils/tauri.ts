@@ -274,6 +274,9 @@ const list: StoreRow[] = all[key];
     }
     return 1421 as unknown as T;
   }
+  if (cmd === 'get_all_share_tokens') {
+    return lsGet<StoreRow>('share_tokens') as unknown as T;
+  }
   if (cmd === 'get_share_token_for_entity') {
     const { entityType, entityId } = (args || {}) as { entityType?: string; entityId?: string };
     const tokens = lsGet<StoreRow>('share_tokens');

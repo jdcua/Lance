@@ -96,6 +96,12 @@ export type LineItem = {
   quantity: number;
   unit_price: number;
   total: number;
+  /**
+   * Time entries this line was built from (invoice modal time import).
+   * Lets invoice deletion unmark exactly those entries instead of losing
+   * the hours. Absent on manual lines and pre-linkage rows.
+   */
+  time_entry_ids?: string[];
 };
 
 export type InvoicePayment = {

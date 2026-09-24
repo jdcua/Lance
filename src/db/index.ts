@@ -386,6 +386,16 @@ class MockDatabase {
         mockWriteTable(table, rows);
         return { rowsAffected: 1, lastInsertId: upserted + 1 };
       }
+      // Plain INSERT without ON CONFLICT: real SQLite enforces the primary
+      // key and throws. The mock must do the same, or re-imports (backup
+      // restore twice) silently duplicate every row in browser mode while
+      // Tauri correctly counts them as skipped.
+      if (row.id !== undefined && row.id !== null) {
+        const dup = rows.some((r) => this.matchesValue(r.id, row.id));
+        if (dup) {
+          throw new Error(`UNIQUE constraint failed: ${table}.id`);
+        }
+      }
       rows.push(row);
       mockWriteTable(table, rows);
       return { rowsAffected: 1, lastInsertId: rows.length };

@@ -60,7 +60,7 @@ type SortKey = 'title' | 'client' | 'status' | 'date' | 'heat';
 type StatusFilter = 'all' | 'draft' | 'sent' | 'accepted' | 'declined' | 'expired';
 
 export default function Proposals() {
-  const { proposals, loadProposals, clients, loadClients, updateProposal, removeProposal, profile, loadProfile, addProposal, addContract, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, logFollowUp, followUpSettings, portalActivity, loadPortalActivity, getActiveTier } = useStore();
+  const { proposals, loadProposals, clients, loadClients, updateProposal, removeProposal, profile, loadProfile, addProposal, addContract, contracts, loadContracts, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, logFollowUp, followUpSettings, portalActivity, loadPortalActivity, getActiveTier } = useStore();
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -80,17 +80,20 @@ export default function Proposals() {
   useEffect(() => {
     const loadShareTokens = async () => {
       try {
-        const { invoke } = await import('@tauri-apps/api/core');
-        const tokens = await invoke<ShareToken[]>('get_all_share_tokens');
+        // Shared invoke, not the Tauri import directly: the browser shim
+        // implements this command, and the direct import throws outside
+        // Tauri — which used to hide every share badge in browser mode.
+        const { tauriInvoke } = await import('../utils/tauri');
+        const tokens = await tauriInvoke<ShareToken[]>('get_all_share_tokens');
         const ids = new Set(tokens.filter(t => t.entity_type === 'proposal').map(t => t.entity_id));
         setShareTokenIds(ids);
       } catch { /* ignore */ }
     };
-    Promise.all([loadProposals(), loadClients(), loadProfile(), loadShareTokens(), loadPortalActivity()])
+    Promise.all([loadProposals(), loadClients(), loadProfile(), loadShareTokens(), loadPortalActivity(), loadContracts()])
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
     loadPendingFollowUps();
-  }, [loadProposals, loadClients, loadProfile, loadPendingFollowUps, loadPortalActivity, addToast]);
+  }, [loadProposals, loadClients, loadProfile, loadContracts, loadPendingFollowUps, loadPortalActivity, addToast]);
 
   useEffect(() => {
     if (!exportDropdown) return;
@@ -201,6 +204,14 @@ export default function Proposals() {
     if (!client || !profile) return;
     setConvertingId(p.id);
     try {
+      // Guard against double conversion (double-click, retry after a slow
+      // save, re-run): contracts remember their source proposal.
+      const existing = useStore.getState().contracts.find((c) => c.proposal_id === p.id);
+      if (existing) {
+        addToast('Contract already exists for this proposal', 'info');
+        navigate('/contracts');
+        return;
+      }
       const freelancerName = profile.name || 'Freelancer';
       const rateStr = p.rate
         ? formatCurrency(p.rate, profile.currency) + (p.rate_type === 'hourly' ? ' per hour' : ' flat project fee')

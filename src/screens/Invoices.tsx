@@ -517,7 +517,7 @@ export default function Invoices() {
     const newItems: Omit<LineItem, 'id'>[] = selected.map((t) => {
       const hours = (t.duration_minutes || 0) / 60;
       const amount = Math.round(hours * hourlyRate * 100) / 100;
-      return { description: t.description || `Time entry ${new Date(t.start_time).toLocaleDateString()}`, quantity: 1, unit_price: amount, total: amount };
+      return { description: t.description || `Time entry ${new Date(t.start_time).toLocaleDateString()}`, quantity: 1, unit_price: amount, total: amount, time_entry_ids: [t.id] };
     });
     const existingItems = items.filter((i) => i.description.trim() !== '' || i.total > 0);
     setItems([...existingItems, ...newItems]);

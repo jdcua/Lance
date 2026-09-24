@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { BACKUP_TABLES, TABLE_INSERT_MAP, fetchBackupTables, createExportEnvelope, validateImportEnvelope } from './backup';
+import { BACKUP_TABLES, TABLE_INSERT_MAP, fetchBackupTables, createExportEnvelope, validateImportEnvelope, performImport } from './backup';
 
 describe('backup completeness', () => {
   it('every backed-up table has a restore mapping', () => {
@@ -53,5 +53,20 @@ describe('backup roundtrip validation', () => {
     expect(validateImportEnvelope({ foo: 1 }).valid).toBe(false);
     expect(validateImportEnvelope(null).valid).toBe(false);
     expect(validateImportEnvelope({ lance_backup: true, version: 'x', schema_version: 1, data: { clients: {} } }).valid).toBe(false);
+  });
+
+  it('re-importing the same backup skips instead of failing', async () => {
+    const envelope = createExportEnvelope(
+      { clients: [{ id: 'dup-1', name: 'Ava', created_at: '2026-01-01' }] },
+      '1.0.0',
+      1,
+    );
+    const first = await performImport(JSON.parse(JSON.stringify(envelope)), 'additive');
+    expect(first.failed).toBe(0);
+    expect(first.imported).toBeGreaterThan(0);
+    const second = await performImport(JSON.parse(JSON.stringify(envelope)), 'additive');
+    expect(second.failed).toBe(0);
+    expect(second.imported).toBe(0);
+    expect(second.skipped).toBeGreaterThan(0);
   });
 });

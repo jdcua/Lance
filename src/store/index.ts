@@ -795,8 +795,26 @@ export const useStore = create<UnifiedStore>((set, get) => {
         throw new Error(`Cannot delete this invoice — ${n} payment${n === 1 ? '' : 's'} recorded. Delete the payment${n === 1 ? '' : 's'} first.`);
       }
       snapshotForTrash('invoices', id, get().invoices.find((i) => i.id === id));
+      // Unmark billed hours: line items remember their time entries, so the
+      // hours return to unbilled instead of vanishing. Entries deleted since
+      // are simply skipped. Pre-linkage invoices have no ids — nothing to do.
+      const doomed = get().invoices.find((i) => i.id === id);
+      const doomedItems = Array.isArray(doomed?.line_items) ? doomed.line_items : [];
+      const linkedEntryIds = new Set(
+        doomedItems.flatMap((li) => li.time_entry_ids || []),
+      );
       await invoke('delete_invoice', { id });
       set({ invoices: get().invoices.filter((i) => i.id !== id) });
+      if (linkedEntryIds.size > 0) {
+        try {
+          await get().loadTimeEntries();
+          await Promise.allSettled(
+            get().timeEntries
+              .filter((t) => linkedEntryIds.has(t.id) && t.invoiced)
+              .map((t) => get().updateTimeEntry({ ...t, invoiced: false })),
+          );
+        } catch { /* deletion stands even if unmarking fails */ }
+      }
       try {
         for (const l of get().pendingFollowUps.filter((f) => f.entity_type === 'invoice' && f.entity_id === id)) {
           await get().updateFollowUpStatus(l.id, 'dismissed', 'auto-resolved');
