@@ -740,8 +740,27 @@ const list: StoreRow[] = all[key];
 
   // ── expire_sent_proposals ──
   if (cmd === 'expire_sent_proposals') {
-    // In browser mode, no automatic expiry
-    return [] as unknown as T;
+    // Mirror the Rust engine: sent proposals past expires_at become expired.
+    // Date-only expiries compare as ISO prefixes, same as rfc3339 in Rust.
+    const now = new Date().toISOString();
+    const proposals = lsGet<StoreRow>('proposals');
+    const expired: StoreRow[] = [];
+    for (const p of proposals) {
+      if (
+        p.status === 'sent' &&
+        typeof p.expires_at === 'string' &&
+        (p.expires_at as string) < now
+      ) {
+        p.status = 'expired';
+        expired.push(p);
+      }
+    }
+    if (expired.length > 0) lsSet('proposals', proposals);
+    return expired.map((p) => ({
+      id: p.id,
+      client_id: p.client_id,
+      title: p.title,
+    })) as unknown as T;
   }
 
   // ── Catch-all: return safe default ──

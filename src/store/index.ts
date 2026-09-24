@@ -470,6 +470,22 @@ export const useStore = create<UnifiedStore>((set, get) => {
     addToast: (message, type = 'info', duration, actions) => {
       const id = crypto.randomUUID();
       const ms = duration ?? (actions ? 0 : type === 'unlock' ? 4000 : 3000);
+      // Deduplicate identical transient toasts (triple-click saves, retry
+      // loops): refresh the existing one's timer instead of stacking three
+      // copies. Interactive toasts (actions) always stand alone.
+      if (!actions && ms !== 0) {
+        const dupe = get().toasts.find((t) => t.message === message && t.type === type && !t.actions);
+        if (dupe) {
+          clearToastTimer(dupe.id);
+          toastTimers.delete(dupe.id);
+          const timeoutId = setTimeout(() => {
+            toastTimers.delete(dupe.id);
+            set((s) => ({ toasts: s.toasts.filter((t) => t.id !== dupe.id) }));
+          }, ms);
+          toastTimers.set(dupe.id, { timeoutId, startedAt: Date.now(), duration: ms });
+          return dupe.id;
+        }
+      }
       set((s) => ({ toasts: [...s.toasts.slice(-2), { id, message, type, duration, actions }] }));
       if (ms === 0) return id;
       const timeoutId = setTimeout(() => {

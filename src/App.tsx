@@ -712,7 +712,10 @@ export default function App() {
 
     const checkExpiry = async () => {
       try {
-        const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
+        // Shared invoke (NOT @tauri-apps/api/core directly): the browser
+        // shim implements this command, and a direct import throws outside
+        // Tauri — which used to silently disable expiry for browser users.
+        const { tauriInvoke } = await import('./utils/tauri');
         const expired = await tauriInvoke<Array<{ id: string; client_id: string; title: string }>>('expire_sent_proposals', {});
         if (expired.length === 0) return;
 
@@ -724,6 +727,18 @@ export default function App() {
         for (const ep of expired) {
           const client = state.clients.find((c) => c.id === ep.client_id);
           const clientName = client?.name || 'Unknown';
+
+          // Retire pre-expiry nudges first: a "chase this proposal" draft
+          // for a now-expired proposal is stale (the expiry engine bypasses
+          // store.updateProposal, so its auto-resolve doesn't run here).
+          try {
+            await state.loadPendingFollowUps();
+            for (const l of useStore.getState().pendingFollowUps.filter(
+              (f) => f.entity_type === 'proposal' && f.entity_id === ep.id,
+            )) {
+              await state.updateFollowUpStatus(l.id, 'dismissed', 'auto-resolved');
+            }
+          } catch { /* expiry stands regardless */ }
 
           await state.addCommunication({
             id: crypto.randomUUID(),
