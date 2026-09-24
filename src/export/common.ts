@@ -16,7 +16,11 @@ export async function saveFile(blob: Blob, defaultName: string): Promise<void> {
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    localStorage.setItem('lance:has-exported', 'true');
+    try {
+      localStorage.setItem('lance:has-exported', 'true');
+    } catch {
+      /* private mode: achievement flag simply isn't persisted */
+    }
     return;
   }
   const { save } = await import('@tauri-apps/plugin-dialog');
@@ -25,5 +29,9 @@ export async function saveFile(blob: Blob, defaultName: string): Promise<void> {
   if (!filePath) return;
   const buffer = await blob.arrayBuffer();
   await writeFile(filePath, new Uint8Array(buffer));
-  localStorage.setItem('lance:has-exported', 'true');
+  try {
+    localStorage.setItem('lance:has-exported', 'true');
+  } catch {
+    /* private mode: achievement flag simply isn't persisted */
+  }
 }

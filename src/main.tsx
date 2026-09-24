@@ -33,6 +33,14 @@ if (!('cancelIdleCallback' in window)) {
   };
 }
 
+// crypto.randomUUID requires a secure context (https, localhost, Tauri).
+// Served over plain http (LAN IPs, some WebViews) it is missing and all
+// 170+ id generations throw. Backfill once so every call site keeps working.
+import { safeRandomUUID } from './utils/uuid';
+if (typeof crypto !== 'undefined' && typeof crypto.randomUUID !== 'function') {
+  (crypto as unknown as { randomUUID: () => string }).randomUUID = safeRandomUUID;
+}
+
 function Root() {
   const prefs = usePrefs();
   return (

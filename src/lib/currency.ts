@@ -1,4 +1,5 @@
 import type { Invoice, Client, UserProfile } from '../types';
+import { formatCurrency as formatCurrencyBase } from '../utils/format';
 
 export const CURRENCIES = ['CAD', 'USD', 'EUR', 'GBP', 'AUD'] as const;
 
@@ -40,10 +41,8 @@ export function getInvoiceCurrency(
 }
 
 export function formatCurrency(amount: number, currency: string): string {
-  return new Intl.NumberFormat('en-CA', {
-    style: 'currency',
-    currency,
-  }).format(amount);
+  // Single implementation lives in utils/format (incl. non-finite guard).
+  return formatCurrencyBase(amount, currency);
 }
 
 /**

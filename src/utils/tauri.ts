@@ -23,8 +23,25 @@ type StoreRow = Record<string, unknown>;
 function lsGet<T>(key: string): T[] {
   try {
     const raw = localStorage.getItem(LS_PREFIX + key);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const val: unknown = JSON.parse(raw);
+    // Hand-edited or version-skewed values can be valid JSON of the wrong
+    // shape (an object where a list belongs). Return [] instead of letting
+    // .find/.filter throw ten frames later.
+    return Array.isArray(val) ? (val as T[]) : [];
   } catch { return []; }
+}
+
+/** Object-shaped reads (follow_up_logs): {} instead of [] on wrong shapes. */
+function lsGetRecord(key: string): Record<string, StoreRow[]> {
+  try {
+    const raw = localStorage.getItem(LS_PREFIX + key);
+    if (!raw) return {};
+    const val: unknown = JSON.parse(raw);
+    return val && typeof val === 'object' && !Array.isArray(val)
+      ? (val as Record<string, StoreRow[]>)
+      : {};
+  } catch { return {}; }
 }
 
 function lsSet<T>(key: string, data: T[]): void {
@@ -203,7 +220,7 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
     if (payload?.id) {
       // follow_up_logs is stored as an object keyed by `entityType:entityId`,
       // each value being an array of logs (lsGet returns the raw parsed value).
-      const all = (lsGet<StoreRow>('follow_up_logs') as unknown) as Record<string, StoreRow[]>;
+      const all = lsGetRecord('follow_up_logs');
       let updated = false;
       for (const key of Object.keys(all || {})) {
 const list: StoreRow[] = all[key];
@@ -630,13 +647,10 @@ const list: StoreRow[] = all[key];
       drafted_at: now,
     };
     const key = `${log.entity_type as string}:${log.entity_id as string}`;
-    const all = (lsGet<StoreRow>('follow_up_logs') as unknown) as Record<string, StoreRow[]>;
-    if (!all || typeof all !== 'object' || Array.isArray(all)) {
-      localStorage.setItem(LS_PREFIX + 'follow_up_logs', JSON.stringify({ [key]: [log] }));
-    } else {
-      all[key] = [...(all[key] || []), log];
-      lsSet('follow_up_logs', all as unknown as StoreRow[]);
-    }
+    // lsGetRecord guarantees a plain object (never null/array/garbage).
+    const all = lsGetRecord('follow_up_logs');
+    all[key] = [...(all[key] || []), log];
+    lsSet('follow_up_logs', all as unknown as StoreRow[]);
     // Register in the pending list so get_all_pending_follow_ups returns it
     const pending = lsGet<StoreRow>('pending_follow_ups');
     if (!pending.some((l: StoreRow) => l && l.id === id)) {

@@ -28,9 +28,13 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
   useEffect(() => {
     if (isLicensed) return;
     getRuntimeVersion().then((v) => {
-      const key = `lance:splash-views:${v}`;
-      const n = parseInt(localStorage.getItem(key) || '0', 10) || 0;
-      localStorage.setItem(key, String(n + 1));
+      try {
+        const key = `lance:splash-views:${v}`;
+        const n = parseInt(localStorage.getItem(key) || '0', 10) || 0;
+        localStorage.setItem(key, String(n + 1));
+      } catch {
+        /* private mode: views simply aren't counted */
+      }
     });
   }, [isLicensed]);
 

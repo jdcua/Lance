@@ -2,6 +2,9 @@
 export const DAY_MS = 86400000;
 
 export function formatCurrency(amount: number, currency = 'CAD'): string {
+  // Corrupt imports and 0/0 math can produce non-finite amounts. Intl would
+  // render "$NaN"/"$∞" — an em dash admits unknown instead of lying.
+  if (typeof amount !== 'number' || !isFinite(amount)) return '—';
   return new Intl.NumberFormat('en-CA', {
     style: 'currency',
     currency,
