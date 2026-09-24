@@ -107,3 +107,8 @@ macOS 11+ (Apple Silicon), Windows 10+ (64-bit), Ubuntu 20.04+ (AppImage).
 ## Press
 
 - Press kit: https://lance.cuajuandiego.workers.dev/press
+
+## Rates (worked examples, illustrative — not market data)
+
+- Hub: https://lance.cuajuandiego.workers.dev/rates
+- 41 craft pages, e.g. https://lance.cuajuandiego.workers.dev/rates/photographer

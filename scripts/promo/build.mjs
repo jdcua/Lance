@@ -303,10 +303,70 @@ for (const u of USE_PAGES) {
   useUrls.push(`use/${u.slug}`);
 }
 
+// ── Rates pages: hub + 41 craft pages (worked examples, labeled illustrative) ──
+const CRAFT_CATS = {
+  Creative: ['animator', 'designer', 'photographer', 'filmmaker', 'illustrator', '3d-artist', 'musician', 'writer', 'copywriter', 'event-planner', 'voice-actor', 'fashion-designer'],
+  Technical: ['developer', 'game-developer', 'ux-designer', 'data-analyst', 'translator', 'devops', 'cybersecurity', 'ai-engineer', 'embedded', 'blockchain'],
+  Strategic: ['consultant', 'marketing', 'seo', 'architect', 'social-media', 'advertiser', 'project-manager', 'product-manager', 'growth', 'cx-strategist'],
+  Service: ['virtual-assistant', 'accountant', 'tutor', 'wellness', 'legal', 'recruiter', 'trainer', 'nutritionist', 'real-estate'],
+};
+const catOf = (id) => Object.keys(CRAFT_CATS).find((k) => CRAFT_CATS[k].includes(id)) || 'Service';
+const rm = content.rateModel;
+const rateFor = (cat) => {
+  const t = rm.byCategory[cat];
+  const d = rm.defaults;
+  const hrs = d.billableHrsWeek * (52 - d.weeksOff);
+  const hourly = Math.round(((t.targetIncome + d.expenses) * (1 + d.bufferPct / 100)) / hrs);
+  return { hourly, day: hourly * 8, hrs, target: t.targetIncome };
+};
+const rateUrls = ['rates'];
+{
+  const hubCards =
+    bentoCard('How the math works', `Target income + expenses, × buffer for non-payment, ÷ real billable hours. Every page below shows its inputs. Try the interactive calculator.`, 'b-3', '▲') +
+    bentoCard('Free rate calculator', 'Thirty seconds of honest math in your browser. No account.', 'b-3', '$') +
+    content.crafts.map((c) => {
+      const r = rateFor(catOf(c.id));
+      return `<a class="bcard b-2" style="text-decoration:none" href="${site}/rates/${c.id}"><div class="b-icon">$</div><div class="b-title">${plural(c.label)}: $${r.hourly}/hr*</div><p class="b-desc">${c.hook}</p></a>`;
+    }).join('');
+  write(
+    join(landing, 'rates', 'index.html'),
+    seoShell('Freelance rates by craft', 'Worked rate examples for 41 freelance crafts with transparent math. Illustrative — adjust with the free calculator.', hubCards, 'rates', [
+      { q: 'Are these real market rates?', a: 'No — they are worked examples from stated assumptions (target income, expenses, billable hours, buffer). Use the free rate calculator with your own numbers.' },
+      { q: 'What does Lance cost?', a: 'Lance Core is free forever. Lance Pro is $99/year ($14/month). Lance Lifetime is a $249 one-time payment.' },
+    ]),
+  );
+}
+for (const c of content.crafts) {
+  const cat = catOf(c.id);
+  const t = rm.byCategory[cat];
+  const d = rm.defaults;
+  const r = rateFor(cat);
+  const name = plural(c.label);
+  const cards =
+    bentoCard(`${name}: $${r.hourly}/hr worked example`, `From $${t.targetIncome.toLocaleString()} target + $${d.expenses.toLocaleString()} expenses, × ${100 + d.bufferPct}% buffer, ÷ ${r.hrs.toLocaleString()} billable hrs/yr (${d.billableHrsWeek}/wk, ${d.weeksOff} wks off). *Illustrative example — not market data.`, 'b-3', '$') +
+    bentoCard('How to charge', t.models + '.', 'b-3', '✎') +
+    bentoCard('Watch out for', t.trap + '.', 'b-2', '!') +
+    bentoCard('Track it in Lance', `One-click timer ties hours to projects; unbilled alerts make sure the rate you set is the rate you collect.`, 'b-2', '◷');
+  write(
+    join(landing, 'rates', `${c.id}.html`),
+    seoShell(
+      `${c.label} rates: pricing example for 2026`,
+      `${c.hook} Worked hourly rate example ($${r.hourly}/hr) with transparent math + free calculator.`,
+      cards,
+      `rates/${c.id}`,
+      [
+        { q: `What should ${name.toLowerCase()} charge per hour?`, a: `Worked example: $${r.hourly}/hr from $${t.targetIncome.toLocaleString()} target income and ${r.hrs.toLocaleString()} billable hours. Illustrative — run your own numbers in the free calculator.` },
+        { q: 'Are these real market rates?', a: 'No — worked examples from stated assumptions, not market data. Adjust with the free rate calculator.' },
+      ],
+    ),
+  );
+  rateUrls.push(`rates/${c.id}`);
+}
+
 // ── sitemap.xml + llms.txt refresh ──
 const urlEntry = (loc, priority, freq = 'monthly') =>
   `  <url>\n    <loc>${site}/${loc}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${freq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
-const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urlEntry('', '1.0', 'weekly')}\n${['privacy', 'terms', 'refunds'].map((p) => urlEntry(p, '0.3', 'yearly')).join('\n')}\n${altUrls.map((u) => urlEntry(u, '0.7')).join('\n')}\n${useUrls.map((u) => urlEntry(u, '0.6')).join('\n')}\n${craftUrls.map((u) => urlEntry(u, '0.6')).join('\n')}\n${urlEntry('press', '0.5')}\n${['tools/invoice-generator', 'tools/rate-calculator'].map((u) => urlEntry(u, '0.8')).join('\n')}\n</urlset>\n`;
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urlEntry('', '1.0', 'weekly')}\n${['privacy', 'terms', 'refunds'].map((p) => urlEntry(p, '0.3', 'yearly')).join('\n')}\n${altUrls.map((u) => urlEntry(u, '0.7')).join('\n')}\n${useUrls.map((u) => urlEntry(u, '0.6')).join('\n')}\n${craftUrls.map((u) => urlEntry(u, '0.6')).join('\n')}\n${urlEntry('press', '0.5')}\n${['tools/invoice-generator', 'tools/rate-calculator'].map((u) => urlEntry(u, '0.8')).join('\n')}\n${urlEntry('rates', '0.6')}\n${rateUrls.filter((u) => u !== 'rates').map((u) => urlEntry(u, '0.5')).join('\n')}\n</urlset>\n`;
 write(join(landing, 'sitemap.xml'), sitemap);
 const llmsAdd = `\n## Browse by craft\n\n${content.crafts.map((c) => `- ${c.label}: ${site}/craft/${c.id} — ${c.hook}`).join('\n')}\n\n## Alternatives\n\n${content.alternatives.map((a) => `- vs ${a.name}: ${site}/alternatives/${a.slug} — ${a.angle}`).join('\n')}\n\n## Use cases\n\n${USE_PAGES.map((u) => `- ${u.title}: ${site}/use/${u.slug}`).join('\n')}
 
@@ -318,6 +378,11 @@ const llmsAdd = `\n## Browse by craft\n\n${content.crafts.map((c) => `- ${c.labe
 ## Press
 
 - Press kit: ${site}/press
+
+## Rates (worked examples, illustrative — not market data)
+
+- Hub: ${site}/rates
+- ${rateUrls.filter((u) => u !== 'rates').length} craft pages, e.g. ${site}/rates/photographer
 `;
 {
   const base = readFileSync(join(landing, 'llms.txt'), 'utf8').split('\n## Browse by craft')[0].replace(/\s+$/, '');
@@ -339,5 +404,6 @@ const draftFiles = {
 for (const [name, body] of Object.entries(draftFiles)) write(join(draftDir, name), body + '\n');
 
 // ── 5. DISTRO + exp-report stubs (full content written by dedicated files; keep pointers) ──
-write(join(promo, '.build-meta.json'), JSON.stringify({ builtAt: today, pages: craftUrls.length + altUrls.length + useUrls.length }, null, 2));
-console.log(`promo: done (${Object.keys(draftFiles).length} drafts, ${craftUrls.length + altUrls.length + useUrls.length} SEO pages)`);
+const pageCount = craftUrls.length + altUrls.length + useUrls.length + rateUrls.length;
+write(join(promo, '.build-meta.json'), JSON.stringify({ builtAt: today, pages: pageCount }, null, 2));
+console.log(`promo: done (${Object.keys(draftFiles).length} drafts, ${pageCount} SEO pages)`);

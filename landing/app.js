@@ -638,7 +638,8 @@ function wireForm(formId, statusId, btnId, btnLabel, payload, url) {
       const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || '');
-      status.textContent = url.includes('issues') ? 'Issue filed. Thanks for reporting it.' : 'Message sent. Talk soon.';
+      status.textContent = url.includes('issues') ? 'Issue filed. Thanks for reporting it.'
+        : url.includes('waitlist') ? "You're on the list. One email when v2 ships." : 'Message sent. Talk soon.';
       status.className = 'form-status ok';
       form.reset();
     } catch (err) {
@@ -650,6 +651,11 @@ function wireForm(formId, statusId, btnId, btnLabel, payload, url) {
     }
   });
 }
+wireForm('wait-form', 'wl-status', 'wl-submit', 'Notify me', () => {
+  const email = $('wl-email').value.trim(), company_hp = $('wl-company').value;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Please add a valid email — one launch email, nothing else.';
+  return { email, company_hp };
+}, '/api/waitlist');
 wireForm('contact-form', 'cf-status', 'cf-submit', 'Send message', () => {
   const name = $('cf-name').value.trim(), email = $('cf-email').value.trim(),
     message = $('cf-message').value.trim(), company_hp = $('cf-company').value;

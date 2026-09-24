@@ -474,3 +474,10 @@ footer p{font-size:13.5px;color:var(--d-t2);line-height:1.8}
 .faq-item.is-extra{display:none}
 .faq-list.show-all .faq-item.is-extra{display:block;animation:panein .35s ease}
 .faq-more{display:flex;justify-content:center;margin-top:26px}
+
+/* ── v2 waitlist band ── */
+.wait-sec{background:radial-gradient(70% 90% at 50% 0%,rgba(var(--green-rgb),.09),transparent 65%),var(--d-bg);padding:100px 28px}
+.wait-inner{max-width:640px;margin:0 auto;text-align:center}
+.wait-inner .sec-sub{margin-bottom:30px}
+.wait-form{max-width:420px;margin:0 auto}
+.wait-form .ghost-btn{width:100%}

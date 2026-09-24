@@ -82,7 +82,8 @@ def main():
     import glob as _glob
     gen_pages = sorted(_glob.glob(os.path.join(landing, "craft", "*.html"))
                        + _glob.glob(os.path.join(landing, "alternatives", "*.html"))
-                       + _glob.glob(os.path.join(landing, "use", "*.html")))
+                       + _glob.glob(os.path.join(landing, "use", "*.html"))
+                       + _glob.glob(os.path.join(landing, "rates", "*.html")))
     sitemap_raw = open(os.path.join(landing, "sitemap.xml"), errors="replace").read() \
         if os.path.exists(os.path.join(landing, "sitemap.xml")) else ""
     seen_titles = set()
@@ -95,6 +96,8 @@ def main():
         except Exception:
             pass
         tag = rel.replace(os.sep, "/")
+        if tag.endswith("/index"):
+            tag = tag[:-len("/index")]
         dup = g.title in seen_titles
         seen_titles.add(g.title)
         check(f"seo:{tag}:title", 10 < len(g.title) < 70 and not dup, "fail",
@@ -110,7 +113,7 @@ def main():
               f"h1s={[h for h in g.h1s if h][:1]}")
         check(f"seo:{tag}:sitemap", f">{tag}<" in sitemap_raw or f"/{tag}</loc>" in sitemap_raw,
               "fail", "in sitemap")
-    check("seo:count", len(gen_pages) >= 52, "warn", f"{len(gen_pages)} pages")
+    check("seo:count", len(gen_pages) >= 93, "warn", f"{len(gen_pages)} pages")
 
     print(f"laya-gate: {len(fails)} FAIL, {len(warns)} warn")
     for cid, ev in fails + warns:

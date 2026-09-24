@@ -101,5 +101,15 @@
   ],
   "channels": {
     "utm": "utm_source={source}&utm_medium={medium}&utm_campaign={campaign}"
+  },
+  "rateModel": {
+    "note": "Illustrative baselines for worked examples — NOT market data. Every rates page shows its inputs and links the interactive calculator.",
+    "defaults": { "expenses": 6000, "billableHrsWeek": 25, "weeksOff": 4, "bufferPct": 10 },
+    "byCategory": {
+      "Creative": { "targetIncome": 75000, "models": "day rates for shoots, per-project for deliverables, revision caps in writing", "trap": "unbilled revision rounds and free 'quick changes' that eat the margin" },
+      "Technical": { "targetIncome": 110000, "models": "hourly for maintenance, weekly rates for builds, retainers for ongoing support", "trap": "scope creep disguised as 'small tweaks' and unbilled debugging time" },
+      "Strategic": { "targetIncome": 120000, "models": "value-based project fees, monthly retainers, paid discovery phases", "trap": "free strategy given away in the sales process instead of paid discovery" },
+      "Service": { "targetIncome": 65000, "models": "session packages, hourly with minimums, monthly plans", "trap": "no-shows and admin time that never makes it onto an invoice" }
+    }
   }
 }
