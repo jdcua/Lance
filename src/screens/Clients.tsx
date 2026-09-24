@@ -13,7 +13,7 @@ import { useToasts } from '../store/toastStore';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 import ClientImportModal from '../components/ui/ClientImportModal';
 import { useVisibleList, MoreRows } from '../components/ui/useVisibleList';
-import { formatCurrency, relativeDate } from '../utils/format';
+import { formatCurrency, relativeDate, todayLocalISO } from '../utils/format';
 import { getCurrencySymbol, CURRENCIES } from '../lib/currency';
 import { checkAndNotify } from '../achievements/notify';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
@@ -182,7 +182,7 @@ export default function Clients() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', company: '', notes: '', preferred_currency: '' });
   const [formErrors, setFormErrors] = useState<{ email?: string; name?: string }>({});
   const [showLogForm, setShowLogForm] = useState(false);
-  const [logForm, setLogForm] = useState({ type: 'note' as Communication['type'], date: new Date().toISOString().split('T')[0], summary: '' });
+  const [logForm, setLogForm] = useState({ type: 'note' as Communication['type'], date: todayLocalISO(), summary: '' });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -197,7 +197,7 @@ export default function Clients() {
   const [editingMetric, setEditingMetric] = useState<MetricDefinition | null>(null);
   const [metricForm, setMetricForm] = useState({ name: '', metric_type: 'number' as MetricDefinition['metric_type'], unit_label: '', is_headline: false });
   const [showValueForm, setShowValueForm] = useState<string | null>(null);
-  const [valueForm, setValueForm] = useState({ value: '', period: new Date().toISOString().split('T')[0], notes: '' });
+  const [valueForm, setValueForm] = useState({ value: '', period: todayLocalISO(), notes: '' });
   const [showTemplatePrompt, setShowTemplatePrompt] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [templateName, setTemplateName] = useState('');
@@ -367,7 +367,7 @@ export default function Clients() {
         date: logForm.date,
         created_at: new Date().toISOString(),
       });
-      setLogForm({ type: 'note', date: new Date().toISOString().split('T')[0], summary: '' });
+      setLogForm({ type: 'note', date: todayLocalISO(), summary: '' });
       setShowLogForm(false);
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to log communication', 'error');
@@ -453,7 +453,7 @@ export default function Clients() {
         notes: valueForm.notes || undefined,
       });
       setShowValueForm(null);
-      setValueForm({ value: '', period: new Date().toISOString().split('T')[0], notes: '' });
+      setValueForm({ value: '', period: todayLocalISO(), notes: '' });
       await loadMetricValues(definitionId);
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to log value', 'error');
@@ -697,7 +697,7 @@ export default function Clients() {
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Communication log</h3>
                       <button
-                        onClick={() => { setShowLogForm(!showLogForm); setLogForm({ type: 'note', date: new Date().toISOString().split('T')[0], summary: '' }); }}
+                        onClick={() => { setShowLogForm(!showLogForm); setLogForm({ type: 'note', date: todayLocalISO(), summary: '' }); }}
                         className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline flex items-center gap-1"
                       >
                         <Plus size={12} /> Log interaction
@@ -1059,7 +1059,7 @@ export default function Clients() {
                             <button
                               onClick={() => {
                                 setShowValueForm(def.id);
-                                setValueForm({ value: '', period: new Date().toISOString().split('T')[0], notes: '' });
+                                setValueForm({ value: '', period: todayLocalISO(), notes: '' });
                               }}
                               className="mt-2 text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline flex items-center gap-1"
                             >

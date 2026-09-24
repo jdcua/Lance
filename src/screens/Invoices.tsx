@@ -10,7 +10,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import ClientSelect from '../components/ui/ClientSelect';
 import { useVisibleList, MoreRows } from '../components/ui/useVisibleList';
 import { exportInvoicePDF, exportInvoiceDOCX } from '../export';
-import { formatCurrency, relativeDate, parseDateString, DAY_MS } from '../utils/format';
+import { formatCurrency, relativeDate, parseDateString, DAY_MS, todayLocalISO } from '../utils/format';
 import { getCurrencySymbol } from '../lib/currency';
 import { generateInvoiceNumber, sanitizeInvoiceNumber } from '../utils/invoiceNumber';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
@@ -65,7 +65,7 @@ export default function Invoices() {
   const [editingRecurring, setEditingRecurring] = useState<RecurringInvoiceType | null>(null);
   const [riForm, setRiForm] = useState({
     client_id: '', project_id: '', title: '', frequency: 'monthly' as RecurringInvoiceType['frequency'],
-    notes: '', tax_rate: '', next_due: new Date().toISOString().split('T')[0],
+    notes: '', tax_rate: '', next_due: todayLocalISO(),
   });
   const [riItems, setRiItems] = useState<Omit<LineItem, 'id'>[]>([{ description: '', quantity: 1, unit_price: 0, total: 0 }]);
   const [form, setForm] = useState({
@@ -82,7 +82,7 @@ export default function Invoices() {
   const [paymentInv, setPaymentInv] = useState<Invoice | null>(null);
   const [paymentForm, setPaymentForm] = useState({
     amount: '',
-    payment_date: new Date().toISOString().split('T')[0],
+    payment_date: todayLocalISO(),
     payment_method: 'Bank Transfer',
     reference: '',
     notes: '',
@@ -295,7 +295,7 @@ export default function Invoices() {
     setPaymentInv(inv);
     setPaymentForm({
       amount: inv.total.toString(),
-      payment_date: new Date().toISOString().split('T')[0],
+      payment_date: todayLocalISO(),
       payment_method: 'Bank Transfer',
       reference: '',
       notes: '',
@@ -533,7 +533,7 @@ export default function Invoices() {
   // ── Recurring handlers ──
   const openNewRecurring = () => {
     setEditingRecurring(null);
-    setRiForm({ client_id: '', project_id: '', title: '', frequency: 'monthly', notes: '', tax_rate: '', next_due: new Date().toISOString().split('T')[0] });
+    setRiForm({ client_id: '', project_id: '', title: '', frequency: 'monthly', notes: '', tax_rate: '', next_due: todayLocalISO() });
     setRiItems([{ description: '', quantity: 1, unit_price: 0, total: 0 }]);
     setShowRecurringModal(true);
   };

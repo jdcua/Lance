@@ -19,7 +19,7 @@ import {
 } from '../utils/trash';
 import { eventCounts, getTelemetryEvents, clearTelemetry } from '../utils/telemetry';
 import { downloadTextFile } from '../utils/yearSummary';
-import { formatCurrency } from '../utils/format';
+import { formatCurrency, todayLocalISO } from '../utils/format';
 import type { UserProfile, ExportTemplate } from '../types';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -392,7 +392,7 @@ export default function Settings() {
       const envelope = createExportEnvelope(data, APP_VERSION, schemaVersion);
 
       const json = JSON.stringify(envelope, null, 2);
-      const filename = `Lance_Backup_${new Date().toISOString().split('T')[0]}.json`;
+      const filename = `Lance_Backup_${todayLocalISO()}.json`;
       if (isTauriApp()) {
         const filePath = await save({ defaultPath: filename });
         if (!filePath) return;
@@ -1468,7 +1468,7 @@ export default function Settings() {
                                 size="sm"
                                 onClick={() => {
                                   downloadTextFile(
-                                    `lance-activity-${new Date().toISOString().split('T')[0]}.json`,
+                                    `lance-activity-${todayLocalISO()}.json`,
                                     JSON.stringify(getTelemetryEvents(), null, 2),
                                     'application/json;charset=utf-8',
                                   );

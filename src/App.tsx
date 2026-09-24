@@ -63,6 +63,25 @@ export default function App() {
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
   const location = useLocation();
+  // Surface background load failures centrally: screens render empty states
+  // on failure (indistinguishable from genuine emptiness) and only Settings
+  // reads the errors map, so without this a broken table looks like "no
+  // data yet" forever. Toast once per key+message; re-arm when cleared.
+  const storeErrors = useStore((s) => s.errors);
+  const toastedErrors = useRef(new Set<string>());
+  useEffect(() => {
+    for (const [key, message] of Object.entries(storeErrors)) {
+      const fingerprint = `${key}:${message}`;
+      if (message && !toastedErrors.current.has(fingerprint)) {
+        toastedErrors.current.add(fingerprint);
+        addToast(`Couldn't load ${key} — showing cached data if any`, 'error');
+      } else if (!message) {
+        for (const fp of [...toastedErrors.current]) {
+          if (fp.startsWith(`${key}:`)) toastedErrors.current.delete(fp);
+        }
+      }
+    }
+  }, [storeErrors, addToast]);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [hasRanAutoGen, setHasRanAutoGen] = useState(false);
 

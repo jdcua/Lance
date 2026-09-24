@@ -22,6 +22,15 @@ export function parseDateString(iso: string): Date {
   return /^\d{4}-\d{2}-\d{2}$/.test(iso) ? new Date(`${iso}T00:00:00`) : new Date(iso);
 }
 
+/**
+ * Today's date as YYYY-MM-DD in LOCAL time. `new Date().toISOString()` is
+ * UTC — in negative-offset timezones the evening hours already belong to
+ * tomorrow, so date-input defaults would open on the wrong day.
+ */
+export function todayLocalISO(d: Date = new Date()): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export function formatDate(iso: string): string {
   return parseDateString(iso).toLocaleDateString('en-CA', {
     year: 'numeric',

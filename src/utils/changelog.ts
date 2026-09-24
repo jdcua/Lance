@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getRuntimeVersion } from '../lib/version';
+import { todayLocalISO } from './format';
 
 export interface ChangelogEntry {
   version: string;
@@ -137,7 +138,7 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
     entries = [
       {
         version: '0.9.3',
-        date: new Date().toISOString().split('T')[0],
+        date: todayLocalISO(),
         items: [
           'Pro licenses and a smoother upgrade flow',
           'New profession profiles with tailored dashboards',
@@ -147,12 +148,12 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
       },
       {
         version: '0.9.1',
-        date: new Date().toISOString().split('T')[0],
+        date: todayLocalISO(),
         items: ['"What\'s new" notes now update themselves'],
       },
       {
         version: '0.9.0',
-        date: new Date().toISOString().split('T')[0],
+        date: todayLocalISO(),
         items: [
           'Auto-backup remembers your settings',
           'Contract and export templates that stick around',
@@ -186,7 +187,7 @@ async function ensureRuntimeVersion(entries: ChangelogEntry[]): Promise<Changelo
       return [
         {
           version: runtimeVersion,
-          date: new Date().toISOString().split('T')[0],
+          date: todayLocalISO(),
           items: ['Release notes unavailable for this version \u2014 check GitHub for details.'],
         },
         ...entries,

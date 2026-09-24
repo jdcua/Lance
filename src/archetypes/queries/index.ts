@@ -1,5 +1,5 @@
 import Database from '@tauri-apps/plugin-sql';
-import { DAY_MS } from '../../utils/format';
+import { DAY_MS, todayLocalISO } from '../../utils/format';
 
 interface CountRow { c: number }
 interface SumRow { s: number }
@@ -40,7 +40,7 @@ export async function totalPaidRevenue(db: Database, profileId: number): Promise
 }
 
 export async function todaysHours(db: Database, _profileId: number): Promise<string | number> {
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayLocalISO();
   const rows = await db.select<MinutesRow[]>(
     "SELECT COALESCE(SUM(duration_minutes), 0) as m FROM time_entries WHERE start_time LIKE $1",
     [`${today}%`]
@@ -246,7 +246,7 @@ export async function revisionsRemaining(db: Database, _profileId: number): Prom
 export async function daysUntilNextShoot(db: Database, _profileId: number): Promise<string | number> {
   const rows = await db.select<DateRow[]>(
     "SELECT MIN(shoot_date) as d FROM archetype_shoots WHERE shoot_date >= $1",
-    [new Date().toISOString().split('T')[0]]
+    [todayLocalISO()]
   );
   if (!first(rows)?.d) return '--';
   const days = Math.ceil((new Date(first(rows)!.d).getTime() - Date.now()) / DAY_MS);

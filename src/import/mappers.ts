@@ -3,6 +3,7 @@
  */
 
 import type { ImportDetection } from '../types';
+import { todayLocalISO } from '../utils/format';
 
 /**
  * Map spreadsheet rows to client creation payloads.
@@ -110,7 +111,7 @@ export function mapToExpenses(
         category: getField(row, reverseMap, 'category')?.trim() || 'Uncategorized',
         description: getField(row, reverseMap, 'description')?.trim() || '',
         amount: isNaN(amount) ? 0 : amount,
-        date: normalizeDate(getField(row, reverseMap, 'date')) || new Date().toISOString().split('T')[0],
+        date: normalizeDate(getField(row, reverseMap, 'date')) || todayLocalISO(),
       };
     })
     .filter(e => e.description.length > 0 && e.amount > 0);

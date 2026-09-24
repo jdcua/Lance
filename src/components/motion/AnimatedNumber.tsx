@@ -13,7 +13,7 @@ interface AnimatedNumberProps {
  */
 export default function AnimatedNumber({
   value,
-  format = (n) => Math.round(n).toLocaleString('en-US'),
+  format = (n) => (Number.isFinite(n) ? Math.round(n).toLocaleString('en-US') : '—'),
   className,
 }: AnimatedNumberProps) {
   const reduce = useReducedMotion();

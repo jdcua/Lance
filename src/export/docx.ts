@@ -11,6 +11,7 @@ import {
   AlignmentType,
   BorderStyle,
 } from 'docx';
+import { todayLocalISO } from '../utils/format';
 import type { Proposal, Invoice, Contract, Client, UserProfile } from '../types';
 import { formatCurrency, formatDate } from '../utils/format';
 import { htmlToPlainText } from '../utils/htmlToText';
@@ -212,7 +213,7 @@ export async function exportProposalDOCX(
   });
 
   const blob = await Packer.toBlob(doc);
-  const date = new Date().toISOString().split('T')[0];
+  const date = todayLocalISO();
   const filename = `Lance_Proposal_${client.name.replace(/\s+/g, '_')}_${date}.docx`;
   await saveFile(blob, filename);
 }

@@ -5,7 +5,7 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import Modal from '../components/ui/Modal';
-import { formatCurrency, formatDate, formatMonth, parseDateString, DAY_MS } from '../utils/format';
+import { formatCurrency, formatDate, formatMonth, parseDateString, DAY_MS, todayLocalISO } from '../utils/format';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useVisibleList, MoreRows } from '../components/ui/useVisibleList';
 import BankImportModal from '../components/features/BankImportModal';
@@ -76,7 +76,7 @@ export default function Finance() {
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; description: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [form, setForm] = useState({ category: 'Other', description: '', amount: '', date: new Date().toISOString().split('T')[0], recurring: false, frequency: 'monthly' });
+  const [form, setForm] = useState({ category: 'Other', description: '', amount: '', date: todayLocalISO(), recurring: false, frequency: 'monthly' });
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'overview' | 'aging' | 'forecast'>('overview');
   const [curFilter, setCurFilter] = useState<string>('all');
@@ -101,7 +101,7 @@ export default function Finance() {
 
   const openNew = () => {
     setEditing(null);
-    setForm({ category: 'Other', description: '', amount: '', date: new Date().toISOString().split('T')[0], recurring: false, frequency: 'monthly' });
+    setForm({ category: 'Other', description: '', amount: '', date: todayLocalISO(), recurring: false, frequency: 'monthly' });
     setShowModal(true);
   };
 
@@ -1064,7 +1064,7 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
   const [paymentInvId, setPaymentInvId] = useState<string | null>(null);
   const [paymentForm, setPaymentForm] = useState({
     amount: '',
-    payment_date: new Date().toISOString().split('T')[0],
+    payment_date: todayLocalISO(),
     payment_method: 'Bank Transfer',
     reference: '',
     notes: '',
@@ -1154,7 +1154,7 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
     setPaymentInvId(invId);
     setPaymentForm({
       amount: remaining > 0 ? remaining.toString() : inv.total.toString(),
-      payment_date: new Date().toISOString().split('T')[0],
+      payment_date: todayLocalISO(),
       payment_method: 'Bank Transfer',
       reference: '',
       notes: '',
