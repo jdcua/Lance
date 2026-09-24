@@ -12,6 +12,7 @@ import { Plus, Pencil, Trash2, Mail, Phone, Building2, MessageSquare, PhoneCall,
 import { useToasts } from '../store/toastStore';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 import ClientImportModal from '../components/ui/ClientImportModal';
+import { useVisibleList, MoreRows } from '../components/ui/useVisibleList';
 import { formatCurrency, relativeDate } from '../utils/format';
 import { getCurrencySymbol, CURRENCIES } from '../lib/currency';
 import { checkAndNotify } from '../achievements/notify';
@@ -270,6 +271,7 @@ export default function Clients() {
     (c.company || '').toLowerCase().includes(search.toLowerCase()) ||
     (c.email || '').toLowerCase().includes(search.toLowerCase())
   );
+  const pagedClients = useVisibleList(filteredClients, search);
 
   const openNew = () => {
     setEditing(null);
@@ -528,7 +530,7 @@ export default function Clients() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto py-2">
-          {filteredClients.map((c) => (
+          {pagedClients.visible.map((c) => (
             <button
               key={c.id}
               onClick={() => setSelectedId(c.id)}
@@ -547,6 +549,7 @@ export default function Clients() {
           {filteredClients.length === 0 && search && (
             <p className="text-xs text-[var(--text-tertiary)] text-center py-4">No clients match "{search}"</p>
           )}
+          <MoreRows total={pagedClients.total} shown={pagedClients.visible.length} hasMore={pagedClients.hasMore} showMore={pagedClients.showMore} />
           <button
             onClick={openNew}
             className="w-full text-left px-4 py-2.5 flex items-center gap-2.5 text-xs text-[var(--accent-ink,var(--accent))] hover:bg-[var(--bg-secondary)] transition-colors"

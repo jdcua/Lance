@@ -4,6 +4,7 @@ import { useToasts } from '../store/toastStore';
 import type { FollowUpLog } from '../types';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
+import { useVisibleList, MoreRows } from '../components/ui/useVisibleList';
 import Badge from '../components/ui/Badge';
 import {
   Bell, Mail, Check, X, Send, AlertTriangle, Edit3, ChevronDown, RefreshCw,
@@ -158,6 +159,7 @@ export default function FollowUps() {
     if (filter !== 'all') items = items.filter((f) => f.log.entity_type === filter);
     return items;
   }, [allFollowUps, tab, filter]);
+  const pagedFollowUps = useVisibleList(filtered, `${tab}|${filter}`);
 
   const pendingFiltered = useMemo(() =>
     filtered.filter((f) => f.log.status === 'pending'),
@@ -324,7 +326,7 @@ export default function FollowUps() {
       )}
 
       <div className="space-y-2">
-        {filtered.map((item) => {
+        {pagedFollowUps.visible.map((item) => {
           const hasEmail = !!item.clientEmail;
           return (
             <div
@@ -442,6 +444,7 @@ export default function FollowUps() {
           );
         })}
       </div>
+      <MoreRows total={pagedFollowUps.total} shown={pagedFollowUps.visible.length} hasMore={pagedFollowUps.hasMore} showMore={pagedFollowUps.showMore} />
 
       {/* Bulk send confirmation */}
       <Modal open={bulkConfirm} onClose={() => setBulkConfirm(false)} title="Draft All Follow-ups" size="sm">

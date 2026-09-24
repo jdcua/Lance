@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import { useStore } from '../store';
 import type { Contract, ContractTemplate, ShareToken } from '../types';
 import Button from '../components/ui/Button';
+import { useVisibleList, MoreRows } from '../components/ui/useVisibleList';
 import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
@@ -259,6 +260,7 @@ export default function Contracts() {
     const q = search.toLowerCase();
     return (c.title || '').toLowerCase().includes(q) || (getClientName(c.client_id) || '').toLowerCase().includes(q);
   });
+  const pagedContracts = useVisibleList(filtered, `${search}|${tab}`);
 
   // Archetype-specific contract presets
   const archetype = useMemo(() => getArchetype(profile?.profession || ''), [profile?.profession]);
@@ -377,8 +379,9 @@ export default function Contracts() {
               <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs">Try a different search term.</p>
             </Card>
           ) : (
+            <>
             <div className="space-y-3">
-              {filtered.map((c) => (
+              {pagedContracts.visible.map((c) => (
                 <Card key={c.id}>
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
@@ -484,6 +487,8 @@ export default function Contracts() {
                 </Card>
               ))}
             </div>
+            <MoreRows total={pagedContracts.total} shown={pagedContracts.visible.length} hasMore={pagedContracts.hasMore} showMore={pagedContracts.showMore} />
+            </>
           )}
         </>
       ) : (

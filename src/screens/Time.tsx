@@ -8,6 +8,7 @@ import Badge from '../components/ui/Badge';
 import MetricCard from '../components/ui/MetricCard';
 import { Plus, Trash2, Clock, Grid3X3, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useToasts } from '../store/toastStore';
+import { useVisibleList, MoreRows } from '../components/ui/useVisibleList';
 import { checkAndNotify } from '../achievements/notify';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 import { getUnlockedAchievementKeys } from '../achievements/checker';
@@ -78,6 +79,7 @@ export default function TimeScreen() {
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; description: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [tab, setTab] = useState<'timer' | 'heatmap'>('timer');
+  const pagedEntries = useVisibleList(timeEntries, `${timeEntries.length}`);
   const [showHeatmap, setShowHeatmap] = useState(false);
 
   useEffect(() => {
@@ -368,8 +370,9 @@ export default function TimeScreen() {
               )}
             </Card>
           ) : (
+            <>
             <div className="space-y-2">
-              {timeEntries.map((entry) => (
+              {pagedEntries.visible.map((entry) => (
                 <div key={entry.id} className="flex items-center gap-3 px-4 py-2.5 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px]">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
@@ -403,6 +406,8 @@ export default function TimeScreen() {
                 </div>
               ))}
             </div>
+            <MoreRows total={pagedEntries.total} shown={pagedEntries.visible.length} hasMore={pagedEntries.hasMore} showMore={pagedEntries.showMore} />
+            </>
           )}
         </>
       ) : (

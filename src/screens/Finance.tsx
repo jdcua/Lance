@@ -7,6 +7,7 @@ import MetricCard from '../components/ui/MetricCard';
 import Modal from '../components/ui/Modal';
 import { formatCurrency, formatDate, formatMonth, parseDateString, DAY_MS } from '../utils/format';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import { useVisibleList, MoreRows } from '../components/ui/useVisibleList';
 import BankImportModal from '../components/features/BankImportModal';
 import YearSummary from '../components/features/YearSummary';
 import RetainerBurnDown from '../components/features/RetainerBurnDown';
@@ -170,6 +171,7 @@ export default function Finance() {
   const finvoices = curFilter === 'all' ? invoices : invoices.filter((i) => invCurOf(i) === curFilter);
   const finIds = new Set(finvoices.map((i) => i.id));
   const foreignFiltered = curFilter !== 'all' && curFilter !== profCur;
+  const pagedExpenses = useVisibleList(expenses, `${expenses.length}`);
   // Manual exchange rates: 1 foreign unit = N profile units. When every
   // non-draft invoice currency is covered, summary totals convert honestly
   // (forecast included); otherwise everything stays per-currency — never a
@@ -598,8 +600,9 @@ export default function Finance() {
               <Button onClick={openNew} size="sm" variant="secondary">Add Expense</Button>
             </Card>
           ) : (
+            <>
             <div className="space-y-2">
-              {expenses.map((exp) => (
+              {pagedExpenses.visible.map((exp) => (
                 <div key={exp.id} className="flex items-center gap-3 px-4 py-2.5 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px]">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
@@ -621,6 +624,8 @@ export default function Finance() {
                 </div>
               ))}
             </div>
+            <MoreRows total={pagedExpenses.total} shown={pagedExpenses.visible.length} hasMore={pagedExpenses.hasMore} showMore={pagedExpenses.showMore} />
+            </>
           )}
           <div className="mt-6">
             <YearSummary />

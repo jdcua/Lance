@@ -8,6 +8,7 @@ import Badge from '../components/ui/Badge';
 import MetricCard from '../components/ui/MetricCard';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import ClientSelect from '../components/ui/ClientSelect';
+import { useVisibleList, MoreRows } from '../components/ui/useVisibleList';
 import { exportInvoicePDF, exportInvoiceDOCX } from '../export';
 import { formatCurrency, relativeDate, parseDateString, DAY_MS } from '../utils/format';
 import { getCurrencySymbol } from '../lib/currency';
@@ -617,6 +618,9 @@ export default function Invoices() {
     else { setSortKey(key); setSortDir('asc'); }
   };
 
+  // Incremental rendering: 10k invoices build ~350k DOM nodes unbounded.
+  const paged = useVisibleList(sortedInvoices, `${search}|${sortKey}|${sortDir}`);
+
   const filteredRecurring = recurringInvoices.filter(ri => {
     if (!search) return true;
     const s = search.toLowerCase();
@@ -686,8 +690,9 @@ export default function Invoices() {
         ) : filteredInvoices.length === 0 && search ? (
           <Card className="text-center py-12"><p className="text-sm text-[var(--text-tertiary)]">No invoices match "{search}"</p></Card>
         ) : (
+          <>
           <div className="space-y-2">
-            {sortedInvoices.map((inv) => {
+            {paged.visible.map((inv) => {
               const isExpanded = expandedInv === inv.id;
               const paidTotal = getPaidTotal(inv.id);
               const remaining = getRemainingBalance(inv);
@@ -889,6 +894,8 @@ export default function Invoices() {
               );
             })}
           </div>
+          <MoreRows total={paged.total} shown={paged.visible.length} hasMore={paged.hasMore} showMore={paged.showMore} />
+          </>
         )
       ) : recurringInvoices.length === 0 ? (
         <Card className="text-center py-12">

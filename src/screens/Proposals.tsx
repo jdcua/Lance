@@ -18,6 +18,7 @@ import { useToasts } from '../store/toastStore';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
 import { Plus, Trash2, Send, Eye, Download, FileText, Search, Bell, Check, X, Copy, Clock, Mail, Share2, Link, Flame } from 'lucide-react';
 import ShareModal from '../components/ShareModal';
+import { useVisibleList, MoreRows } from '../components/ui/useVisibleList';
 import { generateFollowUpDraft, generateSubjectLine, openMailTo } from '../utils/followUpTemplates';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
@@ -274,6 +275,8 @@ export default function Proposals() {
     }
   });
 
+  const pagedProposals = useVisibleList(sorted, `${search}|${sortKey}|${sortDir}|${statusFilter}`);
+
   // Rescue queue (Pro): sent proposals gone cold (3+ weeks, never opened)
   // are money left on the table. One click queues a follow-up nudge.
   const rescueList = proposals
@@ -434,8 +437,9 @@ export default function Proposals() {
       ) : filtered.length === 0 ? (
         <Card className="text-center py-12"><p className="text-sm text-[var(--text-tertiary)]">No proposals match your filters.</p></Card>
       ) : (
+        <>
         <div className="space-y-3">
-          {sorted.map((p) => (
+          {pagedProposals.visible.map((p) => (
             <Card key={p.id}>
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
@@ -653,6 +657,8 @@ export default function Proposals() {
             </Card>
           ))}
         </div>
+        <MoreRows total={pagedProposals.total} shown={pagedProposals.visible.length} hasMore={pagedProposals.hasMore} showMore={pagedProposals.showMore} />
+        </>
       )}
 
       <ConfirmDialog
