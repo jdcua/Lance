@@ -244,9 +244,10 @@ export default function Invoices() {
     }
     setSaving(true);
     try {
-      // Invoice numbers must be unique across all invoices.
+      // Invoice numbers must be unique across all invoices (case-insensitive:
+      // "inv-001" and "INV-001" are the same number to a human).
       const duplicateNum = (invoices || []).find(
-        (i) => i.invoice_number === invoice_number && (!editing || i.id !== editing.id)
+        (i) => (i.invoice_number || '').toLowerCase() === invoice_number.toLowerCase() && (!editing || i.id !== editing.id)
       );
       if (duplicateNum) {
         setSaving(false);

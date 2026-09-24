@@ -14,6 +14,9 @@ export type StoreState = Pick<
 
 const ACHIEVEMENTS_KEY = 'lance:achievements';
 
+// Keys currently being unlocked by an in-flight check (see below).
+const inflight = new Set<string>();
+
 function lsGetUnlocked(): Set<string> {
   try {
     const raw = localStorage.getItem(ACHIEVEMENTS_KEY);
@@ -125,21 +128,46 @@ export async function checkAchievements(store: StoreState): Promise<AchievementK
   ];
 
   for (const check of checks) {
-    if (check.condition && !unlocked.has(check.key)) {
-      await saveAchievement(check.key);
-      newlyUnlocked.push(check.key);
+    // In-flight guard: mount checks, post-seed checks, and per-screen
+    // notifiers overlap in practice. Storage writes are idempotent, but
+    // without this every overlapping run returns the same key and the user
+    // gets duplicate unlock toasts. Check-then-claim is atomic here (no
+    // await between has and add).
+    if (check.condition && !unlocked.has(check.key) && !inflight.has(check.key)) {
+      inflight.add(check.key);
+      try {
+        await saveAchievement(check.key);
+        newlyUnlocked.push(check.key);
 
-      if (check.key === 'first_proposal_sent' && !unlocked.has('motion_theme')) {
-        await saveAchievement('motion_theme');
-        newlyUnlocked.push('motion_theme');
-      }
-      if (check.key === 'ten_hours_logged' && !unlocked.has('lens_theme')) {
-        await saveAchievement('lens_theme');
-        newlyUnlocked.push('lens_theme');
-      }
-      if (check.key === 'first_invoice_paid' && !unlocked.has('scale_theme')) {
-        await saveAchievement('scale_theme');
-        newlyUnlocked.push('scale_theme');
+        if (check.key === 'first_proposal_sent' && !unlocked.has('motion_theme') && !inflight.has('motion_theme')) {
+          inflight.add('motion_theme');
+          try {
+            await saveAchievement('motion_theme');
+            newlyUnlocked.push('motion_theme');
+          } finally {
+            inflight.delete('motion_theme');
+          }
+        }
+        if (check.key === 'ten_hours_logged' && !unlocked.has('lens_theme') && !inflight.has('lens_theme')) {
+          inflight.add('lens_theme');
+          try {
+            await saveAchievement('lens_theme');
+            newlyUnlocked.push('lens_theme');
+          } finally {
+            inflight.delete('lens_theme');
+          }
+        }
+        if (check.key === 'first_invoice_paid' && !unlocked.has('scale_theme') && !inflight.has('scale_theme')) {
+          inflight.add('scale_theme');
+          try {
+            await saveAchievement('scale_theme');
+            newlyUnlocked.push('scale_theme');
+          } finally {
+            inflight.delete('scale_theme');
+          }
+        }
+      } finally {
+        inflight.delete(check.key);
       }
     }
   }
@@ -149,9 +177,14 @@ export async function checkAchievements(store: StoreState): Promise<AchievementK
 
 export async function unlockAchievement(key: AchievementKey): Promise<boolean> {
   const unlocked = await getUnlockedKeys();
-  if (!unlocked.has(key)) {
-    await saveAchievement(key);
-    return true;
+  if (!unlocked.has(key) && !inflight.has(key)) {
+    inflight.add(key);
+    try {
+      await saveAchievement(key);
+      return true;
+    } finally {
+      inflight.delete(key);
+    }
   }
   return false;
 }
