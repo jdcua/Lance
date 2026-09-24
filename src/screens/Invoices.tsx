@@ -305,7 +305,7 @@ export default function Invoices() {
 
   const openReminderModal = (inv: Invoice) => {
     const client = getClient(inv.client_id);
-    const dueDate = inv.due_date ? new Date(inv.due_date) : null;
+    const dueDate = inv.due_date ? parseDateString(inv.due_date) : null;
     const daysElapsed = dueDate ? Math.floor((Date.now() - dueDate.getTime()) / DAY_MS) : 0;
     const templateKey = daysElapsed >= 10 ? 'invoice_day14' : daysElapsed >= 4 ? 'invoice_day7' : 'invoice_day1';
     const draft = withFeeNote(generateFollowUpDraft(templateKey, {
