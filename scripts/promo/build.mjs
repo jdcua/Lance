@@ -62,7 +62,10 @@ for (const exp of exps.experiments) {
     write(join(landing, 'variants', `${exp.id}-${variant}.html`), frag);
   }
 }
-// A/B activator (privacy-safe: no PII, bots get control)
+// A/B activator (privacy-safe: no PII, bots get control).
+// Runs as a parser-blocking script at end of <body> so variant swaps land
+// BEFORE first paint (no flicker). Fragments are inlined into index.html by
+// build.mjs between EXP-Fragments markers (single source: experiments.json).
 const abSnippet = `/* AUTO-GENERATED A/B activator — anonymous, first-party only. */
 (function () {
   function isBot() { return /bot|crawl|spider|slurp|mediapartners/i.test(navigator.userAgent || ''); }
@@ -80,66 +83,246 @@ const abSnippet = `/* AUTO-GENERATED A/B activator — anonymous, first-party on
     try {
       fetch('/api/exp-hit', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ exp: exp, variant: variant, goal: goal }), keepalive: true });
-    } catch (e) {}
+    } catch (e) { /* beacon is best-effort; page works without it */ }
   }
-  document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('[data-exp]').forEach(function (node) {
-      var expId = node.getAttribute('data-exp');
-      var v = new URLSearchParams(location.search).get('ab_' + expId) || bucket(expId);
-      node.setAttribute('data-exp-variant', v);
-      if (v !== 'A') {
-        var frag = document.querySelector('[data-exp-fragment="' + expId + ':' + v + '"]');
-        if (frag) {
-          try {
-            var data = JSON.parse(frag.textContent);
-            if (data.heroBtnLabel) {
-              var btn = document.getElementById('heroBtnLabel');
-              if (btn) btn.textContent = data.heroBtnLabel;
-            }
-            if (data.h1) {
-              var h1 = document.querySelector('.hero-hl');
-              if (h1) h1.setAttribute('data-variant-h1', data.h1);
-            }
-          } catch (e) {}
-        }
-      }
-      if (expId === 'hero-cta') {
-        ['heroBtn', 'dl-mac', 'dl-win', 'dl-linux'].forEach(function (id) {
-          var b = document.getElementById(id);
-          if (b && !b.dataset.expWired) { b.dataset.expWired = '1';
-            b.addEventListener('click', function () { beacon(expId, v, 'dl-click'); }, { once: true }); }
-        });
-      }
+  function frag(expId, v) {
+    var el = document.querySelector('[data-exp-fragment="' + expId + ':' + v + '"]');
+    if (!el) return null;
+    try { return JSON.parse(el.textContent); } catch (e) { return null; }
+  }
+  var qs = new URLSearchParams(location.search);
+  function activate(expId, apply) {
+    var v = qs.get('ab_' + expId) || bucket(expId);
+    document.documentElement.setAttribute('data-exp-' + expId, v);
+    if (v !== 'A') {
+      var data = frag(expId, v);
+      if (data) apply(data, v);
+    }
+    beacon(expId, v, 'view');
+    return v;
+  }
+  // hero-cta: button label + download-click goal on all download CTAs
+  var ctaV = activate('hero-cta', function (data) {
+    var btn = document.getElementById('heroBtnLabel');
+    if (btn && data.heroBtnLabel) btn.textContent = data.heroBtnLabel;
+  });
+  ['heroBtn', 'dl-mac', 'dl-win', 'dl-linux'].forEach(function (id) {
+    var b = document.getElementById(id);
+    if (b) b.addEventListener('click', function () { beacon('hero-cta', ctaV, 'dl-click'); }, { once: true });
+  });
+  // hero-h1: swap headline lines pre-paint
+  activate('hero-h1', function (data) {
+    var h1 = document.querySelector('.hero-hl');
+    if (h1 && data.h1) h1.innerHTML = '<span class="hl-line"><span>' + data.h1 + '</span></span>';
+  });
+  // pricing-order: reorder cards per variant (ids: freeCard/proCard/lifetimeCard)
+  activate('pricing-order', function (data) {
+    var grid = document.querySelector('.pricing-grid');
+    if (!grid || !data.order) return;
+    var ids = { free: 'freeCard', pro: 'proCard', lifetime: 'lifetimeCard' };
+    data.order.forEach(function (key) {
+      var el = document.getElementById(ids[key]);
+      if (el) grid.appendChild(el);
     });
+    if (data.ribbon) {
+      var life = document.querySelector('#lifetimeCard .price-badge');
+      if (life) life.textContent = data.ribbon;
+    }
+  });
+  // trial-cta goal: pro trial + lifetime buttons
+  var poV = document.documentElement.getAttribute('data-exp-pricing-order') || 'A';
+  document.querySelectorAll('#proCard .shimmer, #lifetimeCard .ghost-btn').forEach(function (b) {
+    b.addEventListener('click', function () { beacon('pricing-order', poV, 'trial-cta'); }, { once: true });
   });
 })();
 `;
 write(join(landing, 'ab-activator.js'), abSnippet);
 
-// ── 3. Sample SEO pages (full 41+ matrix is P1; P0 emits 3 samples) ──
-const seoShell = (title, desc, body, path) =>
-  `<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} — Lance</title><meta name="description" content="${desc}"><link rel="canonical" href="${site}/${path}"></head><body><main>${body}</main><p><a href="${site}/">← Lance home</a></p></body></html>`;
+// Inline variant fragments into index.html (between markers) so swaps are pre-paint.
+{
+  const idxPath = join(landing, 'index.html');
+  let idx = readFileSync(idxPath, 'utf8');
+  const fragTags = exps.experiments
+    .flatMap((e) =>
+      Object.entries(e.variants)
+        .filter(([v]) => v !== 'A')
+        .map(
+          ([v, data]) =>
+            `<script type="application/json" data-exp-fragment="${e.id}:${v}">${JSON.stringify(data)}</script>`,
+        ),
+    )
+    .join('\n');
+  const block = `<!-- EXP-Fragments-START (auto by promo:build) -->\n${fragTags}\n<!-- EXP-FRANMENTS-END -->`;
+  if (idx.includes('<!-- EXP-Fragments-START')) {
+    idx = idx.replace(/<!-- EXP-Fragments-START[\s\S]*?EXP-FRANMENTS-END -->/, block);
+  } else {
+    idx = idx.replace('</head>', `${block}\n</head>`);
+  }
+  write(idxPath, idx);
+}
 
-const sampleCrafts = content.crafts.filter((c) => ['photographer', 'developer'].includes(c.id));
-for (const c of sampleCrafts) {
-  const body = `<h1>Lance for ${c.label}s</h1><p>${c.hook} Proposals, contracts, time tracking, invoices and client insights in one offline app.</p><ul>${content.pillars
-    .map((p) => `<li><strong>${p.headline}</strong> — ${p.points.join(', ')}.</li>`)
-    .join('')}</ul><p><a href="${site}/#download">Free download — no account, no cloud.</a></p>`;
+// ── 3. Sample SEO pages (full 41+ matrix is P1; P0 emits 3 samples) ──
+// Styled with the landing theme (nav, bento cards, pricing CTA, footer)
+// so generated pages look designed, not raw. depth = ../ from craft|alternatives|use.
+const seoShell = (title, desc, bodyInner, path, faq) => {
+  const faqJson = (faq || [])
+    .map(
+      (f) =>
+        `{"@type":"Question","name":${JSON.stringify(f.q)},"acceptedAnswer":{"@type":"Answer","text":${JSON.stringify(f.a)}}}`,
+    )
+    .join(',');
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title} — Lance</title>
+<meta name="description" content="${desc}">
+<meta property="og:title" content="${title} — Lance">
+<meta property="og:description" content="${desc}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="${site}/${path}">
+<meta property="og:image" content="${site}/og-image.png">
+<link rel="canonical" href="${site}/${path}">
+<link rel="icon" type="image/png" href="../favicon.png">
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net/css?family=space-grotesk:500,600,700|inter:400,500,600|jetbrains-mono:400,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Lance","applicationCategory":"BusinessApplication","operatingSystem":["macOS 11+","Windows 10+","Ubuntu 20.04+"],"description":${JSON.stringify(desc)},"url":"${site}/","offers":[{"@type":"Offer","name":"Lance Core","price":"0","priceCurrency":"USD"},{"@type":"Offer","name":"Lance Pro","price":"99","priceCurrency":"USD"},{"@type":"Offer","name":"Lance Lifetime","price":"249","priceCurrency":"USD"}]}${faqJson ? `,{"@type":"FAQPage","mainEntity":[${faqJson}]}` : ''}]}</script>
+</head>
+<body>
+<div id="sbar"></div>
+<nav id="nav" class="scrolled"><div class="nav-inner">
+<a href="${site}/" class="nav-brand" aria-label="Lance home">Lance</a>
+<ul class="nav-links"><li><a href="${site}/#features">Features</a></li><li><a href="${site}/#pricing">Pricing</a></li><li><a href="${site}/#download">Free Download</a></li></ul>
+</div></nav>
+<header class="hero" style="min-height:62vh;padding-top:120px"><div class="orb orb-a"></div><div class="orb orb-b"></div><div class="hero-noise"></div>
+<div class="hero-inner" style="grid-template-columns:1fr"><div class="hero-copy">
+<div class="hero-badge"><span class="pulse-dot"></span><span class="mono">${title}</span></div>
+<h1 class="hero-hl"><span class="hl-line"><span>${title}</span></span></h1>
+<p class="hero-sub">${desc}</p>
+<div class="hero-cta"><a href="${site}/#download" class="shimmer"><span class="shimmer-label">Free Download</span><span class="shimmer-hi"></span><span class="shimmer-bg"></span></a><a href="${site}/#pricing" class="ghost-btn">See pricing</a></div>
+</div></div><div class="hero-fade"></div></header>
+<section class="section bento-sec"><div class="container">
+<div class="kicker mono">Lance · Freelancer OS</div>
+<div class="bento">
+${bodyInner}
+</div>
+<p class="ai-note mono">* Core free forever. No account. No cloud. Client payments go straight to you.</p>
+</div></section>
+<footer><div class="container footer-grid"><div class="foot-brand">
+<a href="${site}/" class="nav-brand">Lance</a>
+<p>Built by independent freelancers.</p>
+<p class="footer-copy mono">© 2026 Lance. Your business data stays on your device.</p>
+</div></div></footer>
+</body>
+</html>`;
+};
+
+const bentoCard = (title, text, span = 'b-2', icon = '◆') =>
+  `<div class="bcard ${span}"><div class="b-icon">${icon}</div><div class="b-title">${title}</div><p class="b-desc">${text}</p></div>`;
+
+const plural = (label) => {
+  if (/s$/i.test(label)) return label; // DevOps
+  if(/(ch|sh|x)$/i.test(label)) return label + 'es'; // Coach → Coaches
+  return label + 's';
+};
+
+// ── Full matrix: 41 crafts + 5 alternatives + 6 use-case pages ──
+const craftUrls = [];
+for (const c of content.crafts) {
+  const name = plural(c.label);
+  const themeNote = `The ${content.crafts.find((x) => x.id === c.id)?.theme ?? 'default'} workspace theme matches the craft.`;
+  const cards = content.pillars
+    .map((p, i) => bentoCard(p.headline, `${p.points.join(' · ')}.`, i < 2 ? 'b-3' : 'b-2'))
+    .join('');
+  const faq = [
+    { q: `Is Lance good for ${name.toLowerCase()}?`, a: `${c.hook} Lance covers proposals, contracts, projects, time tracking, invoices and insights in one offline app. ${themeNote}` },
+    { q: 'Is my data really never in the cloud?', a: 'Yes. Lance stores everything on your device — no accounts, no cloud sync, no trackers.' },
+    { q: 'Does Lance use AI on my data?', a: 'Not yet. Local AI proposal drafting is coming in Lance v2 — on-device, optional and off by default. v1 has zero AI.' },
+    { q: 'What does Lance cost?', a: 'Lance Core is free forever. Lance Pro is $99/year ($14/month). Lance Lifetime is a $249 one-time payment.' },
+  ];
+  const faqHtml = faq.map((f) => bentoCard(f.q, f.a, 'b-2', '?')).join('');
   write(
     join(landing, 'craft', `${c.id}.html`),
-    seoShell(`Lance for ${c.label}s`, `${c.hook} Offline-first freelancer OS. Free forever.`, body, `craft/${c.id}`),
+    seoShell(
+      `Lance for ${name}`,
+      `${c.hook} Offline-first freelancer OS. Free forever.`,
+      `${cards}${faqHtml}`,
+      `craft/${c.id}`,
+      faq,
+    ),
   );
+  craftUrls.push(`craft/${c.id}`);
 }
-const alt = content.alternatives[0];
-write(
-  join(landing, 'alternatives', `${alt.slug}.html`),
-  seoShell(
-    `Lance vs ${alt.name}`,
-    `${alt.angle} Free-forever offline freelancer OS.`,
-    `<h1>Lance vs ${alt.name}</h1><p>${alt.angle}</p><p>Core free forever. Pro depth optional. Your data stays on your machine.</p><p><a href="${site}/#pricing">Compare pricing</a></p>`,
-    `alternatives/${alt.slug}`,
-  ),
-);
+const altUrls = [];
+for (const alt of content.alternatives) {
+  const cards =
+    bentoCard('Lance: free forever, offline', 'Proposals to paid in one app. Your data stays on your machine. No subscription for core.', 'b-3', '✓') +
+    bentoCard(`${alt.name}: cloud subscription`, `${alt.angle}`, 'b-3', '✕') +
+    bentoCard('Switch in an afternoon', 'Import clients via drag-and-drop, set payment terms once, print bank details on every invoice.', 'b-2', '→') +
+    bentoCard('Pro depth, optional', 'Archetype documents, forecasts, change orders, smart dunning. Core stays free.', 'b-2', '◆');
+  write(
+    join(landing, 'alternatives', `${alt.slug}.html`),
+    seoShell(
+      `Lance vs ${alt.name}`,
+      `${alt.angle} Free-forever offline freelancer OS.`,
+      cards,
+      `alternatives/${alt.slug}`,
+      [
+        { q: `How is Lance different from ${alt.name}?`, a: alt.angle },
+        { q: 'Can I get a refund?', a: 'Yes. See the refunds page, or contact us and we will sort it out.' },
+      ],
+    ),
+  );
+  altUrls.push(`alternatives/${alt.slug}`);
+}
+const USE_PAGES = [
+  { slug: 'proposals', title: 'Proposal software that warns before you underprice', desc: 'Scope warnings, win-rate tracking, polished PDF export. Offline and free forever.', icon: '✎' },
+  { slug: 'contracts', title: 'Contracts tied to proposals, signed faster', desc: 'Template contracts with variables, signing status, no cloud. Free forever core.', icon: '§' },
+  { slug: 'time-tracking', title: 'One-click time tracking that catches unbilled hours', desc: 'Timers tied to projects, manual log, unbilled alerts. Offline-first.', icon: '◷' },
+  { slug: 'invoicing', title: 'Invoices that chase themselves', desc: 'Recurring invoices, partial payments, smart dunning and late fees. Free forever.', icon: '$' },
+  { slug: 'clients', title: 'A client CRM that lives on your machine', desc: 'Contacts, history, KPIs per client, attachments. No cloud, nothing to breach.', icon: '◉' },
+  { slug: 'insights', title: 'Know your numbers without a spreadsheet', desc: 'Revenue, win rate, profit, forecasts and rate-leak alerts (Pro).', icon: '▲' },
+];
+const useUrls = [];
+for (const u of USE_PAGES) {
+  const cards =
+    bentoCard(u.title, u.desc, 'b-3', u.icon) +
+    content.pillars.slice(0, 2).map((p) => bentoCard(p.headline, p.points.join(' · ') + '.', 'b-3')).join('') +
+    bentoCard('Free forever core', 'Unlimited clients, projects, proposals. Pro depth optional, lifetime available.', 'b-2', '◆') +
+    bentoCard('Private by design', 'No accounts, no telemetry, no sync. Export everything anytime.', 'b-2', '◈');
+  const useName = u.slug.replace(/(^|-)./g, (m) => m.toUpperCase()).replace(/-/g, ' ');
+  write(
+    join(landing, 'use', `${u.slug}.html`),
+    seoShell(`Lance ${useName}`, u.desc, cards, `use/${u.slug}`, [
+      { q: `Does Lance do ${u.slug.replace(/-/g, ' ')}?`, a: u.desc },
+      { q: 'What does Lance cost?', a: 'Lance Core is free forever. Lance Pro is $99/year ($14/month). Lance Lifetime is a $249 one-time payment.' },
+    ]),
+  );
+  useUrls.push(`use/${u.slug}`);
+}
+
+// ── sitemap.xml + llms.txt refresh ──
+const urlEntry = (loc, priority, freq = 'monthly') =>
+  `  <url>\n    <loc>${site}/${loc}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${freq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urlEntry('', '1.0', 'weekly')}\n${['privacy', 'terms', 'refunds'].map((p) => urlEntry(p, '0.3', 'yearly')).join('\n')}\n${altUrls.map((u) => urlEntry(u, '0.7')).join('\n')}\n${useUrls.map((u) => urlEntry(u, '0.6')).join('\n')}\n${craftUrls.map((u) => urlEntry(u, '0.6')).join('\n')}\n${urlEntry('press', '0.5')}\n${['tools/invoice-generator', 'tools/rate-calculator'].map((u) => urlEntry(u, '0.8')).join('\n')}\n</urlset>\n`;
+write(join(landing, 'sitemap.xml'), sitemap);
+const llmsAdd = `\n## Browse by craft\n\n${content.crafts.map((c) => `- ${c.label}: ${site}/craft/${c.id} — ${c.hook}`).join('\n')}\n\n## Alternatives\n\n${content.alternatives.map((a) => `- vs ${a.name}: ${site}/alternatives/${a.slug} — ${a.angle}`).join('\n')}\n\n## Use cases\n\n${USE_PAGES.map((u) => `- ${u.title}: ${site}/use/${u.slug}`).join('\n')}
+
+## Free tools (lead magnets, no account, offline-capable)
+
+- Free invoice generator: ${site}/tools/invoice-generator
+- Freelance rate calculator: ${site}/tools/rate-calculator
+
+## Press
+
+- Press kit: ${site}/press
+`;
+{
+  const base = readFileSync(join(landing, 'llms.txt'), 'utf8').split('\n## Browse by craft')[0].replace(/\s+$/, '');
+  write(join(landing, 'llms.txt'), base + '\n' + llmsAdd);
+}
 
 // ── 4. Per-channel drafts for launch day ──
 const draftDir = join(promo, 'drafts', today);
@@ -156,5 +339,5 @@ const draftFiles = {
 for (const [name, body] of Object.entries(draftFiles)) write(join(draftDir, name), body + '\n');
 
 // ── 5. DISTRO + exp-report stubs (full content written by dedicated files; keep pointers) ──
-write(join(promo, '.build-meta.json'), JSON.stringify({ builtAt: today, samples: true }, null, 2));
-console.log(`promo: done (${Object.keys(draftFiles).length} drafts, ${sampleCrafts.length + 1} SEO samples)`);
+write(join(promo, '.build-meta.json'), JSON.stringify({ builtAt: today, pages: craftUrls.length + altUrls.length + useUrls.length }, null, 2));
+console.log(`promo: done (${Object.keys(draftFiles).length} drafts, ${craftUrls.length + altUrls.length + useUrls.length} SEO pages)`);

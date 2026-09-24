@@ -457,3 +457,20 @@ footer p{font-size:13.5px;color:var(--d-t2);line-height:1.8}
 .show-pane{position:absolute;left:0;right:0;top:46px;bottom:0;padding:16px;flex-direction:column;gap:10px;min-height:0;opacity:0;transform:translateX(46px) scale(.985);transition:opacity .38s ease,transform .45s cubic-bezier(.22,1,.36,1);pointer-events:none;background:rgba(19,19,21,.9)}
 .show-pane.on{position:absolute;opacity:1;transform:none;pointer-events:auto;animation:none}
 .show-pane{display:flex}
+
+/* ── FAQ (dark accordion, paginated show-more) ── */
+.faq-sec{background:var(--d-bg)}
+.faq-list{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.faq-item{background:var(--d-s1);border:1px solid var(--d-bd);border-radius:16px;overflow:hidden;transition:border-color .25s}
+.faq-item:hover{border-color:rgba(255,255,255,.2)}
+.faq-item[open]{border-color:rgba(var(--green-rgb),.45)}
+.faq-item summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px;font-family:var(--font-d);font-size:16.5px;font-weight:600;color:var(--d-t1);cursor:pointer;user-select:none}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:'+';flex-shrink:0;width:30px;height:30px;border-radius:50%;border:1px solid var(--d-bd);display:grid;place-items:center;font-size:18px;font-weight:400;color:var(--green);transition:transform .3s,background .3s}
+.faq-item[open] summary::after{content:'–';transform:rotate(180deg);background:var(--green-dim)}
+.faq-item summary:focus-visible{outline:2px solid var(--green);outline-offset:-2px}
+.faq-item > p{padding:0 24px 22px;font-size:14.5px;line-height:1.75;color:var(--d-t2)}
+.faq-item > p a{color:var(--green)}
+.faq-item.is-extra{display:none}
+.faq-list.show-all .faq-item.is-extra{display:block;animation:panein .35s ease}
+.faq-more{display:flex;justify-content:center;margin-top:26px}

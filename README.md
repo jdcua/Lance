@@ -37,7 +37,7 @@ Built by [Lance freelancers](https://lance.cuajuandiego.workers.dev).
 
 **Client portal.** Give clients a read-only view of their projects, invoices, and communications. Self-contained, no account system needed.
 
-**AI proposals.** Optional local AI that drafts proposal sections in your writing voice. Runs on your machine. Nothing leaves your computer. Currently disabled for v1.0, shipping in v1.1.
+**AI proposals (coming v2).** Optional local AI that drafts proposal sections in your writing voice. Runs on your machine. Nothing leaves your computer. v1 has zero AI.
 
 **Import & export.** Drag and drop spreadsheets, documents, and images to import data. Full backup and restore as JSON. Auto-backup on a schedule you set. Export anything as PDF or DOCX.
 

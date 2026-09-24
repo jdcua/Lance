@@ -61,6 +61,7 @@ lint.txt
 *.jpeg
 *.webp
 *.gif
+*.mp4
 *-snapshot.md
 lance-*.md
 lance-after-fix-snapshot.md
@@ -81,5 +82,7 @@ lance.key
 
 # Artifacts
 *.AppImage
+promo-video/out/
+promo-video/*.log
 dist-artifacts/
 vite.config.ts.timestamp-*.mjs

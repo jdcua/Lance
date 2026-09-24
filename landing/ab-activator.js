@@ -15,36 +15,55 @@
     try {
       fetch('/api/exp-hit', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ exp: exp, variant: variant, goal: goal }), keepalive: true });
-    } catch (e) {}
+    } catch (e) { /* beacon is best-effort; page works without it */ }
   }
-  document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('[data-exp]').forEach(function (node) {
-      var expId = node.getAttribute('data-exp');
-      var v = new URLSearchParams(location.search).get('ab_' + expId) || bucket(expId);
-      node.setAttribute('data-exp-variant', v);
-      if (v !== 'A') {
-        var frag = document.querySelector('[data-exp-fragment="' + expId + ':' + v + '"]');
-        if (frag) {
-          try {
-            var data = JSON.parse(frag.textContent);
-            if (data.heroBtnLabel) {
-              var btn = document.getElementById('heroBtnLabel');
-              if (btn) btn.textContent = data.heroBtnLabel;
-            }
-            if (data.h1) {
-              var h1 = document.querySelector('.hero-hl');
-              if (h1) h1.setAttribute('data-variant-h1', data.h1);
-            }
-          } catch (e) {}
-        }
-      }
-      if (expId === 'hero-cta') {
-        ['heroBtn', 'dl-mac', 'dl-win', 'dl-linux'].forEach(function (id) {
-          var b = document.getElementById(id);
-          if (b && !b.dataset.expWired) { b.dataset.expWired = '1';
-            b.addEventListener('click', function () { beacon(expId, v, 'dl-click'); }, { once: true }); }
-        });
-      }
+  function frag(expId, v) {
+    var el = document.querySelector('[data-exp-fragment="' + expId + ':' + v + '"]');
+    if (!el) return null;
+    try { return JSON.parse(el.textContent); } catch (e) { return null; }
+  }
+  var qs = new URLSearchParams(location.search);
+  function activate(expId, apply) {
+    var v = qs.get('ab_' + expId) || bucket(expId);
+    document.documentElement.setAttribute('data-exp-' + expId, v);
+    if (v !== 'A') {
+      var data = frag(expId, v);
+      if (data) apply(data, v);
+    }
+    beacon(expId, v, 'view');
+    return v;
+  }
+  // hero-cta: button label + download-click goal on all download CTAs
+  var ctaV = activate('hero-cta', function (data) {
+    var btn = document.getElementById('heroBtnLabel');
+    if (btn && data.heroBtnLabel) btn.textContent = data.heroBtnLabel;
+  });
+  ['heroBtn', 'dl-mac', 'dl-win', 'dl-linux'].forEach(function (id) {
+    var b = document.getElementById(id);
+    if (b) b.addEventListener('click', function () { beacon('hero-cta', ctaV, 'dl-click'); }, { once: true });
+  });
+  // hero-h1: swap headline lines pre-paint
+  activate('hero-h1', function (data) {
+    var h1 = document.querySelector('.hero-hl');
+    if (h1 && data.h1) h1.innerHTML = '<span class="hl-line"><span>' + data.h1 + '</span></span>';
+  });
+  // pricing-order: reorder cards per variant (ids: freeCard/proCard/lifetimeCard)
+  activate('pricing-order', function (data) {
+    var grid = document.querySelector('.pricing-grid');
+    if (!grid || !data.order) return;
+    var ids = { free: 'freeCard', pro: 'proCard', lifetime: 'lifetimeCard' };
+    data.order.forEach(function (key) {
+      var el = document.getElementById(ids[key]);
+      if (el) grid.appendChild(el);
     });
+    if (data.ribbon) {
+      var life = document.querySelector('#lifetimeCard .price-badge');
+      if (life) life.textContent = data.ribbon;
+    }
+  });
+  // trial-cta goal: pro trial + lifetime buttons
+  var poV = document.documentElement.getAttribute('data-exp-pricing-order') || 'A';
+  document.querySelectorAll('#proCard .shimmer, #lifetimeCard .ghost-btn').forEach(function (b) {
+    b.addEventListener('click', function () { beacon('pricing-order', poV, 'trial-cta'); }, { once: true });
   });
 })();

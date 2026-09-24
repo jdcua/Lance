@@ -35,17 +35,31 @@ export const Hero30s: React.FC<HeroProps> = ({
         </AbsoluteFill>
       </Sequence>
       <Sequence from={s(3)} durationInFrames={s(15)}>
-        <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center', gap: 20 }}>
-          <Sequence from={s(3)} durationInFrames={s(5)}>
-            <MockApp pane="Proposals" accent={accent} />
+        <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center' }}>
+          <Sequence from={0} durationInFrames={s(5)}>
+            <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center' }}>
+              <MockApp pane="Proposals" accent={accent} />
+            </AbsoluteFill>
           </Sequence>
-          <Sequence from={s(8)} durationInFrames={s(5)}>
-            <MockApp pane="Time" accent={accent} />
+          <Sequence from={s(5)} durationInFrames={s(5)}>
+            <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center' }}>
+              <MockApp pane="Time" accent={accent} />
+            </AbsoluteFill>
           </Sequence>
-          <Sequence from={s(13)} durationInFrames={s(5)}>
-            <MockApp pane="Invoices" accent={accent} />
+          <Sequence from={s(10)} durationInFrames={s(5)}>
+            <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center' }}>
+              <MockApp pane="Invoices" accent={accent} />
+            </AbsoluteFill>
           </Sequence>
-          <div style={{ display: 'flex', gap: 60, marginTop: 24 }}>
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 90,
+              display: 'flex',
+              gap: 90,
+              fontFamily: TOKENS.fontB,
+            }}
+          >
             <NumberTicker to={12400} prefix="$" style={{ fontSize: 54, color: TOKENS.t1 }} />
             <NumberTicker to={72} suffix="%" style={{ fontSize: 54, color: TOKENS.t1 }} />
             <NumberTicker to={41} style={{ fontSize: 54, color: TOKENS.t1 }} />

@@ -1,0 +1,31 @@
+name: promo
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 9 * * 1' # weekly Monday draft refresh
+  push:
+    paths:
+      - 'promo/**'
+      - 'scripts/promo/**'
+
+jobs:
+  build-draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm run promo:build
+      - run: npm run promo:exp-eval || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: promo-bundle
+          path: |
+            promo/drafts
+            promo/.build-meta.json
+            landing/craft
+            landing/alternatives
+            landing/variants
+            landing/launch-config.js

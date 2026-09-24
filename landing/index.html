@@ -38,7 +38,7 @@
 {"@type":"Question","name":"Which platforms are supported?","acceptedAnswer":{"@type":"Answer","text":"macOS 11 and later (Apple Silicon), Windows 10 and later (64-bit), and Ubuntu 20.04 and later (AppImage)."}},
 {"@type":"Question","name":"How is Lance different from HoneyBonsai-style tools?","acceptedAnswer":{"@type":"Answer","text":"Cloud freelance tools charge monthly subscriptions and hold your client data on their servers. Lance Core is free forever, works fully offline, and keeps every byte of business data on your device."}},
 {"@type":"Question","name":"Can I get a refund?","acceptedAnswer":{"@type":"Answer","text":"Yes. See the refunds page for the policy, or contact us and we will sort it out."}},
-{"@type":"Question","name":"Does Lance use AI on my data?","acceptedAnswer":{"@type":"Answer","text":"AI features are optional, off by default, and togglable anytime. Nothing is sent anywhere unless you explicitly turn it on."}}]}
+{"@type":"Question","name":"Does Lance use AI on my data?","acceptedAnswer":{"@type":"Answer","text":"Not yet. Local AI proposal drafting is coming in Lance v2 — it runs on your machine, stays optional and off by default, and nothing is ever sent anywhere. v1 has zero AI."}}]}
 ]}</script>
 <link rel="canonical" href="https://lance.cuajuandiego.workers.dev/">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -54,6 +54,11 @@
     animated-group stagger, magnetic, in-view
   - ObsidianUI (MIT, obsidianui.dev): dotted-grid cursor glow (kept light)
 -->
+<!-- EXP-Fragments-START (auto by promo:build) -->
+<script type="application/json" data-exp-fragment="hero-cta:B">{"heroBtnLabel":"Free Download — No account","note":"challenger, friction-first"}</script>
+<script type="application/json" data-exp-fragment="hero-h1:B">{"h1":"Your freelance business, on your machine."}</script>
+<script type="application/json" data-exp-fragment="pricing-order:B">{"order":["lifetime","pro","free"],"ribbon":"Launch $149"}</script>
+<!-- EXP-FRANMENTS-END -->
 </head>
 <body>
 
@@ -99,13 +104,13 @@
         <span class="mono">Freelancer OS</span>
         <span class="hero-ver mono" id="heroVer"></span>
       </div>
-      <h1 class="hero-hl">
+      <h1 class="hero-hl" data-exp="hero-h1">
         <span class="hl-line blur-in" style="--d:80ms"><span>Win work.</span></span>
         <span class="hl-line blur-in" style="--d:180ms"><span>Run projects.</span></span>
         <span class="hl-line blur-in" style="--d:280ms"><span class="aurora">Get paid.</span></span>
       </h1>
       <p class="hero-sub blur-in" style="--d:380ms">Proposals, contracts, time tracking, invoices and client insights in one fast app. Your data never touches the cloud.</p>
-      <div class="hero-cta blur-in" style="--d:480ms">
+      <div class="hero-cta blur-in" style="--d:480ms" data-exp="hero-cta">
         <a href="#download" class="shimmer magnetic" id="heroBtn"><span class="shimmer-label" id="heroBtnLabel">Download for Mac</span><span class="spark" aria-hidden="true"><span class="spark-inner"><span class="spark-rotor"></span></span></span><span class="shimmer-hi" aria-hidden="true"></span><span class="shimmer-bg" aria-hidden="true"></span></a>
         <a href="#showcase" class="ghost-btn magnetic">See it in action</a>
       </div>
@@ -331,7 +336,7 @@
         <button id="billYr" class="on" role="tab" aria-selected="true">Yearly<span class="save">−41%</span></button>
       </div>
     </div>
-    <div class="pricing-grid">
+    <div class="pricing-grid" data-exp="pricing-order">
       <div class="price-card blur-in" id="freeCard">
         <div class="price-badge mono">Free</div>
         <div class="price-name">Lance Core</div>
@@ -391,10 +396,11 @@
       <details class="faq-item"><summary>Is my data really never in the cloud?</summary><p>Yes. Lance stores everything on your device — no accounts, no cloud sync, no trackers. There is nothing to breach because there is no server holding your data.</p></details>
       <details class="faq-item"><summary>What does Lance cost?</summary><p>Lance Core is free forever with unlimited clients, projects and proposals. Lance Pro is $99/year ($14/month monthly) with a 30-day free trial. Lance Lifetime is a $249 one-time payment. Client payments go straight to you; Lance never takes a cut.</p></details>
       <details class="faq-item"><summary>Which platforms are supported?</summary><p>macOS 11 and later (Apple Silicon), Windows 10 and later (64-bit), and Ubuntu 20.04 and later (AppImage).</p></details>
-      <details class="faq-item"><summary>How is Lance different from cloud freelance tools?</summary><p>Cloud tools charge monthly subscriptions and hold your client data on their servers. Lance Core is free forever, works fully offline, and keeps every byte of business data on your device.</p></details>
-      <details class="faq-item"><summary>Can I get a refund?</summary><p>Yes. See our <a href="/refunds">refunds page</a> for the policy, or <a href="#contact">contact us</a> and we will sort it out.</p></details>
-      <details class="faq-item"><summary>Does Lance use AI on my data?</summary><p>AI features are optional, off by default, and togglable anytime. Nothing is sent anywhere unless you explicitly turn it on.</p></details>
+      <details class="faq-item is-extra"><summary>How is Lance different from cloud freelance tools?</summary><p>Cloud tools charge monthly subscriptions and hold your client data on their servers. Lance Core is free forever, works fully offline, and keeps every byte of business data on your device.</p></details>
+      <details class="faq-item is-extra"><summary>Can I get a refund?</summary><p>Yes. See our <a href="/refunds">refunds page</a> for the policy, or <a href="#contact">contact us</a> and we will sort it out.</p></details>
+      <details class="faq-item is-extra"><summary>Does Lance use AI on my data?</summary><p>Not yet. Local AI proposal drafting is coming in Lance v2 — it runs on your machine, in your writing voice, and stays optional and off by default. Nothing is ever sent anywhere. v1 has zero AI: no accounts, no cloud, no trackers.</p></details>
     </div>
+    <div class="faq-more"><button class="ghost-btn ghost-sm" id="faqMore" aria-expanded="false">Show all questions</button></div>
   </div>
 </section>
 
@@ -473,6 +479,9 @@
 </footer>
 
 <div id="egg-overlay"><div id="egg-msg">⚡ LANCE MODE</div></div>
+<script src="launch-config.js"></script>
+<script src="ab-activator.js"></script>
+<script src="launch-countdown.js"></script>
 <script src="app.js" defer></script>
 </body>
 </html>

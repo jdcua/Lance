@@ -227,7 +227,9 @@ meteorShower('dlMeteors', 18);
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); idx = PANES.indexOf(el.dataset.pane); show(el.dataset.pane); }
     });
   });
-  if (!RM) setInterval(() => { idx = (idx + 1) % PANES.length; show(PANES[idx]); }, 3600);
+  // ?static=1 freezes pane cycling for deterministic promo screenshots.
+  const STATIC = new URLSearchParams(location.search).has('static');
+  if (!RM && !STATIC) setInterval(() => { idx = (idx + 1) % PANES.length; show(PANES[idx]); }, 3600);
 
   // tilt toward cursor
   const vis = $('heroVisual'), tilt = $('mockTilt');
@@ -577,7 +579,9 @@ function bentoVis(kind) {
     ids.forEach((d) => $(d).classList.remove('hi'));
     $(id).classList.add('hi');
   }
-  function label(t) { $('heroBtnLabel').textContent = t; }
+  // Respect the hero-cta A/B variant: variant B owns the label, OS-detect only owns href/hi.
+  const ctaVariant = document.documentElement.getAttribute('data-exp-hero-cta');
+  function label(t) { if (ctaVariant !== 'B') $('heroBtnLabel').textContent = t; }
   if (isMac) { label('Download for Mac'); hi('dl-mac'); }
   else if (isWin) { label('Download for Windows'); hi('dl-win'); }
   else { label('Download for Linux'); hi('dl-linux'); }
@@ -601,6 +605,17 @@ function bentoVis(kind) {
       }
     } catch (e) { /* fallback links still work */ }
   })();
+})();
+
+/* ── FAQ show-more pagination (no-JS shows all) ── */
+(function () {
+  const btn = $('faqMore'), list = document.querySelector('.faq-list');
+  if (!btn || !list) return;
+  btn.addEventListener('click', () => {
+    const open = list.classList.toggle('show-all');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    btn.textContent = open ? 'Show fewer questions' : 'Show all questions';
+  });
 })();
 
 /* ── forms ── */

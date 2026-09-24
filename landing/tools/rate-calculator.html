@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Freelance rate calculator — Lance</title>
+<meta name="description" content="Free freelance rate calculator. Target income, expenses and real billable hours → the hourly rate you should charge. No account. By Lance.">
+<meta property="og:title" content="Freelance rate calculator — Lance">
+<meta property="og:description" content="What should you actually charge per hour? 30-second math, no account.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://lance.cuajuandiego.workers.dev/tools/rate-calculator">
+<meta property="og:image" content="https://lance.cuajuandiego.workers.dev/og-image.png">
+<link rel="canonical" href="https://lance.cuajuandiego.workers.dev/tools/rate-calculator">
+<link rel="icon" type="image/png" href="../favicon.png">
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net/css?family=space-grotesk:500,600,700|inter:400,500,600|jetbrains-mono:400,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Lance freelance rate calculator","applicationCategory":"BusinessApplication","operatingSystem":"Any (web)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Free client-side freelance rate calculator. No account, works offline."}</script>
+<style>
+.tool-wrap{max-width:880px;margin:0 auto;padding:130px 28px 60px}
+.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:700px){.tool-grid{grid-template-columns:1fr}}
+.tool-field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.tool-field label{font-family:var(--font-m);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--d-t2)}
+.tool-field input,.tool-field select{background:var(--d-s1);border:1px solid var(--d-bd);border-radius:10px;padding:11px 13px;color:var(--d-t1);font-size:14px;font-family:var(--font-b)}
+.rate-out{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:26px 0}
+@media(max-width:700px){.rate-out{grid-template-columns:1fr}}
+.rate-card{background:var(--d-s1);border:1px solid var(--d-bd);border-radius:16px;padding:22px;text-align:center}
+.rate-card.hot{border-color:rgba(var(--green-rgb),.5)}
+.rate-card .v{font-family:var(--font-d);font-size:38px;font-weight:700;color:var(--d-t1)}
+.rate-card .l{font-family:var(--font-m);font-size:11px;color:var(--d-t2);margin-top:6px}
+.tool-cta{margin-top:44px;text-align:center;border:1px solid rgba(var(--green-rgb),.4);border-radius:20px;padding:34px 26px;background:var(--green-dim)}
+</style>
+</head>
+<body>
+<nav id="nav" class="scrolled"><div class="nav-inner">
+<a href="https://lance.cuajuandiego.workers.dev/" class="nav-brand">Lance</a>
+<ul class="nav-links"><li><a href="https://lance.cuajuandiego.workers.dev/#pricing">Pricing</a></li><li><a href="https://lance.cuajuandiego.workers.dev/#download">Free Download</a></li></ul>
+</div></nav>
+<div class="tool-wrap">
+<div class="hero-badge"><span class="pulse-dot"></span><span class="mono">Free tool · No account</span></div>
+<h1 class="hero-hl" style="font-size:clamp(34px,5vw,58px)"><span class="hl-line"><span>Rate calculator.</span></span></h1>
+<p class="hero-sub">What should you actually charge? Thirty seconds of honest math. Nothing leaves your browser.</p>
+<div class="tool-grid">
+<div class="tool-field"><label>Target yearly income ($)</label><input id="r-income" type="number" value="90000" min="0"></div>
+<div class="tool-field"><label>Yearly business expenses ($)</label><input id="r-exp" type="number" value="6000" min="0"></div>
+<div class="tool-field"><label>Billable hrs / week</label><input id="r-hrs" type="number" value="25" min="1" max="80"></div>
+<div class="tool-field"><label>Weeks off / year</label><input id="r-off" type="number" value="4" min="0" max="20"></div>
+<div class="tool-field"><label>Buffer for non-payment (%)</label><input id="r-buf" type="number" value="10" min="0" max="50"></div>
+<div class="tool-field"><label>Currency</label><select id="r-cur"><option>USD</option><option>CAD</option><option>EUR</option><option>GBP</option></select></div>
+</div>
+<div class="rate-out">
+<div class="rate-card hot"><div class="v" id="r-hourly">$0</div><div class="l">PER BILLABLE HOUR</div></div>
+<div class="rate-card"><div class="v" id="r-day">$0</div><div class="l">PER 8H DAY</div></div>
+<div class="rate-card"><div class="v" id="r-billable">0h</div><div class="l">BILLABLE HRS / YEAR</div></div>
+</div>
+<p class="mono" id="r-note" style="color:var(--d-t2);font-size:12.5px"></p>
+<div class="tool-cta">
+<div class="b-title">Now track every one of those hours.</div>
+<p class="b-desc" style="color:var(--d-t2)">Lance's one-click timer ties hours to projects and flags what's unbilled — offline, free forever.</p>
+<a href="https://lance.cuajuandiego.workers.dev/#download" class="shimmer"><span class="shimmer-label">Get Lance free</span><span class="shimmer-hi"></span><span class="shimmer-bg"></span></a>
+</div>
+</div>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  function calc(){
+    const need=(Number($('r-income').value)||0)+(Number($('r-exp').value)||0);
+    const weeks=Math.max(1,52-(Number($('r-off').value)||0));
+    const hrs=Math.max(1,(Number($('r-hrs').value)||0)*weeks);
+    const buf=1+(Number($('r-buf').value)||0)/100;
+    const hourly=need*buf/hrs;
+    const cur=$('r-cur').value||'USD';
+    const fmt=n=>cur+' '+Math.round(n).toLocaleString();
+    $('r-hourly').textContent=fmt(hourly);
+    $('r-day').textContent=fmt(hourly*8);
+    $('r-billable').textContent=Math.round(hrs).toLocaleString()+'h';
+    $('r-note').textContent='Math: ('+fmt(need)+' needed × '+Math.round(buf*100)+'% buffer) ÷ '+Math.round(hrs).toLocaleString()+' billable hours.';
+  }
+  ['r-income','r-exp','r-hrs','r-off','r-buf','r-cur'].forEach(id=>$(id).oninput=calc);
+  calc();
+})();
+</script>
+</body>
+</html>
