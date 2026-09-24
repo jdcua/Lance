@@ -76,4 +76,31 @@ describe('delete guards', () => {
     const toks = JSON.parse(localStorage.getItem(P + 'share_tokens') || '[]');
     expect(toks[0].revoked).toBe(true);
   });
+
+  it('retires pending nudges when an invoice is paid', async () => {
+    set('invoices', [{ id: 'i1', client_id: 'c1', invoice_number: 'INV-1', status: 'sent', total: 100, line_items: [], created_at: '2026-01-03' }]);
+    const log = { id: 'f1', entity_type: 'invoice', entity_id: 'i1', stage: 2, status: 'pending', drafted_at: '2026-01-04' };
+    localStorage.setItem('follow_up_logs', JSON.stringify({ 'invoice:i1': [log] }));
+    useStore.setState({
+      invoices: [{ id: 'i1', client_id: 'c1', invoice_number: 'INV-1', status: 'sent', total: 100, line_items: [], created_at: '2026-01-03' }],
+      pendingFollowUps: [log],
+      followUpLogs: { 'invoice:i1': [log] },
+    } as never);
+    await useStore.getState().updateInvoice({ id: 'i1', client_id: 'c1', invoice_number: 'INV-1', status: 'paid', total: 100, line_items: [], created_at: '2026-01-03' } as never);
+    expect(useStore.getState().pendingFollowUps).toHaveLength(0);
+    expect(useStore.getState().followUpLogs['invoice:i1'][0].status).toBe('paid');
+  });
+
+  it('retires pending nudges when a proposal is accepted or deleted', async () => {
+    const log = { id: 'f2', entity_type: 'proposal', entity_id: 'p9', stage: 1, status: 'pending', drafted_at: '2026-01-04' };
+    localStorage.setItem('follow_up_logs', JSON.stringify({ 'proposal:p9': [log] }));
+    useStore.setState({
+      proposals: [{ id: 'p9', client_id: 'c1', title: 'Deck', status: 'sent', created_at: '2026-01-02' }],
+      pendingFollowUps: [log],
+      followUpLogs: { 'proposal:p9': [log] },
+    } as never);
+    await useStore.getState().updateProposal({ id: 'p9', client_id: 'c1', title: 'Deck', status: 'accepted', created_at: '2026-01-02' } as never);
+    expect(useStore.getState().pendingFollowUps).toHaveLength(0);
+    expect(useStore.getState().followUpLogs['proposal:p9'][0].status).toBe('responded');
+  });
 });

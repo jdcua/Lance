@@ -408,6 +408,7 @@ export default function FollowUps() {
                         onClick={() => openEditModal(item)}
                         className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[6px] transition-colors"
                         title="Edit before sending"
+                        aria-label="Edit before sending"
                       >
                         <Edit3 size={12} />
                       </button>
@@ -415,6 +416,7 @@ export default function FollowUps() {
                         onClick={() => handleMarkSent(item.log.id)}
                         className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[6px] transition-colors"
                         title="Mark as Sent"
+                        aria-label="Mark as sent"
                       >
                         <Check size={12} />
                       </button>
@@ -422,6 +424,7 @@ export default function FollowUps() {
                         onClick={() => handleDismiss(item.log.id)}
                         className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--danger)] rounded-[6px] transition-colors"
                         title="Dismiss"
+                        aria-label="Dismiss"
                       >
                         <X size={12} />
                       </button>

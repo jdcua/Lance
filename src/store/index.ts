@@ -667,14 +667,31 @@ export const useStore = create<UnifiedStore>((set, get) => {
       return proposal;
     },
     updateProposal: async (data) => {
+      const prev = get().proposals.find((p) => p.id === data.id);
       await invoke('update_proposal', { payload: data });
       set({ proposals: get().proposals.map((p) => (p.id === data.id ? data : p)) });
+      // Terminal states retire open nudges: a pending "chase this proposal"
+      // after accept/decline/expiry is embarrassing. Status (not delete) so
+      // the history guard never re-drafts the same stage.
+      if (prev && prev.status === 'sent' && data.status !== 'sent') {
+        const terminal = data.status === 'accepted' || data.status === 'declined' ? 'responded' : 'dismissed';
+        try {
+          for (const l of get().pendingFollowUps.filter((f) => f.entity_type === 'proposal' && f.entity_id === data.id)) {
+            await get().updateFollowUpStatus(l.id, terminal, 'auto-resolved');
+          }
+        } catch { /* resolution stands even if nudge cleanup fails */ }
+      }
     },
     deleteProposal: async (id) => {
       snapshotForTrash('proposals', id, get().proposals.find((p) => p.id === id));
       await invoke('delete_proposal', { id });
       set({ proposals: get().proposals.filter((p) => p.id !== id) });
       await revokeTokensForEntity('proposal', id);
+      try {
+        for (const l of get().pendingFollowUps.filter((f) => f.entity_type === 'proposal' && f.entity_id === id)) {
+          await get().updateFollowUpStatus(l.id, 'dismissed', 'auto-resolved');
+        }
+      } catch { /* deletion stands */ }
     },
 
     // ── Contracts ──
@@ -740,8 +757,17 @@ export const useStore = create<UnifiedStore>((set, get) => {
     },
     updateInvoice: async (data) => {
       const payload = { ...data, line_items: JSON.stringify(data.line_items) };
+      const prev = get().invoices.find((i) => i.id === data.id);
       await invoke('update_invoice', { payload });
       set({ invoices: get().invoices.map((i) => (i.id === data.id ? data : i)) });
+      // Paid invoices retire open dunning for the same reason as proposals.
+      if (prev && prev.status !== 'paid' && data.status === 'paid') {
+        try {
+          for (const l of get().pendingFollowUps.filter((f) => f.entity_type === 'invoice' && f.entity_id === data.id)) {
+            await get().updateFollowUpStatus(l.id, 'paid', 'auto-resolved');
+          }
+        } catch { /* resolution stands even if nudge cleanup fails */ }
+      }
     },
     deleteInvoice: async (id) => {
       // Payments are money records: resurrecting an invoice without them
@@ -755,6 +781,11 @@ export const useStore = create<UnifiedStore>((set, get) => {
       snapshotForTrash('invoices', id, get().invoices.find((i) => i.id === id));
       await invoke('delete_invoice', { id });
       set({ invoices: get().invoices.filter((i) => i.id !== id) });
+      try {
+        for (const l of get().pendingFollowUps.filter((f) => f.entity_type === 'invoice' && f.entity_id === id)) {
+          await get().updateFollowUpStatus(l.id, 'dismissed', 'auto-resolved');
+        }
+      } catch { /* deletion stands */ }
     },
 
     // ── Payments ──
