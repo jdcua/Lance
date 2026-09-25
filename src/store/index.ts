@@ -1209,8 +1209,11 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ allAttachments: get().allAttachments.filter((a) => a.id !== id) });
     },
     saveAssetFile: async (file) => {
-      const buffer = await file.arrayBuffer();
-      const data = Array.from(new Uint8Array(buffer));
+      // Browser mode discards bytes (mock path) — never read a whole file
+      // into memory first: a large video would spike gigabytes of RAM for
+      // bytes that get thrown away.
+      const { isTauri } = await import('../utils/tauri');
+      const data = isTauri() ? Array.from(new Uint8Array(await file.arrayBuffer())) : [];
       return invoke<string>('save_asset_file', { filename: file.name, data });
     },
     getAssetsDir: () => invoke<string>('get_assets_dir'),
@@ -1311,14 +1314,43 @@ export const useStore = create<UnifiedStore>((set, get) => {
         const stored = localStorage.getItem('lance:follow-up-settings');
         if (stored) {
           const defaults = { enabled: true, proposal_delay_days: 3, invoice_delay_days: 0, templates: {}, subject_templates: {} };
-          set({ followUpSettings: { ...defaults, ...JSON.parse(stored) } });
+          const raw = JSON.parse(stored) as Record<string, unknown>;
+          // Hand-edited or legacy values flow straight into scheduling math
+          // (a string delay disables nagging silently), so validate shapes.
+          const num = (v: unknown, lo: number, hi: number, fb: number) =>
+            typeof v === 'number' && isFinite(v) ? Math.min(hi, Math.max(lo, Math.round(v))) : fb;
+          const tones = ['auto', 'warm', 'direct', 'formal'] as const;
+          type Tone = (typeof tones)[number];
+          const strRecord = (v: unknown): Record<string, string> => {
+            if (!v || typeof v !== 'object' || Array.isArray(v)) return {};
+            const out: Record<string, string> = {};
+            for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+              if (typeof val === 'string') out[k] = val;
+            }
+            return out;
+          };
+          set({
+            followUpSettings: {
+              ...defaults,
+              enabled: typeof raw.enabled === 'boolean' ? raw.enabled : defaults.enabled,
+              proposal_delay_days: num(raw.proposal_delay_days, 1, 30, defaults.proposal_delay_days),
+              invoice_delay_days: num(raw.invoice_delay_days, 0, 30, defaults.invoice_delay_days),
+              tone: (typeof raw.tone === 'string' && (tones as readonly string[]).includes(raw.tone)
+                ? raw.tone
+                : undefined) as Tone | undefined,
+              templates: strRecord(raw.templates),
+              subject_templates: strRecord(raw.subject_templates),
+            },
+          });
         }
       } catch { /* use defaults */ }
     },
     saveFollowUpSettings: (updates) => {
       const merged = { ...get().followUpSettings, ...updates };
       set({ followUpSettings: merged });
-      localStorage.setItem('lance:follow-up-settings', JSON.stringify(merged));
+      try {
+        localStorage.setItem('lance:follow-up-settings', JSON.stringify(merged));
+      } catch { /* private mode: settings apply for the session only */ }
     },
     createFollowUp: async (data) => {
       const log = await invoke<FollowUpLog>('log_follow_up', { payload: data });

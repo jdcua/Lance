@@ -137,12 +137,13 @@ export function extractDocumentPrefill(detection: ImportDetection): {
     id: crypto.randomUUID(),
   }));
 
+  const prefillTotal = fields.total ? parseFloat(fields.total) : undefined;
   return {
     entityType: detection.detectedEntity,
     title: fields.title,
     client_name: fields.client_name,
     email: fields.email,
-    total: fields.total ? parseFloat(fields.total) : undefined,
+    total: prefillTotal !== undefined && isFinite(prefillTotal) ? prefillTotal : undefined,
     due_date: normalizeDate(fields.due_date),
     invoice_number: fields.invoice_number,
     body: detection.preview.rawText?.substring(0, 5000),

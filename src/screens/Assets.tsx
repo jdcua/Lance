@@ -56,6 +56,9 @@ export default function Assets() {
   const [scope, setScope] = useState<SelectedScope>({ type: 'library', id: 'root' });
   const [dragOver, setDragOver] = useState(false);
   const [previewAsset, setPreviewAsset] = useState<Attachment | null>(null);
+  const [previewImgFailed, setPreviewImgFailed] = useState(false);
+  // A failed load must not hide the NEXT image previewed in the same modal.
+  useEffect(() => { setPreviewImgFailed(false); }, [previewAsset?.id]);
   const [renameTarget, setRenameTarget] = useState<Attachment | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<Attachment | null>(null);
@@ -512,17 +515,24 @@ export default function Assets() {
       )}
 
       {/* Preview Modal */}
-      <Modal open={!!previewAsset} onClose={() => setPreviewAsset(null)} title={previewAsset?.filename || ''} size="lg">
+      <Modal open={!!previewAsset} onClose={() => { setPreviewAsset(null); setPreviewImgFailed(false); }} title={previewAsset?.filename || ''} size="lg">
         {previewAsset && (
           <div className="space-y-4">
             {/* Preview content */}
             <div className="bg-[var(--bg-secondary)] rounded-[8px] flex items-center justify-center min-h-[200px] max-h-[400px] overflow-hidden">
-              {isImage(previewAsset.mime_type) ? (
+              {isImage(previewAsset.mime_type) && !previewImgFailed ? (
                 <img
                   src={`asset://localhost/${encodeURIComponent(previewAsset.file_path)}`}
                   alt={previewAsset.filename}
                   className="max-w-full max-h-[400px] object-contain"
+                  onError={() => setPreviewImgFailed(true)}
                 />
+              ) : isImage(previewAsset.mime_type) ? (
+                <div className="text-center py-8">
+                  <Image size={48} className="mx-auto mb-3 text-[var(--text-tertiary)]" />
+                  <p className="text-sm text-[var(--text-secondary)]">Preview unavailable</p>
+                  <p className="text-xs text-[var(--text-tertiary)] mt-1">Image previews need the desktop app's asset server</p>
+                </div>
               ) : isPDF(previewAsset.mime_type) ? (
                 <div className="text-center py-8">
                   <FileText size={48} className="mx-auto mb-3 text-[var(--text-tertiary)]" />

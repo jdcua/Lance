@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { checkAchievements, unlockAchievement, type StoreState } from './checker';
+import { checkAchievements, unlockAchievement, getUnlockedThemes, type StoreState } from './checker';
 
 function state(over: Partial<StoreState>): StoreState {
   return {
@@ -44,5 +44,12 @@ describe('achievements', () => {
 
   it('does not unlock on empty state', async () => {
     expect(await checkAchievements(state({}))).toEqual([]);
+  });
+
+  it('maps unlocked achievements to themes (locked otherwise)', async () => {
+    expect(await getUnlockedThemes()).toEqual([]);
+    await checkAchievements(state({ proposals: [{ status: 'sent' } as never] }));
+    expect(await getUnlockedThemes()).toContain('motion');
+    expect(await getUnlockedThemes()).not.toContain('lens');
   });
 });
