@@ -342,8 +342,9 @@ for (const c of content.crafts) {
   const d = rm.defaults;
   const r = rateFor(cat);
   const name = plural(c.label);
+  const annual = Math.round((r.hourly * r.hrs) / 1000);
   const cards =
-    bentoCard(`${name}: $${r.hourly}/hr worked example`, `From $${t.targetIncome.toLocaleString()} target + $${d.expenses.toLocaleString()} expenses, × ${100 + d.bufferPct}% buffer, ÷ ${r.hrs.toLocaleString()} billable hrs/yr (${d.billableHrsWeek}/wk, ${d.weeksOff} wks off). *Illustrative example — not market data.`, 'b-3', '$') +
+    bentoCard(`${name}: $${r.hourly}/hr worked example`, `From $${t.targetIncome.toLocaleString()} target + $${d.expenses.toLocaleString()} expenses, × ${100 + d.bufferPct}% buffer, ÷ ${r.hrs.toLocaleString()} billable hrs/yr (${d.billableHrsWeek}/wk, ${d.weeksOff} wks off) ≈ $${annual}k collected per year. *Illustrative example — not market data.`, 'b-3', '$') +
     bentoCard('How to charge', t.models + '.', 'b-3', '✎') +
     bentoCard('Watch out for', t.trap + '.', 'b-2', '!') +
     bentoCard('Track it in Lance', `One-click timer ties hours to projects; unbilled alerts make sure the rate you set is the rate you collect.`, 'b-2', '◷');
