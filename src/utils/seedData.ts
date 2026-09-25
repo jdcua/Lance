@@ -110,9 +110,49 @@ export async function seedBuiltInTemplates(): Promise<void> {
 export async function seedSampleData(): Promise<void> {
   if (localStorage.getItem('lance:seeded') === 'true') return;
 
+  // Snapshot pre-seed achievements: seed data itself unlocks badges, and
+  // clearing the seeds must restore exactly what the user had — neither
+  // stale seed-badges nor lost earned ones.
+  try {
+    const prev = localStorage.getItem('lance:achievements');
+    if (prev !== null) localStorage.setItem('lance:achievements-pre-seed', prev);
+  } catch { /* private mode */ }
+
   try {
     const { useStore } = await import('../store');
     const store = useStore.getState();
+
+    // Snapshot pre-seed row ids per table. On clear, exactly the,
+    // ids created below are deleted — post-seed user work is untouched.
+    // (A `seeded` flag column exists but nothing ever sets it, so id
+    // tracking is the honest mechanism.)
+    await Promise.all([
+      store.loadClients(),
+      store.loadProjects(),
+      store.loadMilestones(),
+      store.loadProposals(),
+      store.loadContracts(),
+      store.loadTimeEntries(),
+      store.loadInvoices(),
+      store.loadExpenses(),
+      store.loadRecurringInvoices(),
+    ]).catch(() => {});
+    const idsOf = (rows: { id: string }[]) => rows.map((r) => r.id);
+    const preSeedIds = () => {
+      const s = useStore.getState();
+      return {
+        clients: idsOf(s.clients),
+        projects: idsOf(s.projects),
+        milestones: idsOf(s.milestones),
+        proposals: idsOf(s.proposals),
+        contracts: idsOf(s.contracts),
+        time_entries: idsOf(s.timeEntries),
+        invoices: idsOf(s.invoices),
+        expenses: idsOf(s.expenses),
+        recurring_invoices: idsOf(s.recurringInvoices),
+      };
+    };
+    const before = preSeedIds();
 
     await seedBuiltInTemplates();
 
@@ -352,6 +392,17 @@ export async function seedSampleData(): Promise<void> {
       });
     }
 
+    // Persist exactly the ids created above (current minus pre-seed).
+    try {
+      const after = preSeedIds();
+      const created: Record<string, string[]> = {};
+      for (const table of Object.keys(after) as (keyof typeof after)[]) {
+        const seen = new Set(before[table]);
+        created[table] = after[table].filter((id) => !seen.has(id));
+      }
+      localStorage.setItem('lance:seeded-ids', JSON.stringify(created));
+    } catch { /* private mode */ }
+
     localStorage.setItem('lance:seeded', 'true');
     localStorage.setItem('lance:seeded-toast-shown', 'true');
   } catch (err) {
@@ -360,30 +411,112 @@ export async function seedSampleData(): Promise<void> {
 }
 
 export async function clearSampleData(): Promise<void> {
-  // In browser mode, we can clear the localStorage entries
-  // In Tauri mode, the original SQL-based function handles this
-  const { getDb } = await import('../db');
-  const db = await getDb().catch(() => null);
-  if (db) {
-    // Tauri mode: use SQL
-    try {
-      await db.execute('BEGIN TRANSACTION');
-      await db.execute(`DELETE FROM milestones WHERE project_id IN (SELECT id FROM projects WHERE seeded = 1)`);
-      await db.execute(`DELETE FROM follow_up_log WHERE entity_id IN (SELECT id FROM proposals WHERE seeded = 1) OR entity_id IN (SELECT id FROM invoices WHERE seeded = 1)`);
-      const tables = ['time_entries', 'invoices', 'recurring_invoices', 'contracts', 'proposals', 'projects', 'expenses', 'clients'];
-      for (const table of tables) {
-        await db.execute(`DELETE FROM ${table} WHERE seeded = 1`);
-      }
-      await db.execute('COMMIT');
-    } catch {
-      await db.execute('ROLLBACK');
-    }
-  } else {
-    // Browser mode: reload from clean state · store data isn't flagged,
-    // but clearing localStorage entries resets everything
-    const keys = Object.keys(localStorage).filter(k => k.startsWith('lance:store:') || k === 'lance:seeded' || k === 'lance:seeded-toast-shown' || k === 'lance:templates-seeded');
-    keys.forEach(k => localStorage.removeItem(k));
+  // Deletes exactly the rows seeding created (tracked in lance:seeded-ids),
+  // children before parents so FK enforcement never trips. Anything the
+  // user added after seeding is untouched — the old `seeded = 1` flag was
+  // never set on any row, so that path deleted nothing while reporting
+  // success. Legacy seeds (no id tracking) must use Reset all data.
+  let tracked: Record<string, string[]> | null = null;
+  try {
+    const raw = localStorage.getItem('lance:seeded-ids');
+    tracked = raw ? (JSON.parse(raw) as Record<string, string[]>) : null;
+  } catch { tracked = null; }
+  if (!tracked) {
+    throw new Error('These sample rows predate selective clearing — use Reset all data instead.');
   }
+  const ORDER: Array<[table: string, ids: string[]]> = [
+    ['milestones', tracked.milestones || []],
+    ['time_entries', tracked.time_entries || []],
+    ['invoices', tracked.invoices || []],
+    ['recurring_invoices', tracked.recurring_invoices || []],
+    ['contracts', tracked.contracts || []],
+    ['proposals', tracked.proposals || []],
+    ['expenses', tracked.expenses || []],
+    ['projects', tracked.projects || []],
+    ['clients', tracked.clients || []],
+  ];
+  const { getDb } = await import('../db');
+  const db = await getDb();
+  const deleted = { proposals: new Set<string>(), invoices: new Set<string>() };
+  for (const [table, ids] of ORDER) {
+    for (const id of ids) {
+      try {
+        await db.execute(`DELETE FROM ${table} WHERE id = ?`, [id]);
+      } catch {
+        /* already gone — keep going */
+      }
+    }
+    if (table === 'proposals' || table === 'invoices') {
+      for (const id of ids) deleted[table].add(id);
+    }
+  }
+  // Follow-ups drafted from seed rows (by the auto-engine) would orphan.
+  try {
+    for (const id of [...deleted.proposals, ...deleted.invoices]) {
+      await db.execute('DELETE FROM follow_up_log WHERE entity_id = ?', [id]).catch(() => {});
+    }
+  } catch { /* best-effort */ }
+  try {
+    for (const key of ['lance:store:pending_follow_ups']) {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const list = JSON.parse(raw) as Array<{ entity_id?: string }>;
+      if (!Array.isArray(list)) continue;
+      localStorage.setItem(
+        key,
+        JSON.stringify(list.filter((l) => !deleted.proposals.has(l.entity_id || '') && !deleted.invoices.has(l.entity_id || ''))),
+      );
+    }
+    // Browser-mode follow_up_logs is an object keyed `type:id`.
+    const rawLogs = localStorage.getItem('lance:store:follow_up_logs');
+    if (rawLogs) {
+      try {
+        const obj = JSON.parse(rawLogs) as Record<string, unknown>;
+        if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+          for (const k of Object.keys(obj)) {
+            const id = k.split(':').slice(1).join(':');
+            if (deleted.proposals.has(id) || deleted.invoices.has(id)) delete obj[k];
+          }
+          localStorage.setItem('lance:store:follow_up_logs', JSON.stringify(obj));
+        }
+      } catch { /* leave logs untouched on parse failure */ }
+    }
+  } catch { /* Tauri keeps these in SQLite; the DELETE above covered it */ }
+  await restorePreSeedAchievements();
+  try {
+    localStorage.removeItem('lance:seeded-ids');
+  } catch { /* private mode */ }
   localStorage.removeItem('lance:seeded');
   localStorage.removeItem('lance:seeded-toast-shown');
+}
+
+/**
+ * Restore the achievement set captured before seeding (or empty when the
+ * account was fresh), in both the local list and the Tauri table.
+ */
+async function restorePreSeedAchievements(): Promise<void> {
+  try {
+    const snapshot = localStorage.getItem('lance:achievements-pre-seed');
+    if (snapshot !== null) {
+      localStorage.setItem('lance:achievements', snapshot);
+    } else {
+      localStorage.removeItem('lance:achievements');
+    }
+    localStorage.removeItem('lance:achievements-pre-seed');
+    const { getDb } = await import('../db');
+    const db = await getDb().catch(() => null);
+    if (db) {
+      const keep: string[] = snapshot !== null ? JSON.parse(snapshot) : [];
+      if (keep.length === 0) {
+        await db.execute('DELETE FROM achievements').catch(() => {});
+      } else {
+        const placeholders = keep.map(() => '?').join(',');
+        await db
+          .execute(`DELETE FROM achievements WHERE key NOT IN (${placeholders})`, keep)
+          .catch(() => {});
+      }
+    }
+  } catch {
+    /* best-effort; stale badges beat a failed clear */
+  }
 }

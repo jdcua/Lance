@@ -221,6 +221,11 @@ export default function Proposals() {
       const body = generateContractBody(freelancerName, client.name, p.title, p.scope || '', p.timeline || '', rateStr);
       const contractTitle = sanitizeInput(`Contract · ${p.title}`).slice(0, MAX_LENGTHS.title);
       await addContract({ client_id: p.client_id, proposal_id: p.id, title: contractTitle, status: 'draft', body });
+      // Converting means the deal closed: accept the proposal so follow-ups
+      // stop nagging and expiry can't fire on a won deal.
+      if (p.status !== 'accepted') {
+        await updateProposal({ ...p, status: 'accepted' as const });
+      }
       navigate('/contracts');
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to convert to contract', 'error');

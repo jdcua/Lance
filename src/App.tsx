@@ -961,18 +961,31 @@ export default function App() {
         return;
       }
       if (mod && e.key === 'n') {
-        e.preventDefault();
         const path = location.pathname;
-        if (path.startsWith('/proposals')) navigate('/proposals/new');
-        else if (path.startsWith('/clients')) {
+        // Only swallow the keystroke when it does something: otherwise
+        // Cmd+N keeps its native meaning (new window) instead of dying.
+        if (path.startsWith('/proposals')) {
+          e.preventDefault();
+          navigate('/proposals/new');
+        } else if (path.startsWith('/clients')) {
+          e.preventDefault();
           // Trigger client add modal via doc event
           document.dispatchEvent(new CustomEvent('lance:add-client'));
         } else if (path.startsWith('/invoices')) {
+          e.preventDefault();
           document.dispatchEvent(new CustomEvent('lance:add-invoice'));
         } else if (path.startsWith('/projects')) {
+          e.preventDefault();
           document.dispatchEvent(new CustomEvent('lance:add-project'));
         } else if (path.startsWith('/time')) {
+          e.preventDefault();
           document.dispatchEvent(new CustomEvent('lance:add-time'));
+        } else if (path.startsWith('/contracts')) {
+          e.preventDefault();
+          document.dispatchEvent(new CustomEvent('lance:add-contract'));
+        } else if (path.startsWith('/finance')) {
+          e.preventDefault();
+          document.dispatchEvent(new CustomEvent('lance:add-expense'));
         }
       }
       if (mod && !e.shiftKey && e.key >= '1' && e.key <= '8') {

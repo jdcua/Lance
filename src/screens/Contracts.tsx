@@ -84,6 +84,8 @@ export default function Contracts() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string } | null>(null);
+  const [confirmCancel, setConfirmCancel] = useState<{ id: string; title: string } | null>(null);
+  const [cancelling, setCancelling] = useState(false);
   const [confirmTemplate, setConfirmTemplate] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [search, setSearch] = useState('');
@@ -125,6 +127,13 @@ export default function Contracts() {
     setForm({ client_id: '', title: '', body: '' });
     setShowModal(true);
   };
+
+  // Global ⌘N dispatch (see App shortcuts).
+  useEffect(() => {
+    const handler = () => openNew();
+    document.addEventListener('lance:add-contract', handler);
+    return () => document.removeEventListener('lance:add-contract', handler);
+  }, []);
 
   const openNewFromTemplate = (template: ContractTemplate) => {
     setEditing(null);
@@ -230,6 +239,22 @@ export default function Contracts() {
       await updateContract({ ...c, status: 'completed' as const });
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to complete', 'error');
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!confirmCancel) return;
+    setCancelling(true);
+    try {
+      const c = contracts.find((x) => x.id === confirmCancel.id);
+      if (!c) return;
+      await updateContract({ ...c, status: 'cancelled' as const });
+      setConfirmCancel(null);
+      addToast('Contract cancelled · history preserved', 'info');
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to cancel', 'error');
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -445,6 +470,14 @@ export default function Contracts() {
                           Complete
                         </button>
                       )}
+                      {(c.status === 'draft' || c.status === 'active') && (
+                        <button
+                          onClick={() => setConfirmCancel({ id: c.id, title: c.title })}
+                          className="text-xs text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:underline px-1"
+                        >
+                          Cancel
+                        </button>
+                      )}
                       <button
                         onClick={() => setExpanded(expanded === c.id ? null : c.id)}
                         aria-label="View contract body"
@@ -635,6 +668,16 @@ export default function Contracts() {
         title="Delete Contract"
         message={`Are you sure you want to delete "${confirmDelete?.title}"? This cannot be undone.`}
         loading={deleting}
+      />
+      <ConfirmDialog
+        open={!!confirmCancel}
+        onClose={() => setConfirmCancel(null)}
+        onConfirm={handleCancel}
+        title="Cancel Contract"
+        message={`Cancel "${confirmCancel?.title}"? It stays in your records as cancelled instead of being deleted.`}
+        confirmLabel="Cancel Contract"
+        variant="primary"
+        loading={cancelling}
       />
       <ConfirmDialog
         open={!!confirmTemplate}
