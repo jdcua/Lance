@@ -268,6 +268,21 @@ export default function Invoices() {
       const invoiceData = { client_id: form.client_id, invoice_number, status: form.status, line_items: lineItems, subtotal, tax_rate: taxRate || undefined, total, due_date: form.due_date || undefined, notes: form.notes ? sanitizeInput(form.notes).slice(0, MAX_LENGTHS.notes) : undefined, currency: form.currency || undefined, rate_type: storedRateType };
       if (editing) await updateInvoice({ ...editing, ...invoiceData });
       else await addInvoice(invoiceData);
+      // Editing totals can strand status (e.g. total lowered below paid
+      // amount). Recompute when payments exist; untouched otherwise.
+      if (editing) {
+        const paidTotal = useStore.getState().payments
+          .filter((p) => p.invoice_id === editing.id)
+          .reduce((s, p) => s + p.amount, 0);
+        if (paidTotal > 0) {
+          const corrected = computeInvoiceStatus({ ...editing, ...invoiceData, total }, paidTotal);
+          if (corrected !== invoiceData.status) {
+            const fix: Partial<Invoice> = { status: corrected };
+            if (corrected !== 'paid') fix.paid_at = undefined;
+            await updateInvoice({ ...editing, ...invoiceData, total, ...fix, status: corrected } as Invoice);
+          }
+        }
+      }
       const ids = Array.from(selectedTimeIds);
       const timeUpdates = ids
         .map(id => timeEntries.find((t: { id: string }) => t.id === id))
@@ -467,6 +482,9 @@ export default function Invoices() {
     const newItems = inv.line_items.map((li) => ({
       ...li,
       id: crypto.randomUUID(),
+      // Fresh lines: inherited time-entry links would let deleting this copy
+      // unmark hours billed on the original invoice.
+      time_entry_ids: undefined,
     }));
     try {
       await addInvoice({
@@ -562,7 +580,14 @@ export default function Invoices() {
   const riTotal = riSubtotal + riSubtotal * (riTaxRate / 100);
 
   const handleSaveRecurring = async () => {
-    if (!riForm.title.trim() || !riForm.client_id) return;
+    if (!riForm.title.trim() || !riForm.client_id) {
+      addToast('Give the recurring invoice a title and a client', 'error');
+      return;
+    }
+    if (!(riTotal > 0)) {
+      addToast('Recurring total must be greater than zero', 'error');
+      return;
+    }
     setSaving(true);
     try {
       const lineItems: LineItem[] = riItems.map((i) => ({ ...i, id: crypto.randomUUID(), description: i.description ? sanitizeInput(i.description).slice(0, MAX_LENGTHS.description) : '' }));
@@ -932,7 +957,7 @@ export default function Invoices() {
                     {ri.last_generated && <span>Last: {relativeDate(ri.last_generated)}</span>}
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => handleToggleActive(ri)} className={`w-2 h-2 rounded-full ${ri.active ? 'bg-[var(--accent)]' : 'bg-[var(--neutral-border)]'}`} title={ri.active ? 'Active · click to pause' : 'Paused · click to resume'} />
+                    <button onClick={() => handleToggleActive(ri)} className={`w-2 h-2 rounded-full ${ri.active ? 'bg-[var(--accent)]' : 'bg-[var(--neutral-border)]'}`} title={ri.active ? 'Active · click to pause' : 'Paused · click to resume'} aria-label={ri.active ? `Pause ${ri.title}` : `Resume ${ri.title}`} />
                     <span className={`text-[10px] ${ri.active ? 'text-[var(--accent-ink,var(--accent))]' : 'text-[var(--text-tertiary)]'}`}>{ri.active ? 'Active' : 'Paused'}</span>
                   </div>
                 </div>

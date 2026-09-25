@@ -904,6 +904,27 @@ export const useStore = create<UnifiedStore>((set, get) => {
       } finally { endLoad('profile'); }
     },
     saveProfile: async (data) => {
+      // Exchange rates are defined relative to the profile currency — and
+      // most callers (Settings form, onboarding, archetype picker) don't
+      // carry them, so an omitted field must INHERIT, not wipe. The one
+      // exception: the base currency itself changed, which silently
+      // invalidates stored rates ("per old base") — then they are cleared
+      // with an explanatory toast instead of misconverting.
+      const prevCurrency = get().profile?.currency;
+      const incomingRates = data.exchange_rates !== undefined
+        ? sanitizeRates(data.exchange_rates)
+        : sanitizeRates(get().profile?.exchange_rates || {});
+      let effectiveRates = incomingRates;
+      let ratesNote: string | null = null;
+      if (
+        prevCurrency &&
+        data.currency &&
+        prevCurrency !== data.currency &&
+        Object.keys(incomingRates).length > 0
+      ) {
+        effectiveRates = {};
+        ratesNote = `Currency changed ${prevCurrency} → ${data.currency}: exchange rates were cleared. Re-enter them under Finance.`;
+      }
       const sanitized: UserProfile = {
         ...data,
         name: truncate(sanitizeInput(data.name || ''), MAX_LENGTHS.name),
@@ -916,13 +937,28 @@ export const useStore = create<UnifiedStore>((set, get) => {
         hourly_rate: data.hourly_rate != null && isFinite(data.hourly_rate) ? Math.max(0, data.hourly_rate) : data.hourly_rate,
         tax_rate: data.tax_rate != null && isFinite(data.tax_rate) ? Math.min(100, Math.max(0, data.tax_rate)) : data.tax_rate,
         payment_terms: data.payment_terms != null && isFinite(data.payment_terms) ? Math.max(0, Math.round(data.payment_terms)) : data.payment_terms,
+        proposal_expiry_days: data.proposal_expiry_days != null && isFinite(data.proposal_expiry_days) ? Math.max(0, Math.round(data.proposal_expiry_days)) : undefined,
         // Rates are manual multipliers (1 foreign unit = N profile units).
         // Sanitize on the way in; the Tauri backend stores them as TEXT.
-        exchange_rates: data.exchange_rates !== undefined ? sanitizeRates(data.exchange_rates) : data.exchange_rates,
+        // Omitted input inherits (see above) — never silently wiped.
+        exchange_rates: effectiveRates,
       };
+      // Currency-less invoices inherit the profile currency (invCurOf
+      // fallback), so switching base would silently re-denominate history.
+      // Stamp the old base onto them first; explicit rows are untouched.
+      if (prevCurrency && data.currency && prevCurrency !== data.currency) {
+        try {
+          await get().loadInvoices();
+          const bare = get().invoices.filter((i) => !i.currency);
+          for (const inv of bare) {
+            await get().updateInvoice({ ...inv, currency: prevCurrency });
+          }
+        } catch { /* history keeps the fallback; rates notice still applies */ }
+      }
       await invoke('upsert_user_profile', { payload: sanitized });
       const licensed = !!(sanitized.license_key && await cachedValidateLicense(sanitized.license_key));
       set({ profile: sanitized, isLicensed: licensed });
+      if (ratesNote) get().addToast(ratesNote, 'info', 6000);
     },
     activateLicense: async (key) => {
       if (!await cachedValidateLicense(key)) return false;

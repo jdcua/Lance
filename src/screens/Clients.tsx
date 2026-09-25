@@ -365,7 +365,7 @@ export default function Clients() {
         id: crypto.randomUUID(),
         client_id: selectedId,
         type: logForm.type,
-        summary: logForm.summary,
+        summary: sanitizeInput(logForm.summary).trim().slice(0, MAX_LENGTHS.notes),
         date: logForm.date,
         created_at: new Date().toISOString(),
       });
@@ -395,7 +395,7 @@ export default function Clients() {
   const handleSaveCommEdit = async (id: string) => {
     if (!editCommText.trim()) return;
     try {
-      await updateCommunication(id, editCommText.trim());
+      await updateCommunication(id, sanitizeInput(editCommText).trim().slice(0, MAX_LENGTHS.notes));
       setEditingCommId(null);
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to update communication', 'error');
@@ -442,9 +442,18 @@ export default function Clients() {
   const handleLogValue = async (definitionId: string) => {
     if (!selectedId || !valueForm.value.trim()) return;
     const def = metricDefs.find((d) => d.id === definitionId);
-    if (def && def.metric_type !== 'text' && Number(valueForm.value) < 0) {
-      addToast('Metric value cannot be negative', 'error');
-      return;
+    if (def && def.metric_type !== 'text') {
+      // Non-numeric strings would poison SQL averages (AVG('abc') = 0 in
+      // SQLite); display code filters NaN, aggregates often don't.
+      const n = Number(valueForm.value);
+      if (!isFinite(n)) {
+        addToast('Enter a number for this metric', 'error');
+        return;
+      }
+      if (n < 0) {
+        addToast('Metric value cannot be negative', 'error');
+        return;
+      }
     }
     try {
       await logMetricValue({

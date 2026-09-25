@@ -588,10 +588,18 @@ export default function Settings() {
         try { await db.execute('ROLLBACK'); } catch { /* ignore */ }
         throw new Error('Reset failed');
       }
-      // Browser-derived caches the tables do not cover.
+      // Browser-derived caches the tables do not cover. Achievements and
+      // trash reference deleted rows (stale badges, restorable ghosts), and
+      // a pending tour or timer config would point at nothing. Identity and
+      // onboarding flags (theme, prefs, has-launched, onboarding-completed)
+      // are deliberately preserved.
       try {
         localStorage.removeItem('lance:store:pending_follow_ups');
         localStorage.removeItem('lance:store:follow_up_logs');
+        localStorage.removeItem('lance:achievements');
+        localStorage.removeItem('lance:trash');
+        localStorage.removeItem('lance:tour-pending');
+        localStorage.removeItem('lance:last-timer-config');
       } catch { /* private mode */ }
       setShowResetModal(false);
       addToast('All data has been reset', 'info');

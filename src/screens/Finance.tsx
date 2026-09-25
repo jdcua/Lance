@@ -107,6 +107,13 @@ export default function Finance() {
     setShowModal(true);
   };
 
+  // Global ⌘N dispatch (see App shortcuts).
+  useEffect(() => {
+    const handler = () => openNew();
+    document.addEventListener('lance:add-expense', handler);
+    return () => document.removeEventListener('lance:add-expense', handler);
+  }, []);
+
   const openEdit = (exp: Expense) => {
     setEditing(exp);
     setForm({ category: exp.category, description: exp.description, amount: exp.amount.toString(), date: exp.date, recurring: exp.recurring || false, frequency: exp.frequency || 'monthly' });

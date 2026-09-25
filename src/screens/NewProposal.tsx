@@ -92,9 +92,12 @@ export default function NewProposal() {
   };
 
   const computeExpiry = (): { expiresAt: string | undefined } => {
-    if (!profile?.proposal_expiry_days) return { expiresAt: undefined };
+    // Legacy/imported profiles can carry garbage here; only finite positive
+    // day counts produce an expiry, otherwise proposals never expire.
+    const days = Number(profile?.proposal_expiry_days);
+    if (!isFinite(days) || days <= 0) return { expiresAt: undefined };
     const d = new Date();
-    d.setDate(d.getDate() + profile.proposal_expiry_days);
+    d.setDate(d.getDate() + days);
     return { expiresAt: d.toISOString() };
   };
 
