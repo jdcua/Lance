@@ -215,6 +215,29 @@ function expReport() {
   return out;
 }
 
+// Anonymous download counts per OS + waitlist signups. Same discipline as
+// exp counters: aggregates only, no IP storage. Served via /api/exp-report
+// under the _totals key so launch day has one dashboard endpoint.
+const dlCounters = new Map(); // key: dl:<os>:<hour> or waitlist:<hour>
+function countDl(os) {
+  const k = `dl:${os}:${expHour()}`;
+  dlCounters.set(k, (dlCounters.get(k) || 0) + 1);
+}
+function countWaitlist() {
+  const k = `waitlist:${expHour()}`;
+  dlCounters.set(k, (dlCounters.get(k) || 0) + 1);
+}
+function totalsReport() {
+  const downloads = {};
+  let waitlist = 0;
+  for (const [k, n] of dlCounters) {
+    const parts = k.split(':');
+    if (parts[0] === 'dl') downloads[parts[1]] = (downloads[parts[1]] || 0) + n;
+    else if (parts[0] === 'waitlist') waitlist += n;
+  }
+  return { downloads, waitlist };
+}
+
 async function handleExpHit(request) {
   if (request.method !== 'POST') return Response.json({ error: 'method not allowed' }, { status: 405 });
   let body;
@@ -335,7 +358,7 @@ export default {
     }
 
     if (url.pathname === '/api/exp-report') {
-      return Response.json(expReport(), {
+      return Response.json({ ...expReport(), _totals: totalsReport() }, {
         headers: { 'Cache-Control': 'no-store' },
       });
     }
@@ -347,10 +370,15 @@ export default {
         const manifest = await getLocalManifest(request, env);
         if (manifest && manifest.mac && manifest.mac.dmg) {
           const local = await serveLocalFile(request, env, manifest.mac.dmg);
-          if (local) return local;
+          if (local) {
+            countDl(os);
+            return local;
+          }
         }
       }
-      return handleDownload(os, env);
+      const res = await handleDownload(os, env);
+      if (res.ok) countDl(os);
+      return res;
     }
 
     // v2 AI waitlist: opt-in email only. Notified via Resend to the owner
@@ -393,6 +421,25 @@ export default {
         });
         if (!res.ok) {
           return Response.json({ error: 'could not join, try again later' }, { status: 502 });
+        }
+        countWaitlist();
+        // Confirmation to the subscriber: best-effort, never fails the signup.
+        try {
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${RESEND_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              from: env.CONTACT_FROM || 'Lance waitlist <onboarding@resend.dev>',
+              to: [email],
+              subject: "You're on the Lance v2 list",
+              text: `You're on the list — one email when Lance v2 (local, on-device AI drafting) ships. Nothing else, ever.\n\nDidn't sign up? Ignore this email.\nWant off the list anytime? Reply "forget me".\n\n— Lance (your business data stays on your device)`,
+            }),
+          });
+        } catch {
+          /* confirmation is best-effort */
         }
         return Response.json({ ok: true });
       } catch {
