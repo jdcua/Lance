@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useStore } from '../store';
 import type { Expense, Invoice, InvoicePayment, Milestone } from '../types';
 import Button from '../components/ui/Button';
+import LoadError from '../components/ui/LoadError';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import Modal from '../components/ui/Modal';
@@ -68,6 +69,7 @@ function MoneyLines({ byCurrency, size = 'md', fallbackCur = 'CAD' }: { byCurren
 export default function Finance() {
   const { expenses, loadExpenses, addExpense, updateExpense, removeExpense, invoices, loadInvoices, profile, saveProfile, recurringInvoices, loadRecurringInvoices, projects, loadProjects, milestones, loadMilestones, payments, loadAllPayments, addPayment, updateInvoice, clients, loadClients, getFinanceSummary } = useStore();
   const addToast = useToasts((s) => s.add);
+  const financeError = useStore((s) => s.errors.expenses || s.errors.invoices);
   const currency = profile?.currency;
   const fmt = (amount: number) => formatCurrency(amount, currency);
   const [showModal, setShowModal] = useState(false);
@@ -348,6 +350,10 @@ export default function Finance() {
   return (
     <div className="p-6">
       <TabBar />
+      <LoadError
+        error={financeError}
+        onRetry={() => { loadExpenses(); loadInvoices(); }}
+      />
 
       {tab === 'overview' ? (
         <>

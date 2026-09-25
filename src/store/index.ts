@@ -397,7 +397,16 @@ export interface UnifiedStore {
 export type AppStore = UnifiedStore;
 
 export const useStore = create<UnifiedStore>((set, get) => {
-  const startLoad = (key: LoadingKey) => set({ loading: { ...get().loading, [key]: true } });
+  const startLoad = (key: LoadingKey) => {
+    const s = get();
+    // A (re)load clears its own stale failure: otherwise a recovered load
+    // leaves the error banner up forever. Loading and error keys share
+    // names by convention ('clients', 'timeEntries', …).
+    set({
+      loading: { ...s.loading, [key]: true },
+      errors: s.errors[key] ? { ...s.errors, [key]: null } : s.errors,
+    });
+  };
   const endLoad = (key: LoadingKey) => set({ loading: { ...get().loading, [key]: false } });
   const setError = (key: ErrorKey, err: string | null) => set({ errors: { ...get().errors, [key]: err } });
 

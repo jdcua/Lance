@@ -8,6 +8,7 @@ import type { Invoice, TimeEntry, UserProfile, Project } from '../types';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import Button from '../components/ui/Button';
+import LoadError from '../components/ui/LoadError';
 import Fade from '../components/motion/Fade';
 import { StaggerGroup, StaggerItem } from '../components/motion/Stagger';
 import AnimatedNumber from '../components/motion/AnimatedNumber';
@@ -27,6 +28,7 @@ import { getFeatureComponent } from '../components/features/registry';
 export default function Dashboard() {
   const { invoices, loadInvoices, proposals, loadProposals, projects, loadProjects, clients, loadClients, timeEntries, loadTimeEntries, profile, loadProfile, loadExpenses, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings, loadContracts, portalActivity, loadPortalActivity } = useStore();
   const addToast = useToasts((s) => s.add);
+  const dashboardError = useStore((s) => s.errors.invoices || s.errors.clients || s.errors.projects);
   const navigate = useNavigate();
   const prefs = usePrefs();
   const [loading, setLoading] = useState(true);
@@ -318,6 +320,10 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 max-w-[1120px]">
+      <LoadError
+        error={dashboardError}
+        onRetry={() => { loadInvoices(); loadClients(); loadProjects(); }}
+      />
       <Fade className="relative overflow-hidden rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-card)] shadow-[var(--card-shadow)] p-6 mb-6" y={18}>
         <div aria-hidden className="pointer-events-none absolute -top-24 -right-16 w-72 h-72 rounded-full bg-[var(--accent)] opacity-[0.13] blur-[80px]" />
         <div aria-hidden className="pointer-events-none absolute -bottom-28 -left-10 w-72 h-72 rounded-full bg-[var(--accent)] opacity-[0.07] blur-[80px]" />

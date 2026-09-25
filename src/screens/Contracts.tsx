@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import { useStore } from '../store';
 import type { Contract, ContractTemplate, ShareToken } from '../types';
 import Button from '../components/ui/Button';
+import LoadError from '../components/ui/LoadError';
 import { useVisibleList, MoreRows } from '../components/ui/useVisibleList';
 import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
@@ -77,6 +78,7 @@ const TEMPLATE_BADGE_COLORS: Record<string, string> = {
 export default function Contracts() {
   const { contracts, loadContracts, clients, loadClients, addContract, updateContract, removeContract, contractTemplates, loadContractTemplates, addContractTemplate, removeContractTemplate, profile } = useStore();
   const addToast = useToasts((s) => s.add);
+  const contractsError = useStore((s) => s.errors.contracts);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Contract | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -319,6 +321,7 @@ export default function Contracts() {
 
   return (
     <div className="p-6">
+      <LoadError error={contractsError} onRetry={() => loadContracts()} />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-lg font-semibold text-[var(--text-primary)]">Contracts</h2>

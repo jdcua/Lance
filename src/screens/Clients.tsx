@@ -12,6 +12,7 @@ import { Plus, Pencil, Trash2, Mail, Phone, Building2, MessageSquare, PhoneCall,
 import { useToasts } from '../store/toastStore';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 import ClientImportModal from '../components/ui/ClientImportModal';
+import LoadError from '../components/ui/LoadError';
 import { useVisibleList, MoreRows } from '../components/ui/useVisibleList';
 import { formatCurrency, relativeDate, todayLocalISO } from '../utils/format';
 import { getCurrencySymbol, CURRENCIES } from '../lib/currency';
@@ -163,6 +164,7 @@ function detectCountry(): string {
 }
 
 export default function Clients() {
+  const clientsError = useStore((s) => s.errors.clients);
   const {
     clients, loadClients, addClient, updateClient, removeClient,
     communications, loadCommunications, addCommunication, updateCommunication, removeCommunication,
@@ -518,6 +520,7 @@ export default function Clients() {
       <div className="w-[240px] border-r border-[var(--border-color)] bg-[var(--bg-card)] flex-shrink-0 flex flex-col">
         <div className="px-4 py-3 border-b border-[var(--border-color)] space-y-2">
           <h2 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Clients</h2>
+          <LoadError error={clientsError} onRetry={() => loadClients()} />
           <div className="relative">
             <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
             <input

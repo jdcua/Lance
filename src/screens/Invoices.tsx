@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { useStore } from '../store';
 import type { Invoice, LineItem, RecurringInvoice as RecurringInvoiceType } from '../types';
 import Button from '../components/ui/Button';
+import LoadError from '../components/ui/LoadError';
 import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
@@ -52,6 +53,7 @@ export default function Invoices() {
     payments, loadPayments, addPayment, removePayment,
     addCommunication,
   } = useStore();
+  const invoicesError = useStore((s) => s.errors.invoices);
   const addToast = useToasts((s) => s.add);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Invoice | null>(null);
@@ -647,6 +649,7 @@ export default function Invoices() {
 
   return (
     <div className="p-6">
+      <LoadError error={invoicesError} onRetry={() => loadInvoices()} />
       <div className="grid grid-cols-3 gap-3 mb-6">
         <MetricCard label="Outstanding" value={moneyValue(invoices.filter(i => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue'), totalOutstanding)} subtext={`${invoices.filter(i => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').length} invoices`} color="amber" />
         <MetricCard label="Paid" value={moneyValue(invoices.filter(i => i.status === 'paid'), totalPaid)} subtext={`${invoices.filter(i => i.status === 'paid').length} invoices`} trend="up" color="green" />

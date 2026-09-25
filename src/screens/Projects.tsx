@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useStore } from '../store';
 import type { Project, Milestone } from '../types';
 import Button from '../components/ui/Button';
+import LoadError from '../components/ui/LoadError';
 import Card from '../components/ui/Card';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 import Modal from '../components/ui/Modal';
@@ -27,6 +28,7 @@ type SortKey = 'title' | 'client' | 'status' | 'budget' | 'date';
 export default function Projects() {
   const { projects, loadProjects, addProject, updateProject, removeProject, clients, loadClients, milestones, loadMilestones, addMilestone, updateMilestone, removeMilestone, loadInvoices, addInvoice, profile, loadProfile, projectTemplates, loadProjectTemplates, loadTemplateMilestones, projectTemplateMilestones, addProjectTemplate } = useStore();
   const addToast = useToasts((s) => s.add);
+  const projectsError = useStore((s) => s.errors.projects);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
@@ -369,6 +371,7 @@ export default function Projects() {
 
   return (
     <div className="p-6">
+      <LoadError error={projectsError} onRetry={() => loadProjects()} />
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg font-semibold text-[var(--text-primary)]">Projects</h2>

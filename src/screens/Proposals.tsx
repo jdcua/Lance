@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import type { Proposal, ShareToken } from '../types';
 import Button from '../components/ui/Button';
+import LoadError from '../components/ui/LoadError';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
@@ -62,6 +63,7 @@ type StatusFilter = 'all' | 'draft' | 'sent' | 'accepted' | 'declined' | 'expire
 export default function Proposals() {
   const { proposals, loadProposals, clients, loadClients, updateProposal, removeProposal, profile, loadProfile, addProposal, addContract, contracts, loadContracts, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, logFollowUp, followUpSettings, portalActivity, loadPortalActivity, getActiveTier } = useStore();
   const addToast = useToasts((s) => s.add);
+  const proposalsError = useStore((s) => s.errors.proposals);
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [exportDropdown, setExportDropdown] = useState<string | null>(null);
@@ -332,6 +334,7 @@ export default function Proposals() {
 
   return (
     <div className="p-6">
+      <LoadError error={proposalsError} onRetry={() => loadProposals()} />
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg font-semibold text-[var(--text-primary)]">Proposals</h2>

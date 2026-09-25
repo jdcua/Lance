@@ -4,6 +4,7 @@ import { useToasts } from '../store/toastStore';
 import type { FollowUpLog } from '../types';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
+import LoadError from '../components/ui/LoadError';
 import { useVisibleList, MoreRows } from '../components/ui/useVisibleList';
 import Badge from '../components/ui/Badge';
 import {
@@ -26,10 +27,10 @@ export default function FollowUps() {
     followUpLogs, loadAllFollowUpLogs,
     updateFollowUpStatus,
     followUpSettings,
-    profile,
-    getActiveTier,
+    profile,    getActiveTier,
   } = useStore();
   const addToast = useToasts((s) => s.add);
+  const followUpsError = useStore((s) => s.errors.invoices || s.errors.proposals || s.errors.clients);
 
   // Smart dunning (Pro): escalation drafts speak in the freelancer's voice.
   // Free tiers always render the default templates.
@@ -274,6 +275,10 @@ export default function FollowUps() {
 
   return (
     <div className="p-6 max-w-5xl">
+      <LoadError
+        error={followUpsError}
+        onRetry={() => { loadInvoices(); loadProposals(); loadClients(); }}
+      />
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
           <h1 className="text-lg font-semibold text-[var(--text-primary)]">Follow-ups</h1>

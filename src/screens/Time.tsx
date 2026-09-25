@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import type { TimeEntry } from '../types';
 import Button from '../components/ui/Button';
+import LoadError from '../components/ui/LoadError';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import MetricCard from '../components/ui/MetricCard';
@@ -70,6 +71,7 @@ export default function TimeScreen() {
   const navigate = useNavigate();
   const { timeEntries, loadTimeEntries, addTimeEntry, updateTimeEntry, removeTimeEntry, projects, loadProjects, clients, loadClients } = useStore();
   const addToast = useToasts((s) => s.add);
+  const timeError = useStore((s) => s.errors.timeEntries);
   const [activeTimer, setActiveTimer] = useState<{ entry: TimeEntry; elapsed: number } | null>(null);
   const [intervalId, setIntervalId] = useState<ReturnType<typeof setInterval> | null>(null);
   const [entryForm, setEntryForm] = useState({ project_id: '', client_id: '', description: '', billable: true });
@@ -275,6 +277,7 @@ export default function TimeScreen() {
         setTab={setTab}
         showHeatmap={showHeatmap}
       />
+      <LoadError error={timeError} onRetry={() => loadTimeEntries()} />
 
       {tab === 'timer' ? (
         <>
