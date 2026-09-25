@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { MotionConfig } from 'motion/react';
@@ -43,6 +43,12 @@ if (typeof crypto !== 'undefined' && typeof crypto.randomUUID !== 'function') {
 
 function Root() {
   const prefs = usePrefs();
+  // The Motion pref must also silence CSS animations (spinners, skeletons,
+  // entrances): MotionConfig only governs the motion library. 'auto' leaves
+  // everything to the OS-level media query already in index.css.
+  useEffect(() => {
+    document.documentElement.classList.toggle('motion-off', prefs.motion === 'off');
+  }, [prefs.motion]);
   return (
     <MotionConfig reducedMotion={prefs.motion === 'off' ? 'always' : prefs.motion === 'full' ? 'never' : 'user'}>
       <RouterProvider router={router} />

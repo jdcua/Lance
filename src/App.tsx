@@ -121,6 +121,7 @@ export default function App() {
   // Guard against double-processing recurring invoices when invoices.length
   // changes mid-generation and re-triggers the idle-callback effect.
   const autoGenProcessedRef = useRef<Set<string>>(new Set());
+  const toggleTimerRunning = useRef(false);
   const [showChangelog, setShowChangelog] = useState(false);
   const [showWalkthrough, setShowWalkthrough] = useState(false);
   const [showSpotlight, setShowSpotlight] = useState(false);
@@ -825,55 +826,84 @@ export default function App() {
   }, []);
 
   const toggleTimer = useCallback(async () => {
-    const state = useStore.getState();
-    await state.loadTimeEntries();
-    await state.loadProjects();
+    // In-flight guard: two rapid toggles would both read "none running" and
+    // open duplicate timers. One toggle at a time; extras are dropped.
+    if (toggleTimerRunning.current) return;
+    toggleTimerRunning.current = true;
+    try {
+      const state = useStore.getState();
+      await state.loadTimeEntries();
+      await state.loadProjects();
 
-    const activeEntry = state.timeEntries.find((t) => !t.end_time);
+      const openEntries = state.timeEntries.filter((t) => !t.end_time);
+      const activeEntry = openEntries[0];
 
-    if (activeEntry) {
-      const endTime = new Date().toISOString();
-      const duration = Math.floor((Date.now() - new Date(activeEntry.start_time).getTime()) / 60000);
-      if (duration < 1) {
-        // Sub-minute timer toggle produces a phantom 0-minute entry. Discard it.
-        await state.removeTimeEntry(activeEntry.id);
-        addToast('Timer stopped', 'success');
-      } else {
-        await state.updateTimeEntry({ ...activeEntry, end_time: endTime, duration_minutes: duration });
-        const h = Math.floor(duration / 60);
-        const m = duration % 60;
-        addToast(`Timer stopped · ${h > 0 ? `${h}h ` : ''}${m}m`, 'success');
-      }
-    } else {
-      let projectId = '';
-      let clientId = '';
-      const lastConfig = localStorage.getItem('lance:last-timer-config');
-      if (lastConfig) {
-        try {
-          const cfg = JSON.parse(lastConfig);
-          projectId = cfg.projectId || '';
-          clientId = cfg.clientId || '';
-        } catch { /* ignore */ }
-      }
-      if (!projectId || !clientId) {
-        const firstProject = state.projects.find((p) => p.status === 'active');
-        if (firstProject) {
-          projectId = firstProject.id;
-          clientId = firstProject.client_id;
-        } else {
-          addToast('No active project available to start timer', 'error');
-          return;
+      if (activeEntry) {
+        const endTime = new Date().toISOString();
+        // Close EVERYTHING open, not just the first: legacy/imported data
+        // (and pre-guard races) can hold several. The first keeps its real
+        // duration; extras are stamped as-is so no time silently vanishes.
+        for (const entry of openEntries) {
+          const duration = Math.floor((Date.now() - new Date(entry.start_time).getTime()) / 60000);
+          if (entry.id === activeEntry.id && duration < 1) {
+            // Sub-minute timer toggle produces a phantom 0-minute entry. Discard it.
+            await state.removeTimeEntry(entry.id);
+          } else {
+            await state.updateTimeEntry({ ...entry, end_time: endTime, duration_minutes: Math.max(0, duration) });
+          }
         }
+        const duration = Math.floor((Date.now() - new Date(activeEntry.start_time).getTime()) / 60000);
+        if (duration < 1) {
+          addToast('Timer stopped', 'success');
+        } else {
+          const h = Math.floor(duration / 60);
+          const m = duration % 60;
+          addToast(`Timer stopped · ${h > 0 ? `${h}h ` : ''}${m}m`, 'success');
+        }
+      } else {
+        let projectId = '';
+        let clientId = '';
+        const lastConfig = localStorage.getItem('lance:last-timer-config');
+        if (lastConfig) {
+          try {
+            const cfg = JSON.parse(lastConfig);
+            projectId = cfg.projectId || '';
+            clientId = cfg.clientId || '';
+          } catch { /* ignore */ }
+        }
+        // The remembered project may be deleted or archived since. Fall
+        // back to the first active project instead of orphaning the entry.
+        const remembered = state.projects.find((p) => p.id === projectId && p.status === 'active');
+        if (!remembered) {
+          projectId = '';
+          clientId = '';
+        }
+        if (!projectId || !clientId) {
+          const firstProject = state.projects.find((p) => p.status === 'active');
+          if (firstProject) {
+            projectId = firstProject.id;
+            clientId = firstProject.client_id;
+          } else {
+            addToast('No active project available to start timer', 'error');
+            return;
+          }
+        }
+        const entry = await state.addTimeEntry({
+          project_id: projectId,
+          client_id: clientId,
+          start_time: new Date().toISOString(),
+          billable: true,
+        });
+        try {
+          localStorage.setItem('lance:last-timer-config', JSON.stringify({ projectId: entry.project_id, clientId: entry.client_id }));
+        } catch { /* private mode */ }
+        const project = state.projects.find((p) => p.id === projectId);
+        addToast(`Timer started · ${project?.title || 'Unknown'}`, 'success');
       }
-      const entry = await state.addTimeEntry({
-        project_id: projectId,
-        client_id: clientId,
-        start_time: new Date().toISOString(),
-        billable: true,
-      });
-      localStorage.setItem('lance:last-timer-config', JSON.stringify({ projectId: entry.project_id, clientId: entry.client_id }));
-      const project = state.projects.find((p) => p.id === projectId);
-      addToast(`Timer started · ${project?.title || 'Unknown'}`, 'success');
+    } catch (err) {
+      addToast(err?.toString?.() || 'Timer failed', 'error');
+    } finally {
+      toggleTimerRunning.current = false;
     }
   }, [addToast]);
 

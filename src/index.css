@@ -52,6 +52,14 @@ html, body, #root {
   }
 }
 
+/* App-level motion kill-switch (Personalize → Motion → Off). Mirrors the
+   OS query above for users whose OS doesn't request reduced motion.
+   Toggled from main.tsx; MotionConfig handles the JS animation library. */
+.motion-off *, .motion-off *::before, .motion-off *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
 @keyframes slide-in {
   from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
