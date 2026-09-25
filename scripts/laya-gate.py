@@ -83,7 +83,8 @@ def main():
     gen_pages = sorted(_glob.glob(os.path.join(landing, "craft", "*.html"))
                        + _glob.glob(os.path.join(landing, "alternatives", "*.html"))
                        + _glob.glob(os.path.join(landing, "use", "*.html"))
-                       + _glob.glob(os.path.join(landing, "rates", "*.html")))
+                       + _glob.glob(os.path.join(landing, "rates", "*.html"))
+                       + _glob.glob(os.path.join(landing, "templates", "*.html")))
     sitemap_raw = open(os.path.join(landing, "sitemap.xml"), errors="replace").read() \
         if os.path.exists(os.path.join(landing, "sitemap.xml")) else ""
     seen_titles = set()
@@ -113,7 +114,7 @@ def main():
               f"h1s={[h for h in g.h1s if h][:1]}")
         check(f"seo:{tag}:sitemap", f">{tag}<" in sitemap_raw or f"/{tag}</loc>" in sitemap_raw,
               "fail", "in sitemap")
-    check("seo:count", len(gen_pages) >= 93, "warn", f"{len(gen_pages)} pages")
+    check("seo:count", len(gen_pages) >= 97, "warn", f"{len(gen_pages)} pages")
 
     print(f"laya-gate: {len(fails)} FAIL, {len(warns)} warn")
     for cid, ev in fails + warns:

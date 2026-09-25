@@ -364,10 +364,45 @@ for (const c of content.crafts) {
   rateUrls.push(`rates/${c.id}`);
 }
 
+// ── Template gallery: hub + 3 copy-paste templates (no Paddle needed) ──
+const TEMPLATES = [
+  { slug: 'freelance-proposal', title: 'Freelance proposal template', icon: '✎',
+    desc: 'Copy-paste proposal template: cover, scope, deliverables, timeline, pricing, terms. Free, no account.',
+    body: `PROPOSAL — [PROJECT NAME]\nPrepared by [YOUR NAME] for [CLIENT NAME] · [DATE]\n\n1. UNDERSTANDING\n[2-3 sentences: their goal in their words.]\n\n2. SCOPE & DELIVERABLES\n- [Deliverable 1 + what "done" means]\n- [Deliverable 2 + what "done" means]\n- [Deliverable 3 + what "done" means]\nOut of scope: [list explicitly — this line prevents 90% of disputes]\n\n3. TIMELINE\nWeek 1: [milestone] · Week 2: [milestone] · Week 3: delivery + 1 revision round\n\n4. PRICING\n[Option A — fixed: $X for everything above]\n[Option B — weekly: $Y/week, 3-week minimum]\nPayment: 50% to start, 50% on delivery. Late payments accrue [X]% monthly.\n\n5. TERMS\n- 1 revision round included; extra rounds billed at $[RATE]/hr\n- Client provides [assets/feedback] within [N] business days or timeline shifts\n- Either party may exit with [N] days written notice; work completed is billed\n\n6. NEXT STEPS\nReply "go" and I'll send the contract + first invoice. Valid until [DATE].` },
+  { slug: 'freelance-contract', title: 'Freelance contract template', icon: '§',
+    desc: 'Copy-paste contract template: scope, payment, revisions, kill fee, IP, termination. Free, no account.',
+    body: `FREELANCE SERVICES AGREEMENT\nBetween [YOUR NAME] ("Contractor") and [CLIENT NAME] ("Client"), dated [DATE].\n\n1. SERVICES\nContractor will perform: [scope, same words as the proposal].\n\n2. PAYMENT\nFee: $[X] ([50% upfront / weekly / monthly]). Invoices due within [14] days. Late balance accrues [X]% per month. Client reimburses pre-approved expenses.\n\n3. REVISIONS\n[1] revision round included per deliverable. Further revisions at $[RATE]/hr, quoted before work starts.\n\n4. KILL FEE\nIf Client cancels after work begins: 50% of remaining fee. If Contractor cancels: full refund of unearned prepayment.\n\n5. INTELLECTUAL PROPERTY\nFull IP transfers to Client on final payment. Contractor retains the right to show the work in a portfolio.\n\n6. CONFIDENTIALITY\nBoth parties keep shared business information private, during and after this agreement.\n\n7. TERM & TERMINATION\nEither party may terminate with [14] days written notice. Completed work and kill fee (if any) are payable.\n\n8. INDEPENDENT CONTRACTOR\nContractor is not an employee; handles own taxes, insurance, and equipment.\n\nSigned: ______________________ ([YOUR NAME], [DATE])\nSigned: ______________________ ([CLIENT NAME], [DATE])\n\n(Template, not legal advice. For large engagements, have a lawyer review it.)` },
+  { slug: 'freelance-invoice', title: 'Freelance invoice template', icon: '$',
+    desc: 'Copy-paste invoice template + free interactive generator with tax, totals, and PDF export. No account.',
+    body: `INVOICE [INV-001] — DUE [DATE]\nFrom: [YOUR NAME] · [EMAIL] · [PAYMENT DETAILS]\nBill to: [CLIENT NAME] · [EMAIL]\n\nLine items:\n- [Description] × [qty] @ $[rate] = $[amount]\n- [Description] × [qty] @ $[rate] = $[amount]\nSubtotal: $[X] · Tax ([X]%): $[Y] · TOTAL DUE: $[Z]\n\nPay to: [bank / Wise / PayPal details]\nLate payments accrue [X]% monthly. Questions? Reply to this invoice.\n\nPrefer zero typing? Use the free interactive invoice generator — same result in 60 seconds with automatic totals.` },
+];
+const tplUrls = ['templates'];
+{
+  const hubCards = TEMPLATES.map((t) =>
+    `<a class="bcard b-2" style="text-decoration:none" href="${site}/templates/${t.slug}"><div class="b-icon">${t.icon}</div><div class="b-title">${t.title}</div><p class="b-desc">${t.desc}</p></a>`
+  ).join('') + bentoCard('Made to be outgrown', 'Templates stop the bleeding; Lance stops the admin. Proposals with scope warnings, contracts tied to them, invoices that chase themselves.', 'b-2', '◆');
+  write(join(landing, 'templates', 'index.html'),
+    seoShell('Free freelance templates', 'Copy-paste proposal, contract, and invoice templates. Free forever, no account.', hubCards, 'templates', [
+      { q: 'Are these templates really free?', a: 'Yes. Copy, print, use commercially. No account.' },
+      { q: 'Is this legal advice?', a: 'No — starting points. Have a lawyer review for large engagements.' },
+    ]));
+}
+for (const t of TEMPLATES) {
+  const cards =
+    `<div class="bcard b-3"><div class="b-icon">${t.icon}</div><div class="b-title">${t.title}</div><p class="b-desc">${t.desc}</p><pre class="mono" id="tpl-body" style="white-space:pre-wrap;font-size:12.5px;color:var(--l-t2);margin:16px 0">${t.body}</pre><div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap"><button class="ghost-btn ghost-sm" onclick="(function(b){var t=document.getElementById('tpl-body').innerText;function ok(){b.textContent='Copied ✓'}if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(ok).catch(function(){fallback()})}else{fallback()}function fallback(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok()}catch(e){b.textContent='Select + Ctrl+C'}document.body.removeChild(ta)}})(this)">Copy template</button><button class="ghost-btn ghost-sm" onclick="window.print()">Print</button></div></div>` +
+    bentoCard('Stop retyping this', 'Lance fills scope, pricing, and terms from your client record and tracks signing + payment. Free core.', 'b-3', '◆');
+  write(join(landing, 'templates', `${t.slug}.html`),
+    seoShell(t.title[0].toUpperCase() + t.title.slice(1), t.desc, cards, `templates/${t.slug}`, [
+      { q: `Where can I get a free ${t.slug.replace(/-/g, ' ')}?`, a: t.desc },
+      { q: 'Is this legal advice?', a: 'No — a starting point. Have a lawyer review for large engagements.' },
+    ]));
+  tplUrls.push(`templates/${t.slug}`);
+}
+
 // ── sitemap.xml + llms.txt refresh ──
 const urlEntry = (loc, priority, freq = 'monthly') =>
   `  <url>\n    <loc>${site}/${loc}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${freq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
-const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urlEntry('', '1.0', 'weekly')}\n${['privacy', 'terms', 'refunds'].map((p) => urlEntry(p, '0.3', 'yearly')).join('\n')}\n${altUrls.map((u) => urlEntry(u, '0.7')).join('\n')}\n${useUrls.map((u) => urlEntry(u, '0.6')).join('\n')}\n${craftUrls.map((u) => urlEntry(u, '0.6')).join('\n')}\n${urlEntry('press', '0.5')}\n${['tools/invoice-generator', 'tools/rate-calculator'].map((u) => urlEntry(u, '0.8')).join('\n')}\n${urlEntry('rates', '0.6')}\n${rateUrls.filter((u) => u !== 'rates').map((u) => urlEntry(u, '0.5')).join('\n')}\n</urlset>\n`;
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urlEntry('', '1.0', 'weekly')}\n${['privacy', 'terms', 'refunds'].map((p) => urlEntry(p, '0.3', 'yearly')).join('\n')}\n${altUrls.map((u) => urlEntry(u, '0.7')).join('\n')}\n${useUrls.map((u) => urlEntry(u, '0.6')).join('\n')}\n${craftUrls.map((u) => urlEntry(u, '0.6')).join('\n')}\n${urlEntry('press', '0.5')}\n${['tools/invoice-generator', 'tools/rate-calculator'].map((u) => urlEntry(u, '0.8')).join('\n')}\n${urlEntry('rates', '0.6')}\n${rateUrls.filter((u) => u !== 'rates').map((u) => urlEntry(u, '0.5')).join('\n')}\n${urlEntry('templates', '0.7')}\n${tplUrls.filter((u) => u !== 'templates').map((u) => urlEntry(u, '0.6')).join('\n')}\n</urlset>\n`;
 write(join(landing, 'sitemap.xml'), sitemap);
 const llmsAdd = `\n## Browse by craft\n\n${content.crafts.map((c) => `- ${c.label}: ${site}/craft/${c.id} — ${c.hook}`).join('\n')}\n\n## Alternatives\n\n${content.alternatives.map((a) => `- vs ${a.name}: ${site}/alternatives/${a.slug} — ${a.angle}`).join('\n')}\n\n## Use cases\n\n${USE_PAGES.map((u) => `- ${u.title}: ${site}/use/${u.slug}`).join('\n')}
 
@@ -384,6 +419,11 @@ const llmsAdd = `\n## Browse by craft\n\n${content.crafts.map((c) => `- ${c.labe
 
 - Hub: ${site}/rates
 - ${rateUrls.filter((u) => u !== 'rates').length} craft pages, e.g. ${site}/rates/photographer
+
+## Templates (free, no account)
+
+- Hub: ${site}/templates
+${tplUrls.filter((u) => u !== 'templates').map((u) => `- ${site}/${u}`).join('\n')}
 `;
 {
   const base = readFileSync(join(landing, 'llms.txt'), 'utf8').split('\n## Browse by craft')[0].replace(/\s+$/, '');
@@ -405,6 +445,6 @@ const draftFiles = {
 for (const [name, body] of Object.entries(draftFiles)) write(join(draftDir, name), body + '\n');
 
 // ── 5. DISTRO + exp-report stubs (full content written by dedicated files; keep pointers) ──
-const pageCount = craftUrls.length + altUrls.length + useUrls.length + rateUrls.length;
+const pageCount = craftUrls.length + altUrls.length + useUrls.length + rateUrls.length + tplUrls.length;
 write(join(promo, '.build-meta.json'), JSON.stringify({ builtAt: today, pages: pageCount }, null, 2));
 console.log(`promo: done (${Object.keys(draftFiles).length} drafts, ${pageCount} SEO pages)`);

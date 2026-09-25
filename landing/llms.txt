@@ -112,3 +112,10 @@ macOS 11+ (Apple Silicon), Windows 10+ (64-bit), Ubuntu 20.04+ (AppImage).
 
 - Hub: https://lance.cuajuandiego.workers.dev/rates
 - 41 craft pages, e.g. https://lance.cuajuandiego.workers.dev/rates/photographer
+
+## Templates (free, no account)
+
+- Hub: https://lance.cuajuandiego.workers.dev/templates
+- https://lance.cuajuandiego.workers.dev/templates/freelance-proposal
+- https://lance.cuajuandiego.workers.dev/templates/freelance-contract
+- https://lance.cuajuandiego.workers.dev/templates/freelance-invoice
