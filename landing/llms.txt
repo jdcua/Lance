@@ -86,7 +86,7 @@ macOS 11+ (Apple Silicon), Windows 10+ (64-bit), Ubuntu 20.04+ (AppImage).
 
 - vs HoneyBook: https://lance.cuajuandiego.workers.dev/alternatives/honeybook — Cloud subscription holding your client data vs free-forever offline.
 - vs Bonsai: https://lance.cuajuandiego.workers.dev/alternatives/bonsai — Monthly fee + cloud lock-in vs your machine, your data.
-- vs FreshBooks: https://lance.cuajuandiego.workers.dev/alternatives/freshbooks — Invoicing-only subscription vs full OS: proposals to paid.
+- vs FreshBooks: https://lance.cuajuandiego.workers.dev/alternatives/freshbooks — Invoicing-first subscription vs full OS: proposals to paid.
 - vs Notion + Sheets: https://lance.cuajuandiego.workers.dev/alternatives/notion — DIY tabs and copy-paste vs one offline loop.
 - vs Excel: https://lance.cuajuandiego.workers.dev/alternatives/excel — Spreadsheet chaos vs milestones, timers, dunning in one place.
 

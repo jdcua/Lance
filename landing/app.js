@@ -607,14 +607,31 @@ function bentoVis(kind) {
   })();
 })();
 
-/* ── FAQ show-more pagination (no-JS shows all) ── */
+/* ── FAQ button accordion: single-open + show-more pagination ── */
 (function () {
-  const btn = $('faqMore'), list = document.querySelector('.faq-list');
-  if (!btn || !list) return;
-  btn.addEventListener('click', () => {
+  const list = document.querySelector('.faq-list');
+  if (!list) return;
+  const items = [...list.querySelectorAll('.faq-item')];
+  items.forEach((item) => {
+    const btn = item.querySelector('.faq-q');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const willOpen = !item.classList.contains('is-open');
+      items.forEach((o) => {
+        o.classList.remove('is-open');
+        o.querySelector('.faq-q').setAttribute('aria-expanded', 'false');
+      });
+      if (willOpen) {
+        item.classList.add('is-open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+  const more = $('faqMore');
+  if (more) more.addEventListener('click', () => {
     const open = list.classList.toggle('show-all');
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    btn.textContent = open ? 'Show fewer questions' : 'Show all questions';
+    more.setAttribute('aria-expanded', open ? 'true' : 'false');
+    more.textContent = open ? 'Show fewer questions' : 'Show all questions';
   });
 })();
 
