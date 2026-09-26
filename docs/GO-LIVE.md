@@ -36,8 +36,9 @@ Private ops notes. No secrets in this file.
 - [ ] GST/HST registration past $30k/12mo revenue
 - [ ] Trademark "Lance" via CIPO (~$250 DIY) once earning
 
-## Launch (Oct 1)
+## Launch (TBD — PAUSED Sept 2026 pending Paddle hosted-checkout approval)
 
+- [ ] Paddle approval received → set date in promo/launch.json, re-enable countdown
 - [ ] Quota refresh → scheduled v1.0.0 release builds
 - [ ] $0 discount live test: checkout → key email → activate in app
 - [ ] Product Hunt + Show HN + lifetime launch price ($149)

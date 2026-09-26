@@ -33,10 +33,11 @@ write(join(landing, 'launch-config.js'), launchSnippet);
 // Keeps logic out of hand-written app.js; safe if missing.
 const countdownSnippet = `/* AUTO-GENERATED countdown — include after app.js or ignore. */
 (function () {
-  var cfg = window.LANCE_LAUNCH; if (!cfg) return;
+  var cfg = window.LANCE_LAUNCH; if (!cfg || !cfg.date) return;
   var badge = document.querySelector('.hero-badge .mono');
   if ((cfg.mode === 'countdown' || cfg.mode === 'tease') && badge) {
     var t = new Date(cfg.date + 'T09:00:00-04:00').getTime();
+    if (isNaN(t)) return;
     var el = document.createElement('span');
     el.className = 'mono'; el.id = 'launchCountdown'; el.style.marginLeft = '8px';
     badge.appendChild(el);

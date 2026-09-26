@@ -93,7 +93,6 @@
     "lifetime": { "name": "Lance Lifetime", "price": 249, "launchPrice": 149, "blurb": "One-time. Everything in Pro, forever." }
   },
   "alternatives": [
-    { "slug": "honeybook", "name": "HoneyBook", "angle": "Cloud subscription holding your client data vs free-forever offline." },
     { "slug": "bonsai", "name": "Bonsai", "angle": "Monthly fee + cloud lock-in vs your machine, your data." },
     { "slug": "freshbooks", "name": "FreshBooks", "angle": "Invoicing-first subscription vs full OS: proposals to paid." },
     { "slug": "notion", "name": "Notion + Sheets", "angle": "DIY tabs and copy-paste vs one offline loop." },

@@ -72,4 +72,4 @@ Tauri · React · TypeScript · SQLite · Rust
 
 ## From Lance
 
-Juan Diego Cua builds decentralized software tools that run on your machine, not someone else's server. [placeholderlabsincorporatedlimited.yabbadabbadoo](https://placeholderlabsincorporatedlimited.yabbadabbadoo)
+Built by independent freelancers making decentralized software tools that run on your machine, not someone else's server.
