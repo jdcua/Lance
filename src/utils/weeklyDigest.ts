@@ -53,6 +53,6 @@ export function buildWeeklyDigest(
     hoursLogged: Math.round(hours * 10) / 10,
     openProposals,
     overdueCount,
-    hasActivity: paid.length > 0 || hours > 0 || openProposals > 0,
+    hasActivity: paid.length > 0 || hours > 0 || openProposals > 0 || overdueCount > 0,
   };
 }
