@@ -410,9 +410,33 @@ export const useStore = create<UnifiedStore>((set, get) => {
   const endLoad = (key: LoadingKey) => set({ loading: { ...get().loading, [key]: false } });
   const setError = (key: ErrorKey, err: string | null) => set({ errors: { ...get().errors, [key]: err } });
 
+  /** Parse a TEXT-column string list defensively: one corrupt row degrades
+   *  to [] instead of failing the whole table load. */
+  function parseStringList(raw: unknown): string[] {
+    if (Array.isArray(raw)) return raw.map(String);
+    if (typeof raw !== 'string') return [];
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch {
+      return [];
+    }
+  }
+
   function parseLineItems<T extends Invoice | RecurringInvoice>(inv: T): T {
     const lineItems = inv.line_items as unknown;
-    return { ...inv, line_items: typeof lineItems === 'string' ? (JSON.parse(lineItems) as LineItem[]) : (lineItems as T['line_items']) };
+    if (typeof lineItems !== 'string') return inv;
+    // One hand-edited or legacy-corrupt row must not brick the whole
+    // invoice list (raw.map(parseLineItems) throws on the first bad row,
+    // leaving the screen empty behind a load-error banner).
+    try {
+      const parsed: unknown = JSON.parse(lineItems);
+      if (!Array.isArray(parsed)) return { ...inv, line_items: [] as unknown as T['line_items'] };
+      return { ...inv, line_items: parsed as T['line_items'] };
+    } catch {
+      console.warn('[store] dropping corrupt line_items for invoice', inv.id);
+      return { ...inv, line_items: [] as unknown as T['line_items'] };
+    }
   }
 
   /** Snapshot a row into the trash bin before a destructive delete. */
@@ -1443,7 +1467,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
         const { getDb } = await import('../db');
         const db = await getDb();
         const rows = await db.select<ExportTemplate[]>('SELECT id, name, type, header, footer, sections, color_scheme, created_at FROM export_templates ORDER BY created_at DESC');
-        set({ exportTemplates: rows.map((r: ExportTemplate) => ({ ...r, sections: typeof r.sections === 'string' ? JSON.parse(r.sections as string) : r.sections })) });
+        set({ exportTemplates: rows.map((r: ExportTemplate) => ({ ...r, sections: parseStringList(r.sections as unknown) })) });
       } catch (e) { console.error('[store] loadExportTemplates failed:', e); setError('exportTemplates', String(e)); }
       finally { endLoad('exportTemplates'); }
     },
@@ -1477,7 +1501,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
         const { getDb } = await import('../db');
         const db = await getDb();
         const rows = await db.select<ContractTemplate[]>('SELECT id, name, category, body, variables, created_at FROM contract_templates ORDER BY created_at DESC');
-        set({ contractTemplates: rows.map((r: ContractTemplate) => ({ ...r, variables: typeof r.variables === 'string' ? JSON.parse(r.variables as string) : r.variables })) });
+        set({ contractTemplates: rows.map((r: ContractTemplate) => ({ ...r, variables: parseStringList(r.variables as unknown) })) });
       } catch (e) { console.error('[store] loadContractTemplates failed:', e); setError('contractTemplates', String(e)); }
       finally { endLoad('contractTemplates'); }
     },
