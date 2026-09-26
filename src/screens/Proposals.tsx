@@ -136,6 +136,15 @@ export default function Proposals() {
   const handleResend = async (p: Proposal) => {
     try {
       const expiry = computeExpiry();
+      // A resend restarts the clock: retire pendings from the previous send
+      // so the timeline (and nudge copy) matches the new sent_at below.
+      try {
+        for (const l of useStore.getState().pendingFollowUps.filter(
+          (f) => f.entity_type === 'proposal' && f.entity_id === p.id,
+        )) {
+          await updateFollowUpStatus(l.id, 'dismissed', 'auto-resolved');
+        }
+      } catch { /* resend stands regardless */ }
       await updateProposal({
         ...p,
         status: 'sent' as const,

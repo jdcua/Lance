@@ -45,7 +45,7 @@ export default function AIBar() {
   if (!aiEnabled || !insight) return null;
 
   return (
-    <div className="border-b border-[var(--border-color)] bg-[var(--accent-bg)] border-l-[3px] border-l-[var(--accent)]">
+    <div className="border-b border-[var(--border-color)] bg-[var(--accent-bg)] border-l-[3px] border-l-[var(--accent)] print:hidden">
       <div className="flex items-start gap-2 px-6 py-2.5">
         <div className="w-5 h-5 rounded-full bg-[var(--accent)] flex items-center justify-center flex-shrink-0 mt-0.5">
           <Sparkles size={11} className="text-white" />

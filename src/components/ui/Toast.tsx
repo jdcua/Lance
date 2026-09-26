@@ -21,7 +21,7 @@ export default function ToastContainer() {
   const { toasts, remove, pause, resume } = useToasts();
 
   return (
-    <div className="fixed bottom-6 right-6 z-[60] flex flex-col-reverse gap-2 pointer-events-none">
+    <div className="fixed bottom-6 right-6 z-[60] flex flex-col-reverse gap-2 pointer-events-none print:hidden">
       {toasts.map((toast) => (
         <div
           key={toast.id}

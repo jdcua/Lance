@@ -1736,7 +1736,11 @@ export const useStore = create<UnifiedStore>((set, get) => {
       // Canonical money summary. Mirrors the Finance screen exactly:
       // actual payments win over invoice status, outstanding is what was
       // billed minus what arrived, profit is arrivals minus expenses.
-      const paidFromPayments = get().payments.reduce((s, p) => s + p.amount, 0);
+      // Orphan payments (invoice deleted or missing via import) are excluded:
+      // phantom revenue is worse than an unattributed row.
+      const invoiceIds = new Set(get().invoices.map((i) => i.id));
+      const livePayments = get().payments.filter((p) => invoiceIds.has(p.invoice_id));
+      const paidFromPayments = livePayments.reduce((s, p) => s + p.amount, 0);
       const totalExpenses = get().expenses.reduce((s, e) => s + e.amount, 0);
       const totalPaid = get().invoices.filter((i) => i.status === 'paid').reduce((s, i) => s + i.total, 0);
       const totalPaidRevenue = paidFromPayments > 0 ? paidFromPayments : totalPaid;

@@ -206,9 +206,12 @@ export default function Finance() {
   if (paidFromPayments > 0) {
     Object.values(payments).flat().forEach((p) => {
       const inv = invoices.find((i) => i.id === p.invoice_id);
-      if (inv && !finIds.has(inv.id)) return;
+      // Orphan payments (invoice gone) are excluded from revenue, same as
+      // getFinanceSummary — phantom money must never inflate totals.
+      if (!inv) return;
+      if (!finIds.has(inv.id)) return;
       const month = p.payment_date.substring(0, 7);
-      const cur = inv ? invCurOf(inv) : (currency || 'CAD');
+      const cur = invCurOf(inv);
       // Converted when rates cover everything so the forecast engine works
       // in one currency; otherwise the legacy mixed sum (marked directional).
       monthlyPaid[month] = (monthlyPaid[month] || 0) + (showConverted ? toProf(p.amount, cur) : p.amount);

@@ -60,6 +60,41 @@ html, body, #root {
   transition: none !important;
 }
 
+/* ── Print: invoices and records print as documents, not app chrome ── */
+@media print {
+  aside,
+  button,
+  input,
+  select,
+  textarea,
+  kbd,
+  [role="dialog"],
+  [role="listbox"],
+  .no-print {
+    display: none !important;
+  }
+  #main-content {
+    overflow: visible !important;
+    height: auto !important;
+  }
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  /* Light ink on paper regardless of theme: dark surfaces flood ink.
+     !important is required — applyTheme writes vars inline, which beats
+     plain stylesheet rules (same cascade lesson as the .dark fix). */
+  :root {
+    --bg-primary: #ffffff !important;
+    --bg-secondary: #f4f4f4 !important;
+    --bg-card: #ffffff !important;
+    --border-color: #dddddd !important;
+    --text-primary: #111111 !important;
+    --text-secondary: #444444 !important;
+    --text-tertiary: #666666 !important;
+  }
+}
+
 @keyframes slide-in {
   from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }

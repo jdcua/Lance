@@ -29,7 +29,7 @@ export default function Topbar() {
   const mod = getShortcutModifierLabel();
 
   return (
-    <Fade className="h-[52px] bg-[var(--bg-card)]/85 backdrop-blur-md border-b border-[var(--border-color)] flex items-center gap-3 px-4 flex-shrink-0" y={-10}>
+    <Fade className="h-[52px] bg-[var(--bg-card)]/85 backdrop-blur-md border-b border-[var(--border-color)] flex items-center gap-3 px-4 flex-shrink-0 print:hidden" y={-10}>
       <nav className="flex items-center gap-1.5 text-[13px] min-w-0" aria-label="Breadcrumb">
         <span className="text-[var(--text-secondary)] flex-shrink-0">Workspace</span>
         <span className="text-[var(--text-tertiary)] flex-shrink-0">/</span>
