@@ -141,6 +141,10 @@ export default function TimeScreen() {
 
   const addManualEntry = async () => {
     if (!entryForm.project_id || !entryForm.client_id || durationMinutes <= 0) return;
+    if (!isFinite(durationMinutes) || durationMinutes > 1440) {
+      addToast('Duration must be between 1 minute and 24 hours', 'error');
+      return;
+    }
     setSaving(true);
     try {
       const now = new Date();

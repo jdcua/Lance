@@ -4,6 +4,7 @@ import Modal from './Modal';
 import Button from './Button';
 import { useToasts } from '../../store/toastStore';
 import { checkAndNotify } from '../../achievements/notify';
+import { sanitizeInput, MAX_LENGTHS } from '../../utils/sanitize';
 
 type QuickTimeLogModalProps = {
   open: boolean;
@@ -37,12 +38,24 @@ export default function QuickTimeLogModal({ open, onClose }: QuickTimeLogModalPr
     setSaving(true);
     try {
       const minutes = parseInt(durationMinutes, 10);
+      // type=number still allows negatives/typos via paste; garbage would
+      // backdate the entry or poison aggregates. Single day is the sane max.
+      if (!isFinite(minutes) || minutes < 1) {
+        setSaving(false);
+        addToast('Duration must be at least 1 minute', 'error');
+        return;
+      }
+      if (minutes > 1440) {
+        setSaving(false);
+        addToast('Duration over 24 hours — split it across days instead', 'error');
+        return;
+      }
       const now = new Date();
       const startTime = new Date(now.getTime() - minutes * 60000).toISOString();
       const entry = await addTimeEntry({
         project_id: projectId,
         client_id: clientId,
-        description: description || undefined,
+        description: description ? sanitizeInput(description).slice(0, MAX_LENGTHS.description) : undefined,
         start_time: startTime,
         billable: true,
       });

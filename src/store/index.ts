@@ -1298,6 +1298,13 @@ export const useStore = create<UnifiedStore>((set, get) => {
       catch (e) { console.error('[store] loadMetricTemplates failed:', e); }
     },
     saveMetricTemplate: async (name, definitions) => {
+      // Same-name save replaces (upsert): otherwise the picker fills with
+      // indistinguishable duplicates and apply() grabs the first blindly.
+      const templates = get().metricTemplates.length ? get().metricTemplates : await invoke<MetricTemplate[]>('get_metric_templates');
+      const existing = templates.find((t) => t.name.toLowerCase() === name.toLowerCase());
+      if (existing) {
+        await invoke('delete_metric_template', { id: existing.id });
+      }
       await invoke('save_metric_template', { payload: { name, definitions_json: JSON.stringify(definitions) } });
       await get().loadMetricTemplates();
     },
@@ -1309,16 +1316,37 @@ export const useStore = create<UnifiedStore>((set, get) => {
       const templates = get().metricTemplates.length ? get().metricTemplates : await invoke<MetricTemplate[]>('get_metric_templates');
       const tmpl = templates.find((t) => t.name === templateName);
       if (!tmpl) return;
-      const definitions: Array<Pick<MetricDefinition, 'name' | 'metric_type' | 'unit_label' | 'is_headline' | 'sort_order'>> = JSON.parse(tmpl.definitions_json);
+      let definitions: Array<Pick<MetricDefinition, 'name' | 'metric_type' | 'unit_label' | 'is_headline' | 'sort_order'>>;
+      try {
+        definitions = JSON.parse(tmpl.definitions_json);
+      } catch {
+        throw new Error(`Template "${templateName}" is corrupted and cannot be applied.`);
+      }
+      if (!Array.isArray(definitions)) {
+        throw new Error(`Template "${templateName}" is corrupted and cannot be applied.`);
+      }
+      const validTypes = ['number', 'percentage', 'currency', 'text'] as const;
+      await get().loadMetricDefs();
+      const existingNames = new Set(
+        get().metricDefs.filter((d) => d.client_id === clientId).map((d) => d.name.toLowerCase()),
+      );
       for (const def of definitions) {
+        const name = (def?.name || '').trim();
+        // Skip nameless rows and defs the client already has: re-applying a
+        // template must be idempotent, not a duplicate factory.
+        if (!name || existingNames.has(name.toLowerCase())) continue;
+        const metric_type = (validTypes as readonly string[]).includes(def.metric_type)
+          ? def.metric_type as MetricDefinition['metric_type']
+          : 'number';
         await get().createMetricDef({
           client_id: clientId,
-          name: def.name,
-          metric_type: def.metric_type as MetricDefinition['metric_type'],
+          name,
+          metric_type,
           unit_label: def.unit_label,
-          is_headline: def.is_headline as boolean,
-          sort_order: def.sort_order as number,
+          is_headline: !!def.is_headline,
+          sort_order: typeof def.sort_order === 'number' ? def.sort_order : 0,
         });
+        existingNames.add(name.toLowerCase());
       }
     },
 
