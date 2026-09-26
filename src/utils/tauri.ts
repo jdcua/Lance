@@ -780,6 +780,14 @@ const list: StoreRow[] = all[key];
     })) as unknown as T;
   }
 
+  // ── get_portal_activity: the portal server is Tauri-only, so browser
+  // mode has no external views to report. Return [] explicitly — falling
+  // through to the {} catch-all made every 30s poll throw inside
+  // snapshotOpens (caught silently, but noisy and fragile).
+  if (cmd === 'get_portal_activity') {
+    return [] as unknown as T;
+  }
+
   // ── Catch-all: return safe default ──
   console.debug(`[tauri] handleBrowserMode: unhandled command "${cmd}"`);
   return {} as unknown as T;

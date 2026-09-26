@@ -10,7 +10,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { exportProposalPDF, exportProposalDOCX } from '../export';
 import { formatCurrency } from '../utils/format';
 import { formatDate } from '../utils/format';
-import { relativeDate, DAY_MS } from '../utils/format';
+import { relativeDate, parseDateString, DAY_MS } from '../utils/format';
 import { getProposalViews } from '../utils/portalActivity';
 import { scoreProposalHeat, compareHeat, type ProposalHeat } from '../utils/proposalHeat';
 import { getFeatureFlags } from '../lib/constants';
@@ -113,6 +113,16 @@ export default function Proposals() {
     const d = new Date();
     d.setDate(d.getDate() + profile.proposal_expiry_days);
     return { expiresAt: d.toISOString() };
+  };
+
+  // Human countdown for sent proposals. A past expiry that the hourly
+  // engine hasn't swept yet says so honestly instead of "Expires {past}".
+  const expiryCountdown = (expiresAt: string, long = false): string => {
+    const days = Math.ceil((parseDateString(expiresAt).getTime() - Date.now()) / DAY_MS);
+    if (days < 0) return long ? `Expired ${formatDate(expiresAt)} · auto-expiry pending` : 'Expired · expiring soon';
+    if (days === 0) return 'Expires today';
+    if (days === 1) return long ? `Expires tomorrow (${formatDate(expiresAt)})` : 'Expires tomorrow';
+    return long ? `Expires in ${days} days (${formatDate(expiresAt)})` : `Expires in ${days} days`;
   };
 
   const handleSend = async (p: Proposal) => {
@@ -534,7 +544,7 @@ export default function Proposals() {
                   {p.status === 'sent' && p.expires_at && (
                     <p className="text-[10px] text-[var(--text-tertiary)] mt-1 flex items-center gap-1">
                       <Clock size={11} />
-                      Expires {formatDate(p.expires_at)}
+                      {expiryCountdown(p.expires_at)}
                     </p>
                   )}
                 </div>
@@ -586,7 +596,7 @@ export default function Proposals() {
                   <div className="flex items-center gap-3 text-[10px] text-[var(--text-tertiary)]">
                     <span>Sent {p.sent_at ? formatDate(p.sent_at) : 'N/A'}</span>
                     <span>·</span>
-                    <span>{p.expires_at ? `Expires ${formatDate(p.expires_at)}` : 'Never expires'}</span>
+                    <span>{p.expires_at ? expiryCountdown(p.expires_at, true) : 'Never expires'}</span>
                   </div>
                   {/* Follow-up banner */}
                   {(() => {

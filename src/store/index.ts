@@ -759,6 +759,20 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ timeEntries: get().timeEntries.map((t) => (t.id === data.id ? data : t)) });
     },
     deleteTimeEntry: async (id) => {
+      // Billed hours belong to an invoice: deleting the entry would hide
+      // hours the client was charged for while the invoice keeps billing
+      // them. Block when a live invoice references this entry (line-item
+      // linkage); legacy flagged rows with no live link may go.
+      await get().loadInvoices();
+      const linker = get().invoices.find((inv) => {
+        const items = Array.isArray(inv.line_items) ? inv.line_items : [];
+        return items.some((li) => (li.time_entry_ids || []).includes(id));
+      });
+      if (linker) {
+        throw new Error(
+          `Cannot delete — this time is billed on ${linker.invoice_number}. Adjust or delete the invoice first.`,
+        );
+      }
       snapshotForTrash('time_entries', id, get().timeEntries.find((t) => t.id === id));
       await invoke('delete_time_entry', { id });
       set({ timeEntries: get().timeEntries.filter((t) => t.id !== id) });

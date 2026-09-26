@@ -26,7 +26,7 @@ const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
 type SortKey = 'title' | 'client' | 'status' | 'budget' | 'date';
 
 export default function Projects() {
-  const { projects, loadProjects, addProject, updateProject, removeProject, clients, loadClients, milestones, loadMilestones, addMilestone, updateMilestone, removeMilestone, loadInvoices, addInvoice, profile, loadProfile, projectTemplates, loadProjectTemplates, loadTemplateMilestones, projectTemplateMilestones, addProjectTemplate } = useStore();
+  const { projects, loadProjects, addProject, updateProject, removeProject, clients, loadClients, milestones, loadMilestones, addMilestone, updateMilestone, removeMilestone, loadInvoices, addInvoice, profile, loadProfile, projectTemplates, loadProjectTemplates, loadTemplateMilestones, projectTemplateMilestones, addProjectTemplate, loadTimeEntries } = useStore();
   const addToast = useToasts((s) => s.add);
   const projectsError = useStore((s) => s.errors.projects);
   const [showProjectModal, setShowProjectModal] = useState(false);
@@ -109,6 +109,27 @@ export default function Projects() {
       }
       if (editingProject) {
         await updateProject({ ...editingProject, ...data, status: data.status });
+        // Completing with loose ends strands them silently (open milestones,
+        // unbilled hours, a running timer). Proceed — abandonment is legit —
+        // but say so out loud.
+        if (editingProject.status !== 'completed' && data.status === 'completed') {
+          try {
+            await loadTimeEntries();
+            const st = useStore.getState();
+            const openMs = st.milestones.filter((m) => m.project_id === editingProject.id && !m.completed).length;
+            const unbilledMin = st.timeEntries
+              .filter((t) => t.project_id === editingProject.id && !t.invoiced)
+              .reduce((s, t) => s + (t.duration_minutes || 0), 0);
+            const running = st.timeEntries.some((t) => t.project_id === editingProject.id && !t.end_time);
+            const loose: string[] = [];
+            if (openMs > 0) loose.push(`${openMs} open milestone${openMs === 1 ? '' : 's'}`);
+            if (unbilledMin > 0) loose.push(`${Math.round(unbilledMin / 60 * 10) / 10}h unbilled`);
+            if (running) loose.push('timer still running');
+            if (loose.length > 0) {
+              addToast(`Completed with loose ends: ${loose.join(', ')}`, 'warning', 6000);
+            }
+          } catch { /* completion stands; the audit is best-effort */ }
+        }
       } else {
         const created = await addProject(data);
         if (selectedTemplateId) {

@@ -104,3 +104,27 @@ describe('delete guards', () => {
     expect(useStore.getState().followUpLogs['proposal:p9'][0].status).toBe('responded');
   });
 });
+
+describe('billed time protection', () => {
+  it('blocks deleting time billed on a live invoice, names it', async () => {
+    localStorage.setItem(
+      'lance:store:invoices',
+      JSON.stringify([{ id: 'i9', client_id: 'c1', invoice_number: 'INV-9', status: 'sent', total: 100, line_items: [{ id: 'l1', description: 'W', quantity: 1, unit_price: 100, total: 100, time_entry_ids: ['te9'] }], created_at: '2026-01-01' }]),
+    );
+    localStorage.setItem(
+      'lance:store:time_entries',
+      JSON.stringify([{ id: 'te9', project_id: 'p1', start_time: '2026-01-01', duration_minutes: 60, billable: true, invoiced: true }]),
+    );
+    await expect(useStore.getState().deleteTimeEntry('te9')).rejects.toThrow(/INV-9/);
+  });
+
+  it('allows deleting legacy flagged entries with no live link', async () => {
+    localStorage.setItem('lance:store:invoices', JSON.stringify([]));
+    localStorage.setItem(
+      'lance:store:time_entries',
+      JSON.stringify([{ id: 'te-old', project_id: 'p1', start_time: '2026-01-01', duration_minutes: 60, billable: true, invoiced: true }]),
+    );
+    await useStore.getState().deleteTimeEntry('te-old');
+    expect(JSON.parse(localStorage.getItem('lance:store:time_entries') || '[]')).toHaveLength(0);
+  });
+});
