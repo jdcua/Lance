@@ -1,0 +1,102 @@
+# Lance — full documentation
+
+> The local-first freelancer OS. Your business data never touches the cloud.
+
+## Pillars
+
+### Win work before your competition.
+Proposals with scope warnings · Contract builder · Win-rate tracking.
+
+### Track time without leaving your flow.
+Project milestones · One-click timer · Unbilled-hours alerts.
+
+### Get paid. On time, every time.
+PDF + DOCX invoices · Recurring billing · Automated follow-ups · Late-fee dunning.
+
+### Your data. Your machine.
+No cloud, no accounts · Works fully offline · Nothing to breach.
+
+### Know your numbers cold.
+Finance overview · Client insights · Custom metrics per craft.
+
+## Pricing
+
+- Core: $0 forever — Free forever. Unlimited clients, projects, proposals.
+- Pro: $99/yr ($14/mo) — $99/year ($14/mo). 30-day free trial. Launch lifetime price $149 (reg $249).
+- Refunds: 30-day, no-questions-asked.
+
+## Crafts (41)
+
+- Animator (/craft/animator): Animate all day. Invoice in minutes.
+- Designer (/craft/designer): Design work that sells itself, proposals that close.
+- Photographer (/craft/photographer): Shoot Saturday. Invoice Sunday. Offline always.
+- Filmmaker (/craft/filmmaker): Cuts delivered. Invoices paid. No cloud.
+- Illustrator (/craft/illustrator): Draw. Deliver. Get paid.
+- 3D Artist (/craft/3d-artist): Renders queue. Invoices don't wait.
+- Musician (/craft/musician): Gigs booked. Stems delivered. Paid.
+- Writer (/craft/writer): Words shipped. Invoices followed up automatically.
+- Copywriter (/craft/copywriter): Copy that converts — proposals too.
+- Event Planner (/craft/event-planner): Every vendor, every deadline, one app.
+- Voice Actor (/craft/voice-actor): Takes tracked. Usage billed.
+- Fashion Designer (/craft/fashion-designer): Collections and clients, side by side.
+- Developer (/craft/developer): Ship code. Bill every hour.
+- Game Developer (/craft/game-developer): Builds versioned. Milestones billed.
+- UX Designer (/craft/ux-designer): Flows tested. Revisions capped.
+- Data Analyst (/craft/data-analyst): Dashboards delivered. Retainers tracked.
+- Translator (/craft/translator): Words counted. Invoices exact.
+- DevOps (/craft/devops): Uptime kept. Hours billed.
+- Security Consultant (/craft/cybersecurity): Audits scoped. Findings billed.
+- AI Engineer (/craft/ai-engineer): Models shipped. Experiments tracked.
+- Embedded Engineer (/craft/embedded): Firmware milestones, hardware billing.
+- Blockchain Dev (/craft/blockchain): Contracts deployed — smart and paper.
+- Consultant (/craft/consultant): Advice priced. Follow-ups automatic.
+- Marketer (/craft/marketing): Campaigns run. Retainers renewed.
+- SEO Specialist (/craft/seo): Rankings tracked per client.
+- Architect (/craft/architect): Phases planned. Fees scheduled.
+- Social Media Manager (/craft/social-media): Content calendars and invoices, together.
+- Advertiser (/craft/advertiser): Ad spend tracked. Fees separated.
+- Project Manager (/craft/project-manager): Every milestone on track.
+- Product Manager (/craft/product-manager): Roadmaps and contractor billing.
+- Growth Specialist (/craft/growth): Experiments run. Wins reported.
+- CX Strategist (/craft/cx-strategist): Journeys mapped. Value proved.
+- Virtual Assistant (/craft/virtual-assistant): Hours logged. Clients billed weekly.
+- Accountant (/craft/accountant): Books closed. Clients invoiced.
+- Tutor (/craft/tutor): Sessions tracked. Packages billed.
+- Wellness Coach (/craft/wellness): Programs delivered. Packages renewed.
+- Legal Consultant (/craft/legal): Matters scoped. Time captured.
+- Recruiter (/craft/recruiter): Placements tracked. Fees collected.
+- Trainer (/craft/trainer): Sessions packed. Plans billed.
+- Nutritionist (/craft/nutritionist): Plans personalized. Follow-ups scheduled.
+- Real Estate Pro (/craft/real-estate): Listings moved. Commissions tracked.
+
+## Alternatives
+
+- vs Bonsai (/alternatives/bonsai): Monthly fee + cloud lock-in vs your machine, your data.
+- vs FreshBooks (/alternatives/freshbooks): Invoicing-first subscription vs full OS: proposals to paid.
+- vs Notion + Sheets (/alternatives/notion): DIY tabs and copy-paste vs one offline loop.
+- vs Excel (/alternatives/excel): Spreadsheet chaos vs milestones, timers, dunning in one place.
+
+## Rate methodology
+
+- Creative: $75,000 illustrative baseline. Models: day rates for shoots, per-project for deliverables, revision caps in writing. Trap: unbilled revision rounds and free 'quick changes' that eat the margin.
+- Technical: $110,000 illustrative baseline. Models: hourly for maintenance, weekly rates for builds, retainers for ongoing support. Trap: scope creep disguised as 'small tweaks' and unbilled debugging time.
+- Strategic: $120,000 illustrative baseline. Models: value-based project fees, monthly retainers, paid discovery phases. Trap: free strategy given away in the sales process instead of paid discovery.
+- Service: $55,000 illustrative baseline. Models: session packages, hourly with minimums, monthly plans. Trap: no-shows and admin time that never makes it onto an invoice. Defaults: $6000 expenses, 25 billable hrs/wk, 4 wks off, 10% buffer. Illustrative examples, not market data.
+
+## Free tools
+
+- Invoice generator: https://lance.cuajuandiego.workers.dev/tools/invoice-generator
+- Rate calculator: https://lance.cuajuandiego.workers.dev/tools/rate-calculator
+
+## Templates
+
+- https://lance.cuajuandiego.workers.dev/templates/freelance-proposal
+- https://lance.cuajuandiego.workers.dev/templates/freelance-contract
+- https://lance.cuajuandiego.workers.dev/templates/freelance-invoice
+
+## FAQ
+
+- What is Lance? Local-first freelancer OS; business data never touches the cloud.
+- Cost? Core free forever; Pro $99/yr; Lifetime $249.
+- Privacy? No accounts, no sync, no trackers. v1 zero AI; v2 on-device optional AI.
+- Refunds? 30-day no-questions-asked.

@@ -344,11 +344,18 @@ for (const c of content.crafts) {
   const r = rateFor(cat);
   const name = plural(c.label);
   const annual = Math.round((r.hourly * r.hrs) / 1000);
+  const rateFaq = [
+    { q: `What should ${name.toLowerCase()} charge per hour?`, a: `Worked example: $${r.hourly}/hr from $${t.targetIncome.toLocaleString()} target income and ${r.hrs.toLocaleString()} billable hours. Illustrative — run your own numbers in the free calculator.` },
+    { q: 'Are these real market rates?', a: 'No — worked examples from stated assumptions, not market data. Adjust with the free rate calculator.' },
+    { q: 'What does Lance cost?', a: 'Lance Core is free forever. Lance Pro is $99/year ($14/month). Lance Lifetime is a $249 one-time payment.' },
+    { q: 'Does Lance use AI on my data?', a: 'Not yet. Local AI proposal drafting is coming in Lance v2 — on-device, optional and off by default. v1 has zero AI.' },
+  ];
   const cards =
     bentoCard(`${name}: $${r.hourly}/hr worked example`, `From $${t.targetIncome.toLocaleString()} target + $${d.expenses.toLocaleString()} expenses, × ${100 + d.bufferPct}% buffer, ÷ ${r.hrs.toLocaleString()} billable hrs/yr (${d.billableHrsWeek}/wk, ${d.weeksOff} wks off) ≈ $${annual}k collected per year. *Illustrative example — not market data.`, 'b-3', '$') +
     bentoCard('How to charge', t.models + '.', 'b-3', '✎') +
     bentoCard('Watch out for', t.trap + '.', 'b-2', '!') +
-    bentoCard('Track it in Lance', `One-click timer ties hours to projects; unbilled alerts make sure the rate you set is the rate you collect.`, 'b-2', '◷');
+    bentoCard('Track it in Lance', `One-click timer ties hours to projects; unbilled alerts make sure the rate you set is the rate you collect.`, 'b-2', '◷') +
+    rateFaq.map((f) => bentoCard(f.q, f.a, 'b-2', '?')).join('');
   write(
     join(landing, 'rates', `${c.id}.html`),
     seoShell(
@@ -356,10 +363,7 @@ for (const c of content.crafts) {
       `${c.hook} Worked hourly rate example ($${r.hourly}/hr) with transparent math + free calculator.`,
       cards,
       `rates/${c.id}`,
-      [
-        { q: `What should ${name.toLowerCase()} charge per hour?`, a: `Worked example: $${r.hourly}/hr from $${t.targetIncome.toLocaleString()} target income and ${r.hrs.toLocaleString()} billable hours. Illustrative — run your own numbers in the free calculator.` },
-        { q: 'Are these real market rates?', a: 'No — worked examples from stated assumptions, not market data. Adjust with the free rate calculator.' },
-      ],
+      rateFaq,
     ),
   );
   rateUrls.push(`rates/${c.id}`);
@@ -429,6 +433,53 @@ ${tplUrls.filter((u) => u !== 'templates').map((u) => `- ${site}/${u}`).join('\n
 {
   const base = readFileSync(join(landing, 'llms.txt'), 'utf8').split('\n## Browse by craft')[0].replace(/\s+$/, '');
   write(join(landing, 'llms.txt'), base + '\n' + llmsAdd);
+}
+
+// ── llms-full.txt: complete dump for AI assistants (regenerated, deterministic) ──
+{
+  const full = `# Lance — full documentation
+
+> ${content.brand.positioning}
+
+## Pillars
+
+${content.pillars.map((p) => `### ${p.headline}\n${p.points.join(' · ')}.`).join('\n\n')}
+
+## Pricing
+
+- Core: $${content.pricing.core.price} forever — ${content.pricing.core.blurb}
+- Pro: $${content.pricing.pro.yearly}/yr ($${content.pricing.pro.monthly}/mo) — ${content.pricing.pro.blurb} Launch lifetime price $${content.pricing.lifetime.launchPrice} (reg $${content.pricing.lifetime.price}).
+- Refunds: 30-day, no-questions-asked.
+
+## Crafts (${content.crafts.length})
+
+${content.crafts.map((c) => `- ${c.label} (/craft/${c.id}): ${c.hook}`).join('\n')}
+
+## Alternatives
+
+${content.alternatives.map((a) => `- vs ${a.name} (/alternatives/${a.slug}): ${a.angle}`).join('\n')}
+
+## Rate methodology
+
+${rm.byCategory ? Object.entries(rm.byCategory).map(([k, v]) => `- ${k}: $${v.targetIncome.toLocaleString()} illustrative baseline. Models: ${v.models}. Trap: ${v.trap}.`).join('\n') : ''} Defaults: $${rm.defaults.expenses} expenses, ${rm.defaults.billableHrsWeek} billable hrs/wk, ${rm.defaults.weeksOff} wks off, ${rm.defaults.bufferPct}% buffer. Illustrative examples, not market data.
+
+## Free tools
+
+- Invoice generator: ${site}/tools/invoice-generator
+- Rate calculator: ${site}/tools/rate-calculator
+
+## Templates
+
+${tplUrls.filter((u) => u !== 'templates').map((u) => `- ${site}/${u}`).join('\n')}
+
+## FAQ
+
+- What is Lance? Local-first freelancer OS; business data never touches the cloud.
+- Cost? Core free forever; Pro $99/yr; Lifetime $249.
+- Privacy? No accounts, no sync, no trackers. v1 zero AI; v2 on-device optional AI.
+- Refunds? 30-day no-questions-asked.
+`;
+  write(join(landing, 'llms-full.txt'), full);
 }
 
 // ── 4. Per-channel drafts for launch day ──
