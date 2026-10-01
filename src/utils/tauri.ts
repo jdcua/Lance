@@ -260,7 +260,15 @@ const list: StoreRow[] = all[key];
 
   // ── get_asset_stats ──
   if (cmd === 'get_asset_stats') {
-    return null as unknown as T;
+    // Browser mode has no asset server, but the rows (with real sizes)
+    // are right here — count them instead of returning null.
+    const items = lsGet<StoreRow>('attachments');
+    let totalSize = 0;
+    for (const item of items) {
+      const size = Number(item.size_bytes);
+      if (Number.isFinite(size) && size > 0) totalSize += size;
+    }
+    return { total_files: items.length, total_size_bytes: totalSize } as unknown as T;
   }
 
   // ── Share token / portal commands (browser mode: simulated portal) ──

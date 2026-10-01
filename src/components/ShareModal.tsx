@@ -4,6 +4,7 @@ import Button from './ui/Button';
 import { useToasts } from '../store/toastStore';
 import { useStore } from '../store';
 import { tauriInvoke, isTauri } from '../utils/tauri';
+import { hasTrialPath } from '../demo/isDemo';
 import { Copy, Link, Trash2, Eye, Clock } from 'lucide-react';
 import type { ShareToken } from '../types';
 
@@ -23,10 +24,23 @@ const EXPIRY_OPTIONS = [
 function shareUrlFor(token: ShareToken, port: number): string {
   // In browser dev mode there is no separate share server, so share links
   // point at the running Lance app itself (avoids a dead 1421 port).
+  // In the trial the app lives under /try, so the link must too —
+  // otherwise it 404s on the landing site instead of opening the portal.
   if (!isTauri()) {
-    return `${window.location.origin}/share/${token.token}`;
+    const base = hasTrialPath() ? '/try' : '';
+    return `${window.location.origin}${base}/share/${token.token}`;
   }
   return `http://localhost:${port}/share/${token.token}`;
+}
+
+/** Trial links open the client view in THIS browser only (tokens live in
+ *  localStorage — there is no server to hand them to another device).
+ *  Real cross-device sharing needs the desktop app's portal server. */
+function shareFooterNote(): string {
+  if (hasTrialPath()) {
+    return 'Trial demo link: opens the client view in this browser only. Real client sharing (any device) needs the desktop app.';
+  }
+  return 'This link only works while Lance is open. Your client can view it on any device with a browser.';
 }
 
 export default function ShareModal({ open, onClose, entityType, entityId }: ShareModalProps) {
@@ -42,7 +56,10 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
   const loadToken = useCallback(async () => {
     setLoading(true);
     try {
-      const existing = await tauriInvoke<ShareToken | null>('get_share_token_for_entity', { entityType, entityId });
+      const existing = await tauriInvoke<ShareToken | null>('get_share_token_for_entity', {
+        entityType,
+        entityId,
+      });
 
       let serverPort = portalPort;
       if (!serverPort) {
@@ -128,8 +145,8 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
   const shareTooltip = portalFailed
     ? 'Portal unavailable \u2014 see Settings'
     : !isServerReady
-    ? 'Portal starting...'
-    : undefined;
+      ? 'Portal starting...'
+      : undefined;
 
   return (
     <Modal open={open} onClose={onClose} title={`Share ${entityLabel}`} size="md">
@@ -137,11 +154,14 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
         {!token ? (
           <>
             <p className="text-sm text-[var(--text-secondary)]">
-              Create a shareable link to let your client view this {entityType === 'proposal' ? 'proposal' : 'contract'} in their browser.
+              Create a shareable link to let your client view this{' '}
+              {entityType === 'proposal' ? 'proposal' : 'contract'} in their browser.
             </p>
 
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Link expiry</label>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">
+                Link expiry
+              </label>
               <div className="flex gap-2">
                 {EXPIRY_OPTIONS.map((opt) => (
                   <button
@@ -160,7 +180,13 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
             </div>
 
             <div className="pt-2">
-              <Button onClick={handleCreate} loading={loading} disabled={shareDisabled} size="sm" title={shareTooltip}>
+              <Button
+                onClick={handleCreate}
+                loading={loading}
+                disabled={shareDisabled}
+                size="sm"
+                title={shareTooltip}
+              >
                 <Link size={14} />
                 Generate Share Link
               </Button>
@@ -172,20 +198,25 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
         ) : (
           <>
             {token.client_response && (
-              <div className={`px-3 py-2 rounded-[8px] text-xs font-medium ${
-                token.client_response === 'accepted'
-                  ? 'bg-[var(--success-bg)] text-[var(--success-text)]'
-                  : 'bg-[var(--danger-bg)] text-[var(--danger-text)]'
-              }`}>
+              <div
+                className={`px-3 py-2 rounded-[8px] text-xs font-medium ${
+                  token.client_response === 'accepted'
+                    ? 'bg-[var(--success-bg)] text-[var(--success-text)]'
+                    : 'bg-[var(--danger-bg)] text-[var(--danger-text)]'
+                }`}
+              >
                 {entityType === 'contract'
                   ? `Signed by ${token.client_signature || 'client'} on ${token.client_signed_at ? new Date(token.client_signed_at).toLocaleDateString() : '--'}`
                   : `${token.client_name || 'Client'} ${token.client_response} this ${entityLabel}`}
-                {token.client_response_at && ` on ${new Date(token.client_response_at).toLocaleDateString()}`}
+                {token.client_response_at &&
+                  ` on ${new Date(token.client_response_at).toLocaleDateString()}`}
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Share link</label>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">
+                Share link
+              </label>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
@@ -231,7 +262,7 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
         )}
 
         <p className="text-[10px] text-[var(--text-tertiary)] text-center pt-2 border-t border-[var(--border-color)]">
-          This link only works while Lance is open. Your client can view it on any device with a browser.
+          {shareFooterNote()}
         </p>
       </div>
     </Modal>

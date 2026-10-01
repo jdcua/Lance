@@ -1,52 +1,174 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lance: Freelancer OS</title>
-<meta name="description" content="Win work. Run projects. Get paid. The local-first freelancer OS.">
-<meta property="og:title" content="Lance: Freelancer OS">
-<meta property="og:description" content="The freelancer OS that keeps everything in one place, and none of it in the cloud.">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://lance.cuajuandiego.workers.dev/">
-<meta property="og:image" content="https://lance.cuajuandiego.workers.dev/og-image.png">
-<meta property="og:image:width" content="1024">
-<meta property="og:image:height" content="1024">
-<meta property="og:image:alt" content="Lance — Win work. Run projects. Get paid.">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:description" content="Proposals, contracts, time tracking, invoices and client insights in one fast, offline-first app. Free forever.">
-<meta name="twitter:image" content="https://lance.cuajuandiego.workers.dev/og-image.png">
-<meta name="author" content="Lance — built by independent freelancers">
-<script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[
-{"@type":"SoftwareApplication","@id":"https://lance.cuajuandiego.workers.dev/#app",
-"name":"Lance","applicationCategory":"BusinessApplication","operatingSystem":["macOS 11+","Windows 10+","Ubuntu 20.04+"],
-"description":"Lance is a local-first freelancer OS: proposals, contracts, projects, time tracking, invoices and client insights in one offline app. No cloud, no accounts.",
-"url":"https://lance.cuajuandiego.workers.dev/","softwareVersion":"0.9.3","dateModified":"2026-09-22",
-"author":{"@type":"Organization","@id":"https://lance.cuajuandiego.workers.dev/#org"},
-"offers":[
-{"@type":"Offer","name":"Lance Core","price":"0","priceCurrency":"USD","description":"Free forever. Unlimited clients, projects, proposals."},
-{"@type":"Offer","name":"Lance Pro","price":"99","priceCurrency":"USD","description":"$99/year ($14/mo monthly). Archetype documents, forecasts, change orders, smart dunning. 30-day free trial."},
-{"@type":"Offer","name":"Lance Lifetime","price":"249","priceCurrency":"USD","description":"One-time payment. Everything in Pro, forever."}]},
-{"@type":"Organization","@id":"https://lance.cuajuandiego.workers.dev/#org",
-"name":"Lance","url":"https://lance.cuajuandiego.workers.dev/","sameAs":[]},
-{"@type":"FAQPage","mainEntity":[
-{"@type":"Question","name":"What is Lance?","acceptedAnswer":{"@type":"Answer","text":"Lance is a local-first freelancer OS: proposals, contracts, projects, time tracking, invoices and client insights in one fast offline app. Your business data never touches the cloud."}},
-{"@type":"Question","name":"Who is Lance for?","acceptedAnswer":{"@type":"Answer","text":"Independent freelancers and contractors who want one offline app instead of five cloud subscriptions. Lance is built by independent freelancers."}},
-{"@type":"Question","name":"Is my data really never in the cloud?","acceptedAnswer":{"@type":"Answer","text":"Yes. Lance stores everything on your device — no accounts, no cloud sync, no trackers. There is nothing to breach because there is no server holding your data."}},
-{"@type":"Question","name":"What does Lance cost?","acceptedAnswer":{"@type":"Answer","text":"Lance Core is free forever with unlimited clients, projects and proposals. Lance Pro is $99/year ($14/month monthly) with a 30-day free trial. Lance Lifetime is a $249 one-time payment. Client payments go straight to you; Lance never takes a cut."}},
-{"@type":"Question","name":"Which platforms are supported?","acceptedAnswer":{"@type":"Answer","text":"macOS 11 and later (Apple Silicon), Windows 10 and later (64-bit), and Ubuntu 20.04 and later (AppImage)."}},
-{"@type":"Question","name":"How is Lance different from HoneyBook-style tools?","acceptedAnswer":{"@type":"Answer","text":"Cloud freelance tools charge monthly subscriptions and hold your client data on their servers. Lance Core is free forever, works fully offline, and keeps every byte of business data on your device."}},
-{"@type":"Question","name":"Can I get a refund?","acceptedAnswer":{"@type":"Answer","text":"Yes. See the refunds page for the policy, or contact us and we will sort it out."}},
-{"@type":"Question","name":"Does Lance use AI on my data?","acceptedAnswer":{"@type":"Answer","text":"Not yet. Local AI proposal drafting is coming in Lance v2 — it runs on your machine, stays optional and off by default, and nothing is ever sent anywhere. v1 has zero AI."}}]}
-]}</script>
-<link rel="canonical" href="https://lance.cuajuandiego.workers.dev/">
-<link rel="icon" type="image/png" href="favicon.png">
-<link rel="preconnect" href="https://fonts.bunny.net">
-<link href="https://fonts.bunny.net/css?family=space-grotesk:500,600,700|inter:400,500,600|jetbrains-mono:400,500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
-<noscript><style>.faq-a{grid-template-rows:minmax(0,1fr)}.faq-item.is-extra{display:block}.faq-more{display:none}</style></noscript>
-<!--
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lance: Freelancer OS</title>
+    <meta
+      name="description"
+      content="Win work. Run projects. Get paid. The local-first freelancer OS."
+    />
+    <meta property="og:title" content="Lance: Freelancer OS" />
+    <meta
+      property="og:description"
+      content="The freelancer OS that keeps everything in one place, and none of it in the cloud."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://lance.cuajuandiego.workers.dev/" />
+    <meta property="og:image" content="https://lance.cuajuandiego.workers.dev/og-image.png" />
+    <meta property="og:image:width" content="1024" />
+    <meta property="og:image:height" content="1024" />
+    <meta property="og:image:alt" content="Lance — Win work. Run projects. Get paid." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:description"
+      content="Proposals, contracts, time tracking, invoices and client insights in one fast, offline-first app. Free forever."
+    />
+    <meta name="twitter:image" content="https://lance.cuajuandiego.workers.dev/og-image.png" />
+    <meta name="author" content="Lance — built by independent freelancers" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "SoftwareApplication",
+            "@id": "https://lance.cuajuandiego.workers.dev/#app",
+            "name": "Lance",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": ["macOS 11+", "Windows 10+", "Ubuntu 20.04+"],
+            "description": "Lance is a local-first freelancer OS: proposals, contracts, projects, time tracking, invoices and client insights in one offline app. No cloud, no accounts.",
+            "url": "https://lance.cuajuandiego.workers.dev/",
+            "softwareVersion": "0.9.3",
+            "dateModified": "2026-09-22",
+            "author": {
+              "@type": "Organization",
+              "@id": "https://lance.cuajuandiego.workers.dev/#org"
+            },
+            "offers": [
+              {
+                "@type": "Offer",
+                "name": "Lance Core",
+                "price": "0",
+                "priceCurrency": "USD",
+                "description": "Free forever. Unlimited clients, projects, proposals."
+              },
+              {
+                "@type": "Offer",
+                "name": "Lance Pro",
+                "price": "99",
+                "priceCurrency": "USD",
+                "description": "$99/year ($14/mo monthly). Archetype documents, forecasts, change orders, smart dunning. 30-day free trial."
+              },
+              {
+                "@type": "Offer",
+                "name": "Lance Lifetime",
+                "price": "249",
+                "priceCurrency": "USD",
+                "description": "One-time payment. Everything in Pro, forever."
+              }
+            ]
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://lance.cuajuandiego.workers.dev/#org",
+            "name": "Lance",
+            "url": "https://lance.cuajuandiego.workers.dev/",
+            "sameAs": []
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "What is Lance?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Lance is a local-first freelancer OS: proposals, contracts, projects, time tracking, invoices and client insights in one fast offline app. Your business data never touches the cloud."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Who is Lance for?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Independent freelancers and contractors who want one offline app instead of five cloud subscriptions. Lance is built by independent freelancers."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is my data really never in the cloud?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. Lance stores everything on your device — no accounts, no cloud sync, no trackers. There is nothing to breach because there is no server holding your data."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What does Lance cost?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Lance Core is free forever with unlimited clients, projects and proposals. Lance Pro is $99/year ($14/month monthly) with a 30-day free trial. Lance Lifetime is a $249 one-time payment. Client payments go straight to you; Lance never takes a cut."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Which platforms are supported?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "macOS 11 and later (Apple Silicon), Windows 10 and later (64-bit), and Ubuntu 20.04 and later (AppImage)."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How is Lance different from HoneyBook-style tools?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Cloud freelance tools charge monthly subscriptions and hold your client data on their servers. Lance Core is free forever, works fully offline, and keeps every byte of business data on your device."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can I get a refund?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. See the refunds page for the policy, or contact us and we will sort it out."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Does Lance use AI on my data?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Not yet. Local AI proposal drafting is coming in Lance v2 — it runs on your machine, stays optional and off by default, and nothing is ever sent anywhere. v1 has zero AI."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+    <link rel="canonical" href="https://lance.cuajuandiego.workers.dev/" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="preconnect" href="https://fonts.bunny.net" />
+    <link
+      href="https://fonts.bunny.net/css?family=space-grotesk:500,600,700|inter:400,500,600|jetbrains-mono:400,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <noscript
+      ><style>
+        .faq-a {
+          grid-template-rows: minmax(0, 1fr);
+        }
+        .faq-item.is-extra {
+          display: block;
+        }
+        .faq-more {
+          display: none;
+        }
+      </style></noscript
+    >
+    <!--
   MOTION DNA (all adapted line-by-line to vanilla CSS/JS, no frameworks):
   - Magic UI (MIT, magicuidesign/magicui): shimmer-button, border-beam,
     marquee, aurora-text, number-ticker, text-reveal, particles,
@@ -55,449 +177,1023 @@
     animated-group stagger, magnetic, in-view
   - ObsidianUI (MIT, obsidianui.dev): dotted-grid cursor glow (kept light)
 -->
-<!-- EXP-Fragments-START (auto by promo:build) -->
-<script type="application/json" data-exp-fragment="hero-cta:B">{"heroBtnLabel":"Free Download — No account","note":"challenger, friction-first"}</script>
-<script type="application/json" data-exp-fragment="hero-h1:B">{"h1":"Your freelance business, on your machine."}</script>
-<script type="application/json" data-exp-fragment="pricing-order:B">{"order":["lifetime","pro","free"],"ribbon":"Launch $149"}</script>
-<!-- EXP-FRANMENTS-END -->
-</head>
-<body>
+    <!-- EXP-Fragments-START (auto by promo:build) -->
+    <script type="application/json" data-exp-fragment="hero-cta:B">
+      { "heroBtnLabel": "Free Download — No account", "note": "challenger, friction-first" }
+    </script>
+    <script type="application/json" data-exp-fragment="hero-h1:B">
+      { "h1": "Your freelance business, on your machine." }
+    </script>
+    <script type="application/json" data-exp-fragment="pricing-order:B">
+      { "order": ["lifetime", "pro", "free"], "ribbon": "Launch $149" }
+    </script>
+    <!-- EXP-FRANMENTS-END -->
+  </head>
+  <body>
+    <div id="sbar"></div>
+    <div id="cursorGlow" aria-hidden="true"></div>
 
-<div id="sbar"></div>
-<div id="cursorGlow" aria-hidden="true"></div>
-
-<!-- ═══ NAV ═══ -->
-<nav id="nav">
-  <div class="nav-inner">
-    <a href="#top" class="nav-brand" aria-label="Lance home">
-      <svg class="brand-mark" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#FFFFFF"/><path d="M7 18 V9.5 h2.6 v5.9 h4.9 V18 Z" fill="#0B3B2A"/><path d="M18.6 6.4 L17 9.9 L15.1 8 Z" fill="#0E9F6E"/><path d="M12.1 12.9 L17.2 7.8" stroke="#0E9F6E" stroke-width="2.2" stroke-linecap="butt"/></svg>
-      Lance
-    </a>
-    <ul class="nav-links" id="navLinks">
-      <li><a href="#features">Features</a></li>
-      <li><a href="#showcase">Showcase</a></li>
-      <li><a href="#themes">Themes</a></li>
-      <li><a href="#pricing">Pricing</a></li>
-      <li><a href="#download" class="shimmer shimmer-sm"><span class="shimmer-label">Free Download</span><span class="spark" aria-hidden="true"><span class="spark-inner"><span class="spark-rotor"></span></span></span><span class="shimmer-hi" aria-hidden="true"></span><span class="shimmer-bg" aria-hidden="true"></span></a></li>
-    </ul>
-    <button class="hamburger" id="hamburger" aria-label="Menu">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
-    </button>
-  </div>
-</nav>
-
-<!-- ═══ HERO ═══ -->
-<header class="hero" id="top">
-  <canvas id="particles" aria-hidden="true"></canvas>
-  <div class="retro-floor" aria-hidden="true">
-    <div class="retro-tilt"><div class="retro-scroll"></div></div>
-    <div class="retro-fade"></div>
-  </div>
-  <div id="meteors" aria-hidden="true"></div>
-  <div class="orb orb-a" aria-hidden="true"></div>
-  <div class="orb orb-b" aria-hidden="true"></div>
-  <div class="hero-noise" aria-hidden="true"></div>
-
-  <div class="hero-inner">
-    <div class="hero-copy">
-      <div class="hero-badge blur-in" style="--d:0ms">
-        <span class="pulse-dot"></span>
-        <span class="mono">Freelancer OS</span>
-        <span class="hero-ver mono" id="heroVer"></span>
+    <!-- ═══ NAV ═══ -->
+    <nav id="nav">
+      <div class="nav-inner">
+        <a href="#top" class="nav-brand" aria-label="Lance home">
+          <svg class="brand-mark" viewBox="0 0 24 24">
+            <rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#FFFFFF" />
+            <path d="M7 18 V9.5 h2.6 v5.9 h4.9 V18 Z" fill="#0B3B2A" />
+            <path d="M18.6 6.4 L17 9.9 L15.1 8 Z" fill="#0E9F6E" />
+            <path
+              d="M12.1 12.9 L17.2 7.8"
+              stroke="#0E9F6E"
+              stroke-width="2.2"
+              stroke-linecap="butt"
+            />
+          </svg>
+          Lance
+        </a>
+        <ul class="nav-links" id="navLinks">
+          <li><a href="#features">Features</a></li>
+          <li><a href="#showcase">Showcase</a></li>
+          <li><a href="#themes">Themes</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li>
+            <a href="#download" class="shimmer shimmer-sm"
+              ><span class="shimmer-label">Free Download</span
+              ><span class="spark" aria-hidden="true"
+                ><span class="spark-inner"><span class="spark-rotor"></span></span></span
+              ><span class="shimmer-hi" aria-hidden="true"></span
+              ><span class="shimmer-bg" aria-hidden="true"></span
+            ></a>
+          </li>
+        </ul>
+        <button class="hamburger" id="hamburger" aria-label="Menu">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <line x1="3" x2="21" y1="6" y2="6" />
+            <line x1="3" x2="21" y1="12" y2="12" />
+            <line x1="3" x2="21" y1="18" y2="18" />
+          </svg>
+        </button>
       </div>
-      <h1 class="hero-hl" data-exp="hero-h1">
-        <span class="hl-line blur-in" style="--d:80ms"><span>Win work.</span></span>
-        <span class="hl-line blur-in" style="--d:180ms"><span>Run projects.</span></span>
-        <span class="hl-line blur-in" style="--d:280ms"><span class="aurora">Get paid.</span></span>
-      </h1>
-      <p class="hero-sub blur-in" style="--d:380ms">Proposals, contracts, time tracking, invoices and client insights in one fast app. Your data never touches the cloud.</p>
-      <div class="hero-cta blur-in" style="--d:480ms" data-exp="hero-cta">
-        <a href="#download" class="shimmer magnetic" id="heroBtn"><span class="shimmer-label" id="heroBtnLabel">Download for Mac</span><span class="spark" aria-hidden="true"><span class="spark-inner"><span class="spark-rotor"></span></span></span><span class="shimmer-hi" aria-hidden="true"></span><span class="shimmer-bg" aria-hidden="true"></span></a>
-        <a href="#showcase" class="ghost-btn magnetic">See it in action</a>
+    </nav>
+
+    <!-- ═══ HERO ═══ -->
+    <header class="hero" id="top">
+      <canvas id="particles" aria-hidden="true"></canvas>
+      <div class="retro-floor" aria-hidden="true">
+        <div class="retro-tilt"><div class="retro-scroll"></div></div>
+        <div class="retro-fade"></div>
       </div>
-      <div class="hero-stats blur-in" style="--d:580ms">
-        <div class="hstat"><div class="hstat-val"><span class="ticker" data-ticker="41">0</span></div><div class="hstat-lbl mono">crafts built-in</div></div>
-        <div class="hstat"><div class="hstat-val"><span class="ticker" data-ticker="100">0</span>%</div><div class="hstat-lbl mono">offline-first</div></div>
-        <div class="hstat"><div class="hstat-val">$<span class="ticker" data-ticker="0">0</span></div><div class="hstat-lbl mono">cloud spend</div></div>
+      <div id="meteors" aria-hidden="true"></div>
+      <div class="orb orb-a" aria-hidden="true"></div>
+      <div class="orb orb-b" aria-hidden="true"></div>
+      <div class="hero-noise" aria-hidden="true"></div>
+
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <div class="hero-badge blur-in" style="--d: 0ms">
+            <span class="pulse-dot"></span>
+            <span class="mono">Freelancer OS</span>
+            <span class="hero-ver mono" id="heroVer"></span>
+          </div>
+          <h1 class="hero-hl" data-exp="hero-h1">
+            <span class="hl-line blur-in" style="--d: 80ms"><span>Win work.</span></span>
+            <span class="hl-line blur-in" style="--d: 180ms"><span>Run projects.</span></span>
+            <span class="hl-line blur-in" style="--d: 280ms"
+              ><span class="aurora">Get paid.</span></span
+            >
+          </h1>
+          <p class="hero-sub blur-in" style="--d: 380ms">
+            Proposals, contracts, time tracking, invoices and client insights in one fast app. Your
+            data never touches the cloud.
+          </p>
+          <div class="hero-cta blur-in" style="--d: 480ms" data-exp="hero-cta">
+            <a href="#download" class="shimmer magnetic" id="heroBtn"
+              ><span class="shimmer-label" id="heroBtnLabel">Download for Mac</span
+              ><span class="spark" aria-hidden="true"
+                ><span class="spark-inner"><span class="spark-rotor"></span></span></span
+              ><span class="shimmer-hi" aria-hidden="true"></span
+              ><span class="shimmer-bg" aria-hidden="true"></span
+            ></a>
+            <a href="/try/" class="ghost-btn magnetic">Try in your browser</a>
+          </div>
+          <div class="hero-stats blur-in" style="--d: 580ms">
+            <div class="hstat">
+              <div class="hstat-val"><span class="ticker" data-ticker="41">0</span></div>
+              <div class="hstat-lbl mono">crafts built-in</div>
+            </div>
+            <div class="hstat">
+              <div class="hstat-val"><span class="ticker" data-ticker="100">0</span>%</div>
+              <div class="hstat-lbl mono">offline-first</div>
+            </div>
+            <div class="hstat">
+              <div class="hstat-val">$<span class="ticker" data-ticker="0">0</span></div>
+              <div class="hstat-lbl mono">cloud spend</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-visual blur-in" style="--d: 400ms" id="heroVisual">
+          <div class="mock-tilt" id="mockTilt">
+            <div class="mock">
+              <div class="mock-chrome">
+                <span class="mdot r"></span><span class="mdot y"></span><span class="mdot g"></span>
+                <span class="mock-url mono">lance — proposals</span>
+              </div>
+              <div class="mock-body">
+                <div class="mock-side">
+                  <div class="ms-brand">
+                    <svg width="12" height="12" viewBox="0 0 24 24">
+                      <rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#FFFFFF" />
+                      <path d="M7 18 V9.5 h2.6 v5.9 h4.9 V18 Z" fill="#0B3B2A" />
+                      <path d="M18.6 6.4 L17 9.9 L15.1 8 Z" fill="#0E9F6E" />
+                      <path
+                        d="M12.1 12.9 L17.2 7.8"
+                        stroke="#0E9F6E"
+                        stroke-width="2.2"
+                        stroke-linecap="butt"
+                      /></svg
+                    >Lance
+                  </div>
+                  <div class="ms-item active" data-pane="proposals">Proposals</div>
+                  <div class="ms-item" data-pane="contracts">Contracts</div>
+                  <div class="ms-item" data-pane="projects">Projects</div>
+                  <div class="ms-item" data-pane="time">Time</div>
+                  <div class="ms-item" data-pane="invoices">Invoices</div>
+                </div>
+                <div class="mock-main">
+                  <div class="mock-top">
+                    <span class="mock-title" id="mockTitle">Proposals</span
+                    ><span class="mock-badge mono" id="mockBadge">3 active</span>
+                  </div>
+                  <div class="mock-pane active" id="mock-proposals">
+                    <div class="mock-stats">
+                      <div class="mstat">
+                        <div class="mstat-v">$12.4k</div>
+                        <div class="mstat-l mono">Revenue</div>
+                      </div>
+                      <div class="mstat">
+                        <div class="mstat-v">72%</div>
+                        <div class="mstat-l mono">Win rate</div>
+                      </div>
+                      <div class="mstat">
+                        <div class="mstat-v">5</div>
+                        <div class="mstat-l mono">Active</div>
+                      </div>
+                    </div>
+                    <div class="mrow">
+                      <div>
+                        <div class="mrow-n">Brand Refresh</div>
+                        <div class="mrow-m mono">Acme Corp · $4,500</div>
+                      </div>
+                      <span class="chip c-sent">Sent</span>
+                    </div>
+                    <div class="mrow">
+                      <div>
+                        <div class="mrow-n">Web Retainer</div>
+                        <div class="mrow-m mono">Studio 12 · $2,200/mo</div>
+                      </div>
+                      <span class="chip c-viewed">Viewed</span>
+                    </div>
+                    <div class="mrow">
+                      <div>
+                        <div class="mrow-n">Landing Page</div>
+                        <div class="mrow-m mono">Northside · $85/hr</div>
+                      </div>
+                      <span class="chip c-draft">Draft</span>
+                    </div>
+                  </div>
+                  <div class="mock-pane" id="mock-contracts">
+                    <div class="mock-stats">
+                      <div class="mstat">
+                        <div class="mstat-v">2</div>
+                        <div class="mstat-l mono">Active</div>
+                      </div>
+                      <div class="mstat">
+                        <div class="mstat-v">1</div>
+                        <div class="mstat-l mono">Pending</div>
+                      </div>
+                      <div class="mstat">
+                        <div class="mstat-v">$18.5k</div>
+                        <div class="mstat-l mono">Value</div>
+                      </div>
+                    </div>
+                    <div class="mrow">
+                      <div>
+                        <div class="mrow-n">Brand Refresh</div>
+                        <div class="mrow-m mono">Acme Corp · Signed</div>
+                      </div>
+                      <span class="chip c-sent">Active</span>
+                    </div>
+                    <div class="mrow">
+                      <div>
+                        <div class="mrow-n">Web Retainer</div>
+                        <div class="mrow-m mono">Studio 12 · Awaiting</div>
+                      </div>
+                      <span class="chip c-viewed">Pending</span>
+                    </div>
+                  </div>
+                  <div class="mock-pane" id="mock-projects">
+                    <div class="mock-stats">
+                      <div class="mstat">
+                        <div class="mstat-v">3</div>
+                        <div class="mstat-l mono">Active</div>
+                      </div>
+                      <div class="mstat">
+                        <div class="mstat-v">2</div>
+                        <div class="mstat-l mono">Done</div>
+                      </div>
+                      <div class="mstat">
+                        <div class="mstat-v">$22k</div>
+                        <div class="mstat-l mono">Budget</div>
+                      </div>
+                    </div>
+                    <div class="mrow">
+                      <div>
+                        <div class="mrow-n">Brand Refresh</div>
+                        <div class="mrow-m mono">Due Oct 30</div>
+                      </div>
+                      <span class="chip c-sent">On track</span>
+                    </div>
+                    <div class="mrow">
+                      <div>
+                        <div class="mrow-n">Web Retainer</div>
+                        <div class="mrow-m mono">Ongoing</div>
+                      </div>
+                      <span class="chip c-sent">Active</span>
+                    </div>
+                    <div class="mrow">
+                      <div>
+                        <div class="mrow-n">Landing Page</div>
+                        <div class="mrow-m mono">Due Nov 15</div>
+                      </div>
+                      <span class="chip c-draft">Behind</span>
+                    </div>
+                  </div>
+                  <div class="mock-pane" id="mock-time">
+                    <div class="mock-stats">
+                      <div class="mstat">
+                        <div class="mstat-v">9.3h</div>
+                        <div class="mstat-l mono">This week</div>
+                      </div>
+                      <div class="mstat">
+                        <div class="mstat-v">32.5h</div>
+                        <div class="mstat-l mono">Month</div>
+                      </div>
+                      <div class="mstat">
+                        <div class="mstat-v">12h</div>
+                        <div class="mstat-l mono">Unbilled</div>
+                      </div>
+                    </div>
+                    <div class="mrow">
+                      <div>
+                        <div class="mrow-n">Brand Refresh</div>
+                        <div class="mrow-m mono">Acme Corp</div>
+                      </div>
+                      <span class="mono live-timer js-tick" data-base="8072">2:14:32</span>
+                    </div>
+                    <div class="mrow">
+                      <div>
+                        <div class="mrow-n">Northside Web</div>
+                        <div class="mrow-m mono">Landing Page</div>
+                      </div>
+                      <span class="mono dim">1:20:00</span>
+                    </div>
+                    <div class="mrow">
+                      <div>
+                        <div class="mrow-n">Studio 12 Consult</div>
+                        <div class="mrow-m mono">Web Retainer</div>
+                      </div>
+                      <span class="mono dim">3:45:00</span>
+                    </div>
+                  </div>
+                  <div class="mock-pane" id="mock-invoices">
+                    <div class="mock-stats">
+                      <div class="mstat">
+                        <div class="mstat-v">$4.5k</div>
+                        <div class="mstat-l mono">Paid</div>
+                      </div>
+                      <div class="mstat">
+                        <div class="mstat-v">$6.7k</div>
+                        <div class="mstat-l mono">Owed</div>
+                      </div>
+                      <div class="mstat">
+                        <div class="mstat-v neg">$2.2k</div>
+                        <div class="mstat-l mono">Overdue</div>
+                      </div>
+                    </div>
+                    <div class="mrow">
+                      <div>
+                        <div class="mrow-n">INV-003</div>
+                        <div class="mrow-m mono">Acme Corp · Due Friday</div>
+                      </div>
+                      <span class="chip c-sent">Sent</span>
+                    </div>
+                    <div class="mrow">
+                      <div>
+                        <div class="mrow-n">INV-002</div>
+                        <div class="mrow-m mono">Studio 12 · Due Sep 15</div>
+                      </div>
+                      <span class="chip c-late">Late</span>
+                    </div>
+                    <div class="mrow">
+                      <div>
+                        <div class="mrow-n">INV-001</div>
+                        <div class="mrow-m mono">Northside · Paid</div>
+                      </div>
+                      <span class="chip c-viewed">Paid</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="float-chip fc-a">
+              <span class="fc-dot"></span><span>Invoice paid <b>+$1,800</b></span>
+            </div>
+            <div class="float-chip fc-b">
+              <span class="fc-eye">◎</span><span>Proposal viewed <b>3×</b></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-fade"></div>
+      <div class="scroll-cue mono" aria-hidden="true"><span>SCROLL</span><span>↓</span></div>
+    </header>
+
+    <!-- ═══ MARQUEE ═══ -->
+    <div class="mq-strip">
+      <div class="mq" id="mq1">
+        <div class="mq-row" id="mqRow1"></div>
+        <div class="mq-row" id="mqRow1b" aria-hidden="true"></div>
+      </div>
+    </div>
+    <div class="mq-strip mq-strip-2">
+      <div class="mq reverse" id="mq2">
+        <div class="mq-row" id="mqRow2"></div>
+        <div class="mq-row" id="mqRow2b" aria-hidden="true"></div>
+      </div>
+    </div>
+    <noscript
+      ><p>
+        Win work. Run projects. Get paid. Local first, 100% offline, your data, free forever, no
+        cloud, keyboard first, 41 crafts.
+      </p></noscript
+    >
+
+    <!-- ═══ BENTO ═══ -->
+    <section class="section bento-sec" id="features">
+      <div class="container">
+        <div class="kicker mono blur-in">Everything you need</div>
+        <h2 class="sec-title blur-in" style="--d: 80ms">One app. Your whole business.</h2>
+        <p class="sec-sub blur-in" style="--d: 160ms">
+          No tabs. No subscriptions. No copy-pasting between five tools.
+        </p>
+        <div class="bento" id="bento"></div>
+        <noscript
+          ><ul>
+            <li>Proposals with scope warnings and win-rate tracking</li>
+            <li>Contracts tied to proposals</li>
+            <li>Project tracking with budgets and due dates</li>
+            <li>Time tracking with unbilled-hours alerts</li>
+            <li>Invoices with smart dunning and late fees</li>
+            <li>Client insights: revenue, win rate, profit</li>
+            <li>100% local: no cloud, no accounts, no trackers</li>
+          </ul></noscript
+        >
+        <p class="ai-note mono">
+          * AI features are optional, off by default, and togglable anytime.
+        </p>
+      </div>
+      <canvas class="flicker" id="flicker" aria-hidden="true"></canvas>
+    </section>
+
+    <!-- ═══ TEXT REVEAL MANIFESTO ═══ -->
+    <div class="treveal" id="treveal">
+      <div class="treveal-sticky">
+        <p class="treveal-text" id="trevealText">
+          Your business lives on your machine. No cloud. No accounts. No one watching.
+        </p>
       </div>
     </div>
 
-    <div class="hero-visual blur-in" style="--d:400ms" id="heroVisual">
-      <div class="mock-tilt" id="mockTilt">
-        <div class="mock">
-          <div class="mock-chrome">
-            <span class="mdot r"></span><span class="mdot y"></span><span class="mdot g"></span>
-            <span class="mock-url mono">lance — proposals</span>
-          </div>
-          <div class="mock-body">
-            <div class="mock-side">
-              <div class="ms-brand"><svg width="12" height="12" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#FFFFFF"/><path d="M7 18 V9.5 h2.6 v5.9 h4.9 V18 Z" fill="#0B3B2A"/><path d="M18.6 6.4 L17 9.9 L15.1 8 Z" fill="#0E9F6E"/><path d="M12.1 12.9 L17.2 7.8" stroke="#0E9F6E" stroke-width="2.2" stroke-linecap="butt"/></svg>Lance</div>
-              <div class="ms-item active" data-pane="proposals">Proposals</div>
-              <div class="ms-item" data-pane="contracts">Contracts</div>
-              <div class="ms-item" data-pane="projects">Projects</div>
-              <div class="ms-item" data-pane="time">Time</div>
-              <div class="ms-item" data-pane="invoices">Invoices</div>
+    <!-- ═══ SHOWCASE ═══ -->
+    <div class="show-outer" id="showcase">
+      <div class="show-sticky">
+        <div class="show-inner">
+          <div class="show-copy">
+            <div class="anno-content" id="annoContent">
+              <div class="anno-eyebrow mono">
+                <span id="annoEyebrow">Proposals &amp; Contracts</span
+                ><span class="anno-step" id="annoStep">01 / 05</span>
+              </div>
+              <div class="anno-title" id="annoTitle">Win work before your competition.</div>
+              <p class="anno-body" id="annoBody">
+                Write proposals with scope warnings built in. Track your win rate across every
+                client. Know exactly what&apos;s working.
+              </p>
+              <div class="show-dots" id="showDots"></div>
             </div>
-            <div class="mock-main">
-              <div class="mock-top"><span class="mock-title" id="mockTitle">Proposals</span><span class="mock-badge mono" id="mockBadge">3 active</span></div>
-              <div class="mock-pane active" id="mock-proposals">
-                <div class="mock-stats">
-                  <div class="mstat"><div class="mstat-v">$12.4k</div><div class="mstat-l mono">Revenue</div></div>
-                  <div class="mstat"><div class="mstat-v">72%</div><div class="mstat-l mono">Win rate</div></div>
-                  <div class="mstat"><div class="mstat-v">5</div><div class="mstat-l mono">Active</div></div>
-                </div>
-                <div class="mrow"><div><div class="mrow-n">Brand Refresh</div><div class="mrow-m mono">Acme Corp · $4,500</div></div><span class="chip c-sent">Sent</span></div>
-                <div class="mrow"><div><div class="mrow-n">Web Retainer</div><div class="mrow-m mono">Studio 12 · $2,200/mo</div></div><span class="chip c-viewed">Viewed</span></div>
-                <div class="mrow"><div><div class="mrow-n">Landing Page</div><div class="mrow-m mono">Northside · $85/hr</div></div><span class="chip c-draft">Draft</span></div>
+          </div>
+          <div class="show-mock">
+            <div class="show-screen">
+              <div class="show-head">
+                <span class="show-title" id="showHeadTitle">Proposals</span
+                ><span class="show-btn">+ New</span>
               </div>
-              <div class="mock-pane" id="mock-contracts">
+              <div class="show-pane on" id="show0">
                 <div class="mock-stats">
-                  <div class="mstat"><div class="mstat-v">2</div><div class="mstat-l mono">Active</div></div>
-                  <div class="mstat"><div class="mstat-v">1</div><div class="mstat-l mono">Pending</div></div>
-                  <div class="mstat"><div class="mstat-v">$18.5k</div><div class="mstat-l mono">Value</div></div>
+                  <div class="mstat">
+                    <div class="mstat-v">72%</div>
+                    <div class="mstat-l mono">Win rate</div>
+                  </div>
+                  <div class="mstat">
+                    <div class="mstat-v">$12.4k</div>
+                    <div class="mstat-l mono">Revenue</div>
+                  </div>
+                  <div class="mstat">
+                    <div class="mstat-v">5</div>
+                    <div class="mstat-l mono">Active</div>
+                  </div>
                 </div>
-                <div class="mrow"><div><div class="mrow-n">Brand Refresh</div><div class="mrow-m mono">Acme Corp · Signed</div></div><span class="chip c-sent">Active</span></div>
-                <div class="mrow"><div><div class="mrow-n">Web Retainer</div><div class="mrow-m mono">Studio 12 · Awaiting</div></div><span class="chip c-viewed">Pending</span></div>
+                <div class="mrow">
+                  <div>
+                    <div class="mrow-n">Brand Refresh</div>
+                    <div class="mrow-m mono">Acme Corp · $4,500</div>
+                  </div>
+                  <span class="chip c-sent">Sent</span>
+                </div>
+                <div class="mrow">
+                  <div>
+                    <div class="mrow-n">Web Retainer</div>
+                    <div class="mrow-m mono">Studio 12 · $2,200/mo</div>
+                  </div>
+                  <span class="chip c-viewed">Viewed</span>
+                </div>
+                <div class="mrow">
+                  <div>
+                    <div class="mrow-n">Landing Page</div>
+                    <div class="mrow-m mono">Northside · $85/hr</div>
+                  </div>
+                  <span class="chip c-draft">Draft</span>
+                </div>
               </div>
-              <div class="mock-pane" id="mock-projects">
+              <div class="show-pane" id="show1">
                 <div class="mock-stats">
-                  <div class="mstat"><div class="mstat-v">3</div><div class="mstat-l mono">Active</div></div>
-                  <div class="mstat"><div class="mstat-v">2</div><div class="mstat-l mono">Done</div></div>
-                  <div class="mstat"><div class="mstat-v">$22k</div><div class="mstat-l mono">Budget</div></div>
+                  <div class="mstat">
+                    <div class="mstat-v">9.3h</div>
+                    <div class="mstat-l mono">This week</div>
+                  </div>
+                  <div class="mstat">
+                    <div class="mstat-v">12h</div>
+                    <div class="mstat-l mono">Unbilled</div>
+                  </div>
                 </div>
-                <div class="mrow"><div><div class="mrow-n">Brand Refresh</div><div class="mrow-m mono">Due Oct 30</div></div><span class="chip c-sent">On track</span></div>
-                <div class="mrow"><div><div class="mrow-n">Web Retainer</div><div class="mrow-m mono">Ongoing</div></div><span class="chip c-sent">Active</span></div>
-                <div class="mrow"><div><div class="mrow-n">Landing Page</div><div class="mrow-m mono">Due Nov 15</div></div><span class="chip c-draft">Behind</span></div>
+                <div class="mrow">
+                  <div>
+                    <div class="mrow-n">Brand Refresh</div>
+                    <div class="mrow-m mono">Acme Corp</div>
+                  </div>
+                  <span class="mono live-timer js-tick" data-base="8072">2:14:32</span>
+                </div>
+                <div class="mrow">
+                  <div>
+                    <div class="mrow-n">Northside Web</div>
+                    <div class="mrow-m mono">Landing Page</div>
+                  </div>
+                  <span class="mono dim">1:20:00</span>
+                </div>
+                <div class="mrow">
+                  <div>
+                    <div class="mrow-n">Studio 12 Consult</div>
+                    <div class="mrow-m mono">Web Retainer</div>
+                  </div>
+                  <span class="mono dim">3:45:00</span>
+                </div>
               </div>
-              <div class="mock-pane" id="mock-time">
+              <div class="show-pane" id="show2">
                 <div class="mock-stats">
-                  <div class="mstat"><div class="mstat-v">9.3h</div><div class="mstat-l mono">This week</div></div>
-                  <div class="mstat"><div class="mstat-v">32.5h</div><div class="mstat-l mono">Month</div></div>
-                  <div class="mstat"><div class="mstat-v">12h</div><div class="mstat-l mono">Unbilled</div></div>
+                  <div class="mstat">
+                    <div class="mstat-v">$4.5k</div>
+                    <div class="mstat-l mono">Paid</div>
+                  </div>
+                  <div class="mstat">
+                    <div class="mstat-v">$6.7k</div>
+                    <div class="mstat-l mono">Owed</div>
+                  </div>
+                  <div class="mstat">
+                    <div class="mstat-v neg">$2.2k</div>
+                    <div class="mstat-l mono">Overdue</div>
+                  </div>
                 </div>
-                <div class="mrow"><div><div class="mrow-n">Brand Refresh</div><div class="mrow-m mono">Acme Corp</div></div><span class="mono live-timer js-tick" data-base="8072">2:14:32</span></div>
-                <div class="mrow"><div><div class="mrow-n">Northside Web</div><div class="mrow-m mono">Landing Page</div></div><span class="mono dim">1:20:00</span></div>
-                <div class="mrow"><div><div class="mrow-n">Studio 12 Consult</div><div class="mrow-m mono">Web Retainer</div></div><span class="mono dim">3:45:00</span></div>
+                <div class="mrow">
+                  <div>
+                    <div class="mrow-n">INV-003</div>
+                    <div class="mrow-m mono">Acme Corp · Due Friday</div>
+                  </div>
+                  <span class="chip c-sent">Sent</span>
+                </div>
+                <div class="mrow">
+                  <div>
+                    <div class="mrow-n">INV-002</div>
+                    <div class="mrow-m mono">Studio 12 · Due Sep 15</div>
+                  </div>
+                  <span class="chip c-late">Late</span>
+                </div>
               </div>
-              <div class="mock-pane" id="mock-invoices">
+              <div class="show-pane" id="show3">
                 <div class="mock-stats">
-                  <div class="mstat"><div class="mstat-v">$4.5k</div><div class="mstat-l mono">Paid</div></div>
-                  <div class="mstat"><div class="mstat-v">$6.7k</div><div class="mstat-l mono">Owed</div></div>
-                  <div class="mstat"><div class="mstat-v neg">$2.2k</div><div class="mstat-l mono">Overdue</div></div>
+                  <div class="mstat">
+                    <div class="mstat-v">72%</div>
+                    <div class="mstat-l mono">Win rate</div>
+                  </div>
+                  <div class="mstat">
+                    <div class="mstat-v">$12.4k</div>
+                    <div class="mstat-l mono">Revenue</div>
+                  </div>
+                  <div class="mstat">
+                    <div class="mstat-v">$8.2k</div>
+                    <div class="mstat-l mono">Profit</div>
+                  </div>
                 </div>
-                <div class="mrow"><div><div class="mrow-n">INV-003</div><div class="mrow-m mono">Acme Corp · Due Friday</div></div><span class="chip c-sent">Sent</span></div>
-                <div class="mrow"><div><div class="mrow-n">INV-002</div><div class="mrow-m mono">Studio 12 · Due Sep 15</div></div><span class="chip c-late">Late</span></div>
-                <div class="mrow"><div><div class="mrow-n">INV-001</div><div class="mrow-m mono">Northside · Paid</div></div><span class="chip c-viewed">Paid</span></div>
+                <div class="mrow">
+                  <div>
+                    <div class="mrow-n">Brand Refresh</div>
+                    <div class="mrow-m mono">On track · Due Oct 30</div>
+                  </div>
+                  <span class="chip c-sent">Healthy</span>
+                </div>
+                <div class="mrow">
+                  <div>
+                    <div class="mrow-n">Acme Corp</div>
+                    <div class="mrow-m mono">Top client · 3 projects</div>
+                  </div>
+                  <span class="chip c-sent">$16.5k</span>
+                </div>
+              </div>
+              <div class="show-pane" id="show4">
+                <div class="privacy-hero">
+                  <div class="privacy-orb">◈</div>
+                  <div class="privacy-title">100% Local</div>
+                  <div class="privacy-sub mono">
+                    No cloud. No accounts.<br />No breach risk. Ever.
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="float-chip fc-a"><span class="fc-dot"></span><span>Invoice paid <b>+$1,800</b></span></div>
-        <div class="float-chip fc-b"><span class="fc-eye">◎</span><span>Proposal viewed <b>3×</b></span></div>
       </div>
     </div>
-  </div>
-  <div class="hero-fade"></div>
-  <div class="scroll-cue mono" aria-hidden="true"><span>SCROLL</span><span>↓</span></div>
-</header>
 
-<!-- ═══ MARQUEE ═══ -->
-<div class="mq-strip">
-  <div class="mq" id="mq1"><div class="mq-row" id="mqRow1"></div><div class="mq-row" id="mqRow1b" aria-hidden="true"></div></div>
-</div>
-<div class="mq-strip mq-strip-2">
-  <div class="mq reverse" id="mq2"><div class="mq-row" id="mqRow2"></div><div class="mq-row" id="mqRow2b" aria-hidden="true"></div></div>
-</div>
-<noscript><p>Win work. Run projects. Get paid. Local first, 100% offline, your data, free forever, no cloud, keyboard first, 41 crafts.</p></noscript>
-
-<!-- ═══ BENTO ═══ -->
-<section class="section bento-sec" id="features">
-  <div class="container">
-    <div class="kicker mono blur-in">Everything you need</div>
-    <h2 class="sec-title blur-in" style="--d:80ms">One app. Your whole business.</h2>
-    <p class="sec-sub blur-in" style="--d:160ms">No tabs. No subscriptions. No copy-pasting between five tools.</p>
-    <div class="bento" id="bento"></div>
-    <noscript><ul>
-      <li>Proposals with scope warnings and win-rate tracking</li>
-      <li>Contracts tied to proposals</li>
-      <li>Project tracking with budgets and due dates</li>
-      <li>Time tracking with unbilled-hours alerts</li>
-      <li>Invoices with smart dunning and late fees</li>
-      <li>Client insights: revenue, win rate, profit</li>
-      <li>100% local: no cloud, no accounts, no trackers</li>
-    </ul></noscript>
-    <p class="ai-note mono">* AI features are optional, off by default, and togglable anytime.</p>
-  </div>
-  <canvas class="flicker" id="flicker" aria-hidden="true"></canvas>
-</section>
-
-<!-- ═══ TEXT REVEAL MANIFESTO ═══ -->
-<div class="treveal" id="treveal">
-  <div class="treveal-sticky">
-    <p class="treveal-text" id="trevealText">Your business lives on your machine. No cloud. No accounts. No one watching.</p>
-  </div>
-</div>
-
-<!-- ═══ SHOWCASE ═══ -->
-<div class="show-outer" id="showcase">
-  <div class="show-sticky">
-    <div class="show-inner">
-      <div class="show-copy">
-        <div class="anno-content" id="annoContent">
-          <div class="anno-eyebrow mono"><span id="annoEyebrow">Proposals &amp; Contracts</span><span class="anno-step" id="annoStep">01 / 05</span></div>
-          <div class="anno-title" id="annoTitle">Win work before your competition.</div>
-          <p class="anno-body" id="annoBody">Write proposals with scope warnings built in. Track your win rate across every client. Know exactly what&apos;s working.</p>
-          <div class="show-dots" id="showDots"></div>
+    <!-- ═══ STATS BAND ═══ -->
+    <section class="stats-sec">
+      <div class="container stats-grid">
+        <div class="stat blur-in">
+          <div class="stat-v"><span class="ticker" data-ticker="41">0</span></div>
+          <div class="stat-l mono">profession profiles</div>
+        </div>
+        <div class="stat blur-in" style="--d: 100ms">
+          <div class="stat-v"><span class="ticker" data-ticker="7">0</span></div>
+          <div class="stat-l mono">workspace themes</div>
+        </div>
+        <div class="stat blur-in">
+          <div class="stat-v"><span class="ticker" data-ticker="37">0</span></div>
+          <div class="stat-l mono">linked data tables</div>
+        </div>
+        <div class="stat blur-in" style="--d: 300ms">
+          <div class="stat-v"><span class="ticker" data-ticker="0">0</span></div>
+          <div class="stat-l mono">trackers. zero.</div>
         </div>
       </div>
-      <div class="show-mock">
-        <div class="show-screen">
-          <div class="show-head"><span class="show-title" id="showHeadTitle">Proposals</span><span class="show-btn">+ New</span></div>
-          <div class="show-pane on" id="show0">
-            <div class="mock-stats">
-              <div class="mstat"><div class="mstat-v">72%</div><div class="mstat-l mono">Win rate</div></div>
-              <div class="mstat"><div class="mstat-v">$12.4k</div><div class="mstat-l mono">Revenue</div></div>
-              <div class="mstat"><div class="mstat-v">5</div><div class="mstat-l mono">Active</div></div>
-            </div>
-            <div class="mrow"><div><div class="mrow-n">Brand Refresh</div><div class="mrow-m mono">Acme Corp · $4,500</div></div><span class="chip c-sent">Sent</span></div>
-            <div class="mrow"><div><div class="mrow-n">Web Retainer</div><div class="mrow-m mono">Studio 12 · $2,200/mo</div></div><span class="chip c-viewed">Viewed</span></div>
-            <div class="mrow"><div><div class="mrow-n">Landing Page</div><div class="mrow-m mono">Northside · $85/hr</div></div><span class="chip c-draft">Draft</span></div>
+    </section>
+
+    <!-- ═══ THEMES ═══ -->
+    <section class="section themes-sec" id="themes">
+      <div class="container">
+        <div class="kicker mono blur-in" id="themeEyebrow">7 themes</div>
+        <h2 class="sec-title blur-in" style="--d: 80ms">Your workspace. Your style.</h2>
+        <div class="theme-tabs blur-in" style="--d: 160ms" id="themeTabs"></div>
+        <p class="theme-hint mono blur-in" style="--d: 220ms">
+          👆 click one — this entire page re-themes live. go on.
+        </p>
+        <div id="themePreviews"></div>
+        <p class="theme-note mono">
+          Themes unlock as you use Lance, or unlock all instantly with a license.
+        </p>
+      </div>
+    </section>
+
+    <!-- ═══ PRICING ═══ -->
+    <section class="section pricing-sec" id="pricing">
+      <div class="container">
+        <div class="kicker mono blur-in">Pricing</div>
+        <h2 class="sec-title blur-in" style="--d: 80ms">Core free forever. Pro optional.</h2>
+        <p class="pricing-intro blur-in" style="--d: 160ms">
+          Lance core is free. No time limits, no client caps, no nag screens.
+          <strong>Pro</strong> unlocks archetype-specific proposals, contracts, invoices, and
+          scope-creep protection. Either way, client payments go straight to you. Lance never takes
+          a cut.
+        </p>
+        <div class="pricing-toggle-wrap blur-in" style="--d: 220ms">
+          <div class="price-toggle" role="tablist" aria-label="Billing period">
+            <button id="billMo" role="tab" aria-selected="false">Monthly</button>
+            <button id="billYr" class="on" role="tab" aria-selected="true">
+              Yearly<span class="save">−41%</span>
+            </button>
           </div>
-          <div class="show-pane" id="show1">
-            <div class="mock-stats">
-              <div class="mstat"><div class="mstat-v">9.3h</div><div class="mstat-l mono">This week</div></div>
-              <div class="mstat"><div class="mstat-v">12h</div><div class="mstat-l mono">Unbilled</div></div>
-            </div>
-            <div class="mrow"><div><div class="mrow-n">Brand Refresh</div><div class="mrow-m mono">Acme Corp</div></div><span class="mono live-timer js-tick" data-base="8072">2:14:32</span></div>
-            <div class="mrow"><div><div class="mrow-n">Northside Web</div><div class="mrow-m mono">Landing Page</div></div><span class="mono dim">1:20:00</span></div>
-            <div class="mrow"><div><div class="mrow-n">Studio 12 Consult</div><div class="mrow-m mono">Web Retainer</div></div><span class="mono dim">3:45:00</span></div>
+        </div>
+        <div class="pricing-grid" data-exp="pricing-order">
+          <div class="price-card blur-in" id="freeCard">
+            <div class="price-badge mono">Free</div>
+            <div class="price-name">Lance Core</div>
+            <div class="price-val"><span class="cur">$</span>0<span class="per">/mo</span></div>
+            <ul class="price-perks">
+              <li>Unlimited clients, projects, proposals</li>
+              <li>Contracts, invoices, time tracking</li>
+              <li>Client portal (local, offline-first)</li>
+              <li>Recurring invoices, expenses, metrics</li>
+              <li>All current themes</li>
+            </ul>
+            <p class="price-note mono">Forever free. No account. No cloud.</p>
           </div>
-          <div class="show-pane" id="show2">
-            <div class="mock-stats">
-              <div class="mstat"><div class="mstat-v">$4.5k</div><div class="mstat-l mono">Paid</div></div>
-              <div class="mstat"><div class="mstat-v">$6.7k</div><div class="mstat-l mono">Owed</div></div>
-              <div class="mstat"><div class="mstat-v neg">$2.2k</div><div class="mstat-l mono">Overdue</div></div>
+          <div class="price-card pro blur-in beam-host" style="--d: 120ms" id="proCard">
+            <div class="border-beam" aria-hidden="true"><span></span></div>
+            <div class="price-badge mono hot">Recommended</div>
+            <div class="price-name">Lance Pro</div>
+            <div class="price-val">
+              <span class="cur">$</span><span id="proNum">99</span
+              ><span class="per" id="proPer">/yr</span>
             </div>
-            <div class="mrow"><div><div class="mrow-n">INV-003</div><div class="mrow-m mono">Acme Corp · Due Friday</div></div><span class="chip c-sent">Sent</span></div>
-            <div class="mrow"><div><div class="mrow-n">INV-002</div><div class="mrow-m mono">Studio 12 · Due Sep 15</div></div><span class="chip c-late">Late</span></div>
+            <ul class="price-perks">
+              <li>Everything in Free</li>
+              <li>Archetype proposals, contracts, invoices</li>
+              <li>Revenue forecasts and rate-leak alerts</li>
+              <li>Change orders that bill scope creep</li>
+              <li>Hot proposals and open alerts</li>
+              <li>Smart dunning and late fees</li>
+              <li>Year-summary CSV and trial countdown</li>
+            </ul>
+            <a href="#download" class="shimmer shimmer-block"
+              ><span class="shimmer-label">Start 30-day free trial</span
+              ><span class="spark" aria-hidden="true"
+                ><span class="spark-inner"><span class="spark-rotor"></span></span></span
+              ><span class="shimmer-hi" aria-hidden="true"></span
+              ><span class="shimmer-bg" aria-hidden="true"></span
+            ></a>
+            <p class="price-note mono" id="proNote">
+              Billed yearly. Save 41% vs monthly. 30 days free. Checkout opens after you download.
+            </p>
           </div>
-          <div class="show-pane" id="show3">
-            <div class="mock-stats">
-              <div class="mstat"><div class="mstat-v">72%</div><div class="mstat-l mono">Win rate</div></div>
-              <div class="mstat"><div class="mstat-v">$12.4k</div><div class="mstat-l mono">Revenue</div></div>
-              <div class="mstat"><div class="mstat-v">$8.2k</div><div class="mstat-l mono">Profit</div></div>
+          <div class="price-card blur-in" style="--d: 240ms; opacity: 0.92" id="lifetimeCard">
+            <div class="price-badge mono">One-time</div>
+            <div class="price-name">Lance Lifetime</div>
+            <div class="price-val"><span class="cur">$</span>249<span class="per"> once</span></div>
+            <ul class="price-perks">
+              <li>Everything in Pro, forever</li>
+              <li>No subscription, ever</li>
+              <li>Future updates included</li>
+            </ul>
+            <a href="#download" class="ghost-btn ghost-block">Buy lifetime license</a>
+            <p class="price-note mono">One payment. Yours forever.</p>
+          </div>
+        </div>
+        <p class="pricing-free-note">Core is genuinely free. Pro is depth, not gates.</p>
+      </div>
+    </section>
+
+    <!-- ═══ FAQ ═══ -->
+    <section class="section faq-sec" id="faq">
+      <div class="container">
+        <div class="kicker mono blur-in">Questions, answered</div>
+        <h2 class="sec-title blur-in" style="--d: 80ms">What is Lance?</h2>
+        <p class="sec-sub blur-in" style="--d: 160ms">
+          Lance is a local-first freelancer OS for independent freelancers: proposals, contracts,
+          projects, time tracking, invoices and client insights in one fast offline app. Your
+          business data never touches the cloud.
+        </p>
+        <div class="faq-list">
+          <div class="faq-item is-open">
+            <button class="faq-q" aria-expanded="true" aria-controls="faq-a0" id="faq-q0">
+              <span>What is Lance?</span>
+            </button>
+            <div class="faq-a" id="faq-a0" role="region" aria-labelledby="faq-q0">
+              <p>
+                Lance is a local-first freelancer OS: proposals, contracts, projects, time tracking,
+                invoices and client insights in one fast offline app. Your business data never
+                touches the cloud.
+              </p>
             </div>
-            <div class="mrow"><div><div class="mrow-n">Brand Refresh</div><div class="mrow-m mono">On track · Due Oct 30</div></div><span class="chip c-sent">Healthy</span></div>
-            <div class="mrow"><div><div class="mrow-n">Acme Corp</div><div class="mrow-m mono">Top client · 3 projects</div></div><span class="chip c-sent">$16.5k</span></div>
           </div>
-          <div class="show-pane" id="show4">
-            <div class="privacy-hero">
-              <div class="privacy-orb">◈</div>
-              <div class="privacy-title">100% Local</div>
-              <div class="privacy-sub mono">No cloud. No accounts.<br>No breach risk. Ever.</div>
+          <div class="faq-item">
+            <button class="faq-q" aria-expanded="false" aria-controls="faq-a1" id="faq-q1">
+              <span>Who is Lance for?</span>
+            </button>
+            <div class="faq-a" id="faq-a1" role="region" aria-labelledby="faq-q1">
+              <p>
+                Independent freelancers and contractors who want one offline app instead of five
+                cloud subscriptions. Lance is built by independent freelancers.
+              </p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q" aria-expanded="false" aria-controls="faq-a2" id="faq-q2">
+              <span>Is my data really never in the cloud?</span>
+            </button>
+            <div class="faq-a" id="faq-a2" role="region" aria-labelledby="faq-q2">
+              <p>
+                Yes. Lance stores everything on your device — no accounts, no cloud sync, no
+                trackers. There is nothing to breach because there is no server holding your data.
+              </p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q" aria-expanded="false" aria-controls="faq-a3" id="faq-q3">
+              <span>What does Lance cost?</span>
+            </button>
+            <div class="faq-a" id="faq-a3" role="region" aria-labelledby="faq-q3">
+              <p>
+                Lance Core is free forever with unlimited clients, projects and proposals. Lance Pro
+                is $99/year ($14/month monthly) with a 30-day free trial. Lance Lifetime is a $249
+                one-time payment. Client payments go straight to you; Lance never takes a cut.
+              </p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q" aria-expanded="false" aria-controls="faq-a4" id="faq-q4">
+              <span>Which platforms are supported?</span>
+            </button>
+            <div class="faq-a" id="faq-a4" role="region" aria-labelledby="faq-q4">
+              <p>
+                macOS 11 and later (Apple Silicon), Windows 10 and later (64-bit), and Ubuntu 20.04
+                and later (AppImage).
+              </p>
+            </div>
+          </div>
+          <div class="faq-item is-extra">
+            <button class="faq-q" aria-expanded="false" aria-controls="faq-a5" id="faq-q5">
+              <span>How is Lance different from cloud freelance tools?</span>
+            </button>
+            <div class="faq-a" id="faq-a5" role="region" aria-labelledby="faq-q5">
+              <p>
+                Cloud tools charge monthly subscriptions and hold your client data on their servers.
+                Lance Core is free forever, works fully offline, and keeps every byte of business
+                data on your device.
+              </p>
+            </div>
+          </div>
+          <div class="faq-item is-extra">
+            <button class="faq-q" aria-expanded="false" aria-controls="faq-a6" id="faq-q6">
+              <span>Can I get a refund?</span>
+            </button>
+            <div class="faq-a" id="faq-a6" role="region" aria-labelledby="faq-q6">
+              <p>
+                Yes. See our <a href="/refunds">refunds page</a> for the policy, or
+                <a href="#contact">contact us</a> and we will sort it out.
+              </p>
+            </div>
+          </div>
+          <div class="faq-item is-extra">
+            <button class="faq-q" aria-expanded="false" aria-controls="faq-a7" id="faq-q7">
+              <span>Does Lance use AI on my data?</span>
+            </button>
+            <div class="faq-a" id="faq-a7" role="region" aria-labelledby="faq-q7">
+              <p>
+                Not yet. Local AI proposal drafting is coming in Lance v2 — it runs on your machine,
+                in your writing voice, and stays optional and off by default. Nothing is ever sent
+                anywhere. v1 has zero AI: no accounts, no cloud, no trackers.
+              </p>
             </div>
           </div>
         </div>
+        <div class="faq-more">
+          <button class="ghost-btn ghost-sm" id="faqMore" aria-expanded="false">
+            Show all questions
+          </button>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
+    </section>
 
-<!-- ═══ STATS BAND ═══ -->
-<section class="stats-sec">
-  <div class="container stats-grid">
-    <div class="stat blur-in"><div class="stat-v"><span class="ticker" data-ticker="41">0</span></div><div class="stat-l mono">profession profiles</div></div>
-    <div class="stat blur-in" style="--d:100ms"><div class="stat-v"><span class="ticker" data-ticker="7">0</span></div><div class="stat-l mono">workspace themes</div></div>
-    <div class="stat blur-in"><div class="stat-v"><span class="ticker" data-ticker="37">0</span></div><div class="stat-l mono">linked data tables</div></div>
-    <div class="stat blur-in" style="--d:300ms"><div class="stat-v"><span class="ticker" data-ticker="0">0</span></div><div class="stat-l mono">trackers. zero.</div></div>
-  </div>
-</section>
-
-<!-- ═══ THEMES ═══ -->
-<section class="section themes-sec" id="themes">
-  <div class="container">
-    <div class="kicker mono blur-in" id="themeEyebrow">7 themes</div>
-    <h2 class="sec-title blur-in" style="--d:80ms">Your workspace. Your style.</h2>
-    <div class="theme-tabs blur-in" style="--d:160ms" id="themeTabs"></div>
-    <p class="theme-hint mono blur-in" style="--d:220ms">👆 click one — this entire page re-themes live. go on.</p>
-    <div id="themePreviews"></div>
-    <p class="theme-note mono">Themes unlock as you use Lance, or unlock all instantly with a license.</p>
-  </div>
-</section>
-
-<!-- ═══ PRICING ═══ -->
-<section class="section pricing-sec" id="pricing">
-  <div class="container">
-    <div class="kicker mono blur-in">Pricing</div>
-    <h2 class="sec-title blur-in" style="--d:80ms">Core free forever. Pro optional.</h2>
-    <p class="pricing-intro blur-in" style="--d:160ms">Lance core is free. No time limits, no client caps, no nag screens. <strong>Pro</strong> unlocks archetype-specific proposals, contracts, invoices, and scope-creep protection. Either way, client payments go straight to you. Lance never takes a cut.</p>
-    <div class="pricing-toggle-wrap blur-in" style="--d:220ms">
-      <div class="price-toggle" role="tablist" aria-label="Billing period">
-        <button id="billMo" role="tab" aria-selected="false">Monthly</button>
-        <button id="billYr" class="on" role="tab" aria-selected="true">Yearly<span class="save">−41%</span></button>
-      </div>
-    </div>
-    <div class="pricing-grid" data-exp="pricing-order">
-      <div class="price-card blur-in" id="freeCard">
-        <div class="price-badge mono">Free</div>
-        <div class="price-name">Lance Core</div>
-        <div class="price-val"><span class="cur">$</span>0<span class="per">/mo</span></div>
-        <ul class="price-perks">
-          <li>Unlimited clients, projects, proposals</li>
-          <li>Contracts, invoices, time tracking</li>
-          <li>Client portal (local, offline-first)</li>
-          <li>Recurring invoices, expenses, metrics</li>
-          <li>All current themes</li>
-        </ul>
-        <p class="price-note mono">Forever free. No account. No cloud.</p>
-      </div>
-      <div class="price-card pro blur-in beam-host" style="--d:120ms" id="proCard">
-        <div class="border-beam" aria-hidden="true"><span></span></div>
-        <div class="price-badge mono hot">Recommended</div>
-        <div class="price-name">Lance Pro</div>
-        <div class="price-val"><span class="cur">$</span><span id="proNum">99</span><span class="per" id="proPer">/yr</span></div>
-        <ul class="price-perks">
-          <li>Everything in Free</li>
-          <li>Archetype proposals, contracts, invoices</li>
-          <li>Revenue forecasts and rate-leak alerts</li>
-          <li>Change orders that bill scope creep</li>
-          <li>Hot proposals and open alerts</li>
-          <li>Smart dunning and late fees</li>
-          <li>Year-summary CSV and trial countdown</li>
-        </ul>
-        <a href="#download" class="shimmer shimmer-block"><span class="shimmer-label">Start 30-day free trial</span><span class="spark" aria-hidden="true"><span class="spark-inner"><span class="spark-rotor"></span></span></span><span class="shimmer-hi" aria-hidden="true"></span><span class="shimmer-bg" aria-hidden="true"></span></a>
-        <p class="price-note mono" id="proNote">Billed yearly. Save 41% vs monthly. 30 days free. Checkout opens after you download.</p>
-      </div>
-      <div class="price-card blur-in" style="--d:240ms;opacity:.92" id="lifetimeCard">
-        <div class="price-badge mono">One-time</div>
-        <div class="price-name">Lance Lifetime</div>
-        <div class="price-val"><span class="cur">$</span>249<span class="per"> once</span></div>
-        <ul class="price-perks">
-          <li>Everything in Pro, forever</li>
-          <li>No subscription, ever</li>
-          <li>Future updates included</li>
-        </ul>
-        <a href="#download" class="ghost-btn ghost-block">Buy lifetime license</a>
-        <p class="price-note mono">One payment. Yours forever.</p>
-      </div>
-    </div>
-    <p class="pricing-free-note">Core is genuinely free. Pro is depth, not gates.</p>
-  </div>
-</section>
-
-<!-- ═══ FAQ ═══ -->
-<section class="section faq-sec" id="faq">
-  <div class="container">
-    <div class="kicker mono blur-in">Questions, answered</div>
-    <h2 class="sec-title blur-in" style="--d:80ms">What is Lance?</h2>
-    <p class="sec-sub blur-in" style="--d:160ms">Lance is a local-first freelancer OS for independent freelancers: proposals, contracts, projects, time tracking, invoices and client insights in one fast offline app. Your business data never touches the cloud.</p>
-    <div class="faq-list">
-            <div class="faq-item is-open"><button class="faq-q" aria-expanded="true" aria-controls="faq-a0" id="faq-q0"><span>What is Lance?</span></button><div class="faq-a" id="faq-a0" role="region" aria-labelledby="faq-q0"><p>Lance is a local-first freelancer OS: proposals, contracts, projects, time tracking, invoices and client insights in one fast offline app. Your business data never touches the cloud.</p></div></div>
-            <div class="faq-item"><button class="faq-q" aria-expanded="false" aria-controls="faq-a1" id="faq-q1"><span>Who is Lance for?</span></button><div class="faq-a" id="faq-a1" role="region" aria-labelledby="faq-q1"><p>Independent freelancers and contractors who want one offline app instead of five cloud subscriptions. Lance is built by independent freelancers.</p></div></div>
-            <div class="faq-item"><button class="faq-q" aria-expanded="false" aria-controls="faq-a2" id="faq-q2"><span>Is my data really never in the cloud?</span></button><div class="faq-a" id="faq-a2" role="region" aria-labelledby="faq-q2"><p>Yes. Lance stores everything on your device — no accounts, no cloud sync, no trackers. There is nothing to breach because there is no server holding your data.</p></div></div>
-            <div class="faq-item"><button class="faq-q" aria-expanded="false" aria-controls="faq-a3" id="faq-q3"><span>What does Lance cost?</span></button><div class="faq-a" id="faq-a3" role="region" aria-labelledby="faq-q3"><p>Lance Core is free forever with unlimited clients, projects and proposals. Lance Pro is $99/year ($14/month monthly) with a 30-day free trial. Lance Lifetime is a $249 one-time payment. Client payments go straight to you; Lance never takes a cut.</p></div></div>
-            <div class="faq-item"><button class="faq-q" aria-expanded="false" aria-controls="faq-a4" id="faq-q4"><span>Which platforms are supported?</span></button><div class="faq-a" id="faq-a4" role="region" aria-labelledby="faq-q4"><p>macOS 11 and later (Apple Silicon), Windows 10 and later (64-bit), and Ubuntu 20.04 and later (AppImage).</p></div></div>
-            <div class="faq-item is-extra"><button class="faq-q" aria-expanded="false" aria-controls="faq-a5" id="faq-q5"><span>How is Lance different from cloud freelance tools?</span></button><div class="faq-a" id="faq-a5" role="region" aria-labelledby="faq-q5"><p>Cloud tools charge monthly subscriptions and hold your client data on their servers. Lance Core is free forever, works fully offline, and keeps every byte of business data on your device.</p></div></div>
-            <div class="faq-item is-extra"><button class="faq-q" aria-expanded="false" aria-controls="faq-a6" id="faq-q6"><span>Can I get a refund?</span></button><div class="faq-a" id="faq-a6" role="region" aria-labelledby="faq-q6"><p>Yes. See our <a href="/refunds">refunds page</a> for the policy, or <a href="#contact">contact us</a> and we will sort it out.</p></div></div>
-            <div class="faq-item is-extra"><button class="faq-q" aria-expanded="false" aria-controls="faq-a7" id="faq-q7"><span>Does Lance use AI on my data?</span></button><div class="faq-a" id="faq-a7" role="region" aria-labelledby="faq-q7"><p>Not yet. Local AI proposal drafting is coming in Lance v2 — it runs on your machine, in your writing voice, and stays optional and off by default. Nothing is ever sent anywhere. v1 has zero AI: no accounts, no cloud, no trackers.</p></div></div>
-    </div>
-    <div class="faq-more"><button class="ghost-btn ghost-sm" id="faqMore" aria-expanded="false">Show all questions</button></div>
-  </div>
-</section>
-
-<!-- ═══ V2 AI WAITLIST ═══ -->
-<section class="wait-sec" id="v2">
-  <div class="container wait-inner">
-    <div class="kicker mono blur-in">Coming in v2</div>
-    <h2 class="sec-title blur-in" style="--d:80ms">Local AI. Still zero cloud.</h2>
-    <p class="sec-sub blur-in" style="--d:160ms">Proposal drafting in your writing voice, running on your machine. Optional, off by default, nothing ever sent anywhere. One email when it ships — nothing else.</p>
-    <form id="wait-form" class="mini-form wait-form blur-in" style="--d:220ms" novalidate>
-      <input type="email" id="wl-email" name="email" placeholder="you@example.com" maxlength="200" autocomplete="email" required aria-label="Email for v2 launch notification">
-      <input type="text" id="wl-company" name="company_hp" class="hp-trap" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <button type="submit" id="wl-submit" class="ghost-btn ghost-sm">Notify me</button>
-      <p id="wl-status" class="form-status" role="status"></p>
-    </form>
-  </div>
-</section>
-
-<!-- ═══ DOWNLOAD ═══ -->
-<div class="hairline" aria-hidden="true"></div>
-<section class="dl-sec" id="download">
-  <div id="dlMeteors" aria-hidden="true"></div>
-  <div class="container dl-inner">
-    <div class="kicker mono blur-in">Get Lance</div>
-    <h2 class="sec-title blur-in" style="--d:80ms">Free to download.<br>Free to use.</h2>
-    <p class="dl-sub mono blur-in" style="--d:160ms"><span id="dlVer">v0.9.3 · Updated September 2026</span> · macOS · Windows · Linux</p>
-    <div class="dl-grid">
-      <a href="/api/download/mac" class="dl-btn blur-in" id="dl-mac">
-        <span class="dl-left"><span class="dl-icon">▣</span><span><span class="dl-name">Download for macOS</span><span class="dl-ver mono">Apple Silicon · macOS 11+</span></span></span>
-        <span class="dl-arr">↓</span>
-      </a>
-      <a href="/api/download/win" class="dl-btn blur-in" style="--d:120ms" id="dl-win">
-        <span class="dl-left"><span class="dl-icon">▦</span><span><span class="dl-name">Download for Windows</span><span class="dl-ver mono">64-bit installer · Windows 10+</span></span></span>
-        <span class="dl-arr">↓</span>
-      </a>
-      <a href="/api/download/linux" class="dl-btn blur-in" style="--d:240ms" id="dl-linux">
-        <span class="dl-left"><span class="dl-icon">◉</span><span><span class="dl-name">Download for Linux</span><span class="dl-ver mono">AppImage · Ubuntu 20.04+</span></span></span>
-        <span class="dl-arr">↓</span>
-      </a>
-    </div>
-    <p class="dl-sysreq mono">macOS 11+ · Windows 10+ · Ubuntu 20.04+</p>
-  </div>
-</section>
-
-<!-- ═══ FOOTER ═══ -->
-<footer>
-  <div class="foot-word" aria-hidden="true">LANCE</div>
-  <div class="container footer-grid">
-    <div class="foot-brand">
-      <a href="#top" class="nav-brand">
-        <svg class="brand-mark" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#FFFFFF"/><path d="M7 18 V9.5 h2.6 v5.9 h4.9 V18 Z" fill="#0B3B2A"/><path d="M18.6 6.4 L17 9.9 L15.1 8 Z" fill="#0E9F6E"/><path d="M12.1 12.9 L17.2 7.8" stroke="#0E9F6E" stroke-width="2.2" stroke-linecap="butt"/></svg>
-        Lance
-      </a>
-      <p>Built by a team of independent freelancers.</p>
-      <div class="footer-links">
-        <a href="/privacy">Privacy</a>
-        <a href="/terms">Terms</a>
-        <a href="/refunds">Refunds</a>
-        <a href="#contact">Contact</a>
-      </div>
-      <p class="footer-copy mono">© 2026 Lance. Your business data stays on your device.</p>
-    </div>
-    <div class="foot-forms" id="contact">
-      <div class="foot-form-block">
-        <p class="foot-form-title">Contact</p>
-        <p class="foot-form-sub">Questions, refunds, or just saying hi.</p>
-        <form id="contact-form" class="mini-form" novalidate>
-          <input type="text" id="cf-name" name="name" placeholder="Your name" maxlength="100" autocomplete="name" required>
-          <input type="email" id="cf-email" name="email" placeholder="you@example.com" maxlength="200" autocomplete="email" required>
-          <textarea id="cf-message" name="message" placeholder="What's up?" rows="3" maxlength="2000" required></textarea>
-          <input type="text" id="cf-company" name="company_hp" class="hp-trap" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <button type="submit" id="cf-submit" class="ghost-btn ghost-sm">Send message</button>
-          <p id="cf-status" class="form-status" role="status"></p>
+    <!-- ═══ V2 AI WAITLIST ═══ -->
+    <section class="wait-sec" id="v2">
+      <div class="container wait-inner">
+        <div class="kicker mono blur-in">Coming in v2</div>
+        <h2 class="sec-title blur-in" style="--d: 80ms">Local AI. Still zero cloud.</h2>
+        <p class="sec-sub blur-in" style="--d: 160ms">
+          Proposal drafting in your writing voice, running on your machine. Optional, off by
+          default, nothing ever sent anywhere. One email when it ships — nothing else.
+        </p>
+        <form id="wait-form" class="mini-form wait-form blur-in" style="--d: 220ms" novalidate>
+          <input
+            type="email"
+            id="wl-email"
+            name="email"
+            placeholder="you@example.com"
+            maxlength="200"
+            autocomplete="email"
+            required
+            aria-label="Email for v2 launch notification"
+          />
+          <input
+            type="text"
+            id="wl-company"
+            name="company_hp"
+            class="hp-trap"
+            tabindex="-1"
+            autocomplete="off"
+            aria-hidden="true"
+          />
+          <button type="submit" id="wl-submit" class="ghost-btn ghost-sm">Notify me</button>
+          <p id="wl-status" class="form-status" role="status"></p>
         </form>
       </div>
-      <div class="foot-form-block">
-        <p class="foot-form-title">Found a bug?</p>
-        <p class="foot-form-sub">File it straight to the tracker.</p>
-        <form id="issue-form" class="mini-form" novalidate>
-          <input type="text" id="ir-name" name="name" placeholder="Your name" maxlength="100" autocomplete="name" required>
-          <input type="email" id="ir-email" name="email" placeholder="you@example.com" maxlength="200" autocomplete="email" required>
-          <input type="text" id="ir-title" name="title" placeholder="Short summary" maxlength="120" required>
-          <textarea id="ir-details" name="details" placeholder="Steps to reproduce, expected vs actual…" rows="3" maxlength="3000" required></textarea>
-          <input type="text" id="ir-company" name="company_hp" class="hp-trap" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <button type="submit" id="ir-submit" class="ghost-btn ghost-sm">Report issue</button>
-          <p id="ir-status" class="form-status" role="status"></p>
-        </form>
-      </div>
-    </div>
-  </div>
-</footer>
+    </section>
 
-<div id="egg-overlay"><div id="egg-msg">⚡ LANCE MODE</div></div>
-<script src="launch-config.js"></script>
-<script src="ab-activator.js"></script>
-<script src="launch-countdown.js"></script>
-<script src="app.js" defer></script>
-</body>
+    <!-- ═══ DOWNLOAD ═══ -->
+    <div class="hairline" aria-hidden="true"></div>
+    <section class="dl-sec" id="download">
+      <div id="dlMeteors" aria-hidden="true"></div>
+      <div class="container dl-inner">
+        <div class="kicker mono blur-in">Get Lance</div>
+        <h2 class="sec-title blur-in" style="--d: 80ms">Free to download.<br />Free to use.</h2>
+        <p class="dl-sub mono blur-in" style="--d: 160ms">
+          <span id="dlVer">v0.9.3 · Updated September 2026</span> · macOS · Windows · Linux
+        </p>
+        <div class="dl-grid">
+          <a href="/api/download/mac" class="dl-btn blur-in" id="dl-mac">
+            <span class="dl-left"
+              ><span class="dl-icon">▣</span
+              ><span
+                ><span class="dl-name">Download for macOS</span
+                ><span class="dl-ver mono">Apple Silicon · macOS 11+</span></span
+              ></span
+            >
+            <span class="dl-arr">↓</span>
+          </a>
+          <a href="/api/download/win" class="dl-btn blur-in" style="--d: 120ms" id="dl-win">
+            <span class="dl-left"
+              ><span class="dl-icon">▦</span
+              ><span
+                ><span class="dl-name">Download for Windows</span
+                ><span class="dl-ver mono">64-bit installer · Windows 10+</span></span
+              ></span
+            >
+            <span class="dl-arr">↓</span>
+          </a>
+          <a href="/api/download/linux" class="dl-btn blur-in" style="--d: 240ms" id="dl-linux">
+            <span class="dl-left"
+              ><span class="dl-icon">◉</span
+              ><span
+                ><span class="dl-name">Download for Linux</span
+                ><span class="dl-ver mono">AppImage · Ubuntu 20.04+</span></span
+              ></span
+            >
+            <span class="dl-arr">↓</span>
+          </a>
+        </div>
+        <p class="dl-sysreq mono">macOS 11+ · Windows 10+ · Ubuntu 20.04+</p>
+        <p class="dl-trial mono">
+          Not sure yet? <a href="/try/">Try Lance in your browser first</a> — no download, nothing
+          leaves your machine.
+        </p>
+      </div>
+    </section>
+
+    <!-- ═══ FOOTER ═══ -->
+    <footer>
+      <div class="foot-word" aria-hidden="true">LANCE</div>
+      <div class="container footer-grid">
+        <div class="foot-brand">
+          <a href="#top" class="nav-brand">
+            <svg class="brand-mark" viewBox="0 0 24 24">
+              <rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#FFFFFF" />
+              <path d="M7 18 V9.5 h2.6 v5.9 h4.9 V18 Z" fill="#0B3B2A" />
+              <path d="M18.6 6.4 L17 9.9 L15.1 8 Z" fill="#0E9F6E" />
+              <path
+                d="M12.1 12.9 L17.2 7.8"
+                stroke="#0E9F6E"
+                stroke-width="2.2"
+                stroke-linecap="butt"
+              />
+            </svg>
+            Lance
+          </a>
+          <p>Built by a team of independent freelancers.</p>
+          <div class="footer-links">
+            <a href="/privacy">Privacy</a>
+            <a href="/terms">Terms</a>
+            <a href="/refunds">Refunds</a>
+            <a href="#contact">Contact</a>
+          </div>
+          <p class="footer-copy mono">© 2026 Lance. Your business data stays on your device.</p>
+        </div>
+        <div class="foot-forms" id="contact">
+          <div class="foot-form-block">
+            <p class="foot-form-title">Contact</p>
+            <p class="foot-form-sub">Questions, refunds, or just saying hi.</p>
+            <form id="contact-form" class="mini-form" novalidate>
+              <input
+                type="text"
+                id="cf-name"
+                name="name"
+                placeholder="Your name"
+                maxlength="100"
+                autocomplete="name"
+                required
+              />
+              <input
+                type="email"
+                id="cf-email"
+                name="email"
+                placeholder="you@example.com"
+                maxlength="200"
+                autocomplete="email"
+                required
+              />
+              <textarea
+                id="cf-message"
+                name="message"
+                placeholder="What's up?"
+                rows="3"
+                maxlength="2000"
+                required
+              ></textarea>
+              <input
+                type="text"
+                id="cf-company"
+                name="company_hp"
+                class="hp-trap"
+                tabindex="-1"
+                autocomplete="off"
+                aria-hidden="true"
+              />
+              <button type="submit" id="cf-submit" class="ghost-btn ghost-sm">Send message</button>
+              <p id="cf-status" class="form-status" role="status"></p>
+            </form>
+          </div>
+          <div class="foot-form-block">
+            <p class="foot-form-title">Found a bug?</p>
+            <p class="foot-form-sub">File it straight to the tracker.</p>
+            <form id="issue-form" class="mini-form" novalidate>
+              <input
+                type="text"
+                id="ir-name"
+                name="name"
+                placeholder="Your name"
+                maxlength="100"
+                autocomplete="name"
+                required
+              />
+              <input
+                type="email"
+                id="ir-email"
+                name="email"
+                placeholder="you@example.com"
+                maxlength="200"
+                autocomplete="email"
+                required
+              />
+              <input
+                type="text"
+                id="ir-title"
+                name="title"
+                placeholder="Short summary"
+                maxlength="120"
+                required
+              />
+              <textarea
+                id="ir-details"
+                name="details"
+                placeholder="Steps to reproduce, expected vs actual…"
+                rows="3"
+                maxlength="3000"
+                required
+              ></textarea>
+              <input
+                type="text"
+                id="ir-company"
+                name="company_hp"
+                class="hp-trap"
+                tabindex="-1"
+                autocomplete="off"
+                aria-hidden="true"
+              />
+              <button type="submit" id="ir-submit" class="ghost-btn ghost-sm">Report issue</button>
+              <p id="ir-status" class="form-status" role="status"></p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <div id="egg-overlay"><div id="egg-msg">⚡ LANCE MODE</div></div>
+    <script src="launch-config.js"></script>
+    <script src="ab-activator.js"></script>
+    <script src="launch-countdown.js"></script>
+    <script src="app.js" defer></script>
+  </body>
 </html>

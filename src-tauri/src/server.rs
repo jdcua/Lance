@@ -789,8 +789,14 @@ pub fn start_server(db_path: String, app_handle: AppHandle) -> Result<ServerHand
 }
 
 fn try_bind_sequential(ports: &[u16]) -> Result<(std::net::TcpListener, u16), String> {
+    // Tokio rejects blocking sockets (panics in from_std on recent
+    // versions), so flip every candidate non-blocking before returning it.
+    // A blocking listener here used to crash the app on launch.
     for &port in ports {
         if let Ok(listener) = std::net::TcpListener::bind(format!("127.0.0.1:{}", port)) {
+            listener
+                .set_nonblocking(true)
+                .map_err(|e| format!("Failed to configure listener: {}", e))?;
             return Ok((listener, port));
         }
     }
@@ -800,4 +806,10 @@ fn try_bind_sequential(ports: &[u16]) -> Result<(std::net::TcpListener, u16), St
             (listener, port)
         })
         .map_err(|e| format!("Failed to bind to any port: {}", e))
+        .and_then(|(listener, port)| {
+            listener
+                .set_nonblocking(true)
+                .map_err(|e| format!("Failed to configure listener: {}", e))?;
+            Ok((listener, port))
+        })
 }

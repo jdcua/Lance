@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
 
 permissions:
   contents: write
@@ -127,7 +128,7 @@ jobs:
           name: Lance ${{ github.ref_name }}
           body: ${{ steps.tagmsg.outputs.body }}
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
           files: |
             artifacts/**/*
             latest.json

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useStore } from '../store';
 import { tauriInvoke } from '../utils/tauri';
+import { hasTrialPath } from '../demo/isDemo';
 import { formatCurrency, formatDate } from '../utils/format';
 import type { Client, Contract, Proposal, ShareToken, UserProfile } from '../types';
 
@@ -13,9 +14,30 @@ import type { Client, Contract, Proposal, ShareToken, UserProfile } from '../typ
 // ─────────────────────────────────────────────────────────────
 
 const ALLOWED_TAGS = new Set([
-  'p', 'strong', 'em', 'b', 'i', 'u', 'h1', 'h2', 'h3', 'h4',
-  'ul', 'ol', 'li', 'blockquote', 'hr', 'br', 'span', 'div',
-  'table', 'thead', 'tbody', 'tr', 'td', 'th',
+  'p',
+  'strong',
+  'em',
+  'b',
+  'i',
+  'u',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'ul',
+  'ol',
+  'li',
+  'blockquote',
+  'hr',
+  'br',
+  'span',
+  'div',
+  'table',
+  'thead',
+  'tbody',
+  'tr',
+  'td',
+  'th',
 ]);
 
 /** Client-side equivalent of the Rust `sanitize_html` allowlist. */
@@ -41,7 +63,7 @@ function sanitizeShareHtml(html: string): string {
     .replace(/\s+(href|src|xlink:href|formaction)\s*=\s*"?\s*javascript:[^"\s>]*/gi, '');
   // Drop any tag outside the allowlist (keep inner content); strip attributes on allowed tags
   out = out.replace(/<(\/?)([a-zA-Z][a-zA-Z0-9]*)(?:\s[^>]*)?>/g, (match, slash, tag) =>
-    ALLOWED_TAGS.has(tag.toLowerCase()) ? `<${slash}${tag.toLowerCase()}>` : ''
+    ALLOWED_TAGS.has(tag.toLowerCase()) ? `<${slash}${tag.toLowerCase()}>` : '',
   );
   return out;
 }
@@ -89,7 +111,13 @@ type PortalState =
   | { kind: 'loading' }
   | { kind: 'notfound' }
   | { kind: 'expired' }
-  | { kind: 'ready'; token: ShareToken; entity: Proposal | Contract; client?: Client; profile?: UserProfile | null };
+  | {
+      kind: 'ready';
+      token: ShareToken;
+      entity: Proposal | Contract;
+      client?: Client;
+      profile?: UserProfile | null;
+    };
 
 export default function ShareView() {
   const { token: tokenParam = '' } = useParams();
@@ -107,7 +135,9 @@ export default function ShareView() {
     let cancelled = false;
     (async () => {
       try {
-        const token = await tauriInvoke<ShareToken | null>('get_share_token', { token: tokenParam });
+        const token = await tauriInvoke<ShareToken | null>('get_share_token', {
+          token: tokenParam,
+        });
         if (cancelled) return;
         if (!token) {
           setState({ kind: 'notfound' });
@@ -122,9 +152,10 @@ export default function ShareView() {
         await loadProfile();
         if (cancelled) return;
         const { profile } = useStore.getState();
-        const entity = token.entity_type === 'contract'
-          ? await tauriInvoke<Contract | null>('get_contract', { id: token.entity_id })
-          : await tauriInvoke<Proposal | null>('get_proposal', { id: token.entity_id });
+        const entity =
+          token.entity_type === 'contract'
+            ? await tauriInvoke<Contract | null>('get_contract', { id: token.entity_id })
+            : await tauriInvoke<Proposal | null>('get_proposal', { id: token.entity_id });
         if (cancelled) return;
         if (!entity) {
           setState({ kind: 'notfound' });
@@ -174,7 +205,9 @@ export default function ShareView() {
         <div className="share-card share-center">
           <h1>Share link not found</h1>
           <p>This link is invalid or has been revoked.</p>
-          <p style={{ marginTop: 16, fontSize: 12, color: '#a1a1a6' }}>Ask the sender for a fresh link.</p>
+          <p style={{ marginTop: 16, fontSize: 12, color: '#a1a1a6' }}>
+            Ask the sender for a fresh link.
+          </p>
         </div>
       </div>
     );
@@ -187,7 +220,9 @@ export default function ShareView() {
         <div className="share-card share-center">
           <h1>Link expired</h1>
           <p>This share link is no longer active.</p>
-          <p style={{ marginTop: 16, fontSize: 12, color: '#a1a1a6' }}>Ask the sender for a fresh link.</p>
+          <p style={{ marginTop: 16, fontSize: 12, color: '#a1a1a6' }}>
+            Ask the sender for a fresh link.
+          </p>
         </div>
       </div>
     );
@@ -237,8 +272,8 @@ export default function ShareView() {
   };
 
   const respondedName = isContract
-    ? (responded?.client_signature || token.client_signature)
-    : (responded?.client_name || token.client_name);
+    ? responded?.client_signature || token.client_signature
+    : responded?.client_name || token.client_name;
   const hasResponded = !!(responded?.client_response || token.client_response);
   const respDate = responded?.client_response_at || token.client_response_at || '';
   const respValue = responded?.client_response || token.client_response;
@@ -293,7 +328,11 @@ export default function ShareView() {
           <>
             <hr className="share-divider" />
             <div className="share-signed">
-              <strong>{isContract ? `Signed by ${respondedName || clientName}` : `${respondedName || clientName} ${respValue} this proposal`}</strong>
+              <strong>
+                {isContract
+                  ? `Signed by ${respondedName || clientName}`
+                  : `${respondedName || clientName} ${respValue} this proposal`}
+              </strong>
               <br />
               {formatDate(respDate)}
             </div>
@@ -302,7 +341,9 @@ export default function ShareView() {
           <div className="share-actions">
             {isContract ? (
               <>
-                <label className="share-field-label" htmlFor="share-signature">Type your full name to sign</label>
+                <label className="share-field-label" htmlFor="share-signature">
+                  Type your full name to sign
+                </label>
                 <input
                   id="share-signature"
                   className="share-field"
@@ -313,14 +354,20 @@ export default function ShareView() {
                   onChange={(e) => setSignature(e.target.value)}
                 />
                 <div className="share-btn-row">
-                  <button className="share-btn share-btn-success" disabled={submitting || signature.trim().length === 0} onClick={handleSign}>
+                  <button
+                    className="share-btn share-btn-success"
+                    disabled={submitting || signature.trim().length === 0}
+                    onClick={handleSign}
+                  >
                     {submitting ? 'Signing…' : 'Sign contract'}
                   </button>
                 </div>
               </>
             ) : (
               <>
-                <label className="share-field-label" htmlFor="share-name">Your name</label>
+                <label className="share-field-label" htmlFor="share-name">
+                  Your name
+                </label>
                 <input
                   id="share-name"
                   className="share-field"
@@ -331,10 +378,18 @@ export default function ShareView() {
                   onChange={(e) => setName(e.target.value)}
                 />
                 <div className="share-btn-row">
-                  <button className="share-btn share-btn-primary" disabled={submitting || name.trim().length === 0} onClick={() => handleRespond('accepted')}>
+                  <button
+                    className="share-btn share-btn-primary"
+                    disabled={submitting || name.trim().length === 0}
+                    onClick={() => handleRespond('accepted')}
+                  >
                     {submitting ? 'Sending…' : 'Accept proposal'}
                   </button>
-                  <button className="share-btn share-btn-danger" disabled={submitting || name.trim().length === 0} onClick={() => handleRespond('declined')}>
+                  <button
+                    className="share-btn share-btn-danger"
+                    disabled={submitting || name.trim().length === 0}
+                    onClick={() => handleRespond('declined')}
+                  >
                     Decline
                   </button>
                 </div>
@@ -344,7 +399,12 @@ export default function ShareView() {
           </div>
         )}
 
-        <div className="share-foot">Powered by Lance · This link only works while Lance is open</div>
+        <div className="share-foot">
+          Powered by Lance ·{' '}
+          {hasTrialPath()
+            ? 'Trial demo: this client view runs in your browser only'
+            : 'This link only works while Lance is open'}
+        </div>
       </div>
     </div>
   );

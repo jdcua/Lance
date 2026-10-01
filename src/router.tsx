@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import { lazy, Suspense, type ComponentType, type ReactNode } from 'react';
 import App from './App';
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import { hasTrialPath } from './demo/isDemo';
 
 const Dashboard = lazyRetry(() => import('./screens/Dashboard'));
 const Proposals = lazyRetry(() => import('./screens/Proposals'));
@@ -35,7 +36,11 @@ function lazyRetry<T extends ComponentType<any>>(importer: () => Promise<{ defau
   return lazy(() =>
     importer()
       .then((m): { default: T } => {
-        try { sessionStorage.removeItem(CHUNK_RETRY_KEY); } catch { /* ignore */ }
+        try {
+          sessionStorage.removeItem(CHUNK_RETRY_KEY);
+        } catch {
+          /* ignore */
+        }
         return m;
       })
       .catch((err: unknown): Promise<{ default: T }> => {
@@ -46,7 +51,9 @@ function lazyRetry<T extends ComponentType<any>>(importer: () => Promise<{ defau
             window.location.reload();
             fatal = false;
           }
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
         if (fatal) throw err;
         return new Promise<{ default: T }>(() => {});
       }),
@@ -55,19 +62,31 @@ function lazyRetry<T extends ComponentType<any>>(importer: () => Promise<{ defau
 function lazyRoute(element: ReactNode) {
   return (
     <ErrorBoundary>
-      <Suspense fallback={
-        <div className="p-6 space-y-6">
-          <div className="h-6 w-24 bg-[var(--bg-secondary)] rounded skeleton-pulse" />
-          <div className="space-y-3">
-            {[...Array(4)].map((_, i) => <div key={i} className="h-16 bg-[var(--bg-secondary)] rounded-[12px] skeleton-pulse" />)}
+      <Suspense
+        fallback={
+          <div className="p-6 space-y-6">
+            <div className="h-6 w-24 bg-[var(--bg-secondary)] rounded skeleton-pulse" />
+            <div className="space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-16 bg-[var(--bg-secondary)] rounded-[12px] skeleton-pulse"
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      }>
+        }
+      >
         {element}
       </Suspense>
     </ErrorBoundary>
   );
 }
+
+// Trial is served under /try/ (vite base + worker route): the router must
+// strip that prefix or every trial URL renders NotFound. Desktop and local
+// dev keep '/'. hasTrialPath (not isTrial) so ?trial=1 dev at / still works.
+const basename = typeof window !== 'undefined' && hasTrialPath() ? '/try' : '/';
 
 export const router = createBrowserRouter(
   [
@@ -100,4 +119,5 @@ export const router = createBrowserRouter(
       element: lazyRoute(<ShareView />),
     },
   ],
+  { basename },
 );

@@ -45,12 +45,17 @@ async function handleDownload(os, env) {
   if (!asset) {
     return Response.json({ error: 'no installer for this platform yet' }, { status: 404 });
   }
-  const upstream = await fetch(asset.url, { headers: githubHeaders(env, 'application/octet-stream') });
+  const upstream = await fetch(asset.url, {
+    headers: githubHeaders(env, 'application/octet-stream'),
+  });
   if (!upstream.ok || !upstream.body) {
     return Response.json({ error: 'upstream unavailable' }, { status: 502 });
   }
   const headers = new Headers();
-  headers.set('Content-Type', asset.content_type || upstream.headers.get('Content-Type') || 'application/octet-stream');
+  headers.set(
+    'Content-Type',
+    asset.content_type || upstream.headers.get('Content-Type') || 'application/octet-stream',
+  );
   headers.set('Content-Disposition', `attachment; filename="${asset.name}"`);
   headers.set('Cache-Control', 'public, max-age=3600, s-maxage=86400');
   return new Response(upstream.body, { status: 200, headers });
@@ -78,15 +83,23 @@ async function handleUpdatesLatest(request, env) {
     const localMac = manifest.mac && manifest.mac.bundle && manifest.mac.bundleSignature;
     if (localMac) {
       const url = `${origin}/api/updates/download-local/${encodeURIComponent(manifest.mac.bundle)}`;
-      for (const key of UPDATER_BUNDLES[0].platforms) platforms[key] = { url, signature: manifest.mac.bundleSignature };
+      for (const key of UPDATER_BUNDLES[0].platforms)
+        platforms[key] = { url, signature: manifest.mac.bundleSignature };
     }
     if (Object.keys(platforms).length === 0) {
       return Response.json({ error: 'no signed updater bundles yet' }, { status: 404 });
     }
-    const notes = String(manifest.notes || 'Bug fixes and improvements').replace(/[\n\r]+/g, ' ').trim();
+    const notes = String(manifest.notes || 'Bug fixes and improvements')
+      .replace(/[\n\r]+/g, ' ')
+      .trim();
     return Response.json(
       { version: manifest.version, notes, pub_date: null, platforms },
-      { headers: { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=300, s-maxage=600' } },
+      {
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Cache-Control': 'public, max-age=300, s-maxage=600',
+        },
+      },
     );
   }
   if (!env.GITHUB_TOKEN) {
@@ -103,7 +116,9 @@ async function handleUpdatesLatest(request, env) {
     const bundle = assets.find((a) => (a.name || '').endsWith(suffix));
     const sig = bundle && byName.get(`${bundle.name}.sig`);
     if (!bundle || !sig) continue;
-    const sigRes = await fetch(sig.url, { headers: githubHeaders(env, 'application/octet-stream') });
+    const sigRes = await fetch(sig.url, {
+      headers: githubHeaders(env, 'application/octet-stream'),
+    });
     if (!sigRes.ok) continue;
     const signature = (await sigRes.text()).trim();
     if (!signature) continue;
@@ -114,10 +129,17 @@ async function handleUpdatesLatest(request, env) {
     return Response.json({ error: 'no signed updater bundles yet' }, { status: 404 });
   }
   const version = String(release.tag_name || '').replace(/^v/, '');
-  const notes = String(release.body || 'Bug fixes and improvements').replace(/[\n\r]+/g, ' ').trim();
+  const notes = String(release.body || 'Bug fixes and improvements')
+    .replace(/[\n\r]+/g, ' ')
+    .trim();
   return Response.json(
     { version, notes, pub_date: release.published_at || null, platforms },
-    { headers: { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=300, s-maxage=600' } },
+    {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, max-age=300, s-maxage=600',
+      },
+    },
   );
 }
 
@@ -133,12 +155,17 @@ async function handleUpdatesDownload(filename, env) {
   if (!asset) {
     return Response.json({ error: 'asset not found' }, { status: 404 });
   }
-  const upstream = await fetch(asset.url, { headers: githubHeaders(env, 'application/octet-stream') });
+  const upstream = await fetch(asset.url, {
+    headers: githubHeaders(env, 'application/octet-stream'),
+  });
   if (!upstream.ok || !upstream.body) {
     return Response.json({ error: 'upstream unavailable' }, { status: 502 });
   }
   const headers = new Headers();
-  headers.set('Content-Type', asset.content_type || upstream.headers.get('Content-Type') || 'application/octet-stream');
+  headers.set(
+    'Content-Type',
+    asset.content_type || upstream.headers.get('Content-Type') || 'application/octet-stream',
+  );
   headers.set('Content-Disposition', `attachment; filename="${asset.name}"`);
   headers.set('Cache-Control', 'public, max-age=3600, s-maxage=86400');
   return new Response(upstream.body, { status: 200, headers });
@@ -174,7 +201,10 @@ async function serveLocalFile(request, env, filename, contentType) {
   const res = await env.ASSETS.fetch(new Request(new URL(`/downloads/${filename}`, request.url)));
   if (!res.ok || !res.body) return null;
   const headers = new Headers();
-  headers.set('Content-Type', contentType || res.headers.get('Content-Type') || 'application/octet-stream');
+  headers.set(
+    'Content-Type',
+    contentType || res.headers.get('Content-Type') || 'application/octet-stream',
+  );
   headers.set('Content-Disposition', `attachment; filename="${filename}"`);
   headers.set('Cache-Control', 'public, max-age=3600, s-maxage=86400');
   return new Response(res.body, { status: 200, headers });
@@ -186,7 +216,14 @@ async function serveLocalFile(request, env, filename, contentType) {
 // promo/exp-report.md via GET /api/exp-report.
 const expCounters = new Map();
 const expHour = () => new Date().toISOString().slice(0, 13);
-const EXP_GOALS = new Set(['view', 'dl-click', 'pricing-view', 'trial-cta', 'contact-submit', 'issue-submit']);
+const EXP_GOALS = new Set([
+  'view',
+  'dl-click',
+  'pricing-view',
+  'trial-cta',
+  'contact-submit',
+  'issue-submit',
+]);
 
 function recordExpHit(exp, variant, goal) {
   exp = String(exp || '').slice(0, 40);
@@ -239,7 +276,8 @@ function totalsReport() {
 }
 
 async function handleExpHit(request) {
-  if (request.method !== 'POST') return Response.json({ error: 'method not allowed' }, { status: 405 });
+  if (request.method !== 'POST')
+    return Response.json({ error: 'method not allowed' }, { status: 405 });
   let body;
   try {
     body = await request.json();
@@ -259,7 +297,10 @@ const issueHits = new Map();
 function issueRateLimited(ip) {
   const now = Date.now();
   const windowMs = 60 * 60 * 1000;
-  const recent = ((issueHits.get(ip) || []).filter((t) => now - t < windowMs).concat([now])).slice(-10);
+  const recent = (issueHits.get(ip) || [])
+    .filter((t) => now - t < windowMs)
+    .concat([now])
+    .slice(-10);
   issueHits.set(ip, recent);
   if (issueHits.size > 2000) {
     for (const [k, v] of issueHits) {
@@ -282,12 +323,28 @@ async function handleCreateIssue(request, env) {
   }
   // Honeypot: bots fill it, humans never see it.
   if (body.company_hp) return Response.json({ ok: true });
-  const name = String(body.name || '').trim().slice(0, 100);
-  const email = String(body.email || '').trim().slice(0, 200);
-  const title = String(body.title || '').trim().slice(0, 120);
-  const details = String(body.details || '').trim().slice(0, 3000);
-  if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || title.length < 5 || details.length < 10) {
-    return Response.json({ error: 'name, a valid email, a short summary, and details are required' }, { status: 400 });
+  const name = String(body.name || '')
+    .trim()
+    .slice(0, 100);
+  const email = String(body.email || '')
+    .trim()
+    .slice(0, 200);
+  const title = String(body.title || '')
+    .trim()
+    .slice(0, 120);
+  const details = String(body.details || '')
+    .trim()
+    .slice(0, 3000);
+  if (
+    !name ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+    title.length < 5 ||
+    details.length < 10
+  ) {
+    return Response.json(
+      { error: 'name, a valid email, a short summary, and details are required' },
+      { status: 400 },
+    );
   }
   if (!env.GITHUB_TOKEN) {
     return Response.json({ error: 'server misconfigured' }, { status: 500 });
@@ -323,9 +380,90 @@ async function handleCreateIssue(request, env) {
   }
 }
 
+// Trial build attestation lives at /try/build.json: version + sha256 per
+// file. No source is published; hashes let anyone verify the bytes served.
+//
+// CSP notes (read before tightening):
+// - connect-src 'none' is the exfiltration guard: no page or worker fetch
+//   can reach any server, so business data cannot leave the browser.
+// - script-src keeps 'unsafe-inline' for our own build-time inline theme
+//   bootstrap (view-source it: no network calls). Third-party scripts still
+//   cannot load (default-src/script-src 'self'), and even an injected inline
+//   script could not send data anywhere (connect-src 'none', form-action
+//   'none'). Removing 'unsafe-inline' would break the theme pre-paint with
+//   zero privacy gain.
+const TRIAL_CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self' data:",
+  "img-src 'self' data: blob:",
+  "connect-src 'none'",
+  "media-src 'self' blob:",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'none'",
+].join('; ');
+
+function isTrialPath(pathname) {
+  return pathname === '/try' || pathname.startsWith('/try/');
+}
+
+function trialResponse(res) {
+  const headers = new Headers(res.headers);
+  headers.set('Content-Security-Policy', TRIAL_CSP);
+  headers.set('Referrer-Policy', 'no-referrer');
+  headers.set('X-Content-Type-Options', 'nosniff');
+  headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  return new Response(res.body, { status: res.status, headers });
+}
+
+async function handleTrial(request, env) {
+  const url = new URL(request.url);
+  // No data collection surface: the trial never POSTs, so reject writes.
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    return Response.json({ error: 'trial is read-only static' }, { status: 405 });
+  }
+  // The service worker script must NOT carry the page CSP: a worker's own
+  // fetch() calls are checked against the CSP delivered with the worker
+  // script, so connect-src 'none' would neuter offline caching entirely
+  // (install fails, every navigation falls through to an empty cache).
+  // Page responses below keep the full policy; the exfiltration guarantee
+  // lives there, not in the SW script response.
+  if (url.pathname === '/try/trial-sw.js') {
+    const res = await env.ASSETS.fetch(request);
+    const headers = new Headers(res.headers);
+    headers.set('Content-Type', 'application/javascript');
+    headers.set('Service-Worker-Allowed', '/try/');
+    headers.set('Cache-Control', 'public, max-age=0, must-revalidate');
+    return new Response(res.body, { status: res.status, headers });
+  }
+  // SPA fallback: /try and /try/<route> serve the trial shell.
+  // File paths with an extension serve directly; build.json is public proof.
+  const hasExt = /\/[^/]+\.[a-z0-9]+$/i.test(url.pathname);
+  if (url.pathname === '/try' || url.pathname === '/try/') {
+    const res = await env.ASSETS.fetch(new Request(new URL('/try/index.html', request.url)));
+    return trialResponse(res);
+  }
+  if (!hasExt) {
+    const res = await env.ASSETS.fetch(new Request(new URL('/try/index.html', request.url)));
+    if (res.ok) return trialResponse(res);
+  }
+  const res = await env.ASSETS.fetch(request);
+  if (!res.ok && !hasExt) {
+    const fallback = await env.ASSETS.fetch(new Request(new URL('/try/index.html', request.url)));
+    if (fallback.ok) return trialResponse(fallback);
+  }
+  return trialResponse(res);
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    if (isTrialPath(url.pathname)) {
+      return handleTrial(request, env);
+    }
 
     if (url.pathname === '/api/updates/latest.json') {
       return handleUpdatesLatest(request, env);
@@ -334,7 +472,9 @@ export default {
     if (url.pathname.startsWith('/api/updates/download-local/')) {
       // Temporary local-release override: only the exact bundle named in the
       // checked-in manifest is servable.
-      const filename = decodeURIComponent(url.pathname.slice('/api/updates/download-local/'.length).split('/')[0] || '');
+      const filename = decodeURIComponent(
+        url.pathname.slice('/api/updates/download-local/'.length).split('/')[0] || '',
+      );
       const manifest = await getLocalManifest(request, env);
       if (!manifest?.mac?.bundle || filename !== manifest.mac.bundle) {
         return Response.json({ error: 'asset not found' }, { status: 404 });
@@ -358,9 +498,12 @@ export default {
     }
 
     if (url.pathname === '/api/exp-report') {
-      return Response.json({ ...expReport(), _totals: totalsReport() }, {
-        headers: { 'Cache-Control': 'no-store' },
-      });
+      return Response.json(
+        { ...expReport(), _totals: totalsReport() },
+        {
+          headers: { 'Cache-Control': 'no-store' },
+        },
+      );
     }
 
     if (url.pathname.startsWith('/api/download/')) {
@@ -392,7 +535,9 @@ export default {
         return Response.json({ error: 'invalid JSON' }, { status: 400 });
       }
       if (body.company_hp) return Response.json({ ok: true });
-      const email = String(body.email || '').trim().slice(0, 200);
+      const email = String(body.email || '')
+        .trim()
+        .slice(0, 200);
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return Response.json({ error: 'a valid email is required' }, { status: 400 });
       }
@@ -460,13 +605,22 @@ export default {
       } catch {
         return Response.json({ error: 'invalid JSON' }, { status: 400 });
       }
-      const name = String(body.name || '').trim().slice(0, 100);
-      const email = String(body.email || '').trim().slice(0, 200);
-      const message = String(body.message || '').trim().slice(0, 2000);
+      const name = String(body.name || '')
+        .trim()
+        .slice(0, 100);
+      const email = String(body.email || '')
+        .trim()
+        .slice(0, 200);
+      const message = String(body.message || '')
+        .trim()
+        .slice(0, 2000);
       // Honeypot: bots fill it, humans never see it.
       if (body.company_hp) return Response.json({ ok: true });
       if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !message) {
-        return Response.json({ error: 'name, a valid email, and a message are required' }, { status: 400 });
+        return Response.json(
+          { error: 'name, a valid email, and a message are required' },
+          { status: 400 },
+        );
       }
 
       try {

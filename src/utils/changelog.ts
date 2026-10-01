@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getRuntimeVersion } from '../lib/version';
 import { todayLocalISO } from './format';
+import { isTrial } from '../demo/isDemo';
 
 export interface ChangelogEntry {
   version: string;
@@ -68,6 +69,9 @@ export function sanitizeChangelogItems(items: string[]): string[] {
  * plain and user-facing.
  */
 export async function loadChangelog(): Promise<ChangelogEntry[]> {
+  // Trial builds never touch the network: prove it by not fetching at all.
+  if (isTrial()) return trialChangelog();
+
   const cacheKey = 'lance:changelog-cache';
   const cacheExpiryKey = 'lance:changelog-cache-expiry';
   const CACHE_TTL_MS = 1000 * 60 * 60; // 1 hour
@@ -101,17 +105,21 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
         });
         if (!response.ok) throw new Error(`release notes ${response.status}`);
         const data = (await response.json()) as GitHubRelease | GitHubRelease[];
-        const releases = (Array.isArray(data) ? data : [data]).filter((r) => !r.draft && !r.prerelease);
-        const mapped = releases.map((r) => ({
-          version: r.tag_name.replace(/^v/, ''),
-          date: (r.published_at || '').split('T')[0],
-          items: sanitizeChangelogItems(
-            (r.body || '').split('\n').map((line: string) => line.replace(/^[-*]\s*/, '').trim()),
-          ),
-        })).map((e) => ({
-          ...e,
-          items: e.items.length > 0 ? e.items : ['Small fixes and polish in this release.'],
-        }));
+        const releases = (Array.isArray(data) ? data : [data]).filter(
+          (r) => !r.draft && !r.prerelease,
+        );
+        const mapped = releases
+          .map((r) => ({
+            version: r.tag_name.replace(/^v/, ''),
+            date: (r.published_at || '').split('T')[0],
+            items: sanitizeChangelogItems(
+              (r.body || '').split('\n').map((line: string) => line.replace(/^[-*]\s*/, '').trim()),
+            ),
+          }))
+          .map((e) => ({
+            ...e,
+            items: e.items.length > 0 ? e.items : ['Small fixes and polish in this release.'],
+          }));
         if (mapped.length > 0) {
           entries = mapped;
           break;
@@ -123,7 +131,11 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
   }
 
   // 3. Fallback: parse local git tags (dev mode, Tauri only)
-  if (entries.length === 0 && typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).__TAURI_INTERNALS__) {
+  if (
+    entries.length === 0 &&
+    typeof window !== 'undefined' &&
+    (window as unknown as Record<string, unknown>).__TAURI_INTERNALS__
+  ) {
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       const log = await invoke<string>('get_git_changelog', { limit: 20 });
@@ -178,6 +190,22 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
   }
 
   return entries;
+}
+
+/** Offline trial notes: no fetch, same shape as the fallback above. */
+function trialChangelog(): ChangelogEntry[] {
+  const today = todayLocalISO();
+  const version = typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : '0.0.0';
+  return [
+    {
+      version,
+      date: today,
+      items: [
+        'Trial runs fully offline in this browser',
+        'Export your trial file to keep everything on desktop',
+      ],
+    },
+  ];
 }
 
 async function ensureRuntimeVersion(entries: ChangelogEntry[]): Promise<ChangelogEntry[]> {
@@ -242,7 +270,9 @@ export function useChangelog() {
         setLoading(false);
       }
     });
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return { changelog, loading };

@@ -1,6 +1,9 @@
 [package]
-name = "lance"
-version = "0.9.3"
+# Capital L on purpose: the debug binary name is what macOS shows in the
+# Dock for unbundled `tauri dev` runs ("lance" looked like a typo next to
+# properly capitalized apps). Release bundles already use productName.
+name = "Lance"
+version = "0.9.9-alpha"
 edition = "2021"
 
 [dependencies]

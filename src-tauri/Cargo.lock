@@ -3,6 +3,36 @@
 version = 4
 
 [[package]]
+name = "Lance"
+version = "0.9.9-alpha"
+dependencies = [
+ "ammonia",
+ "axum",
+ "chrono",
+ "hex",
+ "hmac",
+ "rand 0.8.6",
+ "reqwest 0.12.28",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-fs",
+ "tauri-plugin-opener",
+ "tauri-plugin-process",
+ "tauri-plugin-shell",
+ "tauri-plugin-sql",
+ "tauri-plugin-updater",
+ "tokio",
+ "tower 0.4.13",
+ "tower-http 0.5.2",
+ "uuid",
+]
+
+[[package]]
 name = "adler2"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2408,36 +2438,6 @@ dependencies = [
  "bitflags 2.11.1",
  "serde",
  "unicode-segmentation",
-]
-
-[[package]]
-name = "lance"
-version = "0.9.3"
-dependencies = [
- "ammonia",
- "axum",
- "chrono",
- "hex",
- "hmac",
- "rand 0.8.6",
- "reqwest 0.12.28",
- "rusqlite",
- "serde",
- "serde_json",
- "sha2",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-fs",
- "tauri-plugin-opener",
- "tauri-plugin-process",
- "tauri-plugin-shell",
- "tauri-plugin-sql",
- "tauri-plugin-updater",
- "tokio",
- "tower 0.4.13",
- "tower-http 0.5.2",
- "uuid",
 ]
 
 [[package]]

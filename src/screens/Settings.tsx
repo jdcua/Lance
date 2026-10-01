@@ -31,7 +31,19 @@ import { save } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeFile } from '@tauri-apps/plugin-fs';
 import { open } from '@tauri-apps/plugin-dialog';
 import { openCheckout } from '../utils/tauri';
-import { Check, Upload, Download, AlertTriangle, Trash2, Lock, Sparkles, ArrowRight, FileText, FolderOpen, X } from 'lucide-react';
+import {
+  Check,
+  Upload,
+  Download,
+  AlertTriangle,
+  Trash2,
+  Lock,
+  Sparkles,
+  ArrowRight,
+  FileText,
+  FolderOpen,
+  X,
+} from 'lucide-react';
 import { THEMES, applyTheme, getTheme } from '../themes/themes';
 import type { ThemeId } from '../themes';
 import { PROFESSION_THEME, type Profession } from '../themes';
@@ -39,8 +51,17 @@ import { getArchetype, ARCHETYPE_LIST } from '../archetypes';
 import { getUnlockedThemes, getUnlockedAchievementKeys } from '../achievements/checker';
 import { TEMPLATE_LABELS, DEFAULT_SUBJECT_TEMPLATES } from '../utils/followUpTemplates';
 import { clearSampleData } from '../utils/seedData';
-import { createExportEnvelope, validateImportEnvelope, performImport, formatTableCounts, logVersionEvent } from '../utils/backup';
+import {
+  createExportEnvelope,
+  validateImportEnvelope,
+  performImport,
+  formatTableCounts,
+  logVersionEvent,
+  sanitizeBlobName,
+} from '../utils/backup';
 import type { BackupEnvelope, ImportValidationResult } from '../utils/backup';
+import { isTrial as isTrialBuild } from '../demo/isDemo';
+import TestModePanel from '../demo/TestModePanel';
 import { getCurrentSchemaVersion } from '../db';
 import { sanitizeInput, sanitizeText } from '../utils/sanitize';
 
@@ -70,7 +91,20 @@ function labelForStyle(s: string): string {
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { profile, loadProfile, saveProfile, isLicensed, activateLicense, removeLicense, followUpSettings, loadFollowUpSettings, saveFollowUpSettings, getActiveTier, getAssetsDir, getImportsDir } = useStore();
+  const {
+    profile,
+    loadProfile,
+    saveProfile,
+    isLicensed,
+    activateLicense,
+    removeLicense,
+    followUpSettings,
+    loadFollowUpSettings,
+    saveFollowUpSettings,
+    getActiveTier,
+    getAssetsDir,
+    getImportsDir,
+  } = useStore();
   const addToast = useToasts((s) => s.add);
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const prefs = usePrefs();
@@ -131,7 +165,9 @@ export default function Settings() {
   });
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const formInitialized = useRef(false);
-  const [section, setSection] = useState<'general' | 'appearance' | 'notifications' | 'data' | 'danger-zone'>('general');
+  const [section, setSection] = useState<
+    'general' | 'appearance' | 'notifications' | 'data' | 'danger-zone'
+  >('general');
   const innerModalOpenRef = useRef(false);
   const NAV_ITEMS = [
     { id: 'general' as const, label: 'General' },
@@ -161,12 +197,25 @@ export default function Settings() {
   }, [navigate]);
 
   useEffect(() => {
-    innerModalOpenRef.current = showResetModal || showLicenseModal || showAssetWarning || showSchemaWarnModal || showImportSummary || showRemoveLicenseConfirm;
-  }, [showResetModal, showLicenseModal, showAssetWarning, showSchemaWarnModal, showImportSummary, showRemoveLicenseConfirm]);
+    innerModalOpenRef.current =
+      showResetModal ||
+      showLicenseModal ||
+      showAssetWarning ||
+      showSchemaWarnModal ||
+      showImportSummary ||
+      showRemoveLicenseConfirm;
+  }, [
+    showResetModal,
+    showLicenseModal,
+    showAssetWarning,
+    showSchemaWarnModal,
+    showImportSummary,
+    showRemoveLicenseConfirm,
+  ]);
 
   useEffect(() => {
     loadProfile()
-      .catch(err => addToast(err?.toString?.() || 'Failed to load profile', 'error'))
+      .catch((err) => addToast(err?.toString?.() || 'Failed to load profile', 'error'))
       .finally(() => setLoading(false));
   }, [loadProfile, addToast]);
 
@@ -198,17 +247,21 @@ export default function Settings() {
     const stored = (localStorage.getItem('lance:theme') || 'default') as ThemeId;
     setActiveTheme(stored);
     if (isLicensed) {
-      setUnlockedThemes(new Set(['default', 'studio', 'terminal', 'craft', 'motion', 'lens', 'scale']));
+      setUnlockedThemes(
+        new Set(['default', 'studio', 'terminal', 'craft', 'motion', 'lens', 'scale']),
+      );
     } else {
-      Promise.all([getUnlockedThemes(), getUnlockedAchievementKeys()]).then(([unlocked, achievementKeys]) => {
-        const set = new Set(['default', ...unlocked]);
-        const prof = profile?.profession as Profession | undefined;
-        if (prof && PROFESSION_THEME[prof]) {
-          set.add(PROFESSION_THEME[prof]);
-        }
-        setUnlockedThemes(set);
-        setUnlockedAchievements(new Set(achievementKeys));
-      });
+      Promise.all([getUnlockedThemes(), getUnlockedAchievementKeys()]).then(
+        ([unlocked, achievementKeys]) => {
+          const set = new Set(['default', ...unlocked]);
+          const prof = profile?.profession as Profession | undefined;
+          if (prof && PROFESSION_THEME[prof]) {
+            set.add(PROFESSION_THEME[prof]);
+          }
+          setUnlockedThemes(set);
+          setUnlockedAchievements(new Set(achievementKeys));
+        },
+      );
     }
   }, [isLicensed, profile?.profession]);
 
@@ -241,7 +294,11 @@ export default function Settings() {
   }, [loadFollowUpSettings]);
 
   useEffect(() => {
-    if (!fuInitRef.current && followUpSettings.templates && Object.keys(followUpSettings.templates).length > 0) {
+    if (
+      !fuInitRef.current &&
+      followUpSettings.templates &&
+      Object.keys(followUpSettings.templates).length > 0
+    ) {
       fuInitRef.current = true;
       setFuEnabled(followUpSettings.enabled);
       setFuProposalDelay(followUpSettings.proposal_delay_days);
@@ -262,7 +319,7 @@ export default function Settings() {
       const { getDb } = await import('../db');
       const db = await getDb();
       const rows = await db.select<{ enabled: number; frequency: string; backup_path: string }[]>(
-        'SELECT enabled, frequency, backup_path FROM auto_backup_state LIMIT 1'
+        'SELECT enabled, frequency, backup_path FROM auto_backup_state LIMIT 1',
       );
       if (rows && rows.length > 0) {
         setAutoBackupEnabled(!!rows[0].enabled);
@@ -283,7 +340,7 @@ export default function Settings() {
       await db.execute(
         `INSERT INTO auto_backup_state (id, enabled, frequency, backup_path) VALUES (1, ?, ?, ?)
          ON CONFLICT(id) DO UPDATE SET enabled = excluded.enabled, frequency = excluded.frequency, backup_path = excluded.backup_path`,
-        [enabled ? 1 : 0, frequency, path || autoBackupPath]
+        [enabled ? 1 : 0, frequency, path || autoBackupPath],
       );
     } catch {
       /* non-critical */
@@ -316,7 +373,7 @@ export default function Settings() {
         });
       }, 1500);
     },
-    [form, saveProfile, addToast]
+    [form, saveProfile, addToast],
   );
 
   const applyAccentColor = (colorId: string) => {
@@ -354,9 +411,13 @@ export default function Settings() {
         let hasAssets = false;
         try {
           const db = await getDb();
-          const rows = await db.select<{ cnt: number }[]>('SELECT COUNT(*) as cnt FROM attachments');
+          const rows = await db.select<{ cnt: number }[]>(
+            'SELECT COUNT(*) as cnt FROM attachments',
+          );
           hasAssets = rows && rows.length > 0 && rows[0].cnt > 0;
-        } catch { /* non-critical */ }
+        } catch {
+          /* non-critical */
+        }
         if (hasAssets) {
           setShowAssetWarning(true);
           return;
@@ -383,8 +444,13 @@ export default function Settings() {
 
   const doExportData = async () => {
     try {
-      const { fetchBackupTables } = await import('../utils/backup');
+      const { fetchBackupTables, fetchAttachmentBlobs, ATTACHMENT_BLOB_TABLE } =
+        await import('../utils/backup');
       const data = await fetchBackupTables();
+      // Portable file bytes ride along (capped); oversized files travel as
+      // metadata with a note instead of silently bloating the backup.
+      const { blobs, skipped } = await fetchAttachmentBlobs();
+      if (blobs.length > 0) data[ATTACHMENT_BLOB_TABLE] = blobs;
 
       const { getRuntimeVersion } = await import('../lib/version');
       const APP_VERSION = await getRuntimeVersion();
@@ -401,7 +467,12 @@ export default function Settings() {
         const { downloadTextFile } = await import('../utils/yearSummary');
         downloadTextFile(filename, json, 'application/json;charset=utf-8');
       }
-      addToast('Data exported successfully', 'success');
+      addToast(
+        skipped > 0
+          ? `Data exported successfully · ${skipped} large file${skipped === 1 ? '' : 's'} travel as metadata only`
+          : 'Data exported successfully',
+        'success',
+      );
     } catch {
       addToast('Export failed', 'error');
     }
@@ -523,14 +594,35 @@ export default function Settings() {
       const envelope = importSummaryData.envelope;
 
       const mode = importReplaceMode ? 'replace' : 'additive';
-      const result = await performImport(envelope, mode);
+      // Blob materializer: exported file bytes land back in real storage.
+      // Desktop writes into the assets folder; browser/trial restores into
+      // IndexedDB. Rows always import — only bytes depend on this.
+      const materialize = async (id: string, bytes: Uint8Array, mime: string, filename: string) => {
+        if (isTauriApp()) {
+          const { writeFile } = await import('@tauri-apps/plugin-fs');
+          const { join } = await import('@tauri-apps/api/path');
+          const dir = await getAssetsDir();
+          const target = await join(dir, `${id}-${sanitizeBlobName(filename)}`);
+          await writeFile(target, bytes);
+          return target;
+        }
+        const { putAssetFile } = await import('../demo/assetStore');
+        return putAssetFile(id, new Blob([bytes as unknown as BlobPart], { type: mime }));
+      };
+      const result = await performImport(envelope, mode, materialize);
 
       if (result.imported === 0 && result.skipped === 0 && result.failed > 0) {
         addToast('Import failed · no data was changed', 'error');
       } else {
         const parts: string[] = [];
-        if (result.imported > 0) parts.push(`Imported: ${result.imported} records across ${result.tablesWritten} tables`);
+        if (result.imported > 0)
+          parts.push(`Imported: ${result.imported} records across ${result.tablesWritten} tables`);
         if (result.skipped > 0) parts.push(`Skipped: ${result.skipped} duplicates`);
+        if (result.blobsRestored > 0) parts.push(`Files restored: ${result.blobsRestored}`);
+        if (result.blobsSkipped > 0)
+          parts.push(
+            `${result.blobsSkipped} large file${result.blobsSkipped === 1 ? '' : 's'} kept as metadata only`,
+          );
         if (result.failed > 0) {
           parts.push(`Failed: ${result.failed} records`);
           if (result.errors.length > 0) {
@@ -585,7 +677,11 @@ export default function Settings() {
         }
         await db.execute('COMMIT');
       } catch {
-        try { await db.execute('ROLLBACK'); } catch { /* ignore */ }
+        try {
+          await db.execute('ROLLBACK');
+        } catch {
+          /* ignore */
+        }
         throw new Error('Reset failed');
       }
       // Browser-derived caches the tables do not cover. Achievements and
@@ -600,7 +696,9 @@ export default function Settings() {
         localStorage.removeItem('lance:trash');
         localStorage.removeItem('lance:tour-pending');
         localStorage.removeItem('lance:last-timer-config');
-      } catch { /* private mode */ }
+      } catch {
+        /* private mode */
+      }
       setShowResetModal(false);
       addToast('All data has been reset', 'info');
       setTimeout(() => window.location.reload(), 500);
@@ -623,7 +721,9 @@ export default function Settings() {
       if (success) {
         setLicenseSuccess(true);
         addToast('Lance is now licensed. All themes unlocked.', 'unlock');
-        setUnlockedThemes(new Set(['default', 'studio', 'terminal', 'craft', 'motion', 'lens', 'scale']));
+        setUnlockedThemes(
+          new Set(['default', 'studio', 'terminal', 'craft', 'motion', 'lens', 'scale']),
+        );
       } else {
         setLicenseError('Invalid license key. Check your key and try again.');
         licenseInputRef.current?.focus();
@@ -649,19 +749,27 @@ export default function Settings() {
     }
   };
 
+  const inputClass =
+    'w-full px-3 py-2 text-sm border border-[var(--border-color)]  rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)]  ';
+  const labelClass =
+    'block text-xs font-medium text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-1';
 
-
-  const inputClass = "w-full px-3 py-2 text-sm border border-[var(--border-color)]  rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)]  ";
-  const labelClass = "block text-xs font-medium text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-1";
-
-  if (loading) return <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" />
+      </div>
+    );
 
   return (
     <>
       <Modal open={true} onClose={handleCloseModal} title="Settings" size="full">
         <div className="flex h-full">
           {/* Sidebar */}
-          <aside aria-label="Settings sections" className="w-[200px] shrink-0 border-r border-[var(--border-color)] p-4">
+          <aside
+            aria-label="Settings sections"
+            className="w-[200px] shrink-0 border-r border-[var(--border-color)] p-4"
+          >
             <nav aria-label="Settings section links" className="space-y-0.5">
               {NAV_ITEMS.map((item) => (
                 <button
@@ -673,8 +781,8 @@ export default function Settings() {
                         ? 'bg-[var(--danger-bg)] text-[var(--danger)] font-medium'
                         : 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] font-medium'
                       : item.danger
-                      ? 'text-[var(--danger)] hover:bg-[var(--danger-bg)] hover:text-[var(--danger)]'
-                      : 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]'
+                        ? 'text-[var(--danger)] hover:bg-[var(--danger-bg)] hover:text-[var(--danger)]'
+                        : 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]'
                   }`}
                 >
                   {item.label}
@@ -688,17 +796,23 @@ export default function Settings() {
             {section === 'general' && (
               <>
                 {/* Profile section header */}
-                <div className="text-xs uppercase tracking-widest text-[var(--text-secondary)] font-semibold mb-4">Profile</div>
+                <div className="text-xs uppercase tracking-widest text-[var(--text-secondary)] font-semibold mb-4">
+                  Profile
+                </div>
 
                 {/* License */}
                 <Card className="mb-6">
-                  <SectionHead title="License" isSaved={saved.has("License")} />
+                  <SectionHead title="License" isSaved={saved.has('License')} />
                   {isLicensed ? (
                     <div>
                       <div className="flex items-center gap-2 mb-3">
                         <Sparkles size={14} className="text-[var(--accent-ink,var(--accent))]" />
-                        <span className="text-sm font-medium text-[var(--accent-ink,var(--accent))]">Licensed</span>
-                        <span className="text-[10px] text-[var(--accent-ink,var(--accent))] bg-[var(--accent-bg)] px-1.5 py-0.5 rounded-full">Licensed</span>
+                        <span className="text-sm font-medium text-[var(--accent-ink,var(--accent))]">
+                          Licensed
+                        </span>
+                        <span className="text-[10px] text-[var(--accent-ink,var(--accent))] bg-[var(--accent-bg)] px-1.5 py-0.5 rounded-full">
+                          Licensed
+                        </span>
                       </div>
                       <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-2">
                         All themes unlocked. Thank you for supporting Lance.
@@ -722,7 +836,11 @@ export default function Settings() {
                     <div>
                       {getActiveTier() === 'trial' && (
                         <p className="text-sm text-[var(--text-primary)] mb-2">
-                          Pro trial: <strong className="text-[var(--accent-ink,var(--accent))]">{trialDaysRemaining(profile?.trial_started_at)} days left</strong>. Everything is unlocked. Keep it with a license before it ends.
+                          Pro trial:{' '}
+                          <strong className="text-[var(--accent-ink,var(--accent))]">
+                            {trialDaysRemaining(profile?.trial_started_at)} days left
+                          </strong>
+                          . Everything is unlocked. Keep it with a license before it ends.
                           {getTrialValue().total > 0 && (
                             <span className="block text-xs text-[var(--text-secondary)] mt-1">
                               It has already earned you {formatCurrency(getTrialValue().total)}.
@@ -732,17 +850,35 @@ export default function Settings() {
                       )}
                       {getActiveTier() === 'expired' && (
                         <p className="text-sm text-[var(--text-primary)] mb-2">
-                          Your Pro trial ended. Your data is intact and Core stays free forever. Resubscribe anytime to unlock Pro depth again.
+                          Your Pro trial ended. Your data is intact and Core stays free forever.
+                          Resubscribe anytime to unlock Pro depth again.
                         </p>
                       )}
                       <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-4">
-                        Lance is free to use. A license removes the launch screen and unlocks all themes immediately.
+                        Lance is free to use. A license removes the launch screen and unlocks all
+                        themes immediately.
                       </p>
                       <div className="flex items-center gap-3">
-                        <Button variant="primary" onClick={() => { setLicenseKey(''); setLicenseError(''); setShowLicenseModal(true); }} size="sm">
+                        <Button
+                          variant="primary"
+                          onClick={() => {
+                            setLicenseKey('');
+                            setLicenseError('');
+                            setShowLicenseModal(true);
+                          }}
+                          size="sm"
+                        >
                           Enter license key
                         </Button>
-                        <Button variant="secondary" onClick={() => { openCheckout('yearly').then((ok) => { if (!ok) addToast('Checkout is not configured in this build', 'info'); }); }} size="sm">
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            openCheckout('yearly').then((ok) => {
+                              if (!ok) addToast('Checkout is not configured in this build', 'info');
+                            });
+                          }}
+                          size="sm"
+                        >
                           Get Pro (${PRO_PRICES.yearly}/yr)
                         </Button>
                       </div>
@@ -752,38 +888,38 @@ export default function Settings() {
 
                 {/* Your profile */}
                 <Card className="mb-6">
-                  <SectionHead title="Your profile" isSaved={saved.has("Your profile")} />
+                  <SectionHead title="Your profile" isSaved={saved.has('Your profile')} />
                   <div className="space-y-4">
                     <div>
                       <label className={labelClass}>Full name</label>
-                        <input
-                          type="text"
-                          maxLength={100}
-                          value={form.name || ''}
-                          onChange={(e) => setForm({ ...form, name: e.target.value })}
-                          onBlur={() => autoSave({ name: form.name }, 'Your profile')}
-                          placeholder="Your full name"
-                          className={inputClass}
-                        />
+                      <input
+                        type="text"
+                        maxLength={100}
+                        value={form.name || ''}
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        onBlur={() => autoSave({ name: form.name }, 'Your profile')}
+                        placeholder="Your full name"
+                        className={inputClass}
+                      />
                     </div>
                     <div>
                       <label className={labelClass}>Email</label>
-                        <input
-                          type="email"
-                          maxLength={254}
-                          value={form.email || ''}
-                          onChange={(e) => setForm({ ...form, email: e.target.value })}
-                          onBlur={() => {
-                            const email = (form.email || '').trim();
-                            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                              addToast('Please enter a valid email address', 'error');
-                              return;
-                            }
-                            autoSave({ email }, 'Your profile');
-                          }}
-                          placeholder="you@example.com"
-                          className={inputClass}
-                        />
+                      <input
+                        type="email"
+                        maxLength={254}
+                        value={form.email || ''}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        onBlur={() => {
+                          const email = (form.email || '').trim();
+                          if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                            addToast('Please enter a valid email address', 'error');
+                            return;
+                          }
+                          autoSave({ email }, 'Your profile');
+                        }}
+                        placeholder="you@example.com"
+                        className={inputClass}
+                      />
                     </div>
                     <div>
                       <label className={labelClass}>Default currency</label>
@@ -794,22 +930,28 @@ export default function Settings() {
                         className={inputClass}
                       >
                         {currencies.map((c) => (
-                          <option key={c} value={c}>{c}</option>
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
                         ))}
                       </select>
-                      <p className="text-[10px] text-[var(--text-secondary)] mt-1">You can override this per-client or per-invoice.</p>
+                      <p className="text-[10px] text-[var(--text-secondary)] mt-1">
+                        You can override this per-client or per-invoice.
+                      </p>
                     </div>
                   </div>
                 </Card>
 
                 {/* Rates */}
                 <Card className="mb-6">
-                  <SectionHead title="Rates" isSaved={saved.has("Rates")} />
+                  <SectionHead title="Rates" isSaved={saved.has('Rates')} />
                   <div className="space-y-4">
                     <div>
                       <label className={labelClass}>Default hourly rate</label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-secondary)]">{getCurrencySymbol(form.currency || profile?.currency || 'CAD')}</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-secondary)]">
+                          {getCurrencySymbol(form.currency || profile?.currency || 'CAD')}
+                        </span>
                         <input
                           type="number"
                           min={0}
@@ -818,7 +960,10 @@ export default function Settings() {
                           value={form.hourly_rate ?? ''}
                           onChange={(e) => {
                             const v = e.target.value ? parseFloat(e.target.value) : 0;
-                            setForm({ ...form, hourly_rate: Number.isFinite(v) ? Math.max(0, Math.min(10000, v)) : 0 });
+                            setForm({
+                              ...form,
+                              hourly_rate: Number.isFinite(v) ? Math.max(0, Math.min(10000, v)) : 0,
+                            });
                           }}
                           onBlur={() => autoSave({ hourly_rate: form.hourly_rate }, 'Rates')}
                           placeholder="0.00"
@@ -835,13 +980,18 @@ export default function Settings() {
                         value={form.tax_rate ?? ''}
                         onChange={(e) => {
                           const v = e.target.value ? parseFloat(e.target.value) : 0;
-                          setForm({ ...form, tax_rate: Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : 0 });
+                          setForm({
+                            ...form,
+                            tax_rate: Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : 0,
+                          });
                         }}
                         onBlur={() => autoSave({ tax_rate: form.tax_rate }, 'Rates')}
                         placeholder="0"
                         className={inputClass}
                       />
-                      <p className="text-[10px] text-[var(--text-secondary)] mt-1">Invoice math only — applied to new invoices as entered. Not tax advice.</p>
+                      <p className="text-[10px] text-[var(--text-secondary)] mt-1">
+                        Invoice math only — applied to new invoices as entered. Not tax advice.
+                      </p>
                     </div>
                     <div>
                       <label className={labelClass}>Payment terms (days)</label>
@@ -853,7 +1003,10 @@ export default function Settings() {
                         value={form.payment_terms ?? 14}
                         onChange={(e) => {
                           const v = parseInt(e.target.value);
-                          setForm({ ...form, payment_terms: Number.isFinite(v) ? Math.max(0, Math.min(365, v)) : 14 });
+                          setForm({
+                            ...form,
+                            payment_terms: Number.isFinite(v) ? Math.max(0, Math.min(365, v)) : 14,
+                          });
                         }}
                         onBlur={() => autoSave({ payment_terms: form.payment_terms }, 'Rates')}
                         className={inputClass}
@@ -865,75 +1018,93 @@ export default function Settings() {
                     <textarea
                       value={form.payment_instructions || ''}
                       onChange={(e) => setForm({ ...form, payment_instructions: e.target.value })}
-                      onBlur={() => autoSave({ payment_instructions: form.payment_instructions }, 'Rates')}
-                      placeholder={'e.g. Bank transfer to First National, routing 123456, account 987654321. Or pay online at example.com/pay.'}
+                      onBlur={() =>
+                        autoSave({ payment_instructions: form.payment_instructions }, 'Rates')
+                      }
+                      placeholder={
+                        'e.g. Bank transfer to First National, routing 123456, account 987654321. Or pay online at example.com/pay.'
+                      }
                       rows={3}
                       className={`${inputClass} resize-none leading-relaxed`}
                     />
-                    <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Bank details, payment links, or anything your clients need to pay you. Stays on your machine, shown only on your invoices.</p>
+                    <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
+                      Bank details, payment links, or anything your clients need to pay you. Stays
+                      on your machine, shown only on your invoices.
+                    </p>
                   </div>
                 </Card>
 
                 {/* Proposal voice */}
                 <Card className="mb-6">
-                  <SectionHead title="Proposal voice" isSaved={saved.has("Proposal voice")} />
+                  <SectionHead title="Proposal voice" isSaved={saved.has('Proposal voice')} />
                   <div className="space-y-4">
                     <div>
                       <label className={labelClass}>Writing style</label>
                       <select
                         value={form.writing_style || 'professional'}
                         aria-label="Writing style"
-                        onChange={(e) => autoSave({ writing_style: e.target.value }, 'Proposal voice')}
+                        onChange={(e) =>
+                          autoSave({ writing_style: e.target.value }, 'Proposal voice')
+                        }
                         className={inputClass}
                       >
                         {writingStyles.map((s) => (
-                          <option key={s} value={s}>{labelForStyle(s)}</option>
+                          <option key={s} value={s}>
+                            {labelForStyle(s)}
+                          </option>
                         ))}
                       </select>
                     </div>
                     <div>
                       <label className={labelClass}>Writing voice description</label>
-                        <textarea
-                          maxLength={1000}
-                          value={form.writing_voice || ''}
-                          onChange={(e) => setForm({ ...form, writing_voice: e.target.value })}
-                          onBlur={() => autoSave({ writing_voice: form.writing_voice }, 'Proposal voice')}
-                          placeholder="e.g. I'm a senior full-stack developer who explains things clearly and avoids jargon"
-                          rows={2}
-                          className={`${inputClass} resize-none`}
-                        />
-                      <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Describe your voice and expertise. This helps the AI write proposals that sound like you.</p>
+                      <textarea
+                        maxLength={1000}
+                        value={form.writing_voice || ''}
+                        onChange={(e) => setForm({ ...form, writing_voice: e.target.value })}
+                        onBlur={() =>
+                          autoSave({ writing_voice: form.writing_voice }, 'Proposal voice')
+                        }
+                        placeholder="e.g. I'm a senior full-stack developer who explains things clearly and avoids jargon"
+                        rows={2}
+                        className={`${inputClass} resize-none`}
+                      />
+                      <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
+                        Describe your voice and expertise. This helps the AI write proposals that
+                        sound like you.
+                      </p>
                     </div>
                     <div>
                       <label className={labelClass}>Tagline / positioning</label>
-                        <input
-                          type="text"
-                          maxLength={200}
-                          value={form.tagline || ''}
-                          onChange={(e) => setForm({ ...form, tagline: e.target.value })}
-                          onBlur={() => autoSave({ tagline: form.tagline }, 'Proposal voice')}
-                          placeholder="e.g. I help startups ship beautiful products fast."
-                          className={inputClass}
-                        />
+                      <input
+                        type="text"
+                        maxLength={200}
+                        value={form.tagline || ''}
+                        onChange={(e) => setForm({ ...form, tagline: e.target.value })}
+                        onBlur={() => autoSave({ tagline: form.tagline }, 'Proposal voice')}
+                        placeholder="e.g. I help startups ship beautiful products fast."
+                        className={inputClass}
+                      />
                     </div>
                     <div>
                       <label className={labelClass}>What I always include</label>
-                        <textarea
-                          maxLength={2000}
-                          value={form.always_include || ''}
-                          onChange={(e) => setForm({ ...form, always_include: e.target.value })}
-                          onBlur={() => autoSave({ always_include: form.always_include }, 'Proposal voice')}
-                          placeholder="Anything you always want in proposals..."
-                          rows={3}
-                          className={`${inputClass} resize-none`}
-                        />
+                      <textarea
+                        maxLength={2000}
+                        value={form.always_include || ''}
+                        onChange={(e) => setForm({ ...form, always_include: e.target.value })}
+                        onBlur={() =>
+                          autoSave({ always_include: form.always_include }, 'Proposal voice')
+                        }
+                        placeholder="Anything you always want in proposals..."
+                        rows={3}
+                        className={`${inputClass} resize-none`}
+                      />
                     </div>
                   </div>
                 </Card>
 
                 {/* Proposal defaults */}
                 <Card className="mb-6">
-                  <SectionHead title="Proposal defaults" isSaved={saved.has("Proposal defaults")} />
+                  <SectionHead title="Proposal defaults" isSaved={saved.has('Proposal defaults')} />
                   <div className="space-y-3">
                     <div>
                       <label className={labelClass}>Proposals expire after</label>
@@ -953,14 +1124,16 @@ export default function Settings() {
                         <option value="60">60 days</option>
                         <option value="">Never</option>
                       </select>
-                      <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Sent proposals will automatically expire after this period.</p>
+                      <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
+                        Sent proposals will automatically expire after this period.
+                      </p>
                     </div>
                   </div>
                 </Card>
 
                 {/* Profession / Archetype */}
                 <Card className="mb-6">
-                  <SectionHead title="Profession" isSaved={saved.has("Profession")} />
+                  <SectionHead title="Profession" isSaved={saved.has('Profession')} />
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
@@ -983,29 +1156,39 @@ export default function Settings() {
                       </Button>
                     </div>
                     <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
-                      Your archetype customizes your sidebar layout, dashboard metrics, insights panels, and rate label. You can switch anytime · your data stays the same.
+                      Your archetype customizes your sidebar layout, dashboard metrics, insights
+                      panels, and rate label. You can switch anytime · your data stays the same.
                     </p>
                     <div className="grid grid-cols-2 gap-1.5">
-                      {ARCHETYPE_LIST.filter(a => a.id !== 'default' && a.id !== 'custom').slice(0, 8).map((archetype) => (
-                        <button
-                          key={archetype.id}
-                          onClick={async () => {
-                            const theme = getTheme(archetype.theme);
-                            applyTheme(theme);
-                            localStorage.setItem('lance:theme', archetype.theme);
-                            if (profile) {
-                              try {
-                                await saveProfile({ ...profile, profession: archetype.id });
-                                addToast(`Switched to ${archetype.label}`, 'success');
-                              } catch { /* archetype switch is non-critical */ addToast('Failed to switch', 'error'); }
-                            }
-                          }}
-                          className="flex items-center gap-2 px-3 py-2 rounded-[8px] text-xs text-left transition-colors hover:bg-[var(--bg-secondary)] border border-[var(--border-color)] bg-[var(--bg-card)]"
-                        >
-                          <span>{archetype.emoji}</span>
-                          <span className="text-[var(--text-primary)] truncate">{archetype.label}</span>
-                        </button>
-                      ))}
+                      {ARCHETYPE_LIST.filter((a) => a.id !== 'default' && a.id !== 'custom')
+                        .slice(0, 8)
+                        .map((archetype) => (
+                          <button
+                            key={archetype.id}
+                            onClick={async () => {
+                              const theme = getTheme(archetype.theme);
+                              applyTheme(theme);
+                              localStorage.setItem('lance:theme', archetype.theme);
+                              if (profile) {
+                                try {
+                                  await saveProfile({ ...profile, profession: archetype.id });
+                                  addToast(`Switched to ${archetype.label}`, 'success');
+                                } catch {
+                                  /* archetype switch is non-critical */ addToast(
+                                    'Failed to switch',
+                                    'error',
+                                  );
+                                }
+                              }
+                            }}
+                            className="flex items-center gap-2 px-3 py-2 rounded-[8px] text-xs text-left transition-colors hover:bg-[var(--bg-secondary)] border border-[var(--border-color)] bg-[var(--bg-card)]"
+                          >
+                            <span>{archetype.emoji}</span>
+                            <span className="text-[var(--text-primary)] truncate">
+                              {archetype.label}
+                            </span>
+                          </button>
+                        ))}
                     </div>
                   </div>
                 </Card>
@@ -1015,11 +1198,13 @@ export default function Settings() {
             {section === 'appearance' && (
               <>
                 {/* Preferences section header */}
-                <div className="text-xs uppercase tracking-widest text-[var(--text-secondary)] font-semibold mb-4">Preferences</div>
+                <div className="text-xs uppercase tracking-widest text-[var(--text-secondary)] font-semibold mb-4">
+                  Preferences
+                </div>
 
                 {/* Appearance (light/dark, density) */}
                 <Card className="mb-6">
-                  <SectionHead title="Appearance" isSaved={saved.has("Appearance")} />
+                  <SectionHead title="Appearance" isSaved={saved.has('Appearance')} />
                   <div className="flex items-center gap-3 mb-4">
                     <button
                       onClick={() => autoSave({ theme: 'light' }, 'Appearance')}
@@ -1044,7 +1229,9 @@ export default function Settings() {
                   </div>
                   {unlockedAchievements.has('three_proposals') && (
                     <div className="pt-3 border-t border-[var(--border-color)]">
-                      <label className="block text-xs font-medium text-[var(--text-secondary)] mb-2">Layout density</label>
+                      <label className="block text-xs font-medium text-[var(--text-secondary)] mb-2">
+                        Layout density
+                      </label>
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => handleDensityChange('comfortable')}
@@ -1067,14 +1254,16 @@ export default function Settings() {
                           Compact
                         </button>
                       </div>
-                      <p className="text-[10px] text-[var(--text-tertiary)] mt-2">Compact mode reduces row heights, padding, and spacing across the interface.</p>
+                      <p className="text-[10px] text-[var(--text-tertiary)] mt-2">
+                        Compact mode reduces row heights, padding, and spacing across the interface.
+                      </p>
                     </div>
                   )}
                 </Card>
 
                 {/* Themes */}
                 <Card className="mb-6">
-                  <SectionHead title="Themes" isSaved={saved.has("Themes")} />
+                  <SectionHead title="Themes" isSaved={saved.has('Themes')} />
                   <div className="space-y-2">
                     {THEMES.map((theme) => {
                       const isUnlocked = unlockedThemes.has(theme.id);
@@ -1093,18 +1282,24 @@ export default function Settings() {
                             isActive
                               ? 'bg-[var(--accent-bg)] border border-[var(--accent)]/30'
                               : isUnlocked
-                              ? 'hover:bg-[var(--bg-secondary)]  border border-transparent'
-                              : 'opacity-60 cursor-not-allowed border border-transparent'
+                                ? 'hover:bg-[var(--bg-secondary)]  border border-transparent'
+                                : 'opacity-60 cursor-not-allowed border border-transparent'
                           }`}
                           disabled={!isUnlocked}
                         >
-                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                            isActive ? 'border-[var(--accent)]' : 'border-[var(--neutral-border)]'
-                          }`}>
-                            {isActive && <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />}
+                          <div
+                            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                              isActive ? 'border-[var(--accent)]' : 'border-[var(--neutral-border)]'
+                            }`}
+                          >
+                            {isActive && (
+                              <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className={`font-medium ${isUnlocked ? 'text-[var(--text-primary)] ' : 'text-[var(--text-tertiary)]'}`}>
+                            <p
+                              className={`font-medium ${isUnlocked ? 'text-[var(--text-primary)] ' : 'text-[var(--text-tertiary)]'}`}
+                            >
                               {theme.name}
                             </p>
                             <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
@@ -1112,7 +1307,9 @@ export default function Settings() {
                             </p>
                           </div>
                           {isUnlocked ? (
-                            <span className="text-[10px] text-[var(--text-tertiary)]">{theme.name}</span>
+                            <span className="text-[10px] text-[var(--text-tertiary)]">
+                              {theme.name}
+                            </span>
                           ) : (
                             <span className="flex items-center gap-1 text-[10px] text-[var(--text-tertiary)]">
                               <Lock size={10} />
@@ -1128,8 +1325,11 @@ export default function Settings() {
                 {/* Accent color */}
                 {unlockedAchievements.has('five_clients') && (
                   <Card className="mb-6">
-                    <SectionHead title="Accent color" isSaved={saved.has("Accent color")} />
-                    <p className="text-xs text-[var(--text-tertiary)] mb-3">Choose a color that personalizes buttons, badges, progress bars, and metric cards.</p>
+                    <SectionHead title="Accent color" isSaved={saved.has('Accent color')} />
+                    <p className="text-xs text-[var(--text-tertiary)] mb-3">
+                      Choose a color that personalizes buttons, badges, progress bars, and metric
+                      cards.
+                    </p>
                     <div className="grid grid-cols-4 gap-2">
                       {ACCENT_COLORS.map((color) => (
                         <button
@@ -1145,7 +1345,9 @@ export default function Settings() {
                             className="w-6 h-6 rounded-full"
                             style={{ backgroundColor: color.hex }}
                           />
-                          <span className="text-[10px] text-[var(--text-primary)]">{color.label}</span>
+                          <span className="text-[10px] text-[var(--text-primary)]">
+                            {color.label}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -1157,13 +1359,16 @@ export default function Settings() {
             {section === 'notifications' && (
               <>
                 {/* Preferences section header */}
-                <div className="text-xs uppercase tracking-widest text-[var(--text-secondary)] font-semibold mb-4">Notifications</div>
+                <div className="text-xs uppercase tracking-widest text-[var(--text-secondary)] font-semibold mb-4">
+                  Notifications
+                </div>
 
                 {/* AI features */}
                 <Card className="mb-6">
-                  <SectionHead title="AI features" isSaved={saved.has("AI features")} />
+                  <SectionHead title="AI features" isSaved={saved.has('AI features')} />
                   <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-4">
-                    AI-assisted writing, scope warnings, and pricing analysis run locally on your machine. No data is sent anywhere.
+                    AI-assisted writing, scope warnings, and pricing analysis run locally on your
+                    machine. No data is sent anywhere.
                   </p>
                   <label className="flex items-center gap-3 cursor-pointer">
                     <button
@@ -1186,17 +1391,29 @@ export default function Settings() {
 
                 {/* Personalize */}
                 <Card className="mb-6">
-                  <SectionHead title="Personalize" isSaved={saved.has("Personalize")} />
+                  <SectionHead title="Personalize" isSaved={saved.has('Personalize')} />
                   <div className="space-y-3">
-                    <p className="text-xs text-[var(--text-tertiary)]">Motion, glow, badges and nudges. Everything here is local and applies instantly.</p>
+                    <p className="text-xs text-[var(--text-tertiary)]">
+                      Motion, glow, badges and nudges. Everything here is local and applies
+                      instantly.
+                    </p>
                     <div>
                       <p className="text-sm text-[var(--text-primary)]">Motion</p>
-                      <p className="text-xs text-[var(--text-tertiary)] mt-0.5 mb-2">Auto follows your operating system setting.</p>
-                      <div className="inline-flex gap-1 rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-secondary)] p-1" role="group" aria-label="Motion preference">
+                      <p className="text-xs text-[var(--text-tertiary)] mt-0.5 mb-2">
+                        Auto follows your operating system setting.
+                      </p>
+                      <div
+                        className="inline-flex gap-1 rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-secondary)] p-1"
+                        role="group"
+                        aria-label="Motion preference"
+                      >
                         {(['auto', 'full', 'off'] as MotionPref[]).map((m) => (
                           <button
                             key={m}
-                            onClick={() => { setPref('motion', m); setSaved((prev) => new Set([...prev, 'Personalize'])); }}
+                            onClick={() => {
+                              setPref('motion', m);
+                              setSaved((prev) => new Set([...prev, 'Personalize']));
+                            }}
                             aria-pressed={prefs.motion === m}
                             className={`px-3 py-1.5 text-xs font-medium rounded-[7px] capitalize transition-colors ${
                               prefs.motion === m
@@ -1209,25 +1426,71 @@ export default function Settings() {
                         ))}
                       </div>
                     </div>
-                    <PrefToggle checked={prefs.glow} onChange={(v) => { setPref('glow', v); setSaved((prev) => new Set([...prev, 'Personalize'])); }} label="Ambient glow" hint="Soft accent wash behind app content" />
-                    <PrefToggle checked={prefs.sparklines} onChange={(v) => { setPref('sparklines', v); setSaved((prev) => new Set([...prev, 'Personalize'])); }} label="KPI sparklines" hint="Six-month trend lines under dashboard metrics" />
-                    <PrefToggle checked={prefs.badges} onChange={(v) => { setPref('badges', v); setSaved((prev) => new Set([...prev, 'Personalize'])); }} label="Sidebar badges" hint="Unread and count pills on navigation" />
-                    <PrefToggle checked={prefs.digest} onChange={(v) => { setPref('digest', v); setSaved((prev) => new Set([...prev, 'Personalize'])); }} label="Weekly digest" hint="Your-week summary card on the dashboard" />
-                    <PrefToggle checked={prefs.coachTips} onChange={(v) => { setPref('coachTips', v); setSaved((prev) => new Set([...prev, 'Personalize'])); }} label="Coach tips" hint="One-time nudges when you seem stuck. Never leaves your machine." />
+                    <PrefToggle
+                      checked={prefs.glow}
+                      onChange={(v) => {
+                        setPref('glow', v);
+                        setSaved((prev) => new Set([...prev, 'Personalize']));
+                      }}
+                      label="Ambient glow"
+                      hint="Soft accent wash behind app content"
+                    />
+                    <PrefToggle
+                      checked={prefs.sparklines}
+                      onChange={(v) => {
+                        setPref('sparklines', v);
+                        setSaved((prev) => new Set([...prev, 'Personalize']));
+                      }}
+                      label="KPI sparklines"
+                      hint="Six-month trend lines under dashboard metrics"
+                    />
+                    <PrefToggle
+                      checked={prefs.badges}
+                      onChange={(v) => {
+                        setPref('badges', v);
+                        setSaved((prev) => new Set([...prev, 'Personalize']));
+                      }}
+                      label="Sidebar badges"
+                      hint="Unread and count pills on navigation"
+                    />
+                    <PrefToggle
+                      checked={prefs.digest}
+                      onChange={(v) => {
+                        setPref('digest', v);
+                        setSaved((prev) => new Set([...prev, 'Personalize']));
+                      }}
+                      label="Weekly digest"
+                      hint="Your-week summary card on the dashboard"
+                    />
+                    <PrefToggle
+                      checked={prefs.coachTips}
+                      onChange={(v) => {
+                        setPref('coachTips', v);
+                        setSaved((prev) => new Set([...prev, 'Personalize']));
+                      }}
+                      label="Coach tips"
+                      hint="One-time nudges when you seem stuck. Never leaves your machine."
+                    />
                   </div>
                 </Card>
 
                 {/* Follow-up settings */}
                 <Card className="mb-6">
-                  <SectionHead title="Follow-up reminders" isSaved={saved.has("Follow-ups")} />
+                  <SectionHead title="Follow-up reminders" isSaved={saved.has('Follow-ups')} />
                   <div className="space-y-4">
-                    <p className="text-xs text-[var(--text-tertiary)]">Lance monitors sent proposals and invoices and drafts friendly follow-up messages when they need attention. You control everything · messages are never sent automatically.</p>
+                    <p className="text-xs text-[var(--text-tertiary)]">
+                      Lance monitors sent proposals and invoices and drafts friendly follow-up
+                      messages when they need attention. You control everything · messages are never
+                      sent automatically.
+                    </p>
 
                     {/* Toggle */}
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-[var(--text-primary)]">Enable follow-ups</p>
-                        <p className="text-xs text-[var(--text-tertiary)]">Draft reminders for overdue proposals and invoices</p>
+                        <p className="text-xs text-[var(--text-tertiary)]">
+                          Draft reminders for overdue proposals and invoices
+                        </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
@@ -1246,7 +1509,9 @@ export default function Settings() {
                     {/* Delays */}
                     <div className="grid grid-cols-2 gap-4 pt-2 border-t border-[var(--border-color)]">
                       <div>
-                        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Proposal delay (days)</label>
+                        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                          Proposal delay (days)
+                        </label>
                         <input
                           type="number"
                           min={1}
@@ -1259,10 +1524,14 @@ export default function Settings() {
                           }}
                           className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                         />
-                        <p className="text-[10px] text-[var(--text-tertiary)] mt-1">First follow-up triggers after this many days of no response.</p>
+                        <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
+                          First follow-up triggers after this many days of no response.
+                        </p>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Invoice overdue delay (days)</label>
+                        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                          Invoice overdue delay (days)
+                        </label>
                         <input
                           type="number"
                           min={0}
@@ -1275,7 +1544,9 @@ export default function Settings() {
                           }}
                           className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                         />
-                        <p className="text-[10px] text-[var(--text-tertiary)] mt-1">First reminder triggers after due date passes by this many days.</p>
+                        <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
+                          First reminder triggers after due date passes by this many days.
+                        </p>
                       </div>
                     </div>
 
@@ -1290,22 +1561,27 @@ export default function Settings() {
                         )}
                       </div>
                       <p className="text-xs text-[var(--text-tertiary)] mb-3">
-                        Charge a monthly percent on overdue balances. Accrued fees appear in reminder drafts and can be added to the invoice with one click.
+                        Charge a monthly percent on overdue balances. Accrued fees appear in
+                        reminder drafts and can be added to the invoice with one click.
                       </p>
                       {(() => {
                         const pro = getFeatureFlags(getActiveTier()).smartDunning === true;
-                        const guard = (fn: (e: ChangeEvent<HTMLInputElement>) => void) => (e: ChangeEvent<HTMLInputElement>) => {
-                          if (!pro) {
-                            document.dispatchEvent(
-                              new CustomEvent('lance:open-upgrade', { detail: 'late fees' }),
-                            );
-                            return;
-                          }
-                          fn(e);
-                        };
+                        const guard =
+                          (fn: (e: ChangeEvent<HTMLInputElement>) => void) =>
+                          (e: ChangeEvent<HTMLInputElement>) => {
+                            if (!pro) {
+                              document.dispatchEvent(
+                                new CustomEvent('lance:open-upgrade', { detail: 'late fees' }),
+                              );
+                              return;
+                            }
+                            fn(e);
+                          };
                         return (
                           <div className="flex items-center gap-4">
-                            <label className={`flex items-center gap-2 text-xs text-[var(--text-secondary)] ${!pro ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>
+                            <label
+                              className={`flex items-center gap-2 text-xs text-[var(--text-secondary)] ${!pro ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                            >
                               <input
                                 type="checkbox"
                                 checked={fuLateFeeEnabled}
@@ -1319,7 +1595,9 @@ export default function Settings() {
                               />
                               Enable late fees
                             </label>
-                            <label className={`flex items-center gap-2 text-xs text-[var(--text-secondary)] ${!pro || !fuLateFeeEnabled ? 'opacity-60' : ''}`}>
+                            <label
+                              className={`flex items-center gap-2 text-xs text-[var(--text-secondary)] ${!pro || !fuLateFeeEnabled ? 'opacity-60' : ''}`}
+                            >
                               Percent per month
                               <input
                                 type="number"
@@ -1329,7 +1607,10 @@ export default function Settings() {
                                 value={fuLateFeePercent}
                                 disabled={!pro || !fuLateFeeEnabled}
                                 onChange={guard((e) => {
-                                  const v = Math.max(0.1, Math.min(10, parseFloat(e.target.value) || 1.5));
+                                  const v = Math.max(
+                                    0.1,
+                                    Math.min(10, parseFloat(e.target.value) || 1.5),
+                                  );
                                   setFuLateFeePercent(v);
                                   saveFollowUpSettings({ lateFeePercent: v });
                                 })}
@@ -1351,16 +1632,20 @@ export default function Settings() {
             {section === 'data' && (
               <>
                 {/* Data & Backup section header */}
-                <div className="text-xs uppercase tracking-widest text-[var(--text-secondary)] font-semibold mb-4">Data &amp; Backup</div>
+                <div className="text-xs uppercase tracking-widest text-[var(--text-secondary)] font-semibold mb-4">
+                  Data &amp; Backup
+                </div>
 
                 {/* Data (export, import, assets, project templates) */}
                 <Card className="mb-6">
-                  <SectionHead title="Data" isSaved={saved.has("Data")} />
+                  <SectionHead title="Data" isSaved={saved.has('Data')} />
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-[var(--text-primary)] ">Export all data</p>
-                        <p className="text-xs text-[var(--text-tertiary)]">Backup your entire database as JSON</p>
+                        <p className="text-xs text-[var(--text-tertiary)]">
+                          Backup your entire database as JSON
+                        </p>
                       </div>
                       <Button variant="secondary" onClick={handleExportData} size="sm">
                         <Download size={14} />
@@ -1370,7 +1655,9 @@ export default function Settings() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-[var(--text-primary)] ">Import data</p>
-                        <p className="text-xs text-[var(--text-tertiary)]">Restore from a Lance backup file</p>
+                        <p className="text-xs text-[var(--text-tertiary)]">
+                          Restore from a Lance backup file
+                        </p>
                       </div>
                       <Button variant="secondary" onClick={handleImportData} size="sm">
                         <Upload size={14} />
@@ -1390,9 +1677,15 @@ export default function Settings() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm text-[var(--text-primary)]">Clear sample data</p>
-                          <p className="text-xs text-[var(--text-tertiary)]">Remove all records tagged as sample data</p>
+                          <p className="text-xs text-[var(--text-tertiary)]">
+                            Remove all records tagged as sample data
+                          </p>
                         </div>
-                        <Button variant="secondary" onClick={() => setShowClearSampleConfirm(true)} size="sm">
+                        <Button
+                          variant="secondary"
+                          onClick={() => setShowClearSampleConfirm(true)}
+                          size="sm"
+                        >
                           <Trash2 size={14} />
                           Clear
                         </Button>
@@ -1402,41 +1695,55 @@ export default function Settings() {
                     <div className="border-t border-[var(--border-color)] pt-3 flex items-center justify-between">
                       <div>
                         <p className="text-sm text-[var(--text-primary)]">Assets folder</p>
-                        <p className="text-xs text-[var(--text-tertiary)]">Open attached files in your file manager{isTauriApp() ? '' : ' · desktop app only'}</p>
+                        <p className="text-xs text-[var(--text-tertiary)]">
+                          Open attached files in your file manager
+                          {isTauriApp() ? '' : ' · desktop app only'}
+                        </p>
                       </div>
                       {isTauriApp() && (
-                      <Button variant="secondary" onClick={async () => {
-                        try {
-                          const assetsDir = await getAssetsDir();
-                          const { open: shellOpen } = await import('@tauri-apps/plugin-shell');
-                          await shellOpen(assetsDir);
-                        } catch {
-                          addToast('Failed to open assets folder', 'error');
-                        }
-                      }} size="sm">
-                        <FolderOpen size={14} />
-                        Open
-                      </Button>
+                        <Button
+                          variant="secondary"
+                          onClick={async () => {
+                            try {
+                              const assetsDir = await getAssetsDir();
+                              const { open: shellOpen } = await import('@tauri-apps/plugin-shell');
+                              await shellOpen(assetsDir);
+                            } catch {
+                              addToast('Failed to open assets folder', 'error');
+                            }
+                          }}
+                          size="sm"
+                        >
+                          <FolderOpen size={14} />
+                          Open
+                        </Button>
                       )}
                     </div>
                     <div className="border-t border-[var(--border-color)] pt-3 flex items-center justify-between">
                       <div>
                         <p className="text-sm text-[var(--text-primary)]">Imports folder</p>
-                        <p className="text-xs text-[var(--text-tertiary)]">Where imported source files are kept{isTauriApp() ? '' : ' · desktop app only'}</p>
+                        <p className="text-xs text-[var(--text-tertiary)]">
+                          Where imported source files are kept
+                          {isTauriApp() ? '' : ' · desktop app only'}
+                        </p>
                       </div>
                       {isTauriApp() && (
-                      <Button variant="secondary" onClick={async () => {
-                        try {
-                          const importsDir = await getImportsDir();
-                          const { open: shellOpen } = await import('@tauri-apps/plugin-shell');
-                          await shellOpen(importsDir);
-                        } catch {
-                          addToast('Failed to open imports folder', 'error');
-                        }
-                      }} size="sm">
-                        <FolderOpen size={14} />
-                        Open
-                      </Button>
+                        <Button
+                          variant="secondary"
+                          onClick={async () => {
+                            try {
+                              const importsDir = await getImportsDir();
+                              const { open: shellOpen } = await import('@tauri-apps/plugin-shell');
+                              await shellOpen(importsDir);
+                            } catch {
+                              addToast('Failed to open imports folder', 'error');
+                            }
+                          }}
+                          size="sm"
+                        >
+                          <FolderOpen size={14} />
+                          Open
+                        </Button>
                       )}
                     </div>
 
@@ -1451,7 +1758,8 @@ export default function Settings() {
                           <p className="text-sm text-[var(--text-primary)]">On-device activity</p>
                           <p className="text-xs text-[var(--text-tertiary)]">
                             Anonymous usage counts that power personal stats and helpful nudges.
-                            Stored only on this machine. Never uploaded, never sold. Names, emails, and amounts are never recorded.
+                            Stored only on this machine. Never uploaded, never sold. Names, emails,
+                            and amounts are never recorded.
                           </p>
                         </div>
                       </div>
@@ -1459,13 +1767,20 @@ export default function Settings() {
                         const counts = eventCounts();
                         const total = Object.values(counts).reduce((a, b) => a + b, 0);
                         if (total === 0) {
-                          return <p className="text-xs text-[var(--text-tertiary)]">No activity recorded yet.</p>;
+                          return (
+                            <p className="text-xs text-[var(--text-tertiary)]">
+                              No activity recorded yet.
+                            </p>
+                          );
                         }
                         return (
                           <div className="space-y-2">
                             <div className="flex flex-wrap gap-1.5">
                               {Object.entries(counts).map(([name, n]) => (
-                                <span key={name} className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--bg-secondary)] text-[var(--text-secondary)]">
+                                <span
+                                  key={name}
+                                  className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--bg-secondary)] text-[var(--text-secondary)]"
+                                >
                                   {name}: {n}
                                 </span>
                               ))}
@@ -1507,12 +1822,14 @@ export default function Settings() {
                 {/* Auto-backup */}
                 {autoBackupLoaded && (
                   <Card className="mb-6">
-                    <SectionHead title="Auto-backup" isSaved={saved.has("Auto-backup")} />
+                    <SectionHead title="Auto-backup" isSaved={saved.has('Auto-backup')} />
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm text-[var(--text-primary)]">Enable auto-backup</p>
-                          <p className="text-xs text-[var(--text-tertiary)]">Silently export your data on a schedule</p>
+                          <p className="text-xs text-[var(--text-tertiary)]">
+                            Silently export your data on a schedule
+                          </p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input
@@ -1531,10 +1848,12 @@ export default function Settings() {
                       {autoBackupEnabled && (
                         <>
                           <div>
-                        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Frequency</label>
-                        <select
-                          value={autoBackupFreq}
-                          aria-label="Auto-backup frequency"
+                            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                              Frequency
+                            </label>
+                            <select
+                              value={autoBackupFreq}
+                              aria-label="Auto-backup frequency"
                               onChange={(e) => {
                                 const freq = e.target.value as 'daily' | 'weekly' | 'monthly';
                                 setAutoBackupFreq(freq);
@@ -1548,7 +1867,9 @@ export default function Settings() {
                             </select>
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Backup location</label>
+                            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                              Backup location
+                            </label>
                             <div className="flex items-center gap-2">
                               <input
                                 type="text"
@@ -1562,8 +1883,12 @@ export default function Settings() {
                                 size="sm"
                                 onClick={async () => {
                                   try {
-                                    const { open: openDialog } = await import('@tauri-apps/plugin-dialog');
-                                    const selected = await openDialog({ directory: true, title: 'Choose backup folder' });
+                                    const { open: openDialog } =
+                                      await import('@tauri-apps/plugin-dialog');
+                                    const selected = await openDialog({
+                                      directory: true,
+                                      title: 'Choose backup folder',
+                                    });
                                     if (selected && typeof selected === 'string') {
                                       setAutoBackupPath(selected);
                                       saveAutoBackupState(true, autoBackupFreq, selected);
@@ -1589,19 +1914,21 @@ export default function Settings() {
                 {/* Export Templates */}
                 {unlockedAchievements.has('first_export') && (
                   <Card className="mb-6">
-                    <SectionHead title="Export Templates" isSaved={saved.has("Export Templates")} />
+                    <SectionHead title="Export Templates" isSaved={saved.has('Export Templates')} />
                     <ExportTemplatesSection />
                   </Card>
                 )}
 
                 {/* Follow-up message templates */}
                 <Card className="mb-6">
-                  <SectionHead title="Follow-up templates" isSaved={saved.has("Follow-ups")} />
+                  <SectionHead title="Follow-up templates" isSaved={saved.has('Follow-ups')} />
                   <div className="space-y-4">
                     {/* Dunning voice (Pro): escalation drafts in your voice */}
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-medium text-[var(--text-primary)]">Dunning voice</p>
+                        <p className="text-sm font-medium text-[var(--text-primary)]">
+                          Dunning voice
+                        </p>
                         {getFeatureFlags(getActiveTier()).smartDunning !== true && (
                           <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">
                             PRO
@@ -1609,7 +1936,8 @@ export default function Settings() {
                         )}
                       </div>
                       <p className="text-xs text-[var(--text-tertiary)] mb-3">
-                        Overdue reminders rewritten to sound like you. Auto follows your archetype unless you pick one.
+                        Overdue reminders rewritten to sound like you. Auto follows your archetype
+                        unless you pick one.
                       </p>
                       <div className="flex gap-2" role="radiogroup" aria-label="Dunning voice">
                         {(['auto', 'warm', 'direct', 'formal'] as const).map((tone) => {
@@ -1625,7 +1953,9 @@ export default function Settings() {
                               onClick={() => {
                                 if (!pro) {
                                   document.dispatchEvent(
-                                    new CustomEvent('lance:open-upgrade', { detail: 'smart dunning voices' }),
+                                    new CustomEvent('lance:open-upgrade', {
+                                      detail: 'smart dunning voices',
+                                    }),
                                   );
                                   return;
                                 }
@@ -1647,18 +1977,53 @@ export default function Settings() {
                     </div>
                     {/* Templates */}
                     <div>
-                      <p className="text-sm font-medium text-[var(--text-primary)] mb-3">Message Templates</p>
+                      <p className="text-sm font-medium text-[var(--text-primary)] mb-3">
+                        Message Templates
+                      </p>
                       <p className="text-xs text-[var(--text-tertiary)] mb-4">
-                        Use <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{client_name}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{proposal_title}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{invoice_number}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{amount}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{due_date}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{days_elapsed}'}</code>, <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">{'{freelancer_name}'}</code> · they fill in automatically.
+                        Use{' '}
+                        <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">
+                          {'{client_name}'}
+                        </code>
+                        ,{' '}
+                        <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">
+                          {'{proposal_title}'}
+                        </code>
+                        ,{' '}
+                        <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">
+                          {'{invoice_number}'}
+                        </code>
+                        ,{' '}
+                        <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">
+                          {'{amount}'}
+                        </code>
+                        ,{' '}
+                        <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">
+                          {'{due_date}'}
+                        </code>
+                        ,{' '}
+                        <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">
+                          {'{days_elapsed}'}
+                        </code>
+                        ,{' '}
+                        <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">
+                          {'{freelancer_name}'}
+                        </code>{' '}
+                        · they fill in automatically.
                       </p>
                       <div className="space-y-3">
                         {Object.entries(TEMPLATE_LABELS).map(([key, label]) => (
                           <div key={key}>
-                            <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1">{label}</label>
+                            <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1">
+                              {label}
+                            </label>
                             <textarea
                               value={fuTemplates[key] || ''}
                               onChange={(e) => {
-                                const updated = { ...fuTemplates, [key]: sanitizeText(e.target.value) };
+                                const updated = {
+                                  ...fuTemplates,
+                                  [key]: sanitizeText(e.target.value),
+                                };
                                 setFuTemplates(updated);
                                 saveFollowUpSettings({ templates: updated });
                               }}
@@ -1672,19 +2037,29 @@ export default function Settings() {
 
                     {/* Subject Templates */}
                     <div className="pt-2 border-t border-[var(--border-color)]">
-                      <p className="text-sm font-medium text-[var(--text-primary)] mb-3">Email Subject Templates</p>
+                      <p className="text-sm font-medium text-[var(--text-primary)] mb-3">
+                        Email Subject Templates
+                      </p>
                       <p className="text-xs text-[var(--text-tertiary)] mb-4">
-                        Same variables as message templates. These appear in the email subject line when you click "Open in Email".
+                        Same variables as message templates. These appear in the email subject line
+                        when you click "Open in Email".
                       </p>
                       <div className="space-y-3">
                         {Object.entries(TEMPLATE_LABELS).map(([key, label]) => (
                           <div key={`subj-${key}`}>
-                            <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1">{label}</label>
+                            <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1">
+                              {label}
+                            </label>
                             <input
                               type="text"
-                              value={fuSubjectTemplates[key] || DEFAULT_SUBJECT_TEMPLATES[key] || ''}
+                              value={
+                                fuSubjectTemplates[key] || DEFAULT_SUBJECT_TEMPLATES[key] || ''
+                              }
                               onChange={(e) => {
-                                const updated = { ...fuSubjectTemplates, [key]: sanitizeText(e.target.value) };
+                                const updated = {
+                                  ...fuSubjectTemplates,
+                                  [key]: sanitizeText(e.target.value),
+                                };
                                 setFuSubjectTemplates(updated);
                                 saveFollowUpSettings({ subject_templates: updated });
                               }}
@@ -1702,7 +2077,9 @@ export default function Settings() {
             {section === 'danger-zone' && (
               <>
                 {/* Danger Zone section header */}
-                <div className="text-xs uppercase tracking-widest text-[var(--text-danger)] font-semibold mb-4 text-[var(--danger)]">Danger Zone</div>
+                <div className="text-xs uppercase tracking-widest text-[var(--text-danger)] font-semibold mb-4 text-[var(--danger)]">
+                  Danger Zone
+                </div>
 
                 {/* Remove license */}
                 {isLicensed && (
@@ -1711,9 +2088,15 @@ export default function Settings() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-[var(--danger)]">Remove license key</p>
-                        <p className="text-xs text-[var(--text-tertiary)]">The splash screen will return and theme locks will be re-applied.</p>
+                        <p className="text-xs text-[var(--text-tertiary)]">
+                          The splash screen will return and theme locks will be re-applied.
+                        </p>
                       </div>
-                      <Button variant="danger" onClick={() => setShowRemoveLicenseConfirm(true)} size="sm">
+                      <Button
+                        variant="danger"
+                        onClick={() => setShowRemoveLicenseConfirm(true)}
+                        size="sm"
+                      >
                         <Lock size={14} />
                         Remove license
                       </Button>
@@ -1727,7 +2110,10 @@ export default function Settings() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-[var(--danger)]">Delete all records permanently</p>
-                      <p className="text-xs text-[var(--text-tertiary)]">All clients, projects, proposals, contracts, invoices, time entries, and expenses will be removed.</p>
+                      <p className="text-xs text-[var(--text-tertiary)]">
+                        All clients, projects, proposals, contracts, invoices, time entries, and
+                        expenses will be removed.
+                      </p>
                     </div>
                     <Button variant="danger" onClick={() => setShowResetModal(true)} size="sm">
                       <Trash2 size={14} />
@@ -1735,6 +2121,16 @@ export default function Settings() {
                     </Button>
                   </div>
                 </Card>
+
+                {/* Test mode · dev + trial builds only. The whole block (and
+                    its imports) is unreachable in production desktop builds:
+                    import.meta.env.DEV is statically false there. */}
+                {(import.meta.env.DEV || isTrialBuild()) && (
+                  <Card className="mb-6 border border-dashed border-[var(--warning-text)]/50">
+                    <SectionHead title="Test Mode" isSaved={false} />
+                    <TestModePanel />
+                  </Card>
+                )}
               </>
             )}
           </div>
@@ -1742,19 +2138,34 @@ export default function Settings() {
       </Modal>
 
       {/* Reset all data modal */}
-      <Modal open={showResetModal} onClose={() => { setShowResetModal(false); setResetConfirmText(''); }} title="Reset all data" size="sm">
+      <Modal
+        open={showResetModal}
+        onClose={() => {
+          setShowResetModal(false);
+          setResetConfirmText('');
+        }}
+        title="Reset all data"
+        size="sm"
+      >
         <div className="space-y-4">
           <div className="flex items-start gap-3 p-3 rounded-[8px] bg-[var(--danger-bg)]">
             <AlertTriangle size={18} className="text-[var(--danger)] flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-[var(--danger)]">This cannot be undone.</p>
               <p className="text-xs text-[var(--danger)]/80 mt-1">
-                All clients, projects, proposals, contracts, invoices, time entries, and expenses will be permanently deleted.
+                All clients, projects, proposals, contracts, invoices, time entries, and expenses
+                will be permanently deleted.
               </p>
             </div>
           </div>
           <div>
-            <p className="text-xs text-[var(--text-secondary)] mb-2">Type <span className="font-mono font-semibold text-[var(--text-primary)]">Lance, The Tool for Freelancers</span> to confirm:</p>
+            <p className="text-xs text-[var(--text-secondary)] mb-2">
+              Type{' '}
+              <span className="font-mono font-semibold text-[var(--text-primary)]">
+                Lance, The Tool for Freelancers
+              </span>{' '}
+              to confirm:
+            </p>
             <input
               type="text"
               value={resetConfirmText}
@@ -1765,14 +2176,47 @@ export default function Settings() {
             />
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => { setShowResetModal(false); setResetConfirmText(''); }} size="sm">Cancel</Button>
-            <Button variant="danger" onClick={() => { handleResetData(); setResetConfirmText(''); }} size="sm" disabled={resetConfirmText.trim().replace(/\s+/g, ' ') !== 'Lance, The Tool for Freelancers'}>Delete everything</Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowResetModal(false);
+                setResetConfirmText('');
+              }}
+              size="sm"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                handleResetData();
+                setResetConfirmText('');
+              }}
+              size="sm"
+              disabled={
+                resetConfirmText.trim().replace(/\s+/g, ' ') !== 'Lance, The Tool for Freelancers'
+              }
+            >
+              Delete everything
+            </Button>
           </div>
         </div>
       </Modal>
 
       {/* License modal */}
-      <Modal open={showLicenseModal} onClose={() => { if (!licenseActivating) { setShowLicenseModal(false); setLicenseKey(''); setLicenseError(''); setLicenseSuccess(false); } }} title="Enter your license key" size="sm">
+      <Modal
+        open={showLicenseModal}
+        onClose={() => {
+          if (!licenseActivating) {
+            setShowLicenseModal(false);
+            setLicenseKey('');
+            setLicenseError('');
+            setLicenseSuccess(false);
+          }
+        }}
+        title="Enter your license key"
+        size="sm"
+      >
         <div className="space-y-4">
           <div>
             <div className="relative">
@@ -1801,8 +2245,8 @@ export default function Settings() {
                   licenseError
                     ? 'border border-[var(--danger)] focus:border-[var(--danger)] focus:ring-[var(--danger)]/20'
                     : licenseSuccess
-                    ? 'border border-green-500 focus:border-green-500 focus:ring-green-500/20'
-                    : 'border border-[var(--border-color)] focus:border-[var(--accent)] focus:ring-[var(--accent)]/20'
+                      ? 'border border-green-500 focus:border-green-500 focus:ring-green-500/20'
+                      : 'border border-[var(--border-color)] focus:border-[var(--accent)] focus:ring-[var(--accent)]/20'
                 }`}
                 autoFocus
               />
@@ -1817,13 +2261,29 @@ export default function Settings() {
                 </div>
               )}
             </div>
-            {licenseError && (
-              <p className="text-xs text-[var(--danger)] mt-2">{licenseError}</p>
-            )}
+            {licenseError && <p className="text-xs text-[var(--danger)] mt-2">{licenseError}</p>}
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => { setShowLicenseModal(false); setLicenseKey(''); setLicenseError(''); setLicenseSuccess(false); }} size="sm" disabled={licenseActivating}>Cancel</Button>
-            <Button variant="primary" onClick={handleActivateLicense} loading={licenseActivating} disabled={!licenseKey.trim() || licenseActivating || licenseSuccess} size="sm">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowLicenseModal(false);
+                setLicenseKey('');
+                setLicenseError('');
+                setLicenseSuccess(false);
+              }}
+              size="sm"
+              disabled={licenseActivating}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleActivateLicense}
+              loading={licenseActivating}
+              disabled={!licenseKey.trim() || licenseActivating || licenseSuccess}
+              size="sm"
+            >
               {licenseSuccess ? 'Activated' : 'Activate'}
             </Button>
           </div>
@@ -1831,17 +2291,32 @@ export default function Settings() {
       </Modal>
 
       {/* Asset warning modal */}
-      <Modal open={showAssetWarning} onClose={() => setShowAssetWarning(false)} title="Backup your files" size="sm">
+      <Modal
+        open={showAssetWarning}
+        onClose={() => setShowAssetWarning(false)}
+        title="Backup your files"
+        size="sm"
+      >
         <div className="space-y-4">
           <div className="text-sm text-[var(--text-primary)] leading-relaxed">
-            <p className="mb-3">Your Lance backup includes all your data · clients, projects, invoices, and everything else.</p>
+            <p className="mb-3">
+              Your Lance backup includes all your data · clients, projects, invoices, and everything
+              else.
+            </p>
             <div className="flex items-start gap-2 p-3 rounded-[8px] bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-              <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+              <AlertTriangle
+                size={16}
+                className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5"
+              />
               <div>
-                <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">Not included: your attached files in Assets.</p>
+                <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">
+                  Not included: your attached files in Assets.
+                </p>
                 <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
                   To back up your files, also copy: <br />
-                  <code className="text-[11px] bg-amber-100 dark:bg-amber-900/40 px-1 py-0.5 rounded">~/Documents/Lance/Assets/</code>
+                  <code className="text-[11px] bg-amber-100 dark:bg-amber-900/40 px-1 py-0.5 rounded">
+                    ~/Documents/Lance/Assets/
+                  </code>
                 </p>
                 <p className="text-xs text-amber-600 dark:text-amber-500 mt-1">
                   This folder contains all files you've attached to clients and projects.
@@ -1863,41 +2338,75 @@ export default function Settings() {
             <span className="text-xs text-[var(--text-secondary)]">Got it, don't show again</span>
           </label>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="secondary" onClick={() => setShowAssetWarning(false)} size="sm">Cancel</Button>
-            <Button variant="primary" onClick={handleAssetWarningContinue} size="sm">Continue export</Button>
+            <Button variant="secondary" onClick={() => setShowAssetWarning(false)} size="sm">
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleAssetWarningContinue} size="sm">
+              Continue export
+            </Button>
           </div>
         </div>
       </Modal>
 
       {/* Schema version warning modal */}
-      <Modal open={showSchemaWarnModal} onClose={() => { setShowSchemaWarnModal(false); setPendingImportEnvelope(null); }} title="Newer backup version" size="sm">
+      <Modal
+        open={showSchemaWarnModal}
+        onClose={() => {
+          setShowSchemaWarnModal(false);
+          setPendingImportEnvelope(null);
+        }}
+        title="Newer backup version"
+        size="sm"
+      >
         <div className="space-y-4">
           <div className="flex items-start gap-3 p-3 rounded-[8px] bg-amber-50 dark:bg-amber-900/20">
-            <AlertTriangle size={18} className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+            <AlertTriangle
+              size={18}
+              className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5"
+            />
             <div>
               <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
                 This backup was made with a newer version of Lance.
               </p>
               <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
-                Backup schema v{schemaWarnData?.from} &gt; app schema v{schemaWarnData?.to}. Some data may not import correctly.
+                Backup schema v{schemaWarnData?.from} &gt; app schema v{schemaWarnData?.to}. Some
+                data may not import correctly.
               </p>
             </div>
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => { setShowSchemaWarnModal(false); setPendingImportEnvelope(null); }} size="sm">Cancel</Button>
-            <Button variant="primary" onClick={proceedWithSchemaWarning} size="sm">Import anyway</Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowSchemaWarnModal(false);
+                setPendingImportEnvelope(null);
+              }}
+              size="sm"
+            >
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={proceedWithSchemaWarning} size="sm">
+              Import anyway
+            </Button>
           </div>
         </div>
       </Modal>
 
       {/* Import summary modal */}
-      <Modal open={showImportSummary} onClose={() => setShowImportSummary(false)} title="Import summary" size="md">
+      <Modal
+        open={showImportSummary}
+        onClose={() => setShowImportSummary(false)}
+        title="Import summary"
+        size="md"
+      >
         <div className="space-y-4">
           <div className="text-sm text-[var(--text-primary)]">
             <p className="mb-2">
               Found:{' '}
               <span className="font-medium">
-                {importSummaryData?.tableCounts ? formatTableCounts(importSummaryData.tableCounts) : '...'}
+                {importSummaryData?.tableCounts
+                  ? formatTableCounts(importSummaryData.tableCounts)
+                  : '...'}
               </span>
             </p>
           </div>
@@ -1925,11 +2434,15 @@ export default function Settings() {
                 <div className="w-9 h-5 bg-[var(--border-color)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-500" />
               </label>
               <div>
-                <p className={`text-sm font-medium ${importReplaceMode ? 'text-[var(--danger)]' : 'text-[var(--text-primary)]'}`}>
+                <p
+                  className={`text-sm font-medium ${importReplaceMode ? 'text-[var(--danger)]' : 'text-[var(--text-primary)]'}`}
+                >
                   {importReplaceMode ? 'Replace all data' : 'Add to existing data'}
                 </p>
                 <p className="text-[10px] text-[var(--text-tertiary)]">
-                  {importReplaceMode ? 'Destructive · removes all current data first' : 'Default · safe'}
+                  {importReplaceMode
+                    ? 'Destructive · removes all current data first'
+                    : 'Default · safe'}
                 </p>
               </div>
             </div>
@@ -1951,7 +2464,9 @@ export default function Settings() {
           )}
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="secondary" onClick={() => setShowImportSummary(false)} size="sm">Cancel</Button>
+            <Button variant="secondary" onClick={() => setShowImportSummary(false)} size="sm">
+              Cancel
+            </Button>
             <Button
               variant={importReplaceMode ? 'danger' : 'primary'}
               onClick={handleConfirmImport}
@@ -1977,7 +2492,10 @@ export default function Settings() {
       <ConfirmDialog
         open={showClearSampleConfirm}
         onClose={() => setShowClearSampleConfirm(false)}
-        onConfirm={async () => { setShowClearSampleConfirm(false); await handleClearSampleData(); }}
+        onConfirm={async () => {
+          setShowClearSampleConfirm(false);
+          await handleClearSampleData();
+        }}
         title="Clear Sample Data"
         message="Remove all records tagged as sample data and reload? This cannot be undone."
         confirmLabel="Clear sample data"
@@ -1988,15 +2506,15 @@ export default function Settings() {
 }
 
 const SectionHead = ({ title, isSaved }: { title: string; isSaved: boolean }) => (
-    <div className="flex items-center gap-2 mb-4">
-      <h3 className="text-sm font-semibold text-[var(--text-primary)] ">{title}</h3>
-      {isSaved && (
-        <span className="flex items-center gap-1 text-[10px] text-[var(--accent-ink,var(--accent))] animate-pulse">
-          <Check size={12} /> Saved
-        </span>
-      )}
-    </div>
-  );
+  <div className="flex items-center gap-2 mb-4">
+    <h3 className="text-sm font-semibold text-[var(--text-primary)] ">{title}</h3>
+    {isSaved && (
+      <span className="flex items-center gap-1 text-[10px] text-[var(--accent-ink,var(--accent))] animate-pulse">
+        <Check size={12} /> Saved
+      </span>
+    )}
+  </div>
+);
 
 const EXPORT_TYPES = [
   { value: 'invoice_pdf', label: 'Invoice PDF' },
@@ -2006,10 +2524,45 @@ const EXPORT_TYPES = [
 ];
 
 const SECTION_OPTIONS: Record<string, string[]> = {
-  invoice_pdf: ['Header', 'Footer', 'From address', 'Client address', 'Line items table', 'Total summary', 'Notes', 'Payment instructions'],
-  proposal_pdf: ['Header', 'Footer', 'Cover page', 'Scope of work', 'Timeline', 'Pricing table', 'Terms', 'Signature block'],
-  proposal_docx: ['Header', 'Footer', 'Cover page', 'Scope of work', 'Timeline', 'Pricing table', 'Terms', 'Signature block'],
-  contract_docx: ['Header', 'Footer', 'Parties', 'Scope', 'Payment terms', 'Timeline', 'Signatures'],
+  invoice_pdf: [
+    'Header',
+    'Footer',
+    'From address',
+    'Client address',
+    'Line items table',
+    'Total summary',
+    'Notes',
+    'Payment instructions',
+  ],
+  proposal_pdf: [
+    'Header',
+    'Footer',
+    'Cover page',
+    'Scope of work',
+    'Timeline',
+    'Pricing table',
+    'Terms',
+    'Signature block',
+  ],
+  proposal_docx: [
+    'Header',
+    'Footer',
+    'Cover page',
+    'Scope of work',
+    'Timeline',
+    'Pricing table',
+    'Terms',
+    'Signature block',
+  ],
+  contract_docx: [
+    'Header',
+    'Footer',
+    'Parties',
+    'Scope',
+    'Payment terms',
+    'Timeline',
+    'Signatures',
+  ],
 };
 
 function TrashBinSection() {
@@ -2019,7 +2572,9 @@ function TrashBinSection() {
   const [restoring, setRestoring] = useState<string | null>(null);
 
   const refresh = useCallback(() => setEntries(loadTrash()), []);
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   const handleRestore = async (entry: TrashEntry) => {
     setRestoring(entry.trashId);
@@ -2048,11 +2603,15 @@ function TrashBinSection() {
         <div>
           <p className="text-sm text-[var(--text-primary)]">Recently deleted</p>
           <p className="text-xs text-[var(--text-tertiary)]">
-            Restores the record itself · linked items deleted with it are not brought back · emptied automatically after {TRASH_RETENTION_DAYS} days
+            Restores the record itself · linked items deleted with it are not brought back · emptied
+            automatically after {TRASH_RETENTION_DAYS} days
           </p>
         </div>
         <button
-          onClick={() => { clearTrash(); refresh(); }}
+          onClick={() => {
+            clearTrash();
+            refresh();
+          }}
           className="text-[11px] text-[var(--text-tertiary)] hover:text-[var(--danger)]"
         >
           Empty trash
@@ -2060,10 +2619,16 @@ function TrashBinSection() {
       </div>
       <div className="space-y-1">
         {entries.map((e) => (
-          <div key={e.trashId} className="flex items-center gap-3 px-2 py-1.5 rounded-[6px] hover:bg-[var(--bg-secondary)] text-xs">
+          <div
+            key={e.trashId}
+            className="flex items-center gap-3 px-2 py-1.5 rounded-[6px] hover:bg-[var(--bg-secondary)] text-xs"
+          >
             <div className="flex-1 min-w-0">
               <span className="font-medium text-[var(--text-primary)] truncate">{e.label}</span>
-              <span className="text-[var(--text-tertiary)]"> · {e.table} · {relativeDate(e.deletedAt)}</span>
+              <span className="text-[var(--text-tertiary)]">
+                {' '}
+                · {e.table} · {relativeDate(e.deletedAt)}
+              </span>
             </div>
             <button
               onClick={() => handleRestore(e)}
@@ -2087,7 +2652,13 @@ function TrashBinSection() {
 }
 
 function ExportTemplatesSection() {
-  const { exportTemplates, loadExportTemplates, addExportTemplate, updateExportTemplate, removeExportTemplate } = useStore();
+  const {
+    exportTemplates,
+    loadExportTemplates,
+    addExportTemplate,
+    updateExportTemplate,
+    removeExportTemplate,
+  } = useStore();
   const addToast = useToasts((s) => s.add);
   const [loaded, setLoaded] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -2109,7 +2680,14 @@ function ExportTemplatesSection() {
 
   const openNew = () => {
     setEditing(null);
-    setForm({ name: '', type: 'invoice_pdf', header: '', footer: '', sections: [], color_scheme: '' });
+    setForm({
+      name: '',
+      type: 'invoice_pdf',
+      header: '',
+      footer: '',
+      sections: [],
+      color_scheme: '',
+    });
     setShowForm(true);
   };
 
@@ -2135,7 +2713,13 @@ function ExportTemplatesSection() {
     }
     setSaving(true);
     try {
-      const normalized = { ...form, name: sanitizeInput(form.name), header: sanitizeInput(form.header), footer: sanitizeInput(form.footer), color_scheme: color };
+      const normalized = {
+        ...form,
+        name: sanitizeInput(form.name),
+        header: sanitizeInput(form.header),
+        footer: sanitizeInput(form.footer),
+        color_scheme: color,
+      };
       if (editing) {
         await updateExportTemplate({ ...editing, ...normalized, sections: form.sections });
       } else {
@@ -2175,7 +2759,8 @@ function ExportTemplatesSection() {
 
   const availableSections = SECTION_OPTIONS[form.type] || [];
 
-  const inputClass = "w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)]";
+  const inputClass =
+    'w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)]';
 
   return (
     <div>
@@ -2183,7 +2768,9 @@ function ExportTemplatesSection() {
         <div className="h-8 bg-[var(--bg-secondary)] rounded skeleton-pulse" />
       ) : exportTemplates.length === 0 ? (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-[var(--text-tertiary)]">No export templates yet. Create reusable export configurations.</p>
+          <p className="text-sm text-[var(--text-tertiary)]">
+            No export templates yet. Create reusable export configurations.
+          </p>
           <Button variant="secondary" size="sm" onClick={openNew}>
             <FileText size={14} />
             New Template
@@ -2192,10 +2779,15 @@ function ExportTemplatesSection() {
       ) : (
         <div className="space-y-2">
           {exportTemplates.map((t) => (
-            <div key={t.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[8px]">
+            <div
+              key={t.id}
+              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[8px]"
+            >
               <div>
                 <p className="text-sm font-medium text-[var(--text-primary)]">{t.name}</p>
-                <p className="text-[10px] text-[var(--text-tertiary)]">{EXPORT_TYPES.find((et) => et.value === t.type)?.label || t.type}</p>
+                <p className="text-[10px] text-[var(--text-tertiary)]">
+                  {EXPORT_TYPES.find((et) => et.value === t.type)?.label || t.type}
+                </p>
               </div>
               <div className="flex items-center gap-1">
                 <button
@@ -2220,12 +2812,12 @@ function ExportTemplatesSection() {
                     </button>
                   </>
                 ) : (
-                <button
-                  onClick={() => handleDelete(t.id)}
-                  className="px-2 py-1 text-[10px] text-[var(--danger)] hover:bg-[var(--danger-bg)] rounded-[6px]"
-                >
-                  Delete
-                </button>
+                  <button
+                    onClick={() => handleDelete(t.id)}
+                    className="px-2 py-1 text-[10px] text-[var(--danger)] hover:bg-[var(--danger-bg)] rounded-[6px]"
+                  >
+                    Delete
+                  </button>
                 )}
               </div>
             </div>
@@ -2245,7 +2837,9 @@ function ExportTemplatesSection() {
             {editing ? 'Edit Template' : 'New Template'}
           </h4>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Template name</label>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              Template name
+            </label>
             <input
               type="text"
               value={form.name}
@@ -2255,20 +2849,28 @@ function ExportTemplatesSection() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Document type</label>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              Document type
+            </label>
             <select
               value={form.type}
               aria-label="Document type"
-              onChange={(e) => setForm({ ...form, type: e.target.value as ExportTemplate['type'], sections: [] })}
+              onChange={(e) =>
+                setForm({ ...form, type: e.target.value as ExportTemplate['type'], sections: [] })
+              }
               className={inputClass}
             >
               {EXPORT_TYPES.map((et) => (
-                <option key={et.value} value={et.value}>{et.label}</option>
+                <option key={et.value} value={et.value}>
+                  {et.label}
+                </option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Header</label>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              Header
+            </label>
             <input
               type="text"
               value={form.header}
@@ -2278,7 +2880,9 @@ function ExportTemplatesSection() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Footer</label>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              Footer
+            </label>
             <input
               type="text"
               value={form.footer}
@@ -2288,7 +2892,9 @@ function ExportTemplatesSection() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Color scheme</label>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              Color scheme
+            </label>
             <input
               type="text"
               value={form.color_scheme}
@@ -2298,7 +2904,9 @@ function ExportTemplatesSection() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-2">Include sections</label>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-2">
+              Include sections
+            </label>
             <div className="grid grid-cols-2 gap-1.5">
               {availableSections.map((section) => (
                 <label key={section} className="flex items-center gap-2 py-0.5">
@@ -2314,7 +2922,9 @@ function ExportTemplatesSection() {
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="secondary" onClick={() => setShowForm(false)} size="sm">Cancel</Button>
+            <Button variant="secondary" onClick={() => setShowForm(false)} size="sm">
+              Cancel
+            </Button>
             <Button onClick={handleSave} loading={saving} disabled={!form.name.trim()} size="sm">
               {editing ? 'Update' : 'Create'}
             </Button>
@@ -2326,7 +2936,14 @@ function ExportTemplatesSection() {
 }
 
 function ProjectTemplatesSection() {
-  const { projectTemplates, loadProjectTemplates, loadTemplateMilestones, projectTemplateMilestones, updateProjectTemplate, removeProjectTemplate } = useStore();
+  const {
+    projectTemplates,
+    loadProjectTemplates,
+    loadTemplateMilestones,
+    projectTemplateMilestones,
+    updateProjectTemplate,
+    removeProjectTemplate,
+  } = useStore();
   const addToast = useToasts((s) => s.add);
   const [loaded, setLoaded] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -2357,7 +2974,10 @@ function ProjectTemplatesSection() {
   const handleSaveEdit = async (id: string) => {
     if (!editName.trim()) return;
     try {
-      await updateProjectTemplate(id, { name: editName, description: editDescription || undefined });
+      await updateProjectTemplate(id, {
+        name: editName,
+        description: editDescription || undefined,
+      });
       setEditing(null);
       addToast('Template updated', 'success');
     } catch {
@@ -2383,7 +3003,9 @@ function ProjectTemplatesSection() {
       {!loaded ? (
         <div className="h-8 bg-[var(--bg-secondary)] rounded skeleton-pulse" />
       ) : projectTemplates.length === 0 ? (
-        <p className="text-xs text-[var(--text-tertiary)]">No project templates yet. Save one from a project.</p>
+        <p className="text-xs text-[var(--text-tertiary)]">
+          No project templates yet. Save one from a project.
+        </p>
       ) : (
         <div className="space-y-2">
           {projectTemplates.map((tpl) => {
@@ -2400,7 +3022,10 @@ function ProjectTemplatesSection() {
                         onChange={(e) => setEditName(e.target.value)}
                         className="w-full px-2 py-1 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                         autoFocus
-                        onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(tpl.id); if (e.key === 'Escape') setEditing(null); }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSaveEdit(tpl.id);
+                          if (e.key === 'Escape') setEditing(null);
+                        }}
                       />
                       <input
                         type="text"
@@ -2410,20 +3035,36 @@ function ProjectTemplatesSection() {
                         className="w-full px-2 py-1 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
                       />
                       <div className="flex items-center gap-1">
-                        <button onClick={() => handleSaveEdit(tpl.id)} className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline">Save</button>
-                        <button onClick={() => setEditing(null)} className="text-[10px] text-[var(--text-tertiary)] hover:underline">Cancel</button>
+                        <button
+                          onClick={() => handleSaveEdit(tpl.id)}
+                          className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setEditing(null)}
+                          className="text-[10px] text-[var(--text-tertiary)] hover:underline"
+                        >
+                          Cancel
+                        </button>
                       </div>
                     </div>
                   ) : (
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-[var(--text-primary)]">{tpl.name}</p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <p className="text-[10px] text-[var(--text-tertiary)]">{ms.length} milestones</p>
+                        <p className="text-[10px] text-[var(--text-tertiary)]">
+                          {ms.length} milestones
+                        </p>
                         {tpl.default_budget && (
-                          <p className="text-[10px] text-[var(--text-tertiary)]">${tpl.default_budget}</p>
+                          <p className="text-[10px] text-[var(--text-tertiary)]">
+                            ${tpl.default_budget}
+                          </p>
                         )}
                         {tpl.is_default && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">Built-in</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">
+                            Built-in
+                          </span>
                         )}
                       </div>
                     </div>
@@ -2445,8 +3086,18 @@ function ProjectTemplatesSection() {
                       {deleteConfirm === tpl.id ? (
                         <div className="flex items-center gap-1">
                           <span className="text-[10px] text-[var(--danger)]">Delete?</span>
-                          <button onClick={() => handleDelete(tpl.id)} className="text-[10px] px-1 py-0.5 bg-[var(--danger)] text-white rounded-[4px]">Yes</button>
-                          <button onClick={() => setDeleteConfirm(null)} className="text-[10px] px-1 py-0.5 bg-[var(--bg-card)] text-[var(--text-secondary)] rounded-[4px]">No</button>
+                          <button
+                            onClick={() => handleDelete(tpl.id)}
+                            className="text-[10px] px-1 py-0.5 bg-[var(--danger)] text-white rounded-[4px]"
+                          >
+                            Yes
+                          </button>
+                          <button
+                            onClick={() => setDeleteConfirm(null)}
+                            className="text-[10px] px-1 py-0.5 bg-[var(--bg-card)] text-[var(--text-secondary)] rounded-[4px]"
+                          >
+                            No
+                          </button>
                         </div>
                       ) : (
                         <button
@@ -2462,15 +3113,21 @@ function ProjectTemplatesSection() {
                 {expanded === tpl.id && (
                   <div className="border-t border-[var(--border-color)] px-3 py-2">
                     {ms.length === 0 ? (
-                      <p className="text-[10px] text-[var(--text-tertiary)]">No milestones defined.</p>
+                      <p className="text-[10px] text-[var(--text-tertiary)]">
+                        No milestones defined.
+                      </p>
                     ) : (
                       <div className="space-y-1">
                         {ms.map((m) => (
                           <div key={m.id} className="flex items-center gap-2 text-xs">
-                            <span className="text-[var(--text-tertiary)] w-5 text-right">{m.days_from_start}d</span>
+                            <span className="text-[var(--text-tertiary)] w-5 text-right">
+                              {m.days_from_start}d
+                            </span>
                             <span className="text-[var(--text-primary)]">{m.title}</span>
                             {m.invoice_on_completion && (
-                              <span className="text-[9px] px-1 py-0.5 bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] rounded-[3px]">invoice</span>
+                              <span className="text-[9px] px-1 py-0.5 bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] rounded-[3px]">
+                                invoice
+                              </span>
                             )}
                           </div>
                         ))}

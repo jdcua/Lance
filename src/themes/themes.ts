@@ -1,4 +1,5 @@
 import type { Theme } from './index';
+import { isTrial } from '../demo/isDemo';
 
 export const THEMES: Theme[] = [
   {
@@ -546,6 +547,10 @@ function loadThemeFonts(themeId: Theme['id']): void {
 
   const url = fontUrls[themeId];
   if (!url || loadedFontSets.has(themeId)) return;
+
+  // Trial serves zero third-party requests: skip webfonts entirely and let
+  // the system-font fallbacks in --font-display/--font-body take over.
+  if (isTrial()) return;
 
   const link = document.createElement('link');
   link.href = `https://fonts.bunny.net/css?family=${url}`;

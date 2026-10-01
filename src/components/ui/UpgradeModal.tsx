@@ -45,13 +45,18 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
       }
       if (e.key === 'Tab' && panelRef.current) {
         const focusable = Array.from(
-          panelRef.current.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+          panelRef.current.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+          ),
         ).filter((el) => el.offsetParent !== null);
         if (focusable.length === 0) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
         if (e.shiftKey) {
-          if (document.activeElement === first || !panelRef.current.contains(document.activeElement)) {
+          if (
+            document.activeElement === first ||
+            !panelRef.current.contains(document.activeElement)
+          ) {
             e.preventDefault();
             last.focus();
           }
@@ -72,9 +77,27 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
   const handleCheckout = async (tier: 'monthly' | 'yearly' | 'onetime') => {
     setLoading(tier);
     try {
+      // Monthly/yearly CTAs promise a free trial: start the clock first so
+      // the plan flips immediately. Lifetime has no trial — straight to
+      // checkout. When no trial is available, fall through to checkout.
+      if (tier !== 'onetime') {
+        try {
+          const { startTrial } = useStore.getState();
+          const outcome = await startTrial();
+          if (outcome === 'started' || outcome === 'already') {
+            addToast('Pro trial active — all Pro depth unlocked for 30 days', 'success');
+            onClose();
+            return;
+          }
+        } catch {
+          /* fall through to checkout */
+        }
+      }
       const opened = await openCheckout(tier);
       if (!opened) {
-        setCheckoutNotice('Checkout isn\u2019t configured in this build yet. Contact support to get a license key.');
+        setCheckoutNotice(
+          'Checkout isn\u2019t configured in this build yet. Contact support to get a license key.',
+        );
         addToast('Checkout is not configured in this build', 'info');
       } else {
         onClose();
@@ -115,7 +138,10 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
   ];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }}>
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center"
+      style={{ background: 'rgba(0,0,0,0.6)' }}
+    >
       <div
         ref={panelRef}
         role="dialog"
@@ -126,7 +152,10 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
       >
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h2 className="text-[24px] font-semibold text-[var(--text-primary)]" style={{ fontFamily: "'Syne', sans-serif" }}>
+            <h2
+              className="text-[24px] font-semibold text-[var(--text-primary)]"
+              style={{ fontFamily: "'Syne', sans-serif" }}
+            >
               Unlock Pro depth
             </h2>
             <p className="text-sm text-[var(--text-secondary)] mt-1">
@@ -160,11 +189,13 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
             >
               {plan.label}
               {plan.badge && (
-                <span className={`ml-2 px-1.5 py-0.5 text-[10px] font-semibold rounded-full ${
-                  activeTab === plan.id
-                    ? 'bg-white/20 text-white'
-                    : 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]'
-                }`}>
+                <span
+                  className={`ml-2 px-1.5 py-0.5 text-[10px] font-semibold rounded-full ${
+                    activeTab === plan.id
+                      ? 'bg-white/20 text-white'
+                      : 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]'
+                  }`}
+                >
                   {plan.badge}
                 </span>
               )}
@@ -186,7 +217,10 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-[28px] font-bold text-[var(--text-primary)]" style={{ fontFamily: "'Syne', sans-serif" }}>
+                    <span
+                      className="text-[28px] font-bold text-[var(--text-primary)]"
+                      style={{ fontFamily: "'Syne', sans-serif" }}
+                    >
                       {plan.price}
                     </span>
                     <span className="text-sm text-[var(--text-tertiary)]">{plan.period}</span>
@@ -213,8 +247,20 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
                 {loading === plan.id ? (
                   <span className="flex items-center justify-center gap-2">
                     <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
                     </svg>
                     Opening checkout…
                   </span>
@@ -227,7 +273,9 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
         </div>
 
         {checkoutNotice && (
-          <p className="text-[11px] text-[var(--warning-text)] mt-4 text-center">{checkoutNotice}</p>
+          <p className="text-[11px] text-[var(--warning-text)] mt-4 text-center">
+            {checkoutNotice}
+          </p>
         )}
 
         {trialValue && trialValue.total > 0 && currentTier === 'trial' && (
@@ -243,13 +291,15 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
             </p>
             <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">
               {[
-                trialValue.changeOrders > 0 ? `change orders ${formatCurrency(trialValue.changeOrders)}` : '',
+                trialValue.changeOrders > 0
+                  ? `change orders ${formatCurrency(trialValue.changeOrders)}`
+                  : '',
                 trialValue.lateFees > 0 ? `late fees ${formatCurrency(trialValue.lateFees)}` : '',
                 trialValue.topUps > 0 ? `top-ups ${formatCurrency(trialValue.topUps)}` : '',
               ]
                 .filter(Boolean)
-                .join(' · ')}
-              {' '}in your trial so far. One change order typically covers months of Pro.
+                .join(' · ')}{' '}
+              in your trial so far. One change order typically covers months of Pro.
             </p>
           </div>
         )}
@@ -257,7 +307,8 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
         {/* Current status */}
         <div className="mt-6 pt-4 border-t border-[var(--border-color)]">
           <p className="text-xs text-[var(--text-tertiary)] text-center">
-            Current: <strong className="text-[var(--text-primary)] capitalize">{currentTier}</strong>
+            Current:{' '}
+            <strong className="text-[var(--text-primary)] capitalize">{currentTier}</strong>
             {currentTier === 'trial' && (
               <>
                 <span className="ml-1 px-1.5 py-0.5 text-[10px] font-semibold bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] rounded-full">
@@ -267,8 +318,8 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
             )}
           </p>
           <p className="text-xs text-[var(--text-tertiary)] text-center mt-1">
-            Core features (clients, projects, invoices, time tracking, client portal) always stay free.
-            Client payments go straight to you. Lance never takes a cut.
+            Core features (clients, projects, invoices, time tracking, client portal) always stay
+            free. Client payments go straight to you. Lance never takes a cut.
           </p>
         </div>
       </div>

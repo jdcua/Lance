@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../../store';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
+import AssetImg from '../../demo/AssetImg';
 import { Plus, Trash2, ExternalLink, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
 
 type ReferenceItem = {
@@ -32,7 +33,7 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
       const db = await getDb();
       const rows = await db.select<(ReferenceItem & Record<string, unknown>)[]>(
         'SELECT id, project_id, asset_id, url, notes, sort_order FROM mood_board_items WHERE project_id = ? ORDER BY sort_order ASC, id ASC',
-        [projectId]
+        [projectId],
       );
       setItems(
         rows.map((r) => ({
@@ -42,7 +43,7 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
           url: r.url as string | undefined,
           notes: r.notes as string | undefined,
           sort_order: r.sort_order as number,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[ReferenceBoard] loadItems failed:', e);
@@ -56,7 +57,7 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
   }, [projectId, loadAllAttachments, loadItems]);
 
   const imageAssets = allAttachments.filter(
-    (a) => a.mime_type && (a.mime_type.startsWith('image/') || a.mime_type === 'application/pdf')
+    (a) => a.mime_type && (a.mime_type.startsWith('image/') || a.mime_type === 'application/pdf'),
   );
 
   const maxSort = items.length > 0 ? Math.max(...items.map((i) => i.sort_order)) : 0;
@@ -77,7 +78,7 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
           tab === 'url' ? url.trim() || null : null,
           null,
           maxSort + 1,
-        ]
+        ],
       );
       const item: ReferenceItem = {
         id,
@@ -211,9 +212,7 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
       ) : (
         <div className="grid grid-cols-3 gap-2">
           {items.map((item) => {
-            const asset = item.asset_id
-              ? allAttachments.find((a) => a.id === item.asset_id)
-              : null;
+            const asset = item.asset_id ? allAttachments.find((a) => a.id === item.asset_id) : null;
 
             return (
               <div
@@ -222,8 +221,8 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
               >
                 {asset && asset.mime_type.startsWith('image/') ? (
                   <div className="aspect-square">
-                    <img
-                      src={`asset://${asset.file_path}`}
+                    <AssetImg
+                      filePath={asset.file_path}
                       alt={asset.filename}
                       className="w-full h-full object-cover"
                     />

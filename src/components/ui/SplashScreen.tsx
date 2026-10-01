@@ -52,13 +52,18 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
       }
       if (e.key === 'Tab' && panelRef.current) {
         const focusable = Array.from(
-          panelRef.current.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+          panelRef.current.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+          ),
         ).filter((el) => el.offsetParent !== null);
         if (focusable.length === 0) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
         if (e.shiftKey) {
-          if (document.activeElement === first || !panelRef.current.contains(document.activeElement)) {
+          if (
+            document.activeElement === first ||
+            !panelRef.current.contains(document.activeElement)
+          ) {
             e.preventDefault();
             last.focus();
           }
@@ -77,15 +82,34 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
   if (isLicensed) return null;
 
   const handleTryPro = async () => {
+    // Start the trial clock first so the plan visibly flips to trial even
+    // when checkout isn't configured (dev builds) or the user just wants
+    // the demo. Falls through to checkout when no trial is available.
+    try {
+      const { startTrial } = useStore.getState();
+      const outcome = await startTrial();
+      if (outcome === 'started' || outcome === 'already') {
+        addToast('Pro trial active — all Pro depth unlocked for 30 days', 'success');
+        onDismiss();
+        return;
+      }
+    } catch {
+      /* fall through to checkout */
+    }
     const opened = await openCheckout('monthly');
     if (!opened) {
-      setCheckoutNotice('Checkout isn\u2019t configured in this build yet. Contact support to get a license key.');
+      setCheckoutNotice(
+        'Checkout isn\u2019t configured in this build yet. Contact support to get a license key.',
+      );
       addToast('Checkout is not configured in this build', 'info');
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }}>
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center"
+      style={{ background: 'rgba(0,0,0,0.6)' }}
+    >
       <div
         ref={panelRef}
         role="dialog"
@@ -95,17 +119,23 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
         style={{ fontFamily: "'Inter', sans-serif" }}
       >
         <BrandLogo size={32} className="text-[var(--accent-ink,var(--accent))] mx-auto mb-2" />
-        <h1 className="text-[28px] font-semibold text-[var(--text-primary)] mb-1" style={{ fontFamily: "'Syne', sans-serif" }}>
+        <h1
+          className="text-[28px] font-semibold text-[var(--text-primary)] mb-1"
+          style={{ fontFamily: "'Syne', sans-serif" }}
+        >
           Lance
         </h1>
         <p className="text-sm text-[var(--text-secondary)] mb-6">Freelancer OS</p>
 
-        <p className="text-xs text-[var(--text-tertiary)] mb-5">Version {appVersion} &middot; Built by Placeholder Labs Incorporated Limited</p>
+        <p className="text-xs text-[var(--text-tertiary)] mb-5">
+          Version {appVersion} &middot; Built by Placeholder Labs Incorporated Limited
+        </p>
 
         <div className="border-t border-[var(--border-color)] my-5" />
 
         <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-3">
-          Core is free forever. Pro adds archetype depth · proposals, contracts, invoices, scope-creep protection.
+          Core is free forever. Pro adds archetype depth · proposals, contracts, invoices,
+          scope-creep protection.
         </p>
 
         <div className="flex items-center justify-center gap-3 mb-6">

@@ -5,9 +5,13 @@ export function formatCurrency(amount: number, currency = 'CAD'): string {
   // Corrupt imports and 0/0 math can produce non-finite amounts. Intl would
   // render "$NaN"/"$∞" — an em dash admits unknown instead of lying.
   if (typeof amount !== 'number' || !isFinite(amount)) return '—';
+  // Narrow symbols ($, €, £) instead of locale-disambiguated codes: en-CA
+  // renders USD as "US$2,850.00", which reads like a broken double prefix
+  // next to CAD amounts. One clean symbol per currency everywhere.
   return new Intl.NumberFormat('en-CA', {
     style: 'currency',
     currency,
+    currencyDisplay: 'narrowSymbol',
   }).format(amount);
 }
 

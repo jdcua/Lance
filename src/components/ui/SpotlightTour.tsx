@@ -42,7 +42,7 @@ export default function SpotlightTour({ open, onClose }: SpotlightTourProps) {
       setIdx(0);
       setSpot(null);
     }
-  }, [open ]);
+  }, [open]);
 
   const step = steps[Math.min(idx, steps.length - 1)];
   const isLast = idx >= steps.length - 1;
@@ -62,16 +62,6 @@ export default function SpotlightTour({ open, onClose }: SpotlightTourProps) {
     };
   }, [open, step, navigate]);
 
-  // Escape skips the tour.
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [open, onClose]);
-
   const next = useCallback(() => {
     if (isLast) onClose();
     else setIdx((i) => i + 1);
@@ -88,6 +78,18 @@ export default function SpotlightTour({ open, onClose }: SpotlightTourProps) {
     next();
   }, [step, navigate, next]);
 
+  // Keyboard: Escape skips; arrows move between slides for keyboard users.
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      else if (e.key === 'ArrowRight') next();
+      else if (e.key === 'ArrowLeft') setIdx((i) => Math.max(0, i - 1));
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [open, onClose, next]);
+
   if (!open || !step) return null;
 
   const pad = 8;
@@ -100,7 +102,12 @@ export default function SpotlightTour({ open, onClose }: SpotlightTourProps) {
       : undefined;
 
   return (
-    <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label="Hands-on tour">
+    <div
+      className="fixed inset-0 z-[70]"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Hands-on tour"
+    >
       {/* Dim + cutout */}
       <svg className="absolute inset-0 w-full h-full">
         <defs>
@@ -118,7 +125,14 @@ export default function SpotlightTour({ open, onClose }: SpotlightTourProps) {
             )}
           </mask>
         </defs>
-        <rect x="0" y="0" width="100%" height="100%" fill="rgba(0,0,0,0.55)" mask="url(#tour-spot-mask)" />
+        <rect
+          x="0"
+          y="0"
+          width="100%"
+          height="100%"
+          fill="rgba(0,0,0,0.55)"
+          mask="url(#tour-spot-mask)"
+        />
         {spot && (
           <rect
             x={spot.left - pad}
@@ -144,7 +158,11 @@ export default function SpotlightTour({ open, onClose }: SpotlightTourProps) {
           <p className="text-[10px] font-semibold uppercase tracking-[0.8px] text-[var(--accent-ink,var(--accent))]">
             Step {idx + 1} of {steps.length}
           </p>
-          <button onClick={onClose} aria-label="Skip tour" className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
+          <button
+            onClick={onClose}
+            aria-label="Skip tour"
+            className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+          >
             <X size={14} />
           </button>
         </div>
@@ -153,9 +171,13 @@ export default function SpotlightTour({ open, onClose }: SpotlightTourProps) {
         <div className="flex items-center justify-between">
           <div className="flex gap-1">
             {steps.map((_, i) => (
-              <span
+              <button
                 key={i}
-                className={`w-1.5 h-1.5 rounded-full ${i === idx ? 'bg-[var(--accent)]' : 'bg-[var(--border-color)]'}`}
+                type="button"
+                onClick={() => setIdx(i)}
+                aria-label={`Go to slide ${i + 1}`}
+                aria-current={i === idx ? 'step' : undefined}
+                className={`w-1.5 h-1.5 rounded-full transition-colors ${i === idx ? 'bg-[var(--accent)]' : 'bg-[var(--border-color)] hover:bg-[var(--text-tertiary)]'}`}
               />
             ))}
           </div>
@@ -165,11 +187,17 @@ export default function SpotlightTour({ open, onClose }: SpotlightTourProps) {
                 <ChevronLeft size={14} /> Back
               </Button>
             )}
-            <Button variant="ghost" size="sm" onClick={onClose}>Skip</Button>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              Skip
+            </Button>
             {step.kind === 'action' ? (
-              <Button size="sm" onClick={runAction}>{step.cta || 'Try it'} <ChevronRight size={14} /></Button>
+              <Button size="sm" onClick={runAction}>
+                {step.cta || 'Try it'} <ChevronRight size={14} />
+              </Button>
             ) : (
-              <Button size="sm" onClick={next}>{step.cta || 'Next'} <ChevronRight size={14} /></Button>
+              <Button size="sm" onClick={next}>
+                {step.cta || 'Next'} <ChevronRight size={14} />
+              </Button>
             )}
           </div>
         </div>

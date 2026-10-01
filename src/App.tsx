@@ -28,13 +28,21 @@ import UpgradeModal from './components/ui/UpgradeModal';
 import { useStore } from './store';
 import { useToasts } from './store/toastStore';
 import { useAutoUpdater } from './hooks/useAutoUpdater';
-import { shouldGenerate, getNextDueDate, countCyclesBehind, getCatchUpCount, shouldShowCatchUpWarning, effectiveDueDate } from './utils/recurringEngine';
+import {
+  shouldGenerate,
+  getNextDueDate,
+  countCyclesBehind,
+  getCatchUpCount,
+  shouldShowCatchUpWarning,
+  effectiveDueDate,
+} from './utils/recurringEngine';
 import { generateInvoiceNumber } from './utils/invoiceNumber';
 import { useChangelog } from './utils/changelog';
 import { usePrefs } from './lib/prefs';
 import { applyTheme, getTheme, THEMES } from './themes/themes';
 import { getShortcutModifierLabel } from './utils/shortcuts';
 import type { Profession } from './themes';
+import type { UserProfile } from './types';
 import { PROFESSION_THEME } from './themes';
 import { getArchetype, ARCHETYPE_LIST } from './archetypes';
 import { driveAxisFor, saveDrive, loadDrive, DRIVE_AXES } from './tour/voice';
@@ -47,18 +55,30 @@ import { recordTelemetry } from './utils/telemetry';
 import { detectNewOpens, snapshotOpens } from './utils/portalActivity';
 import { getFeatureFlags } from './lib/constants';
 import { getRuntimeVersion } from './lib/version';
+import { isTrial } from './demo/isDemo';
+import TrialBanner from './demo/TrialBanner';
+import TestModeBanner from './demo/TestModeBanner';
 
 // Max upsell-splash views per app version for unlicensed users.
 export const SPLASH_MAX_VIEWS = 3;
 
 export default function App() {
   const {
-    profile, profileLoaded, loadProfile, isLicensed, initLicenseFlow,
-    recurringInvoices, loadRecurringInvoices, updateRecurringInvoice,
-    invoices, loadInvoices, addInvoice,
+    profile,
+    profileLoaded,
+    loadProfile,
+    isLicensed,
+    initLicenseFlow,
+    recurringInvoices,
+    loadRecurringInvoices,
+    updateRecurringInvoice,
+    invoices,
+    loadInvoices,
+    addInvoice,
     loadClients,
     loadFollowUpSettings,
-    setPortalPort, setPortalFailed,
+    setPortalPort,
+    setPortalFailed,
   } = useStore();
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
@@ -84,8 +104,9 @@ export default function App() {
     try {
       // Either completion marker counts — legacy runs wrote step=complete
       // without onboarding-completed, and those users are still first-launch.
-      const done = localStorage.getItem('lance:onboarding-completed') === 'true'
-        || localStorage.getItem('lance:onboarding-step') === 'complete';
+      const done =
+        localStorage.getItem('lance:onboarding-completed') === 'true' ||
+        localStorage.getItem('lance:onboarding-step') === 'complete';
       return done && localStorage.getItem('lance:has-launched') === 'true';
     } catch {
       return true;
@@ -96,8 +117,10 @@ export default function App() {
     // somebody's first session, and marking it would burn the first-launch
     // grace before they ever see the app.
     try {
-      if (localStorage.getItem('lance:onboarding-completed') === 'true'
-        || localStorage.getItem('lance:onboarding-step') === 'complete') {
+      if (
+        localStorage.getItem('lance:onboarding-completed') === 'true' ||
+        localStorage.getItem('lance:onboarding-step') === 'complete'
+      ) {
         localStorage.setItem('lance:has-launched', 'true');
       }
     } catch {
@@ -140,7 +163,6 @@ export default function App() {
     };
     document.addEventListener('lance:open-upgrade', handler);
     return () => document.removeEventListener('lance:open-upgrade', handler);
-     
   }, []);
 
   // Time entries are logged through the global quick-log modal (the Time
@@ -276,12 +298,19 @@ export default function App() {
     const setupListeners = async () => {
       try {
         const { tauriListen } = await import('./utils/tauri');
-        const unlistenReady = await tauriListen<{ port: number }>('portal-server-ready', (event) => {
-          setPortalPort(event.port);
-        });
+        const unlistenReady = await tauriListen<{ port: number }>(
+          'portal-server-ready',
+          (event) => {
+            setPortalPort(event.port);
+          },
+        );
         const unlistenFailed = await tauriListen<{ reason: string }>('portal-server-failed', () => {
           setPortalFailed();
-          addToast('Client portal unavailable \u2014 port conflict. Restart Lance to retry.', 'error', 8000);
+          addToast(
+            'Client portal unavailable \u2014 port conflict. Restart Lance to retry.',
+            'error',
+            8000,
+          );
         });
         cleanup = () => {
           unlistenReady();
@@ -314,7 +343,9 @@ export default function App() {
     const persistMode = (mode: 'dark' | 'light') => {
       try {
         localStorage.setItem('lance:theme-mode', mode);
-      } catch { /* private mode */ }
+      } catch {
+        /* private mode */
+      }
     };
     if (explicitTheme) {
       const dark = explicitTheme === 'dark';
@@ -365,7 +396,9 @@ export default function App() {
           const clampedY = Math.max(my, Math.min(y, my + mh - Math.min(height, mh)));
           return { x: clampedX, y: clampedY, width, height };
         }
-      } catch { /* non-critical */ }
+      } catch {
+        /* non-critical */
+      }
       return { x: Math.max(x, 0), y: Math.max(y, 0), width, height };
     };
 
@@ -381,34 +414,31 @@ export default function App() {
           try {
             const { width, height, x, y } = JSON.parse(saved);
             const clamped = await clampToDisplayBounds(
-              x ?? 0, y ?? 0,
+              x ?? 0,
+              y ?? 0,
               Math.max(width ?? 1100, 900),
               Math.max(height ?? 680, 600),
             );
-            await win.setSize(
-              new PhysicalSize(clamped.width, clamped.height),
-            );
-            await win.setPosition(
-              new PhysicalPosition(clamped.x, clamped.y),
-            );
-          } catch { /* ignore corrupt state */ }
+            await win.setSize(new PhysicalSize(clamped.width, clamped.height));
+            await win.setPosition(new PhysicalPosition(clamped.x, clamped.y));
+          } catch {
+            /* ignore corrupt state */
+          }
         }
 
         const saveState = async () => {
           try {
-            const [size, pos] = await Promise.all([
-              win.outerSize(),
-              win.outerPosition(),
-            ]);
+            const [size, pos] = await Promise.all([win.outerSize(), win.outerPosition()]);
             const clamped = await clampToDisplayBounds(
-              Math.max(pos.x, 0), Math.max(pos.y, 0),
-              Math.max(size.width, 900), Math.max(size.height, 600),
+              Math.max(pos.x, 0),
+              Math.max(pos.y, 0),
+              Math.max(size.width, 900),
+              Math.max(size.height, 600),
             );
-            localStorage.setItem(
-              'lance:window-state',
-              JSON.stringify(clamped),
-            );
-          } catch { /* non-critical */ }
+            localStorage.setItem('lance:window-state', JSON.stringify(clamped));
+          } catch {
+            /* non-critical */
+          }
         };
 
         // Save on resize
@@ -422,7 +452,9 @@ export default function App() {
           clearTimeout(debounceTimer);
           debounceTimer = setTimeout(saveState, 300);
         });
-      } catch { /* not running in Tauri */ }
+      } catch {
+        /* not running in Tauri */
+      }
     };
 
     setup();
@@ -451,7 +483,6 @@ export default function App() {
         applyTheme(current);
       });
     }
-     
   }, [isLicensed]);
 
   useEffect(() => {
@@ -479,7 +510,11 @@ export default function App() {
 
   // Show walkthrough after onboarding completes
   useEffect(() => {
-    if (!showOnboarding && localStorage.getItem('lance:tour-pending') === 'true' && !showWalkthrough) {
+    if (
+      !showOnboarding &&
+      localStorage.getItem('lance:tour-pending') === 'true' &&
+      !showWalkthrough
+    ) {
       setShowWalkthrough(true);
     }
   }, [showOnboarding, showWalkthrough]);
@@ -489,6 +524,40 @@ export default function App() {
     if (!profileLoaded || hasRanAutoGen) return;
     const handle = requestIdleCallback(() => {
       setHasRanAutoGen(true);
+      // Trial always opens with a full sample business so every screen
+      // has something real to click. Unlimited tries: Reset restores this.
+      // Seeding is async and screens mount (and load) before it finishes,
+      // so refresh the store once it lands — otherwise the first screen a
+      // visitor opens can stay empty until they navigate away and back.
+      if (isTrial()) {
+        seedSampleData()
+          .then(() => {
+            const s = useStore.getState();
+            return Promise.allSettled([
+              s.loadClients(),
+              s.loadProjects(),
+              s.loadMilestones(),
+              s.loadProposals(),
+              s.loadContracts(),
+              s.loadTimeEntries(),
+              s.loadInvoices(),
+              s.loadExpenses(),
+              s.loadRecurringInvoices(),
+            ]);
+          })
+          .then(() => import('./demo/importToolDraft').then((m) => m.importToolDraft()))
+          .then((imported) => {
+            if (imported) {
+              addToast(
+                'Imported your invoice-generator draft as a client + draft invoice',
+                'success',
+              );
+              const s = useStore.getState();
+              return Promise.allSettled([s.loadClients(), s.loadInvoices()]);
+            }
+          })
+          .catch(() => {});
+      }
       loadRecurringInvoices();
       loadInvoices();
       loadClients();
@@ -503,7 +572,9 @@ export default function App() {
             }
           }
         });
-      } catch { /* achievement check is non-critical */ }
+      } catch {
+        /* achievement check is non-critical */
+      }
     });
     return () => cancelIdleCallback(handle);
   }, [profileLoaded, hasRanAutoGen, loadRecurringInvoices, loadInvoices, loadClients, addToast]);
@@ -517,7 +588,9 @@ export default function App() {
     }
     const handle = requestIdleCallback(async () => {
       const paymentTerms = profile?.payment_terms ?? 14;
-      const due = recurringInvoices.filter(shouldGenerate).filter((ri) => !autoGenProcessedRef.current.has(ri.id));
+      const due = recurringInvoices
+        .filter(shouldGenerate)
+        .filter((ri) => !autoGenProcessedRef.current.has(ri.id));
       for (const ri of due) {
         autoGenProcessedRef.current.add(ri.id);
         // Never orphan invoices: legacy rows can outlive their client
@@ -568,7 +641,7 @@ export default function App() {
           addToast(
             `\u26A0\uFE0F ${ri.title} recurring invoice is ${cyclesBehind} cycles overdue. ${generate} drafts created \u2014 review in Invoices.`,
             'info',
-            6000
+            6000,
           );
 
           try {
@@ -576,7 +649,7 @@ export default function App() {
             const db = await getDb();
             await db.execute(
               'UPDATE recurring_invoices SET last_catch_up_warning = ? WHERE id = ?',
-              [new Date().toISOString(), ri.id]
+              [new Date().toISOString(), ri.id],
             );
           } catch {
             /* non-critical */
@@ -585,12 +658,25 @@ export default function App() {
       }
     });
     return () => cancelIdleCallback(handle);
-  }, [hasRanAutoGen, recurringInvoices, invoices.length, profile?.payment_terms, addInvoice, addToast, loadInvoices, updateRecurringInvoice]);
+  }, [
+    hasRanAutoGen,
+    recurringInvoices,
+    invoices.length,
+    profile?.payment_terms,
+    addInvoice,
+    addToast,
+    loadInvoices,
+    updateRecurringInvoice,
+  ]);
 
   // Auto-backup check · runs after engines, deferred (browser mode: skip)
   useEffect(() => {
     if (!hasRanAutoGen) return;
-    if (typeof window === 'undefined' || !(window as unknown as Record<string, unknown>).__TAURI_INTERNALS__) return;
+    if (
+      typeof window === 'undefined' ||
+      !(window as unknown as Record<string, unknown>).__TAURI_INTERNALS__
+    )
+      return;
     const handle = requestIdleCallback(async () => {
       try {
         const { runAutoBackup } = await import('./utils/backup');
@@ -646,10 +732,10 @@ export default function App() {
 
           const stage = getStage('proposal', daysElapsed - settings.proposal_delay_days);
           const alreadyPending = currentPending.some(
-            (l) => l.entity_type === 'proposal' && l.entity_id === p.id && l.stage === stage
+            (l) => l.entity_type === 'proposal' && l.entity_id === p.id && l.stage === stage,
           );
           const alreadyLogged = (followUpHistory[`proposal:${p.id}`] || []).some(
-            (l) => l.stage === stage
+            (l) => l.stage === stage,
           );
           if (alreadyPending || alreadyLogged) continue;
 
@@ -666,7 +752,9 @@ export default function App() {
 
           const client = useStore.getState().clients.find((c) => c.id === inv.client_id);
           if (!client?.email) {
-            console.warn(`Skipping invoice follow-up for "${inv.invoice_number}" · client has no email`);
+            console.warn(
+              `Skipping invoice follow-up for "${inv.invoice_number}" · client has no email`,
+            );
             continue;
           }
 
@@ -678,16 +766,18 @@ export default function App() {
           if (inv.status === 'sent' && daysElapsed >= 1) {
             try {
               await state.updateInvoice({ ...inv, status: 'overdue' });
-            } catch { /* non-critical; follow-up still queues below */ }
+            } catch {
+              /* non-critical; follow-up still queues below */
+            }
           }
           if (daysElapsed < settings.invoice_delay_days) continue;
 
           const stage = getStage('invoice', daysElapsed);
           const alreadyPending = currentPending.some(
-            (l) => l.entity_type === 'invoice' && l.entity_id === inv.id && l.stage === stage
+            (l) => l.entity_type === 'invoice' && l.entity_id === inv.id && l.stage === stage,
           );
           const alreadyLogged = (followUpHistory[`invoice:${inv.id}`] || []).some(
-            (l) => l.stage === stage
+            (l) => l.stage === stage,
           );
           if (alreadyPending || alreadyLogged) continue;
 
@@ -696,7 +786,9 @@ export default function App() {
 
           await state.logFollowUp({ entity_type: 'invoice', entity_id: inv.id, stage });
         }
-      } catch { /* follow-up check is non-critical */ }
+      } catch {
+        /* follow-up check is non-critical */
+      }
     };
 
     const initialHandle = requestIdleCallback(() => checkFollowUps());
@@ -717,7 +809,10 @@ export default function App() {
         // shim implements this command, and a direct import throws outside
         // Tauri — which used to silently disable expiry for browser users.
         const { tauriInvoke } = await import('./utils/tauri');
-        const expired = await tauriInvoke<Array<{ id: string; client_id: string; title: string }>>('expire_sent_proposals', {});
+        const expired = await tauriInvoke<Array<{ id: string; client_id: string; title: string }>>(
+          'expire_sent_proposals',
+          {},
+        );
         if (expired.length === 0) return;
 
         const state = useStore.getState();
@@ -734,12 +829,16 @@ export default function App() {
           // store.updateProposal, so its auto-resolve doesn't run here).
           try {
             await state.loadPendingFollowUps();
-            for (const l of useStore.getState().pendingFollowUps.filter(
-              (f) => f.entity_type === 'proposal' && f.entity_id === ep.id,
-            )) {
+            for (const l of useStore
+              .getState()
+              .pendingFollowUps.filter(
+                (f) => f.entity_type === 'proposal' && f.entity_id === ep.id,
+              )) {
               await state.updateFollowUpStatus(l.id, 'dismissed', 'auto-resolved');
             }
-          } catch { /* expiry stands regardless */ }
+          } catch {
+            /* expiry stands regardless */
+          }
 
           await state.addCommunication({
             id: crypto.randomUUID(),
@@ -758,7 +857,9 @@ export default function App() {
             addToast(`Proposal '${ep.title}' for ${clientName} has expired`, 'info');
           }
         }
-      } catch { /* expiry check is non-critical */ }
+      } catch {
+        /* expiry check is non-critical */
+      }
     };
 
     const initialHandle = requestIdleCallback(() => checkExpiry());
@@ -849,10 +950,16 @@ export default function App() {
             // Sub-minute timer toggle produces a phantom 0-minute entry. Discard it.
             await state.removeTimeEntry(entry.id);
           } else {
-            await state.updateTimeEntry({ ...entry, end_time: endTime, duration_minutes: Math.max(0, duration) });
+            await state.updateTimeEntry({
+              ...entry,
+              end_time: endTime,
+              duration_minutes: Math.max(0, duration),
+            });
           }
         }
-        const duration = Math.floor((Date.now() - new Date(activeEntry.start_time).getTime()) / 60000);
+        const duration = Math.floor(
+          (Date.now() - new Date(activeEntry.start_time).getTime()) / 60000,
+        );
         if (duration < 1) {
           addToast('Timer stopped', 'success');
         } else {
@@ -869,7 +976,9 @@ export default function App() {
             const cfg = JSON.parse(lastConfig);
             projectId = cfg.projectId || '';
             clientId = cfg.clientId || '';
-          } catch { /* ignore */ }
+          } catch {
+            /* ignore */
+          }
         }
         // The remembered project may be deleted or archived since. Fall
         // back to the first active project instead of orphaning the entry.
@@ -895,8 +1004,13 @@ export default function App() {
           billable: true,
         });
         try {
-          localStorage.setItem('lance:last-timer-config', JSON.stringify({ projectId: entry.project_id, clientId: entry.client_id }));
-        } catch { /* private mode */ }
+          localStorage.setItem(
+            'lance:last-timer-config',
+            JSON.stringify({ projectId: entry.project_id, clientId: entry.client_id }),
+          );
+        } catch {
+          /* private mode */
+        }
         const project = state.projects.find((p) => p.id === projectId);
         addToast(`Timer started · ${project?.title || 'Unknown'}`, 'success');
       }
@@ -925,8 +1039,11 @@ export default function App() {
   const isEditing = useCallback((): boolean => {
     const tag = (document.activeElement?.tagName || '').toLowerCase();
     if (['input', 'textarea', 'select'].includes(tag)) return true;
-    if (document.activeElement?.closest('[contenteditable="true"]') ||
-        document.activeElement?.closest('.tiptap')) return true;
+    if (
+      document.activeElement?.closest('[contenteditable="true"]') ||
+      document.activeElement?.closest('.tiptap')
+    )
+      return true;
     return false;
   }, []);
 
@@ -1022,120 +1139,175 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-    <div className="h-full flex bg-[var(--bg-primary)]">
-      <a
-        href="#main-content"
-        onClick={(e) => {
-          e.preventDefault();
-          document.getElementById('main-content')?.focus();
-        }}
-        className="sr-only focus:not-sr-only focus:absolute focus:z-[200] focus:m-3 focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:rounded-[8px] focus:bg-[var(--bg-card)] focus:text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--accent)]"
-      >
-        Skip to main content
-      </a>
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <Topbar />
-        <AIBar />
-        <main tabIndex={0} id="main-content" aria-label="Main content" className={`flex-1 overflow-y-auto ${prefs.glow ? 'bg-[radial-gradient(70%_380px_at_50%_-120px,var(--accent-bg),transparent)]' : ''}`}>
-          <Outlet key={location.pathname} />
-        </main>
-      </div>
+      <div className="h-full flex bg-[var(--bg-primary)]">
+        <a
+          href="#main-content"
+          onClick={(e) => {
+            e.preventDefault();
+            document.getElementById('main-content')?.focus();
+          }}
+          className="sr-only focus:not-sr-only focus:absolute focus:z-[200] focus:m-3 focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:rounded-[8px] focus:bg-[var(--bg-card)] focus:text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--accent)]"
+        >
+          Skip to main content
+        </a>
+        <Sidebar />
+        <div className="flex-1 flex flex-col min-w-0">
+          <TestModeBanner />
+          <Topbar />
+          {isTrial() ? <TrialBanner /> : null}
+          <AIBar />
+          <main
+            tabIndex={0}
+            id="main-content"
+            aria-label="Main content"
+            className={`flex-1 overflow-y-auto ${prefs.glow ? 'bg-[radial-gradient(70%_380px_at_50%_-120px,var(--accent-bg),transparent)]' : ''}`}
+          >
+            <Outlet key={location.pathname} />
+          </main>
+        </div>
 
-      {/* Splash screen · shown on launch when unlicensed. Suppressed while
+        {/* Splash screen · shown on launch when unlicensed. Suppressed while
           onboarding or the tour is active so modals never stack (tour is
           z-60, splash is z-100 and would bury it). Capped at SPLASH_MAX_VIEWS
-          views per version so free users aren't nagged every launch. */}
-      {showSplash && splashAtMount && !userInteracted && !isLicensed && !showOnboarding && !showWalkthrough && splashViews !== null && splashViews < SPLASH_MAX_VIEWS && (
-        <SplashScreen onDismiss={() => setShowSplash(false)} />
-      )}
+          views per version so free users aren't nagged every launch.
+          Never in trial mode: the trial banner already owns the download
+          CTA, and nagging pre-download visitors is backwards. */}
+        {showSplash &&
+          splashAtMount &&
+          !userInteracted &&
+          !isLicensed &&
+          !isTrial() &&
+          !showOnboarding &&
+          !showWalkthrough &&
+          splashViews !== null &&
+          splashViews < SPLASH_MAX_VIEWS && <SplashScreen onDismiss={() => setShowSplash(false)} />}
 
-      {/* Changelog modal · hidden while onboarding is active to avoid z-index overlap.
+        {/* Changelog modal · hidden while onboarding is active to avoid z-index overlap.
           Also sequenced after the splash: splash (z-100) would otherwise bury
           this modal (z-50) and trap the buttons underneath it. */}
-      <Modal open={showChangelog && !showOnboarding && (!showSplash || isLicensed)} onClose={dismissChangelog} title={"What's new in Lance " + (changelog[0]?.version || appVersion)} size="md">
-        <div className="space-y-4">
-          {changelog.length === 0 ? (
-            <p className="text-sm text-[var(--text-tertiary)]">Loading changelog...</p>
-          ) : (
-            changelog.map((entry: { version: string; date: string; items: string[] }, i: number) => (
-              <div key={i} className="space-y-2">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xs font-semibold text-[var(--accent-ink,var(--accent))]">v{entry.version}</span>
-                  <span className="text-xs text-[var(--text-tertiary)]">{entry.date}</span>
+        <Modal
+          open={showChangelog && !showOnboarding && (!showSplash || isLicensed)}
+          onClose={dismissChangelog}
+          title={"What's new in Lance " + (changelog[0]?.version || appVersion)}
+          size="md"
+        >
+          <div className="space-y-4">
+            {changelog.length === 0 ? (
+              <p className="text-sm text-[var(--text-tertiary)]">Loading changelog...</p>
+            ) : (
+              changelog.map(
+                (entry: { version: string; date: string; items: string[] }, i: number) => (
+                  <div key={i} className="space-y-2">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-xs font-semibold text-[var(--accent-ink,var(--accent))]">
+                        v{entry.version}
+                      </span>
+                      <span className="text-xs text-[var(--text-tertiary)]">{entry.date}</span>
+                    </div>
+                    <ul className="space-y-1.5 ml-6">
+                      {entry.items.map((item: string, j: number) => (
+                        <li
+                          key={j}
+                          className="flex items-start gap-2 text-sm text-[var(--text-primary)]"
+                        >
+                          <span className="text-[var(--accent-ink,var(--accent))] mt-0.5 flex-shrink-0">
+                            &bull;
+                          </span>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ),
+              )
+            )}
+            <div className="pt-2">
+              <Button onClick={dismissChangelog} className="w-full" size="sm">
+                Got it
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
+        <OnboardingFlow showOnboarding={showOnboarding} setShowOnboarding={setShowOnboarding} />
+
+        <Walkthrough
+          open={showWalkthrough}
+          onClose={() => {
+            setShowWalkthrough(false);
+            localStorage.removeItem('lance:tour-pending');
+          }}
+          onStartTour={() => {
+            setShowWalkthrough(false);
+            setShowSpotlight(true);
+          }}
+        />
+
+        <SpotlightTour
+          open={showSpotlight}
+          onClose={() => {
+            setShowSpotlight(false);
+            localStorage.removeItem('lance:tour-pending');
+          }}
+        />
+
+        <ImportModal
+          open={showImportModal}
+          onClose={() => {
+            setShowImportModal(false);
+            setImportFiles(undefined);
+          }}
+          initialFiles={importFiles}
+        />
+
+        <UpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          triggerFeature={upgradeTrigger || undefined}
+        />
+
+        <DropZoneOverlay visible={isDragOver} />
+
+        <CommandPalette open={showCommandPalette} onClose={() => setShowCommandPalette(false)} />
+        <QuickTimeLogModal open={showQuickLogModal} onClose={() => setShowQuickLogModal(false)} />
+        <UpdaterModal />
+
+        {/* Keyboard shortcuts cheat sheet */}
+        <Modal
+          open={showShortcuts}
+          onClose={() => setShowShortcuts(false)}
+          title="Keyboard Shortcuts"
+          size="sm"
+        >
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {[
+                [`${getShortcutModifierLabel()} + K`, 'Command palette'],
+                [`${getShortcutModifierLabel()} + N`, 'New item (contextual)'],
+                [`${getShortcutModifierLabel()} + ,`, 'Settings'],
+                [`${getShortcutModifierLabel()} + /`, 'Shortcuts'],
+                [`${getShortcutModifierLabel()} + 1–8`, 'Jump to section'],
+                [`${getShortcutModifierLabel()} + Shift + T`, 'Start/Stop timer'],
+                [`${getShortcutModifierLabel()} + Shift + L`, 'Quick log time'],
+                ['Escape', 'Close modal / palette'],
+              ].map(([key, desc]) => (
+                <div
+                  key={key}
+                  className="flex items-center justify-between col-span-2 px-3 py-1.5 rounded-[6px] hover:bg-[var(--bg-secondary)]"
+                >
+                  <kbd className="text-[11px] font-mono text-[var(--accent-ink,var(--accent))] bg-[var(--accent-bg)] px-1.5 py-0.5 rounded-[4px]">
+                    {key}
+                  </kbd>
+                  <span className="text-[var(--text-secondary)]">{desc}</span>
                 </div>
-                <ul className="space-y-1.5 ml-6">
-                  {entry.items.map((item: string, j: number) => (
-                    <li key={j} className="flex items-start gap-2 text-sm text-[var(--text-primary)]">
-                      <span className="text-[var(--accent-ink,var(--accent))] mt-0.5 flex-shrink-0">&bull;</span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))
-          )}
-          <div className="pt-2">
-            <Button onClick={dismissChangelog} className="w-full" size="sm">
-              Got it
-            </Button>
+              ))}
+            </div>
+            <DynamicShortcutLegend />
           </div>
-        </div>
-      </Modal>
+        </Modal>
 
-      <OnboardingFlow showOnboarding={showOnboarding} setShowOnboarding={setShowOnboarding} />
-
-      <Walkthrough
-        open={showWalkthrough}
-        onClose={() => { setShowWalkthrough(false); localStorage.removeItem('lance:tour-pending'); }}
-        onStartTour={() => { setShowWalkthrough(false); setShowSpotlight(true); }}
-      />
-
-      <SpotlightTour
-        open={showSpotlight}
-        onClose={() => { setShowSpotlight(false); localStorage.removeItem('lance:tour-pending'); }}
-      />
-
-      <ImportModal
-        open={showImportModal}
-        onClose={() => { setShowImportModal(false); setImportFiles(undefined); }}
-        initialFiles={importFiles}
-      />
-
-      <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} triggerFeature={upgradeTrigger || undefined} />
-
-      <DropZoneOverlay visible={isDragOver} />
-
-      <CommandPalette open={showCommandPalette} onClose={() => setShowCommandPalette(false)} />
-      <QuickTimeLogModal open={showQuickLogModal} onClose={() => setShowQuickLogModal(false)} />
-      <UpdaterModal />
-
-      {/* Keyboard shortcuts cheat sheet */}
-      <Modal open={showShortcuts} onClose={() => setShowShortcuts(false)} title="Keyboard Shortcuts" size="sm">
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            {[
-              [`${getShortcutModifierLabel()} + K`, 'Command palette'],
-              [`${getShortcutModifierLabel()} + N`, 'New item (contextual)'],
-              [`${getShortcutModifierLabel()} + ,`, 'Settings'],
-              [`${getShortcutModifierLabel()} + /`, 'Shortcuts'],
-              [`${getShortcutModifierLabel()} + 1–8`, 'Jump to section'],
-              [`${getShortcutModifierLabel()} + Shift + T`, 'Start/Stop timer'],
-              [`${getShortcutModifierLabel()} + Shift + L`, 'Quick log time'],
-              ['Escape', 'Close modal / palette'],
-            ].map(([key, desc]) => (
-              <div key={key} className="flex items-center justify-between col-span-2 px-3 py-1.5 rounded-[6px] hover:bg-[var(--bg-secondary)]">
-                <kbd className="text-[11px] font-mono text-[var(--accent-ink,var(--accent))] bg-[var(--accent-bg)] px-1.5 py-0.5 rounded-[4px]">{key}</kbd>
-                <span className="text-[var(--text-secondary)]">{desc}</span>
-              </div>
-            ))}
-          </div>
-          <DynamicShortcutLegend />
-        </div>
-      </Modal>
-
-      <ToastContainer />
-    </div>
+        <ToastContainer />
+      </div>
     </ErrorBoundary>
   );
 }
@@ -1158,7 +1330,9 @@ function DynamicShortcutLegend() {
       <p className="text-[10px] text-[var(--text-tertiary)] text-center">
         {items.map((item, i) => (
           <span key={item.num}>
-            {item.label} = {getShortcutModifierLabel()}{item.num}{i < items.length - 1 ? ' · ' : ''}
+            {item.label} = {getShortcutModifierLabel()}
+            {item.num}
+            {i < items.length - 1 ? ' · ' : ''}
           </span>
         ))}
       </p>
@@ -1166,11 +1340,43 @@ function DynamicShortcutLegend() {
   );
 }
 
-function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding: boolean, setShowOnboarding: (s: boolean) => void }) {
+function OnboardingFlow({
+  showOnboarding,
+  setShowOnboarding,
+}: {
+  showOnboarding: boolean;
+  setShowOnboarding: (s: boolean) => void;
+}) {
   const { saveProfile, profile } = useStore();
   const [onboardingStep, setOnboardingStep] = useState(1);
+  // Free-tool bridge: ?rate=85&currency=USD from the rate calculator
+  // pre-fills onboarding (validated; only for fresh starts, never over
+  // resumed input).
+  const toolPrefill: { hourly_rate: string; currency: string | null } = {
+    hourly_rate: '',
+    currency: null,
+  };
+  try {
+    const stored = localStorage.getItem('lance:onboarding-step');
+    const done = localStorage.getItem('lance:onboarding-completed') === 'true';
+    if ((!stored || stored === 'complete') && !done) {
+      const q = new URLSearchParams(window.location.search);
+      const rate = q.get('rate');
+      const cur = (q.get('currency') || '').toUpperCase();
+      if (rate !== null && isFinite(Number(rate)) && Number(rate) > 0) {
+        toolPrefill.hourly_rate = String(Math.round(Number(rate)));
+      }
+      if (['CAD', 'USD', 'EUR', 'GBP', 'AUD'].includes(cur)) toolPrefill.currency = cur;
+    }
+  } catch {
+    /* private mode or odd URLs: plain defaults */
+  }
   const [onboardingForm, setOnboardingForm] = useState({
-    name: '', email: '', currency: defaultCurrency() as string, hourly_rate: '', payment_terms: '14',
+    name: '',
+    email: '',
+    currency: (toolPrefill.currency || defaultCurrency()) as string,
+    hourly_rate: toolPrefill.hourly_rate,
+    payment_terms: '14',
     profession: '' as Profession | '',
     writing_style: 'professional' as string,
     ai_enabled: false,
@@ -1178,7 +1384,9 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
   const [isSaving, setIsSaving] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
   const seedDataRef = useRef(false);
-  const [activeThemeId, setActiveThemeId] = useState<string>(localStorage.getItem('lance:theme') || 'default');
+  const [activeThemeId, setActiveThemeId] = useState<string>(
+    localStorage.getItem('lance:theme') || 'default',
+  );
   const [validationErrors, setValidationErrors] = useState<{ email?: string }>({});
   // Counts invalid email blurs this session. After a couple of stumbles the
   // form adds a reassuring line (and each stumble feeds local telemetry).
@@ -1234,13 +1442,17 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
         name: onboardingForm.name || undefined,
         email: onboardingForm.email || undefined,
         currency: onboardingForm.currency,
-        hourly_rate: onboardingForm.hourly_rate ? parseFloat(onboardingForm.hourly_rate) : undefined,
+        hourly_rate: onboardingForm.hourly_rate
+          ? parseFloat(onboardingForm.hourly_rate)
+          : undefined,
         payment_terms: parseInt(onboardingForm.payment_terms) || 14,
         profession: onboardingForm.profession || undefined,
         writing_style: onboardingForm.writing_style,
         ai_enabled: onboardingForm.ai_enabled,
       });
-    } catch { /* save is best-effort during onboarding */ }
+    } catch {
+      /* save is best-effort during onboarding */
+    }
   };
 
   const handleOnboardingNext = () => {
@@ -1261,12 +1473,21 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
   // Explicit opt-out, offered as a "Skip setup" link in the header.
   // Skipping means "leave me alone": no tour is queued, so the user lands
   // straight in a usable app instead of behind a second modal.
-  const handleOnboardingSkip = useCallback(() => {
+  // A skipped run still writes a minimal profile (currency default): with no
+  // profile row at all, backups export a currency-less user_profile that
+  // import validation rejects — silently breaking trial→desktop continuity
+  // for the most common trial path.
+  const handleOnboardingSkip = useCallback(async () => {
+    try {
+      await saveProfile({ currency: defaultCurrency() } as UserProfile);
+    } catch {
+      /* skip must never trap the user; flags below still apply */
+    }
     localStorage.setItem('lance:onboarding-step', 'complete');
     localStorage.setItem('lance:onboarding-completed', 'true');
     localStorage.removeItem('lance:tour-pending');
     setShowOnboarding(false);
-  }, [setShowOnboarding]);
+  }, [setShowOnboarding, saveProfile]);
 
   const handleOnboardingFinish = async () => {
     if (!onboardingForm.name.trim()) return;
@@ -1276,7 +1497,9 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
         name: onboardingForm.name,
         email: onboardingForm.email || undefined,
         currency: onboardingForm.currency,
-        hourly_rate: onboardingForm.hourly_rate ? parseFloat(onboardingForm.hourly_rate) : undefined,
+        hourly_rate: onboardingForm.hourly_rate
+          ? parseFloat(onboardingForm.hourly_rate)
+          : undefined,
         payment_terms: parseInt(onboardingForm.payment_terms) || 14,
         profession: onboardingForm.profession || undefined,
         writing_style: onboardingForm.writing_style,
@@ -1301,7 +1524,9 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
             const ach = ACHIEVEMENTS.find((a) => a.key === key);
             if (ach) console.info(`[achievement] Unlocked: ${ach.title}`);
           }
-        } catch { /* non-critical */ }
+        } catch {
+          /* non-critical */
+        }
       }
     } finally {
       setIsSaving(false);
@@ -1313,8 +1538,9 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
     setShowOnboarding(false);
   };
 
-  const inputClass = "w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)] text-[var(--text-primary)]";
-  const labelClass = "block text-xs font-medium text-[var(--text-secondary)] mb-1";
+  const inputClass =
+    'w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)] text-[var(--text-primary)]';
+  const labelClass = 'block text-xs font-medium text-[var(--text-secondary)] mb-1';
 
   const STEP_LABELS = ['Your craft', 'Your profile', 'Your theme', 'Rates & data'];
 
@@ -1328,7 +1554,8 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
         )}
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs text-[var(--text-tertiary)]" aria-live="polite">
-            Step {Math.min(onboardingStep, 4)} of 4 &middot; {STEP_LABELS[Math.min(onboardingStep, 4) - 1]}
+            Step {Math.min(onboardingStep, 4)} of 4 &middot;{' '}
+            {STEP_LABELS[Math.min(onboardingStep, 4) - 1]}
           </span>
           <button
             onClick={handleOnboardingSkip}
@@ -1355,49 +1582,69 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
             <div className="text-center space-y-2">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Welcome to Lance</h3>
               <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-                Your freelance business, all in one place. About a minute of setup,
-                free forever. What do you do?
+                Your freelance business, all in one place. About a minute of setup, free forever.
+                What do you do?
               </p>
             </div>
             <div className="grid grid-cols-2 gap-2 max-h-[280px] overflow-y-auto pr-1">
-              {ARCHETYPE_LIST.filter((a) => a.id !== 'custom' && a.id !== 'default').map((archetype) => (
-                <button
-                  key={archetype.id}
-                  onClick={() => {
-                    setOnboardingForm({ ...onboardingForm, profession: archetype.id as Profession });
-                  }}
-                  className={`flex items-center gap-2 px-3 py-2.5 text-xs font-medium rounded-[8px] border transition-colors text-left ${
-                    onboardingForm.profession === archetype.id
-                      ? 'bg-[var(--accent-bg)] border-[var(--accent)] text-[var(--text-primary)]'
-                      : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40'
-                  }`}
-                >
-                  <span className="text-base flex-shrink-0">{archetype.emoji}</span>
-                  <span className="leading-snug line-clamp-2">{archetype.label}</span>
-                </button>
-              ))}
+              {ARCHETYPE_LIST.filter((a) => a.id !== 'custom' && a.id !== 'default').map(
+                (archetype) => (
+                  <button
+                    key={archetype.id}
+                    onClick={() => {
+                      setOnboardingForm({
+                        ...onboardingForm,
+                        profession: archetype.id as Profession,
+                      });
+                    }}
+                    className={`flex items-center gap-2 px-3 py-2.5 text-xs font-medium rounded-[8px] border transition-colors text-left ${
+                      onboardingForm.profession === archetype.id
+                        ? 'bg-[var(--accent-bg)] border-[var(--accent)] text-[var(--text-primary)]'
+                        : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40'
+                    }`}
+                  >
+                    <span className="text-base flex-shrink-0">{archetype.emoji}</span>
+                    <span className="leading-snug line-clamp-2">{archetype.label}</span>
+                  </button>
+                ),
+              )}
             </div>
             <div className="flex items-center justify-between pt-1">
               <span className="text-[11px] text-[var(--text-tertiary)]">
-                Tunes proposals, contracts &amp; insights to your craft. Changeable anytime in Settings &rarr; Archetype.
+                Tunes proposals, contracts &amp; insights to your craft. Changeable anytime in
+                Settings &rarr; Archetype.
               </span>
-              <Button onClick={handleOnboardingNext} size="sm">Continue &rarr;</Button>
+              <Button onClick={handleOnboardingNext} size="sm">
+                Continue &rarr;
+              </Button>
             </div>
             {driveAxis && driveAxisId && (
               <div className="p-3 rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-secondary)]">
-                <p className="text-xs font-semibold text-[var(--text-primary)]">{driveAxis.question}</p>
+                <p className="text-xs font-semibold text-[var(--text-primary)]">
+                  {driveAxis.question}
+                </p>
                 <p className="text-[11px] text-[var(--text-tertiary)] mt-0.5">
                   Tunes your tour guide to how you think. Ten seconds, skippable.
                 </p>
                 <div className="flex gap-2 mt-2" role="radiogroup" aria-label={driveAxis.question}>
-                  {([[-1, driveAxis.low], [0, driveAxis.mid], [1, driveAxis.high]] as const).map(([v, label]) => (
+                  {(
+                    [
+                      [-1, driveAxis.low],
+                      [0, driveAxis.mid],
+                      [1, driveAxis.high],
+                    ] as const
+                  ).map(([v, label]) => (
                     <button
                       key={v}
                       role="radio"
                       aria-checked={driveValue === v}
                       onClick={() => {
                         setDriveValue(v);
-                        saveDrive({ archetype: onboardingForm.profession, axis: driveAxisId, value: v });
+                        saveDrive({
+                          archetype: onboardingForm.profession,
+                          axis: driveAxisId,
+                          value: v,
+                        });
                       }}
                       className={`flex-1 px-2 py-2 text-[11px] font-medium rounded-[8px] border transition-colors ${
                         driveValue === v
@@ -1418,8 +1665,12 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
         {onboardingStep === 2 && (
           <>
             <div className="text-center mb-2">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Tell us about yourself</h3>
-                <p className="text-xs text-[var(--text-tertiary)] mt-1">Only your name is required. Everything else can wait.</p>
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                Tell us about yourself
+              </h3>
+              <p className="text-xs text-[var(--text-tertiary)] mt-1">
+                Only your name is required. Everything else can wait.
+              </p>
             </div>
             <div className="space-y-3">
               <div>
@@ -1436,7 +1687,9 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
                 />
               </div>
               <div>
-                <label className={labelClass}>Email <span className="font-normal text-[var(--text-tertiary)]">(optional)</span></label>
+                <label className={labelClass}>
+                  Email <span className="font-normal text-[var(--text-tertiary)]">(optional)</span>
+                </label>
                 <input
                   type="email"
                   value={onboardingForm.email}
@@ -1463,14 +1716,18 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
                   <p className="text-red-500 text-xs mt-1">{validationErrors.email}</p>
                 )}
                 {validationErrors.email && emailStumbles >= 2 && (
-                  <p className="text-xs text-[var(--text-tertiary)] mt-1">Personal addresses work fine. Anything with an @ will do.</p>
+                  <p className="text-xs text-[var(--text-tertiary)] mt-1">
+                    Personal addresses work fine. Anything with an @ will do.
+                  </p>
                 )}
               </div>
               <div>
                 <label className={labelClass}>Currency</label>
                 <select
                   value={onboardingForm.currency}
-                  onChange={(e) => setOnboardingForm({ ...onboardingForm, currency: e.target.value })}
+                  onChange={(e) =>
+                    setOnboardingForm({ ...onboardingForm, currency: e.target.value })
+                  }
                   className={inputClass}
                 >
                   <option value="CAD">CAD ($)</option>
@@ -1482,11 +1739,17 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
               </div>
             </div>
             <div className="flex justify-between pt-2">
-              <Button variant="secondary" onClick={handleOnboardingBack} size="sm">&larr; Back</Button>
+              <Button variant="secondary" onClick={handleOnboardingBack} size="sm">
+                &larr; Back
+              </Button>
               <Button
                 onClick={handleOnboardingNext}
                 size="sm"
-                disabled={!onboardingForm.name.trim() || !!validationErrors.email || (onboardingForm.email !== '' && !EMAIL_REGEX.test(onboardingForm.email))}
+                disabled={
+                  !onboardingForm.name.trim() ||
+                  !!validationErrors.email ||
+                  (onboardingForm.email !== '' && !EMAIL_REGEX.test(onboardingForm.email))
+                }
               >
                 Continue &rarr;
               </Button>
@@ -1498,9 +1761,12 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
         {onboardingStep === 3 && (
           <>
             <div className="text-center mb-3">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Pick your workspace</h3>
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                Pick your workspace
+              </h3>
               <p className="text-xs text-[var(--text-tertiary)] mt-1">
-                No need to decide now. Default looks great everywhere, and you can switch anytime in Settings.
+                No need to decide now. Default looks great everywhere, and you can switch anytime in
+                Settings.
               </p>
               <p className="text-xs text-[var(--text-tertiary)] mt-1">
                 {onboardingForm.profession
@@ -1510,7 +1776,10 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
             </div>
             <div className="space-y-1 max-h-[300px] overflow-y-auto">
               {THEMES.map((theme) => {
-                const isUnlocked = theme.id === 'default' || (onboardingForm.profession && theme.id === PROFESSION_THEME[onboardingForm.profession as Profession]);
+                const isUnlocked =
+                  theme.id === 'default' ||
+                  (onboardingForm.profession &&
+                    theme.id === PROFESSION_THEME[onboardingForm.profession as Profession]);
                 const isActive = activeThemeId === theme.id;
                 return (
                   <button
@@ -1525,8 +1794,8 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
                       isActive
                         ? 'bg-[var(--accent-bg)] border-[var(--accent)] text-[var(--text-primary)] border'
                         : isUnlocked
-                        ? 'bg-[var(--bg-secondary)] border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] border'
-                        : 'bg-[var(--bg-secondary)] border-transparent text-[var(--text-tertiary)] opacity-60 cursor-not-allowed border'
+                          ? 'bg-[var(--bg-secondary)] border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] border'
+                          : 'bg-[var(--bg-secondary)] border-transparent text-[var(--text-tertiary)] opacity-60 cursor-not-allowed border'
                     }`}
                     disabled={!isUnlocked}
                   >
@@ -1538,8 +1807,14 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
                       {isActive && <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className={`font-medium ${isUnlocked ? 'text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}>{theme.name}</div>
-                      <div className="text-[10px] text-[var(--text-tertiary)] truncate mt-0.5">{theme.description}</div>
+                      <div
+                        className={`font-medium ${isUnlocked ? 'text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}
+                      >
+                        {theme.name}
+                      </div>
+                      <div className="text-[10px] text-[var(--text-tertiary)] truncate mt-0.5">
+                        {theme.description}
+                      </div>
                     </div>
                     {isUnlocked ? (
                       <span className="text-[10px] text-[var(--text-tertiary)]">{theme.name}</span>
@@ -1554,8 +1829,12 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
               })}
             </div>
             <div className="flex justify-between pt-3">
-              <Button variant="secondary" onClick={handleOnboardingBack} size="sm">&larr; Back</Button>
-              <Button onClick={handleOnboardingNext} size="sm">Continue &rarr;</Button>
+              <Button variant="secondary" onClick={handleOnboardingBack} size="sm">
+                &larr; Back
+              </Button>
+              <Button onClick={handleOnboardingNext} size="sm">
+                Continue &rarr;
+              </Button>
             </div>
           </>
         )}
@@ -1616,28 +1895,40 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
         {onboardingStep === 4 && (
           <>
             <div className="text-center mb-2">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Rates &amp; sample data</h3>
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                Rates &amp; sample data
+              </h3>
               <p className="text-sm text-[var(--text-secondary)] leading-relaxed mt-1">
-                Defaults you can override per client or invoice. Last step, then we&rsquo;ll show you around.
+                Defaults you can override per client or invoice. Last step, then we&rsquo;ll show
+                you around.
               </p>
             </div>
             <div className="space-y-3">
               <div>
-                <label className={labelClass}>Default Hourly Rate ({onboardingForm.currency}) <span className="font-normal text-[var(--text-tertiary)]">(optional)</span></label>
+                <label className={labelClass}>
+                  Default Hourly Rate ({onboardingForm.currency}){' '}
+                  <span className="font-normal text-[var(--text-tertiary)]">(optional)</span>
+                </label>
                 <input
                   type="number"
                   value={onboardingForm.hourly_rate}
-                  onChange={(e) => setOnboardingForm({ ...onboardingForm, hourly_rate: e.target.value })}
+                  onChange={(e) =>
+                    setOnboardingForm({ ...onboardingForm, hourly_rate: e.target.value })
+                  }
                   placeholder="e.g. 75"
                   className={inputClass}
                 />
-                <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Leave blank if you primarily do flat-rate projects.</p>
+                <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
+                  Leave blank if you primarily do flat-rate projects.
+                </p>
               </div>
               <div>
                 <label className={labelClass}>Default Payment Terms</label>
                 <select
                   value={onboardingForm.payment_terms}
-                  onChange={(e) => setOnboardingForm({ ...onboardingForm, payment_terms: e.target.value })}
+                  onChange={(e) =>
+                    setOnboardingForm({ ...onboardingForm, payment_terms: e.target.value })
+                  }
                   className={inputClass}
                 >
                   <option value="0">Due on receipt</option>
@@ -1651,9 +1942,12 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
               <div className="flex items-start gap-2.5">
                 <span className="text-lg flex-shrink-0">🗂</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-[var(--text-primary)]">Start with sample data?</p>
+                  <p className="text-xs font-semibold text-[var(--text-primary)]">
+                    Start with sample data?
+                  </p>
                   <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed mt-0.5">
-                    See Lance fully populated so you know what to expect. Easy to clear anytime in Settings → Data.
+                    See Lance fully populated so you know what to expect. Easy to clear anytime in
+                    Settings → Data.
                   </p>
                 </div>
               </div>
@@ -1681,8 +1975,17 @@ function OnboardingFlow({ showOnboarding, setShowOnboarding }: { showOnboarding:
               </div>
             </div>
             <div className="flex justify-between pt-4">
-              <Button variant="secondary" onClick={handleOnboardingBack} size="sm" disabled={isSaving}>&larr; Back</Button>
-              <span className="text-[11px] text-[var(--text-tertiary)] self-center">You can revisit setup anytime in Settings</span>
+              <Button
+                variant="secondary"
+                onClick={handleOnboardingBack}
+                size="sm"
+                disabled={isSaving}
+              >
+                &larr; Back
+              </Button>
+              <span className="text-[11px] text-[var(--text-tertiary)] self-center">
+                You can revisit setup anytime in Settings
+              </span>
             </div>
           </>
         )}

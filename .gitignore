@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
 dist/
+landing/try/
 src-tauri/target/
 
 # Environment

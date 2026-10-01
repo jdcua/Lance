@@ -26,7 +26,8 @@ const BUILT_IN_TEMPLATES = [
   },
   {
     name: 'Brand Identity',
-    description: 'Complete brand identity package including research, concepts, and final delivery.',
+    description:
+      'Complete brand identity package including research, concepts, and final delivery.',
     default_budget: 4000,
     default_status: 'active',
     milestones: [
@@ -93,12 +94,15 @@ export async function seedBuiltInTemplates(): Promise<void> {
     const store = useStore.getState();
 
     for (const tpl of BUILT_IN_TEMPLATES) {
-      await store.addProjectTemplate({
-        name: tpl.name,
-        description: tpl.description,
-        default_budget: tpl.default_budget,
-        default_status: tpl.default_status,
-      }, tpl.milestones);
+      await store.addProjectTemplate(
+        {
+          name: tpl.name,
+          description: tpl.description,
+          default_budget: tpl.default_budget,
+          default_status: tpl.default_status,
+        },
+        tpl.milestones,
+      );
     }
 
     localStorage.setItem('lance:templates-seeded', 'true');
@@ -107,16 +111,88 @@ export async function seedBuiltInTemplates(): Promise<void> {
   }
 }
 
-export async function seedSampleData(): Promise<void> {
-  if (localStorage.getItem('lance:seeded') === 'true') return;
+// Single-flight guard (two layers):
+// - In-memory: rapid effect re-fires within one page lifetime share a run.
+// - Persistent claim: full-page reloads reset module state, so overlapping
+//   loads coordinate through localStorage. Without this, quick navigations
+//   during the first seed insert every client/invoice twice (and corrupt the
+//   tracked id list the clearer depends on). A stale claim (>60s, e.g. a
+//   killed tab) is taken over.
+let seedInFlight: Promise<void> | null = null;
+const SEED_CLAIM_KEY = 'lance:seeding-at';
+const SEED_CLAIM_TTL_MS = 60_000;
 
+function isSeeded(): boolean {
+  try {
+    return localStorage.getItem('lance:seeded') === 'true';
+  } catch {
+    return true; // unreadable storage: never seed blindly
+  }
+}
+
+function readClaim(): number {
+  try {
+    return Number(localStorage.getItem(SEED_CLAIM_KEY) || 0);
+  } catch {
+    return Date.now();
+  }
+}
+
+function writeClaim(): void {
+  try {
+    localStorage.setItem(SEED_CLAIM_KEY, String(Date.now()));
+  } catch {
+    /* private mode: fall through to unguarded seed */
+  }
+}
+
+function clearClaim(): void {
+  try {
+    localStorage.removeItem(SEED_CLAIM_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Wait while a fresh claim exists. True when seeding finished meanwhile. */
+async function waitForClaim(): Promise<boolean> {
+  for (let i = 0; i < 40; i++) {
+    if (isSeeded()) return true;
+    if (Date.now() - readClaim() > SEED_CLAIM_TTL_MS) return false;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  return isSeeded();
+}
+
+export function seedSampleData(): Promise<void> {
+  if (isSeeded()) return Promise.resolve();
+  if (!seedInFlight) {
+    seedInFlight = (async () => {
+      if (await waitForClaim()) return;
+      if (isSeeded()) return;
+      writeClaim();
+      try {
+        await runSeed();
+      } finally {
+        clearClaim();
+      }
+    })().finally(() => {
+      seedInFlight = null;
+    });
+  }
+  return seedInFlight;
+}
+
+async function runSeed(): Promise<void> {
   // Snapshot pre-seed achievements: seed data itself unlocks badges, and
   // clearing the seeds must restore exactly what the user had — neither
   // stale seed-badges nor lost earned ones.
   try {
     const prev = localStorage.getItem('lance:achievements');
     if (prev !== null) localStorage.setItem('lance:achievements-pre-seed', prev);
-  } catch { /* private mode */ }
+  } catch {
+    /* private mode */
+  }
 
   try {
     const { useStore } = await import('../store');
@@ -196,7 +272,8 @@ export async function seedSampleData(): Promise<void> {
       start_date: daysAgo(21),
       end_date: undefined,
       budget: 6500,
-      notes: 'Complete rebrand including logo, color palette, typography, and brand guidelines document.',
+      notes:
+        'Complete rebrand including logo, color palette, typography, and brand guidelines document.',
     });
     const proj2 = await store.addProject({
       client_id: client4.id,
@@ -223,7 +300,8 @@ export async function seedSampleData(): Promise<void> {
       start_date: daysAgo(14),
       end_date: undefined,
       budget: 1500,
-      notes: 'Website copy for their new service landing pages. Paused while they finalize product names.',
+      notes:
+        'Website copy for their new service landing pages. Paused while they finalize product names.',
     });
 
     // ── MILESTONES (for Brand Identity Refresh) ──
@@ -295,26 +373,116 @@ export async function seedSampleData(): Promise<void> {
     });
 
     // ── TIME ENTRIES ──
+    // Month-filtered metrics (utilization, effective rate, "this week") only
+    // count the current calendar month, so the two most recent entries are
+    // anchored to today — otherwise a seed run on the 1st shows "--" hero
+    // metrics on every craft dashboard.
     const timeEntries = [
-      { desc: 'Discovery call with Jordan', proj: proj1.id, cl: client1.id, mins: 60, daysAgo: 14, billable: 1 },
-      { desc: 'Competitive brand audit', proj: proj1.id, cl: client1.id, mins: 150, daysAgo: 13, billable: 1 },
-      { desc: 'Logo concepts · round 1', proj: proj1.id, cl: client1.id, mins: 180, daysAgo: 10, billable: 1 },
-      { desc: 'Logo concepts · round 2', proj: proj1.id, cl: client1.id, mins: 120, daysAgo: 7, billable: 1 },
-      { desc: 'Color palette exploration', proj: proj1.id, cl: client1.id, mins: 90, daysAgo: 5, billable: 1 },
-      { desc: 'Typography system', proj: proj1.id, cl: client1.id, mins: 60, daysAgo: 3, billable: 1 },
-      { desc: 'Client revisions call', proj: proj1.id, cl: client1.id, mins: 45, daysAgo: 2, billable: 0 },
-      { desc: 'Homepage wireframes', proj: proj2.id, cl: client4.id, mins: 180, daysAgo: 45, billable: 1 },
-      { desc: 'Product page designs', proj: proj2.id, cl: client4.id, mins: 120, daysAgo: 42, billable: 1 },
-      { desc: 'Mobile responsive QA', proj: proj2.id, cl: client4.id, mins: 90, daysAgo: 30, billable: 1 },
-      { desc: 'Launch strategy workshop', proj: proj3.id, cl: client3.id, mins: 120, daysAgo: 8, billable: 1 },
-      { desc: 'Messaging framework draft', proj: proj3.id, cl: client3.id, mins: 150, daysAgo: 5, billable: 1 },
+      {
+        desc: 'Discovery call with Jordan',
+        proj: proj1.id,
+        cl: client1.id,
+        mins: 60,
+        daysAgo: 0,
+        billable: 1,
+      },
+      {
+        desc: 'Competitive brand audit',
+        proj: proj1.id,
+        cl: client1.id,
+        mins: 150,
+        daysAgo: 0,
+        billable: 1,
+      },
+      {
+        desc: 'Logo concepts · round 1',
+        proj: proj1.id,
+        cl: client1.id,
+        mins: 180,
+        daysAgo: 10,
+        billable: 1,
+      },
+      {
+        desc: 'Logo concepts · round 2',
+        proj: proj1.id,
+        cl: client1.id,
+        mins: 120,
+        daysAgo: 7,
+        billable: 1,
+      },
+      {
+        desc: 'Color palette exploration',
+        proj: proj1.id,
+        cl: client1.id,
+        mins: 90,
+        daysAgo: 5,
+        billable: 1,
+      },
+      {
+        desc: 'Typography system',
+        proj: proj1.id,
+        cl: client1.id,
+        mins: 60,
+        daysAgo: 3,
+        billable: 1,
+      },
+      {
+        desc: 'Client revisions call',
+        proj: proj1.id,
+        cl: client1.id,
+        mins: 45,
+        daysAgo: 2,
+        billable: 0,
+      },
+      {
+        desc: 'Homepage wireframes',
+        proj: proj2.id,
+        cl: client4.id,
+        mins: 180,
+        daysAgo: 45,
+        billable: 1,
+      },
+      {
+        desc: 'Product page designs',
+        proj: proj2.id,
+        cl: client4.id,
+        mins: 120,
+        daysAgo: 42,
+        billable: 1,
+      },
+      {
+        desc: 'Mobile responsive QA',
+        proj: proj2.id,
+        cl: client4.id,
+        mins: 90,
+        daysAgo: 30,
+        billable: 1,
+      },
+      {
+        desc: 'Launch strategy workshop',
+        proj: proj3.id,
+        cl: client3.id,
+        mins: 120,
+        daysAgo: 8,
+        billable: 1,
+      },
+      {
+        desc: 'Messaging framework draft',
+        proj: proj3.id,
+        cl: client3.id,
+        mins: 150,
+        daysAgo: 5,
+        billable: 1,
+      },
     ];
     for (const [idx, te] of timeEntries.entries()) {
       const d = daysAgo(te.daysAgo);
       // Stagger start times across the workday so seeded days read human.
       const startHour = 8 + ((idx * 37) % 10);
       const startMin = (idx * 53) % 60;
-      const start = new Date(`${d}T${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}:00.000Z`);
+      const start = new Date(
+        `${d}T${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}:00.000Z`,
+      );
       // Closed entries carry an end_time: without one the app (correctly)
       // reads the entry as a still-running timer and counts from its start.
       const end = new Date(start.getTime() + te.mins * 60000);
@@ -330,7 +498,12 @@ export async function seedSampleData(): Promise<void> {
     }
 
     // ── INVOICES ──
-    await store.addInvoice({
+    // Paid invoices stamp paid_at = today: month-filtered revenue metrics
+    // (and "paid this month" style panels) stay populated no matter which
+    // day of the month the seed runs on. createInvoice omits paid_at, so it
+    // lands via update right after creation.
+    const paidAtToday = new Date().toISOString();
+    const inv1 = await store.addInvoice({
       client_id: client4.id,
       project_id: proj2.id,
       invoice_number: 'INV-001',
@@ -339,9 +512,18 @@ export async function seedSampleData(): Promise<void> {
       total: 4200,
       due_date: daysAgo(44),
       notes: 'Full payment received on time.',
-      line_items: [{ id: crypto.randomUUID(), description: 'E-commerce Site Redesign', quantity: 1, unit_price: 4200, total: 4200 }],
+      line_items: [
+        {
+          id: crypto.randomUUID(),
+          description: 'E-commerce Site Redesign',
+          quantity: 1,
+          unit_price: 4200,
+          total: 4200,
+        },
+      ],
     });
-    await store.addInvoice({
+    await store.updateInvoice({ ...inv1, paid_at: paidAtToday });
+    const inv2 = await store.addInvoice({
       client_id: client1.id,
       project_id: proj1.id,
       invoice_number: 'INV-002',
@@ -350,8 +532,17 @@ export async function seedSampleData(): Promise<void> {
       total: 2000,
       due_date: daysAgo(42),
       notes: 'Deposit paid promptly.',
-      line_items: [{ id: crypto.randomUUID(), description: 'Brand Identity Refresh · 30% Deposit', quantity: 1, unit_price: 2000, total: 2000 }],
+      line_items: [
+        {
+          id: crypto.randomUUID(),
+          description: 'Brand Identity Refresh · 30% Deposit',
+          quantity: 1,
+          unit_price: 2000,
+          total: 2000,
+        },
+      ],
     });
+    await store.updateInvoice({ ...inv2, paid_at: paidAtToday });
     await store.addInvoice({
       client_id: client1.id,
       project_id: proj1.id,
@@ -361,7 +552,15 @@ export async function seedSampleData(): Promise<void> {
       total: 2000,
       due_date: daysFromNow(7),
       notes: 'Due after design concept approval.',
-      line_items: [{ id: crypto.randomUUID(), description: 'Brand Identity Refresh · Progress Payment', quantity: 1, unit_price: 2000, total: 2000 }],
+      line_items: [
+        {
+          id: crypto.randomUUID(),
+          description: 'Brand Identity Refresh · Progress Payment',
+          quantity: 1,
+          unit_price: 2000,
+          total: 2000,
+        },
+      ],
     });
     await store.addInvoice({
       client_id: client3.id,
@@ -372,7 +571,15 @@ export async function seedSampleData(): Promise<void> {
       total: 850,
       due_date: daysAgo(12),
       notes: 'First milestone payment.',
-      line_items: [{ id: crypto.randomUUID(), description: 'Product Launch Strategy', quantity: 1, unit_price: 850, total: 850 }],
+      line_items: [
+        {
+          id: crypto.randomUUID(),
+          description: 'Product Launch Strategy',
+          quantity: 1,
+          unit_price: 850,
+          total: 850,
+        },
+      ],
     });
 
     // ── EXPENSES ──
@@ -401,7 +608,9 @@ export async function seedSampleData(): Promise<void> {
         created[table] = after[table].filter((id) => !seen.has(id));
       }
       localStorage.setItem('lance:seeded-ids', JSON.stringify(created));
-    } catch { /* private mode */ }
+    } catch {
+      /* private mode */
+    }
 
     localStorage.setItem('lance:seeded', 'true');
     localStorage.setItem('lance:seeded-toast-shown', 'true');
@@ -420,7 +629,9 @@ export async function clearSampleData(): Promise<void> {
   try {
     const raw = localStorage.getItem('lance:seeded-ids');
     tracked = raw ? (JSON.parse(raw) as Record<string, string[]>) : null;
-  } catch { tracked = null; }
+  } catch {
+    tracked = null;
+  }
   if (!tracked) {
     throw new Error('These sample rows predate selective clearing — use Reset all data instead.');
   }
@@ -455,7 +666,9 @@ export async function clearSampleData(): Promise<void> {
     for (const id of [...deleted.proposals, ...deleted.invoices]) {
       await db.execute('DELETE FROM follow_up_log WHERE entity_id = ?', [id]).catch(() => {});
     }
-  } catch { /* best-effort */ }
+  } catch {
+    /* best-effort */
+  }
   try {
     for (const key of ['lance:store:pending_follow_ups']) {
       const raw = localStorage.getItem(key);
@@ -464,7 +677,12 @@ export async function clearSampleData(): Promise<void> {
       if (!Array.isArray(list)) continue;
       localStorage.setItem(
         key,
-        JSON.stringify(list.filter((l) => !deleted.proposals.has(l.entity_id || '') && !deleted.invoices.has(l.entity_id || ''))),
+        JSON.stringify(
+          list.filter(
+            (l) =>
+              !deleted.proposals.has(l.entity_id || '') && !deleted.invoices.has(l.entity_id || ''),
+          ),
+        ),
       );
     }
     // Browser-mode follow_up_logs is an object keyed `type:id`.
@@ -479,13 +697,19 @@ export async function clearSampleData(): Promise<void> {
           }
           localStorage.setItem('lance:store:follow_up_logs', JSON.stringify(obj));
         }
-      } catch { /* leave logs untouched on parse failure */ }
+      } catch {
+        /* leave logs untouched on parse failure */
+      }
     }
-  } catch { /* Tauri keeps these in SQLite; the DELETE above covered it */ }
+  } catch {
+    /* Tauri keeps these in SQLite; the DELETE above covered it */
+  }
   await restorePreSeedAchievements();
   try {
     localStorage.removeItem('lance:seeded-ids');
-  } catch { /* private mode */ }
+  } catch {
+    /* private mode */
+  }
   localStorage.removeItem('lance:seeded');
   localStorage.removeItem('lance:seeded-toast-shown');
 }

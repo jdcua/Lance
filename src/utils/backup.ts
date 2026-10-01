@@ -21,6 +21,8 @@ export interface ImportResult {
   failed: number;
   errors: string[];
   tablesWritten: number;
+  blobsRestored: number;
+  blobsSkipped: number;
 }
 
 export interface AutoBackupConfig {
@@ -32,7 +34,7 @@ export interface AutoBackupConfig {
 export function createExportEnvelope(
   data: Record<string, unknown[]>,
   version: string,
-  schemaVersion: number
+  schemaVersion: number,
 ): BackupEnvelope {
   return {
     lance_backup: true,
@@ -182,50 +184,316 @@ export async function fetchBackupTables(): Promise<Record<string, unknown[]>> {
   return data;
 }
 
+/**
+ * Portable file bytes. Attachment ROWS travel in their table; BYTES travel
+ * here so a backup carries actual files across machines and into the trial.
+ * Caps keep JSON backups sane; bigger files import as metadata with the row
+ * intact (the file itself stays behind). Older app versions ignore this
+ * section (no TABLE_INSERT_MAP entry), so the format stays compatible.
+ */
+export interface AttachmentBlob {
+  id: string;
+  filename: string;
+  mime_type: string;
+  size_bytes: number;
+  /** Raw bytes, base64. */
+  data: string;
+}
+
+export const ATTACHMENT_BLOB_TABLE = 'attachment_blobs';
+export const ATTACHMENT_BLOB_MAX_PER_FILE = 2 * 1024 * 1024;
+export const ATTACHMENT_BLOB_MAX_TOTAL = 8 * 1024 * 1024;
+
+/** Materialize blob bytes on import. Returns the file_path to store. */
+export type BlobMaterializer = (
+  id: string,
+  bytes: Uint8Array,
+  mime: string,
+  filename: string,
+) => Promise<string>;
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(binary);
+}
+
+export function base64ToBytes(data: string): Uint8Array {
+  const binary = atob(data);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+export function sanitizeBlobName(name: string): string {
+  const safe = String(name || 'file')
+    .replace(/[/\\:*?"<>|]/g, '_')
+    .slice(0, 120);
+  return safe || 'file';
+}
+
+/**
+ * Collect portable bytes for attachments whose contents are reachable:
+ * trial idb: paths (IndexedDB) and desktop disk files. Returns blobs plus
+ * the count skipped by caps or unreachable paths.
+ */
+export async function fetchAttachmentBlobs(): Promise<{
+  blobs: AttachmentBlob[];
+  skipped: number;
+}> {
+  const blobs: AttachmentBlob[] = [];
+  let skipped = 0;
+  let total = 0;
+  try {
+    const { getDb } = await import('../db');
+    const db = await getDb();
+    const rows = await db.select<
+      {
+        id: string;
+        filename: string;
+        mime_type: string;
+        file_path: string;
+      }[]
+    >(`SELECT id, filename, mime_type, file_path FROM attachments`);
+    const { isTauri } = await import('./tauri');
+    const tauri = isTauri();
+    for (const row of rows || []) {
+      if (!row || !row.id) continue;
+      let bytes: Uint8Array | null = null;
+      try {
+        if (!tauri && row.file_path.startsWith('idb:')) {
+          const { getAssetFile } = await import('../demo/assetStore');
+          const blob = await getAssetFile(row.file_path.slice(4));
+          if (blob) bytes = new Uint8Array(await blob.arrayBuffer());
+        } else if (tauri) {
+          const { readFile } = await import('@tauri-apps/plugin-fs');
+          bytes = await readFile(row.file_path);
+        }
+      } catch {
+        bytes = null;
+      }
+      if (!bytes || bytes.length === 0) {
+        skipped++;
+        continue;
+      }
+      if (
+        bytes.length > ATTACHMENT_BLOB_MAX_PER_FILE ||
+        total + bytes.length > ATTACHMENT_BLOB_MAX_TOTAL
+      ) {
+        skipped++;
+        continue;
+      }
+      total += bytes.length;
+      blobs.push({
+        id: row.id,
+        filename: sanitizeBlobName(row.filename),
+        mime_type: row.mime_type || 'application/octet-stream',
+        size_bytes: bytes.length,
+        data: bytesToBase64(bytes),
+      });
+    }
+  } catch {
+    return { blobs, skipped };
+  }
+  return { blobs, skipped };
+}
+
 export const TABLE_INSERT_MAP: Record<string, { table: string; columns: string[] }> = {
   clients: {
     table: 'clients',
-    columns: ['id', 'user_id', 'name', 'email', 'phone', 'company', 'notes', 'preferred_currency', 'seeded', 'created_at'],
+    columns: [
+      'id',
+      'user_id',
+      'name',
+      'email',
+      'phone',
+      'company',
+      'notes',
+      'preferred_currency',
+      'seeded',
+      'created_at',
+    ],
   },
   projects: {
     table: 'projects',
-    columns: ['id', 'user_id', 'client_id', 'title', 'status', 'start_date', 'end_date', 'budget', 'notes', 'color', 'seeded', 'created_at'],
+    columns: [
+      'id',
+      'user_id',
+      'client_id',
+      'title',
+      'status',
+      'start_date',
+      'end_date',
+      'budget',
+      'notes',
+      'color',
+      'seeded',
+      'created_at',
+    ],
   },
   proposals: {
     table: 'proposals',
-    columns: ['id', 'user_id', 'client_id', 'project_id', 'title', 'status', 'scope', 'timeline', 'rate', 'rate_type', 'body', 'sent_at', 'expires_at', 'seeded', 'created_at'],
+    columns: [
+      'id',
+      'user_id',
+      'client_id',
+      'project_id',
+      'title',
+      'status',
+      'scope',
+      'timeline',
+      'rate',
+      'rate_type',
+      'body',
+      'sent_at',
+      'expires_at',
+      'seeded',
+      'created_at',
+    ],
   },
   contracts: {
     table: 'contracts',
-    columns: ['id', 'user_id', 'client_id', 'project_id', 'proposal_id', 'title', 'status', 'body', 'signed_at', 'seeded', 'created_at'],
+    columns: [
+      'id',
+      'user_id',
+      'client_id',
+      'project_id',
+      'proposal_id',
+      'title',
+      'status',
+      'body',
+      'signed_at',
+      'seeded',
+      'created_at',
+    ],
   },
   time_entries: {
     table: 'time_entries',
-    columns: ['id', 'user_id', 'project_id', 'client_id', 'description', 'start_time', 'end_time', 'duration_minutes', 'billable', 'invoiced', 'seeded'],
+    columns: [
+      'id',
+      'user_id',
+      'project_id',
+      'client_id',
+      'description',
+      'start_time',
+      'end_time',
+      'duration_minutes',
+      'billable',
+      'invoiced',
+      'seeded',
+    ],
   },
   invoices: {
     table: 'invoices',
-    columns: ['id', 'user_id', 'client_id', 'project_id', 'invoice_number', 'status', 'line_items', 'subtotal', 'tax_rate', 'total', 'due_date', 'paid_at', 'notes', 'currency', 'seeded', 'created_at'],
+    columns: [
+      'id',
+      'user_id',
+      'client_id',
+      'project_id',
+      'invoice_number',
+      'status',
+      'line_items',
+      'subtotal',
+      'tax_rate',
+      'total',
+      'due_date',
+      'paid_at',
+      'notes',
+      'currency',
+      'seeded',
+      'created_at',
+    ],
   },
   invoice_payments: {
     table: 'invoice_payments',
-    columns: ['id', 'user_id', 'invoice_id', 'amount', 'payment_date', 'payment_method', 'reference', 'notes', 'created_at'],
+    columns: [
+      'id',
+      'user_id',
+      'invoice_id',
+      'amount',
+      'payment_date',
+      'payment_method',
+      'reference',
+      'notes',
+      'created_at',
+    ],
   },
   expenses: {
     table: 'expenses',
-    columns: ['id', 'user_id', 'category', 'description', 'amount', 'date', 'recurring', 'frequency', 'seeded'],
+    columns: [
+      'id',
+      'user_id',
+      'category',
+      'description',
+      'amount',
+      'date',
+      'recurring',
+      'frequency',
+      'seeded',
+    ],
   },
   milestones: {
     table: 'milestones',
-    columns: ['id', 'user_id', 'project_id', 'title', 'due_date', 'completed', 'invoice_on_completion'],
+    columns: [
+      'id',
+      'user_id',
+      'project_id',
+      'title',
+      'due_date',
+      'completed',
+      'invoice_on_completion',
+    ],
   },
   recurring_invoices: {
     table: 'recurring_invoices',
-    columns: ['id', 'user_id', 'client_id', 'project_id', 'title', 'frequency', 'line_items', 'subtotal', 'tax_rate', 'total', 'notes', 'active', 'next_due', 'last_generated', 'last_catch_up_warning', 'seeded', 'created_at'],
+    columns: [
+      'id',
+      'user_id',
+      'client_id',
+      'project_id',
+      'title',
+      'frequency',
+      'line_items',
+      'subtotal',
+      'tax_rate',
+      'total',
+      'notes',
+      'active',
+      'next_due',
+      'last_generated',
+      'last_catch_up_warning',
+      'seeded',
+      'created_at',
+    ],
   },
   user_profile: {
     table: 'user_profile',
-    columns: ['id', 'name', 'email', 'hourly_rate', 'currency', 'writing_voice', 'tax_rate', 'payment_terms', 'tagline', 'always_include', 'writing_style', 'theme', 'license_key', 'licensed_at', 'ai_enabled', 'profession', 'custom_archetype_config', 'density', 'accent_color', 'proposal_expiry_days', 'exchange_rates'],
+    columns: [
+      'id',
+      'name',
+      'email',
+      'hourly_rate',
+      'currency',
+      'writing_voice',
+      'tax_rate',
+      'payment_terms',
+      'tagline',
+      'always_include',
+      'writing_style',
+      'theme',
+      'license_key',
+      'licensed_at',
+      'ai_enabled',
+      'profession',
+      'custom_archetype_config',
+      'density',
+      'accent_color',
+      'proposal_expiry_days',
+      'exchange_rates',
+    ],
   },
   communications: {
     table: 'communications',
@@ -233,19 +501,60 @@ export const TABLE_INSERT_MAP: Record<string, { table: string; columns: string[]
   },
   follow_up_log: {
     table: 'follow_up_log',
-    columns: ['id', 'user_id', 'entity_type', 'entity_id', 'stage', 'status', 'drafted_at', 'actioned_at', 'action'],
+    columns: [
+      'id',
+      'user_id',
+      'entity_type',
+      'entity_id',
+      'stage',
+      'status',
+      'drafted_at',
+      'actioned_at',
+      'action',
+    ],
   },
   attachments: {
     table: 'attachments',
-    columns: ['id', 'user_id', 'entity_type', 'entity_id', 'filename', 'file_path', 'mime_type', 'size_bytes', 'tags', 'notes', 'created_at'],
+    columns: [
+      'id',
+      'user_id',
+      'entity_type',
+      'entity_id',
+      'filename',
+      'file_path',
+      'mime_type',
+      'size_bytes',
+      'tags',
+      'notes',
+      'created_at',
+    ],
   },
   metric_definitions: {
     table: 'metric_definitions',
-    columns: ['id', 'user_id', 'client_id', 'name', 'metric_type', 'unit_label', 'is_headline', 'sort_order', 'created_at'],
+    columns: [
+      'id',
+      'user_id',
+      'client_id',
+      'name',
+      'metric_type',
+      'unit_label',
+      'is_headline',
+      'sort_order',
+      'created_at',
+    ],
   },
   metric_values: {
     table: 'metric_values',
-    columns: ['id', 'user_id', 'definition_id', 'client_id', 'value', 'period', 'notes', 'created_at'],
+    columns: [
+      'id',
+      'user_id',
+      'definition_id',
+      'client_id',
+      'value',
+      'period',
+      'notes',
+      'created_at',
+    ],
   },
   metric_templates: {
     table: 'metric_templates',
@@ -257,7 +566,15 @@ export const TABLE_INSERT_MAP: Record<string, { table: string; columns: string[]
   },
   project_templates: {
     table: 'project_templates',
-    columns: ['id', 'name', 'description', 'default_budget', 'default_status', 'is_default', 'created_at'],
+    columns: [
+      'id',
+      'name',
+      'description',
+      'default_budget',
+      'default_status',
+      'is_default',
+      'created_at',
+    ],
   },
   project_template_milestones: {
     table: 'project_template_milestones',
@@ -265,7 +582,17 @@ export const TABLE_INSERT_MAP: Record<string, { table: string; columns: string[]
   },
   export_templates: {
     table: 'export_templates',
-    columns: ['id', 'user_id', 'name', 'type', 'header', 'footer', 'sections', 'color_scheme', 'created_at'],
+    columns: [
+      'id',
+      'user_id',
+      'name',
+      'type',
+      'header',
+      'footer',
+      'sections',
+      'color_scheme',
+      'created_at',
+    ],
   },
   contract_templates: {
     table: 'contract_templates',
@@ -273,19 +600,59 @@ export const TABLE_INSERT_MAP: Record<string, { table: string; columns: string[]
   },
   archetype_render_log: {
     table: 'archetype_render_log',
-    columns: ['id', 'user_id', 'project_id', 'pass_name', 'duration_minutes', 'software', 'frame_range', 'notes', 'created_at'],
+    columns: [
+      'id',
+      'user_id',
+      'project_id',
+      'pass_name',
+      'duration_minutes',
+      'software',
+      'frame_range',
+      'notes',
+      'created_at',
+    ],
   },
   archetype_sessions: {
     table: 'archetype_sessions',
-    columns: ['id', 'user_id', 'client_id', 'project_id', 'session_type', 'duration_minutes', 'notes', 'action_items', 'next_session_date', 'created_at'],
+    columns: [
+      'id',
+      'user_id',
+      'client_id',
+      'project_id',
+      'session_type',
+      'duration_minutes',
+      'notes',
+      'action_items',
+      'next_session_date',
+      'created_at',
+    ],
   },
   archetype_shoots: {
     table: 'archetype_shoots',
-    columns: ['id', 'user_id', 'project_id', 'shoot_date', 'location', 'shoot_type', 'camera_system', 'hours_on_location', 'conditions_notes', 'created_at'],
+    columns: [
+      'id',
+      'user_id',
+      'project_id',
+      'shoot_date',
+      'location',
+      'shoot_type',
+      'camera_system',
+      'hours_on_location',
+      'conditions_notes',
+      'created_at',
+    ],
   },
   archetype_revisions: {
     table: 'archetype_revisions',
-    columns: ['id', 'user_id', 'project_id', 'round_number', 'change_summary', 'approved', 'created_at'],
+    columns: [
+      'id',
+      'user_id',
+      'project_id',
+      'round_number',
+      'change_summary',
+      'approved',
+      'created_at',
+    ],
   },
   archetype_builds: {
     table: 'archetype_builds',
@@ -293,15 +660,46 @@ export const TABLE_INSERT_MAP: Record<string, { table: string; columns: string[]
   },
   archetype_keywords: {
     table: 'archetype_keywords',
-    columns: ['id', 'user_id', 'client_id', 'keyword', 'position_start', 'position_current', 'target_position', 'created_at'],
+    columns: [
+      'id',
+      'user_id',
+      'client_id',
+      'keyword',
+      'position_start',
+      'position_current',
+      'target_position',
+      'created_at',
+    ],
   },
   archetype_datasets: {
     table: 'archetype_datasets',
-    columns: ['id', 'user_id', 'project_id', 'dataset_name', 'source', 'size_bytes', 'format_type', 'license_type', 'created_at'],
+    columns: [
+      'id',
+      'user_id',
+      'project_id',
+      'dataset_name',
+      'source',
+      'size_bytes',
+      'format_type',
+      'license_type',
+      'created_at',
+    ],
   },
   import_log: {
     table: 'import_log',
-    columns: ['id', 'user_id', 'filename', 'file_type', 'file_path', 'detected_type', 'target_entity', 'target_id', 'status', 'error_message', 'imported_at'],
+    columns: [
+      'id',
+      'user_id',
+      'filename',
+      'file_type',
+      'file_path',
+      'detected_type',
+      'target_entity',
+      'target_id',
+      'status',
+      'error_message',
+      'imported_at',
+    ],
   },
   app_events: {
     table: 'app_events',
@@ -317,13 +715,28 @@ export const TABLE_INSERT_MAP: Record<string, { table: string; columns: string[]
   },
   kanban_cards: {
     table: 'kanban_cards',
-    columns: ['id', 'column_id', 'project_id', 'title', 'description', 'priority', 'hours_estimated', 'hours_actual', 'due_date', 'labels', 'assignee', 'sort_order', 'created_at'],
+    columns: [
+      'id',
+      'column_id',
+      'project_id',
+      'title',
+      'description',
+      'priority',
+      'hours_estimated',
+      'hours_actual',
+      'due_date',
+      'labels',
+      'assignee',
+      'sort_order',
+      'created_at',
+    ],
   },
 };
 
 export async function performImport(
   envelope: BackupEnvelope,
-  mode: 'additive' | 'replace'
+  mode: 'additive' | 'replace',
+  materializeBlob?: BlobMaterializer,
 ): Promise<ImportResult> {
   const { getDb } = await import('../db');
   const db = await getDb();
@@ -334,6 +747,8 @@ export async function performImport(
     failed: 0,
     errors: [],
     tablesWritten: 0,
+    blobsRestored: 0,
+    blobsSkipped: 0,
   };
 
   await db.execute('BEGIN TRANSACTION');
@@ -387,7 +802,7 @@ export async function performImport(
           try {
             await db.execute(
               `INSERT INTO ${mapping.table} (${columnsStr}) VALUES (${placeholders})`,
-              values
+              values,
             );
             result.imported++;
             if (!tableWritten) {
@@ -412,14 +827,71 @@ export async function performImport(
 
     await db.execute('COMMIT');
   } catch (err) {
-    try { await db.execute('ROLLBACK'); } catch { /* ignore */ }
+    try {
+      await db.execute('ROLLBACK');
+    } catch {
+      /* ignore */
+    }
     result.failed += result.imported;
     result.imported = 0;
     result.tablesWritten = 0;
     result.errors.push(`Transaction rolled back: ${(err as Error)?.message || String(err)}`);
   }
 
+  // File bytes ride outside the transaction: a failed thumbnail must never
+  // roll back the business data, and rows exist by now in both modes.
+  await restoreAttachmentBlobs(envelope, materializeBlob, result);
+
   return result;
+}
+
+/**
+ * Write exported blob bytes back to storage and point each attachment row
+ * at the restored file. Without a materializer (or without blobs in the
+ * envelope) rows keep whatever file_path they carried — metadata intact,
+ * bytes wherever they were.
+ */
+async function restoreAttachmentBlobs(
+  envelope: BackupEnvelope,
+  materialize: BlobMaterializer | undefined,
+  result: ImportResult,
+): Promise<void> {
+  const raw = envelope.data[ATTACHMENT_BLOB_TABLE];
+  if (!Array.isArray(raw) || raw.length === 0) return;
+  if (!materialize) {
+    result.blobsSkipped += raw.length;
+    return;
+  }
+  const { getDb } = await import('../db');
+  const db = await getDb();
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object') {
+      result.blobsSkipped++;
+      continue;
+    }
+    const blob = entry as Record<string, unknown>;
+    if (typeof blob.id !== 'string' || typeof blob.data !== 'string') {
+      result.blobsSkipped++;
+      continue;
+    }
+    try {
+      const bytes = base64ToBytes(blob.data);
+      if (bytes.length === 0 || bytes.length > ATTACHMENT_BLOB_MAX_PER_FILE) {
+        result.blobsSkipped++;
+        continue;
+      }
+      const filePath = await materialize(
+        blob.id,
+        bytes,
+        typeof blob.mime_type === 'string' ? blob.mime_type : 'application/octet-stream',
+        typeof blob.filename === 'string' ? blob.filename : 'file',
+      );
+      await db.execute('UPDATE attachments SET file_path = ? WHERE id = ?', [filePath, blob.id]);
+      result.blobsRestored++;
+    } catch {
+      result.blobsSkipped++;
+    }
+  }
 }
 
 export function formatTableCounts(counts: Record<string, number>): string {
@@ -445,6 +917,7 @@ export function formatTableCounts(counts: Record<string, number>): string {
     project_template_milestones: 'project template milestones',
     export_templates: 'export templates',
     contract_templates: 'contract templates',
+    attachment_blobs: 'attachment files',
   };
 
   return Object.entries(counts)
@@ -455,15 +928,15 @@ export function formatTableCounts(counts: Record<string, number>): string {
 
 export async function logVersionEvent(
   eventType: string,
-  payload: Record<string, unknown>
+  payload: Record<string, unknown>,
 ): Promise<void> {
   try {
     const { getDb } = await import('../db');
     const db = await getDb();
-    await db.execute(
-      'INSERT INTO app_events (event_type, payload) VALUES (?, ?)',
-      [eventType, JSON.stringify(payload)]
-    );
+    await db.execute('INSERT INTO app_events (event_type, payload) VALUES (?, ?)', [
+      eventType,
+      JSON.stringify(payload),
+    ]);
   } catch {
     /* non-critical */
   }
@@ -474,10 +947,7 @@ export async function saveProfileForImport(profile: UserProfile): Promise<void> 
   await tauriInvoke('upsert_user_profile', { payload: profile });
 }
 
-async function upsertUserProfile(
-  values: unknown[],
-  columns: string[]
-): Promise<void> {
+async function upsertUserProfile(values: unknown[], columns: string[]): Promise<void> {
   const { getDb } = await import('../db');
   const db = await getDb();
   const setClauses = columns
@@ -489,7 +959,7 @@ async function upsertUserProfile(
   await db.execute(
     `INSERT INTO user_profile (${columnsStr}) VALUES (${placeholders})
      ON CONFLICT(id) DO UPDATE SET ${setClauses}`,
-    values
+    values,
   );
 }
 
@@ -498,14 +968,14 @@ export async function runAutoBackup(): Promise<{ success: boolean; error?: strin
     const { getDb } = await import('../db');
     const db = await getDb();
 
-    const rows = await db.select<{
-      enabled: number;
-      frequency: string;
-      backup_path: string;
-      last_backup_at: string | null;
-    }[]>(
-      'SELECT enabled, frequency, backup_path, last_backup_at FROM auto_backup_state LIMIT 1'
-    );
+    const rows = await db.select<
+      {
+        enabled: number;
+        frequency: string;
+        backup_path: string;
+        last_backup_at: string | null;
+      }[]
+    >('SELECT enabled, frequency, backup_path, last_backup_at FROM auto_backup_state LIMIT 1');
 
     if (!rows || rows.length === 0 || !rows[0].enabled) {
       return { success: true };
@@ -514,10 +984,9 @@ export async function runAutoBackup(): Promise<{ success: boolean; error?: strin
     const { frequency, backup_path, last_backup_at: lastBackupAt } = rows[0];
 
     if (!backup_path) {
-      await db.execute(
-        "UPDATE auto_backup_state SET last_backup_error = ? WHERE id = 1",
-        ['No backup path configured']
-      );
+      await db.execute('UPDATE auto_backup_state SET last_backup_error = ? WHERE id = 1', [
+        'No backup path configured',
+      ]);
       return { success: false, error: 'No backup path configured' };
     }
 
@@ -564,7 +1033,7 @@ export async function runAutoBackup(): Promise<{ success: boolean; error?: strin
 
     await db.execute(
       'UPDATE auto_backup_state SET last_backup_at = ?, last_backup_error = NULL WHERE id = 1',
-      [now.toISOString()]
+      [now.toISOString()],
     );
 
     await cleanupOldBackups(backup_path);
@@ -575,11 +1044,10 @@ export async function runAutoBackup(): Promise<{ success: boolean; error?: strin
       const { getDb } = await import('../db');
       const db = await getDb();
       const msg = (err as Error)?.message || String(err);
-      await db.execute(
-        "UPDATE auto_backup_state SET last_backup_error = ? WHERE id = 1",
-        [msg]
-      );
-    } catch { /* non-critical */ }
+      await db.execute('UPDATE auto_backup_state SET last_backup_error = ? WHERE id = 1', [msg]);
+    } catch {
+      /* non-critical */
+    }
     return { success: false, error: (err as Error)?.message || String(err) };
   }
 }
@@ -617,11 +1085,13 @@ export async function getLastBackupInfo(): Promise<{
   try {
     const { getDb } = await import('../db');
     const db = await getDb();
-    const rows = await db.select<{
-      enabled: number;
-      last_backup_at: string | null;
-      last_backup_error: string | null;
-    }[]>('SELECT enabled, last_backup_at, last_backup_error FROM auto_backup_state LIMIT 1');
+    const rows = await db.select<
+      {
+        enabled: number;
+        last_backup_at: string | null;
+        last_backup_error: string | null;
+      }[]
+    >('SELECT enabled, last_backup_at, last_backup_error FROM auto_backup_state LIMIT 1');
 
     if (!rows || rows.length === 0) return null;
     return {

@@ -11,13 +11,43 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import ClientSelect from '../components/ui/ClientSelect';
 import { useVisibleList, MoreRows } from '../components/ui/useVisibleList';
 import { exportInvoicePDF, exportInvoiceDOCX } from '../export';
-import { formatCurrency, relativeDate, parseDateString, DAY_MS, todayLocalISO } from '../utils/format';
+import {
+  formatCurrency,
+  relativeDate,
+  parseDateString,
+  DAY_MS,
+  todayLocalISO,
+} from '../utils/format';
 import { getCurrencySymbol } from '../lib/currency';
 import { generateInvoiceNumber, sanitizeInvoiceNumber } from '../utils/invoiceNumber';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 import { useToasts } from '../store/toastStore';
-import { Plus, Pencil, Trash2, Download, Clock, RotateCw, Receipt, Search, Bell, X, Copy, DollarSign, ChevronDown, ChevronRight, Mail, AlertTriangle, Check } from 'lucide-react';
-import { generateFollowUpDraft, generateSubjectLine, openMailTo, resolveDunningTone, type DunningTone } from '../utils/followUpTemplates';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Download,
+  Clock,
+  RotateCw,
+  Receipt,
+  Search,
+  Bell,
+  X,
+  Copy,
+  DollarSign,
+  ChevronDown,
+  ChevronRight,
+  Mail,
+  AlertTriangle,
+  Check,
+} from 'lucide-react';
+import {
+  generateFollowUpDraft,
+  generateSubjectLine,
+  openMailTo,
+  resolveDunningTone,
+  type DunningTone,
+} from '../utils/followUpTemplates';
 import { computeLateFee, lateFeeParagraph } from '../utils/lateFees';
 import { recordTrialValue } from '../utils/trialValue';
 import { recordTelemetry } from '../utils/telemetry';
@@ -46,11 +76,34 @@ type InvSortKey = 'number' | 'client' | 'status' | 'total' | 'date';
 
 export default function Invoices() {
   const {
-    invoices, loadInvoices, clients, loadClients, addInvoice, updateInvoice, removeInvoice, profile, loadProfile,
-    timeEntries, loadTimeEntries, updateTimeEntry, projects, loadProjects,
-    recurringInvoices, loadRecurringInvoices, addRecurringInvoice, updateRecurringInvoice, removeRecurringInvoice,
-    pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings, getActiveTier,
-    payments, loadPayments, addPayment, removePayment,
+    invoices,
+    loadInvoices,
+    clients,
+    loadClients,
+    addInvoice,
+    updateInvoice,
+    removeInvoice,
+    profile,
+    loadProfile,
+    timeEntries,
+    loadTimeEntries,
+    updateTimeEntry,
+    projects,
+    loadProjects,
+    recurringInvoices,
+    loadRecurringInvoices,
+    addRecurringInvoice,
+    updateRecurringInvoice,
+    removeRecurringInvoice,
+    pendingFollowUps,
+    loadPendingFollowUps,
+    updateFollowUpStatus,
+    followUpSettings,
+    getActiveTier,
+    payments,
+    loadPayments,
+    addPayment,
+    removePayment,
     addCommunication,
   } = useStore();
   const invoicesError = useStore((s) => s.errors.invoices);
@@ -66,19 +119,40 @@ export default function Invoices() {
   const [showRecurringModal, setShowRecurringModal] = useState(false);
   const [editingRecurring, setEditingRecurring] = useState<RecurringInvoiceType | null>(null);
   const [riForm, setRiForm] = useState({
-    client_id: '', project_id: '', title: '', frequency: 'monthly' as RecurringInvoiceType['frequency'],
-    notes: '', tax_rate: '', next_due: todayLocalISO(),
+    client_id: '',
+    project_id: '',
+    title: '',
+    frequency: 'monthly' as RecurringInvoiceType['frequency'],
+    notes: '',
+    tax_rate: '',
+    next_due: todayLocalISO(),
   });
-  const [riItems, setRiItems] = useState<Omit<LineItem, 'id'>[]>([{ description: '', quantity: 1, unit_price: 0, total: 0 }]);
+  const [riItems, setRiItems] = useState<Omit<LineItem, 'id'>[]>([
+    { description: '', quantity: 1, unit_price: 0, total: 0 },
+  ]);
   const [form, setForm] = useState({
-    client_id: '', project_id: '', invoice_number: '', due_date: '', notes: '', tax_rate: '', status: 'draft' as Invoice['status'], currency: '', rate_type: 'flat' as 'flat' | 'hourly',
+    client_id: '',
+    project_id: '',
+    invoice_number: '',
+    due_date: '',
+    notes: '',
+    tax_rate: '',
+    status: 'draft' as Invoice['status'],
+    currency: '',
+    rate_type: 'flat' as 'flat' | 'hourly',
   });
-  const [items, setItems] = useState<Omit<LineItem, 'id'>[]>([{ description: '', quantity: 1, unit_price: 0, total: 0 }]);
+  const [items, setItems] = useState<Omit<LineItem, 'id'>[]>([
+    { description: '', quantity: 1, unit_price: 0, total: 0 },
+  ]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<InvSortKey>('date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
-  const [confirmDelete, setConfirmDelete] = useState<{ id: string; label: string; type: 'invoice' | 'recurring' } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{
+    id: string;
+    label: string;
+    type: 'invoice' | 'recurring';
+  } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentInv, setPaymentInv] = useState<Invoice | null>(null);
@@ -91,10 +165,18 @@ export default function Invoices() {
   });
   const [paymentSaving, setPaymentSaving] = useState(false);
   const [expandedInv, setExpandedInv] = useState<string | null>(null);
-  const [confirmDeletePayment, setConfirmDeletePayment] = useState<{ id: string; invoiceId: string } | null>(null);
+  const [confirmDeletePayment, setConfirmDeletePayment] = useState<{
+    id: string;
+    invoiceId: string;
+  } | null>(null);
   const [deletingPayment, setDeletingPayment] = useState(false);
   const [reminderInv, setReminderInv] = useState<Invoice | null>(null);
-  const [reminderForm, setReminderForm] = useState({ to: '', subject: '', body: '', markFollowedUp: false });
+  const [reminderForm, setReminderForm] = useState({
+    to: '',
+    subject: '',
+    body: '',
+    markFollowedUp: false,
+  });
 
   // Archetype-aware invoice defaults
   const archetype = useMemo(() => getArchetype(profile?.profession || ''), [profile?.profession]);
@@ -138,21 +220,35 @@ export default function Invoices() {
         subtotal: Math.round((inv.subtotal + fee.fee) * 100) / 100,
         total: Math.round((inv.total + fee.fee) * 100) / 100,
       });
-      addToast(`Late fee of ${formatCurrency(fee.fee, inv.currency || profile?.currency)} added`, 'success');
+      addToast(
+        `Late fee of ${formatCurrency(fee.fee, inv.currency || profile?.currency)} added`,
+        'success',
+      );
       recordTrialValue('late-fee', fee.fee);
       recordTelemetry('pro_feature_used', { feature: 'late-fee' });
     } catch {
       addToast('Could not add the late fee', 'error');
     }
   };
-  const defaultPaymentTerms = useMemo(() => archetype?.paymentTerms ?? (profile?.payment_terms ?? 14), [archetype, profile?.payment_terms]);
+  const defaultPaymentTerms = useMemo(
+    () => archetype?.paymentTerms ?? profile?.payment_terms ?? 14,
+    [archetype, profile?.payment_terms],
+  );
 
   useEffect(() => {
     Promise.all([loadInvoices(), loadClients(), loadProfile(), loadProjects(), loadTimeEntries()])
-      .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
+      .catch((err) => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
     loadPendingFollowUps();
-  }, [loadInvoices, loadClients, loadProfile, loadProjects, loadPendingFollowUps, loadTimeEntries, addToast]);
+  }, [
+    loadInvoices,
+    loadClients,
+    loadProfile,
+    loadProjects,
+    loadPendingFollowUps,
+    loadTimeEntries,
+    addToast,
+  ]);
 
   useEffect(() => {
     if (activeTab === 'recurring') loadRecurringInvoices();
@@ -161,7 +257,8 @@ export default function Invoices() {
   useEffect(() => {
     if (!exportDropdown) return;
     const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setExportDropdown(null);
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node))
+        setExportDropdown(null);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -177,7 +274,17 @@ export default function Invoices() {
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + paymentTerms);
     setEditing(null);
-    setForm({ client_id: '', project_id: '', invoice_number: generateInvoiceNumber(invoices || []), due_date: dueDate.toISOString().split('T')[0], notes: '', tax_rate: profile?.tax_rate ? String(profile.tax_rate) : '', status: 'draft', currency: '', rate_type: 'flat' });
+    setForm({
+      client_id: '',
+      project_id: '',
+      invoice_number: generateInvoiceNumber(invoices || []),
+      due_date: dueDate.toISOString().split('T')[0],
+      notes: '',
+      tax_rate: profile?.tax_rate ? String(profile.tax_rate) : '',
+      status: 'draft',
+      currency: '',
+      rate_type: 'flat',
+    });
     setItems([{ description: '', quantity: 1, unit_price: 0, total: 0 }]);
     setSelectedTimeIds(new Set());
     setShowModal(true);
@@ -205,29 +312,57 @@ export default function Invoices() {
 
   const openEdit = (inv: Invoice) => {
     setEditing(inv);
-    setForm({ client_id: inv.client_id, project_id: inv.project_id || '', invoice_number: inv.invoice_number, due_date: inv.due_date || '', notes: inv.notes || '', tax_rate: inv.tax_rate?.toString() || '', status: inv.status, currency: inv.currency || '', rate_type: inv.rate_type ?? 'flat' });
-    setItems(inv.line_items.map((li) => ({ description: li.description, quantity: li.quantity, unit_price: li.unit_price, total: li.total })));
+    setForm({
+      client_id: inv.client_id,
+      project_id: inv.project_id || '',
+      invoice_number: inv.invoice_number,
+      due_date: inv.due_date || '',
+      notes: inv.notes || '',
+      tax_rate: inv.tax_rate?.toString() || '',
+      status: inv.status,
+      currency: inv.currency || '',
+      rate_type: inv.rate_type ?? 'flat',
+    });
+    setItems(
+      inv.line_items.map((li) => ({
+        description: li.description,
+        quantity: li.quantity,
+        unit_price: li.unit_price,
+        total: li.total,
+      })),
+    );
     setShowModal(true);
   };
 
   const handleClientChange = (clientId: string) => {
     const prefCurrency = resolveDefaultCurrency(clientId);
-    setForm({ ...form, client_id: clientId, project_id: '', currency: form.currency || prefCurrency });
+    setForm({
+      ...form,
+      client_id: clientId,
+      project_id: '',
+      currency: form.currency || prefCurrency,
+    });
   };
 
   const updateItem = (index: number, field: keyof Omit<LineItem, 'id'>, value: string | number) => {
-    setItems(prev => prev.map((item, i) => {
-      if (i !== index) return item;
-      const newItem = { ...item, [field]: value };
-      if (field === 'quantity') newItem.quantity = Math.max(0, Number(value) || 0);
-      if (field === 'unit_price') newItem.unit_price = Math.max(0, Number(value) || 0);
-      if (field === 'quantity' || field === 'unit_price') newItem.total = newItem.quantity * newItem.unit_price;
-      return newItem;
-    }));
+    setItems((prev) =>
+      prev.map((item, i) => {
+        if (i !== index) return item;
+        const newItem = { ...item, [field]: value };
+        if (field === 'quantity') newItem.quantity = Math.max(0, Number(value) || 0);
+        if (field === 'unit_price') newItem.unit_price = Math.max(0, Number(value) || 0);
+        if (field === 'quantity' || field === 'unit_price')
+          newItem.total = newItem.quantity * newItem.unit_price;
+        return newItem;
+      }),
+    );
   };
 
-  const addItem = () => setItems([...items, { description: '', quantity: 1, unit_price: 0, total: 0 }]);
-  const removeItem = (index: number) => { if (items.length > 1) setItems(items.filter((_, i) => i !== index)); };
+  const addItem = () =>
+    setItems([...items, { description: '', quantity: 1, unit_price: 0, total: 0 }]);
+  const removeItem = (index: number) => {
+    if (items.length > 1) setItems(items.filter((_, i) => i !== index));
+  };
 
   const subtotal = items.reduce((sum, i) => sum + i.total, 0);
   const taxRate = form.tax_rate ? parseFloat(form.tax_rate) : 0;
@@ -255,45 +390,96 @@ export default function Invoices() {
       // Invoice numbers must be unique across all invoices (case-insensitive:
       // "inv-001" and "INV-001" are the same number to a human).
       const duplicateNum = (invoices || []).find(
-        (i) => (i.invoice_number || '').toLowerCase() === invoice_number.toLowerCase() && (!editing || i.id !== editing.id)
+        (i) =>
+          (i.invoice_number || '').toLowerCase() === invoice_number.toLowerCase() &&
+          (!editing || i.id !== editing.id),
       );
       if (duplicateNum) {
         setSaving(false);
         addToast(`Invoice number ${invoice_number} already exists`, 'error');
         return;
       }
-      const lineItems: LineItem[] = items.map((i) => ({ ...i, id: crypto.randomUUID(), description: i.description ? sanitizeInput(i.description).slice(0, MAX_LENGTHS.description) : '' }));
-      const hourlyRateTypes = new Set(['hourly', 'per-shoot', 'per-session', 'per-track', 'per-word', 'per-look', 'per-event', 'per-commission', 'per-plan', 'per-closing', 'per-campaign', 'per-placement', 'per-project', 'milestone', 'retainer', 'commission-based', 'per-track', 'per-look', 'per-word']);
-      const storedRateType: 'flat' | 'hourly' = hourlyRateTypes.has(form.rate_type) ? 'hourly' : 'flat';
-      const invoiceData = { client_id: form.client_id, invoice_number, status: form.status, line_items: lineItems, subtotal, tax_rate: taxRate || undefined, total, due_date: form.due_date || undefined, notes: form.notes ? sanitizeInput(form.notes).slice(0, MAX_LENGTHS.notes) : undefined, currency: form.currency || undefined, rate_type: storedRateType };
+      const lineItems: LineItem[] = items.map((i) => ({
+        ...i,
+        id: crypto.randomUUID(),
+        description: i.description
+          ? sanitizeInput(i.description).slice(0, MAX_LENGTHS.description)
+          : '',
+      }));
+      const hourlyRateTypes = new Set([
+        'hourly',
+        'per-shoot',
+        'per-session',
+        'per-track',
+        'per-word',
+        'per-look',
+        'per-event',
+        'per-commission',
+        'per-plan',
+        'per-closing',
+        'per-campaign',
+        'per-placement',
+        'per-project',
+        'milestone',
+        'retainer',
+        'commission-based',
+        'per-track',
+        'per-look',
+        'per-word',
+      ]);
+      const storedRateType: 'flat' | 'hourly' = hourlyRateTypes.has(form.rate_type)
+        ? 'hourly'
+        : 'flat';
+      const invoiceData = {
+        client_id: form.client_id,
+        invoice_number,
+        status: form.status,
+        line_items: lineItems,
+        subtotal,
+        tax_rate: taxRate || undefined,
+        total,
+        due_date: form.due_date || undefined,
+        notes: form.notes ? sanitizeInput(form.notes).slice(0, MAX_LENGTHS.notes) : undefined,
+        currency: form.currency || undefined,
+        rate_type: storedRateType,
+      };
       if (editing) await updateInvoice({ ...editing, ...invoiceData });
       else await addInvoice(invoiceData);
       // Editing totals can strand status (e.g. total lowered below paid
       // amount). Recompute when payments exist; untouched otherwise.
       if (editing) {
-        const paidTotal = useStore.getState().payments
-          .filter((p) => p.invoice_id === editing.id)
+        const paidTotal = useStore
+          .getState()
+          .payments.filter((p) => p.invoice_id === editing.id)
           .reduce((s, p) => s + p.amount, 0);
         if (paidTotal > 0) {
           const corrected = computeInvoiceStatus({ ...editing, ...invoiceData, total }, paidTotal);
           if (corrected !== invoiceData.status) {
             const fix: Partial<Invoice> = { status: corrected };
             if (corrected !== 'paid') fix.paid_at = undefined;
-            await updateInvoice({ ...editing, ...invoiceData, total, ...fix, status: corrected } as Invoice);
+            await updateInvoice({
+              ...editing,
+              ...invoiceData,
+              total,
+              ...fix,
+              status: corrected,
+            } as Invoice);
           }
         }
       }
       const ids = Array.from(selectedTimeIds);
       const timeUpdates = ids
-        .map(id => timeEntries.find((t: { id: string }) => t.id === id))
+        .map((id) => timeEntries.find((t: { id: string }) => t.id === id))
         .filter((entry): entry is NonNullable<typeof entry> => !!entry)
-        .map(entry => updateTimeEntry({ ...entry, invoiced: true }));
+        .map((entry) => updateTimeEntry({ ...entry, invoiced: true }));
       await Promise.allSettled(timeUpdates);
       setShowModal(false);
       checkAndNotify(useStore.getState(), addToast);
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to save invoice', 'error');
-    } finally { setSaving(false); }
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -305,7 +491,9 @@ export default function Invoices() {
       setConfirmDelete(null);
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to delete', 'error');
-    } finally { setDeleting(false); }
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const openPaymentModal = (inv: Invoice) => {
@@ -324,27 +512,42 @@ export default function Invoices() {
     const client = getClient(inv.client_id);
     const dueDate = inv.due_date ? parseDateString(inv.due_date) : null;
     const daysElapsed = dueDate ? Math.floor((Date.now() - dueDate.getTime()) / DAY_MS) : 0;
-    const templateKey = daysElapsed >= 10 ? 'invoice_day14' : daysElapsed >= 4 ? 'invoice_day7' : 'invoice_day1';
-    const draft = withFeeNote(generateFollowUpDraft(templateKey, {
-      clientName: client?.name || 'Unknown',
-      invoiceNumber: inv.invoice_number,
-      amount: formatCurrency(inv.total),
-      dueDate: inv.due_date,
-      daysElapsed,
-      freelancerName: profile?.name || 'Freelancer',
-    }, followUpSettings.templates, dunningTone), inv);
-    const subject = generateSubjectLine(templateKey, {
-      clientName: client?.name || 'Unknown',
-      invoiceNumber: inv.invoice_number,
-      amount: formatCurrency(inv.total),
-      dueDate: inv.due_date,
-      daysElapsed,
-      freelancerName: profile?.name || 'Freelancer',
-    }, followUpSettings.subject_templates, dunningTone);
+    const templateKey =
+      daysElapsed >= 10 ? 'invoice_day14' : daysElapsed >= 4 ? 'invoice_day7' : 'invoice_day1';
+    const draft = withFeeNote(
+      generateFollowUpDraft(
+        templateKey,
+        {
+          clientName: client?.name || 'Unknown',
+          invoiceNumber: inv.invoice_number,
+          amount: formatCurrency(inv.total),
+          dueDate: inv.due_date,
+          daysElapsed,
+          freelancerName: profile?.name || 'Freelancer',
+        },
+        followUpSettings.templates,
+        dunningTone,
+      ),
+      inv,
+    );
+    const subject = generateSubjectLine(
+      templateKey,
+      {
+        clientName: client?.name || 'Unknown',
+        invoiceNumber: inv.invoice_number,
+        amount: formatCurrency(inv.total),
+        dueDate: inv.due_date,
+        daysElapsed,
+        freelancerName: profile?.name || 'Freelancer',
+      },
+      followUpSettings.subject_templates,
+      dunningTone,
+    );
     setReminderInv(inv);
     setReminderForm({
       to: client?.email || '',
-      subject: subject || `Friendly reminder · Invoice ${inv.invoice_number} due ${inv.due_date || 'now'}`,
+      subject:
+        subject || `Friendly reminder · Invoice ${inv.invoice_number} due ${inv.due_date || 'now'}`,
       body: draft,
       markFollowedUp: false,
     });
@@ -370,13 +573,17 @@ export default function Invoices() {
             created_at: new Date().toISOString(),
           });
         }
-        const fu = pendingFollowUps.find((f) => f.entity_type === 'invoice' && f.entity_id === reminderInv.id);
+        const fu = pendingFollowUps.find(
+          (f) => f.entity_type === 'invoice' && f.entity_id === reminderInv.id,
+        );
         if (fu) {
           await updateFollowUpStatus(fu.id, 'sent', 'sent');
         }
       }
       setReminderInv(null);
-    } catch { addToast('Failed to open email client', 'error'); }
+    } catch {
+      addToast('Failed to open email client', 'error');
+    }
   };
 
   const getPaidTotal = (invId: string) => {
@@ -402,10 +609,15 @@ export default function Invoices() {
     setPaymentSaving(true);
     try {
       const amount = Math.max(0, parseFloat(paymentForm.amount) || 0);
-      if (amount <= 0) { setPaymentSaving(false); addToast('Payment amount must be greater than zero', 'error'); return; }
+      if (amount <= 0) {
+        setPaymentSaving(false);
+        addToast('Payment amount must be greater than zero', 'error');
+        return;
+      }
       // Guard against overpayment: total paid must never exceed the invoice total.
-      const paidSoFar = useStore.getState().payments
-        .filter((p) => p.invoice_id === paymentInv.id)
+      const paidSoFar = useStore
+        .getState()
+        .payments.filter((p) => p.invoice_id === paymentInv.id)
         .reduce((s, p) => s + p.amount, 0);
       const remaining = Math.max(0, paymentInv.total - paidSoFar);
       if (amount > remaining) {
@@ -418,10 +630,16 @@ export default function Invoices() {
         amount,
         payment_date: paymentForm.payment_date,
         payment_method: paymentForm.payment_method,
-        reference: paymentForm.reference ? sanitizeInput(paymentForm.reference).slice(0, 500) : undefined,
-        notes: paymentForm.notes ? sanitizeInput(paymentForm.notes).slice(0, MAX_LENGTHS.notes) : undefined,
+        reference: paymentForm.reference
+          ? sanitizeInput(paymentForm.reference).slice(0, 500)
+          : undefined,
+        notes: paymentForm.notes
+          ? sanitizeInput(paymentForm.notes).slice(0, MAX_LENGTHS.notes)
+          : undefined,
       });
-      const updatedPayments = useStore.getState().payments.filter((p) => p.invoice_id === paymentInv.id);
+      const updatedPayments = useStore
+        .getState()
+        .payments.filter((p) => p.invoice_id === paymentInv.id);
       const paidTotal = updatedPayments.reduce((s, p) => s + p.amount, 0) + amount;
       const newStatus = computeInvoiceStatus(paymentInv, paidTotal);
       const isFullyPaid = newStatus === 'paid';
@@ -431,7 +649,9 @@ export default function Invoices() {
         await updateInvoice({ ...paymentInv, ...updateData, status: newStatus } as Invoice);
       }
       if (isFullyPaid) {
-        const fu = pendingFollowUps.find((f) => f.entity_type === 'invoice' && f.entity_id === paymentInv.id);
+        const fu = pendingFollowUps.find(
+          (f) => f.entity_type === 'invoice' && f.entity_id === paymentInv.id,
+        );
         if (fu) {
           await updateFollowUpStatus(fu.id, 'paid', 'marked_paid').catch(() => {});
         }
@@ -441,7 +661,9 @@ export default function Invoices() {
       addToast('Payment recorded', 'success');
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to record payment', 'error');
-    } finally { setPaymentSaving(false); }
+    } finally {
+      setPaymentSaving(false);
+    }
   };
 
   const handleDeletePayment = async () => {
@@ -452,8 +674,9 @@ export default function Invoices() {
       await removePayment(id, invoiceId);
       const inv = invoices.find((i) => i.id === invoiceId);
       if (inv) {
-        const remainingPayments = useStore.getState().payments
-          .filter((p) => p.invoice_id === invoiceId && p.id !== id);
+        const remainingPayments = useStore
+          .getState()
+          .payments.filter((p) => p.invoice_id === invoiceId && p.id !== id);
         const paidTotal = remainingPayments.reduce((s, p) => s + p.amount, 0);
         const newStatus = computeInvoiceStatus(inv, paidTotal);
         if (newStatus !== inv.status) {
@@ -466,12 +689,17 @@ export default function Invoices() {
       addToast('Payment deleted', 'info');
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to delete payment', 'error');
-    } finally { setDeletingPayment(false); }
+    } finally {
+      setDeletingPayment(false);
+    }
   };
 
   const handleMarkSent = async (inv: Invoice) => {
-    try { await updateInvoice({ ...inv, status: 'sent' as const }); }
-    catch (err) { addToast(err?.toString?.() || 'Failed to mark as sent', 'error'); }
+    try {
+      await updateInvoice({ ...inv, status: 'sent' as const });
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to mark as sent', 'error');
+    }
   };
 
   const handleDuplicate = async (inv: Invoice) => {
@@ -535,46 +763,97 @@ export default function Invoices() {
     return true;
   });
 
-  const toggleTimeSelection = (id: string) => setSelectedTimeIds(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const toggleTimeSelection = (id: string) =>
+    setSelectedTimeIds((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
 
   const importSelectedTime = () => {
-    if (hourlyRate <= 0) { addToast('Set your hourly rate in profile to use time import.', 'error'); return; }
+    if (hourlyRate <= 0) {
+      addToast('Set your hourly rate in profile to use time import.', 'error');
+      return;
+    }
     const selected = timeEntries.filter((t) => selectedTimeIds.has(t.id));
     const newItems: Omit<LineItem, 'id'>[] = selected.map((t) => {
       const hours = (t.duration_minutes || 0) / 60;
       const amount = Math.round(hours * hourlyRate * 100) / 100;
-      return { description: t.description || `Time entry ${new Date(t.start_time).toLocaleDateString()}`, quantity: 1, unit_price: amount, total: amount, time_entry_ids: [t.id] };
+      return {
+        description: t.description || `Time entry ${new Date(t.start_time).toLocaleDateString()}`,
+        quantity: 1,
+        unit_price: amount,
+        total: amount,
+        time_entry_ids: [t.id],
+      };
     });
     const existingItems = items.filter((i) => i.description.trim() !== '' || i.total > 0);
     setItems([...existingItems, ...newItems]);
-    addToast(`Imported ${newItems.length} time entr${newItems.length !== 1 ? 'ies' : 'y'}`, 'success');
+    addToast(
+      `Imported ${newItems.length} time entr${newItems.length !== 1 ? 'ies' : 'y'}`,
+      'success',
+    );
   };
 
   // ── Recurring handlers ──
   const openNewRecurring = () => {
     setEditingRecurring(null);
-    setRiForm({ client_id: '', project_id: '', title: '', frequency: 'monthly', notes: '', tax_rate: '', next_due: todayLocalISO() });
+    setRiForm({
+      client_id: '',
+      project_id: '',
+      title: '',
+      frequency: 'monthly',
+      notes: '',
+      tax_rate: '',
+      next_due: todayLocalISO(),
+    });
     setRiItems([{ description: '', quantity: 1, unit_price: 0, total: 0 }]);
     setShowRecurringModal(true);
   };
   const openEditRecurring = (ri: RecurringInvoiceType) => {
     setEditingRecurring(ri);
-    setRiForm({ client_id: ri.client_id, project_id: ri.project_id || '', title: ri.title, frequency: ri.frequency, notes: ri.notes || '', tax_rate: ri.tax_rate?.toString() || '', next_due: ri.next_due.split('T')[0] });
-    setRiItems(ri.line_items.map((li) => ({ description: li.description, quantity: li.quantity, unit_price: li.unit_price, total: li.total })));
+    setRiForm({
+      client_id: ri.client_id,
+      project_id: ri.project_id || '',
+      title: ri.title,
+      frequency: ri.frequency,
+      notes: ri.notes || '',
+      tax_rate: ri.tax_rate?.toString() || '',
+      next_due: ri.next_due.split('T')[0],
+    });
+    setRiItems(
+      ri.line_items.map((li) => ({
+        description: li.description,
+        quantity: li.quantity,
+        unit_price: li.unit_price,
+        total: li.total,
+      })),
+    );
     setShowRecurringModal(true);
   };
-  const updateRiItem = (index: number, field: keyof Omit<LineItem, 'id'>, value: string | number) => {
-    setRiItems(prev => prev.map((item, i) => {
-      if (i !== index) return item;
-      const newItem = { ...item, [field]: value };
-      if (field === 'quantity') newItem.quantity = Math.max(0, Number(value) || 0);
-      if (field === 'unit_price') newItem.unit_price = Math.max(0, Number(value) || 0);
-      if (field === 'quantity' || field === 'unit_price') newItem.total = newItem.quantity * newItem.unit_price;
-      return newItem;
-    }));
+  const updateRiItem = (
+    index: number,
+    field: keyof Omit<LineItem, 'id'>,
+    value: string | number,
+  ) => {
+    setRiItems((prev) =>
+      prev.map((item, i) => {
+        if (i !== index) return item;
+        const newItem = { ...item, [field]: value };
+        if (field === 'quantity') newItem.quantity = Math.max(0, Number(value) || 0);
+        if (field === 'unit_price') newItem.unit_price = Math.max(0, Number(value) || 0);
+        if (field === 'quantity' || field === 'unit_price')
+          newItem.total = newItem.quantity * newItem.unit_price;
+        return newItem;
+      }),
+    );
   };
-  const addRiItem = () => setRiItems([...riItems, { description: '', quantity: 1, unit_price: 0, total: 0 }]);
-  const removeRiItem = (i: number) => { if (riItems.length > 1) setRiItems(riItems.filter((_, idx) => idx !== i)); };
+  const addRiItem = () =>
+    setRiItems([...riItems, { description: '', quantity: 1, unit_price: 0, total: 0 }]);
+  const removeRiItem = (i: number) => {
+    if (riItems.length > 1) setRiItems(riItems.filter((_, idx) => idx !== i));
+  };
   const riSubtotal = riItems.reduce((s, i) => s + i.total, 0);
   const riTaxRate = riForm.tax_rate ? parseFloat(riForm.tax_rate) : 0;
   const riTotal = riSubtotal + riSubtotal * (riTaxRate / 100);
@@ -590,120 +869,251 @@ export default function Invoices() {
     }
     setSaving(true);
     try {
-      const lineItems: LineItem[] = riItems.map((i) => ({ ...i, id: crypto.randomUUID(), description: i.description ? sanitizeInput(i.description).slice(0, MAX_LENGTHS.description) : '' }));
-      const data = { client_id: riForm.client_id, project_id: riForm.project_id || undefined, title: sanitizeInput(riForm.title).slice(0, MAX_LENGTHS.title), frequency: riForm.frequency, line_items: lineItems, subtotal: riSubtotal, tax_rate: riTaxRate || undefined, total: riTotal, notes: riForm.notes ? sanitizeInput(riForm.notes).slice(0, MAX_LENGTHS.notes) : undefined, active: true, next_due: riForm.next_due };
-      if (editingRecurring) await updateRecurringInvoice({ ...editingRecurring, ...data, active: editingRecurring.active });
+      const lineItems: LineItem[] = riItems.map((i) => ({
+        ...i,
+        id: crypto.randomUUID(),
+        description: i.description
+          ? sanitizeInput(i.description).slice(0, MAX_LENGTHS.description)
+          : '',
+      }));
+      const data = {
+        client_id: riForm.client_id,
+        project_id: riForm.project_id || undefined,
+        title: sanitizeInput(riForm.title).slice(0, MAX_LENGTHS.title),
+        frequency: riForm.frequency,
+        line_items: lineItems,
+        subtotal: riSubtotal,
+        tax_rate: riTaxRate || undefined,
+        total: riTotal,
+        notes: riForm.notes ? sanitizeInput(riForm.notes).slice(0, MAX_LENGTHS.notes) : undefined,
+        active: true,
+        next_due: riForm.next_due,
+      };
+      if (editingRecurring)
+        await updateRecurringInvoice({
+          ...editingRecurring,
+          ...data,
+          active: editingRecurring.active,
+        });
       else await addRecurringInvoice(data);
       setShowRecurringModal(false);
       checkAndNotify(useStore.getState(), addToast);
-    } catch (err) { addToast(err?.toString?.() || 'Failed to save recurring invoice', 'error'); } finally { setSaving(false); }
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to save recurring invoice', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleToggleActive = async (ri: RecurringInvoiceType) => {
-    try { await updateRecurringInvoice({ ...ri, active: !ri.active }); }
-    catch (err) { addToast(err?.toString?.() || 'Failed to toggle', 'error'); }
+    try {
+      await updateRecurringInvoice({ ...ri, active: !ri.active });
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to toggle', 'error');
+    }
   };
 
   const handleExportPDF = (inv: Invoice) => {
-    try { const client = getClient(inv.client_id); if (client && profile) { exportInvoicePDF(inv, client, profile); tryUnlock('first_export', addToast); } }
-    catch (err) { addToast(err?.toString?.() || 'Failed to export PDF', 'error'); }
+    try {
+      const client = getClient(inv.client_id);
+      if (client && profile) {
+        exportInvoicePDF(inv, client, profile);
+        tryUnlock('first_export', addToast);
+      }
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to export PDF', 'error');
+    }
     setExportDropdown(null);
   };
   const handleExportDOCX = (inv: Invoice) => {
-    try { const client = getClient(inv.client_id); if (client && profile) { exportInvoiceDOCX(inv, client, profile); tryUnlock('first_export', addToast); } }
-    catch (err) { addToast(err?.toString?.() || 'Failed to export DOCX', 'error'); }
+    try {
+      const client = getClient(inv.client_id);
+      if (client && profile) {
+        exportInvoiceDOCX(inv, client, profile);
+        tryUnlock('first_export', addToast);
+      }
+    } catch (err) {
+      addToast(err?.toString?.() || 'Failed to export DOCX', 'error');
+    }
     setExportDropdown(null);
   };
 
-  const totalOutstanding = invoices.filter(i => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').reduce((s, i) => s + i.total, 0);
-  const totalPaid = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.total, 0);
+  const totalOutstanding = invoices
+    .filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue')
+    .reduce((s, i) => s + i.total, 0);
+  const totalPaid = invoices.filter((i) => i.status === 'paid').reduce((s, i) => s + i.total, 0);
   const invCurrency = (i: { currency?: string }) => i.currency || profile?.currency || 'CAD';
   const sumByCurrency = (list: { currency?: string; total: number }[]) => {
     const by: Record<string, number> = {};
-    list.forEach((i) => { by[invCurrency(i)] = (by[invCurrency(i)] || 0) + i.total; });
+    list.forEach((i) => {
+      by[invCurrency(i)] = (by[invCurrency(i)] || 0) + i.total;
+    });
     return by;
   };
-  const mixedCurrencies = new Set(invoices.filter((i) => i.status !== 'draft').map(invCurrency)).size > 1;
+  const mixedCurrencies =
+    new Set(invoices.filter((i) => i.status !== 'draft').map(invCurrency)).size > 1;
   const moneyValue = (list: { currency?: string; total: number }[], single: number) =>
     mixedCurrencies
-      ? Object.entries(sumByCurrency(list)).map(([cur, amt]) => `${formatCurrency(amt, cur)} ${cur}`).join(' · ')
+      ? Object.entries(sumByCurrency(list))
+          .map(([cur, amt]) => `${formatCurrency(amt, cur)} ${cur}`)
+          .join(' · ')
       : formatCurrency(single, invCurrency(list[0] || {}));
 
-  const filteredInvoices = invoices.filter(inv => {
+  const filteredInvoices = invoices.filter((inv) => {
     if (!search) return true;
     const s = search.toLowerCase();
-    return (inv.invoice_number || '').toLowerCase().includes(s) || (getClientName(inv.client_id) || '').toLowerCase().includes(s);
+    return (
+      (inv.invoice_number || '').toLowerCase().includes(s) ||
+      (getClientName(inv.client_id) || '').toLowerCase().includes(s)
+    );
   });
 
   const sortedInvoices = [...filteredInvoices].sort((a, b) => {
     const dir = sortDir === 'asc' ? 1 : -1;
     switch (sortKey) {
-      case 'number': return dir * a.invoice_number.localeCompare(b.invoice_number);
-      case 'client': return dir * getClientName(a.client_id).localeCompare(getClientName(b.client_id));
-      case 'status': return dir * a.status.localeCompare(b.status);
-      case 'total': return dir * (a.total - b.total);
-      case 'date': return dir * (new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-      default: return 0;
+      case 'number':
+        return dir * a.invoice_number.localeCompare(b.invoice_number);
+      case 'client':
+        return dir * getClientName(a.client_id).localeCompare(getClientName(b.client_id));
+      case 'status':
+        return dir * a.status.localeCompare(b.status);
+      case 'total':
+        return dir * (a.total - b.total);
+      case 'date':
+        return dir * (new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      default:
+        return 0;
     }
   });
 
   const toggleSort = (key: InvSortKey) => {
-    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-    else { setSortKey(key); setSortDir('asc'); }
+    if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
   };
 
   // Incremental rendering: 10k invoices build ~350k DOM nodes unbounded.
   const paged = useVisibleList(sortedInvoices, `${search}|${sortKey}|${sortDir}`);
 
-  const filteredRecurring = recurringInvoices.filter(ri => {
+  const filteredRecurring = recurringInvoices.filter((ri) => {
     if (!search) return true;
     const s = search.toLowerCase();
-    return (ri.title || '').toLowerCase().includes(s) || (getClientName(ri.client_id) || '').toLowerCase().includes(s);
+    return (
+      (ri.title || '').toLowerCase().includes(s) ||
+      (getClientName(ri.client_id) || '').toLowerCase().includes(s)
+    );
   });
 
-  if (loading) return (
-    <div className="p-6">
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        {[...Array(3)].map((_, i) => <div key={i} className="h-24 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />)}
+  if (loading)
+    return (
+      <div className="p-6">
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-24 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />
+          ))}
+        </div>
+        <div className="space-y-3">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-14 bg-[var(--bg-secondary)] rounded-[8px] skeleton-pulse" />
+          ))}
+        </div>
       </div>
-      <div className="space-y-3">
-        {[...Array(4)].map((_, i) => <div key={i} className="h-14 bg-[var(--bg-secondary)] rounded-[8px] skeleton-pulse" />)}
-      </div>
-    </div>
-  );
+    );
 
   return (
     <div className="p-6">
       <LoadError error={invoicesError} onRetry={() => loadInvoices()} />
       <div className="grid grid-cols-3 gap-3 mb-6">
-        <MetricCard label="Outstanding" value={moneyValue(invoices.filter(i => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue'), totalOutstanding)} subtext={`${invoices.filter(i => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').length} invoices`} color="amber" />
-        <MetricCard label="Paid" value={moneyValue(invoices.filter(i => i.status === 'paid'), totalPaid)} subtext={`${invoices.filter(i => i.status === 'paid').length} invoices`} trend="up" color="green" />
-        <MetricCard label="Overdue" value={moneyValue(invoices.filter(i => i.status === 'overdue'), invoices.filter(i => i.status === 'overdue').reduce((s, i) => s + i.total, 0))} subtext="needs attention" trend={invoices.filter(i => i.status === 'overdue').length > 0 ? 'down' : 'neutral'} color={invoices.filter(i => i.status === 'overdue').length > 0 ? 'red' : 'gray'} />
+        <MetricCard
+          label="Outstanding"
+          value={moneyValue(
+            invoices.filter(
+              (i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue',
+            ),
+            totalOutstanding,
+          )}
+          subtext={`${invoices.filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').length} invoices`}
+          color="amber"
+        />
+        <MetricCard
+          label="Paid"
+          value={moneyValue(
+            invoices.filter((i) => i.status === 'paid'),
+            totalPaid,
+          )}
+          subtext={`${invoices.filter((i) => i.status === 'paid').length} invoices`}
+          trend="up"
+          color="green"
+        />
+        <MetricCard
+          label="Overdue"
+          value={moneyValue(
+            invoices.filter((i) => i.status === 'overdue'),
+            invoices.filter((i) => i.status === 'overdue').reduce((s, i) => s + i.total, 0),
+          )}
+          subtext="needs attention"
+          trend={invoices.filter((i) => i.status === 'overdue').length > 0 ? 'down' : 'neutral'}
+          color={invoices.filter((i) => i.status === 'overdue').length > 0 ? 'red' : 'gray'}
+        />
       </div>
 
       {/* Tab bar + search + sort */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <div className="flex items-center gap-2 border-b border-[var(--border-color)] flex-shrink-0 min-w-max">
-          <button onClick={() => setActiveTab('all')} className={`whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-[1px] ${activeTab === 'all' ? 'text-[var(--accent-ink,var(--accent))] border-[var(--accent)]' : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'}`}>All invoices</button>
-          <button onClick={() => setActiveTab('recurring')} className={`whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-[1px] ${activeTab === 'recurring' ? 'text-[var(--accent-ink,var(--accent))] border-[var(--accent)]' : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'}`}>Recurring</button>
+          <button
+            onClick={() => setActiveTab('all')}
+            className={`whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-[1px] ${activeTab === 'all' ? 'text-[var(--accent-ink,var(--accent))] border-[var(--accent)]' : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'}`}
+          >
+            All invoices
+          </button>
+          <button
+            onClick={() => setActiveTab('recurring')}
+            className={`whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-[1px] ${activeTab === 'recurring' ? 'text-[var(--accent-ink,var(--accent))] border-[var(--accent)]' : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]'}`}
+          >
+            Recurring
+          </button>
         </div>
         <div className="relative max-w-[180px] flex-shrink-0">
-          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
-          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Filter..." className="w-full pl-8 pr-3 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]" />
+          <Search
+            size={13}
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]"
+          />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Filter..."
+            className="w-full pl-8 pr-3 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]"
+          />
         </div>
         {activeTab === 'all' && (
           <>
             <div className="flex items-center gap-1">
               <span className="text-[10px] text-[var(--text-tertiary)]">Sort:</span>
-              {(['date', 'number', 'client', 'status', 'total'] as InvSortKey[]).map(k => (
-                <button key={k} onClick={() => toggleSort(k)} className={`text-[10px] px-2 py-0.5 rounded-[4px] transition-colors capitalize ${sortKey === k ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] font-medium' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}>{k}{sortKey === k && <span className="ml-0.5">{sortDir === 'asc' ? '↑' : '↓'}</span>}</button>
+              {(['date', 'number', 'client', 'status', 'total'] as InvSortKey[]).map((k) => (
+                <button
+                  key={k}
+                  onClick={() => toggleSort(k)}
+                  className={`text-[10px] px-2 py-0.5 rounded-[4px] transition-colors capitalize ${sortKey === k ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] font-medium' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}
+                >
+                  {k}
+                  {sortKey === k && <span className="ml-0.5">{sortDir === 'asc' ? '↑' : '↓'}</span>}
+                </button>
               ))}
             </div>
-            <Button onClick={handleCreateFromEmptyState} size="sm" disabled={clients.length === 0}><Plus size={14} />New Invoice</Button>
+            <Button onClick={handleCreateFromEmptyState} size="sm" disabled={clients.length === 0}>
+              <Plus size={14} />
+              New Invoice
+            </Button>
           </>
         )}
         {activeTab === 'recurring' && (
-          <Button onClick={openNewRecurring} size="sm"><Plus size={14} />New recurring</Button>
+          <Button onClick={openNewRecurring} size="sm">
+            <Plus size={14} />
+            New recurring
+          </Button>
         )}
       </div>
 
@@ -711,236 +1121,432 @@ export default function Invoices() {
         invoices.length === 0 ? (
           <Card className="text-center py-16 flex flex-col items-center">
             <Receipt size={40} className="text-[var(--text-tertiary)] mb-4" />
-            <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No invoices yet</h3>
-            <p className="text-[13px] text-[var(--text-secondary)] max-w-xs mb-5">Create your first invoice to start getting paid.</p>
+            <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">
+              No invoices yet
+            </h3>
+            <p className="text-[13px] text-[var(--text-secondary)] max-w-xs mb-5">
+              Create your first invoice to start getting paid.
+            </p>
             {clients.length === 0 ? (
               <div className="text-center">
-                <p className="text-xs text-[var(--warning-text)] mb-3">Add at least one client before creating an invoice.</p>
-                <Button size="sm" disabled={true}>New Invoice</Button>
+                <p className="text-xs text-[var(--warning-text)] mb-3">
+                  Add at least one client before creating an invoice.
+                </p>
+                <Button size="sm" disabled={true}>
+                  New Invoice
+                </Button>
               </div>
             ) : (
-              <Button onClick={handleCreateFromEmptyState} size="sm" variant="secondary">New Invoice</Button>
+              <Button onClick={handleCreateFromEmptyState} size="sm" variant="secondary">
+                New Invoice
+              </Button>
             )}
           </Card>
         ) : filteredInvoices.length === 0 && search ? (
-          <Card className="text-center py-12"><p className="text-sm text-[var(--text-tertiary)]">No invoices match "{search}"</p></Card>
+          <Card className="text-center py-12">
+            <p className="text-sm text-[var(--text-tertiary)]">No invoices match "{search}"</p>
+          </Card>
         ) : (
           <>
-          <div className="space-y-2">
-            {paged.visible.map((inv) => {
-              const isExpanded = expandedInv === inv.id;
-              const paidTotal = getPaidTotal(inv.id);
-              const remaining = getRemainingBalance(inv);
-              const invPayments = payments.filter((p) => p.invoice_id === inv.id);
-              const toggleExpand = () => {
-                if (isExpanded) {
-                  setExpandedInv(null);
-                } else {
-                  setExpandedInv(inv.id);
-                  loadPayments();
-                }
-              };
-              return (
-                <div key={inv.id}>
-                  <div className={`flex items-center gap-3 px-4 py-3 bg-[var(--bg-card)] border rounded-[8px] ${isExpanded ? 'rounded-b-none border-b-0' : ''} ${inv.status === 'overdue' ? 'border-l-[3px] border-l-[var(--danger)] border-[var(--border-color)]' : 'border-[var(--border-color)]'}`}>
-                    <button onClick={toggleExpand} aria-label={isExpanded ? 'Collapse invoice details' : 'Expand invoice details'} title={isExpanded ? 'Collapse' : 'Expand'} className="p-0.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] flex-shrink-0">
-                      {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                    </button>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-xs font-semibold text-[var(--text-primary)]">{inv.invoice_number}</span>
-                        <span className="text-xs text-[var(--text-secondary)]">{getClientName(inv.client_id)}</span>
-                        <Badge variant={statusBadge[inv.status]}>{inv.status}</Badge>
-                      </div>
-                      <div className="flex items-center gap-3 text-[10px] text-[var(--text-tertiary)]">
-                        <span>{fmtInvDisplay(inv)}</span>
-                        {inv.due_date && <span>Due: {relativeDate(inv.due_date)}</span>}
-                        {inv.paid_at && <span>Paid: {relativeDate(inv.paid_at)}</span>}
-                        {paidTotal > 0 && !inv.paid_at && <span className="text-[var(--warning-text)]">Paid: {fmtInv(paidTotal, inv)}</span>}
-                        {remaining > 0 && remaining < inv.total && <span className="text-[var(--warning-text)]">Remaining: {fmtInv(remaining, inv)}</span>}
-                        <span>{inv.line_items.length} item{inv.line_items.length !== 1 ? 's' : ''}</span>
+            <div className="space-y-2">
+              {paged.visible.map((inv) => {
+                const isExpanded = expandedInv === inv.id;
+                const paidTotal = getPaidTotal(inv.id);
+                const remaining = getRemainingBalance(inv);
+                const invPayments = payments.filter((p) => p.invoice_id === inv.id);
+                // The follow-up strip below already carries its own Record
+                // Payment action — hide the duplicate in the action row.
+                const hasFollowUpStrip =
+                  inv.status !== 'paid' &&
+                  pendingFollowUps.some(
+                    (f) => f.entity_type === 'invoice' && f.entity_id === inv.id,
+                  );
+                const toggleExpand = () => {
+                  if (isExpanded) {
+                    setExpandedInv(null);
+                  } else {
+                    setExpandedInv(inv.id);
+                    loadPayments();
+                  }
+                };
+                return (
+                  <div key={inv.id}>
+                    <div
+                      className={`flex items-center gap-3 px-4 py-3 bg-[var(--bg-card)] border rounded-[8px] ${isExpanded ? 'rounded-b-none border-b-0' : ''} ${inv.status === 'overdue' ? 'border-l-[3px] border-l-[var(--danger)] border-[var(--border-color)]' : 'border-[var(--border-color)]'}`}
+                    >
+                      <button
+                        onClick={toggleExpand}
+                        aria-label={
+                          isExpanded ? 'Collapse invoice details' : 'Expand invoice details'
+                        }
+                        title={isExpanded ? 'Collapse' : 'Expand'}
+                        className="p-0.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] flex-shrink-0"
+                      >
+                        {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-xs font-semibold text-[var(--text-primary)]">
+                            {inv.invoice_number}
+                          </span>
+                          <span className="text-xs text-[var(--text-secondary)]">
+                            {getClientName(inv.client_id)}
+                          </span>
+                          <Badge variant={statusBadge[inv.status]}>{inv.status}</Badge>
+                        </div>
+                        <div className="flex items-center gap-3 text-[10px] text-[var(--text-tertiary)]">
+                          <span>{fmtInvDisplay(inv)}</span>
+                          {inv.due_date && <span>Due: {relativeDate(inv.due_date)}</span>}
+                          {inv.paid_at && <span>Paid: {relativeDate(inv.paid_at)}</span>}
+                          {paidTotal > 0 && !inv.paid_at && (
+                            <span className="text-[var(--warning-text)]">
+                              Paid: {fmtInv(paidTotal, inv)}
+                            </span>
+                          )}
+                          {remaining > 0 && remaining < inv.total && (
+                            <span className="text-[var(--warning-text)]">
+                              Remaining: {fmtInv(remaining, inv)}
+                            </span>
+                          )}
+                          <span>
+                            {inv.line_items.length} item{inv.line_items.length !== 1 ? 's' : ''}
+                          </span>
+                          {(() => {
+                            if (!lateFeeOn) return null;
+                            if (
+                              inv.status !== 'sent' &&
+                              inv.status !== 'overdue' &&
+                              inv.status !== 'partial'
+                            )
+                              return null;
+                            const fee = computeLateFee(inv.total, inv.due_date, lateFeePercent);
+                            if (fee.fee <= 0) return null;
+                            return (
+                              <>
+                                <span className="text-[var(--danger)]">
+                                  +{formatCurrency(fee.fee, inv.currency || profile?.currency)} late
+                                  fee ({fee.periods}p)
+                                </span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAddLateFee(inv);
+                                  }}
+                                  className="text-[var(--accent-ink,var(--accent))] hover:underline"
+                                  title={
+                                    feeConfirm === inv.id
+                                      ? 'Click again to confirm adding the fee'
+                                      : 'Add the accrued late fee as a line item'
+                                  }
+                                >
+                                  {feeConfirm === inv.id ? 'Confirm add?' : 'Add to invoice'}
+                                </button>
+                              </>
+                            );
+                          })()}
+                        </div>
+                        {/* Follow-up indicator */}
                         {(() => {
-                          if (!lateFeeOn) return null;
-                          if (inv.status !== 'sent' && inv.status !== 'overdue' && inv.status !== 'partial') return null;
-                          const fee = computeLateFee(inv.total, inv.due_date, lateFeePercent);
-                          if (fee.fee <= 0) return null;
+                          const fu = pendingFollowUps.find(
+                            (f) => f.entity_type === 'invoice' && f.entity_id === inv.id,
+                          );
+                          if (!fu || inv.status === 'paid') return null;
+                          const client = getClient(inv.client_id);
+                          const dueDate = inv.due_date ? parseDateString(inv.due_date) : null;
+                          const daysElapsed = dueDate
+                            ? Math.floor((Date.now() - dueDate.getTime()) / DAY_MS)
+                            : 0;
+                          const templateKey =
+                            daysElapsed >= 10
+                              ? 'invoice_day14'
+                              : daysElapsed >= 4
+                                ? 'invoice_day7'
+                                : 'invoice_day1';
+                          const draft = withFeeNote(
+                            generateFollowUpDraft(
+                              templateKey,
+                              {
+                                clientName: client?.name || 'Unknown',
+                                invoiceNumber: inv.invoice_number,
+                                amount: formatCurrency(inv.total),
+                                dueDate: inv.due_date,
+                                daysElapsed,
+                                freelancerName: profile?.name || 'Freelancer',
+                              },
+                              followUpSettings.templates,
+                              dunningTone,
+                            ),
+                            inv,
+                          );
+                          const subject = generateSubjectLine(
+                            templateKey,
+                            {
+                              clientName: client?.name || 'Unknown',
+                              invoiceNumber: inv.invoice_number,
+                              amount: formatCurrency(inv.total),
+                              dueDate: inv.due_date,
+                              daysElapsed,
+                              freelancerName: profile?.name || 'Freelancer',
+                            },
+                            followUpSettings.subject_templates,
+                            dunningTone,
+                          );
+                          const hasEmail = !!client?.email;
                           return (
-                            <>
-                              <span className="text-[var(--danger)]">
-                                +{formatCurrency(fee.fee, inv.currency || profile?.currency)} late fee ({fee.periods}p)
+                            <div className="flex items-center gap-1.5 mt-1.5">
+                              <Bell size={10} className="text-[var(--accent-ink,var(--accent))]" />
+                              <span className="text-[10px] text-[var(--accent-ink,var(--accent))]">
+                                {daysElapsed > 0
+                                  ? `Follow-up ready · ${daysElapsed}d overdue`
+                                  : 'Follow-up ready'}
                               </span>
+                              {!hasEmail && (
+                                <span className="flex items-center gap-0.5 text-[10px] text-[var(--warning-text)]">
+                                  <AlertTriangle size={9} /> No email
+                                </span>
+                              )}
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  if (!client?.email) {
+                                    addToast('No email on file for this client', 'error');
+                                    return;
+                                  }
+                                  try {
+                                    await openMailTo(client.email, subject, draft);
+                                    addToast('Email opened in your default mail client', 'success');
+                                  } catch {
+                                    addToast('Failed to open email client', 'error');
+                                  }
+                                }}
+                                className="text-[10px] btn-accent px-1.5 py-0.5 rounded-[4px] transition-colors flex-shrink-0"
+                              >
+                                <Mail size={10} className="inline mr-0.5" /> Email
+                              </button>
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  await updateFollowUpStatus(fu.id, 'sent', 'sent');
+                                  addToast('Marked as sent', 'success');
+                                }}
+                                className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] px-1 flex-shrink-0"
+                                aria-label="Mark follow-up as sent"
+                                title="Mark as sent"
+                              >
+                                <Check size={10} />
+                              </button>
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  await updateFollowUpStatus(fu.id, 'dismissed', 'dismissed');
+                                  addToast('Dismissed', 'info');
+                                }}
+                                className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] px-1 flex-shrink-0"
+                                aria-label="Dismiss follow-up"
+                                title="Dismiss"
+                              >
+                                <X size={10} />
+                              </button>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleAddLateFee(inv);
+                                  openPaymentModal(inv);
                                 }}
-                                className="text-[var(--accent-ink,var(--accent))] hover:underline"
-                                title={feeConfirm === inv.id ? 'Click again to confirm adding the fee' : 'Add the accrued late fee as a line item'}
+                                className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline ml-auto flex-shrink-0"
                               >
-                                {feeConfirm === inv.id ? 'Confirm add?' : 'Add to invoice'}
+                                Record Payment
                               </button>
-                            </>
+                            </div>
                           );
                         })()}
                       </div>
-                      {/* Follow-up indicator */}
-                      {(() => {
-                        const fu = pendingFollowUps.find((f) => f.entity_type === 'invoice' && f.entity_id === inv.id);
-                        if (!fu || inv.status === 'paid') return null;
-                        const client = getClient(inv.client_id);
-    const dueDate = inv.due_date ? parseDateString(inv.due_date) : null;
-                        const daysElapsed = dueDate ? Math.floor((Date.now() - dueDate.getTime()) / DAY_MS) : 0;
-                        const templateKey = daysElapsed >= 10 ? 'invoice_day14' : daysElapsed >= 4 ? 'invoice_day7' : 'invoice_day1';
-                        const draft = withFeeNote(generateFollowUpDraft(templateKey, {
-                          clientName: client?.name || 'Unknown',
-                          invoiceNumber: inv.invoice_number,
-                          amount: formatCurrency(inv.total),
-                          dueDate: inv.due_date,
-                          daysElapsed,
-                          freelancerName: profile?.name || 'Freelancer',
-                        }, followUpSettings.templates, dunningTone), inv);
-                        const subject = generateSubjectLine(templateKey, {
-                          clientName: client?.name || 'Unknown',
-                          invoiceNumber: inv.invoice_number,
-                          amount: formatCurrency(inv.total),
-                          dueDate: inv.due_date,
-                          daysElapsed,
-                          freelancerName: profile?.name || 'Freelancer',
-                        }, followUpSettings.subject_templates, dunningTone);
-                        const hasEmail = !!client?.email;
-                        return (
-                          <div className="flex items-center gap-1.5 mt-1.5">
-                            <Bell size={10} className="text-[var(--accent-ink,var(--accent))]" />
-                            <span className="text-[10px] text-[var(--accent-ink,var(--accent))]">{daysElapsed > 0 ? `Follow-up ready · ${daysElapsed}d overdue` : 'Follow-up ready'}</span>
-                            {!hasEmail && (
-                              <span className="flex items-center gap-0.5 text-[10px] text-[var(--warning-text)]">
-                                <AlertTriangle size={9} /> No email
-                              </span>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {inv.status === 'draft' && (
+                          <button
+                            onClick={() => handleMarkSent(inv)}
+                            className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline px-1"
+                          >
+                            Mark Sent
+                          </button>
+                        )}
+                        {(inv.status === 'sent' ||
+                          inv.status === 'overdue' ||
+                          inv.status === 'partial') && (
+                          <>
+                            <button
+                              onClick={() => openReminderModal(inv)}
+                              className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline px-1 flex items-center gap-0.5"
+                            >
+                              <Mail size={10} /> Remind
+                            </button>
+                            {!hasFollowUpStrip && (
+                              <button
+                                onClick={() => openPaymentModal(inv)}
+                                className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline px-1"
+                              >
+                                Record Payment
+                              </button>
                             )}
-                            <button
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                if (!client?.email) {
-                                  addToast('No email on file for this client', 'error');
-                                  return;
-                                }
-                                try {
-                                  await openMailTo(client.email, subject, draft);
-                                  addToast('Email opened in your default mail client', 'success');
-                                } catch { addToast('Failed to open email client', 'error'); }
-                              }}
-                              className="text-[10px] btn-accent px-1.5 py-0.5 rounded-[4px] transition-colors flex-shrink-0"
-                            >
-                              <Mail size={10} className="inline mr-0.5" /> Email
-                            </button>
-                            <button
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                await updateFollowUpStatus(fu.id, 'sent', 'sent');
-                                addToast('Marked as sent', 'success');
-                              }}
-                              className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] px-1 flex-shrink-0"
-                              aria-label="Mark follow-up as sent"
-                              title="Mark as sent"
-                            >
-                              <Check size={10} />
-                            </button>
-                            <button
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                await updateFollowUpStatus(fu.id, 'dismissed', 'dismissed');
-                                addToast('Dismissed', 'info');
-                              }}
-                              className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] px-1 flex-shrink-0"
-                              aria-label="Dismiss follow-up"
-                              title="Dismiss"
-                            >
-                              <X size={10} />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openPaymentModal(inv);
-                              }}
-                              className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline ml-auto flex-shrink-0"
-                            >
-                              Record Payment
-                            </button>
-                          </div>
-                        );
-                      })()}
+                          </>
+                        )}
+                        <div
+                          className="relative"
+                          ref={exportDropdown === inv.id ? dropdownRef : undefined}
+                        >
+                          <button
+                            onClick={() =>
+                              setExportDropdown(exportDropdown === inv.id ? null : inv.id)
+                            }
+                            aria-label="Export invoice"
+                            className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]"
+                            title="Export"
+                          >
+                            <Download size={13} />
+                          </button>
+                          {exportDropdown === inv.id && (
+                            <div className="absolute right-0 top-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px] shadow-lg py-1 z-10 w-28">
+                              <button
+                                onClick={() => handleExportPDF(inv)}
+                                className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
+                              >
+                                PDF
+                              </button>
+                              <button
+                                onClick={() => handleExportDOCX(inv)}
+                                className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
+                              >
+                                DOCX
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleDuplicate(inv)}
+                          aria-label="Duplicate invoice"
+                          className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]"
+                          title="Duplicate"
+                        >
+                          <Copy size={14} />
+                        </button>
+                        <button
+                          onClick={() => openEdit(inv)}
+                          aria-label="Edit invoice"
+                          className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() =>
+                            setConfirmDelete({
+                              id: inv.id,
+                              label: inv.invoice_number,
+                              type: 'invoice',
+                            })
+                          }
+                          aria-label="Delete invoice"
+                          className="p-1 text-[var(--text-tertiary)] hover:text-[var(--danger)] rounded-[8px]"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      {inv.status === 'draft' && <button onClick={() => handleMarkSent(inv)} className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline px-1">Mark Sent</button>}
-                      {(inv.status === 'sent' || inv.status === 'overdue' || inv.status === 'partial') && (
-                        <>
-                          <button onClick={() => openReminderModal(inv)} className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline px-1 flex items-center gap-0.5"><Mail size={10} /> Remind</button>
-                          <button onClick={() => openPaymentModal(inv)} className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline px-1">Record Payment</button>
-                        </>
-                      )}
-                      <div className="relative" ref={exportDropdown === inv.id ? dropdownRef : undefined}>
-                        <button onClick={() => setExportDropdown(exportDropdown === inv.id ? null : inv.id)} aria-label="Export invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]" title="Export"><Download size={13} /></button>
-                        {exportDropdown === inv.id && (
-                          <div className="absolute right-0 top-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px] shadow-lg py-1 z-10 w-28">
-                            <button onClick={() => handleExportPDF(inv)} className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]">PDF</button>
-                            <button onClick={() => handleExportDOCX(inv)} className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]">DOCX</button>
+                    {isExpanded && (
+                      <div className="border border-t-0 border-[var(--border-color)] rounded-b-[8px] bg-[var(--bg-secondary)]/30 px-4 py-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
+                            <DollarSign size={12} />
+                            Payments
+                          </h4>
+                        </div>
+                        <div className="flex items-center gap-4 mb-2 text-[10px]">
+                          <span className="text-[var(--text-secondary)]">
+                            Total paid:{' '}
+                            <span className="font-medium text-[var(--accent-ink,var(--accent))]">
+                              {fmtInv(paidTotal, inv)}
+                            </span>
+                          </span>
+                          <span className="text-[var(--text-secondary)]">
+                            Remaining:{' '}
+                            <span
+                              className={`font-medium ${remaining > 0 ? 'text-[var(--warning-text)]' : 'text-[var(--accent-ink,var(--accent))]'}`}
+                            >
+                              {fmtInv(remaining, inv)}
+                            </span>
+                          </span>
+                        </div>
+                        {invPayments.length === 0 ? (
+                          <p className="text-[10px] text-[var(--text-secondary)]">
+                            No payments recorded yet.
+                          </p>
+                        ) : (
+                          <div className="space-y-1">
+                            {invPayments.map((p) => (
+                              <div
+                                key={p.id}
+                                className="flex items-center justify-between px-2 py-1.5 rounded-[6px] bg-[var(--bg-card)]"
+                              >
+                                <div className="flex items-center gap-3 text-[10px]">
+                                  <span className="text-[var(--text-primary)] font-medium">
+                                    {fmtInv(p.amount, inv)}
+                                  </span>
+                                  <span className="text-[var(--text-secondary)]">
+                                    {relativeDate(p.created_at || p.payment_date)}
+                                  </span>
+                                  <span className="text-[var(--text-secondary)]">
+                                    {p.payment_method}
+                                  </span>
+                                  {p.reference && (
+                                    <span className="text-[var(--text-secondary)]">
+                                      Ref: {p.reference}
+                                    </span>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() =>
+                                    setConfirmDeletePayment({ id: p.id, invoiceId: inv.id })
+                                  }
+                                  className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"
+                                >
+                                  <Trash2 size={11} />
+                                </button>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>
-                      <button onClick={() => handleDuplicate(inv)} aria-label="Duplicate invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]" title="Duplicate"><Copy size={14} /></button>
-                      <button onClick={() => openEdit(inv)} aria-label="Edit invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]"><Pencil size={14} /></button>
-                      <button onClick={() => setConfirmDelete({ id: inv.id, label: inv.invoice_number, type: 'invoice' })} aria-label="Delete invoice" className="p-1 text-[var(--text-tertiary)] hover:text-[var(--danger)] rounded-[8px]"><Trash2 size={14} /></button>
-                    </div>
+                    )}
                   </div>
-                  {isExpanded && (
-                    <div className="border border-t-0 border-[var(--border-color)] rounded-b-[8px] bg-[var(--bg-secondary)]/30 px-4 py-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5"><DollarSign size={12} />Payments</h4>
-                      </div>
-                       <div className="flex items-center gap-4 mb-2 text-[10px]">
-                          <span className="text-[var(--text-secondary)]">Total paid: <span className="font-medium text-[var(--accent-ink,var(--accent))]">{fmtInv(paidTotal, inv)}</span></span>
-                          <span className="text-[var(--text-secondary)]">Remaining: <span className={`font-medium ${remaining > 0 ? 'text-[var(--warning-text)]' : 'text-[var(--accent-ink,var(--accent))]'}`}>{fmtInv(remaining, inv)}</span></span>
-                      </div>
-                      {invPayments.length === 0 ? (
-                        <p className="text-[10px] text-[var(--text-secondary)]">No payments recorded yet.</p>
-                      ) : (
-                        <div className="space-y-1">
-                          {invPayments.map((p) => (
-                            <div key={p.id} className="flex items-center justify-between px-2 py-1.5 rounded-[6px] bg-[var(--bg-card)]">
-                              <div className="flex items-center gap-3 text-[10px]">
-                                <span className="text-[var(--text-primary)] font-medium">{fmtInv(p.amount, inv)}</span>
-                                <span className="text-[var(--text-secondary)]">{relativeDate(p.created_at || p.payment_date)}</span>
-                                <span className="text-[var(--text-secondary)]">{p.payment_method}</span>
-                                {p.reference && <span className="text-[var(--text-secondary)]">Ref: {p.reference}</span>}
-                              </div>
-                              <button
-                                onClick={() => setConfirmDeletePayment({ id: p.id, invoiceId: inv.id })}
-                                className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"
-                              >
-                                <Trash2 size={11} />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          <MoreRows total={paged.total} shown={paged.visible.length} hasMore={paged.hasMore} showMore={paged.showMore} />
+                );
+              })}
+            </div>
+            <MoreRows
+              total={paged.total}
+              shown={paged.visible.length}
+              hasMore={paged.hasMore}
+              showMore={paged.showMore}
+            />
           </>
         )
       ) : recurringInvoices.length === 0 ? (
         <Card className="text-center py-12">
           <RotateCw size={32} className="text-[var(--neutral-border)] mx-auto mb-3" />
-          <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-1">No recurring invoices</h3>
-          <p className="text-xs text-[var(--text-tertiary)] mb-4">Set up a recurring invoice for retainer clients or subscriptions.</p>
-          <Button onClick={openNewRecurring} size="sm" variant="secondary"><Plus size={14} />New recurring</Button>
+          <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-1">
+            No recurring invoices
+          </h3>
+          <p className="text-xs text-[var(--text-tertiary)] mb-4">
+            Set up a recurring invoice for retainer clients or subscriptions.
+          </p>
+          <Button onClick={openNewRecurring} size="sm" variant="secondary">
+            <Plus size={14} />
+            New recurring
+          </Button>
         </Card>
       ) : filteredRecurring.length === 0 && search ? (
-        <Card className="text-center py-12"><p className="text-sm text-[var(--text-tertiary)]">No recurring invoices match "{search}"</p></Card>
+        <Card className="text-center py-12">
+          <p className="text-sm text-[var(--text-tertiary)]">
+            No recurring invoices match "{search}"
+          </p>
+        </Card>
       ) : (
         <div className="space-y-3">
           {filteredRecurring.map((ri) => (
@@ -949,21 +1555,55 @@ export default function Invoices() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="text-sm font-semibold text-[var(--text-primary)]">{ri.title}</h4>
-                    <span className="text-xs text-[var(--text-secondary)]">-- {getClientName(ri.client_id)}</span>
+                    <span className="text-xs text-[var(--text-secondary)]">
+                      -- {getClientName(ri.client_id)}
+                    </span>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-[var(--text-tertiary)] mb-1.5">
-                    <span>{formatCurrency(ri.total)}/{ri.frequency === 'monthly' ? 'month' : ri.frequency === 'weekly' ? 'week' : ri.frequency === 'biweekly' ? '2 weeks' : 'quarter'}</span>
+                    <span>
+                      {formatCurrency(ri.total)}/
+                      {ri.frequency === 'monthly'
+                        ? 'month'
+                        : ri.frequency === 'weekly'
+                          ? 'week'
+                          : ri.frequency === 'biweekly'
+                            ? '2 weeks'
+                            : 'quarter'}
+                    </span>
                     <span>Next: {relativeDate(ri.next_due)}</span>
                     {ri.last_generated && <span>Last: {relativeDate(ri.last_generated)}</span>}
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => handleToggleActive(ri)} className={`w-2 h-2 rounded-full ${ri.active ? 'bg-[var(--accent)]' : 'bg-[var(--neutral-border)]'}`} title={ri.active ? 'Active · click to pause' : 'Paused · click to resume'} aria-label={ri.active ? `Pause ${ri.title}` : `Resume ${ri.title}`} />
-                    <span className={`text-[10px] ${ri.active ? 'text-[var(--accent-ink,var(--accent))]' : 'text-[var(--text-tertiary)]'}`}>{ri.active ? 'Active' : 'Paused'}</span>
+                    <button
+                      onClick={() => handleToggleActive(ri)}
+                      className={`w-2 h-2 rounded-full ${ri.active ? 'bg-[var(--accent)]' : 'bg-[var(--neutral-border)]'}`}
+                      title={ri.active ? 'Active · click to pause' : 'Paused · click to resume'}
+                      aria-label={ri.active ? `Pause ${ri.title}` : `Resume ${ri.title}`}
+                    />
+                    <span
+                      className={`text-[10px] ${ri.active ? 'text-[var(--accent-ink,var(--accent))]' : 'text-[var(--text-tertiary)]'}`}
+                    >
+                      {ri.active ? 'Active' : 'Paused'}
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0 ml-3">
-                  <button onClick={() => openEditRecurring(ri)} aria-label="Edit recurring invoice" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"><Pencil size={14} /></button>
-                  <button onClick={() => setConfirmDelete({ id: ri.id, label: ri.title, type: 'recurring' })} aria-label="Delete recurring invoice" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)]"><Trash2 size={14} /></button>
+                  <button
+                    onClick={() => openEditRecurring(ri)}
+                    aria-label="Edit recurring invoice"
+                    className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                  <button
+                    onClick={() =>
+                      setConfirmDelete({ id: ri.id, label: ri.title, type: 'recurring' })
+                    }
+                    aria-label="Delete recurring invoice"
+                    className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)]"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               </div>
             </Card>
@@ -972,36 +1612,89 @@ export default function Invoices() {
       )}
 
       {/* Invoice Modal */}
-      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Invoice' : 'New Invoice'} size="lg">
+      <Modal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        title={editing ? 'Edit Invoice' : 'New Invoice'}
+        size="lg"
+      >
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Client *</label>
-              <ClientSelect clients={clients} value={form.client_id} onChange={handleClientChange} placeholder="Select a client..." />
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                Client *
+              </label>
+              <ClientSelect
+                clients={clients}
+                value={form.client_id}
+                onChange={handleClientChange}
+                placeholder="Select a client..."
+              />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Project (optional)</label>
-              <select value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]">
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                Project (optional)
+              </label>
+              <select
+                value={form.project_id}
+                onChange={(e) => setForm({ ...form, project_id: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              >
                 <option value="">None</option>
-                {projects.filter(p => !form.client_id || p.client_id === form.client_id).map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+                {projects
+                  .filter((p) => !form.client_id || p.client_id === form.client_id)
+                  .map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.title}
+                    </option>
+                  ))}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Invoice #</label>
-              <input type="text" value={form.invoice_number} onChange={(e) => setForm({ ...form, invoice_number: sanitizeInvoiceNumber(e.target.value) })} maxLength={40} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]" />
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                Invoice #
+              </label>
+              <input
+                type="text"
+                value={form.invoice_number}
+                onChange={(e) =>
+                  setForm({ ...form, invoice_number: sanitizeInvoiceNumber(e.target.value) })
+                }
+                maxLength={40}
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]"
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Due Date</label>
-              <input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]" />
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                Due Date
+              </label>
+              <input
+                type="date"
+                value={form.due_date}
+                onChange={(e) => setForm({ ...form, due_date: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]"
+              />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Currency</label>
-              <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]">
-                <option value="">{profile?.currency ? `${getCurrencySymbol(profile.currency)} (default)` : 'Default'}</option>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                Currency
+              </label>
+              <select
+                value={form.currency}
+                onChange={(e) => setForm({ ...form, currency: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              >
+                <option value="">
+                  {profile?.currency
+                    ? `${getCurrencySymbol(profile.currency)} (default)`
+                    : 'Default'}
+                </option>
                 {currencies.map((c) => (
-                  <option key={c} value={c}>{getCurrencySymbol(c)} {c}</option>
+                  <option key={c} value={c}>
+                    {getCurrencySymbol(c)} {c}
+                  </option>
                 ))}
               </select>
             </div>
@@ -1009,24 +1702,49 @@ export default function Invoices() {
           {!editing && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-medium text-[var(--text-secondary)] flex items-center gap-1.5"><Clock size={13} /> Import unbilled time</label>
-                {selectedTimeIds.size > 0 && <button onClick={importSelectedTime} className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline">Import {selectedTimeIds.size} selected</button>}
+                <label className="text-xs font-medium text-[var(--text-secondary)] flex items-center gap-1.5">
+                  <Clock size={13} /> Import unbilled time
+                </label>
+                {selectedTimeIds.size > 0 && (
+                  <button
+                    onClick={importSelectedTime}
+                    className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline"
+                  >
+                    Import {selectedTimeIds.size} selected
+                  </button>
+                )}
               </div>
               {hourlyRate <= 0 ? (
-                <p className="text-xs text-[var(--warning-text)] bg-[var(--warning-bg)] px-3 py-2 rounded-[6px]">Set your hourly rate in profile to use time import.</p>
+                <p className="text-xs text-[var(--warning-text)] bg-[var(--warning-bg)] px-3 py-2 rounded-[6px]">
+                  Set your hourly rate in profile to use time import.
+                </p>
               ) : unbilledTime.length === 0 ? (
-                <p className="text-xs text-[var(--text-tertiary)]">No unbilled time entries to import.</p>
+                <p className="text-xs text-[var(--text-tertiary)]">
+                  No unbilled time entries to import.
+                </p>
               ) : (
                 <div className="space-y-1 max-h-36 overflow-y-auto border border-[var(--border-color)] rounded-[8px] p-1">
                   {unbilledTime.map((t) => {
                     const hours = (t.duration_minutes || 0) / 60;
                     const amount = Math.round(hours * hourlyRate * 100) / 100;
                     return (
-                      <label key={t.id} className={`flex items-center gap-2 px-2 py-1.5 rounded-[6px] cursor-pointer text-xs ${selectedTimeIds.has(t.id) ? 'bg-[var(--accent-bg)]' : 'hover:bg-[var(--bg-secondary)]'}`}>
-                        <input type="checkbox" checked={selectedTimeIds.has(t.id)} onChange={() => toggleTimeSelection(t.id)} className="w-3.5 h-3.5 rounded border-[var(--neutral-border)] text-[var(--accent-ink,var(--accent))]" />
+                      <label
+                        key={t.id}
+                        className={`flex items-center gap-2 px-2 py-1.5 rounded-[6px] cursor-pointer text-xs ${selectedTimeIds.has(t.id) ? 'bg-[var(--accent-bg)]' : 'hover:bg-[var(--bg-secondary)]'}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedTimeIds.has(t.id)}
+                          onChange={() => toggleTimeSelection(t.id)}
+                          className="w-3.5 h-3.5 rounded border-[var(--neutral-border)] text-[var(--accent-ink,var(--accent))]"
+                        />
                         <span className="flex-1 truncate">{t.description || 'No description'}</span>
-                        <span className="text-[var(--text-secondary)] flex-shrink-0">{formatMinutes(t.duration_minutes || 0)}</span>
-                        <span className="text-[var(--accent-ink,var(--accent))] font-medium flex-shrink-0 w-16 text-right">{formatCurrency(amount)}</span>
+                        <span className="text-[var(--text-secondary)] flex-shrink-0">
+                          {formatMinutes(t.duration_minutes || 0)}
+                        </span>
+                        <span className="text-[var(--accent-ink,var(--accent))] font-medium flex-shrink-0 w-16 text-right">
+                          {formatCurrency(amount)}
+                        </span>
                       </label>
                     );
                   })}
@@ -1037,50 +1755,136 @@ export default function Invoices() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-medium text-[var(--text-secondary)]">Line Items</label>
-              <button onClick={addItem} className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline">+ Add Line</button>
+              <button
+                onClick={addItem}
+                className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline"
+              >
+                + Add Line
+              </button>
             </div>
             <div className="space-y-2">
               {items.map((item, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <input type="text" value={item.description} onChange={(e) => updateItem(i, 'description', e.target.value)} placeholder="Description" className="flex-1 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
-                  <input type="number" value={item.quantity || ''} onChange={(e) => updateItem(i, 'quantity', parseFloat(e.target.value) || 0)} placeholder="Qty" className="w-16 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
-                  <input type="number" value={item.unit_price || ''} onChange={(e) => updateItem(i, 'unit_price', parseFloat(e.target.value) || 0)} placeholder="Rate" className="w-24 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
-                  <span className="text-xs text-[var(--text-secondary)] w-20 text-right font-medium tabular-nums">{formatCurrency(item.total)}</span>
-                  <button onClick={() => removeItem(i)} aria-label="Remove line item" className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"><Trash2 size={14} /></button>
+                  <input
+                    type="text"
+                    value={item.description}
+                    onChange={(e) => updateItem(i, 'description', e.target.value)}
+                    placeholder="Description"
+                    className="flex-1 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]"
+                  />
+                  <input
+                    type="number"
+                    value={item.quantity || ''}
+                    onChange={(e) => updateItem(i, 'quantity', parseFloat(e.target.value) || 0)}
+                    placeholder="Qty"
+                    className="w-16 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]"
+                  />
+                  <input
+                    type="number"
+                    value={item.unit_price || ''}
+                    onChange={(e) => updateItem(i, 'unit_price', parseFloat(e.target.value) || 0)}
+                    placeholder="Rate"
+                    className="w-24 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]"
+                  />
+                  <span className="text-xs text-[var(--text-secondary)] w-20 text-right font-medium tabular-nums">
+                    {formatCurrency(item.total)}
+                  </span>
+                  <button
+                    onClick={() => removeItem(i)}
+                    aria-label="Remove line item"
+                    className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               ))}
             </div>
           </div>
           <div className="border-t border-[var(--border-color)] pt-3 space-y-1 text-sm">
-            <div className="flex justify-between"><span className="text-[var(--text-secondary)]">Subtotal</span><span className="text-[var(--text-primary)] font-medium">{formatCurrency(subtotal)}</span></div>
+            <div className="flex justify-between">
+              <span className="text-[var(--text-secondary)]">Subtotal</span>
+              <span className="text-[var(--text-primary)] font-medium">
+                {formatCurrency(subtotal)}
+              </span>
+            </div>
             <div className="flex justify-between items-center">
               <span className="text-[var(--text-secondary)]">VAT / sales tax (%)</span>
-              <input type="number" min={0} value={form.tax_rate} onChange={(e) => { const v = e.target.value; setForm({ ...form, tax_rate: Number(v) < 0 ? '0' : v }); }} placeholder="0" className="w-20 px-2 py-1 text-xs text-right border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
+              <input
+                type="number"
+                min={0}
+                value={form.tax_rate}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setForm({ ...form, tax_rate: Number(v) < 0 ? '0' : v });
+                }}
+                placeholder="0"
+                className="w-20 px-2 py-1 text-xs text-right border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]"
+              />
             </div>
-            <div className="flex justify-between pt-1 border-t border-[var(--border-color)]"><span className="font-medium text-[var(--text-primary)]">Total</span><span className="font-semibold text-[var(--text-primary)]">{formatCurrency(total)}</span></div>
+            <div className="flex justify-between pt-1 border-t border-[var(--border-color)]">
+              <span className="font-medium text-[var(--text-primary)]">Total</span>
+              <span className="font-semibold text-[var(--text-primary)]">
+                {formatCurrency(total)}
+              </span>
+            </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Notes</label>
-            <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Invoice notes..." rows={2} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none" />
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              Notes
+            </label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              placeholder="Invoice notes..."
+              rows={2}
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none"
+            />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="secondary" onClick={() => setShowModal(false)} size="sm">Cancel</Button>
-            <Button onClick={handleSave} loading={saving} disabled={!form.client_id} size="sm">{editing ? 'Save Changes' : 'Create Invoice'}</Button>
+            <Button variant="secondary" onClick={() => setShowModal(false)} size="sm">
+              Cancel
+            </Button>
+            <Button onClick={handleSave} loading={saving} disabled={!form.client_id} size="sm">
+              {editing ? 'Save Changes' : 'Create Invoice'}
+            </Button>
           </div>
         </div>
       </Modal>
 
       {/* Recurring Invoice Modal */}
-      <Modal open={showRecurringModal} onClose={() => setShowRecurringModal(false)} title={editingRecurring ? 'Edit Recurring Invoice' : 'New Recurring Invoice'} size="lg">
+      <Modal
+        open={showRecurringModal}
+        onClose={() => setShowRecurringModal(false)}
+        title={editingRecurring ? 'Edit Recurring Invoice' : 'New Recurring Invoice'}
+        size="lg"
+      >
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Client *</label>
-              <ClientSelect clients={clients} value={riForm.client_id} onChange={(clientId) => setRiForm({ ...riForm, client_id: clientId })} placeholder="Select a client..." />
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                Client *
+              </label>
+              <ClientSelect
+                clients={clients}
+                value={riForm.client_id}
+                onChange={(clientId) => setRiForm({ ...riForm, client_id: clientId })}
+                placeholder="Select a client..."
+              />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Frequency</label>
-              <select value={riForm.frequency} onChange={(e) => setRiForm({ ...riForm, frequency: e.target.value as RecurringInvoiceType['frequency'] })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]">
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                Frequency
+              </label>
+              <select
+                value={riForm.frequency}
+                onChange={(e) =>
+                  setRiForm({
+                    ...riForm,
+                    frequency: e.target.value as RecurringInvoiceType['frequency'],
+                  })
+                }
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              >
                 <option value="weekly">Weekly</option>
                 <option value="biweekly">Bi-weekly</option>
                 <option value="monthly">Monthly</option>
@@ -1088,91 +1892,251 @@ export default function Invoices() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Starts on</label>
-              <input type="date" value={riForm.next_due} onChange={(e) => setRiForm({ ...riForm, next_due: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]" />
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                Starts on
+              </label>
+              <input
+                type="date"
+                value={riForm.next_due}
+                onChange={(e) => setRiForm({ ...riForm, next_due: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]"
+              />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Title *</label>
-            <input type="text" value={riForm.title} onChange={(e) => setRiForm({ ...riForm, title: e.target.value })} placeholder="e.g. Monthly retainer" className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]" />
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              Title *
+            </label>
+            <input
+              type="text"
+              value={riForm.title}
+              onChange={(e) => setRiForm({ ...riForm, title: e.target.value })}
+              placeholder="e.g. Monthly retainer"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+            />
           </div>
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-medium text-[var(--text-secondary)]">Line Items</label>
-              <button onClick={addRiItem} className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline">+ Add Line</button>
+              <button
+                onClick={addRiItem}
+                className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline"
+              >
+                + Add Line
+              </button>
             </div>
             <div className="space-y-2">
               {riItems.map((item, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <input type="text" value={item.description} onChange={(e) => updateRiItem(i, 'description', e.target.value)} placeholder="Description" className="flex-1 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
-                  <input type="number" value={item.quantity || ''} onChange={(e) => updateRiItem(i, 'quantity', parseFloat(e.target.value) || 0)} placeholder="Qty" className="w-16 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
-                  <input type="number" value={item.unit_price || ''} onChange={(e) => updateRiItem(i, 'unit_price', parseFloat(e.target.value) || 0)} placeholder="Rate" className="w-24 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
-                  <span className="text-xs text-[var(--text-secondary)] w-20 text-right font-medium tabular-nums">{formatCurrency(item.total)}</span>
-                  <button onClick={() => removeRiItem(i)} aria-label="Remove line item" className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"><Trash2 size={14} /></button>
+                  <input
+                    type="text"
+                    value={item.description}
+                    onChange={(e) => updateRiItem(i, 'description', e.target.value)}
+                    placeholder="Description"
+                    className="flex-1 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]"
+                  />
+                  <input
+                    type="number"
+                    value={item.quantity || ''}
+                    onChange={(e) => updateRiItem(i, 'quantity', parseFloat(e.target.value) || 0)}
+                    placeholder="Qty"
+                    className="w-16 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]"
+                  />
+                  <input
+                    type="number"
+                    value={item.unit_price || ''}
+                    onChange={(e) => updateRiItem(i, 'unit_price', parseFloat(e.target.value) || 0)}
+                    placeholder="Rate"
+                    className="w-24 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]"
+                  />
+                  <span className="text-xs text-[var(--text-secondary)] w-20 text-right font-medium tabular-nums">
+                    {formatCurrency(item.total)}
+                  </span>
+                  <button
+                    onClick={() => removeRiItem(i)}
+                    aria-label="Remove line item"
+                    className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               ))}
             </div>
           </div>
           <div className="border-t border-[var(--border-color)] pt-3 space-y-1 text-sm">
-            <div className="flex justify-between"><span className="text-[var(--text-secondary)]">Subtotal</span><span className="text-[var(--text-primary)] font-medium">{formatCurrency(riSubtotal)}</span></div>
+            <div className="flex justify-between">
+              <span className="text-[var(--text-secondary)]">Subtotal</span>
+              <span className="text-[var(--text-primary)] font-medium">
+                {formatCurrency(riSubtotal)}
+              </span>
+            </div>
             <div className="flex justify-between items-center">
               <span className="text-[var(--text-secondary)]">VAT / sales tax (%)</span>
-              <input type="number" min={0} value={riForm.tax_rate} onChange={(e) => { const v = e.target.value; setRiForm({ ...riForm, tax_rate: Number(v) < 0 ? '0' : v }); }} placeholder="0" className="w-20 px-2 py-1 text-xs text-right border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]" />
+              <input
+                type="number"
+                min={0}
+                value={riForm.tax_rate}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setRiForm({ ...riForm, tax_rate: Number(v) < 0 ? '0' : v });
+                }}
+                placeholder="0"
+                className="w-20 px-2 py-1 text-xs text-right border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]"
+              />
             </div>
-            <div className="flex justify-between pt-1 border-t border-[var(--border-color)]"><span className="font-medium text-[var(--text-primary)]">Total</span><span className="font-semibold text-[var(--text-primary)]">{formatCurrency(riTotal)}</span></div>
+            <div className="flex justify-between pt-1 border-t border-[var(--border-color)]">
+              <span className="font-medium text-[var(--text-primary)]">Total</span>
+              <span className="font-semibold text-[var(--text-primary)]">
+                {formatCurrency(riTotal)}
+              </span>
+            </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Notes</label>
-            <textarea value={riForm.notes} onChange={(e) => setRiForm({ ...riForm, notes: e.target.value })} placeholder="Invoice notes..." rows={2} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] resize-none focus:outline-none focus:border-[var(--accent)]" />
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              Notes
+            </label>
+            <textarea
+              value={riForm.notes}
+              onChange={(e) => setRiForm({ ...riForm, notes: e.target.value })}
+              placeholder="Invoice notes..."
+              rows={2}
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] resize-none focus:outline-none focus:border-[var(--accent)]"
+            />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="secondary" onClick={() => setShowRecurringModal(false)} size="sm">Cancel</Button>
-            <Button onClick={handleSaveRecurring} loading={saving} disabled={!riForm.title.trim() || !riForm.client_id} size="sm">{editingRecurring ? 'Save Changes' : 'Create'}</Button>
+            <Button variant="secondary" onClick={() => setShowRecurringModal(false)} size="sm">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveRecurring}
+              loading={saving}
+              disabled={!riForm.title.trim() || !riForm.client_id}
+              size="sm"
+            >
+              {editingRecurring ? 'Save Changes' : 'Create'}
+            </Button>
           </div>
         </div>
       </Modal>
 
       {/* Payment Recording Modal */}
-      <Modal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} title="Record Payment" size="sm">
+      <Modal
+        open={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        title="Record Payment"
+        size="sm"
+      >
         <div className="space-y-4">
           {paymentInv && (
             <div className="px-3 py-2 rounded-[8px] bg-[var(--bg-secondary)]">
-              <p className="text-xs font-medium text-[var(--text-primary)]">{paymentInv.invoice_number}</p>
-              <p className="text-[10px] text-[var(--text-secondary)]">{getClientName(paymentInv.client_id)} &middot; {fmtInvDisplay(paymentInv)}</p>
+              <p className="text-xs font-medium text-[var(--text-primary)]">
+                {paymentInv.invoice_number}
+              </p>
+              <p className="text-[10px] text-[var(--text-secondary)]">
+                {getClientName(paymentInv.client_id)} &middot; {fmtInvDisplay(paymentInv)}
+              </p>
             </div>
           )}
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Payment Date</label>
-            <input type="date" value={paymentForm.payment_date} onChange={(e) => setPaymentForm({ ...paymentForm, payment_date: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]" />
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              Payment Date
+            </label>
+            <input
+              type="date"
+              value={paymentForm.payment_date}
+              onChange={(e) => setPaymentForm({ ...paymentForm, payment_date: e.target.value })}
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]"
+            />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Amount Received</label>
-            <input type="number" min={0} value={paymentForm.amount} onChange={(e) => { const v = e.target.value; setPaymentForm({ ...paymentForm, amount: Number(v) < 0 ? '0' : v }); }} placeholder="0.00" className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]" />
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              Amount Received
+            </label>
+            <input
+              type="number"
+              min={0}
+              value={paymentForm.amount}
+              onChange={(e) => {
+                const v = e.target.value;
+                setPaymentForm({ ...paymentForm, amount: Number(v) < 0 ? '0' : v });
+              }}
+              placeholder="0.00"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+            />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Payment Method</label>
-            <select value={paymentForm.payment_method} onChange={(e) => setPaymentForm({ ...paymentForm, payment_method: e.target.value })} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]">
-              {['Bank Transfer', 'E-Transfer', 'Cash', 'Cheque', 'Credit Card', 'PayPal', 'Stripe', 'Wise', 'Crypto', 'Other'].map((m) => (
-                <option key={m} value={m}>{m}</option>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              Payment Method
+            </label>
+            <select
+              value={paymentForm.payment_method}
+              onChange={(e) => setPaymentForm({ ...paymentForm, payment_method: e.target.value })}
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+            >
+              {[
+                'Bank Transfer',
+                'E-Transfer',
+                'Cash',
+                'Cheque',
+                'Credit Card',
+                'PayPal',
+                'Stripe',
+                'Wise',
+                'Crypto',
+                'Other',
+              ].map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Reference / Transaction ID</label>
-            <input type="text" value={paymentForm.reference} onChange={(e) => setPaymentForm({ ...paymentForm, reference: e.target.value })} placeholder="Optional" className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]" />
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              Reference / Transaction ID
+            </label>
+            <input
+              type="text"
+              value={paymentForm.reference}
+              onChange={(e) => setPaymentForm({ ...paymentForm, reference: e.target.value })}
+              placeholder="Optional"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+            />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Notes</label>
-            <textarea value={paymentForm.notes} onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })} placeholder="Optional" rows={2} className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none" />
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              Notes
+            </label>
+            <textarea
+              value={paymentForm.notes}
+              onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
+              placeholder="Optional"
+              rows={2}
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none"
+            />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="secondary" onClick={() => setShowPaymentModal(false)} size="sm">Cancel</Button>
-            <Button onClick={handleRecordPayment} loading={paymentSaving} disabled={!paymentForm.amount} size="sm">Record Payment</Button>
+            <Button variant="secondary" onClick={() => setShowPaymentModal(false)} size="sm">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRecordPayment}
+              loading={paymentSaving}
+              disabled={!paymentForm.amount}
+              size="sm"
+            >
+              Record Payment
+            </Button>
           </div>
         </div>
       </Modal>
 
-      <Modal open={!!reminderInv} onClose={() => setReminderInv(null)} title="Send Invoice Reminder" size="md">
+      <Modal
+        open={!!reminderInv}
+        onClose={() => setReminderInv(null)}
+        title="Send Invoice Reminder"
+        size="md"
+      >
         {reminderInv && (
           <div className="space-y-3">
             {!reminderForm.to && (
@@ -1182,7 +2146,9 @@ export default function Invoices() {
               </div>
             )}
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">To</label>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                To
+              </label>
               <input
                 type="email"
                 value={reminderForm.to}
@@ -1192,7 +2158,9 @@ export default function Invoices() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Subject</label>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                Subject
+              </label>
               <input
                 type="text"
                 value={reminderForm.subject}
@@ -1201,7 +2169,9 @@ export default function Invoices() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Body</label>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                Body
+              </label>
               <textarea
                 value={reminderForm.body}
                 onChange={(e) => setReminderForm({ ...reminderForm, body: e.target.value })}
@@ -1213,21 +2183,31 @@ export default function Invoices() {
               <input
                 type="checkbox"
                 checked={reminderForm.markFollowedUp}
-                onChange={(e) => setReminderForm({ ...reminderForm, markFollowedUp: e.target.checked })}
+                onChange={(e) =>
+                  setReminderForm({ ...reminderForm, markFollowedUp: e.target.checked })
+                }
                 className="w-3.5 h-3.5 rounded border-[var(--border-color)] text-[var(--accent-ink,var(--accent))] focus:ring-[var(--accent)]"
               />
               Mark as followed up (logs a communication entry)
             </label>
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="secondary" size="sm" onClick={() => {
-                if (reminderForm.to && reminderForm.subject && reminderForm.body) {
-                  navigator.clipboard.writeText(`To: ${reminderForm.to}\nSubject: ${reminderForm.subject}\n\n${reminderForm.body}`);
-                  addToast('Copied to clipboard', 'success');
-                }
-              }}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  if (reminderForm.to && reminderForm.subject && reminderForm.body) {
+                    navigator.clipboard.writeText(
+                      `To: ${reminderForm.to}\nSubject: ${reminderForm.subject}\n\n${reminderForm.body}`,
+                    );
+                    addToast('Copied to clipboard', 'success');
+                  }
+                }}
+              >
                 <Copy size={12} className="mr-1" /> Copy
               </Button>
-              <Button variant="secondary" size="sm" onClick={() => setReminderInv(null)}>Cancel</Button>
+              <Button variant="secondary" size="sm" onClick={() => setReminderInv(null)}>
+                Cancel
+              </Button>
               <Button size="sm" onClick={handleSendReminder}>
                 <Mail size={12} className="mr-1" /> Open in Email
               </Button>

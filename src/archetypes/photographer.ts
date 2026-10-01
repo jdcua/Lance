@@ -17,7 +17,7 @@ const photographer: ArchetypeConfig = {
       { id: 'shootsThisMonth', label: 'Shoots this month', query: null, format: 'count', color: 'blue' },
       { id: 'editingVsShootRatio', label: 'Editing vs shoot ratio', query: null, format: 'text', color: 'purple' },
       { id: 'assetsCount', label: 'Assets in library', query: null, format: 'count', color: 'green' },
-      { id: 'revenuePerProjectAvg', label: 'Revenue per shoot (avg)', query: null, format: 'currency', color: 'green' },
+      { id: 'revenuePerProjectAvg', label: 'Revenue per project (avg)', query: null, format: 'currency', color: 'green' },
     ],
     widgets: [
       { id: 'shoot-log-widget', component: 'ShootLogWidget', priority: 1 },

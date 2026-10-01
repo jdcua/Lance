@@ -1,11 +1,12 @@
 {
   "name": "lance",
   "private": true,
-  "version": "0.9.3",
+  "version": "0.9.9-alpha",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:trial": "node scripts/build-trial.mjs",
     "preview": "vite preview",
     "tauri": "tauri",
     "build:win": "tauri build --target x86_64-pc-windows-msvc",

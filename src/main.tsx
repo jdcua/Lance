@@ -14,7 +14,11 @@ interface IdleDeadline {
 type IdleCallbackFn = (deadline: IdleDeadline) => void;
 
 if (!('requestIdleCallback' in window)) {
-  (window as unknown as { requestIdleCallback?: (cb: IdleCallbackFn) => ReturnType<typeof setTimeout> }).requestIdleCallback = function (cb: IdleCallbackFn) {
+  (
+    window as unknown as {
+      requestIdleCallback?: (cb: IdleCallbackFn) => ReturnType<typeof setTimeout>;
+    }
+  ).requestIdleCallback = function (cb: IdleCallbackFn) {
     const start = Date.now();
     return setTimeout(function () {
       cb({
@@ -28,7 +32,9 @@ if (!('requestIdleCallback' in window)) {
 }
 
 if (!('cancelIdleCallback' in window)) {
-  (window as unknown as { cancelIdleCallback?: (handle: ReturnType<typeof setTimeout>) => void }).cancelIdleCallback = function (id: ReturnType<typeof setTimeout>) {
+  (
+    window as unknown as { cancelIdleCallback?: (handle: ReturnType<typeof setTimeout>) => void }
+  ).cancelIdleCallback = function (id: ReturnType<typeof setTimeout>) {
     clearTimeout(id);
   };
 }
@@ -37,8 +43,25 @@ if (!('cancelIdleCallback' in window)) {
 // Served over plain http (LAN IPs, some WebViews) it is missing and all
 // 170+ id generations throw. Backfill once so every call site keeps working.
 import { safeRandomUUID } from './utils/uuid';
+import { isTrial } from './demo/isDemo';
 if (typeof crypto !== 'undefined' && typeof crypto.randomUUID !== 'function') {
   (crypto as unknown as { randomUUID: () => string }).randomUUID = safeRandomUUID;
+}
+
+// Trial: no third-party requests, ever. External fonts stay unloaded so the
+// trial works offline and leaks nothing. System fonts take over cleanly.
+if (isTrial() && typeof document !== 'undefined') {
+  for (const link of Array.from(document.querySelectorAll('link[href*="fonts.bunny.net"]'))) {
+    link.remove();
+  }
+}
+
+// Trial: handwritten service worker caches the app shell for offline use.
+// Same-origin only. No analytics, no push, no background sync.
+if (isTrial() && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/try/trial-sw.js', { scope: '/try/' }).catch(() => {});
+  });
 }
 
 function Root() {
@@ -50,7 +73,9 @@ function Root() {
     document.documentElement.classList.toggle('motion-off', prefs.motion === 'off');
   }, [prefs.motion]);
   return (
-    <MotionConfig reducedMotion={prefs.motion === 'off' ? 'always' : prefs.motion === 'full' ? 'never' : 'user'}>
+    <MotionConfig
+      reducedMotion={prefs.motion === 'off' ? 'always' : prefs.motion === 'full' ? 'never' : 'user'}
+    >
       <RouterProvider router={router} />
     </MotionConfig>
   );
@@ -59,5 +84,5 @@ function Root() {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Root />
-  </React.StrictMode>
+  </React.StrictMode>,
 );
