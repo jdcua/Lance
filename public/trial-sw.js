@@ -11,7 +11,7 @@
 // Replaced at build time with "<version>-<shorthash>" so each deploy gets
 // fresh bytes (service workers only update when the script changes).
 var BUILD_ID = '__TRIAL_BUILD_ID__';
-var CACHE = 'lance-trial-v0.9.9-alpha';
+var CACHE = 'lance-trial-v0.9.9-1';
 var SHELL = ['/try/', '/try/index.html', '/try/manifest.trial.webmanifest'];
 
 function isSameOrigin(url) {
