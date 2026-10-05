@@ -44,6 +44,13 @@ export function csvCellValue(value: string | number): string {
 }
 
 function sanitizeCell(value: unknown): string {
+  // With cellDates:true, date-formatted cells arrive as Dates: freeze them to
+  // ISO before String() turns them into locale prose or epoch millis.
+  // Time-only cells decode to year 1899 — those are not calendar dates, so
+  // leave them to fail closed downstream exactly as before.
+  if (value instanceof Date && !isNaN(value.getTime()) && value.getFullYear() >= 1950) {
+    return value.toISOString().split('T')[0];
+  }
   const str = String(value ?? '');
   const stripped = stripFormulaInjection(str);
   if (stripped.length > MAX_CELL_LENGTH) {
@@ -59,7 +66,7 @@ export async function parseSpreadsheet(file: File): Promise<ImportDetection> {
   // sheet_to_json, by which point a 5MB xlsx declaring !ref="A1:XFD1048576"
   // has already made SheetJS materialise ~17 billion cells. Tell the parser the
   // ceiling up front so it never allocates them.
-  const workbook = XLSX.read(arrayBuffer, { type: 'array', sheetRows: MAX_ROWS + 1 });
+  const workbook = XLSX.read(arrayBuffer, { type: 'array', sheetRows: MAX_ROWS + 1, cellDates: true });
 
   const sheetName = workbook.SheetNames[0];
   if (!sheetName) {

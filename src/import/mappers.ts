@@ -4,6 +4,7 @@
 
 import type { ImportDetection } from '../types';
 import { todayLocalISO } from '../utils/format';
+import { sanitizeInput, sanitizePhone } from '../utils/sanitize';
 
 /**
  * Map spreadsheet rows to client creation payloads.
@@ -20,11 +21,13 @@ export function mapToClients(
       const rawEmail = getField(row, reverseMap, 'email')?.trim();
       const email = rawEmail && EMAIL_REGEX.test(rawEmail) ? rawEmail : undefined;
       return {
-        name: getField(row, reverseMap, 'name')?.trim() || '',
+        // Imported cells are untrusted (shared CSVs, bank exports): strip
+        // markup/sequences at the mapper so no caller can store them raw.
+        name: sanitizeInput(getField(row, reverseMap, 'name') || '').trim() || '',
         email,
-        phone: getField(row, reverseMap, 'phone')?.trim() || undefined,
-        company: getField(row, reverseMap, 'company')?.trim() || undefined,
-        notes: getField(row, reverseMap, 'notes')?.trim() || undefined,
+        phone: sanitizePhone(getField(row, reverseMap, 'phone') || '') || undefined,
+        company: sanitizeInput(getField(row, reverseMap, 'company') || '').trim() || undefined,
+        notes: sanitizeInput(getField(row, reverseMap, 'notes') || '').trim() || undefined,
       };
     })
     .filter(c => c.name.length > 0);
@@ -40,7 +43,7 @@ export function mapToLineItems(
   const reverseMap = buildReverseMap(columnMapping);
   return rows
     .map(row => {
-      const desc = getField(row, reverseMap, 'description')?.trim() || '';
+      const desc = sanitizeInput(getField(row, reverseMap, 'description') || '').trim() || '';
       const qty = parseFloat(getField(row, reverseMap, 'quantity') || '1') || 1;
       const price = parseFloat(getField(row, reverseMap, 'unit_price') || '0') || 0;
       const total = parseFloat(getField(row, reverseMap, 'total') || '') || qty * price;
@@ -83,13 +86,13 @@ export function mapToProjects(
       const budget = budgetStr ? parseFloat(budgetStr.replace(/[$,]/g, '')) : undefined;
 
       return {
-        title: getField(row, reverseMap, 'title')?.trim() || '',
+        title: sanitizeInput(getField(row, reverseMap, 'title') || '').trim() || '',
         status,
         budget: budget && !isNaN(budget) ? budget : undefined,
         start_date: normalizeDate(getField(row, reverseMap, 'start_date')),
         end_date: normalizeDate(getField(row, reverseMap, 'end_date')),
-        notes: getField(row, reverseMap, 'notes')?.trim() || undefined,
-        client_name: getField(row, reverseMap, 'client_name')?.trim() || undefined,
+        notes: sanitizeInput(getField(row, reverseMap, 'notes') || '').trim() || undefined,
+        client_name: sanitizeInput(getField(row, reverseMap, 'client_name') || '').trim() || undefined,
       };
     })
     .filter(p => p.title.length > 0);
@@ -108,8 +111,8 @@ export function mapToExpenses(
       const amountStr = getField(row, reverseMap, 'amount') || '0';
       const amount = parseFloat(amountStr.replace(/[$,]/g, ''));
       return {
-        category: getField(row, reverseMap, 'category')?.trim() || 'Uncategorized',
-        description: getField(row, reverseMap, 'description')?.trim() || '',
+        category: sanitizeInput(getField(row, reverseMap, 'category') || '').trim() || 'Uncategorized',
+        description: sanitizeInput(getField(row, reverseMap, 'description') || '').trim() || '',
         amount: isNaN(amount) ? 0 : amount,
         date: normalizeDate(getField(row, reverseMap, 'date')) || todayLocalISO(),
       };
@@ -140,14 +143,17 @@ export function extractDocumentPrefill(detection: ImportDetection): {
   const prefillTotal = fields.total ? parseFloat(fields.total) : undefined;
   return {
     entityType: detection.detectedEntity,
-    title: fields.title,
-    client_name: fields.client_name,
+    title: fields.title ? sanitizeInput(fields.title).trim() || undefined : undefined,
+    client_name: fields.client_name ? sanitizeInput(fields.client_name).trim() || undefined : undefined,
     email: fields.email,
     total: prefillTotal !== undefined && isFinite(prefillTotal) ? prefillTotal : undefined,
     due_date: normalizeDate(fields.due_date),
     invoice_number: fields.invoice_number,
     body: detection.preview.rawText?.substring(0, 5000),
-    lineItems,
+    lineItems: lineItems?.map(item => ({
+      ...item,
+      description: sanitizeInput(item.description || '').trim(),
+    })),
   };
 }
 
@@ -171,6 +177,18 @@ function normalizeDate(dateStr: string | undefined): string | undefined {
   const trimmed = dateStr.trim();
   // Already ISO format
   if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) return trimmed.substring(0, 10);
+  // Excel serial (unformatted numeric cells, CSV dates): days since
+  // 1899-12-30. Range-gated to plausible calendar dates so plain numbers
+  // like invoice counts never convert.
+  if (/^\d+(\.\d+)?$/.test(trimmed)) {
+    const serial = Number(trimmed);
+    if (serial >= 20000 && serial <= 80000) {
+      const ms = Math.round((serial - 25569) * 86400 * 1000);
+      const d = new Date(ms);
+      if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+    }
+    return undefined;
+  }
   // Try parsing
   const parsed = new Date(trimmed);
   if (!isNaN(parsed.getTime())) return parsed.toISOString().split('T')[0];
