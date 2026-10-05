@@ -12,7 +12,7 @@ import { getArchetype } from '../archetypes';
 import ProInsights from '../components/features/ProInsights';
 
 export default function Insights() {
-  const { projects, loadProjects, invoices, loadInvoices, timeEntries, loadTimeEntries, clients, loadClients, proposals, loadProposals, expenses, loadExpenses, profile, loadProfile, headlineMetrics, loadHeadlineMetrics } = useStore();
+  const { projects, loadProjects, invoices, loadInvoices, timeEntries, loadTimeEntries, clients, loadClients, proposals, loadProposals, expenses, loadExpenses, profile, loadProfile, headlineMetrics, loadHeadlineMetrics, getFinanceSummary } = useStore();
   const addToast = useToasts((s) => s.add);
   const [loaded, setLoaded] = useState(false);
 
@@ -37,8 +37,10 @@ export default function Insights() {
   const completedProjects = projects.filter((p) => p.status === 'completed').length;
   const totalProjects = projects.length;
 
-  const totalPaid = invoices.filter((i) => i.status === 'paid').reduce((sum, i) => sum + i.total, 0);
-  const totalOutstanding = invoices.filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').reduce((sum, i) => sum + i.total, 0);
+  // Money totals come from the one payment-aware summary (per-invoice
+  // payment caps) — local status-sum copies drifted from Finance, showing
+  // contradictory Outstanding balances for the same data.
+  const { totalPaidRevenue: totalPaid, totalOutstanding } = getFinanceSummary();
   const overdueInvoices = invoices.filter((i) => i.status === 'partial' || i.status === 'overdue').length;
 
   const totalHoursTracked = timeEntries.reduce((sum, t) => sum + (t.duration_minutes || 0), 0);

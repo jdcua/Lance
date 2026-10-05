@@ -128,4 +128,22 @@ describe('getInvoiceBalance', () => {
   });
 });
 
+describe('outstanding agreement (Finance = Insights = Dashboard hero)', () => {
+  beforeEach(() => {
+    useStore.setState({ invoices: [], payments: [], expenses: [] } as never);
+  });
+
+  it('a partially-paid invoice contributes only its remainder', () => {
+    // The regression: Insights and the Dashboard hero summed raw totals by
+    // status, so a $1000 partial with $900 paid showed $1000 outstanding
+    // while Finance showed $100. All three now read getFinanceSummary().
+    useStore.setState({
+      invoices: [invoice(1, 1000, 'partial')],
+      payments: [{ id: 1, invoice_id: 1, amount: 900, payment_date: '2026-10-01' } as never],
+      expenses: [],
+    } as never);
+    expect(useStore.getState().getFinanceSummary().totalOutstanding).toBe(100);
+  });
+});
+
 void client;

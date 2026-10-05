@@ -20,6 +20,32 @@ export default function PhaseTracker({ projectId, defaultPhases }: { projectId: 
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
+  // No project context (e.g. the dashboard renders the widget bare): never
+  // touch the DB. Loading with `project_id = NULL` matches nothing, so the
+  // old code fell into auto-seed and wrote 7 orphan rows per mount, and a
+  // save wrote one more — all invisible forever, since every read filters by
+  // project_id. Sweep the orphans best-effort while we are here.
+  useEffect(() => {
+    if (projectId) return;
+    setLoading(false);
+    getDb()
+      .then((db) => db.execute('DELETE FROM project_phases WHERE project_id IS NULL'))
+      .catch(() => {
+        /* cleanup is best-effort */
+      });
+  }, [projectId]);
+
+  if (!projectId) {
+    return (
+      <div className="text-center py-6">
+        <p className="text-sm font-medium text-[var(--text-primary)]">Phase Tracker</p>
+        <p className="text-xs text-[var(--text-tertiary)] mt-1">
+          Open a project to track its phases here.
+        </p>
+      </div>
+    );
+  }
+
   const loadPhases = useCallback(async () => {
     try {
       const db = await getDb();

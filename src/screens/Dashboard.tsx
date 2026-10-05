@@ -26,7 +26,7 @@ import * as queries from '../archetypes/queries';
 import { getFeatureComponent } from '../components/features/registry';
 
 export default function Dashboard() {
-  const { invoices, loadInvoices, proposals, loadProposals, projects, loadProjects, clients, loadClients, timeEntries, loadTimeEntries, profile, loadProfile, loadExpenses, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings, loadContracts, portalActivity, loadPortalActivity } = useStore();
+  const { invoices, loadInvoices, proposals, loadProposals, projects, loadProjects, clients, loadClients, timeEntries, loadTimeEntries, profile, loadProfile, loadExpenses, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings, loadContracts, portalActivity, loadPortalActivity, getFinanceSummary } = useStore();
   const addToast = useToasts((s) => s.add);
   const dashboardError = useStore((s) => s.errors.invoices || s.errors.clients || s.errors.projects);
   const navigate = useNavigate();
@@ -53,6 +53,14 @@ export default function Dashboard() {
   const digest = useMemo(
     () => buildWeeklyDigest(invoices, timeEntries, proposals),
     [invoices, timeEntries, proposals],
+  );
+  // Badge and rows read the same orphan-filtered list, so the count can
+  // never exceed the rendered rows (legacy pending rows whose invoice or
+  // proposal is gone stay hidden instead of rendering nulls).
+  const getActiveFollowUps = useStore((s) => s.getActiveFollowUps);
+  const activeFollowUps = useMemo(
+    () => getActiveFollowUps(),
+    [getActiveFollowUps, pendingFollowUps, invoices, proposals],
   );
 
   useEffect(() => {
@@ -206,10 +214,11 @@ export default function Dashboard() {
   const recentInvoices = [...invoices].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5);
   const recentTime = [...timeEntries].filter(t => t.duration_minutes).sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime()).slice(0, 5);
 
-  // Hero money stats: sorted by money at risk, computed from live data.
+  // Hero money stats: the one payment-aware summary, so the hero agrees
+  // with Finance (a status-sum here ignored partial payments).
   const UNPAID = ['sent', 'partial', 'overdue'];
   const unpaidInvoices = invoices.filter((i) => UNPAID.includes(i.status));
-  const outstandingTotal = unpaidInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
+  const outstandingTotal = getFinanceSummary().totalOutstanding;
   const overdueCount = invoices.filter((i) => i.status === 'overdue').length;
   const activeProjects = projects.filter((p) => p.status === 'active').length;
   const draftProposals = proposals.filter((p) => p.status === 'draft').length;
@@ -511,15 +520,15 @@ export default function Dashboard() {
       )}
 
       {/* Needs Attention · Follow-ups */}
-      {pendingFollowUps.length > 0 && (
+      {activeFollowUps.length > 0 && (
         <Card className="mb-6 border-[var(--accent)]/20">
           <div className="flex items-center gap-2 mb-3">
             <Bell size={14} className="text-[var(--accent-ink,var(--accent))]" />
             <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Needs Attention</h3>
-            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">{pendingFollowUps.length}</span>
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">{activeFollowUps.length}</span>
           </div>
           <div className="space-y-2">
-            {pendingFollowUps.slice(0, 3).map((fu) => {
+            {activeFollowUps.slice(0, 3).map((fu) => {
               const isProposal = fu.entity_type === 'proposal';
               const entity = isProposal
                 ? proposals.find((p) => p.id === fu.entity_id)
@@ -623,7 +632,9 @@ function DashboardWidgets({ archetype, recentInvoices, recentTime, profile, proj
       return (
         <Card key={widget.id}>
           <Suspense fallback={<div className="h-32 skeleton-pulse rounded" />}>
-            <Component />
+            {/* Spread declared props (e.g. projectId): rendering bare left
+                project-scoped widgets writing orphan rows. */}
+            <Component {...(widget.props || {})} />
           </Suspense>
         </Card>
       );

@@ -350,6 +350,11 @@ export interface UnifiedStore {
   }) => Promise<FollowUpLog>;
   updateFollowUpStatus: (id: string, status: string, action?: string) => Promise<void>;
   loadPendingFollowUps: () => Promise<void>;
+  /** Pending follow-ups whose invoice/proposal still exists. Deletes dismiss
+      linked rows going forward, but legacy orphans (pre-dismissal rows,
+      stress-test leftovers) stay pending in the DB forever — badge counts
+      and lists must read through here so they agree. */
+  getActiveFollowUps: () => FollowUpLog[];
   loadAllFollowUpLogs: () => Promise<void>;
   loadPortalActivity: () => Promise<void>;
 
@@ -2020,6 +2025,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
         console.error('[store] loadPendingFollowUps failed:', e);
       }
     },
+    getActiveFollowUps: () => {
+      const { pendingFollowUps, invoices, proposals } = get();
+      return pendingFollowUps.filter((l) =>
+        l.entity_type === 'proposal'
+          ? proposals.some((p) => p.id === l.entity_id)
+          : invoices.some((i) => i.id === l.entity_id),
+      );
+    },
     loadAllFollowUpLogs: async () => {
       try {
         const logs = await invoke<FollowUpLog[]>('get_all_follow_up_logs');
@@ -2534,7 +2547,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
     getUpcomingFollowUps: (days = 7) => {
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() + days);
-      return get().pendingFollowUps.filter((f) => new Date(f.drafted_at) <= cutoff);
+      return get().getActiveFollowUps().filter((f) => new Date(f.drafted_at) <= cutoff);
     },
     getProjectMetrics: (projectId) => {
       const entries = get().timeEntries.filter((t) => t.project_id === projectId);

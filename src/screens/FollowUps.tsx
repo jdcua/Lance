@@ -31,6 +31,14 @@ export default function FollowUps() {
   } = useStore();
   const addToast = useToasts((s) => s.add);
   const followUpsError = useStore((s) => s.errors.invoices || s.errors.proposals || s.errors.clients);
+  // Orphan rows (entity deleted before the dismiss-on-delete guards existed)
+  // stay pending in the DB: count and list only ones that still resolve.
+  // Memoized on the source arrays (the selector builds a fresh array).
+  const getActiveFollowUps = useStore((s) => s.getActiveFollowUps);
+  const activeFollowUps = useMemo(
+    () => getActiveFollowUps(),
+    [getActiveFollowUps, pendingFollowUps, invoices, proposals],
+  );
 
   // Smart dunning (Pro): escalation drafts speak in the freelancer's voice.
   // Free tiers always render the default templates.
@@ -69,8 +77,8 @@ export default function FollowUps() {
       dueDate?: string;
     }> = [];
 
-    for (const log of [...pendingFollowUps, ...Object.values(followUpLogs).flat().filter(
-      (l) => !pendingFollowUps.some((p) => p.id === l.id)
+    for (const log of [...activeFollowUps, ...Object.values(followUpLogs).flat().filter(
+      (l) => !activeFollowUps.some((p) => p.id === l.id)
     )]) {
       const client = getClient(
         log.entity_type === 'invoice'
@@ -150,7 +158,7 @@ export default function FollowUps() {
 
     results.sort((a, b) => new Date(a.log.drafted_at).getTime() - new Date(b.log.drafted_at).getTime());
     return results;
-  }, [pendingFollowUps, followUpLogs, profile, followUpSettings, dunningTone, getClient, getInvoice, getProposal]);
+  }, [activeFollowUps, followUpLogs, profile, followUpSettings, dunningTone, getClient, getInvoice, getProposal]);
 
   const filtered = useMemo(() => {
     let items = allFollowUps;
@@ -254,7 +262,7 @@ export default function FollowUps() {
     setEditModal(null);
   };
 
-  const pendingCount = pendingFollowUps.length;
+  const pendingCount = activeFollowUps.length;
   const tabCounts: Record<Tab, number> = {
     pending: allFollowUps.filter((f) => f.log.status === 'pending').length,
     sent: allFollowUps.filter((f) => f.log.status === 'sent').length,
