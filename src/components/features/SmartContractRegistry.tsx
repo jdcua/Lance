@@ -190,7 +190,7 @@ export default function SmartContractRegistry({ projectId }: { projectId: string
             autoFocus
           />
           <div className="grid grid-cols-2 gap-2">
-            <select
+            <select aria-label="Network"
               value={form.network}
               onChange={(e) => setForm({ ...form, network: e.target.value })}
               className={inputClass}
@@ -201,7 +201,7 @@ export default function SmartContractRegistry({ projectId }: { projectId: string
                 </option>
               ))}
             </select>
-            <select
+            <select aria-label="Status"
               value={form.status}
               onChange={(e) => setForm({ ...form, status: e.target.value })}
               className={inputClass}

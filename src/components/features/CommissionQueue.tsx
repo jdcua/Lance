@@ -230,7 +230,7 @@ export default function CommissionQueue({ clientId }: { clientId?: string }) {
       {showForm && (
         <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
           {!clientId && (
-            <select
+            <select aria-label="Client"
               value={form.client_id}
               onChange={(e) => setForm({ ...form, client_id: e.target.value })}
               className={inputClass}
@@ -266,7 +266,7 @@ export default function CommissionQueue({ clientId }: { clientId?: string }) {
               onChange={(e) => setForm({ ...form, deadline: e.target.value })}
               className={inputClass}
             />
-            <select
+            <select aria-label="Status"
               value={form.status}
               onChange={(e) => setForm({ ...form, status: e.target.value })}
               className={inputClass}
@@ -277,7 +277,7 @@ export default function CommissionQueue({ clientId }: { clientId?: string }) {
               <option value="delivered">Delivered</option>
             </select>
           </div>
-          <select
+          <select aria-label="Payment Status"
             value={form.payment_status}
             onChange={(e) => setForm({ ...form, payment_status: e.target.value })}
             className={inputClass}

@@ -133,7 +133,7 @@ export default function DependencyTracker({ projectId }: { projectId: string }) 
               onChange={(e) => setForm({ ...form, due_date: e.target.value })}
               className={inputClass}
             />
-            <select
+            <select aria-label="Depends On"
               value={form.depends_on}
               onChange={(e) => setForm({ ...form, depends_on: e.target.value })}
               className={inputClass}

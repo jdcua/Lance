@@ -582,7 +582,7 @@ export default function Projects() {
           {!editingProject && projectTemplates.length > 0 && (
             <div>
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Start from template</label>
-              <select
+              <select aria-label="Start from template"
                 value={selectedTemplateId}
                 onChange={(e) => handleTemplateSelect(e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
@@ -617,7 +617,7 @@ export default function Projects() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Status</label>
-              <select
+              <select aria-label="Status"
                 value={pform.status}
                 onChange={(e) => setPForm({ ...pform, status: e.target.value })}
                 className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"

@@ -35,7 +35,7 @@ export default function FoodDiaryReviews({ clientId }: { clientId: string }) {
       const db = await getDb();
       const rows = await db.select<(FoodDiary & Record<string, unknown>)[]>(
         'SELECT id, client_id, date, meal, foods, notes FROM food_diaries WHERE client_id = ? ORDER BY date DESC, meal ASC',
-        [clientId]
+        [clientId],
       );
       setEntries(
         rows.map((r) => ({
@@ -45,7 +45,7 @@ export default function FoodDiaryReviews({ clientId }: { clientId: string }) {
           meal: r.meal as string | undefined,
           foods: r.foods as string | undefined,
           notes: r.notes as string | undefined,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[FoodDiaryReviews] loadEntries failed:', e);
@@ -72,7 +72,7 @@ export default function FoodDiaryReviews({ clientId }: { clientId: string }) {
       const db = await getDb();
       await db.execute(
         'INSERT INTO food_diaries (id, client_id, date, meal, foods, notes) VALUES (?, ?, ?, ?, ?, ?)',
-        [id, clientId, form.date, form.meal, form.foods || null, form.notes || null]
+        [id, clientId, form.date, form.meal, form.foods || null, form.notes || null],
       );
       const entry: FoodDiary = {
         id,
@@ -82,8 +82,17 @@ export default function FoodDiaryReviews({ clientId }: { clientId: string }) {
         foods: form.foods || undefined,
         notes: form.notes || undefined,
       };
-      setEntries((prev) => [...prev, entry].sort((a, b) => b.date.localeCompare(a.date) || (a.meal || '').localeCompare(b.meal || '')));
-      setForm({ date: new Date().toISOString().split('T')[0], meal: 'breakfast', foods: '', notes: '' });
+      setEntries((prev) =>
+        [...prev, entry].sort(
+          (a, b) => b.date.localeCompare(a.date) || (a.meal || '').localeCompare(b.meal || ''),
+        ),
+      );
+      setForm({
+        date: new Date().toISOString().split('T')[0],
+        meal: 'breakfast',
+        foods: '',
+        notes: '',
+      });
       setShowForm(false);
     } catch (e) {
       console.error('[FoodDiaryReviews] handleSave failed:', e);
@@ -108,7 +117,9 @@ export default function FoodDiaryReviews({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Food Diary</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+            Food Diary
+          </h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -140,8 +151,17 @@ export default function FoodDiaryReviews({ clientId }: { clientId: string }) {
               className={inputClass}
               autoFocus
             />
-            <select value={form.meal} onChange={(e) => setForm({ ...form, meal: e.target.value })} className={inputClass}>
-              {MEAL_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
+            <select
+              aria-label="Meal"
+              value={form.meal}
+              onChange={(e) => setForm({ ...form, meal: e.target.value })}
+              className={inputClass}
+            >
+              {MEAL_OPTIONS.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
             </select>
           </div>
           <textarea
@@ -159,8 +179,12 @@ export default function FoodDiaryReviews({ clientId }: { clientId: string }) {
             className={inputClass + ' resize-none'}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.date}>Save</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.date}>
+              Save
+            </Button>
           </div>
         </div>
       )}
@@ -175,17 +199,26 @@ export default function FoodDiaryReviews({ clientId }: { clientId: string }) {
                 {date} ({dayEntries.length})
               </div>
               {dayEntries.map((e) => (
-                <div key={e.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+                <div
+                  key={e.id}
+                  className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs"
+                >
                   <div className="flex-1 min-w-0 flex items-center gap-2">
                     <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-secondary)] capitalize">
                       {e.meal || 'meal'}
                     </span>
                     <span className="text-[var(--text-primary)] truncate">{e.foods || '--'}</span>
-                    {e.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">{e.notes}</span>}
+                    {e.notes && (
+                      <span className="text-[10px] text-[var(--text-tertiary)] truncate">
+                        {e.notes}
+                      </span>
+                    )}
                   </div>
                   <button
                     aria-label="Delete food diary reviews"
-                    onClick={() => handleDelete(e.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                    onClick={() => handleDelete(e.id)}
+                    className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2"
+                  >
                     <Trash2 size={12} />
                   </button>
                 </div>

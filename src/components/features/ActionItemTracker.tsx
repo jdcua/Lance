@@ -191,7 +191,7 @@ export default function ActionItemTracker({ clientId }: { clientId: string }) {
             autoFocus
           />
           <div className="grid grid-cols-2 gap-2">
-            <select
+            <select aria-label="Owner"
               value={form.owner}
               onChange={(e) => setForm({ ...form, owner: e.target.value })}
               className={selectClass}

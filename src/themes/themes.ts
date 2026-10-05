@@ -548,28 +548,16 @@ export function applyContrastBoost(root: HTMLElement = document.documentElement)
   const primary = getComputedStyle(root).getPropertyValue('--text-primary').trim();
   if (!primary) return;
 
+  // One-way only: when the class is on, pin the trio to primary. When it is
+  // off there is nothing to "clear" — the palette owns the trio, and any
+  // removeProperty here would wipe values a palette write just set (that was
+  // the app-wide invisible-dots bug). Callers re-apply the theme after
+  // toggling the class so the palette is always rewritten first.
+  if (!root.classList.contains('contrast-high')) return;
   const el = root;
-  if (el.classList.contains('contrast-high')) {
-    // Body and secondary text both go to primary: same colour, so maximum
-    // contrast against whatever surface the theme uses.
-    el.style.setProperty('--text-secondary', primary);
-    el.style.setProperty('--text-tertiary', primary);
-    el.style.setProperty('--border-color', primary);
-    el.dataset.contrastBoosted = '1';
-  } else if (el.dataset.contrastBoosted === '1') {
-    // Boost was on and is now off: clear only the inline overrides so the
-    // theme palette owns the three vars again.
-    delete el.dataset.contrastBoosted;
-    el.style.removeProperty('--text-secondary');
-    el.style.removeProperty('--text-tertiary');
-    el.style.removeProperty('--border-color');
-  }
-  // Otherwise: never boosted, nothing to clear. An earlier version removed
-  // the three vars unconditionally here, which wiped the palette that
-  // applyThemePalette had just written: app-wide, --border-color backgrounds
-  // went transparent (4 of 5 onboarding progress dots invisible),
-  // --border-color borders fell back to currentColor, and secondary/tertiary
-  // text inherited full-brightness primary (flattened hierarchy).
+  el.style.setProperty('--text-secondary', primary);
+  el.style.setProperty('--text-tertiary', primary);
+  el.style.setProperty('--border-color', primary);
 }
 
 /** Write a theme palette onto <html>. Internal; prefer applyTheme(). */

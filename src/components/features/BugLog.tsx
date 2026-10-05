@@ -52,24 +52,30 @@ export default function BugLog({ projectId }: { projectId: string }) {
     try {
       const db = await getDb();
       const rows = await db.select<(Bug & Record<string, unknown>)[]>(
-        'SELECT id, project_id, title, priority, status, hours_spent, created_at, resolved_at FROM bugs WHERE project_id = ? ORDER BY CASE priority WHEN \'critical\' THEN 0 WHEN \'high\' THEN 1 WHEN \'medium\' THEN 2 WHEN \'low\' THEN 3 END, created_at DESC',
-        [projectId]
+        "SELECT id, project_id, title, priority, status, hours_spent, created_at, resolved_at FROM bugs WHERE project_id = ? ORDER BY CASE priority WHEN 'critical' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 END, created_at DESC",
+        [projectId],
       );
-      setBugs(rows.map(r => ({
-        id: r.id as string,
-        project_id: r.project_id as string,
-        title: r.title as string,
-        priority: r.priority as string,
-        status: r.status as string,
-        hours_spent: r.hours_spent as number | undefined,
-        created_at: r.created_at as string,
-        resolved_at: r.resolved_at as string | undefined,
-      })));
-    } catch (e) { console.error('[BugLog] loadBugs failed:', e); }
+      setBugs(
+        rows.map((r) => ({
+          id: r.id as string,
+          project_id: r.project_id as string,
+          title: r.title as string,
+          priority: r.priority as string,
+          status: r.status as string,
+          hours_spent: r.hours_spent as number | undefined,
+          created_at: r.created_at as string,
+          resolved_at: r.resolved_at as string | undefined,
+        })),
+      );
+    } catch (e) {
+      console.error('[BugLog] loadBugs failed:', e);
+    }
     setLoading(false);
   }, [projectId]);
 
-  useEffect(() => { loadBugs(); }, [projectId, loadBugs]);
+  useEffect(() => {
+    loadBugs();
+  }, [projectId, loadBugs]);
 
   const handleAdd = async () => {
     if (!form.title.trim()) return;
@@ -79,16 +85,38 @@ export default function BugLog({ projectId }: { projectId: string }) {
       const db = await getDb();
       await db.execute(
         'INSERT INTO bugs (id, project_id, title, priority, status, hours_spent, created_at, resolved_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [id, projectId, form.title.trim(), form.priority, form.status, null, new Date().toISOString(), null]
+        [
+          id,
+          projectId,
+          form.title.trim(),
+          form.priority,
+          form.status,
+          null,
+          new Date().toISOString(),
+          null,
+        ],
       );
-      const bug: Bug = { id, project_id: projectId, title: form.title.trim(), priority: form.priority, status: form.status, hours_spent: undefined, created_at: new Date().toISOString(), resolved_at: undefined };
-      setBugs(prev => [bug, ...prev].sort((a, b) => {
-        const priorityOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
-        return (priorityOrder[a.priority] ?? 2) - (priorityOrder[b.priority] ?? 2);
-      }));
+      const bug: Bug = {
+        id,
+        project_id: projectId,
+        title: form.title.trim(),
+        priority: form.priority,
+        status: form.status,
+        hours_spent: undefined,
+        created_at: new Date().toISOString(),
+        resolved_at: undefined,
+      };
+      setBugs((prev) =>
+        [bug, ...prev].sort((a, b) => {
+          const priorityOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+          return (priorityOrder[a.priority] ?? 2) - (priorityOrder[b.priority] ?? 2);
+        }),
+      );
       setForm({ title: '', priority: 'medium', status: 'open' });
       setShowForm(false);
-    } catch (e) { console.error('[BugLog] add failed:', e); }
+    } catch (e) {
+      console.error('[BugLog] add failed:', e);
+    }
     setSaving(false);
   };
 
@@ -96,34 +124,52 @@ export default function BugLog({ projectId }: { projectId: string }) {
     try {
       const db = await getDb();
       await db.execute('DELETE FROM bugs WHERE id = ?', [id]);
-      setBugs(prev => prev.filter(b => b.id !== id));
-    } catch (e) { console.error('[BugLog] delete failed:', e); }
+      setBugs((prev) => prev.filter((b) => b.id !== id));
+    } catch (e) {
+      console.error('[BugLog] delete failed:', e);
+    }
   };
 
   const handleResolve = async (id: string) => {
     try {
       const now = new Date().toISOString();
       const db = await getDb();
-      await db.execute('UPDATE bugs SET status = ?, resolved_at = ? WHERE id = ?', ['resolved', now, id]);
-      setBugs(prev => prev.map(b => b.id === id ? { ...b, status: 'resolved', resolved_at: now } : b));
-    } catch (e) { console.error('[BugLog] resolve failed:', e); }
+      await db.execute('UPDATE bugs SET status = ?, resolved_at = ? WHERE id = ?', [
+        'resolved',
+        now,
+        id,
+      ]);
+      setBugs((prev) =>
+        prev.map((b) => (b.id === id ? { ...b, status: 'resolved', resolved_at: now } : b)),
+      );
+    } catch (e) {
+      console.error('[BugLog] resolve failed:', e);
+    }
   };
 
-  const openCount = bugs.filter(b => b.status !== 'resolved').length;
-  const criticalCount = bugs.filter(b => b.status !== 'resolved' && b.priority === 'critical').length;
+  const openCount = bugs.filter((b) => b.status !== 'resolved').length;
+  const criticalCount = bugs.filter(
+    (b) => b.status !== 'resolved' && b.priority === 'critical',
+  ).length;
   const totalHours = bugs.reduce((sum, b) => sum + (b.hours_spent || 0), 0);
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
-  const selectClass = "w-full px-2 py-1 text-[11px] border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass =
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
+  const selectClass =
+    'w-full px-2 py-1 text-[11px] border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Bugs</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+            Bugs
+          </h4>
         </div>
         <div className="space-y-1">
-          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+          ))}
         </div>
       </div>
     );
@@ -132,7 +178,9 @@ export default function BugLog({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Bugs ({bugs.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          Bugs ({bugs.length})
+        </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Report Bug
         </Button>
@@ -140,18 +188,47 @@ export default function BugLog({ projectId }: { projectId: string }) {
 
       {showForm && (
         <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
-          <input type="text" placeholder="Bug title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={inputClass} autoFocus />
+          <input
+            type="text"
+            placeholder="Bug title"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            className={inputClass}
+            autoFocus
+          />
           <div className="grid grid-cols-2 gap-2">
-            <select value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })} className={selectClass}>
-              {PRIORITY_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
+            <select
+              aria-label="Priority"
+              value={form.priority}
+              onChange={(e) => setForm({ ...form, priority: e.target.value })}
+              className={selectClass}
+            >
+              {PRIORITY_OPTIONS.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
             </select>
-            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className={selectClass}>
-              {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
+            <select
+              aria-label="Status"
+              value={form.status}
+              onChange={(e) => setForm({ ...form, status: e.target.value })}
+              className={selectClass}
+            >
+              {STATUS_OPTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {s.replace('_', ' ')}
+                </option>
+              ))}
             </select>
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleAdd} loading={saving} disabled={!form.title.trim()}>Add</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleAdd} loading={saving} disabled={!form.title.trim()}>
+              Add
+            </Button>
           </div>
         </div>
       )}
@@ -161,33 +238,51 @@ export default function BugLog({ projectId }: { projectId: string }) {
       ) : (
         <div className="space-y-1">
           {bugs.map((bug) => (
-            <div key={bug.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+            <div
+              key={bug.id}
+              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs"
+            >
               <div className="flex items-center gap-2 flex-1 min-w-0">
-                <Circle size={8} className={`${priorityDotColors[bug.priority] || priorityDotColors.medium} fill-current flex-shrink-0`} />
-                <span className={`font-medium ${bug.status === 'resolved' ? 'line-through text-[var(--text-tertiary)]' : 'text-[var(--text-primary)]'} truncate`}>
+                <Circle
+                  size={8}
+                  className={`${priorityDotColors[bug.priority] || priorityDotColors.medium} fill-current flex-shrink-0`}
+                />
+                <span
+                  className={`font-medium ${bug.status === 'resolved' ? 'line-through text-[var(--text-tertiary)]' : 'text-[var(--text-primary)]'} truncate`}
+                >
                   {bug.title}
                 </span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0 ${priorityBadgeClasses[bug.priority] || priorityBadgeClasses.medium}`}>
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0 ${priorityBadgeClasses[bug.priority] || priorityBadgeClasses.medium}`}
+                >
                   {bug.priority}
                 </span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0 ${statusBadgeClasses[bug.status] || statusBadgeClasses.open}`}>
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0 ${statusBadgeClasses[bug.status] || statusBadgeClasses.open}`}
+                >
                   {bug.status === 'in_progress' ? 'in progress' : bug.status}
                 </span>
                 {bug.hours_spent != null && (
-                  <span className="text-[10px] text-[var(--text-tertiary)] flex-shrink-0">{bug.hours_spent}h</span>
+                  <span className="text-[10px] text-[var(--text-tertiary)] flex-shrink-0">
+                    {bug.hours_spent}h
+                  </span>
                 )}
               </div>
               <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
                 {bug.status !== 'resolved' && (
                   <button
                     aria-label="Confirm bug log"
-                    onClick={() => handleResolve(bug.id)} className="text-[var(--text-tertiary)] hover:text-[#16A34A]">
+                    onClick={() => handleResolve(bug.id)}
+                    className="text-[var(--text-tertiary)] hover:text-[#16A34A]"
+                  >
                     <CheckCircle2 size={12} />
                   </button>
                 )}
                 <button
                   aria-label="Delete bug log"
-                  onClick={() => handleDelete(bug.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                  onClick={() => handleDelete(bug.id)}
+                  className="text-[var(--text-tertiary)] hover:text-[#A32D2D]"
+                >
                   <Trash2 size={12} />
                 </button>
               </div>

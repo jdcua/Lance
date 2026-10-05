@@ -1143,9 +1143,9 @@ export default function Invoices() {
         invoices.length === 0 ? (
           <Card className="text-center py-16 flex flex-col items-center">
             <Receipt size={40} className="text-[var(--text-tertiary)] mb-4" />
-            <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">
+            <h2 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">
               No invoices yet
-            </h3>
+            </h2>
             <p className="text-[13px] text-[var(--text-secondary)] max-w-xs mb-5">
               Create your first invoice to start getting paid.
             </p>
@@ -1523,7 +1523,8 @@ export default function Invoices() {
                                     </span>
                                   )}
                                 </div>
-                                <button aria-label="Delete invoices"
+                                <button
+                                  aria-label="Delete invoices"
                                   onClick={() =>
                                     setConfirmDeletePayment({ id: p.id, invoiceId: inv.id })
                                   }
@@ -1552,9 +1553,9 @@ export default function Invoices() {
       ) : recurringInvoices.length === 0 ? (
         <Card className="text-center py-12">
           <RotateCw size={32} className="text-[var(--neutral-border)] mx-auto mb-3" />
-          <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-1">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-1">
             No recurring invoices
-          </h3>
+          </h2>
           <p className="text-xs text-[var(--text-tertiary)] mb-4">
             Set up a recurring invoice for retainer clients or subscriptions.
           </p>
@@ -1657,7 +1658,7 @@ export default function Invoices() {
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
                 Project (optional)
               </label>
-              <select
+              <select aria-label="Project"
                 value={form.project_id}
                 onChange={(e) => setForm({ ...form, project_id: e.target.value })}
                 className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
@@ -1703,7 +1704,7 @@ export default function Invoices() {
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
                 Currency
               </label>
-              <select
+              <select aria-label="Currency"
                 value={form.currency}
                 onChange={(e) => setForm({ ...form, currency: e.target.value })}
                 className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
@@ -1897,7 +1898,7 @@ export default function Invoices() {
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
                 Frequency
               </label>
-              <select
+              <select aria-label="Frequency"
                 value={riForm.frequency}
                 onChange={(e) =>
                   setRiForm({
@@ -2091,7 +2092,7 @@ export default function Invoices() {
             <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
               Payment Method
             </label>
-            <select
+            <select aria-label="Payment Method"
               value={paymentForm.payment_method}
               onChange={(e) => setPaymentForm({ ...paymentForm, payment_method: e.target.value })}
               className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"

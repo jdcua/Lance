@@ -178,7 +178,7 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
             <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
               Category for all imported rows
             </label>
-            <select
+            <select aria-label="Category"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"

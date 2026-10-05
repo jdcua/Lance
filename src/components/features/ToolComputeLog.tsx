@@ -32,7 +32,12 @@ export default function ToolComputeLog({ projectId }: { projectId: string }) {
   const [costs, setCosts] = useState<ComputeCost[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ provider: 'AWS', hours: '', cost: '', date: new Date().toISOString().split('T')[0] });
+  const [form, setForm] = useState({
+    provider: 'AWS',
+    hours: '',
+    cost: '',
+    date: new Date().toISOString().split('T')[0],
+  });
   const [saving, setSaving] = useState(false);
 
   const loadCosts = useCallback(async () => {
@@ -40,22 +45,28 @@ export default function ToolComputeLog({ projectId }: { projectId: string }) {
       const db = await getDb();
       const rows = await db.select<(ComputeCost & Record<string, unknown>)[]>(
         'SELECT id, project_id, provider, instance_type, hours, cost, date FROM compute_costs WHERE project_id = ? ORDER BY date DESC',
-        [projectId]
+        [projectId],
       );
-      setCosts(rows.map(r => ({
-        id: r.id as string,
-        project_id: r.project_id as string,
-        provider: r.provider as string | undefined,
-        instance_type: r.instance_type as string | undefined,
-        hours: r.hours as number | undefined,
-        cost: r.cost as number | undefined,
-        date: r.date as string | undefined,
-      })));
-    } catch (e) { console.error('[ToolComputeLog] loadCosts failed:', e); }
+      setCosts(
+        rows.map((r) => ({
+          id: r.id as string,
+          project_id: r.project_id as string,
+          provider: r.provider as string | undefined,
+          instance_type: r.instance_type as string | undefined,
+          hours: r.hours as number | undefined,
+          cost: r.cost as number | undefined,
+          date: r.date as string | undefined,
+        })),
+      );
+    } catch (e) {
+      console.error('[ToolComputeLog] loadCosts failed:', e);
+    }
     setLoading(false);
   }, [projectId]);
 
-  useEffect(() => { loadCosts(); }, [projectId, loadCosts]);
+  useEffect(() => {
+    loadCosts();
+  }, [projectId, loadCosts]);
 
   const handleAdd = async () => {
     setSaving(true);
@@ -64,17 +75,40 @@ export default function ToolComputeLog({ projectId }: { projectId: string }) {
       const db = await getDb();
       await db.execute(
         'INSERT INTO compute_costs (id, project_id, provider, instance_type, hours, cost, date) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [id, projectId, form.provider, null, form.hours ? parseFloat(form.hours) : null, form.cost ? parseFloat(form.cost) : null, form.date || null]
+        [
+          id,
+          projectId,
+          form.provider,
+          null,
+          form.hours ? parseFloat(form.hours) : null,
+          form.cost ? parseFloat(form.cost) : null,
+          form.date || null,
+        ],
       );
-      const item: ComputeCost = { id, project_id: projectId, provider: form.provider, instance_type: undefined, hours: form.hours ? parseFloat(form.hours) : undefined, cost: form.cost ? parseFloat(form.cost) : undefined, date: form.date || undefined };
-      setCosts(prev => {
+      const item: ComputeCost = {
+        id,
+        project_id: projectId,
+        provider: form.provider,
+        instance_type: undefined,
+        hours: form.hours ? parseFloat(form.hours) : undefined,
+        cost: form.cost ? parseFloat(form.cost) : undefined,
+        date: form.date || undefined,
+      };
+      setCosts((prev) => {
         const next = [item, ...prev];
         next.sort((a, b) => new Date(b.date || '').getTime() - new Date(a.date || '').getTime());
         return next;
       });
-      setForm({ provider: 'AWS', hours: '', cost: '', date: new Date().toISOString().split('T')[0] });
+      setForm({
+        provider: 'AWS',
+        hours: '',
+        cost: '',
+        date: new Date().toISOString().split('T')[0],
+      });
       setShowForm(false);
-    } catch (e) { console.error('[ToolComputeLog] add failed:', e); }
+    } catch (e) {
+      console.error('[ToolComputeLog] add failed:', e);
+    }
     setSaving(false);
   };
 
@@ -82,8 +116,10 @@ export default function ToolComputeLog({ projectId }: { projectId: string }) {
     try {
       const db = await getDb();
       await db.execute('DELETE FROM compute_costs WHERE id = ?', [id]);
-      setCosts(prev => prev.filter(c => c.id !== id));
-    } catch (e) { console.error('[ToolComputeLog] delete failed:', e); }
+      setCosts((prev) => prev.filter((c) => c.id !== id));
+    } catch (e) {
+      console.error('[ToolComputeLog] delete failed:', e);
+    }
   };
 
   const totalCost = costs.reduce((sum, c) => sum + (c.cost || 0), 0);
@@ -95,17 +131,23 @@ export default function ToolComputeLog({ projectId }: { projectId: string }) {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
-  const selectClass = "w-full px-2 py-1 text-[11px] border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass =
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
+  const selectClass =
+    'w-full px-2 py-1 text-[11px] border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Tool Compute</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+            Tool Compute
+          </h4>
         </div>
         <div className="space-y-1">
-          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+          ))}
         </div>
       </div>
     );
@@ -114,7 +156,9 @@ export default function ToolComputeLog({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Tool Compute ({costs.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          Tool Compute ({costs.length})
+        </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Log Usage
         </Button>
@@ -135,38 +179,80 @@ export default function ToolComputeLog({ projectId }: { projectId: string }) {
 
       {showForm && (
         <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
-          <select value={form.provider} onChange={(e) => setForm({ ...form, provider: e.target.value })} className={selectClass}>
-            {PROVIDER_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
+          <select
+            aria-label="Provider"
+            value={form.provider}
+            onChange={(e) => setForm({ ...form, provider: e.target.value })}
+            className={selectClass}
+          >
+            {PROVIDER_OPTIONS.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
           </select>
           <div className="grid grid-cols-2 gap-2">
-            <input type="number" step="0.01" placeholder="Hours" value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} className={inputClass} />
-            <input type="number" step="0.01" placeholder="Cost ($)" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} className={inputClass} autoFocus />
+            <input
+              type="number"
+              step="0.01"
+              placeholder="Hours"
+              value={form.hours}
+              onChange={(e) => setForm({ ...form, hours: e.target.value })}
+              className={inputClass}
+            />
+            <input
+              type="number"
+              step="0.01"
+              placeholder="Cost ($)"
+              value={form.cost}
+              onChange={(e) => setForm({ ...form, cost: e.target.value })}
+              className={inputClass}
+              autoFocus
+            />
           </div>
-          <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className={inputClass} />
+          <input
+            type="date"
+            value={form.date}
+            onChange={(e) => setForm({ ...form, date: e.target.value })}
+            className={inputClass}
+          />
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleAdd} loading={saving}>Add</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleAdd} loading={saving}>
+              Add
+            </Button>
           </div>
         </div>
       )}
 
       {costs.length === 0 ? (
-        <p className="text-xs text-[var(--text-tertiary)] py-2">No tool compute costs logged yet.</p>
+        <p className="text-xs text-[var(--text-tertiary)] py-2">
+          No tool compute costs logged yet.
+        </p>
       ) : (
         <div className="space-y-1">
           {costs.map((c) => (
-            <div key={c.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+            <div
+              key={c.id}
+              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs"
+            >
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 <Cloud size={10} className="text-[var(--text-tertiary)] flex-shrink-0" />
                 {c.provider && (
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0 ${providerBadgeClasses[c.provider] || providerBadgeClasses.other}`}>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0 ${providerBadgeClasses[c.provider] || providerBadgeClasses.other}`}
+                  >
                     {c.provider}
                   </span>
                 )}
                 {c.hours != null && (
                   <span className="text-[var(--text-tertiary)] flex-shrink-0">{c.hours}h</span>
                 )}
-                <span className="font-medium text-[var(--text-primary)] flex-shrink-0">${(c.cost || 0).toFixed(2)}</span>
+                <span className="font-medium text-[var(--text-primary)] flex-shrink-0">
+                  ${(c.cost || 0).toFixed(2)}
+                </span>
                 {c.date && (
                   <span className="text-[10px] text-[var(--text-tertiary)] flex items-center gap-0.5 flex-shrink-0">
                     <Calendar size={9} />
@@ -176,7 +262,9 @@ export default function ToolComputeLog({ projectId }: { projectId: string }) {
               </div>
               <button
                 aria-label="Delete tool compute log"
-                onClick={() => handleDelete(c.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                onClick={() => handleDelete(c.id)}
+                className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0"
+              >
                 <Trash2 size={12} />
               </button>
             </div>

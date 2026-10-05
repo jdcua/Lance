@@ -111,7 +111,7 @@ export default function ColumnMapper({
               </div>
 
               {/* Lance field dropdown */}
-              <select
+              <select aria-label="Mappedfield"
                 value={mappedField}
                 onChange={(e) => handleFieldChange(header, e.target.value)}
                 className={`w-full px-2 py-1.5 text-xs border rounded-[6px] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 appearance-none cursor-pointer ${

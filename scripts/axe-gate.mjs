@@ -38,6 +38,14 @@ async function dismiss(page) {
 async function onboard(page, base) {
   await page.goto(base + '/', { waitUntil: 'load', timeout: 45000 });
   await page.waitForTimeout(4000);
+  // 5-step flow: Comfort first (Continue), then the craft grid.
+  const comfort = page.getByText('Make yourself comfortable');
+  if (await comfort.count()) {
+    const c0 = page.locator('button', { hasText: 'Continue' });
+    if (await c0.count()) {
+      try { if (await c0.first().isEnabled({ timeout: 3000 })) { await c0.first().click(); await page.waitForTimeout(800); } } catch { /* no-op */ }
+    }
+  }
   const card = page.locator('button', { hasText: 'Developer / Engineer' });
   if (await card.count()) { await card.first().click(); await page.waitForTimeout(400); }
   const cont = page.locator('button', { hasText: 'Continue' });
@@ -46,6 +54,8 @@ async function onboard(page, base) {
   }
   const nm = page.locator('input[placeholder*="name" i], input[name="name"]').first();
   if (await nm.count()) { await nm.fill('Axe Gate'); await page.waitForTimeout(300); }
+  const em = page.locator('input[type="email"], input[placeholder*="email" i]').first();
+  if (await em.count()) { await em.fill('axe@example.com'); await page.waitForTimeout(300); }
   for (let i = 0; i < 5; i++) {
     const c = page.locator('button', { hasText: 'Continue' });
     if (!(await c.count())) break;
@@ -73,10 +83,11 @@ async function main() {
     await onboard(page, base);
 
     // Gate: verify the served tree, so a stale dev server fails loudly.
-    // (btn-accent only renders on a few routes — check where it lives.)
+    // (Marker must render unconditionally: btn-accent only appears with an
+    // accepted proposal, so seeded runs without one aborted here forever.)
     await page.goto(base + '/proposals', { waitUntil: 'load', timeout: 30000 });
     await page.waitForTimeout(2000);
-    const fresh = await page.evaluate(() => document.body.innerHTML.includes('btn-accent'));
+    const fresh = await page.evaluate(() => document.body.innerHTML.includes('New Proposal'));
     if (!fresh) throw new Error('stale code served — aborting gate');
 
     for (const route of ROUTES) {

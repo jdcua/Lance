@@ -45,7 +45,7 @@ export default function BookingTracker({ clientId }: { clientId: string }) {
       const db = await getDb();
       const rows = await db.select<(Booking & Record<string, unknown>)[]>(
         'SELECT id, client_id, project_title, role, session_date, rate, status, notes FROM bookings WHERE client_id = ? ORDER BY session_date DESC, project_title ASC',
-        [clientId]
+        [clientId],
       );
       setBookings(
         rows.map((r) => ({
@@ -57,7 +57,7 @@ export default function BookingTracker({ clientId }: { clientId: string }) {
           rate: r.rate as number | undefined,
           status: r.status as string,
           notes: r.notes as string | undefined,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[BookingTracker] loadBookings failed:', e);
@@ -81,7 +81,16 @@ export default function BookingTracker({ clientId }: { clientId: string }) {
       const db = await getDb();
       await db.execute(
         'INSERT INTO bookings (id, client_id, project_title, role, session_date, rate, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [id, clientId, form.project_title.trim(), form.role || null, form.session_date || null, form.rate ? parseFloat(form.rate) : null, form.status, form.notes || null]
+        [
+          id,
+          clientId,
+          form.project_title.trim(),
+          form.role || null,
+          form.session_date || null,
+          form.rate ? parseFloat(form.rate) : null,
+          form.status,
+          form.notes || null,
+        ],
       );
       const booking: Booking = {
         id,
@@ -94,9 +103,18 @@ export default function BookingTracker({ clientId }: { clientId: string }) {
         notes: form.notes || undefined,
       };
       setBookings((prev) =>
-        [...prev, booking].sort((a, b) => (b.session_date || '').localeCompare(a.session_date || ''))
+        [...prev, booking].sort((a, b) =>
+          (b.session_date || '').localeCompare(a.session_date || ''),
+        ),
       );
-      setForm({ project_title: '', role: '', session_date: '', rate: '', status: 'confirmed', notes: '' });
+      setForm({
+        project_title: '',
+        role: '',
+        session_date: '',
+        rate: '',
+        status: 'confirmed',
+        notes: '',
+      });
       setShowForm(false);
     } catch (e) {
       console.error('[BookingTracker] handleSave failed:', e);
@@ -121,7 +139,9 @@ export default function BookingTracker({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Bookings</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+            Bookings
+          </h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -185,8 +205,17 @@ export default function BookingTracker({ clientId }: { clientId: string }) {
               className={inputClass}
             />
           </div>
-          <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className={inputClass}>
-            {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+          <select
+            aria-label="Status"
+            value={form.status}
+            onChange={(e) => setForm({ ...form, status: e.target.value })}
+            className={inputClass}
+          >
+            {STATUS_OPTIONS.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
           </select>
           <textarea
             placeholder="Notes"
@@ -196,8 +225,17 @@ export default function BookingTracker({ clientId }: { clientId: string }) {
             className={inputClass + ' resize-none'}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.project_title.trim()}>Save</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              loading={saving}
+              disabled={!form.project_title.trim()}
+            >
+              Save
+            </Button>
           </div>
         </div>
       )}
@@ -207,11 +245,18 @@ export default function BookingTracker({ clientId }: { clientId: string }) {
       ) : (
         <div className="space-y-1">
           {bookings.map((b) => (
-            <div key={b.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+            <div
+              key={b.id}
+              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs"
+            >
               <div className="flex-1 min-w-0 flex items-center gap-2">
-                <span className="font-medium text-[var(--text-primary)] truncate">{b.project_title}</span>
+                <span className="font-medium text-[var(--text-primary)] truncate">
+                  {b.project_title}
+                </span>
                 {b.role && <span className="text-[var(--text-tertiary)]">{b.role}</span>}
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusBadge[b.status] || statusBadge.confirmed}`}>
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusBadge[b.status] || statusBadge.confirmed}`}
+                >
                   {b.status}
                 </span>
                 {b.session_date && (
@@ -224,11 +269,17 @@ export default function BookingTracker({ clientId }: { clientId: string }) {
                     ${b.rate.toLocaleString()}
                   </span>
                 )}
-                {b.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">{b.notes}</span>}
+                {b.notes && (
+                  <span className="text-[10px] text-[var(--text-tertiary)] truncate">
+                    {b.notes}
+                  </span>
+                )}
               </div>
               <button
                 aria-label="Delete booking tracker"
-                onClick={() => handleDelete(b.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                onClick={() => handleDelete(b.id)}
+                className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2"
+              >
                 <Trash2 size={12} />
               </button>
             </div>

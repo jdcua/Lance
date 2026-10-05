@@ -44,7 +44,7 @@ export default function AuditionLog({ clientId }: { clientId: string }) {
       const db = await getDb();
       const rows = await db.select<(Audition & Record<string, unknown>)[]>(
         'SELECT id, client_id, project_title, role, callback_date, status, notes FROM auditions WHERE client_id = ? ORDER BY callback_date ASC, project_title ASC',
-        [clientId]
+        [clientId],
       );
       setAuditions(
         rows.map((r) => ({
@@ -55,7 +55,7 @@ export default function AuditionLog({ clientId }: { clientId: string }) {
           callback_date: r.callback_date as string | undefined,
           status: r.status as string,
           notes: r.notes as string | undefined,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[AuditionLog] loadAuditions failed:', e);
@@ -75,7 +75,15 @@ export default function AuditionLog({ clientId }: { clientId: string }) {
       const db = await getDb();
       await db.execute(
         'INSERT INTO auditions (id, client_id, project_title, role, callback_date, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [id, clientId, form.project_title.trim(), form.role || null, form.callback_date || null, form.status, form.notes || null]
+        [
+          id,
+          clientId,
+          form.project_title.trim(),
+          form.role || null,
+          form.callback_date || null,
+          form.status,
+          form.notes || null,
+        ],
       );
       const audition: Audition = {
         id,
@@ -87,7 +95,11 @@ export default function AuditionLog({ clientId }: { clientId: string }) {
         notes: form.notes || undefined,
       };
       setAuditions((prev) =>
-        [...prev, audition].sort((a, b) => (a.callback_date || '').localeCompare(b.callback_date || '') || a.project_title.localeCompare(b.project_title))
+        [...prev, audition].sort(
+          (a, b) =>
+            (a.callback_date || '').localeCompare(b.callback_date || '') ||
+            a.project_title.localeCompare(b.project_title),
+        ),
       );
       setForm({ project_title: '', role: '', callback_date: '', status: 'submitted', notes: '' });
       setShowForm(false);
@@ -114,7 +126,9 @@ export default function AuditionLog({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Auditions</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+            Auditions
+          </h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -161,8 +175,17 @@ export default function AuditionLog({ clientId }: { clientId: string }) {
               className={inputClass}
             />
           </div>
-          <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className={inputClass}>
-            {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+          <select
+            aria-label="Status"
+            value={form.status}
+            onChange={(e) => setForm({ ...form, status: e.target.value })}
+            className={inputClass}
+          >
+            {STATUS_OPTIONS.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
           </select>
           <textarea
             placeholder="Notes"
@@ -172,8 +195,17 @@ export default function AuditionLog({ clientId }: { clientId: string }) {
             className={inputClass + ' resize-none'}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.project_title.trim()}>Save</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              loading={saving}
+              disabled={!form.project_title.trim()}
+            >
+              Save
+            </Button>
           </div>
         </div>
       )}
@@ -183,11 +215,18 @@ export default function AuditionLog({ clientId }: { clientId: string }) {
       ) : (
         <div className="space-y-1">
           {auditions.map((a) => (
-            <div key={a.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+            <div
+              key={a.id}
+              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs"
+            >
               <div className="flex-1 min-w-0 flex items-center gap-2">
-                <span className="font-medium text-[var(--text-primary)] truncate">{a.project_title}</span>
+                <span className="font-medium text-[var(--text-primary)] truncate">
+                  {a.project_title}
+                </span>
                 {a.role && <span className="text-[var(--text-tertiary)]">{a.role}</span>}
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusBadge[a.status] || statusBadge.submitted}`}>
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusBadge[a.status] || statusBadge.submitted}`}
+                >
                   {a.status}
                 </span>
                 {a.callback_date && (
@@ -196,11 +235,17 @@ export default function AuditionLog({ clientId }: { clientId: string }) {
                     {new Date(a.callback_date).toLocaleDateString()}
                   </span>
                 )}
-                {a.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">{a.notes}</span>}
+                {a.notes && (
+                  <span className="text-[10px] text-[var(--text-tertiary)] truncate">
+                    {a.notes}
+                  </span>
+                )}
               </div>
               <button
                 aria-label="Delete audition log"
-                onClick={() => handleDelete(a.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                onClick={() => handleDelete(a.id)}
+                className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2"
+              >
                 <Trash2 size={12} />
               </button>
             </div>

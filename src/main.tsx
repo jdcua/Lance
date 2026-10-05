@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { MotionConfig } from 'motion/react';
 import { usePrefs } from './lib/prefs';
-import { applyContrastBoost } from './themes/themes';
+import { applyTheme, getTheme } from './themes/themes';
 import { router } from './router';
 import './index.css';
 
@@ -66,11 +66,9 @@ if (isTrial() && typeof document !== 'undefined') {
 // Dev with ?trial=1 is the exact case that logged it on every load.
 if (hasTrialPath() && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/try/trial-sw.js', { scope: '/try/' })
-      .catch(() => {
-        /* offline shell is an enhancement, never a hard requirement */
-      });
+    navigator.serviceWorker.register('/try/trial-sw.js', { scope: '/try/' }).catch(() => {
+      /* offline shell is an enhancement, never a hard requirement */
+    });
   });
 }
 
@@ -103,10 +101,16 @@ function Root() {
         'contrast-auto-boost',
         prefs.contrast === 'auto' && osWantsContrast,
       );
-      // The class alone changes nothing: applyTheme writes the palette as
-      // inline custom props, which beat the `.contrast-high` stylesheet rule.
-      // Re-run the boost so the pref takes effect without a theme re-apply.
-      applyContrastBoost(document.documentElement);
+      // Re-apply the whole theme: the palette lives in inline custom props,
+      // which beat the `.contrast-high` stylesheet rule, so the class alone
+      // changes nothing. Re-applying rewrites the palette and re-pins the
+      // boost exactly when the class is on.
+      try {
+        const themeId = localStorage.getItem('lance:theme') || 'default';
+        applyTheme(getTheme(themeId));
+      } catch {
+        /* private mode: class toggle above still applies */
+      }
     };
     apply();
     query.addEventListener('change', apply);

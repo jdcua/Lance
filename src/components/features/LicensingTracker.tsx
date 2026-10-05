@@ -189,7 +189,7 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
 
       {showForm && (
         <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
-          <select
+          <select aria-label="License Type"
             value={form.license_type}
             onChange={(e) => setForm({ ...form, license_type: e.target.value })}
             className={inputClass}
@@ -226,7 +226,7 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
               min="0"
               step="0.01"
             />
-            <select
+            <select aria-label="Currency"
               value={form.currency}
               onChange={(e) => setForm({ ...form, currency: e.target.value })}
               className={inputClass}

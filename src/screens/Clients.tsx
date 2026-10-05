@@ -1122,7 +1122,7 @@ export default function Clients() {
                             />
                           </div>
                           <div className="flex items-center gap-3">
-                            <select
+                            <select aria-label="Metric type"
                               value={metricForm.metric_type}
                               onChange={(e) => setMetricForm({ ...metricForm, metric_type: e.target.value as MetricDefinition['metric_type'] })}
                               className="px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
@@ -1229,7 +1229,7 @@ export default function Clients() {
           </div>
           <div>
             <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Preferred currency</label>
-            <select
+            <select aria-label="Preferred currency"
               value={form.preferred_currency}
               onChange={(e) => setForm({ ...form, preferred_currency: e.target.value })}
               className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"

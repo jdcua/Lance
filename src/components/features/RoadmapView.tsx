@@ -64,7 +64,7 @@ export default function RoadmapView({ projectId }: { projectId: string }) {
       const db = await getDb();
       const rows = await db.select<(RoadmapItem & Record<string, unknown>)[]>(
         'SELECT id, project_id, title, quarter, status, priority, effort, notes, sort_order FROM roadmap_items WHERE project_id = ? ORDER BY quarter ASC, sort_order ASC, id ASC',
-        [projectId]
+        [projectId],
       );
       setItems(
         rows.map((r) => ({
@@ -77,7 +77,7 @@ export default function RoadmapView({ projectId }: { projectId: string }) {
           effort: r.effort as string | undefined,
           notes: r.notes as string | undefined,
           sort_order: r.sort_order as number,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[RoadmapView] loadItems failed:', e);
@@ -101,7 +101,17 @@ export default function RoadmapView({ projectId }: { projectId: string }) {
       const db = await getDb();
       await db.execute(
         'INSERT INTO roadmap_items (id, project_id, title, quarter, status, priority, effort, notes, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [id, projectId, form.title.trim(), form.quarter, form.status, form.priority, form.effort || null, form.notes || null, sortOrder]
+        [
+          id,
+          projectId,
+          form.title.trim(),
+          form.quarter,
+          form.status,
+          form.priority,
+          form.effort || null,
+          form.notes || null,
+          sortOrder,
+        ],
       );
       const item: RoadmapItem = {
         id,
@@ -116,10 +126,19 @@ export default function RoadmapView({ projectId }: { projectId: string }) {
       };
       setItems((prev) => {
         const next = [...prev, item];
-        next.sort((a, b) => (a.quarter || '').localeCompare(b.quarter || '') || a.sort_order - b.sort_order);
+        next.sort(
+          (a, b) => (a.quarter || '').localeCompare(b.quarter || '') || a.sort_order - b.sort_order,
+        );
         return next;
       });
-      setForm({ title: '', quarter: 'Q1', status: 'planned', priority: 'P2', effort: 'M', notes: '' });
+      setForm({
+        title: '',
+        quarter: 'Q1',
+        status: 'planned',
+        priority: 'P2',
+        effort: 'M',
+        notes: '',
+      });
       setShowForm(false);
     } catch (e) {
       console.error('[RoadmapView] handleSave failed:', e);
@@ -145,15 +164,23 @@ export default function RoadmapView({ projectId }: { projectId: string }) {
     const b = sorted[targetIndex];
     try {
       const db = await getDb();
-      await db.execute('UPDATE roadmap_items SET sort_order = ? WHERE id = ?', [b.sort_order, a.id]);
-      await db.execute('UPDATE roadmap_items SET sort_order = ? WHERE id = ?', [a.sort_order, b.id]);
+      await db.execute('UPDATE roadmap_items SET sort_order = ? WHERE id = ?', [
+        b.sort_order,
+        a.id,
+      ]);
+      await db.execute('UPDATE roadmap_items SET sort_order = ? WHERE id = ?', [
+        a.sort_order,
+        b.id,
+      ]);
       setItems((prev) => {
         const next = prev.map((c) => {
           if (c.id === a.id) return { ...c, sort_order: b.sort_order };
           if (c.id === b.id) return { ...c, sort_order: a.sort_order };
           return c;
         });
-        next.sort((x, y) => (x.quarter || '').localeCompare(y.quarter || '') || x.sort_order - y.sort_order);
+        next.sort(
+          (x, y) => (x.quarter || '').localeCompare(y.quarter || '') || x.sort_order - y.sort_order,
+        );
         return next;
       });
     } catch (e) {
@@ -173,7 +200,9 @@ export default function RoadmapView({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Roadmap</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+            Roadmap
+          </h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -206,17 +235,53 @@ export default function RoadmapView({ projectId }: { projectId: string }) {
             autoFocus
           />
           <div className="grid grid-cols-4 gap-2">
-            <select value={form.quarter} onChange={(e) => setForm({ ...form, quarter: e.target.value })} className={inputClass}>
-              {QUARTERS.map((q) => <option key={q} value={q}>{q}</option>)}
+            <select
+              aria-label="Quarter"
+              value={form.quarter}
+              onChange={(e) => setForm({ ...form, quarter: e.target.value })}
+              className={inputClass}
+            >
+              {QUARTERS.map((q) => (
+                <option key={q} value={q}>
+                  {q}
+                </option>
+              ))}
             </select>
-            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className={inputClass}>
-              {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
+            <select
+              aria-label="Status"
+              value={form.status}
+              onChange={(e) => setForm({ ...form, status: e.target.value })}
+              className={inputClass}
+            >
+              {STATUS_OPTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {s.replace('_', ' ')}
+                </option>
+              ))}
             </select>
-            <select value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })} className={inputClass}>
-              {PRIORITY_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
+            <select
+              aria-label="Priority"
+              value={form.priority}
+              onChange={(e) => setForm({ ...form, priority: e.target.value })}
+              className={inputClass}
+            >
+              {PRIORITY_OPTIONS.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
             </select>
-            <select value={form.effort} onChange={(e) => setForm({ ...form, effort: e.target.value })} className={inputClass}>
-              {EFFORT_OPTIONS.map((e) => <option key={e} value={e}>{e}</option>)}
+            <select
+              aria-label="Effort"
+              value={form.effort}
+              onChange={(e) => setForm({ ...form, effort: e.target.value })}
+              className={inputClass}
+            >
+              {EFFORT_OPTIONS.map((e) => (
+                <option key={e} value={e}>
+                  {e}
+                </option>
+              ))}
             </select>
           </div>
           <textarea
@@ -227,8 +292,12 @@ export default function RoadmapView({ projectId }: { projectId: string }) {
             className={inputClass + ' resize-none'}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.title.trim()}>Save</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.title.trim()}>
+              Save
+            </Button>
           </div>
         </div>
       )}
@@ -250,34 +319,48 @@ export default function RoadmapView({ projectId }: { projectId: string }) {
                     <div key={item.id}>
                       <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
                         <div className="flex-1 min-w-0 flex items-center gap-2">
-                          <button aria-label="Next"
+                          <button
+                            aria-label="Next"
                             onClick={() => setExpanded(expanded === item.id ? null : item.id)}
                             className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                           >
-                            <ChevronRight size={10} className={`transition-transform ${expanded === item.id ? 'rotate-90' : ''}`} />
+                            <ChevronRight
+                              size={10}
+                              className={`transition-transform ${expanded === item.id ? 'rotate-90' : ''}`}
+                            />
                           </button>
-                          <span className="font-medium text-[var(--text-primary)] truncate">{item.title}</span>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusBadge[item.status] || statusBadge.planned}`}>
+                          <span className="font-medium text-[var(--text-primary)] truncate">
+                            {item.title}
+                          </span>
+                          <span
+                            className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusBadge[item.status] || statusBadge.planned}`}
+                          >
                             {item.status.replace('_', ' ')}
                           </span>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${priorityBadge[item.priority] || priorityBadge.P2}`}>
+                          <span
+                            className={`text-[10px] px-1.5 py-0.5 rounded-full ${priorityBadge[item.priority] || priorityBadge.P2}`}
+                          >
                             {item.priority}
                           </span>
                           {item.effort && (
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${effortBadge[item.effort] || ''}`}>
+                            <span
+                              className={`text-[10px] px-1.5 py-0.5 rounded-full ${effortBadge[item.effort] || ''}`}
+                            >
                               {item.effort}
                             </span>
                           )}
                         </div>
                         <div className="flex items-center gap-0.5 ml-2">
-                          <button aria-label="Move up"
+                          <button
+                            aria-label="Move up"
                             onClick={() => handleReorder(globalIndex, 'up')}
                             disabled={globalIndex === 0}
                             className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30"
                           >
                             <ChevronUp size={12} />
                           </button>
-                          <button aria-label="Move down"
+                          <button
+                            aria-label="Move down"
                             onClick={() => handleReorder(globalIndex, 'down')}
                             disabled={globalIndex === sorted.length - 1}
                             className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30"
@@ -286,14 +369,20 @@ export default function RoadmapView({ projectId }: { projectId: string }) {
                           </button>
                           <button
                             aria-label="Delete roadmap view"
-                            onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-1">
+                            onClick={() => handleDelete(item.id)}
+                            className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-1"
+                          >
                             <Trash2 size={12} />
                           </button>
                         </div>
                       </div>
                       {expanded === item.id && (
                         <div className="mt-1 px-3 py-2 bg-[var(--bg-secondary)]/50 rounded-[6px] text-xs space-y-1">
-                          {item.notes ? <p className="text-[var(--text-secondary)]">{item.notes}</p> : <p className="text-[var(--text-tertiary)] italic">No notes.</p>}
+                          {item.notes ? (
+                            <p className="text-[var(--text-secondary)]">{item.notes}</p>
+                          ) : (
+                            <p className="text-[var(--text-tertiary)] italic">No notes.</p>
+                          )}
                         </div>
                       )}
                     </div>

@@ -43,7 +43,7 @@ export default function StakeholderLog({ projectId }: { projectId: string }) {
       const db = await getDb();
       const rows = await db.select<(Stakeholder & Record<string, unknown>)[]>(
         'SELECT id, project_id, name, role, contact, influence, notes FROM stakeholder_logs WHERE project_id = ? ORDER BY name ASC',
-        [projectId]
+        [projectId],
       );
       setStakeholders(
         rows.map((r) => ({
@@ -54,7 +54,7 @@ export default function StakeholderLog({ projectId }: { projectId: string }) {
           contact: r.contact as string | undefined,
           influence: r.influence as string | undefined,
           notes: r.notes as string | undefined,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[StakeholderLog] loadStakeholders failed:', e);
@@ -74,7 +74,15 @@ export default function StakeholderLog({ projectId }: { projectId: string }) {
       const db = await getDb();
       await db.execute(
         'INSERT INTO stakeholder_logs (id, project_id, name, role, contact, influence, notes) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [id, projectId, form.name.trim(), form.role || null, form.contact || null, form.influence, form.notes || null]
+        [
+          id,
+          projectId,
+          form.name.trim(),
+          form.role || null,
+          form.contact || null,
+          form.influence,
+          form.notes || null,
+        ],
       );
       const item: Stakeholder = {
         id,
@@ -111,7 +119,9 @@ export default function StakeholderLog({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Stakeholders</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+            Stakeholders
+          </h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -159,8 +169,17 @@ export default function StakeholderLog({ projectId }: { projectId: string }) {
               className={inputClass}
             />
           </div>
-          <select value={form.influence} onChange={(e) => setForm({ ...form, influence: e.target.value })} className={inputClass}>
-            {INFLUENCE_OPTIONS.map((i) => <option key={i} value={i}>{i}</option>)}
+          <select
+            aria-label="Influence"
+            value={form.influence}
+            onChange={(e) => setForm({ ...form, influence: e.target.value })}
+            className={inputClass}
+          >
+            {INFLUENCE_OPTIONS.map((i) => (
+              <option key={i} value={i}>
+                {i}
+              </option>
+            ))}
           </select>
           <textarea
             placeholder="Notes"
@@ -170,8 +189,12 @@ export default function StakeholderLog({ projectId }: { projectId: string }) {
             className={inputClass + ' resize-none'}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.name.trim()}>Save</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.name.trim()}>
+              Save
+            </Button>
           </div>
         </div>
       )}
@@ -181,21 +204,34 @@ export default function StakeholderLog({ projectId }: { projectId: string }) {
       ) : (
         <div className="space-y-1">
           {stakeholders.map((s) => (
-            <div key={s.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+            <div
+              key={s.id}
+              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs"
+            >
               <div className="flex-1 min-w-0 flex items-center gap-2">
                 <span className="font-medium text-[var(--text-primary)]">{s.name}</span>
                 {s.role && <span className="text-[var(--text-tertiary)]">{s.role}</span>}
-                {s.contact && <span className="text-[10px] text-[var(--text-tertiary)]">{s.contact}</span>}
+                {s.contact && (
+                  <span className="text-[10px] text-[var(--text-tertiary)]">{s.contact}</span>
+                )}
                 {s.influence && (
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${influenceBadge[s.influence] || influenceBadge.medium}`}>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full ${influenceBadge[s.influence] || influenceBadge.medium}`}
+                  >
                     {s.influence}
                   </span>
                 )}
-                {s.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">{s.notes}</span>}
+                {s.notes && (
+                  <span className="text-[10px] text-[var(--text-tertiary)] truncate">
+                    {s.notes}
+                  </span>
+                )}
               </div>
               <button
                 aria-label="Delete stakeholder log"
-                onClick={() => handleDelete(s.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                onClick={() => handleDelete(s.id)}
+                className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2"
+              >
                 <Trash2 size={12} />
               </button>
             </div>

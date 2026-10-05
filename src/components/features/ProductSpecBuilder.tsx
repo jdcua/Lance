@@ -45,7 +45,7 @@ export default function ProductSpecBuilder({ projectId }: { projectId: string })
       const db = await getDb();
       const rows = await db.select<(ProductSpec & Record<string, unknown>)[]>(
         'SELECT id, project_id, title, problem, solution, success_metrics, status, created_at FROM product_specs WHERE project_id = ? ORDER BY created_at DESC',
-        [projectId]
+        [projectId],
       );
       setSpecs(
         rows.map((r) => ({
@@ -57,7 +57,7 @@ export default function ProductSpecBuilder({ projectId }: { projectId: string })
           success_metrics: r.success_metrics as string | undefined,
           status: r.status as string,
           created_at: r.created_at as string,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[ProductSpecBuilder] loadSpecs failed:', e);
@@ -78,7 +78,16 @@ export default function ProductSpecBuilder({ projectId }: { projectId: string })
       const db = await getDb();
       await db.execute(
         'INSERT INTO product_specs (id, project_id, title, problem, solution, success_metrics, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [id, projectId, form.title.trim(), form.problem || null, form.solution || null, form.success_metrics || null, form.status, now]
+        [
+          id,
+          projectId,
+          form.title.trim(),
+          form.problem || null,
+          form.solution || null,
+          form.success_metrics || null,
+          form.status,
+          now,
+        ],
       );
       const spec: ProductSpec = {
         id,
@@ -116,7 +125,9 @@ export default function ProductSpecBuilder({ projectId }: { projectId: string })
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Product Specs</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+            Product Specs
+          </h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -169,12 +180,25 @@ export default function ProductSpecBuilder({ projectId }: { projectId: string })
             rows={2}
             className={inputClass + ' resize-none'}
           />
-          <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className={inputClass}>
-            {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+          <select
+            aria-label="Status"
+            value={form.status}
+            onChange={(e) => setForm({ ...form, status: e.target.value })}
+            className={inputClass}
+          >
+            {STATUS_OPTIONS.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
           </select>
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.title.trim()}>Save</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.title.trim()}>
+              Save
+            </Button>
           </div>
         </div>
       )}
@@ -187,14 +211,22 @@ export default function ProductSpecBuilder({ projectId }: { projectId: string })
             <div key={spec.id}>
               <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
                 <div className="flex-1 min-w-0 flex items-center gap-2">
-                  <button aria-label="Next"
+                  <button
+                    aria-label="Next"
                     onClick={() => setExpanded(expanded === spec.id ? null : spec.id)}
                     className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                   >
-                    <ChevronRight size={10} className={`transition-transform ${expanded === spec.id ? 'rotate-90' : ''}`} />
+                    <ChevronRight
+                      size={10}
+                      className={`transition-transform ${expanded === spec.id ? 'rotate-90' : ''}`}
+                    />
                   </button>
-                  <span className="font-medium text-[var(--text-primary)] truncate">{spec.title}</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusBadge[spec.status] || statusBadge.draft}`}>
+                  <span className="font-medium text-[var(--text-primary)] truncate">
+                    {spec.title}
+                  </span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusBadge[spec.status] || statusBadge.draft}`}
+                  >
                     {spec.status}
                   </span>
                   <span className="text-[10px] text-[var(--text-tertiary)]">
@@ -203,7 +235,9 @@ export default function ProductSpecBuilder({ projectId }: { projectId: string })
                 </div>
                 <button
                   aria-label="Delete product spec builder"
-                  onClick={() => handleDelete(spec.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                  onClick={() => handleDelete(spec.id)}
+                  className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2"
+                >
                   <Trash2 size={12} />
                 </button>
               </div>
@@ -211,19 +245,25 @@ export default function ProductSpecBuilder({ projectId }: { projectId: string })
                 <div className="mt-1 px-3 py-2 bg-[var(--bg-secondary)]/50 rounded-[6px] text-xs space-y-2">
                   {spec.problem && (
                     <div>
-                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase">Problem</p>
+                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase">
+                        Problem
+                      </p>
                       <p className="text-[var(--text-secondary)]">{spec.problem}</p>
                     </div>
                   )}
                   {spec.solution && (
                     <div>
-                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase">Solution</p>
+                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase">
+                        Solution
+                      </p>
                       <p className="text-[var(--text-secondary)]">{spec.solution}</p>
                     </div>
                   )}
                   {spec.success_metrics && (
                     <div>
-                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase">Success Metrics</p>
+                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase">
+                        Success Metrics
+                      </p>
                       <p className="text-[var(--text-secondary)]">{spec.success_metrics}</p>
                     </div>
                   )}

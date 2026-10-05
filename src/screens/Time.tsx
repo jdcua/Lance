@@ -34,51 +34,99 @@ import {
   type HeatmapCell,
 } from '../lib/heatmap';
 
-const DAY_NAMES_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAY_NAMES_FULL = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const DAY_ABBREV = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS_SHORT = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
 
-const TabBar = ({ tab, setTab, showHeatmap }: { tab: string; setTab: (t: 'timer' | 'heatmap') => void; showHeatmap: boolean }) => (
-    <div className="flex items-center gap-4 mb-6">
+const TabBar = ({
+  tab,
+  setTab,
+  showHeatmap,
+}: {
+  tab: string;
+  setTab: (t: 'timer' | 'heatmap') => void;
+  showHeatmap: boolean;
+}) => (
+  <div className="flex items-center gap-4 mb-6">
+    <button
+      onClick={() => setTab('timer')}
+      className={`text-sm font-medium pb-1.5 border-b-2 transition-colors ${
+        tab === 'timer'
+          ? 'text-[var(--text-primary)] border-[var(--accent)]'
+          : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
+      }`}
+    >
+      Timer
+    </button>
+    {showHeatmap && (
       <button
-        onClick={() => setTab('timer')}
-        className={`text-sm font-medium pb-1.5 border-b-2 transition-colors ${
-          tab === 'timer'
+        onClick={() => setTab('heatmap')}
+        className={`text-sm font-medium pb-1.5 border-b-2 transition-colors flex items-center gap-1.5 ${
+          tab === 'heatmap'
             ? 'text-[var(--text-primary)] border-[var(--accent)]'
             : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
         }`}
       >
-        Timer
+        <Grid3X3 size={14} />
+        Heatmap
       </button>
-      {showHeatmap && (
-        <button
-          onClick={() => setTab('heatmap')}
-          className={`text-sm font-medium pb-1.5 border-b-2 transition-colors flex items-center gap-1.5 ${
-            tab === 'heatmap'
-              ? 'text-[var(--text-primary)] border-[var(--accent)]'
-              : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
-          }`}
-        >
-          <Grid3X3 size={14} />
-          Heatmap
-        </button>
-      )}
-    </div>
-  );
+    )}
+  </div>
+);
 
 export default function TimeScreen() {
   const navigate = useNavigate();
-  const { timeEntries, loadTimeEntries, addTimeEntry, updateTimeEntry, removeTimeEntry, projects, loadProjects, clients, loadClients } = useStore();
+  const {
+    timeEntries,
+    loadTimeEntries,
+    addTimeEntry,
+    updateTimeEntry,
+    removeTimeEntry,
+    projects,
+    loadProjects,
+    clients,
+    loadClients,
+  } = useStore();
   const addToast = useToasts((s) => s.add);
   const timeError = useStore((s) => s.errors.timeEntries);
-  const [activeTimer, setActiveTimer] = useState<{ entry: TimeEntry; elapsed: number } | null>(null);
+  const [activeTimer, setActiveTimer] = useState<{ entry: TimeEntry; elapsed: number } | null>(
+    null,
+  );
   const [intervalId, setIntervalId] = useState<ReturnType<typeof setInterval> | null>(null);
-  const [entryForm, setEntryForm] = useState({ project_id: '', client_id: '', description: '', billable: true });
+  const [entryForm, setEntryForm] = useState({
+    project_id: '',
+    client_id: '',
+    description: '',
+    billable: true,
+  });
   const [durationMinutes, setDurationMinutes] = useState(0);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [confirmDelete, setConfirmDelete] = useState<{ id: string; description: string } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; description: string } | null>(
+    null,
+  );
   const [deleting, setDeleting] = useState(false);
   const [tab, setTab] = useState<'timer' | 'heatmap'>('timer');
   const pagedEntries = useVisibleList(timeEntries, `${timeEntries.length}`);
@@ -86,7 +134,7 @@ export default function TimeScreen() {
 
   useEffect(() => {
     Promise.all([loadTimeEntries(), loadProjects(), loadClients()])
-      .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
+      .catch((err) => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
   }, [loadTimeEntries, loadProjects, loadClients, addToast]);
 
@@ -96,13 +144,21 @@ export default function TimeScreen() {
     if (running) {
       setActiveTimer((prev) => {
         if (prev && prev.entry.id === running.id) return prev;
-        return { entry: running, elapsed: Math.max(0, Math.floor((Date.now() - new Date(running.start_time).getTime()) / 60000)) };
+        return {
+          entry: running,
+          elapsed: Math.max(
+            0,
+            Math.floor((Date.now() - new Date(running.start_time).getTime()) / 60000),
+          ),
+        };
       });
       if (!intervalId) {
         const id = setInterval(() => {
           setActiveTimer((prev) => {
             if (!prev) return null;
-            const elapsed = Math.floor((Date.now() - new Date(prev.entry.start_time).getTime()) / 60000);
+            const elapsed = Math.floor(
+              (Date.now() - new Date(prev.entry.start_time).getTime()) / 60000,
+            );
             return { ...prev, elapsed };
           });
         }, 1000);
@@ -110,7 +166,10 @@ export default function TimeScreen() {
       }
     } else {
       setActiveTimer(null);
-      if (intervalId) { clearInterval(intervalId); setIntervalId(null); }
+      if (intervalId) {
+        clearInterval(intervalId);
+        setIntervalId(null);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeEntries]);
@@ -152,7 +211,9 @@ export default function TimeScreen() {
       const created = await addTimeEntry({
         project_id: entryForm.project_id,
         client_id: entryForm.client_id,
-        description: entryForm.description ? sanitizeInput(entryForm.description).slice(0, MAX_LENGTHS.description) : undefined,
+        description: entryForm.description
+          ? sanitizeInput(entryForm.description).slice(0, MAX_LENGTHS.description)
+          : undefined,
         start_time: startTime,
         billable: entryForm.billable,
       });
@@ -193,8 +254,10 @@ export default function TimeScreen() {
     }
   };
 
-  const getProjectName = (projectId: string) => projects.find((p) => p.id === projectId)?.title || 'Unknown';
-  const getClientName = (clientId: string) => clients.find((c) => c.id === clientId)?.name || 'Unknown';
+  const getProjectName = (projectId: string) =>
+    projects.find((p) => p.id === projectId)?.title || 'Unknown';
+  const getClientName = (clientId: string) =>
+    clients.find((c) => c.id === clientId)?.name || 'Unknown';
 
   const today = getDateKey(new Date());
   const todaysEntries = timeEntries.filter((t) => getDateKey(new Date(t.start_time)) === today);
@@ -206,7 +269,9 @@ export default function TimeScreen() {
     return startDate >= weekAgo;
   });
   const weekMinutes = weekEntries.reduce((acc, t) => acc + (t.duration_minutes || 0), 0);
-  const unbilledMinutes = timeEntries.filter((t) => t.billable && !t.invoiced).reduce((acc, t) => acc + (t.duration_minutes || 0), 0);
+  const unbilledMinutes = timeEntries
+    .filter((t) => t.billable && !t.invoiced)
+    .reduce((acc, t) => acc + (t.duration_minutes || 0), 0);
 
   // ── Heatmap state ──
   const now = new Date();
@@ -217,7 +282,12 @@ export default function TimeScreen() {
   const gridRef = useRef<HTMLDivElement>(null);
 
   const heatmapGrid = useMemo(
-    () => computeHeatmapGrid(timeEntries, heatmapYear, selectedProject !== '__all__' ? selectedProject : undefined),
+    () =>
+      computeHeatmapGrid(
+        timeEntries,
+        heatmapYear,
+        selectedProject !== '__all__' ? selectedProject : undefined,
+      ),
     [timeEntries, heatmapYear, selectedProject],
   );
 
@@ -227,19 +297,30 @@ export default function TimeScreen() {
   );
 
   const dowBreakdown = useMemo(
-    () => computeDayOfWeekBreakdown(timeEntries, selectedProject !== '__all__' ? selectedProject : undefined),
+    () =>
+      computeDayOfWeekBreakdown(
+        timeEntries,
+        selectedProject !== '__all__' ? selectedProject : undefined,
+      ),
     [timeEntries, selectedProject],
   );
 
   const hourGrid = useMemo(
-    () => computeHourOfDayHeatmap(timeEntries, selectedProject !== '__all__' ? selectedProject : undefined),
+    () =>
+      computeHourOfDayHeatmap(
+        timeEntries,
+        selectedProject !== '__all__' ? selectedProject : undefined,
+      ),
     [timeEntries, selectedProject],
   );
 
   const monthLabels = useMemo(() => computeMonthLabels(heatmapGrid), [heatmapGrid]);
   const maxHourCount = useMemo(() => getMaxHourCount(hourGrid), [hourGrid]);
 
-  const maxDOW = useMemo(() => Math.max(...dowBreakdown.map((d) => d.avgHours), 0.1), [dowBreakdown]);
+  const maxDOW = useMemo(
+    () => Math.max(...dowBreakdown.map((d) => d.avgHours), 0.1),
+    [dowBreakdown],
+  );
 
   const projectColor = useMemo(() => {
     if (selectedProject === '__all__') return 'var(--accent)';
@@ -264,23 +345,27 @@ export default function TimeScreen() {
     setSelectedCell(cell);
   };
 
-  if (loading) return (
-    <div className="p-6">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        {[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />)}
+  if (loading)
+    return (
+      <div className="p-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />
+          ))}
+        </div>
+        <div className="h-16 rounded-[8px] bg-[var(--bg-secondary)] skeleton-pulse mb-4" />
+        {[...Array(5)].map((_, i) => (
+          <div
+            key={i}
+            className="h-10 bg-[var(--bg-secondary)] rounded-[8px] skeleton-pulse mb-2"
+          />
+        ))}
       </div>
-      <div className="h-16 rounded-[8px] bg-[var(--bg-secondary)] skeleton-pulse mb-4" />
-      {[...Array(5)].map((_, i) => <div key={i} className="h-10 bg-[var(--bg-secondary)] rounded-[8px] skeleton-pulse mb-2" />)}
-    </div>
-  );
+    );
 
   return (
     <div className="p-6">
-      <TabBar
-        tab={tab}
-        setTab={setTab}
-        showHeatmap={showHeatmap}
-      />
+      <TabBar tab={tab} setTab={setTab} showHeatmap={showHeatmap} />
       <LoadError error={timeError} onRetry={() => loadTimeEntries()} />
 
       {tab === 'timer' ? (
@@ -288,7 +373,12 @@ export default function TimeScreen() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
             <MetricCard label="Today" value={formatDuration(todaysMinutes)} color="gray" />
             <MetricCard label="This Week" value={formatDuration(weekMinutes)} color="gray" />
-            <MetricCard label="Unbilled" value={formatDuration(unbilledMinutes)} subtext="billable hours" color={unbilledMinutes > 0 ? 'amber' : 'gray'} />
+            <MetricCard
+              label="Unbilled"
+              value={formatDuration(unbilledMinutes)}
+              subtext="billable hours"
+              color={unbilledMinutes > 0 ? 'amber' : 'gray'}
+            />
             <div
               onClick={() => {
                 // Dispatch custom event so App.tsx's toggleTimer handles it
@@ -299,7 +389,9 @@ export default function TimeScreen() {
               <MetricCard
                 label={activeTimer ? 'Timer Running' : 'Timer'}
                 value={activeTimer ? formatDuration(activeTimer.elapsed) : 'Stopped'}
-                subtext={activeTimer ? getProjectName(activeTimer.entry.project_id) : 'No active timer'}
+                subtext={
+                  activeTimer ? getProjectName(activeTimer.entry.project_id) : 'No active timer'
+                }
                 trend={activeTimer ? 'up' : 'neutral'}
                 color={activeTimer ? 'green' : 'gray'}
               />
@@ -310,13 +402,22 @@ export default function TimeScreen() {
             <Card className="mb-6">
               <div className="flex items-end gap-4">
                 <div className="flex-1">
-                  <label htmlFor="time-entry-project" className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Project</label>
-                  <select
+                  <label
+                    htmlFor="time-entry-project"
+                    className="block text-xs font-medium text-[var(--text-secondary)] mb-1"
+                  >
+                    Project
+                  </label>
+                  <select aria-label="Project"
                     id="time-entry-project"
                     value={entryForm.project_id}
                     onChange={(e) => {
                       const project = projects.find((p) => p.id === e.target.value);
-                      setEntryForm({ ...entryForm, project_id: e.target.value, client_id: project?.client_id || '' });
+                      setEntryForm({
+                        ...entryForm,
+                        project_id: e.target.value,
+                        client_id: project?.client_id || '',
+                      });
                     }}
                     className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     disabled={!!activeTimer}
@@ -324,12 +425,16 @@ export default function TimeScreen() {
                   >
                     <option value="">Project...</option>
                     {projects.map((p) => (
-                      <option key={p.id} value={p.id}>{p.title}</option>
+                      <option key={p.id} value={p.id}>
+                        {p.title}
+                      </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] text-[var(--text-tertiary)] mb-1">Minutes</label>
+                  <label className="block text-[10px] text-[var(--text-tertiary)] mb-1">
+                    Minutes
+                  </label>
                   <input
                     type="number"
                     min={1}
@@ -352,7 +457,12 @@ export default function TimeScreen() {
                     className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px]"
                   />
                 </div>
-                <Button onClick={addManualEntry} loading={saving} disabled={!entryForm.project_id || durationMinutes <= 0} size="sm">
+                <Button
+                  onClick={addManualEntry}
+                  loading={saving}
+                  disabled={!entryForm.project_id || durationMinutes <= 0}
+                  size="sm"
+                >
                   Log
                 </Button>
               </div>
@@ -362,58 +472,87 @@ export default function TimeScreen() {
           {timeEntries.length === 0 ? (
             <Card className="text-center py-16 flex flex-col items-center">
               <Clock size={40} className="text-[var(--text-tertiary)] mb-4" />
-              <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No time entries yet</h3>
+              <h2 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">
+                No time entries yet
+              </h2>
               {projects.length === 0 ? (
                 <>
                   <p className="text-[13px] text-[var(--text-secondary)] max-w-xs mb-5">
-                    Time tracking runs on projects. Create your first project to start logging hours.
+                    Time tracking runs on projects. Create your first project to start logging
+                    hours.
                   </p>
                   <Button onClick={() => navigate('/projects')} variant="secondary" size="sm">
                     <Plus size={14} /> Your first project
                   </Button>
                 </>
               ) : (
-                <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Start a timer or add entries manually.</p>
+                <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">
+                  Start a timer or add entries manually.
+                </p>
               )}
             </Card>
           ) : (
             <>
-            <div className="space-y-2">
-              {pagedEntries.visible.map((entry) => (
-                <div key={entry.id} className="flex items-center gap-3 px-4 py-2.5 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px]">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-xs font-medium text-[var(--text-primary)]">{getProjectName(entry.project_id)}</span>
-                      <span className="text-[10px] text-[var(--text-tertiary)]">--</span>
-                      <span className="text-xs text-[var(--text-secondary)] truncate">{entry.description || 'No description'}</span>
+              <div className="space-y-2">
+                {pagedEntries.visible.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="flex items-center gap-3 px-4 py-2.5 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px]"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-xs font-medium text-[var(--text-primary)]">
+                          {getProjectName(entry.project_id)}
+                        </span>
+                        <span className="text-[10px] text-[var(--text-tertiary)]">--</span>
+                        <span className="text-xs text-[var(--text-secondary)] truncate">
+                          {entry.description || 'No description'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] text-[var(--text-tertiary)]">
+                        <span>{relativeDate(entry.start_time)}</span>
+                        <span>
+                          {formatTime(entry.start_time)}{' '}
+                          {entry.end_time ? `- ${formatTime(entry.end_time)}` : ''}
+                        </span>
+                        <span className="text-[var(--text-secondary)] font-medium">
+                          {entry.duration_minutes
+                            ? formatDuration(entry.duration_minutes)
+                            : 'In progress'}
+                        </span>
+                        <span>{getClientName(entry.client_id)}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] text-[var(--text-tertiary)]">
-                      <span>{relativeDate(entry.start_time)}</span>
-                      <span>{formatTime(entry.start_time)} {entry.end_time ? `- ${formatTime(entry.end_time)}` : ''}</span>
-                      <span className="text-[var(--text-secondary)] font-medium">{entry.duration_minutes ? formatDuration(entry.duration_minutes) : 'In progress'}</span>
-                      <span>{getClientName(entry.client_id)}</span>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => toggleEntryBillable(entry)}
+                        className={`text-[10px] px-1.5 py-0.5 rounded-full border ${entry.billable ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] border-[var(--accent)]/20' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--neutral-border)]'}`}
+                      >
+                        {entry.billable ? 'billable' : 'non-billable'}
+                      </button>
+                      {entry.invoiced && <Badge variant="info">invoiced</Badge>}
+                      <button
+                        onClick={() =>
+                          setConfirmDelete({
+                            id: entry.id,
+                            description: entry.description || 'No description',
+                          })
+                        }
+                        aria-label="Delete time entry"
+                        className="p-1 text-[var(--text-tertiary)] hover:text-[var(--danger)]"
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <button
-                      onClick={() => toggleEntryBillable(entry)}
-                      className={`text-[10px] px-1.5 py-0.5 rounded-full border ${entry.billable ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] border-[var(--accent)]/20' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--neutral-border)]'}`}
-                    >
-                      {entry.billable ? 'billable' : 'non-billable'}
-                    </button>
-                    {entry.invoiced && <Badge variant="info">invoiced</Badge>}
-                    <button
-                      onClick={() => setConfirmDelete({ id: entry.id, description: entry.description || 'No description' })}
-                      aria-label="Delete time entry"
-                      className="p-1 text-[var(--text-tertiary)] hover:text-[var(--danger)]"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <MoreRows total={pagedEntries.total} shown={pagedEntries.visible.length} hasMore={pagedEntries.hasMore} showMore={pagedEntries.showMore} />
+                ))}
+              </div>
+              <MoreRows
+                total={pagedEntries.total}
+                shown={pagedEntries.visible.length}
+                hasMore={pagedEntries.hasMore}
+                showMore={pagedEntries.showMore}
+              />
             </>
           )}
         </>
@@ -423,14 +562,18 @@ export default function TimeScreen() {
           {/* SECTION 2 · Streak Stats + SECTION 5 · Project Filter */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <button aria-label="Previous"
+              <button
+                aria-label="Previous"
                 onClick={() => setHeatmapYear((y) => y - 1)}
                 className="p-0.5 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
               >
                 <ChevronLeft size={16} />
               </button>
-              <span className="text-sm font-semibold text-[var(--text-primary)]">{heatmapYear}</span>
-              <button aria-label="Next"
+              <span className="text-sm font-semibold text-[var(--text-primary)]">
+                {heatmapYear}
+              </span>
+              <button
+                aria-label="Next"
                 onClick={() => setHeatmapYear((y) => Math.min(y + 1, now.getFullYear()))}
                 className="p-0.5 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                 disabled={heatmapYear >= now.getFullYear()}
@@ -438,15 +581,19 @@ export default function TimeScreen() {
                 <ChevronRight size={16} />
               </button>
             </div>
-            <select
+            <select aria-label="Selectedproject"
               value={selectedProject}
               onChange={(e) => setSelectedProject(e.target.value)}
               className="px-3 py-1.5 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
             >
               <option value="__all__">All Projects</option>
-              {projects.filter((p) => p.status === 'active').map((p) => (
-                <option key={p.id} value={p.id}>{p.title}</option>
-              ))}
+              {projects
+                .filter((p) => p.status === 'active')
+                .map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.title}
+                  </option>
+                ))}
             </select>
           </div>
 
@@ -470,29 +617,46 @@ export default function TimeScreen() {
             />
             <MetricCard
               label="Best Day"
-              value={streakStats.bestDayHours > 0 ? `${streakStats.bestDayHours.toFixed(1)}h` : '--'}
-              subtext={streakStats.bestDayHours > 0 ? parseLocalDateKey(streakStats.bestDayDate).toLocaleDateString() : undefined}
+              value={
+                streakStats.bestDayHours > 0 ? `${streakStats.bestDayHours.toFixed(1)}h` : '--'
+              }
+              subtext={
+                streakStats.bestDayHours > 0
+                  ? parseLocalDateKey(streakStats.bestDayDate).toLocaleDateString()
+                  : undefined
+              }
               color={streakStats.bestDayHours > 0 ? 'purple' : 'gray'}
             />
             <MetricCard
               label="Top Month"
               value={streakStats.mostActiveMonth || '--'}
-              subtext={streakStats.mostActiveMonth ? `${Math.round(streakStats.mostActiveMonthHours)}h` : undefined}
+              subtext={
+                streakStats.mostActiveMonth
+                  ? `${Math.round(streakStats.mostActiveMonthHours)}h`
+                  : undefined
+              }
               color={streakStats.mostActiveMonth ? 'blue' : 'gray'}
             />
           </div>
 
           {/* SECTION 1 · Annual Heatmap */}
           <Card className="mb-6">
-            <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Activity Heatmap</h3>
-            <p className="text-xs text-[var(--text-tertiary)] mb-4">{streakStats.totalDays} day{streakStats.totalDays !== 1 ? 's' : ''} with logged time</p>
+            <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-1">
+              Activity Heatmap
+            </h2>
+            <p className="text-xs text-[var(--text-tertiary)] mb-4">
+              {streakStats.totalDays} day{streakStats.totalDays !== 1 ? 's' : ''} with logged time
+            </p>
 
             {!hasEnoughData ? (
               <div className="text-center py-12 flex flex-col items-center">
                 <Grid3X3 size={32} className="text-[var(--text-tertiary)] mb-3" />
-                <p className="text-sm font-medium text-[var(--text-secondary)] mb-1">Not enough data yet</p>
+                <p className="text-sm font-medium text-[var(--text-secondary)] mb-1">
+                  Not enough data yet
+                </p>
                 <p className="text-xs text-[var(--text-tertiary)] max-w-xs">
-                  Start tracking time and check back after logging at least 7 days to see your patterns emerge.
+                  Start tracking time and check back after logging at least 7 days to see your
+                  patterns emerge.
                 </p>
               </div>
             ) : (
@@ -561,25 +725,38 @@ export default function TimeScreen() {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-semibold text-[var(--text-primary)]">
-                        {DAY_NAMES_FULL[selectedCell.date.getDay()]}, {MONTHS_SHORT[selectedCell.date.getMonth()]} {selectedCell.date.getDate()}
+                        {DAY_NAMES_FULL[selectedCell.date.getDay()]},{' '}
+                        {MONTHS_SHORT[selectedCell.date.getMonth()]} {selectedCell.date.getDate()}
                       </span>
-                      <button aria-label="Close"
-                        onClick={() => { setSelectedCell(null); setSelectedCellPos(null); }}
+                      <button
+                        aria-label="Close"
+                        onClick={() => {
+                          setSelectedCell(null);
+                          setSelectedCellPos(null);
+                        }}
                         className="p-0.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                       >
                         <X size={12} />
                       </button>
                     </div>
                     <p className="text-[11px] text-[var(--text-secondary)] mb-2">
-                      {selectedCell.hours.toFixed(1)}h logged · {selectedCell.billableHours.toFixed(1)}h billable
+                      {selectedCell.hours.toFixed(1)}h logged ·{' '}
+                      {selectedCell.billableHours.toFixed(1)}h billable
                     </p>
                     {selectedCell.entries.length > 0 && (
                       <div className="space-y-1.5 max-h-48 overflow-y-auto">
                         {selectedCell.entries.map((entry) => (
-                          <div key={entry.id} className="text-[11px] text-[var(--text-secondary)] flex items-center justify-between">
-                            <span className="truncate mr-2">{getProjectName(entry.project_id)}</span>
+                          <div
+                            key={entry.id}
+                            className="text-[11px] text-[var(--text-secondary)] flex items-center justify-between"
+                          >
+                            <span className="truncate mr-2">
+                              {getProjectName(entry.project_id)}
+                            </span>
                             <span className="text-[var(--text-primary)] font-medium flex-shrink-0">
-                              {entry.duration_minutes ? formatDuration(entry.duration_minutes) : '--'}
+                              {entry.duration_minutes
+                                ? formatDuration(entry.duration_minutes)
+                                : '--'}
                             </span>
                           </div>
                         ))}
@@ -611,8 +788,10 @@ export default function TimeScreen() {
 
           {/* SECTION 3 · Day of Week Breakdown */}
           <Card className="mb-6">
-            <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Day of Week</h3>
-            <p className="text-xs text-[var(--text-tertiary)] mb-4">Average hours per day of the week</p>
+            <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Day of Week</h2>
+            <p className="text-xs text-[var(--text-tertiary)] mb-4">
+              Average hours per day of the week
+            </p>
             <div className="flex items-end gap-3" style={{ height: '120px' }}>
               {dowBreakdown.map((bar) => (
                 <div key={bar.dayIndex} className="flex-1 flex flex-col items-center gap-1">
@@ -637,15 +816,21 @@ export default function TimeScreen() {
 
           {/* SECTION 4 · Hour of Day Heatmap */}
           <Card>
-            <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Hour of Day</h3>
-            <p className="text-xs text-[var(--text-tertiary)] mb-4">When you clock in across the week</p>
+            <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Hour of Day</h2>
+            <p className="text-xs text-[var(--text-tertiary)] mb-4">
+              When you clock in across the week
+            </p>
             <div className="overflow-x-auto">
               <div className="flex" style={{ minWidth: 'fit-content' }}>
                 {/* Hour labels */}
                 <div className="flex flex-col mr-2 gap-[2px]">
                   <div style={{ height: '10px' }} />
                   {DAY_ABBREV.map((day, i) => (
-                    <span key={i} className="text-[9px] text-[var(--text-tertiary)]" style={{ height: '14px', lineHeight: '14px' }}>
+                    <span
+                      key={i}
+                      className="text-[9px] text-[var(--text-tertiary)]"
+                      style={{ height: '14px', lineHeight: '14px' }}
+                    >
                       {day}
                     </span>
                   ))}
@@ -677,9 +862,10 @@ export default function TimeScreen() {
                             style={{
                               width: '18px',
                               height: '14px',
-                              backgroundColor: maxHourCount > 0
-                                ? `color-mix(in srgb, ${projectColor} ${Math.max(5, Math.round((cell.count / maxHourCount) * 100))}%, var(--color-surface-2, var(--bg-secondary)))`
-                                : 'var(--color-surface-2, var(--bg-secondary))',
+                              backgroundColor:
+                                maxHourCount > 0
+                                  ? `color-mix(in srgb, ${projectColor} ${Math.max(5, Math.round((cell.count / maxHourCount) * 100))}%, var(--color-surface-2, var(--bg-secondary)))`
+                                  : 'var(--color-surface-2, var(--bg-secondary))',
                             }}
                           />
                         ))}
@@ -703,9 +889,10 @@ export default function TimeScreen() {
                     style={{
                       width: '18px',
                       height: '14px',
-                      backgroundColor: maxHourCount > 0
-                        ? `color-mix(in srgb, ${projectColor} ${Math.max(5, Math.round(pct * 100))}%, var(--color-surface-2, var(--bg-secondary)))`
-                        : 'var(--color-surface-2, var(--bg-secondary))',
+                      backgroundColor:
+                        maxHourCount > 0
+                          ? `color-mix(in srgb, ${projectColor} ${Math.max(5, Math.round(pct * 100))}%, var(--color-surface-2, var(--bg-secondary)))`
+                          : 'var(--color-surface-2, var(--bg-secondary))',
                     }}
                   />
                 );
@@ -724,7 +911,10 @@ export default function TimeScreen() {
         message={`Are you sure you want to delete "${confirmDelete?.description}"? This cannot be undone.`}
         loading={deleting}
       />
-      <ArchetypeFeatureTabs screen="time" context={{ projectId: selectedProject !== '__all__' ? selectedProject : '' }} />
+      <ArchetypeFeatureTabs
+        screen="time"
+        context={{ projectId: selectedProject !== '__all__' ? selectedProject : '' }}
+      />
     </div>
   );
 }

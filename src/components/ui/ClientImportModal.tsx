@@ -365,7 +365,7 @@ export default function ClientImportModal({
               <label htmlFor="import-source" className="text-xs text-[var(--text-secondary)] flex-shrink-0">
                 Switching from another tool?
               </label>
-              <select
+              <select aria-label="Importsource"
                 id="import-source"
                 value={importSource}
                 onChange={(e) => setImportSource(e.target.value)}
@@ -476,7 +476,7 @@ export default function ClientImportModal({
                       {header}
                     </span>
                     <span className="text-[var(--text-tertiary)] text-xs">&rarr;</span>
-                    <select
+                    <select aria-label="Columnmapping[header] || ''"
                       value={columnMapping[header] || ''}
                       onChange={(e) => {
                         setColumnMapping((prev) => {
@@ -625,7 +625,7 @@ export default function ClientImportModal({
                       </td>
                       <td className="px-3 py-1.5 text-center">
                         {dr.duplicate ? (
-                          <select
+                          <select aria-label="Dr.action"
                             value={dr.action}
                             onChange={(e) =>
                               handleActionChange(

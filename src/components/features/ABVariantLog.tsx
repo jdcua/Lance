@@ -43,7 +43,7 @@ export default function ABVariantLog({ projectId }: { projectId: string }) {
       const db = await getDb();
       const rows = await db.select<(ABVariant & Record<string, unknown>)[]>(
         'SELECT id, project_id, test_name, variant_name, is_control, results, status FROM ab_variants WHERE project_id = ? ORDER BY test_name ASC, variant_name ASC',
-        [projectId]
+        [projectId],
       );
       setVariants(
         rows.map((r) => ({
@@ -51,10 +51,10 @@ export default function ABVariantLog({ projectId }: { projectId: string }) {
           project_id: r.project_id as string,
           test_name: r.test_name as string,
           variant_name: r.variant_name as string,
-          is_control: !!(r.is_control),
+          is_control: !!r.is_control,
           results: r.results as string | undefined,
           status: r.status as string,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[ABVariantLog] loadVariants failed:', e);
@@ -74,7 +74,15 @@ export default function ABVariantLog({ projectId }: { projectId: string }) {
       const db = await getDb();
       await db.execute(
         'INSERT INTO ab_variants (id, project_id, test_name, variant_name, is_control, results, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [id, projectId, form.test_name.trim(), form.variant_name.trim(), form.is_control ? 1 : 0, form.results || null, form.status]
+        [
+          id,
+          projectId,
+          form.test_name.trim(),
+          form.variant_name.trim(),
+          form.is_control ? 1 : 0,
+          form.results || null,
+          form.status,
+        ],
       );
       const variant: ABVariant = {
         id,
@@ -86,9 +94,18 @@ export default function ABVariantLog({ projectId }: { projectId: string }) {
         status: form.status,
       };
       setVariants((prev) =>
-        [...prev, variant].sort((a, b) => a.test_name.localeCompare(b.test_name) || a.variant_name.localeCompare(b.variant_name))
+        [...prev, variant].sort(
+          (a, b) =>
+            a.test_name.localeCompare(b.test_name) || a.variant_name.localeCompare(b.variant_name),
+        ),
       );
-      setForm({ test_name: '', variant_name: '', is_control: false, results: '', status: 'running' });
+      setForm({
+        test_name: '',
+        variant_name: '',
+        is_control: false,
+        results: '',
+        status: 'running',
+      });
       setShowForm(false);
     } catch (e) {
       console.error('[ABVariantLog] handleSave failed:', e);
@@ -119,7 +136,9 @@ export default function ABVariantLog({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">A/B Variants</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+            A/B Variants
+          </h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -174,12 +193,30 @@ export default function ABVariantLog({ projectId }: { projectId: string }) {
             rows={2}
             className={inputClass + ' resize-none'}
           />
-          <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className={inputClass}>
-            {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+          <select
+            aria-label="Status"
+            value={form.status}
+            onChange={(e) => setForm({ ...form, status: e.target.value })}
+            className={inputClass}
+          >
+            {STATUS_OPTIONS.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
           </select>
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.test_name.trim() || !form.variant_name.trim()}>Save</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              loading={saving}
+              disabled={!form.test_name.trim() || !form.variant_name.trim()}
+            >
+              Save
+            </Button>
           </div>
         </div>
       )}
@@ -194,7 +231,10 @@ export default function ABVariantLog({ projectId }: { projectId: string }) {
                 {testName} ({testVariants.length})
               </div>
               {testVariants.map((v) => (
-                <div key={v.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+                <div
+                  key={v.id}
+                  className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs"
+                >
                   <div className="flex-1 min-w-0 flex items-center gap-2">
                     {v.is_control ? (
                       <CheckCircle2 size={10} className="text-[#16A34A] flex-shrink-0" />
@@ -202,14 +242,22 @@ export default function ABVariantLog({ projectId }: { projectId: string }) {
                       <span className="w-2.5 flex-shrink-0" />
                     )}
                     <span className="font-medium text-[var(--text-primary)]">{v.variant_name}</span>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusBadge[v.status] || statusBadge.running}`}>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusBadge[v.status] || statusBadge.running}`}
+                    >
                       {v.status}
                     </span>
-                    {v.results && <span className="text-[10px] text-[var(--text-tertiary)] truncate">{v.results}</span>}
+                    {v.results && (
+                      <span className="text-[10px] text-[var(--text-tertiary)] truncate">
+                        {v.results}
+                      </span>
+                    )}
                   </div>
                   <button
                     aria-label="Delete ab variant log"
-                    onClick={() => handleDelete(v.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                    onClick={() => handleDelete(v.id)}
+                    className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2"
+                  >
                     <Trash2 size={12} />
                   </button>
                 </div>

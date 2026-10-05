@@ -254,7 +254,7 @@ export default function StyleGuide({ clientId }: { clientId: string }) {
           <label className="text-[10px] font-medium text-[var(--text-secondary)] mb-1 block">
             Style Guide Reference
           </label>
-          <select
+          <select aria-label="Style Guide Ref"
             value={form.style_guide_ref}
             onChange={(e) => setForm({ ...form, style_guide_ref: e.target.value })}
             className={selectClass}

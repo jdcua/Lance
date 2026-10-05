@@ -91,7 +91,7 @@ export default function QuickTimeLogModal({ open, onClose }: QuickTimeLogModalPr
       <div className="space-y-4">
         <div>
           <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Project</label>
-          <select
+          <select aria-label="Projectid"
             ref={projectSelectRef}
             value={projectId}
             onChange={(e) => handleProjectChange(e.target.value)}

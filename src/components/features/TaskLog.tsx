@@ -187,7 +187,7 @@ export default function TaskLog({ clientId }: { clientId: string }) {
               className={inputClass}
               min={0}
             />
-            <select
+            <select aria-label="Category"
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
               className={inputClass}

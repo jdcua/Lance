@@ -130,7 +130,7 @@ export default function FeaturePrioritization({ projectId }: { projectId: string
                   <span className="text-[10px] text-[var(--text-tertiary)]">{item.effort}</span>
                 )}
               </div>
-              <select
+              <select aria-label="Item.priority"
                 value={item.priority}
                 onChange={(e) => handlePriorityChange(item.id, e.target.value)}
                 className={selectClass + ' w-16 ml-2'}

@@ -175,7 +175,7 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
               autoFocus
             />
           ) : (
-            <select
+            <select aria-label="Selectedassetid"
               value={selectedAssetId}
               onChange={(e) => setSelectedAssetId(e.target.value)}
               className={inputClass}

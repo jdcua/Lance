@@ -1805,7 +1805,7 @@ function OnboardingFlow({
               </div>
               <div>
                 <label className={labelClass}>Currency</label>
-                <select
+                <select aria-label="Currency"
                   value={onboardingForm.currency}
                   onChange={(e) =>
                     setOnboardingForm({ ...onboardingForm, currency: e.target.value })
@@ -1952,7 +1952,7 @@ function OnboardingFlow({
               {onboardingForm.ai_enabled && (
                 <div className="animate-fade-in pl-1">
                   <label className={labelClass}>Default writing style</label>
-                  <select
+                  <select aria-label="Default writing style"
                     value={onboardingForm.writing_style}
                     onChange={(e) => setOnboardingForm({ ...onboardingForm, writing_style: e.target.value })}
                     className={inputClass}
@@ -2006,7 +2006,7 @@ function OnboardingFlow({
               </div>
               <div>
                 <label className={labelClass}>Default Payment Terms</label>
-                <select
+                <select aria-label="Default Payment Terms"
                   value={onboardingForm.payment_terms}
                   onChange={(e) =>
                     setOnboardingForm({ ...onboardingForm, payment_terms: e.target.value })

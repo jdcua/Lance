@@ -39,7 +39,7 @@ export default function EquipmentInventory({ clientId }: { clientId: string }) {
       const db = await getDb();
       const rows = await db.select<(EquipmentItem & Record<string, unknown>)[]>(
         'SELECT id, client_id, name, equipment_type, serial_number, purchase_date, value, notes FROM equipment_inventory WHERE client_id = ? ORDER BY equipment_type ASC, name ASC',
-        [clientId]
+        [clientId],
       );
       setItems(
         rows.map((r) => ({
@@ -51,7 +51,7 @@ export default function EquipmentInventory({ clientId }: { clientId: string }) {
           purchase_date: r.purchase_date as string | undefined,
           value: r.value as number | undefined,
           notes: r.notes as string | undefined,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[EquipmentInventory] loadItems failed:', e);
@@ -82,7 +82,7 @@ export default function EquipmentInventory({ clientId }: { clientId: string }) {
           form.purchase_date || null,
           form.value ? parseFloat(form.value) : null,
           form.notes || null,
-        ]
+        ],
       );
       const item: EquipmentItem = {
         id,
@@ -95,9 +95,20 @@ export default function EquipmentInventory({ clientId }: { clientId: string }) {
         notes: form.notes || undefined,
       };
       setItems((prev) =>
-        [...prev, item].sort((a, b) => (a.equipment_type || '').localeCompare(b.equipment_type || '') || a.name.localeCompare(b.name))
+        [...prev, item].sort(
+          (a, b) =>
+            (a.equipment_type || '').localeCompare(b.equipment_type || '') ||
+            a.name.localeCompare(b.name),
+        ),
       );
-      setForm({ name: '', equipment_type: 'mic', serial_number: '', purchase_date: '', value: '', notes: '' });
+      setForm({
+        name: '',
+        equipment_type: 'mic',
+        serial_number: '',
+        purchase_date: '',
+        value: '',
+        notes: '',
+      });
       setShowForm(false);
     } catch (e) {
       console.error('[EquipmentInventory] handleSave failed:', e);
@@ -122,7 +133,9 @@ export default function EquipmentInventory({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Equipment</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+            Equipment
+          </h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -164,8 +177,17 @@ export default function EquipmentInventory({ clientId }: { clientId: string }) {
             autoFocus
           />
           <div className="grid grid-cols-2 gap-2">
-            <select value={form.equipment_type} onChange={(e) => setForm({ ...form, equipment_type: e.target.value })} className={inputClass}>
-              {EQUIPMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+            <select
+              aria-label="Equipment Type"
+              value={form.equipment_type}
+              onChange={(e) => setForm({ ...form, equipment_type: e.target.value })}
+              className={inputClass}
+            >
+              {EQUIPMENT_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
             </select>
             <input
               type="text"
@@ -199,8 +221,12 @@ export default function EquipmentInventory({ clientId }: { clientId: string }) {
             className={inputClass + ' resize-none'}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.name.trim()}>Save</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.name.trim()}>
+              Save
+            </Button>
           </div>
         </div>
       )}
@@ -210,7 +236,10 @@ export default function EquipmentInventory({ clientId }: { clientId: string }) {
       ) : (
         <div className="space-y-1">
           {items.map((item) => (
-            <div key={item.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+            <div
+              key={item.id}
+              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs"
+            >
               <div className="flex-1 min-w-0 flex items-center gap-2">
                 <span className="font-medium text-[var(--text-primary)]">{item.name}</span>
                 {item.equipment_type && (
@@ -219,19 +248,31 @@ export default function EquipmentInventory({ clientId }: { clientId: string }) {
                   </span>
                 )}
                 {item.serial_number && (
-                  <span className="text-[10px] font-mono text-[var(--text-tertiary)]">{item.serial_number}</span>
+                  <span className="text-[10px] font-mono text-[var(--text-tertiary)]">
+                    {item.serial_number}
+                  </span>
                 )}
                 {item.purchase_date && (
-                  <span className="text-[10px] text-[var(--text-tertiary)]">{item.purchase_date?.split('T')[0]}</span>
+                  <span className="text-[10px] text-[var(--text-tertiary)]">
+                    {item.purchase_date?.split('T')[0]}
+                  </span>
                 )}
                 {item.value != null && (
-                  <span className="text-[10px] text-[#16A34A] font-medium">${item.value.toLocaleString()}</span>
+                  <span className="text-[10px] text-[#16A34A] font-medium">
+                    ${item.value.toLocaleString()}
+                  </span>
                 )}
-                {item.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">{item.notes}</span>}
+                {item.notes && (
+                  <span className="text-[10px] text-[var(--text-tertiary)] truncate">
+                    {item.notes}
+                  </span>
+                )}
               </div>
               <button
                 aria-label="Delete equipment inventory"
-                onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                onClick={() => handleDelete(item.id)}
+                className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2"
+              >
                 <Trash2 size={12} />
               </button>
             </div>
