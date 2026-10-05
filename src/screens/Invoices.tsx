@@ -374,8 +374,9 @@ export default function Invoices() {
       return;
     }
     // Typo guard (mirrors the expense form): computed totals can only be
-    // absurd via a mistyped rate/quantity.
-    if (total > 999999999.99 || !(total >= 0)) {
+    // absurd via a mistyped rate/quantity. Zero is rejected like the
+    // recurring flow: a $0 invoice is a draft with extra steps.
+    if (total > 999999999.99 || !(total > 0)) {
       addToast('That total looks off, please check rates and quantities for typos', 'error');
       return;
     }

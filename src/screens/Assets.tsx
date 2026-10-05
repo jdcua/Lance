@@ -68,8 +68,6 @@ export default function Assets() {
   const {
     allAttachments,
     loadAllAttachments,
-    assetStats,
-    loadAssetStats,
     addAttachment,
     removeAttachment,
     renameAttachment,
@@ -113,10 +111,9 @@ export default function Assets() {
 
   useEffect(() => {
     loadAllAttachments();
-    loadAssetStats();
     loadClients();
     loadProjects();
-  }, [loadAllAttachments, loadAssetStats, loadClients, loadProjects]);
+  }, [loadAllAttachments, loadClients, loadProjects]);
 
   const scopeAssets = useMemo(() => {
     const source = searchResults || allAttachments;
@@ -143,13 +140,16 @@ export default function Assets() {
     );
   }, [allAttachments]);
 
+  // Header counts come from the same attachment list the page renders, not
+  // the SQL aggregate: when the two disagree (stale/unavailable stats) the
+  // header claimed "0 files" next to a non-empty library.
   const libraryStats = useMemo(() => {
-    if (!assetStats) return { total: 0, totalSize: 0 };
+    const rows = allAttachments.filter((a) => a.entity_type === 'library' && a.entity_id === 'root');
     return {
-      total: assetStats.total_files,
-      totalSize: assetStats.total_size_bytes,
+      total: rows.length,
+      totalSize: rows.reduce((s, a) => s + (a.size_bytes || 0), 0),
     };
-  }, [assetStats]);
+  }, [allAttachments]);
 
   const scopeLabel = useMemo(() => {
     if (scope.type === 'library') return 'Asset Library';
@@ -183,7 +183,6 @@ export default function Assets() {
         }
       }
       await loadAllAttachments();
-      await loadAssetStats();
       if (ok === 0) {
         addToast('No files uploaded', 'error');
       } else if (ok < fileArray.length) {
@@ -192,7 +191,7 @@ export default function Assets() {
         addToast(`${ok} file${ok !== 1 ? 's' : ''} uploaded`, 'success');
       }
     },
-    [scope, saveAssetFile, addAttachment, loadAllAttachments, loadAssetStats, addToast],
+    [scope, saveAssetFile, addAttachment, loadAllAttachments, addToast],
   );
 
   const handleSearch = useCallback(

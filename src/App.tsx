@@ -989,7 +989,7 @@ export default function App() {
           (Date.now() - new Date(activeEntry.start_time).getTime()) / 60000,
         );
         if (duration < 1) {
-          addToast('Timer stopped', 'success');
+          addToast('Timer stopped · under a minute, nothing logged', 'info');
         } else {
           const h = Math.floor(duration / 60);
           const m = duration % 60;

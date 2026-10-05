@@ -264,7 +264,9 @@ export default function FollowUps() {
 
   const pendingCount = activeFollowUps.length;
   const tabCounts: Record<Tab, number> = {
-    pending: allFollowUps.filter((f) => f.log.status === 'pending').length,
+    // Pending counts the same live set as the header: history rows stuck at
+    // status pending (orphans included) must not inflate the tab.
+    pending: pendingCount,
     sent: allFollowUps.filter((f) => f.log.status === 'sent').length,
     dismissed: allFollowUps.filter((f) => f.log.status === 'dismissed').length,
     all: allFollowUps.length,

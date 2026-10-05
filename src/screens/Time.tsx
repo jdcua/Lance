@@ -463,7 +463,9 @@ export default function TimeScreen() {
             />
             <MetricCard
               label={`${heatmapYear} Total`}
-              value={`${Math.round(streakStats.totalHoursThisYear)}h`}
+              // Same h/m precision as the Timer tab: whole-hour rounding
+              // silently dropped up to 59 minutes off the yearly total.
+              value={formatDuration(Math.round(streakStats.totalHoursThisYear * 60))}
               color="gray"
             />
             <MetricCard
@@ -697,7 +699,7 @@ export default function TimeScreen() {
                   <div
                     key={pct}
                     className="rounded-sm"
-                    title={count > 0 ? `${count} entries` : '0 entries'}
+                    title={count === 1 ? '1 entry' : `${count} entries`}
                     style={{
                       width: '18px',
                       height: '14px',
