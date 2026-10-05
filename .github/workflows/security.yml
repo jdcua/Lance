@@ -97,6 +97,10 @@ jobs:
       - uses: rustsec/audit-check@69366f33c96575abad1ee0dba8212993eecbe998 # v2.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          # The Rust workspace lives in src-tauri, not the repo root. Without
+          # this the action looks for ./Cargo.lock, fails, and the whole
+          # Security workflow goes red (2026-10-05).
+          working-directory: src-tauri
 
       # rustsec/audit-check's `ignore:` input is additive and silent, it will not
       # fail if you ignore something that is not vulnerable, which is how audit
