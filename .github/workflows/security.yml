@@ -94,18 +94,18 @@ jobs:
         working-directory: src-tauri
         run: cargo tree --locked --depth 0
 
-      - uses: rustsec/audit-check@69366f33c96575abad1ee0dba8212993eecbe998 # v2.0.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          # The Rust workspace lives in src-tauri, not the repo root. Without
-          # this the action looks for ./Cargo.lock, fails, and the whole
-          # Security workflow goes red (2026-10-05).
-          working-directory: src-tauri
-
-      # rustsec/audit-check's `ignore:` input is additive and silent, it will not
-      # fail if you ignore something that is not vulnerable, which is how audit
-      # gates decay into decoration. This step is the actual gate: it reasons
-      # about patch availability and validates the allowlist itself.
+      # NOTE: no rustsec/audit-check action step here on purpose. It was
+      # removed 2026-10-05 after failing every Security run two ways: first it
+      # scanned ./Cargo.lock at the repo root (workspace is in src-tauri),
+      # then, pointed at the right lockfile, it (a) needs checks:write to post
+      # its check run, which this least-privilege workflow does not grant, and
+      # (b) hard-fails on ANY advisory with no way to express
+      # "allowlisted, no patch exists" — our two advisories (rsa, sqlx) would
+      # keep it red forever. The Advisory gate below is the actual gate: it
+      # reasons about patch availability and validates the allowlist itself
+      # (an `ignore:` input would be additive and silent — it never fails on
+      # an entry that stopped being vulnerable, which is how audit gates
+      # decay into decoration).
       - name: Install cargo-audit
         run: cargo install cargo-audit --locked
 
