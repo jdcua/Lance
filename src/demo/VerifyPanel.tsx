@@ -63,13 +63,24 @@ export default function VerifyPanel() {
         keys.
       </p>
       {/* Full key list sits behind a disclosure: the proof stays one click
-          away, but the raw key dump no longer reads like a devtools panel. */}
-      <details>
-        <summary>Show all {entries.length} keys</summary>
-        <ul>
+          away, and reads as designed UI rather than a devtools panel. */}
+      <details className="group">
+        <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-[8px] border border-[var(--border-color)] bg-[var(--bg-secondary)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)] [&::-webkit-details-marker]:hidden">
+          <span aria-hidden="true" className="text-[10px] text-[var(--text-tertiary)] transition-transform group-open:rotate-90">▶</span>
+          Show all {entries.length} keys · {formatBytes(total)}
+        </summary>
+        <ul className="mt-2 max-h-[220px] space-y-1 overflow-y-auto rounded-[8px] border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2">
           {entries.map((e) => (
-            <li key={e.key}>
-              {e.key} · {formatBytes(e.bytes)}
+            <li
+              key={e.key}
+              className="flex items-center justify-between gap-2 rounded-[6px] bg-[var(--bg-card)] px-2 py-1"
+            >
+              <code className="truncate font-mono text-[11px] text-[var(--text-primary)]">
+                {e.key}
+              </code>
+              <span className="shrink-0 rounded-full bg-[var(--accent-bg)] px-1.5 py-px text-[10px] font-semibold text-[var(--accent-ink,var(--accent))]">
+                {formatBytes(e.bytes)}
+              </span>
             </li>
           ))}
         </ul>
