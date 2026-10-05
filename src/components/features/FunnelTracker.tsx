@@ -137,7 +137,9 @@ export default function FunnelTracker({ projectId }: { projectId: string }) {
                       <span className="text-[10px] text-[var(--text-tertiary)] font-medium">{si + 1}</span>
                       <span className="font-medium text-[var(--text-primary)]">{item.stage}</span>
                     </div>
-                    <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                    <button
+                      aria-label="Delete funnel tracker"
+                      onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                       <Trash2 size={12} />
                     </button>
                   </div>

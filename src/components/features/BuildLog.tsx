@@ -64,7 +64,9 @@ export default function BuildLog({ projectId }: { projectId: string }) {
                   {b.platform && <><Monitor size={10} className="inline mr-0.5" />{b.platform}</>}
                 </span>
               </div>
-              <button onClick={() => removeBuild(b.id, projectId)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+              <button
+                aria-label="Delete build log"
+                onClick={() => removeBuild(b.id, projectId)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                 <Trash2 size={12} />
               </button>
             </div>

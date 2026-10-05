@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, Check, Circle, AlertCircle, User, Users } from 'lucide-react';
+import { parseDateString } from '../../utils/format';
 
 type ActionItem = {
   id: string;
@@ -132,7 +133,7 @@ export default function ActionItemTracker({ clientId }: { clientId: string }) {
     if (!item.due_date) return false;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const due = new Date(item.due_date);
+    const due = parseDateString(item.due_date);
     due.setHours(0, 0, 0, 0);
     return due.getTime() < today.getTime();
   };
@@ -274,7 +275,7 @@ export default function ActionItemTracker({ clientId }: { clientId: string }) {
                             <span className="flex items-center gap-0.5">
                               <AlertCircle size={9} />
                               Overdue{' '}
-                              {new Date(item.due_date).toLocaleDateString('en-US', {
+                              {parseDateString(item.due_date).toLocaleDateString('en-US', {
                                 month: 'short',
                                 day: 'numeric',
                               })}
@@ -293,7 +294,7 @@ export default function ActionItemTracker({ clientId }: { clientId: string }) {
                     </div>
                   </div>
                 </div>
-                <button
+                <button aria-label="Delete action item tracker"
                   onClick={() => handleDelete(item.id)}
                   className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0"
                 >

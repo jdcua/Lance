@@ -132,7 +132,9 @@ export default function JourneyMapBuilder({ projectId }: { projectId: string }) 
                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${PRIORITY_COLORS[item.priority] || ''}`}>{item.priority}</span>
                   )}
                 </div>
-                <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                <button
+                  aria-label="Delete journey map builder"
+                  onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                   <Trash2 size={12} />
                 </button>
               </div>

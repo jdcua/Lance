@@ -49,12 +49,14 @@ vi.mock('@dnd-kit/utilities', () => ({
 }));
 
 describe('KanbanBoard', () => {
-  it('shows loading state initially', async () => {
+  // Vitest 4 removed the third `it(name, fn, options)` argument — options are
+  // the second argument now.
+  it('shows loading state initially', { timeout: 5000 }, async () => {
     const KanbanBoard = (await import('../components/features/KanbanBoard')).default;
     render(<KanbanBoard projectId="test-project-id" />);
     // Component should quickly become unavailable in browser mode (no Tauri)
     await waitFor(() => {
-      expect(screen.queryByText('Kanban Board')).toBeInTheDocument();
+      expect(screen.queryByText('Kanban Board')).not.toBeNull();
     }, { timeout: 1000 });
-  }, { timeout: 5000 });
+  });
 });

@@ -580,7 +580,7 @@ export default function Contracts() {
                         <span className="text-[10px] text-[var(--text-tertiary)]">Add a client first</span>
                       )}
                       {!isPrebuilt && (
-                        <button
+                        <button aria-label="Delete contracts"
                           onClick={() => setConfirmTemplate({ id: t.id, name: t.name })}
                           className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
                         >

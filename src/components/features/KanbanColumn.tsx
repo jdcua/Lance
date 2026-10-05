@@ -54,10 +54,14 @@ export default function KanbanColumnComponent({
           </span>
         </div>
         <div className="flex items-center gap-0.5">
-          <button onClick={() => onEditColumn(column)} className="p-1 rounded-[4px] hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+          <button
+            aria-label="Do action on"
+            onClick={() => onEditColumn(column)} className="p-1 rounded-[4px] hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
             <Settings2 size={11} />
           </button>
-          <button onClick={() => onDeleteColumn(column.id)} className="p-1 rounded-[4px] hover:bg-[#DC2626]/10 text-[var(--text-tertiary)] hover:text-[#DC2626] transition-colors">
+          <button
+            aria-label="Delete kanban column"
+            onClick={() => onDeleteColumn(column.id)} className="p-1 rounded-[4px] hover:bg-[#DC2626]/10 text-[var(--text-tertiary)] hover:text-[#DC2626] transition-colors">
             <Trash2 size={11} />
           </button>
         </div>

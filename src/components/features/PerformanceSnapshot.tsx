@@ -155,7 +155,9 @@ export default function PerformanceSnapshot({ projectId }: { projectId: string }
                   )}
                   {item.date && <span className="text-[10px] text-[var(--text-tertiary)]">{item.date}</span>}
                 </div>
-                <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                <button
+                  aria-label="Delete performance snapshot"
+                  onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                   <Trash2 size={12} />
                 </button>
               </div>

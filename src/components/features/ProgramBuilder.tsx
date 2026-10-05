@@ -185,7 +185,9 @@ export default function ProgramBuilder({ clientId }: { clientId: string }) {
                       <span className="text-[var(--text-tertiary)] truncate">{program.notes}</span>
                     )}
                   </div>
-                  <button onClick={(e) => { e.stopPropagation(); handleDelete(program.id); }} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                  <button
+                    aria-label="Delete program builder"
+                    onClick={(e) => { e.stopPropagation(); handleDelete(program.id); }} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                     <Trash2 size={12} />
                   </button>
                 </div>

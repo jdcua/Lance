@@ -19,11 +19,14 @@ pub async fn validate_license_online(key: String) -> Result<OnlineValidationResu
         .filter(|url| !url.is_empty())
         .unwrap_or("https://lance-license.your-subdomain.workers.dev");
     
-    let url = format!("{}/validate?key={}", worker_url, key);
+    // POST JSON body: keys in GET query strings land in access logs.
+    // (Older builds used GET; the worker still accepts it.)
+    let url = format!("{}/validate", worker_url);
     
     let client = reqwest::Client::new();
     let resp = client
-        .get(&url)
+        .post(&url)
+        .json(&serde_json::json!({ "key": key }))
         .timeout(std::time::Duration::from_secs(10))
         .send()
         .await

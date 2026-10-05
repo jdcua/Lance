@@ -207,7 +207,9 @@ export default function ABVariantLog({ projectId }: { projectId: string }) {
                     </span>
                     {v.results && <span className="text-[10px] text-[var(--text-tertiary)] truncate">{v.results}</span>}
                   </div>
-                  <button onClick={() => handleDelete(v.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                  <button
+                    aria-label="Delete ab variant log"
+                    onClick={() => handleDelete(v.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                     <Trash2 size={12} />
                   </button>
                 </div>

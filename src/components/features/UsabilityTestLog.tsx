@@ -202,7 +202,9 @@ export default function UsabilityTestLog({ projectId }: { projectId: string }) {
                     </span>
                   </td>
                   <td className="py-1.5 px-2">
-                    <button onClick={() => handleDelete(t.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                    <button
+                      aria-label="Delete usability test log"
+                      onClick={() => handleDelete(t.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                       <Trash2 size={12} />
                     </button>
                   </td>

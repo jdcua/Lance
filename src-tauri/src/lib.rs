@@ -167,6 +167,8 @@ pub fn run() {
             commands::sharing::get_portal_activity,
             commands::sharing::get_share_server_port,
             commands::sharing::get_all_share_tokens,
+            commands::sharing::record_share_view,
+            commands::sharing::respond_share_token,
             commands::kanban::get_kanban_board,
             commands::kanban::create_kanban_board,
             commands::kanban::get_kanban_columns,

@@ -114,7 +114,9 @@ export default function StorageTracker({ projectId }: { projectId: string }) {
                   {l.exported_gb != null && <><Upload size={10} className="inline mr-0.5 ml-1" />{l.exported_gb} GB exported</>}
                 </span>
               </div>
-              <button onClick={() => handleDelete(l.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+              <button
+                aria-label="Delete storage tracker"
+                onClick={() => handleDelete(l.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                 <Trash2 size={12} />
               </button>
             </div>

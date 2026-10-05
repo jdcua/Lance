@@ -269,7 +269,9 @@ export default function FeatureScopeBoard({ projectId }: { projectId: string }) 
                               {feature.hours_estimated == null && feature.hours_actual != null && (
                                 <span className="text-[10px] text-[var(--text-tertiary)]">actual {feature.hours_actual}h</span>
                               )}
-                              <button onClick={(e) => { e.stopPropagation(); handleDelete(feature.id); }} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] opacity-0 group-hover:opacity-100">
+                              <button
+                                aria-label="Delete feature scope board"
+                                onClick={(e) => { e.stopPropagation(); handleDelete(feature.id); }} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] opacity-0 group-hover:opacity-100">
                                 <Trash2 size={11} />
                               </button>
                             </div>

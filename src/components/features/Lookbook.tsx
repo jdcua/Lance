@@ -174,7 +174,9 @@ export default function Lookbook({ clientId }: { clientId: string }) {
                   </div>
                   <div className="flex items-center gap-2 ml-2 flex-shrink-0">
                     <span className="text-[10px] text-[var(--text-tertiary)]">{entryAssets.length} assets</span>
-                    <button onClick={(e) => { e.stopPropagation(); handleDelete(entry.id); }} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                    <button
+                      aria-label="Delete lookbook"
+                      onClick={(e) => { e.stopPropagation(); handleDelete(entry.id); }} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                       <Trash2 size={12} />
                     </button>
                     {isExpanded ? <ChevronUp size={12} className="text-[var(--text-tertiary)]" /> : <ChevronDown size={12} className="text-[var(--text-tertiary)]" />}

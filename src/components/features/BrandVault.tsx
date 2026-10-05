@@ -114,7 +114,7 @@ export default function BrandVault() {
               onClick={() => setActiveCategory(cat)}
               className={`inline-flex items-center gap-1 px-2 py-1 rounded-[6px] text-[11px] font-medium transition-colors ${
                 activeCategory === cat
-                  ? 'bg-[var(--accent)] text-white'
+                  ? 'bg-[var(--accent)] text-[var(--accent-on)]'
                   : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--border-color)]'
               }`}
             >
@@ -164,7 +164,7 @@ export default function BrandVault() {
                   <p className="text-[10px] font-medium text-[var(--text-primary)] truncate">{asset.filename}</p>
                   <p className="text-[10px] text-[var(--text-tertiary)] truncate">{asset.entity_type} / {asset.entity_id}</p>
                 </div>
-                <button
+                <button aria-label="Delete brand vault"
                   onClick={() => handleDelete(asset.id)}
                   className="absolute top-1 right-1 p-0.5 rounded-[4px] bg-[var(--bg-card)]/80 text-[var(--text-tertiary)] hover:text-[#A32D2D] opacity-0 group-hover:opacity-100 transition-opacity"
                 >

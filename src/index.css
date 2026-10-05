@@ -60,6 +60,53 @@ html, body, #root {
   transition: none !important;
 }
 
+/* ── Device auto-detect: OS-level access needs (both app + trial) ── */
+/* High contrast OS request: boost text to near-max contrast, strengthen borders/focus. */
+@media (prefers-contrast: more) {
+  :root {
+    --text-secondary: var(--text-primary);
+  }
+  .contrast-auto-boost {
+    --text-tertiary: var(--text-secondary);
+  }
+}
+/* Reduced transparency OS request: drop blurs/overlays that smear text. */
+@media (prefers-reduced-transparency: reduce) {
+  *, *::before, *::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+/* Forced colors (Windows High Contrast): let the OS own colors, keep semantics. */
+@media (forced-colors: active) {
+  button, a, [role="button"], input, select, textarea {
+    forced-color-adjust: auto;
+  }
+}
+
+/* ── Pref-driven layers (Settings + onboarding; local-only) ── */
+/* High contrast pref: 7:1-ish body text, visible borders, thick focus. */
+.contrast-high {
+  --text-secondary: var(--text-primary);
+  --text-tertiary: var(--text-secondary);
+}
+.contrast-high * {
+  text-shadow: none !important;
+}
+/* Text scaling pref: root-relative growth for the whole app. */
+.textscale-112 { font-size: 112.5%; }
+.textscale-125 { font-size: 125%; }
+.textscale-112 *, .textscale-125 * {
+  line-height: 1.6;
+}
+/* Stronger visible focus for keyboard users, every interactive element. */
+a:focus-visible, button:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible, [role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* ── Print: invoices and records print as documents, not app chrome ── */
 @media print {
   aside,
@@ -293,6 +340,11 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
   --item-padding: 1;
   --card-padding: 1;
   --accent: #1EC98A;
+  /* Foreground for text sitting ON a solid --accent fill. White fails WCAG AA
+     against a light accent (2.15:1 on Default), so each theme declares the
+     legible side; this is the Default value and the fallback for any theme
+     that predates the token. */
+  --accent-on: #181716;
   --accent-hover: #18B47C;
   --accent-bg: rgba(30,201,138,0.1);
   --info: #3B82F6;

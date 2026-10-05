@@ -212,7 +212,9 @@ export default function LanguagePairTracker({ projectId }: { projectId: string }
             >
               <Globe size={10} />
               {getLangName(p.source_lang)} → {getLangName(p.target_lang)}
-              <button onClick={() => handleDeletePair(p.id)} className="hover:opacity-70">
+              <button
+                aria-label="Close"
+                onClick={() => handleDeletePair(p.id)} className="hover:opacity-70">
                 <X size={10} />
               </button>
             </span>

@@ -138,7 +138,9 @@ export default function StemTracker({ projectId }: { projectId: string }) {
                 {stem.delivery_date && <span className="text-[10px] text-[var(--text-tertiary)] flex-shrink-0">{stem.delivery_date}</span>}
                 {stem.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">-- {stem.notes}</span>}
               </div>
-              <button onClick={() => handleDelete(stem.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+              <button
+                aria-label="Delete stem tracker"
+                onClick={() => handleDelete(stem.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                 <Trash2 size={12} />
               </button>
             </div>

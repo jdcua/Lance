@@ -6,7 +6,13 @@ import { trialDaysRemaining } from '../lib/trial';
 import { getFeatureFlags } from '../lib/constants';
 import { resolveDunningTone } from '../utils/followUpTemplates';
 import { getCurrencySymbol } from '../lib/currency';
-import { setPref, usePrefs, type MotionPref } from '../lib/prefs';
+import {
+  setPref,
+  usePrefs,
+  type MotionPref,
+  type ContrastPref,
+  type TextScalePref,
+} from '../lib/prefs';
 import { PRO_PRICES } from '../lib/pricing';
 import { getTrialValue } from '../utils/trialValue';
 import { relativeDate } from '../utils/format';
@@ -55,12 +61,13 @@ import {
   createExportEnvelope,
   validateImportEnvelope,
   performImport,
+  MAX_IMPORT_MB,
+  MAX_IMPORT_BYTES,
   formatTableCounts,
   logVersionEvent,
   sanitizeBlobName,
 } from '../utils/backup';
 import type { BackupEnvelope, ImportValidationResult } from '../utils/backup';
-import { isTrial as isTrialBuild } from '../demo/isDemo';
 import TestModePanel from '../demo/TestModePanel';
 import { getCurrentSchemaVersion } from '../db';
 import { sanitizeInput, sanitizeText } from '../utils/sanitize';
@@ -502,6 +509,13 @@ export default function Settings() {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
+    // Reject on the reported size BEFORE reading. The 50MB check downstream runs
+    // on an already-materialised string, so a 900MB file would exhaust the
+    // renderer heap during file.text() before anything validated it.
+    if (file.size > MAX_IMPORT_BYTES) {
+      addToast(`Import failed · file exceeds ${MAX_IMPORT_MB}MB limit`, 'error');
+      return;
+    }
     try {
       await ingestImportText(await file.text());
     } catch {
@@ -512,8 +526,8 @@ export default function Settings() {
   const ingestImportText = async (content: string) => {
     try {
       const bytes = new TextEncoder().encode(content);
-      if (bytes.length > 50 * 1024 * 1024) {
-        addToast('Import failed · file exceeds 50MB limit', 'error');
+      if (bytes.length > MAX_IMPORT_BYTES) {
+        addToast(`Import failed · file exceeds ${MAX_IMPORT_MB}MB limit`, 'error');
         return;
       }
 
@@ -596,7 +610,7 @@ export default function Settings() {
       const mode = importReplaceMode ? 'replace' : 'additive';
       // Blob materializer: exported file bytes land back in real storage.
       // Desktop writes into the assets folder; browser/trial restores into
-      // IndexedDB. Rows always import — only bytes depend on this.
+      // IndexedDB. Rows always import, only bytes depend on this.
       const materialize = async (id: string, bytes: Uint8Array, mime: string, filename: string) => {
         if (isTauriApp()) {
           const { writeFile } = await import('@tauri-apps/plugin-fs');
@@ -696,6 +710,15 @@ export default function Settings() {
         localStorage.removeItem('lance:trash');
         localStorage.removeItem('lance:tour-pending');
         localStorage.removeItem('lance:last-timer-config');
+        // Attached file BYTES live in IndexedDB, not in any table, so the
+        // DELETEs above never touched them: a user resetting on a shared
+        // machine was left with the client's PDFs on disk. sessionStorage held
+        // the import-classification banner.
+        const { clearAssetFiles } = await import('../demo/assetStore');
+        await clearAssetFiles();
+        for (const key of Object.keys(sessionStorage)) {
+          if (key.startsWith('lance')) sessionStorage.removeItem(key);
+        }
       } catch {
         /* private mode */
       }
@@ -990,7 +1013,7 @@ export default function Settings() {
                         className={inputClass}
                       />
                       <p className="text-[10px] text-[var(--text-secondary)] mt-1">
-                        Invoice math only — applied to new invoices as entered. Not tax advice.
+                        Invoice math only, applied to new invoices as entered. Not tax advice.
                       </p>
                     </div>
                     <div>
@@ -1210,7 +1233,7 @@ export default function Settings() {
                       onClick={() => autoSave({ theme: 'light' }, 'Appearance')}
                       className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
                         form.theme === 'light'
-                          ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                          ? 'bg-[var(--accent)] text-[var(--accent-on)] border-[var(--accent)]'
                           : 'bg-[var(--bg-card)]  text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] border-[var(--border-color)] '
                       }`}
                     >
@@ -1220,7 +1243,7 @@ export default function Settings() {
                       onClick={() => autoSave({ theme: 'dark' }, 'Appearance')}
                       className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
                         form.theme === 'dark'
-                          ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                          ? 'bg-[var(--accent)] text-[var(--accent-on)] border-[var(--accent)]'
                           : 'bg-[var(--bg-card)]  text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] border-[var(--border-color)] '
                       }`}
                     >
@@ -1237,7 +1260,7 @@ export default function Settings() {
                           onClick={() => handleDensityChange('comfortable')}
                           className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
                             density === 'comfortable'
-                              ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                              ? 'bg-[var(--accent)] text-[var(--accent-on)] border-[var(--accent)]'
                               : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-color)]'
                           }`}
                         >
@@ -1247,7 +1270,7 @@ export default function Settings() {
                           onClick={() => handleDensityChange('compact')}
                           className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
                             density === 'compact'
-                              ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                              ? 'bg-[var(--accent)] text-[var(--accent-on)] border-[var(--accent)]'
                               : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-color)]'
                           }`}
                         >
@@ -1422,6 +1445,64 @@ export default function Settings() {
                             }`}
                           >
                             {m === 'auto' ? 'Auto' : m === 'full' ? 'Full' : 'Off'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm text-[var(--text-primary)]">Contrast</p>
+                      <p className="text-xs text-[var(--text-tertiary)] mt-0.5 mb-2">
+                        Auto follows your operating system setting. High targets 7:1 body text.
+                      </p>
+                      <div
+                        className="inline-flex gap-1 rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-secondary)] p-1"
+                        role="group"
+                        aria-label="Contrast preference"
+                      >
+                        {(['auto', 'standard', 'high'] as ContrastPref[]).map((c) => (
+                          <button
+                            key={c}
+                            onClick={() => {
+                              setPref('contrast', c);
+                              setSaved((prev) => new Set([...prev, 'Personalize']));
+                            }}
+                            aria-pressed={prefs.contrast === c}
+                            className={`px-3 py-1.5 text-xs font-medium rounded-[7px] capitalize transition-colors ${
+                              prefs.contrast === c
+                                ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm'
+                                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                            }`}
+                          >
+                            {c === 'auto' ? 'Auto' : c === 'standard' ? 'Standard' : 'High'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm text-[var(--text-primary)]">Text size</p>
+                      <p className="text-xs text-[var(--text-tertiary)] mt-0.5 mb-2">
+                        Scales the whole app. Browser zoom still works on top.
+                      </p>
+                      <div
+                        className="inline-flex gap-1 rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-secondary)] p-1"
+                        role="group"
+                        aria-label="Text size preference"
+                      >
+                        {(['100', '112', '125'] as TextScalePref[]).map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => {
+                              setPref('textScale', s);
+                              setSaved((prev) => new Set([...prev, 'Personalize']));
+                            }}
+                            aria-pressed={prefs.textScale === s}
+                            className={`px-3 py-1.5 text-xs font-medium rounded-[7px] transition-colors ${
+                              prefs.textScale === s
+                                ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm'
+                                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                            }`}
+                          >
+                            {s}%
                           </button>
                         ))}
                       </div>
@@ -2122,10 +2203,11 @@ export default function Settings() {
                   </div>
                 </Card>
 
-                {/* Test mode · dev + trial builds only. The whole block (and
-                    its imports) is unreachable in production desktop builds:
-                    import.meta.env.DEV is statically false there. */}
-                {(import.meta.env.DEV || isTrialBuild()) && (
+                {/* Test mode · dev + trial builds only. `__TEST_MODE__` is a
+                    build-time literal, not a runtime check: the old
+                    `import.meta.env.DEV || isTrialBuild()` folded to
+                    `false || isTrial()`, which shipped the whole panel. */}
+                {__TEST_MODE__ && (
                   <Card className="mb-6 border border-dashed border-[var(--warning-text)]/50">
                     <SectionHead title="Test Mode" isSaved={false} />
                     <TestModePanel />

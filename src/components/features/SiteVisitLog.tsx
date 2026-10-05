@@ -219,7 +219,9 @@ export default function SiteVisitLog({ projectId }: { projectId: string }) {
                     {v.observations && <p className="text-[10px] text-[var(--text-tertiary)] truncate">{v.observations}</p>}
                   </div>
                 </div>
-                <button onClick={() => handleDelete(v.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                <button
+                  aria-label="Delete site visit log"
+                  onClick={() => handleDelete(v.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                   <Trash2 size={12} />
                 </button>
               </div>

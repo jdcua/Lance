@@ -169,7 +169,9 @@ export default function DocumentVersionLog({ clientId }: { clientId: string }) {
                             <span className="text-[10px] text-[var(--text-tertiary)] truncate ml-auto">{v.notes}</span>
                           )}
                         </div>
-                        <button onClick={() => handleDelete(v.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                        <button
+                          aria-label="Delete document version log"
+                          onClick={() => handleDelete(v.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                           <Trash2 size={12} />
                         </button>
                       </div>

@@ -129,7 +129,7 @@ export default function RichEditor({ content, onChange, placeholder = 'Start wri
               onClick={() => item.action(editor)}
               className={`w-[28px] h-[28px] flex items-center justify-center rounded-[4px] transition-colors ${
                 editor.isActive(item.key) || (item.key === 'heading1' && editor.isActive('heading', { level: 1 })) || (item.key === 'heading2' && editor.isActive('heading', { level: 2 }))
-                  ? 'bg-[var(--accent)] text-white'
+                  ? 'bg-[var(--accent)] text-[var(--accent-on)]'
                   : 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
               }`}
             >

@@ -137,7 +137,9 @@ export default function AssessmentLog({ clientId }: { clientId: string }) {
                   <p className="text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">{a.notes}</p>
                 )}
               </div>
-              <button onClick={() => handleDelete(a.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] flex-shrink-0 mt-0.5 ml-2">
+              <button
+                aria-label="Delete assessment log"
+                onClick={() => handleDelete(a.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] flex-shrink-0 mt-0.5 ml-2">
                 <Trash2 size={12} />
               </button>
             </div>

@@ -188,7 +188,9 @@ export default function RetainerManager({ clientId }: { clientId: string }) {
               <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
                 Edit
               </Button>
-              <button onClick={handleDelete} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] p-1">
+              <button
+                aria-label="Delete retainer manager"
+                onClick={handleDelete} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] p-1">
                 <Trash2 size={12} />
               </button>
             </>

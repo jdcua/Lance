@@ -1,0 +1,2050 @@
+[
+ {
+  "cond": "dark-md",
+  "route": "/",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md",
+  "route": "/clients",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md",
+  "route": "/projects",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md",
+  "route": "/time",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md",
+  "route": "/invoices",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md",
+  "route": "/finance",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md",
+  "route": "/insights",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md",
+  "route": "/proposals",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md",
+  "route": "/contracts",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md",
+  "route": "/follow-ups",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md",
+  "route": "/settings",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md",
+  "route": "/achievements",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md",
+  "route": "/assets",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md",
+  "route": "/search",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md",
+  "route": "/archetype",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md",
+  "route": "/this-route-does-not-exist",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md",
+  "route": "/",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md",
+  "route": "/clients",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md",
+  "route": "/projects",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md",
+  "route": "/time",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md",
+  "route": "/invoices",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md",
+  "route": "/finance",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md",
+  "route": "/insights",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md",
+  "route": "/proposals",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md",
+  "route": "/contracts",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md",
+  "route": "/follow-ups",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md",
+  "route": "/settings",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md",
+  "route": "/achievements",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md",
+  "route": "/assets",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md",
+  "route": "/search",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md",
+  "route": "/archetype",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md",
+  "route": "/this-route-does-not-exist",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-sm",
+  "route": "/",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-sm",
+  "route": "/clients",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-sm",
+  "route": "/projects",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-sm",
+  "route": "/time",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-sm",
+  "route": "/invoices",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-sm",
+  "route": "/finance",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-sm",
+  "route": "/insights",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-sm",
+  "route": "/proposals",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-sm",
+  "route": "/contracts",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-sm",
+  "route": "/follow-ups",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-sm",
+  "route": "/settings",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-sm",
+  "route": "/achievements",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-sm",
+  "route": "/assets",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-sm",
+  "route": "/search",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-sm",
+  "route": "/archetype",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-sm",
+  "route": "/this-route-does-not-exist",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-lg",
+  "route": "/",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-lg",
+  "route": "/clients",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-lg",
+  "route": "/projects",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-lg",
+  "route": "/time",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-lg",
+  "route": "/invoices",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-lg",
+  "route": "/finance",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-lg",
+  "route": "/insights",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-lg",
+  "route": "/proposals",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-lg",
+  "route": "/contracts",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-lg",
+  "route": "/follow-ups",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-lg",
+  "route": "/settings",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-lg",
+  "route": "/achievements",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-lg",
+  "route": "/assets",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-lg",
+  "route": "/search",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-lg",
+  "route": "/archetype",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-lg",
+  "route": "/this-route-does-not-exist",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-125",
+  "route": "/",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-125",
+  "route": "/clients",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-125",
+  "route": "/projects",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-125",
+  "route": "/time",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-125",
+  "route": "/invoices",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-125",
+  "route": "/finance",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-125",
+  "route": "/insights",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-125",
+  "route": "/proposals",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-125",
+  "route": "/contracts",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-125",
+  "route": "/follow-ups",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-125",
+  "route": "/settings",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-125",
+  "route": "/achievements",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-125",
+  "route": "/assets",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-125",
+  "route": "/search",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-125",
+  "route": "/archetype",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-125",
+  "route": "/this-route-does-not-exist",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-compact",
+  "route": "/",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-compact",
+  "route": "/clients",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-compact",
+  "route": "/projects",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-compact",
+  "route": "/time",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-compact",
+  "route": "/invoices",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-compact",
+  "route": "/finance",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-compact",
+  "route": "/insights",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-compact",
+  "route": "/proposals",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-compact",
+  "route": "/contracts",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-compact",
+  "route": "/follow-ups",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-compact",
+  "route": "/settings",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-compact",
+  "route": "/achievements",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-compact",
+  "route": "/assets",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-compact",
+  "route": "/search",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-compact",
+  "route": "/archetype",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-compact",
+  "route": "/this-route-does-not-exist",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md-terminal",
+  "route": "/",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md-terminal",
+  "route": "/clients",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md-terminal",
+  "route": "/projects",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md-terminal",
+  "route": "/time",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md-terminal",
+  "route": "/invoices",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md-terminal",
+  "route": "/finance",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md-terminal",
+  "route": "/insights",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md-terminal",
+  "route": "/proposals",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md-terminal",
+  "route": "/contracts",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md-terminal",
+  "route": "/follow-ups",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md-terminal",
+  "route": "/settings",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md-terminal",
+  "route": "/achievements",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md-terminal",
+  "route": "/assets",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md-terminal",
+  "route": "/search",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md-terminal",
+  "route": "/archetype",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "light-md-terminal",
+  "route": "/this-route-does-not-exist",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-studio",
+  "route": "/",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-studio",
+  "route": "/clients",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-studio",
+  "route": "/projects",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-studio",
+  "route": "/time",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-studio",
+  "route": "/invoices",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-studio",
+  "route": "/finance",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-studio",
+  "route": "/insights",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-studio",
+  "route": "/proposals",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-studio",
+  "route": "/contracts",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-studio",
+  "route": "/follow-ups",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-studio",
+  "route": "/settings",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-studio",
+  "route": "/achievements",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-studio",
+  "route": "/assets",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-studio",
+  "route": "/search",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-studio",
+  "route": "/archetype",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ },
+ {
+  "cond": "dark-md-studio",
+  "route": "/this-route-does-not-exist",
+  "errors": [],
+  "failed": [],
+  "axe": [],
+  "audit": {
+   "overflowX": 0,
+   "offenders": [],
+   "clipped": [],
+   "badText": [],
+   "brokenImages": [],
+   "namelessControls": [],
+   "tinyText": []
+  }
+ }
+]

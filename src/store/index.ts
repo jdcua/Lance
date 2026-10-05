@@ -51,7 +51,25 @@ import {
 } from '../utils/trash';
 import { sanitizeRates, normalizeRates } from '../lib/currency';
 
+// Public URL of the license worker. Mirrors the value baked into the desktop
+// binary via LANCE_LICENSE_WORKER_URL; needed here because browser mode has no
+// Rust to make the request.
+const LICENSE_WORKER_URL = 'https://lance-license.your-subdomain.workers.dev';
+
 const licenseCache = new Map<string, boolean>();
+
+// Re-validate a key every 7 days. Long enough that we are not pinging on every
+// launch, short enough that a refund or a chargeback actually downgrades the
+// install instead of waiting for a reinstall.
+const LICENSE_REVALIDATE_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** True when the key has never been validated, or the last check is stale. */
+function licenseValidationIsStale(validatedAt?: string | null): boolean {
+  if (!validatedAt) return true;
+  const at = new Date(validatedAt).getTime();
+  if (Number.isNaN(at)) return true;
+  return Date.now() - at > LICENSE_REVALIDATE_MS;
+}
 
 async function cachedValidateLicense(key: string): Promise<boolean> {
   if (licenseCache.has(key)) return licenseCache.get(key)!;
@@ -67,7 +85,7 @@ const invoke = async <T>(cmd: string, args?: Record<string, unknown>): Promise<T
 
 /**
  * Best-effort teardown of share links when their entity is deleted.
- * Without this, links die as a confusing "not found" — revoked links say
+ * Without this, links die as a confusing "not found", revoked links say
  * "revoked". Loops because several live links can exist per entity.
  */
 async function revokeTokensForEntity(
@@ -787,12 +805,22 @@ export const useStore = create<UnifiedStore>((set, get) => {
       // here keeps both backends identical: no silent orphans in browser,
       // no raw constraint errors in Tauri. Lists are (re)loaded first so the
       // check never passes on stale/empty state.
+      //
+      // time_entries + communications are in this list because the browser
+      // shim's delete_client DOES cascade them: deleting a client used to
+      // wipe their logged billable hours and notes with no warning, while
+      // the in-memory store kept showing them until the next reload, so the
+      // hours silently disappeared after a refresh. Blocking here is the only
+      // outcome that is honest in both backends.
       await Promise.all([
         get().loadProjects(),
         get().loadInvoices(),
         get().loadProposals(),
         get().loadContracts(),
         get().loadRecurringInvoices(),
+        get().loadTimeEntries(),
+        get().loadCommunications(),
+        get().loadKeywords(),
       ]);
       const s = get();
       const linked: string[] = [];
@@ -808,9 +836,18 @@ export const useStore = create<UnifiedStore>((set, get) => {
         'recurring invoice',
         'recurring invoices',
       );
+      count(s.timeEntries.filter((t) => t.client_id === id).length, 'time entry', 'time entries');
+      count(
+        s.communications.filter((c) => c.client_id === id).length,
+        'communication',
+        'communications',
+      );
+      // Keywords are client-scoped (ArchetypeKeyword has client_id, no
+      // project_id), so the shim's cascade wipes them with the client too.
+      count(s.keywords.filter((k) => k.client_id === id).length, 'keyword', 'keywords');
       if (linked.length > 0) {
         throw new Error(
-          `Cannot delete this client — ${linked.join(', ')} still linked. Delete those first.`,
+          `Cannot delete this client, ${linked.join(', ')} still linked. Delete those first.`,
         );
       }
       snapshotForTrash(
@@ -844,12 +881,24 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ projects: get().projects.map((p) => (p.id === data.id ? data : p)) });
     },
     deleteProject: async (id) => {
+      // Same reasoning as deleteClient: the browser shim cascades every
+      // project_id-scoped row, so anything NOT checked here is destroyed
+      // silently. That includes the archetype work logs (shoot logs, build
+      // logs, revision rounds, sessions, keyword rankings, dataset versions,
+      // render passes) — real billable history, not scratch data.
       await Promise.all([
         get().loadMilestones(),
         get().loadTimeEntries(),
         get().loadInvoices(),
         get().loadProposals(),
         get().loadRecurringInvoices(),
+        get().loadShoots(),
+        get().loadBuilds(),
+        get().loadRevisions(),
+        get().loadSessions(),
+        get().loadKeywords(),
+        get().loadDatasets(),
+        get().loadRenderLogs(),
       ]);
       const s = get();
       const linked: string[] = [];
@@ -865,9 +914,27 @@ export const useStore = create<UnifiedStore>((set, get) => {
         'recurring invoice',
         'recurring invoices',
       );
+      count(s.shoots.filter((x) => x.project_id === id).length, 'shoot log', 'shoot logs');
+      count(s.builds.filter((x) => x.project_id === id).length, 'build log', 'build logs');
+      count(
+        s.revisions.filter((x) => x.project_id === id).length,
+        'revision round',
+        'revision rounds',
+      );
+      count(
+        s.sessions.filter((x) => x.project_id === id).length,
+        'session log',
+        'session logs',
+      );
+      count(s.datasets.filter((x) => x.project_id === id).length, 'dataset', 'datasets');
+      count(
+        s.renderLogs.filter((x) => x.project_id === id).length,
+        'render pass',
+        'render passes',
+      );
       if (linked.length > 0) {
         throw new Error(
-          `Cannot delete this project — ${linked.join(', ')} still linked. Delete those first.`,
+          `Cannot delete this project, ${linked.join(', ')} still linked. Delete those first.`,
         );
       }
       snapshotForTrash(
@@ -1033,7 +1100,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       });
       if (linker) {
         throw new Error(
-          `Cannot delete — this time is billed on ${linker.invoice_number}. Adjust or delete the invoice first.`,
+          `Cannot delete, this time is billed on ${linker.invoice_number}. Adjust or delete the invoice first.`,
         );
       }
       snapshotForTrash(
@@ -1086,12 +1153,12 @@ export const useStore = create<UnifiedStore>((set, get) => {
     deleteInvoice: async (id) => {
       // Payments are money records: resurrecting an invoice without them
       // (trash holds only the invoice row) would corrupt paid status, and
-      // no backend cascades them — so block until they are removed first.
+      // no backend cascades them, so block until they are removed first.
       await get().loadPayments();
       const n = get().payments.filter((p) => p.invoice_id === id).length;
       if (n > 0) {
         throw new Error(
-          `Cannot delete this invoice — ${n} payment${n === 1 ? '' : 's'} recorded. Delete the payment${n === 1 ? '' : 's'} first.`,
+          `Cannot delete this invoice, ${n} payment${n === 1 ? '' : 's'} recorded. Delete the payment${n === 1 ? '' : 's'} first.`,
         );
       }
       snapshotForTrash(
@@ -1101,7 +1168,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       );
       // Unmark billed hours: line items remember their time entries, so the
       // hours return to unbilled instead of vanishing. Entries deleted since
-      // are simply skipped. Pre-linkage invoices have no ids — nothing to do.
+      // are simply skipped. Pre-linkage invoices have no ids, nothing to do.
       const doomed = get().invoices.find((i) => i.id === id);
       const doomedItems = Array.isArray(doomed?.line_items) ? doomed.line_items : [];
       const linkedEntryIds = new Set(doomedItems.flatMap((li) => li.time_entry_ids || []));
@@ -1212,15 +1279,20 @@ export const useStore = create<UnifiedStore>((set, get) => {
         );
         set({ profile, profileLoaded: true, isLicensed: licensed });
         // Rehydrate test mode across reloads: the flag outlives the page,
-        // and loadProfile is the real boot entry point.
-        try {
-          const { loadTestMode } = await import('../demo/testMode');
-          const persisted = loadTestMode();
-          if (persisted.active && persisted.tier) {
-            set({ testMode: persisted, isLicensed: true });
+        // and loadProfile is the real boot entry point. Guarded by the
+        // build-time constant, not a runtime check, an unguarded rehydrate
+        // here meant one localStorage write granted permanent Pro in a
+        // production desktop build.
+        if (__TEST_MODE__) {
+          try {
+            const { loadTestMode } = await import('../demo/testMode');
+            const persisted = loadTestMode();
+            if (persisted.active && persisted.tier) {
+              set({ testMode: persisted, isLicensed: true });
+            }
+          } catch {
+            /* test mode stays off */
           }
-        } catch {
-          /* test mode stays off */
         }
         return profile;
       } catch (e) {
@@ -1232,11 +1304,11 @@ export const useStore = create<UnifiedStore>((set, get) => {
       }
     },
     saveProfile: async (data) => {
-      // Exchange rates are defined relative to the profile currency — and
+      // Exchange rates are defined relative to the profile currency, and
       // most callers (Settings form, onboarding, archetype picker) don't
       // carry them, so an omitted field must INHERIT, not wipe. The one
       // exception: the base currency itself changed, which silently
-      // invalidates stored rates ("per old base") — then they are cleared
+      // invalidates stored rates ("per old base"), then they are cleared
       // with an explanatory toast instead of misconverting.
       const prevCurrency = get().profile?.currency;
       const incomingRates =
@@ -1284,7 +1356,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
             : undefined,
         // Rates are manual multipliers (1 foreign unit = N profile units).
         // Sanitize on the way in; the Tauri backend stores them as TEXT.
-        // Omitted input inherits (see above) — never silently wiped.
+        // Omitted input inherits (see above), never silently wiped.
         exchange_rates: effectiveRates,
       };
       // Currency-less invoices inherit the profile currency (invCurOf
@@ -1335,7 +1407,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
     },
     startTrial: async () => {
       // Explicit "Try Pro free" action behind every trial CTA. Starts the
-      // clock only if it never started (never resets — that would mint
+      // clock only if it never started (never resets, that would mint
       // infinite trials). Returns the resulting state so callers can show
       // the right next step instead of leaving the plan visibly unchanged.
       const profile = get().profile;
@@ -1390,8 +1462,11 @@ export const useStore = create<UnifiedStore>((set, get) => {
         console.log('[license] Trial started:', now);
       }
 
-      // If we have a license key but haven't validated recently, ping the license server
-      if (profile.license_key && !profile.license_validated_at) {
+      // Re-validate on a schedule, not once ever. `license_validated_at` was
+      // written on first success and never re-checked, so a refunded or
+      // chargeback'd key kept `isLicensed: true` indefinitely, the worker's
+      // `revoked` flag never reached an activated install.
+      if (profile.license_key && licenseValidationIsStale(profile.license_validated_at)) {
         await get().pingLicenseServer();
       }
     },
@@ -1403,59 +1478,69 @@ export const useStore = create<UnifiedStore>((set, get) => {
       const { isTauri } = await import('../utils/tauri');
 
       try {
-        // In Tauri, call the Rust command to ping the license server
-        // In browser, we'd call the worker directly (future enhancement)
-        if (isTauri()) {
-          const result = await invoke<{
-            valid: boolean;
-            tier: string;
-            expires_at?: string;
-            message: string;
-          }>('validate_license_online', { key: get().profile?.license_key });
-
-          if (result.valid) {
-            const profile = get().profile;
-            if (!profile) return;
-            const updated = {
-              ...profile,
-              currency: profile.currency || 'CAD',
-              license_tier: result.tier,
-              license_expires_at: result.expires_at,
-              license_validated_at: new Date().toISOString(),
-              license_grace_until: undefined,
-              isLicensed: true,
-            };
-            await invoke('upsert_user_profile', { payload: updated });
-            set({ profile: updated, isLicensed: true });
-            console.log('[license] Online validation OK:', result.tier);
-          } else if (result.tier) {
-            // Server said invalid/expired but gave us a tier · update local state
-            const profile = get().profile;
-            if (!profile) return;
-            const updated = {
-              ...profile,
-              currency: profile.currency || 'CAD',
-              license_tier: result.tier,
-              license_expires_at: result.expires_at,
-              license_validated_at: new Date().toISOString(),
-              license_grace_until: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2-day grace
-            };
-            await invoke('upsert_user_profile', { payload: updated });
-            set({
-              profile: updated,
-              isLicensed: result.tier !== 'free' && result.tier !== 'expired',
+        // In Tauri, call the Rust command to ping the license server.
+        // In browser mode we call the worker directly, otherwise a trial user
+        // redeeming a key could never be validated online at all, since Rust
+        // is not there to do it.
+        const result = isTauri()
+          ? await invoke<{
+              valid: boolean;
+              tier: string;
+              expires_at?: string;
+              message: string;
+            }>('validate_license_online', { key: profile.license_key })
+          : await fetch(`${LICENSE_WORKER_URL}/validate`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ key: profile.license_key }),
+            }).then((r) => {
+              if (!r.ok) throw new Error(`license worker returned ${r.status}`);
+              return r.json();
             });
-            console.warn('[license] Online validation failed, grace started:', result.message);
-          }
+
+        if (result.valid) {
+          const profile = get().profile;
+          if (!profile) return;
+          const updated = {
+            ...profile,
+            currency: profile.currency || 'CAD',
+            license_tier: result.tier,
+            license_expires_at: result.expires_at,
+            license_validated_at: new Date().toISOString(),
+            license_grace_until: undefined,
+            isLicensed: true,
+          };
+          await invoke('upsert_user_profile', { payload: updated });
+          set({ profile: updated, isLicensed: true });
+          console.log('[license] Online validation OK:', result.tier);
+        } else if (result.tier) {
+          // Server said invalid/expired/revoked but gave us a tier. Record it
+          // and start a 2-day grace, so a customer who refunded does not lose
+          // access mid-session while a transient worker failure cannot lock
+          // them out. `revoked` arrives here as tier 'expired'.
+          const profile = get().profile;
+          if (!profile) return;
+          const updated = {
+            ...profile,
+            currency: profile.currency || 'CAD',
+            license_tier: result.tier,
+            license_expires_at: result.expires_at,
+            license_validated_at: new Date().toISOString(),
+            license_grace_until: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+          };
+          await invoke('upsert_user_profile', { payload: updated });
+          set({
+            profile: updated,
+            isLicensed: result.tier !== 'free' && result.tier !== 'expired',
+          });
+          console.warn('[license] Online validation failed, grace started:', result.message);
         }
       } catch (e) {
         console.warn('[license] Online ping failed, using cached/offline:', e);
-        // Offline: if we have a cached validation, check grace period
         const profile = get().profile;
         if (profile?.license_validated_at && profile.license_grace_until) {
           const graceUntil = new Date(profile.license_grace_until).getTime();
           if (Date.now() > graceUntil) {
-            // Grace expired · downgrade
             const updated = { ...profile, license_tier: 'free', isLicensed: false };
             await invoke('upsert_user_profile', { payload: updated });
             set({ profile: updated, isLicensed: false });
@@ -1466,15 +1551,19 @@ export const useStore = create<UnifiedStore>((set, get) => {
     },
 
     isTier: (tier: string) => {
-      const testMode = get().testMode;
-      if (testMode.active && testMode.tier) return testMode.tier === tier;
+      if (__TEST_MODE__) {
+        const testMode = get().testMode;
+        if (testMode.active && testMode.tier) return testMode.tier === tier;
+      }
       const profile = get().profile;
       return profile?.license_tier === tier;
     },
 
     getActiveTier: (): LicenseTier => {
-      const testMode = get().testMode;
-      if (testMode.active && testMode.tier) return testMode.tier;
+      if (__TEST_MODE__) {
+        const testMode = get().testMode;
+        if (testMode.active && testMode.tier) return testMode.tier;
+      }
       const profile = get().profile;
       if (!profile) return 'free';
       // Server-validated or downgraded tiers win, but paid tiers require
@@ -1484,9 +1573,13 @@ export const useStore = create<UnifiedStore>((set, get) => {
         const serverTier = profile.license_tier as LicenseTier;
         if (serverTier !== 'pro' && serverTier !== 'lifetime') return serverTier;
         if (profile.license_key) return serverTier;
-      } else if (profile.license_key) {
-        return 'lifetime';
       }
+      // Deliberately NOT `else if (profile.license_key) return 'lifetime'`.
+      // With no server-recorded tier, inferring 'lifetime' from the mere
+      // presence of a key meant every offline-validated key, including a
+      // monthly subscriber's, and including one the server has never seen ,
+      // displayed as Lifetime. No tier is known here, so the honest answer is
+      // to fall through to the trial clock and resolve 'free'.
       // Keyless trial derived from the trial clock: full Pro through the
       // grace window (day 37), expired after. Without this, trial users
       // silently resolved to 'free' and the trial never existed.
@@ -1510,17 +1603,22 @@ export const useStore = create<UnifiedStore>((set, get) => {
     testMode: { active: false, tier: null },
 
     enableTestMode: async (tier) => {
+      // Hard no-op in production desktop builds. Guarding the render site was
+      // not enough: these are store actions, callable from the console or from
+      // any injected script, so every one of them needs the gate.
+      if (!__TEST_MODE__) return;
       const { loadTestMode, activateTestMode, snapshotProfile } = await import('../demo/testMode');
-      snapshotProfile();
       const persisted = loadTestMode();
       if (persisted.active && persisted.tier) {
         set({ testMode: persisted, isLicensed: true });
         return;
       }
+      snapshotProfile();
       set({ testMode: activateTestMode(tier), isLicensed: true });
     },
 
     setTestTier: (tier) => {
+      if (!__TEST_MODE__) return;
       if (!get().testMode.active) return;
       import('../demo/testMode').then(({ activateTestMode }) => {
         set({ testMode: activateTestMode(tier), isLicensed: true });
@@ -1528,6 +1626,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
     },
 
     setTestTrialClock: async (daysAgo) => {
+      if (!__TEST_MODE__) return;
       const profile = get().profile;
       if (!profile) return;
       const trial_started_at =
@@ -1538,6 +1637,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
     },
 
     disableTestMode: async () => {
+      if (!__TEST_MODE__) return;
       const { deactivateTestMode, restoreProfileSnapshot } = await import('../demo/testMode');
       set({ testMode: deactivateTestMode() });
       restoreProfileSnapshot();
@@ -2415,10 +2515,12 @@ export const useStore = create<UnifiedStore>((set, get) => {
       values: get().metricValues.filter((v) => v.client_id === clientId),
     }),
     getInvoiceBalance: (invoiceId) => {
-      const inv = get().invoices.find((i) => i.id === invoiceId);
+      const inv = get().invoices.find((i) => String(i.id) === String(invoiceId));
       if (!inv) return 0;
+      // String compare both sides: Payment.invoice_id is typed string,
+      // Invoice.id is number, and an imported backup can carry either.
       const totalPaid = get()
-        .payments.filter((p) => p.invoice_id === invoiceId)
+        .payments.filter((p) => String(p.invoice_id) === String(invoiceId))
         .reduce((s, p) => s + p.amount, 0);
       return inv.total - totalPaid;
     },
@@ -2448,21 +2550,52 @@ export const useStore = create<UnifiedStore>((set, get) => {
       return { totalTime, totalBillable, totalInvoiced, milestoneProgress };
     },
     getFinanceSummary: () => {
-      // Canonical money summary. Mirrors the Finance screen exactly:
-      // actual payments win over invoice status, outstanding is what was
-      // billed minus what arrived, profit is arrivals minus expenses.
+      // Canonical money summary. Revenue is PER INVOICE, never a global
+      // either/or: an invoice with no payment rows is paid at its total, and an
+      // invoice with payment rows is paid at what actually arrived (capped at
+      // its total). The previous version did `paidFromPayments > 0 ?
+      // paidFromPayments : totalPaid`, a single global branch that REPLACED
+      // the sum of paid invoices. Recording one $500 payment against a book
+      // with $6,200 of paid invoices reported $500 revenue and inverted every
+      // KPI on the Finance screen.
+      //
       // Orphan payments (invoice deleted or missing via import) are excluded:
       // phantom revenue is worse than an unattributed row.
-      const invoiceIds = new Set(get().invoices.map((i) => i.id));
-      const livePayments = get().payments.filter((p) => invoiceIds.has(p.invoice_id));
+      const invoices = get().invoices;
+      // Compare as strings on both sides. Payment.invoice_id is typed `string`
+      // while Invoice.id is `number`, and a JSON import can hand back either
+      // shape, a strict Set<number>.has(p.invoice_id) then classified a real
+      // payment as an orphan and dropped the revenue.
+      const invoiceIds = new Set(invoices.map((i) => String(i.id)));
+      const livePayments = get().payments.filter((p) => invoiceIds.has(String(p.invoice_id)));
       const paidFromPayments = livePayments.reduce((s, p) => s + p.amount, 0);
       const totalExpenses = get().expenses.reduce((s, e) => s + e.amount, 0);
-      const totalPaid = get()
-        .invoices.filter((i) => i.status === 'paid')
-        .reduce((s, i) => s + i.total, 0);
-      const totalPaidRevenue = paidFromPayments > 0 ? paidFromPayments : totalPaid;
-      const totalInvoiced = get()
-        .invoices.filter((i) => i.status !== 'draft')
+
+      // Payment.invoice_id is typed string while Invoice.id is number (SQLite
+      // INTEGER vs the TS model), so key the map by string and compare with
+      // String(). Using them raw silently matched nothing.
+      const paidByInvoice = new Map<string, number>();
+      for (const p of livePayments) {
+        const id = String(p.invoice_id);
+        paidByInvoice.set(id, (paidByInvoice.get(id) ?? 0) + p.amount);
+      }
+
+      const isSettled = (inv: Invoice): boolean => {
+        const received = paidByInvoice.get(String(inv.id));
+        if (received === undefined) return inv.status === 'paid';
+        return received >= inv.total;
+      };
+
+      let totalPaidRevenue = 0;
+      for (const inv of invoices) {
+        if (inv.status === 'draft') continue;
+        const received = paidByInvoice.get(String(inv.id));
+        totalPaidRevenue +=
+          received === undefined ? (isSettled(inv) ? inv.total : 0) : Math.min(received, inv.total);
+      }
+
+      const totalInvoiced = invoices
+        .filter((i) => i.status !== 'draft')
         .reduce((s, i) => s + i.total, 0);
       const totalOutstanding = totalInvoiced - totalPaidRevenue;
       const profit = totalPaidRevenue - totalExpenses;

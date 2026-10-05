@@ -220,7 +220,9 @@ export default function PhaseGateTracker({ projectId }: { projectId: string }) {
                   </label>
                 </div>
               </div>
-              <button onClick={() => handleDelete(phase.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+              <button
+                aria-label="Delete phase gate tracker"
+                onClick={() => handleDelete(phase.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                 <Trash2 size={12} />
               </button>
             </div>

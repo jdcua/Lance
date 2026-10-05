@@ -179,7 +179,9 @@ export default function SourcingLog({ projectId }: { projectId: string }) {
                     </select>
                   </td>
                   <td className="py-1.5 px-2">
-                    <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                    <button
+                      aria-label="Delete sourcing log"
+                      onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                       <Trash2 size={12} />
                     </button>
                   </td>

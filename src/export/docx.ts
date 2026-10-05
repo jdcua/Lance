@@ -16,7 +16,7 @@ import type { Proposal, Invoice, Contract, Client, UserProfile } from '../types'
 import { formatCurrency, formatDate } from '../utils/format';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { saveFile, getProfileName } from './common';
-import { sanitizeInvoiceNumber } from '../utils/invoiceNumber';
+import { sanitizeInvoiceNumber, sanitizeFilenamePart } from '../utils/invoiceNumber';
 
 function parseHtmlToDocx(html: string): Paragraph[] {
   const parser = new DOMParser();
@@ -214,7 +214,7 @@ export async function exportProposalDOCX(
 
   const blob = await Packer.toBlob(doc);
   const date = todayLocalISO();
-  const filename = `Lance_Proposal_${client.name.replace(/\s+/g, '_')}_${date}.docx`;
+  const filename = `Lance_Proposal_${sanitizeFilenamePart(client.name, 'client')}_${date}.docx`;
   await saveFile(blob, filename);
 }
 
@@ -431,7 +431,7 @@ export async function exportInvoiceDOCX(
   });
 
   const blob = await Packer.toBlob(doc);
-  const filename = `Lance_Invoice_${sanitizeInvoiceNumber(invoice.invoice_number) || 'INV'}_${client.name.replace(/\s+/g, '_')}.docx`;
+  const filename = `Lance_Invoice_${sanitizeFilenamePart(sanitizeInvoiceNumber(invoice.invoice_number), 'INV')}_${sanitizeFilenamePart(client.name, 'client')}.docx`;
   await saveFile(blob, filename);
 }
 
@@ -494,6 +494,6 @@ export async function exportContractDOCX(
   });
 
   const blob = await Packer.toBlob(doc);
-  const filename = `Lance_Contract_${contract.title.replace(/\s+/g, '_')}_${client.name.replace(/\s+/g, '_')}.docx`;
+  const filename = `Lance_Contract_${sanitizeFilenamePart(contract.title, 'contract')}_${sanitizeFilenamePart(client.name, 'client')}.docx`;
   await saveFile(blob, filename);
 }

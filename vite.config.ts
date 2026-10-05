@@ -22,7 +22,7 @@ const trialHtml = {
   },
 };
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [react(), trialHtml],
   resolve: {
     alias: {
@@ -31,6 +31,14 @@ export default defineConfig({
   },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
+    // Test mode ("godmode") is a dev + trial affordance. This has to be a
+    // build-time constant rather than `import.meta.env.DEV` at the render
+    // site: the DEV flag folded to `false || isTrial()`, so the whole panel
+    // shipped in the production desktop bundle and the store rehydrated the
+    // flag from localStorage with no guard at all, writing
+    // lance:test-mode={"active":true,"tier":"pro"} granted permanent Pro.
+    // Substituted as a literal so the bundler drops the dead branches.
+    __TEST_MODE__: JSON.stringify(command === 'serve' || isTrialBuild),
   },
   clearScreen: false,
   server: {
@@ -41,31 +49,33 @@ export default defineConfig({
     },
   },
   build: {
-    minify: 'esbuild',
+    // Vite 8 builds with Rolldown (oxc), so there is no 'esbuild' minifier to
+    // name, oxc is the default. Sourcemaps stay off: the trial publishes
+    // build.json hashes, and shipping .map files would leak source.
     sourcemap: false,
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom', 'zustand', 'lucide-react'],
-          tiptap: [
-            '@tiptap/react',
-            '@tiptap/starter-kit',
-            '@tiptap/extension-placeholder',
-            '@tiptap/extension-typography',
+        // Rolldown replaces Rollup's manualChunks with codeSplitting.groups.
+        // Each group is a module-id regex; keep the chunk names identical to
+        // the old manualChunks keys because the trial service worker and the
+        // build attestation both key off the emitted filenames.
+        codeSplitting: {
+          groups: [
+            {
+              name: 'vendor',
+              test: /node_modules[\\/](react|react-dom|react-router-dom|zustand|lucide-react)[\\/]/,
+            },
+            { name: 'tiptap', test: /node_modules[\\/]@tiptap[\\/]/ },
+            { name: 'pdf', test: /node_modules[\\/](@react-pdf|pdfjs-dist)[\\/]/ },
+            {
+              name: 'tauri',
+              test: /node_modules[\\/]@tauri-apps[\\/](api|plugin-sql|plugin-fs|plugin-dialog|plugin-process|plugin-updater)[\\/]/,
+            },
+            { name: 'import', test: /node_modules[\\/](mammoth|xlsx|@xmldom)[\\/]/ },
+            { name: 'export', test: /node_modules[\\/](docx|@zip.js)[\\/]/ },
           ],
-          pdf: ['@react-pdf/renderer', 'pdfjs-dist'],
-          tauri: [
-            '@tauri-apps/api',
-            '@tauri-apps/plugin-sql',
-            '@tauri-apps/plugin-fs',
-            '@tauri-apps/plugin-dialog',
-            '@tauri-apps/plugin-process',
-            '@tauri-apps/plugin-updater',
-          ],
-          import: ['mammoth', 'xlsx'],
-          export: ['docx'],
         },
       },
     },
   },
-});
+}));

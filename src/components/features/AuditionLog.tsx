@@ -198,7 +198,9 @@ export default function AuditionLog({ clientId }: { clientId: string }) {
                 )}
                 {a.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">{a.notes}</span>}
               </div>
-              <button onClick={() => handleDelete(a.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+              <button
+                aria-label="Delete audition log"
+                onClick={() => handleDelete(a.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                 <Trash2 size={12} />
               </button>
             </div>

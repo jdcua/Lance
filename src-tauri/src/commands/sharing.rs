@@ -1,5 +1,6 @@
 use crate::db::DbState;
 use chrono::Utc;
+use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 
@@ -346,4 +347,105 @@ pub fn get_all_share_tokens(app: AppHandle) -> Result<Vec<ShareToken>, String> {
         .collect();
 
     Ok(tokens)
+}
+
+// ─────────────────────────────────────────────────────────────
+// Browser-mode portal parity.
+//
+// ShareView.tsx (the /share/:token route used in dev and in the
+// trial) calls record_share_view and respond_share_token. Neither
+// existed here, so both silently failed: the view count never
+// incremented, and a client clicking Accept or Sign got a red error
+// banner because the response was never stored.
+// ─────────────────────────────────────────────────────────────
+
+#[tauri::command]
+pub fn record_share_view(app: AppHandle, token: String) -> Result<(), String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+    let now = chrono_now();
+    // viewed_at records the FIRST view; view_count increments every time.
+    conn.execute(
+        "UPDATE share_tokens
+            SET view_count = view_count + 1,
+                viewed_at = COALESCE(viewed_at, ?1)
+          WHERE token = ?2",
+        rusqlite::params![now, token],
+    )
+    .map_err(|_| "Database operation failed".to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn respond_share_token(
+    app: AppHandle,
+    token: String,
+    response: String,
+    client_name: Option<String>,
+    client_signature: Option<String>,
+) -> Result<ShareToken, String> {
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
+
+    // Closed enum at the boundary. This value reaches the portal HTML, and the
+    // axum handler in server.rs validates it the same way, belt and braces
+    // across the two entry points.
+    let response = match response.as_str() {
+        "accepted" => "accepted",
+        "declined" => "declined",
+        "signed" => "signed",
+        _ => return Err("Invalid response.".to_string()),
+    };
+
+    // Truncate by character, not byte index: `&s[..200]` panics mid-character
+    // and release builds set panic = "abort".
+    let clean_name = client_name
+        .as_deref()
+        .map(|s| s.trim().chars().take(200).collect::<String>());
+    let clean_sig = client_signature
+        .as_deref()
+        .map(|s| s.trim().chars().take(200).collect::<String>());
+
+    let now = chrono_now();
+    conn.execute(
+        "UPDATE share_tokens
+            SET client_response = ?1,
+                client_response_at = ?2,
+                client_name = COALESCE(?3, client_name),
+                client_signature = COALESCE(?4, client_signature),
+                client_signed_at = CASE WHEN ?4 IS NULL THEN client_signed_at ELSE ?5 END
+          WHERE token = ?6",
+        rusqlite::params![response, now, clean_name, clean_sig, now, token],
+    )
+    .map_err(|_| "Database operation failed".to_string())?;
+
+    if response == "signed" {
+        if let Some(entity_id) = lookup_entity_id(&conn, &token, "contract") {
+            conn.execute(
+                "UPDATE contracts SET signed_at = ?1 WHERE id = ?2",
+                rusqlite::params![now, entity_id],
+            )
+            .map_err(|_| "Database operation failed".to_string())?;
+        }
+    } else if response == "accepted" {
+        if let Some(entity_id) = lookup_entity_id(&conn, &token, "proposal") {
+            conn.execute(
+                "UPDATE proposals SET status = 'accepted' WHERE id = ?1",
+                rusqlite::params![entity_id],
+            )
+            .map_err(|_| "Database operation failed".to_string())?;
+        }
+    }
+
+    drop(conn);
+    get_share_token(app, token)?.ok_or_else(|| "Share link not found".to_string())
+}
+
+fn lookup_entity_id(conn: &Connection, token: &str, want_type: &str) -> Option<i64> {
+    conn.query_row(
+        "SELECT entity_id FROM share_tokens WHERE token = ?1 AND entity_type = ?2",
+        rusqlite::params![token, want_type],
+        |row| row.get(0),
+    )
+    .ok()
 }

@@ -153,7 +153,9 @@ export default function StackLogger({ projectId }: { projectId: string }) {
                     <span key={item.id} className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-[var(--bg-secondary)] rounded-[6px] text-[var(--text-primary)] border border-[var(--border-color)]">
                       <Layers size={10} className="text-[var(--text-tertiary)]" />
                       {item.technology}
-                      <button onClick={() => handleRemove(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-0.5">
+                      <button
+                        aria-label="Close"
+                        onClick={() => handleRemove(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-0.5">
                         <X size={10} />
                       </button>
                     </span>

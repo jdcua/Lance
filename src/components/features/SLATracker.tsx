@@ -145,7 +145,9 @@ export default function SLATracker({ projectId }: { projectId: string }) {
                     <span className="text-[10px] text-[var(--text-tertiary)] flex-shrink-0">{sla.period}</span>
                   )}
                 </div>
-                <button onClick={() => handleDelete(sla.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                <button
+                  aria-label="Delete sla tracker"
+                  onClick={() => handleDelete(sla.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                   <Trash2 size={12} />
                 </button>
               </div>

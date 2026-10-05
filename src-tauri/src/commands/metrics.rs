@@ -225,15 +225,16 @@ pub fn get_metric_values(
 ) -> Result<Vec<MetricValue>, String> {
     let state = app.state::<DbState>();
     let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
-    let query = if let Some(l) = limit {
-        format!(
-            "SELECT id, definition_id, client_id, value, period, notes, created_at FROM metric_values WHERE definition_id = ? ORDER BY created_at DESC LIMIT {}",
-            l
-        )
-    } else {
-        "SELECT id, definition_id, client_id, value, period, notes, created_at FROM metric_values WHERE definition_id = ? ORDER BY created_at DESC"
-            .to_string()
-    };
+    // `limit` is interpolated rather than bound because SQLite will not accept a
+    // parameter there. It is an i64, so it cannot carry SQL, but it IS
+    // renderer-supplied and unbounded: LIMIT -1 means "no limit" and i64::MAX
+    // asks SQLite to plan an enormous result. Clamp it.
+    const MAX_LIMIT: i64 = 1000;
+    let capped = limit.map(|l| l.clamp(1, MAX_LIMIT)).unwrap_or(MAX_LIMIT);
+    let query = format!(
+        "SELECT id, definition_id, client_id, value, period, notes, created_at FROM metric_values WHERE definition_id = ? ORDER BY created_at DESC LIMIT {}",
+        capped
+    );
     let mut stmt = conn.prepare(&query).map_err(|_| "Database operation failed".to_string())?;
     let values = stmt
         .query_map([&definition_id], |row| {

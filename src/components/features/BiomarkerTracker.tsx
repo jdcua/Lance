@@ -222,7 +222,9 @@ export default function BiomarkerTracker({ clientId }: { clientId: string }) {
                   {b.reference_range && <span className="text-[10px] text-[var(--text-tertiary)]">{b.reference_range}</span>}
                   {b.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">{b.notes}</span>}
                 </div>
-                <button onClick={() => handleDelete(b.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                <button
+                  aria-label="Delete biomarker tracker"
+                  onClick={() => handleDelete(b.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                   <Trash2 size={12} />
                 </button>
               </div>

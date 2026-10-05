@@ -203,7 +203,9 @@ export default function ResearchLog({ projectId }: { projectId: string }) {
                 </div>
                 <p className="text-[var(--text-primary)] leading-relaxed whitespace-pre-wrap">{a.key_findings}</p>
               </div>
-              <button onClick={() => handleDelete(a.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] flex-shrink-0 mt-0.5">
+              <button
+                aria-label="Delete research log"
+                onClick={() => handleDelete(a.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] flex-shrink-0 mt-0.5">
                 <Trash2 size={12} />
               </button>
             </div>

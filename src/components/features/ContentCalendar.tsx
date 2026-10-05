@@ -143,19 +143,23 @@ export default function ContentCalendar({ clientId }: { clientId: string }) {
       <div className="flex items-center justify-between">
         <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Content Calendar ({posts.length})</h4>
         <div className="flex items-center gap-1">
-          <button onClick={() => setViewMode('calendar')} className={`p-1 rounded-[4px] ${viewMode === 'calendar' ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}>
+          <button
+            aria-label="Switch to grid view"
+            onClick={() => setViewMode('calendar')} className={`p-1 rounded-[4px] ${viewMode === 'calendar' ? 'bg-[var(--accent)] text-[var(--accent-on)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}>
             <LayoutGrid size={12} />
           </button>
-          <button onClick={() => setViewMode('list')} className={`p-1 rounded-[4px] ${viewMode === 'list' ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}>
+          <button
+            aria-label="Switch to list view"
+            onClick={() => setViewMode('list')} className={`p-1 rounded-[4px] ${viewMode === 'list' ? 'bg-[var(--accent)] text-[var(--accent-on)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}>
             <List size={12} />
           </button>
         </div>
       </div>
 
       <div className="flex flex-wrap gap-1">
-        <button onClick={() => setFilterPlatform(null)} className={`px-2 py-0.5 rounded-[4px] text-[10px] ${!filterPlatform ? 'bg-[var(--accent)] text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}>All</button>
+        <button onClick={() => setFilterPlatform(null)} className={`px-2 py-0.5 rounded-[4px] text-[10px] ${!filterPlatform ? 'bg-[var(--accent)] text-[var(--accent-on)]' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}>All</button>
         {PLATFORMS.map(p => (
-          <button key={p} onClick={() => setFilterPlatform(filterPlatform === p ? null : p)} className={`px-2 py-0.5 rounded-[4px] text-[10px] ${filterPlatform === p ? 'bg-[var(--accent)] text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}>
+          <button key={p} onClick={() => setFilterPlatform(filterPlatform === p ? null : p)} className={`px-2 py-0.5 rounded-[4px] text-[10px] ${filterPlatform === p ? 'bg-[var(--accent)] text-[var(--accent-on)]' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'}`}>
             {p}
           </button>
         ))}
@@ -164,9 +168,13 @@ export default function ContentCalendar({ clientId }: { clientId: string }) {
       {viewMode === 'calendar' ? (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <button onClick={prevMonth} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"><ChevronLeft size={14} /></button>
+            <button
+              aria-label="Previous"
+              onClick={prevMonth} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"><ChevronLeft size={14} /></button>
             <span className="text-xs font-medium text-[var(--text-primary)]">{monthLabel}</span>
-            <button onClick={nextMonth} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"><ChevronRight size={14} /></button>
+            <button
+              aria-label="Next"
+              onClick={nextMonth} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"><ChevronRight size={14} /></button>
           </div>
 
           <div className="grid grid-cols-7 gap-0.5">
@@ -212,7 +220,9 @@ export default function ContentCalendar({ clientId }: { clientId: string }) {
                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)]">{p.status}</span>
                   <span className="text-[10px] text-[var(--text-tertiary)]">{p.date || '--'}</span>
                 </div>
-                <button onClick={() => handleDelete(p.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                <button
+                  aria-label="Delete content calendar"
+                  onClick={() => handleDelete(p.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                   <Trash2 size={12} />
                 </button>
               </div>
@@ -225,7 +235,9 @@ export default function ContentCalendar({ clientId }: { clientId: string }) {
         <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[10px] text-[var(--text-tertiary)]">Date: {selectedDate}</span>
-            <button onClick={() => setShowForm(false)} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"><X size={12} /></button>
+            <button
+              aria-label="Close"
+              onClick={() => setShowForm(false)} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"><X size={12} /></button>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <select value={form.platform} onChange={(e) => setForm({ ...form, platform: e.target.value })} className={inputClass}>

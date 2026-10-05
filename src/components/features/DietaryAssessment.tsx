@@ -167,7 +167,7 @@ export default function DietaryAssessment({ clientId }: { clientId: string }) {
             <div key={a.id}>
               <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
                 <div className="flex-1 min-w-0 flex items-center gap-2">
-                  <button
+                  <button aria-label="Next"
                     onClick={() => setExpanded(expanded === a.id ? null : a.id)}
                     className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                   >
@@ -180,7 +180,9 @@ export default function DietaryAssessment({ clientId }: { clientId: string }) {
                     <span className="text-[10px] text-[var(--text-tertiary)] truncate">{a.analysis.split('\n')[0]}</span>
                   )}
                 </div>
-                <button onClick={() => handleDelete(a.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                <button
+                  aria-label="Delete dietary assessment"
+                  onClick={() => handleDelete(a.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                   <Trash2 size={12} />
                 </button>
               </div>

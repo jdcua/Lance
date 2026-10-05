@@ -120,7 +120,9 @@ export default function ServiceBlueprint({ projectId }: { projectId: string }) {
                   <span className="text-[10px] text-[var(--text-tertiary)] font-medium w-5">{i + 1}</span>
                   <span className="font-medium text-[var(--text-primary)]">{item.component}</span>
                 </div>
-                <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                <button
+                  aria-label="Delete service blueprint"
+                  onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                   <Trash2 size={12} />
                 </button>
               </div>

@@ -554,7 +554,7 @@ export default function Projects() {
                           )}
                           {invoicePrompt?.milestone.id === m.id && (
                             <div className="flex items-center gap-1 ml-1">
-                              <button onClick={handleInvoicePromptYes} className="text-[10px] px-1.5 py-0.5 rounded-[6px] bg-[var(--accent)] text-white font-medium">Yes</button>
+                              <button onClick={handleInvoicePromptYes} className="text-[10px] px-1.5 py-0.5 rounded-[6px] bg-[var(--accent)] text-[var(--accent-on)] font-medium">Yes</button>
                               <button onClick={handleInvoicePromptNo} className="text-[10px] px-1.5 py-0.5 rounded-[6px] bg-[var(--bg-secondary)] text-[var(--text-secondary)] font-medium">Skip</button>
                             </div>
                           )}

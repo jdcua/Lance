@@ -77,7 +77,7 @@ export function validateImportEnvelope(raw: unknown): ImportValidationResult {
     }
     if (value.length > 0) {
       const first = value[0] as Record<string, unknown>;
-      // user_profile is a singleton row and may predate the id column —
+      // user_profile is a singleton row and may predate the id column ,
       // its shape check below is the real gate, not a generic id.
       if (key !== 'user_profile' && !first.id) {
         return { valid: false, error: `Invalid record in "${key}": missing "id" field` };
@@ -165,6 +165,86 @@ const TABLE_ORDER = [
 export const BACKUP_TABLES = TABLE_ORDER;
 
 /**
+ * Columns for a table with no hand-written mapping, taken from the record
+ * itself. Only keys that are plain column names: no `__proto__`, no `constructor`,
+ * so a crafted backup cannot smuggle a property name into an INSERT statement.
+ */
+function inferColumns(record: unknown): string[] {
+  if (!record || typeof record !== 'object') return [];
+  const out: string[] = [];
+  for (const key of Object.keys(record as Record<string, unknown>)) {
+    if (!/^[a-z_][a-z0-9_]*$/.test(key)) continue;
+    out.push(key);
+  }
+  return out;
+}
+
+/** Highest existing INTEGER id, so a restore re-keys instead of colliding. */
+async function maxNumericId(
+  db: Awaited<ReturnType<typeof import('../db').getDb>>,
+  table: string,
+  columns: string[],
+): Promise<number> {
+  if (!columns.includes('id')) return 0;
+  if (!/^[a-z_][a-z0-9_]*$/.test(table)) return 0;
+  try {
+    const rows = await db.select<{ max_id: number | null }[]>(
+      `SELECT MAX(id) as max_id FROM ${table}`,
+    );
+    const max = rows?.[0]?.max_id;
+    return typeof max === 'number' && max > 0 ? max : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Discover every table that actually exists, so nothing can be silently left
+ * behind.
+ *
+ * TABLE_ORDER above is a HAND-MAINTAINED list, and it drifted badly: the
+ * archetype feature creates ~136 tables at runtime from src/db/index.ts
+ * (retainers, ledger_entries, bookings, sprint_tasks, action_items, sops, ...).
+ * None of them were in the list, so Export said "Data exported successfully" and
+ * dropped all of it. Retainers and ledger_entries hold real money.
+ *
+ * So the export enumerates the live schema and unions it with the hand list,
+ * rather than trusting the hand list. Tables that do not exist yield [] and are
+ * dropped, so an older backup importing into a newer app still works.
+ */
+export async function discoverBackupTables(): Promise<string[]> {
+  const { getDb, browserStoreTableNames } = await import('../db');
+  const db = await getDb();
+  const found = new Set<string>(TABLE_ORDER);
+  found.add('share_tokens');
+  try {
+    const rows = await db.select<{ name: string }[]>(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
+    );
+    for (const row of rows ?? []) {
+      if (typeof row?.name === 'string' && row.name) found.add(row.name);
+    }
+  } catch {
+    // No SQLite introspection available; the store scan below covers it.
+  }
+  // Browser mode has no sqlite_master at all — the mock db answers the query
+  // with [] rather than throwing — so the hand list alone would omit ~100
+  // archetype tables and Export would report success while dropping every
+  // mood board, retainer, ledger entry and campaign the user entered. This
+  // scan is a no-op under Tauri (nothing writes lance:store:* there).
+  try {
+    for (const name of browserStoreTableNames()) found.add(name);
+  } catch {
+    /* nothing else to try */
+  }
+  // schema_version describes the schema itself; carrying it across machines
+  // would tell the importer the wrong version.
+  found.delete('schema_version');
+  found.delete('sqlite_sequence');
+  return [...found];
+}
+
+/**
  * Read every user table via the db layer (works in Tauri and browser).
  * Missing tables yield []. share_tokens is browser-only (no SQLite table):
  * included best-effort, skipped on restore (no mapping by design).
@@ -173,7 +253,7 @@ export async function fetchBackupTables(): Promise<Record<string, unknown[]>> {
   const { getDb } = await import('../db');
   const db = await getDb();
   const data: Record<string, unknown[]> = {};
-  for (const table of [...TABLE_ORDER, 'share_tokens']) {
+  for (const table of await discoverBackupTables()) {
     try {
       const rows = await db.select<Record<string, unknown>[]>(`SELECT * FROM ${table}`);
       data[table] = Array.isArray(rows) ? rows : [];
@@ -203,6 +283,12 @@ export interface AttachmentBlob {
 export const ATTACHMENT_BLOB_TABLE = 'attachment_blobs';
 export const ATTACHMENT_BLOB_MAX_PER_FILE = 2 * 1024 * 1024;
 export const ATTACHMENT_BLOB_MAX_TOTAL = 8 * 1024 * 1024;
+
+// Ceiling on an import envelope, checked against File.size before the file is
+// read. Enforcing it after JSON.parse is too late: parsing a 900MB JSON string
+// exhausts the renderer heap before any validation runs.
+export const MAX_IMPORT_MB = 50;
+export const MAX_IMPORT_BYTES = MAX_IMPORT_MB * 1024 * 1024;
 
 /** Materialize blob bytes on import. Returns the file_path to store. */
 export type BlobMaterializer = (
@@ -484,8 +570,11 @@ export const TABLE_INSERT_MAP: Record<string, { table: string; columns: string[]
       'always_include',
       'writing_style',
       'theme',
-      'license_key',
-      'licensed_at',
+      // license_key / licensed_at are deliberately ABSENT. A backup is a file
+      // people email to themselves, upload to a drive, and hand to a colleague
+      //, exporting the key meant sharing the backup shared the licence, while
+      // the fulfilment email tells people the key "unlocks Pro on all your
+      // devices". A restore keeps whatever licence is already on the machine.
       'ai_enabled',
       'profession',
       'custom_archetype_config',
@@ -754,31 +843,54 @@ export async function performImport(
   await db.execute('BEGIN TRANSACTION');
 
   try {
+    // Walk the envelope's OWN keys, not TABLE_ORDER. The export now discovers
+    // ~136 runtime archetype tables, and this is what lets them come back.
+    const present = Object.keys(envelope.data ?? {})
+      .filter((name) => name !== 'schema_version' && name !== 'sqlite_sequence')
+      .sort((a, b) => {
+        const ai = TABLE_ORDER.indexOf(a);
+        const bi = TABLE_ORDER.indexOf(b);
+        // Hand-listed tables first, in their dependency order; the rest after.
+        if (ai !== -1 && bi !== -1) return ai - bi;
+        if (ai !== -1) return -1;
+        if (bi !== -1) return 1;
+        return a.localeCompare(b);
+      });
+
     if (mode === 'replace') {
-      for (const tableName of TABLE_ORDER) {
+      for (const tableName of present) {
         const mapping = TABLE_INSERT_MAP[tableName];
-        if (mapping) {
-          try {
-            await db.execute(`DELETE FROM ${mapping.table}`);
-          } catch {
-            /* table may not exist yet */
-          }
+        try {
+          // Reverse order on delete so FK children clear before parents.
+          await db.execute(`DELETE FROM ${mapping ? mapping.table : tableName}`);
+        } catch {
+          /* table may not exist in this app version */
         }
       }
     }
 
-    for (const tableName of TABLE_ORDER) {
+    for (const tableName of present) {
       const records = envelope.data[tableName];
       if (!records || !Array.isArray(records) || records.length === 0) continue;
 
       const mapping = TABLE_INSERT_MAP[tableName];
-      if (!mapping) continue;
 
       let tableWritten = false;
 
+      // No hand-written mapping: this is one of the ~136 archetype tables. Derive
+      // the columns from the first record so they still restore, instead of
+      // dropping the table because nobody enumerated it. Identifiers stay
+      // SQLite-internal: we re-key so a restore cannot collide with rows already
+      // on the machine.
+      const columns = mapping?.columns ?? inferColumns(records[0]);
+      let offsetId = 0;
+      if (!mapping && columns.length > 0) {
+        offsetId = await maxNumericId(db, tableName, columns);
+      }
+
       for (const record of records) {
         try {
-          const values = mapping.columns.map((col) => {
+          const values = columns.map((col) => {
             const val = (record as Record<string, unknown>)[col];
             if (typeof val === 'object' && val !== null && !(val instanceof Date)) {
               return JSON.stringify(val);
@@ -786,7 +898,14 @@ export async function performImport(
             return val ?? null;
           });
 
-          if (tableName === 'user_profile') {
+          if (offsetId > 0) {
+            const idIdx = columns.indexOf('id');
+            if (idIdx !== -1 && typeof values[idIdx] === 'number') {
+              values[idIdx] = (values[idIdx] as number) + offsetId;
+            }
+          }
+
+          if (tableName === 'user_profile' && mapping) {
             await upsertUserProfile(values, mapping.columns);
             result.imported++;
             if (!tableWritten) {
@@ -796,12 +915,14 @@ export async function performImport(
             continue;
           }
 
-          const placeholders = mapping.columns.map(() => '?').join(', ');
-          const columnsStr = mapping.columns.join(', ');
+          if (columns.length === 0) continue;
+          const targetTable = mapping ? mapping.table : tableName;
+          const placeholders = columns.map(() => '?').join(', ');
+          const columnsStr = columns.join(', ');
 
           try {
             await db.execute(
-              `INSERT INTO ${mapping.table} (${columnsStr}) VALUES (${placeholders})`,
+              `INSERT INTO ${targetTable} (${columnsStr}) VALUES (${placeholders})`,
               values,
             );
             result.imported++;
@@ -848,7 +969,7 @@ export async function performImport(
 /**
  * Write exported blob bytes back to storage and point each attachment row
  * at the restored file. Without a materializer (or without blobs in the
- * envelope) rows keep whatever file_path they carried — metadata intact,
+ * envelope) rows keep whatever file_path they carried, metadata intact,
  * bytes wherever they were.
  */
 async function restoreAttachmentBlobs(

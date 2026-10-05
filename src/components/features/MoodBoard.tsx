@@ -151,13 +151,13 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
           <div className="flex gap-1.5">
             <button
               onClick={() => setAddMode('url')}
-              className={`flex-1 px-2 py-1 rounded-[6px] text-[11px] font-medium transition-colors ${addMode === 'url' ? 'bg-[var(--accent)] text-white' : 'bg-[var(--bg-card)] text-[var(--text-secondary)]'}`}
+              className={`flex-1 px-2 py-1 rounded-[6px] text-[11px] font-medium transition-colors ${addMode === 'url' ? 'bg-[var(--accent)] text-[var(--accent-on)]' : 'bg-[var(--bg-card)] text-[var(--text-secondary)]'}`}
             >
               <Link size={10} className="inline mr-1" /> Add URL
             </button>
             <button
               onClick={() => { setAddMode('asset'); setShowPicker(true); }}
-              className={`flex-1 px-2 py-1 rounded-[6px] text-[11px] font-medium transition-colors ${addMode === 'asset' ? 'bg-[var(--accent)] text-white' : 'bg-[var(--bg-card)] text-[var(--text-secondary)]'}`}
+              className={`flex-1 px-2 py-1 rounded-[6px] text-[11px] font-medium transition-colors ${addMode === 'asset' ? 'bg-[var(--accent)] text-[var(--accent-on)]' : 'bg-[var(--bg-card)] text-[var(--text-secondary)]'}`}
             >
               <Image size={10} className="inline mr-1" /> From Library
             </button>
@@ -181,7 +181,9 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
         <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-medium text-[var(--text-secondary)]">Select Asset</span>
-            <button onClick={() => setShowPicker(false)} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"><X size={14} /></button>
+            <button
+              aria-label="Close"
+              onClick={() => setShowPicker(false)} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"><X size={14} /></button>
           </div>
           <div className="relative">
             <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
@@ -248,6 +250,7 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
                 {/* Actions */}
                 <div className="absolute top-1 right-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
+                    aria-label="Move up"
                     onClick={() => handleMove(item.id, 'up')}
                     disabled={idx === 0}
                     className="p-0.5 rounded-[4px] bg-[var(--bg-card)]/80 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30"
@@ -255,6 +258,7 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
                     <ChevronUp size={10} />
                   </button>
                   <button
+                    aria-label="Move down"
                     onClick={() => handleMove(item.id, 'down')}
                     disabled={idx === items.length - 1}
                     className="p-0.5 rounded-[4px] bg-[var(--bg-card)]/80 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30"
@@ -262,6 +266,7 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
                     <ChevronDown size={10} />
                   </button>
                   <button
+                    aria-label="Delete mood board item"
                     onClick={() => handleRemove(item.id)}
                     className="p-0.5 rounded-[4px] bg-[var(--bg-card)]/80 text-[var(--text-tertiary)] hover:text-[#A32D2D]"
                   >

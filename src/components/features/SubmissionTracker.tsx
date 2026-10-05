@@ -148,7 +148,9 @@ export default function SubmissionTracker({ projectId }: { projectId: string }) 
                 {s.response_date && <span className="text-[10px] text-[var(--text-tertiary)]">→ {s.response_date}</span>}
                 {s.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">-- {s.notes}</span>}
               </div>
-              <button onClick={() => handleDelete(s.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+              <button
+                aria-label="Delete submission tracker"
+                onClick={() => handleDelete(s.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                 <Trash2 size={12} />
               </button>
             </div>

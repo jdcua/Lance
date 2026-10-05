@@ -173,7 +173,9 @@ export default function TaxDeadlineCalendar({ clientId }: { clientId: string }) 
                   <span className="text-[var(--text-tertiary)] flex-shrink-0 ml-auto">${(d.amount || 0).toFixed(2)}</span>
                   <span className={`text-[10px] flex-shrink-0 ${isOverdue ? 'text-[#DC2626] font-medium' : 'text-[var(--text-tertiary)]'}`}>{d.due_date || '--'}</span>
                 </div>
-                <button onClick={() => handleDelete(d.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                <button
+                  aria-label="Delete tax deadline calendar"
+                  onClick={() => handleDelete(d.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                   <Trash2 size={12} />
                 </button>
               </div>

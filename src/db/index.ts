@@ -49,8 +49,53 @@ function mockTableRows(table: string): Record<string, unknown>[] {
     const storeKey = STORE_ALIAS[table] ?? table;
     const raw = localStorage.getItem(MOCK_PREFIX + storeKey);
     const val = raw ? JSON.parse(raw) : [];
-    return Array.isArray(val) ? val : [];
+    if (!Array.isArray(val)) return [];
+    // Same boundary rule as the Tauri shim's reader: SQLite can never hand back
+    // a null row, so a null here means a hand-edited store, a truncated write
+    // or a partial restore. Dropping it here keeps the ~130 archetype widgets
+    // that query through raw SQL working, instead of each one throwing on its
+    // first `.project_id` read and logging an error per screen.
+    return val.filter((r) => r !== null && typeof r === 'object') as Record<string, unknown>[];
   } catch { return []; }
+}
+
+/**
+ * Store keys that are derived caches, not tables. They are recomputed from the
+ * real rows on load, so backing one up would just restore a stale duplicate.
+ */
+const NON_TABLE_STORE_KEYS = new Set([
+  'pending_follow_ups', // rebuilt from follow_up_log + invoices/proposals
+  'follow_up_logs', // record-shaped (`type:id` → rows), not a table
+]);
+
+/**
+ * Logical table names backing the current browser-mode store.
+ *
+ * `sqlite_master` does not exist here, so anything that introspects the schema
+ * (backup/restore being the important one) would otherwise see only its own
+ * hand-written list and silently drop every archetype table the user has
+ * actually filled in. Reverse-applies STORE_ALIAS so the names returned are the
+ * real schema names, which is what a backup envelope and the importer expect.
+ */
+export function browserStoreTableNames(): string[] {
+  const reverse = new Map<string, string>();
+  for (const [table, key] of Object.entries(STORE_ALIAS)) reverse.set(key, table);
+
+  const out = new Set<string>();
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const name = localStorage.key(i);
+      if (!name || !name.startsWith(MOCK_PREFIX)) continue;
+      const key = name.slice(MOCK_PREFIX.length);
+      if (!key || NON_TABLE_STORE_KEYS.has(key)) continue;
+      out.add(reverse.get(key) ?? key);
+    }
+    // The singleton profile is not behind a store key at all.
+    if (localStorage.getItem('lance:profile') !== null) out.add('user_profile');
+  } catch {
+    /* private mode: no store to enumerate */
+  }
+  return [...out];
 }
 
 function mockWriteTable(table: string, rows: Record<string, unknown>[]): void {

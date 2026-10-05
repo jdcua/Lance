@@ -137,7 +137,9 @@ export default function BudgetVsActualTracker({ projectId }: { projectId: string
                   <div className="flex-1 min-w-0 flex items-center gap-2">
                     <span className="font-medium text-[var(--text-primary)]">{item.category}</span>
                   </div>
-                  <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                  <button
+                    aria-label="Delete budget vs actual tracker"
+                    onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                     <Trash2 size={12} />
                   </button>
                 </div>

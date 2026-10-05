@@ -235,7 +235,7 @@ export default function PublicationLog({ projectId }: { projectId: string }) {
                   </div>
                 </div>
               </div>
-              <button
+              <button aria-label="Delete publication log"
                 onClick={() => handleDelete(p.id)}
                 className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0"
               >

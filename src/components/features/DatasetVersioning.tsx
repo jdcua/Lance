@@ -131,7 +131,9 @@ export default function DatasetVersioning({ projectId }: { projectId: string }) 
                 )}
                 <span className="text-[10px] text-[var(--text-tertiary)] flex-shrink-0 ml-auto">{formatDate(v.created_at)}</span>
               </div>
-              <button onClick={() => handleDelete(v.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+              <button
+                aria-label="Delete dataset versioning"
+                onClick={() => handleDelete(v.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                 <Trash2 size={12} />
               </button>
             </div>

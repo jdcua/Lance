@@ -165,7 +165,9 @@ export default function ProgressTracker({ clientId }: { clientId: string }) {
                   </p>
                 )}
               </div>
-              <button onClick={() => handleDelete(note.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] flex-shrink-0 mt-0.5">
+              <button
+                aria-label="Delete progress tracker"
+                onClick={() => handleDelete(note.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] flex-shrink-0 mt-0.5">
                 <Trash2 size={12} />
               </button>
             </div>

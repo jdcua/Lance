@@ -178,7 +178,9 @@ export default function ComparableTracker({ projectId }: { projectId: string }) 
                     <td className="py-1.5 px-2 text-right text-[var(--text-primary)]">{comp.beds || '--'}</td>
                     <td className="py-1.5 px-2 text-right text-[var(--text-primary)]">{comp.baths || '--'}</td>
                     <td className="py-1.5 px-2">
-                      <button onClick={() => handleDelete(comp.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                      <button
+                        aria-label="Delete comparable tracker"
+                        onClick={() => handleDelete(comp.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                         <Trash2 size={12} />
                       </button>
                     </td>

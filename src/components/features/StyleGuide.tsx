@@ -239,7 +239,9 @@ export default function StyleGuide({ clientId }: { clientId: string }) {
                   className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-[#DC2626]/15 text-[#DC2626] font-medium"
                 >
                   {word}
-                  <button onClick={() => removeBannedWord(word)} className="hover:opacity-70">
+                  <button
+                    aria-label="Close"
+                    onClick={() => removeBannedWord(word)} className="hover:opacity-70">
                     <X size={10} />
                   </button>
                 </span>

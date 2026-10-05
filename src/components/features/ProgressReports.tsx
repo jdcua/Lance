@@ -152,7 +152,9 @@ export default function ProgressReports({ projectId }: { projectId: string }) {
                   </p>
                 )}
               </div>
-              <button onClick={() => handleDelete(report.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] flex-shrink-0 mt-0.5">
+              <button
+                aria-label="Delete progress reports"
+                onClick={() => handleDelete(report.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] flex-shrink-0 mt-0.5">
                 <Trash2 size={12} />
               </button>
             </div>

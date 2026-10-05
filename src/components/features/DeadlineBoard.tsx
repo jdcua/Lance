@@ -159,7 +159,7 @@ export default function DeadlineBoard() {
                     )}
                   </div>
                   {!isEditing && (
-                    <button
+                    <button aria-label="Do action on"
                       onClick={() => handleStartEdit(project)}
                       className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] flex-shrink-0"
                     >

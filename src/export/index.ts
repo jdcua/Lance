@@ -2,7 +2,7 @@ import { pdf } from '@react-pdf/renderer';
 import { createElement } from 'react';
 import { ProposalPDF, InvoicePDF, ContractPDF } from './pdf';
 import { saveFile } from './common';
-import { sanitizeInvoiceNumber } from '../utils/invoiceNumber';
+import { sanitizeInvoiceNumber, sanitizeFilenamePart } from '../utils/invoiceNumber';
 import { todayLocalISO } from '../utils/format';
 import type { Proposal, Invoice, Contract, Client, UserProfile } from '../types';
 
@@ -17,7 +17,7 @@ export async function exportProposalPDF(
   const doc = createElement(ProposalPDF, { proposal, client, profile }) as any;
   const blob = await pdf(doc).toBlob();
   const date = todayLocalISO();
-  const filename = `Lance_Proposal_${client.name.replace(/\s+/g, '_')}_${date}.pdf`;
+  const filename = `Lance_Proposal_${sanitizeFilenamePart(client.name, 'client')}_${date}.pdf`;
   await saveFile(blob, filename);
 }
 
@@ -29,7 +29,7 @@ export async function exportInvoicePDF(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const doc = createElement(InvoicePDF, { invoice, client, profile }) as any;
   const blob = await pdf(doc).toBlob();
-  const filename = `Lance_Invoice_${sanitizeInvoiceNumber(invoice.invoice_number) || 'INV'}_${client.name.replace(/\s+/g, '_')}.pdf`;
+  const filename = `Lance_Invoice_${sanitizeFilenamePart(sanitizeInvoiceNumber(invoice.invoice_number), 'INV')}_${sanitizeFilenamePart(client.name, 'client')}.pdf`;
   await saveFile(blob, filename);
 }
 
@@ -42,6 +42,6 @@ export async function exportContractPDF(
   const doc = createElement(ContractPDF, { contract, client, profile }) as any;
   const blob = await pdf(doc).toBlob();
   const date = todayLocalISO();
-  const filename = `Lance_Contract_${client.name.replace(/\s+/g, '_')}_${date}.pdf`;
+  const filename = `Lance_Contract_${sanitizeFilenamePart(client.name, 'client')}_${date}.pdf`;
   await saveFile(blob, filename);
 }

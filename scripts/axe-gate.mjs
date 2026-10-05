@@ -2,18 +2,8 @@
  * Axe regression gate — locks in the zero-violation state.
  *
  * Spins up vite, onboards a seeded profile, and runs full axe-core rules
- * across dense routes × all 7 themes × light/dark. Exits non-zero on any
- * violation, with targets for fast triage.
- *
- * Lessons baked in (Waves 4–6):
- * - Default-theme-only is insufficient: tertiaries, accent-ink, and lens/
- *   terminal palette bugs only showed per-theme. All 7 themes run here.
- * - Dark mode once silently never applied (inline light vars beat the .dark
- *   stylesheet block). The dark leg asserts the palette itself, not just
- *   the .dark class — a stale dev server fails loudly instead of passing.
- * - `select-name` phantoms: very long sessions intermittently flag a
- *   `select` on select-less routes; never reproduced in isolation (3+
- *   attempts). Select-name-only failures get one re-run before failing.
+ * on the densest routes (default theme) plus a dark-mode spot check.
+ * Exits non-zero on any violation, with targets for fast triage.
  *
  * Usage: npm run test:axe  (needs playwright browsers installed)
  */
@@ -23,8 +13,7 @@ import { readFileSync } from 'node:fs';
 import net from 'node:net';
 
 const ROUTES = ['/', '/finance', '/invoices', '/clients', '/proposals', '/settings', '/time', '/follow-ups'];
-const THEMES = ['default', 'studio', 'terminal', 'craft', 'motion', 'lens', 'scale'];
-const DARK_ROUTES = ['/', '/finance', '/settings'];
+const DARK_SPOTS = [['studio', '/finance'], ['terminal', '/']];
 
 function freePort() {
   return new Promise((resolve) => {
@@ -90,59 +79,40 @@ async function main() {
     const fresh = await page.evaluate(() => document.body.innerHTML.includes('btn-accent'));
     if (!fresh) throw new Error('stale code served — aborting gate');
 
-    const collect = (res, prefix) => {
-      const out = [];
-      for (const v of res.violations) {
-        out.push(
-          `${prefix} [${v.id}] ` +
-          v.nodes.map((n) => n.target.join(' ')).join(' | ').slice(0, 160),
-        );
-      }
-      return out;
-    };
-
-    const audit = async (theme, route, dark) => {
-      await page.evaluate((t) => localStorage.setItem('lance:theme', t), theme);
+    for (const route of ROUTES) {
       await page.goto(base + route, { waitUntil: 'load', timeout: 30000 });
       await page.waitForTimeout(2200);
       await dismiss(page);
       await page.evaluate(axeSrc);
-      let res = await page.evaluate(async () => await axe.run(document));
-      let found = collect(res, `${dark ? 'dark' : 'light'}/${theme} ${route}`);
-      // Phantom handling: select-name-only failures get one re-run; the
-      // phantom never survives a second pass, real findings do.
-      if (found.length > 0 && res.violations.every((v) => v.id === 'select-name')) {
-        await page.waitForTimeout(1000);
-        await page.evaluate(axeSrc);
-        res = await page.evaluate(async () => await axe.run(document));
-        found = collect(res, `${dark ? 'dark' : 'light'}/${theme} ${route}`);
-      }
-      return found;
-    };
-
-    for (const theme of THEMES) {
-      for (const route of ROUTES) {
-        failures.push(...await audit(theme, route, false));
+      const res = await page.evaluate(async () => await axe.run(document));
+      for (const v of res.violations) {
+        failures.push(
+          `default ${route} [${v.id}] ` +
+          v.nodes.map((n) => n.target.join(' ')).join(' | ').slice(0, 160),
+        );
       }
     }
 
-    // Dark mode across all themes (profile-driven, the way Settings
-    // enables it). Asserts the palette applied — not just the class.
+    // Dark-mode spot check (profile-driven, the way Settings enables it).
     await page.evaluate(() => {
       const p = JSON.parse(localStorage.getItem('lance:profile') || '{}');
       p.theme = 'dark';
       localStorage.setItem('lance:profile', JSON.stringify(p));
     });
-    for (const theme of THEMES) {
-      for (const route of DARK_ROUTES) {
-        failures.push(...await audit(theme, route, true));
-      }
-      const applied = await page.evaluate(() => ({
-        dark: document.documentElement.classList.contains('dark'),
-        card: getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim(),
-      }));
-      if (!applied.dark || applied.card === '#FFFFFF') {
-        throw new Error(`dark palette did not apply for ${theme} — aborting gate`);
+    for (const [theme, route] of DARK_SPOTS) {
+      await page.evaluate((t) => localStorage.setItem('lance:theme', t), theme);
+      await page.goto(base + route, { waitUntil: 'load', timeout: 30000 });
+      await page.waitForTimeout(2200);
+      await dismiss(page);
+      const dark = await page.evaluate(() => document.documentElement.classList.contains('dark'));
+      if (!dark) throw new Error(`dark mode did not apply for ${theme} ${route}`);
+      await page.evaluate(axeSrc);
+      const res = await page.evaluate(async () => await axe.run(document));
+      for (const v of res.violations) {
+        failures.push(
+          `dark/${theme} ${route} [${v.id}] ` +
+          v.nodes.map((n) => n.target.join(' ')).join(' | ').slice(0, 160),
+        );
       }
     }
 

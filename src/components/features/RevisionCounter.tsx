@@ -160,7 +160,7 @@ export default function RevisionCounter({ projectId }: { projectId: string }) {
           {list.map((r) => (
             <div key={r.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
               <div className="flex items-center gap-2">
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] flex-shrink-0 ${r.approved ? 'bg-[var(--accent)] text-white' : 'bg-[var(--border-color)] text-[var(--text-secondary)]'}`}>
+                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] flex-shrink-0 ${r.approved ? 'bg-[var(--accent)] text-[var(--accent-on)]' : 'bg-[var(--border-color)] text-[var(--text-secondary)]'}`}>
                   {r.round_number}
                 </span>
                 <span className="text-[var(--text-primary)]">{r.change_summary || 'No summary'}</span>

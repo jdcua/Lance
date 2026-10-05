@@ -177,7 +177,7 @@ export default function Glossary({ clientId }: { clientId: string }) {
           className={inputClass + ' pl-7'}
         />
         {searchQuery && (
-          <button
+          <button aria-label="Close"
             onClick={() => setSearchQuery('')}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
           >
@@ -285,13 +285,13 @@ export default function Glossary({ clientId }: { clientId: string }) {
                     )}
                   </div>
                   <div className="flex items-center gap-1 ml-2 flex-shrink-0">
-                    <button
+                    <button aria-label="Edit glossary"
                       onClick={() => handleStartEdit(t)}
                       className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] p-0.5"
                     >
                       <Edit3 size={12} />
                     </button>
-                    <button
+                    <button aria-label="Delete glossary"
                       onClick={() => handleDelete(t.id)}
                       className="text-[var(--text-tertiary)] hover:text-[#A32D2D] p-0.5"
                     >

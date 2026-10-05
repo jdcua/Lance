@@ -7,6 +7,7 @@ import { useStore } from '../../store';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, ArrowRight, CheckCircle2, Circle, DollarSign } from 'lucide-react';
+import { parseDateString } from '../../utils/format';
 
 type MilestoneWithDeps = {
   id: string;
@@ -183,7 +184,7 @@ export default function DependencyTracker({ projectId }: { projectId: string }) 
                   </span>
                   {m.due_date && (
                     <span className="text-[10px] text-[var(--text-tertiary)]">
-                      {new Date(m.due_date).toLocaleDateString()}
+                      {parseDateString(m.due_date).toLocaleDateString()}
                     </span>
                   )}
                   {m.invoice_on_completion && (
@@ -192,7 +193,9 @@ export default function DependencyTracker({ projectId }: { projectId: string }) 
                     </span>
                   )}
                 </div>
-                <button onClick={() => handleDelete(m.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                <button
+                  aria-label="Delete dependency tracker"
+                  onClick={() => handleDelete(m.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                   <Trash2 size={12} />
                 </button>
               </div>

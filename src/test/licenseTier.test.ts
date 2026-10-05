@@ -29,9 +29,14 @@ describe('trial tier derivation', () => {
     expect(useStore.getState().getActiveTier()).toBe('pro');
   });
 
-  it('treats a key without a tier as lifetime (legacy)', () => {
+  it('does not infer a paid tier from the mere presence of a key', () => {
+    // This used to return 'lifetime'. A key with no server-recorded tier has no
+    // known tier, and since the offline HMAC key is recoverable from the
+    // shipped binary, "has a key" is not evidence of anything paid. Inferring
+    // 'lifetime' meant a monthly subscriber displayed as Lifetime, and a forged
+    // key would too.
     profile({ license_key: 'LANCE-AAAA-BBBB-CCCC-DDDD' });
-    expect(useStore.getState().getActiveTier()).toBe('lifetime');
+    expect(useStore.getState().getActiveTier()).toBe('free');
   });
 
   it('grants trial through the 37-day grace window', () => {

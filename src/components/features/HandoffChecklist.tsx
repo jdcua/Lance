@@ -186,7 +186,9 @@ export default function HandoffChecklist({ projectId }: { projectId: string }) {
                 </span>
               </button>
               {!isDefault(item) && (
-                <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                <button
+                  aria-label="Delete handoff checklist"
+                  onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                   <Trash2 size={12} />
                 </button>
               )}

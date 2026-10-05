@@ -157,7 +157,9 @@ export default function RemediationTracker({ projectId }: { projectId: string })
                   </span>
                 )}
               </div>
-              <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+              <button
+                aria-label="Delete remediation tracker"
+                onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                 <Trash2 size={12} />
               </button>
             </div>

@@ -505,7 +505,7 @@ export default function Clients() {
   const clientComms = communications.filter((c) => c.client_id === selectedId);
 
   if (loading) return (
-    <div className="flex h-full">
+    <div className="flex flex-col md:flex-row h-full">
       <div className="w-[240px] border-r border-[var(--border-color)] bg-[var(--bg-card)] flex-shrink-0">
         <div className="px-4 py-3 border-b border-[var(--border-color)]">
           <div className="h-4 w-16 bg-[var(--bg-secondary)] rounded skeleton-pulse" />
@@ -524,9 +524,9 @@ export default function Clients() {
   );
 
   return (
-    <div className="flex h-full">
+    <div className="flex flex-col md:flex-row h-full">
       {/* Left panel · client list */}
-      <div className="w-[240px] border-r border-[var(--border-color)] bg-[var(--bg-card)] flex-shrink-0 flex flex-col">
+      <div className="w-full md:w-[240px] border-b md:border-b-0 md:border-r border-[var(--border-color)] bg-[var(--bg-card)] flex-shrink-0 flex flex-col max-h-[38vh] md:max-h-none">
         <div className="px-4 py-3 border-b border-[var(--border-color)] space-y-2">
           <h2 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Clients</h2>
           <LoadError error={clientsError} onRetry={() => loadClients()} />
@@ -580,12 +580,18 @@ export default function Clients() {
       </div>
 
       {/* Right panel · detail */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 min-h-0">
         {!selectedClient ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <Users size={40} className="text-[var(--neutral-border)] mx-auto mb-3" />
-              <p className="text-sm text-[var(--text-secondary)]">Select a client or add a new one.</p>
+            <div className="text-center py-16">
+              <Users size={40} className="text-[var(--text-tertiary)] mx-auto mb-3 opacity-40" />
+              <p className="text-sm font-medium text-[var(--text-primary)]">{clients.length === 0 ? 'No clients yet' : 'Select a client or add a new one.'}</p>
+              {clients.length === 0 && (
+                <>
+                  <p className="text-xs text-[var(--text-tertiary)] mt-1 mb-4">Everything in Lance starts with a client. Add your first to get going.</p>
+                  <button onClick={openNew} className="text-xs font-medium px-3 py-1.5 rounded-[8px] bg-[var(--accent)] text-[var(--accent-on)] hover:opacity-90">Add your first client</button>
+                </>
+              )}
             </div>
           </div>
         ) : (() => {
@@ -728,7 +734,7 @@ export default function Clients() {
                                   onClick={() => setLogForm({ ...logForm, type: t })}
                                   className={`flex items-center gap-1 px-3 py-1.5 rounded-[6px] text-xs transition-colors ${
                                     logForm.type === t
-                                      ? 'bg-[var(--accent)] text-white'
+                                      ? 'bg-[var(--accent)] text-[var(--accent-on)]'
                                       : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
                                   }`}
                                 >
@@ -853,7 +859,9 @@ export default function Clients() {
                         >
                           Save template
                         </button>
-                        <button onClick={() => setShowTemplatePrompt(false)} className="p-0.5 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
+                        <button
+                          aria-label="Close"
+                          onClick={() => setShowTemplatePrompt(false)} className="p-0.5 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
                           <X size={14} />
                         </button>
                       </div>
@@ -937,7 +945,7 @@ export default function Clients() {
                               </Badge>
                             </div>
                             <div className="flex items-center gap-1">
-                              <button
+                              <button aria-label="Edit clients"
                                 onClick={() => {
                                   setEditingMetric(def);
                                   setMetricForm({
@@ -970,7 +978,7 @@ export default function Clients() {
                                   </button>
                                 </>
                               ) : (
-                              <button
+                              <button aria-label="Delete clients"
                                 onClick={() => setMetricDeleteConfirm(def.id)}
                                 className="p-1 rounded-[6px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
                               >
@@ -1063,7 +1071,9 @@ export default function Clients() {
                                 />
                               </div>
                               <Button size="sm" onClick={() => handleLogValue(def.id)}>Log</Button>
-                              <button onClick={() => setShowValueForm(null)} className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
+                              <button
+                                aria-label="Close"
+                                onClick={() => setShowValueForm(null)} className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
                                 <X size={14} />
                               </button>
                             </div>

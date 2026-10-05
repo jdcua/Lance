@@ -1,17 +1,23 @@
-/* Lance trial service worker — handwritten, full offline app.
+/* Lance trial service worker, handwritten, full offline app.
  * Same-origin only. No analytics, no push, no background sync.
  * Versioned cache so each release replaces the last cleanly.
  * Install precaches the shell, then every build asset (via the
  * asset-manifest.json the build writes), so ANY route works offline after
- * one visit — even routes never opened while online. Runtime caching keeps
+ * one visit, even routes never opened while online. Runtime caching keeps
  * warming the cache afterwards. Review in one sitting.
  */
 'use strict';
 
 // Replaced at build time with "<version>-<shorthash>" so each deploy gets
 // fresh bytes (service workers only update when the script changes).
+// Replaced at build time with "<version>-<shorthash>" so each deploy gets
+// fresh bytes (service workers only update when the script changes).
 var BUILD_ID = '__TRIAL_BUILD_ID__';
-var CACHE = 'lance-trial-v0.9.9-1';
+// Key the cache on BUILD_ID, not just the version. A version-only name meant two
+// deploys at the same version shared a cache, `activate` deleted nothing, and a
+// superseded (possibly vulnerable) chunk stayed on the user's disk forever, a
+// privacy fix that shipped without a version bump would never land.
+var CACHE = 'lance-trial-' + BUILD_ID;
 var SHELL = ['/try/', '/try/index.html', '/try/manifest.trial.webmanifest'];
 
 function isSameOrigin(url) {
@@ -50,7 +56,7 @@ self.addEventListener('install', function (event) {
 /**
  * Cache every build asset so unvisited routes work offline too.
  * Best-effort: one bad file must not fail the install. Fetched in small
- * parallel batches — 200+ sequential round-trips would keep the worker in
+ * parallel batches, 200+ sequential round-trips would keep the worker in
  * "installing" for a minute, during which it controls nothing.
  */
 var PRECACHE_BATCH = 6;
@@ -73,7 +79,17 @@ function precacheAll() {
           if (group.length === 0) return Promise.resolve();
           return Promise.all(
             group.map(function (path) {
-              return cache.add('/try/' + path).catch(function () {
+              // The install path never goes through shouldCache(), so validate
+              // here too: '/try/' + '../../api/x' resolves outside the trial.
+              var target;
+              try {
+                target = new URL('/try/' + path, self.location.origin);
+              } catch (e) {
+                return Promise.resolve(null);
+              }
+              if (target.origin !== self.location.origin) return Promise.resolve(null);
+              if (target.pathname.indexOf('/try/') !== 0) return Promise.resolve(null);
+              return cache.add(target.pathname).catch(function () {
                 return null;
               });
             }),

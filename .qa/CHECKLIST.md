@@ -20,6 +20,61 @@ Status legend:
 
 ---
 
+## 2026-10-02 AUTOMATED PASS
+
+Full exploratory pass. Findings, fixes and re-run instructions:
+`.qa/QA-REPORT.md`. **10 defects found, 10 fixed, 0 open.**
+
+This section records only what the automated pass *proved* — the sweep drove all
+16 routes in 8 theme/viewport/density conditions, plus a red-team pass (XSS,
+corrupt storage, hostile input, 60-record scale, timer race). Items not listed
+here are NOT covered; treat the original list below as still open unless a
+person walks it.
+
+### Proved working by this pass
+- [x] Every route renders with **0 console/page errors, 0 failed requests**
+      (`/`, `/clients`, `/projects`, `/time`, `/invoices`, `/finance`,
+      `/insights`, `/proposals`, `/contracts`, `/follow-ups`, `/settings`,
+      `/achievements`, `/assets`, `/search`, `/archetype`, 404)
+- [x] No horizontal overflow / clipped labels / broken images at 1280/1440/1920,
+      light + dark, 125% text scale, compact density
+- [x] XSS: poisoned client name/company/email/tags/notes execute nothing on any
+      route; portal sanitizer is a DOM allowlist rebuild, not a regex filter
+- [x] Corrupt storage: garbage JSON, wrong-shaped values, null rows, `1e21`
+      totals and `"not-a-date"` all degrade with 0 console errors
+- [x] Hostile input: 1000-char + emoji + RTL save and render, no overflow
+- [x] Scale: 60 clients interactive in ~2.0 s
+- [x] Timer race: 5 rapid Cmd+Shift+T toggles open exactly 1 timer
+- [x] Delete a client → **blocked** while time entries / communications /
+      keywords exist (previously deleted the hours silently)
+- [x] Delete a project → **blocked** while shoot/build/revision/session/
+      keyword/dataset/render logs exist (previously destroyed them silently)
+- [x] Backup round-trip in browser mode: 36 tables discovered (was 35),
+      81 rows imported, 0 failures, `project_phases` restored intact
+- [x] Follow-up log returns real rows (`get_all_follow_up_logs` was always `[]`)
+- [x] Accessibility: 0 unnamed controls; 187 icon buttons labelled; every
+      theme/mode meets WCAG AA on accent-filled labels (was 6 of 7 failing)
+- [x] `tsc --noEmit` clean · ESLint 0 errors · 220 unit tests · `cargo test` ok ·
+      production build clean · e2e 2 passed
+- [x] Final sweep: **128/128** route × condition combinations clean (0 console
+      errors, 0 axe violations, 0 overflow, 0 clipped, 0 junk text, 0 nameless
+      controls)
+
+### Fixed by this pass (previously broken)
+- [!] Onboarding step 1 had no Continue button — new users were trapped
+- [!] Deleting a client destroyed logged billable hours + comms silently
+- [!] Deleting a project destroyed archetype work logs silently
+- [!] One null row in any table blanked the whole app
+- [!] Browser-mode backups dropped every archetype table but said "success"
+- [!] Follow-up log always empty in the browser
+- [!] Repo's e2e spec asserted a 4-step onboarding that no longer exists
+- [!] 187 icon-only buttons had no accessible name (axe critical)
+- [!] White-on-accent failed WCAG AA in 6 of 7 themes (axe serious)
+- [!] Service worker registered at an HTML path → MIME console error each load
+- [!] Escape did not close the tour intro dialog
+
+---
+
 ## CORE FLOWS
 
 ### Clients

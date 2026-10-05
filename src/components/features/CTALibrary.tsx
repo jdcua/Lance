@@ -220,7 +220,9 @@ export default function CTALibrary({ projectId }: { projectId: string }) {
                   )}
                   {cta.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">{cta.notes}</span>}
                 </div>
-                <button onClick={() => handleDelete(cta.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                <button
+                  aria-label="Delete cta library"
+                  onClick={() => handleDelete(cta.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                   <Trash2 size={12} />
                 </button>
               </div>

@@ -174,7 +174,9 @@ export default function AutomationTracker({ projectId }: { projectId: string }) 
                 <button onClick={() => handleToggleStatus(a.id, a.status)} className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))]" title={a.status === 'active' ? 'Deactivate' : 'Activate'}>
                   {a.status === 'active' ? <Pause size={12} /> : <Play size={12} />}
                 </button>
-                <button onClick={() => handleDelete(a.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                <button
+                  aria-label="Delete automation tracker"
+                  onClick={() => handleDelete(a.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                   <Trash2 size={12} />
                 </button>
               </div>

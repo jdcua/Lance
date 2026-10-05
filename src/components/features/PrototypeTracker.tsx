@@ -197,7 +197,9 @@ export default function PrototypeTracker({ projectId }: { projectId: string }) {
                   <td className="py-1.5 px-2 text-[var(--text-secondary)] max-w-[200px] truncate">{p.feedback || '--'}</td>
                   <td className="py-1.5 px-2 text-[var(--text-tertiary)]">{formatDate(p.created_at)}</td>
                   <td className="py-1.5 px-2">
-                    <button onClick={() => handleDelete(p.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                    <button
+                      aria-label="Delete prototype tracker"
+                      onClick={() => handleDelete(p.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                       <Trash2 size={12} />
                     </button>
                   </td>

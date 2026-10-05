@@ -172,7 +172,9 @@ export default function ClientSearchTracker({ clientId }: { clientId: string }) 
                   >
                     {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
                   </select>
-                  <button onClick={() => handleDelete(search.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                  <button
+                    aria-label="Delete client search tracker"
+                    onClick={() => handleDelete(search.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                     <Trash2 size={12} />
                   </button>
                 </div>

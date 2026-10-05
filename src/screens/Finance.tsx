@@ -482,7 +482,11 @@ export default function Finance() {
             <Card>
               <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Monthly Overview{hasMixedCurrencies ? ' · per currency' : ''}</h2>
               {allMonths.length === 0 ? (
-                <p className="text-xs text-[var(--text-secondary)]">No data yet.</p>
+                <div className="text-center py-8">
+                  <BarChart3 size={32} className="mx-auto mb-2 text-[var(--text-tertiary)] opacity-40" />
+                  <p className="text-xs text-[var(--text-secondary)]">No data yet.</p>
+                  <p className="text-[11px] text-[var(--text-tertiary)] mt-1">Paid invoices and expenses will show up here by month.</p>
+                </div>
               ) : (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-[10px] uppercase tracking-wide text-[var(--text-secondary)]">
@@ -1231,7 +1235,7 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
   return (
     <>
       {/* Summary cards */}
-      <div className="grid grid-cols-5 gap-3 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
         {bucketOrder.map((bucket) => (
           <div key={bucket} style={{ borderTop: `3px solid ${bucketColor[bucket]}` }}>
             <Card className="text-center">
@@ -1263,11 +1267,11 @@ function AgingReport({ invoices, payments, getClientName, fmt, addPayment, updat
                 ['days_overdue', 'Days Overdue'],
                 ['status', 'Status'],
               ] as [AgingSortKey, string][]).map(([key, label]) => (
-                <th key={key} className="text-left px-3 py-2 font-medium text-[var(--text-secondary)] cursor-pointer hover:text-[var(--text-primary)] select-none whitespace-nowrap" onClick={() => toggleSort(key)}>
+                <th key={key} scope="col" aria-sort={sortKey === key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left px-3 py-2 font-medium text-[var(--text-secondary)] cursor-pointer hover:text-[var(--text-primary)] select-none whitespace-nowrap" onClick={() => toggleSort(key)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSort(key); } }} tabIndex={0}>
                   <span className="flex items-center gap-1">{label}<SortIcon col={key} /></span>
                 </th>
               ))}
-              <th className="text-right px-3 py-2 font-medium text-[var(--text-secondary)]">Action</th>
+              <th scope="col" className="text-right px-3 py-2 font-medium text-[var(--text-secondary)]">Action</th>
             </tr>
           </thead>
           <tbody>

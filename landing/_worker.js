@@ -28,6 +28,7 @@ async function getLatestRelease(env) {
 }
 
 function findAsset(release, os) {
+  if (!Object.hasOwn(OS_ASSET_SUFFIX, os)) return null;
   const suffixes = OS_ASSET_SUFFIX[os];
   if (!release || !suffixes) return null;
   const assets = release.assets || [];
@@ -35,7 +36,9 @@ function findAsset(release, os) {
 }
 
 async function handleDownload(os, env) {
-  if (!OS_ASSET_SUFFIX[os]) {
+  // Object.hasOwn, not truthiness: inherited keys (constructor, toString,
+  // __proto__, 12 more) passed a `!OS_ASSET_SUFFIX[os]` check and threw a 500.
+  if (!Object.hasOwn(OS_ASSET_SUFFIX, os)) {
     return Response.json({ error: 'unknown platform' }, { status: 404 });
   }
   if (!env.GITHUB_TOKEN) {
@@ -70,41 +73,67 @@ const UPDATER_BUNDLES = [
   { platforms: ['windows-x86_64'], suffix: '-setup.exe' },
 ];
 
+// Floor for the updater manifest. A client on an older build than this should be
+// told to download fresh rather than auto-update, because the older build cannot
+// be trusted to check anything. Bump this in the same commit that ships a
+// security fix older clients need.
+const MIN_SUPPORTED_VERSION = '0.9.0';
+
 async function handleUpdatesLatest(request, env) {
-  // Temporary local-release mode: when landing/downloads/manifest.json
-  // exists, serve ONLY what it provides. Unsigned builds offer no updater
-  // entries (mac users install via the download button); win/linux entries
-  // are omitted rather than mislabeled with a version they don't match.
-  // No manifest → full matrix from the latest GitHub release.
-  const manifest = await getLocalManifest(request, env);
   const origin = new URL(request.url).origin;
-  if (manifest) {
-    const platforms = {};
-    const localMac = manifest.mac && manifest.mac.bundle && manifest.mac.bundleSignature;
-    if (localMac) {
-      const url = `${origin}/api/updates/download-local/${encodeURIComponent(manifest.mac.bundle)}`;
-      for (const key of UPDATER_BUNDLES[0].platforms)
-        platforms[key] = { url, signature: manifest.mac.bundleSignature };
-    }
-    if (Object.keys(platforms).length === 0) {
-      return Response.json({ error: 'no signed updater bundles yet' }, { status: 404 });
-    }
-    const notes = String(manifest.notes || 'Bug fixes and improvements')
-      .replace(/[\n\r]+/g, ' ')
-      .trim();
-    return Response.json(
-      { version: manifest.version, notes, pub_date: null, platforms },
-      {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Cache-Control': 'public, max-age=300, s-maxage=600',
+
+  // Local-release override, opt-in via `?local=1` ONLY.
+  //
+  // This used to short-circuit whenever landing/downloads/manifest.json merely
+  // EXISTED. That file is a hand-made local artifact (it shipped with a `dmg`
+  // and no bundle/signature), so the endpoint answered 404 for every user
+  // forever: auto-update was non-functional, and every install stayed pinned to
+  // whatever build it had. A user with a security fix shipped could never
+  // receive it.
+  //
+  // The release workflow generates a properly signed latest.json and attaches it
+  // to the GitHub release, so the release is the source of truth and the static
+  // file is only for local testing.
+  if (new URL(request.url).searchParams.get('local') === '1') {
+    const localManifest = await getLocalManifest(request, env);
+    if (localManifest) {
+      const platforms = {};
+      const localMac =
+        localManifest.mac && localManifest.mac.bundle && localManifest.mac.bundleSignature;
+      if (localMac) {
+        const url = `${origin}/api/updates/download-local/${encodeURIComponent(localManifest.mac.bundle)}`;
+        for (const key of UPDATER_BUNDLES[0].platforms)
+          platforms[key] = { url, signature: localManifest.mac.bundleSignature };
+      }
+      if (Object.keys(platforms).length === 0) {
+        return Response.json(
+          { error: 'no local signed bundle (expected mac.bundle + signature)' },
+          { status: 404 },
+        );
+      }
+      const notes = String(localManifest.notes || 'Local build')
+        .replace(/[\n\r]+/g, ' ')
+        .trim();
+      return Response.json(
+        { version: localManifest.version, notes, pub_date: null, platforms },
+        {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Cache-Control': 'no-store',
+            'X-Lance-Updater-Source': 'local-override',
+          },
         },
-      },
-    );
+      );
+    }
   }
+
   if (!env.GITHUB_TOKEN) {
     return Response.json({ error: 'server misconfigured' }, { status: 500 });
   }
+  if (!outboundBudgetAvailable()) {
+    return Response.json({ error: 'service busy, try again later' }, { status: 503 });
+  }
+  spendOutbound();
   const release = await getLatestRelease(env);
   if (!release) {
     return Response.json({ error: 'upstream unavailable' }, { status: 502 });
@@ -133,7 +162,18 @@ async function handleUpdatesLatest(request, env) {
     .replace(/[\n\r]+/g, ' ')
     .trim();
   return Response.json(
-    { version, notes, pub_date: release.published_at || null, platforms },
+    {
+      version,
+      notes,
+      pub_date: release.published_at || null,
+      platforms,
+      // Lets the client refuse a manifest that is older than one it has already
+      // seen. There is no signature over this manifest, so someone who can write
+      // the worker's ASSETS could otherwise pin every install onto a previously
+      // signed but now-vulnerable bundle; the signature would verify, because it
+      // IS a genuine signature. The client-side high-water mark is the check.
+      min_supported_version: MIN_SUPPORTED_VERSION,
+    },
     {
       headers: {
         'Access-Control-Allow-Origin': '*',
@@ -143,11 +183,27 @@ async function handleUpdatesLatest(request, env) {
   );
 }
 
+// A malformed percent-escape (`/api/updates/download/%`) throws URIError, which
+// surfaced as a 500. Asset names are [A-Za-z0-9._-] by construction, so reject
+// anything else before decoding rather than catching the throw.
+function safeDecodeName(raw) {
+  const value = String(raw || '');
+  if (!/^[A-Za-z0-9._-]*$/.test(value)) return null;
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return null;
+  }
+}
+
 async function handleUpdatesDownload(filename, env) {
   if (!env.GITHUB_TOKEN) {
     return Response.json({ error: 'server misconfigured' }, { status: 500 });
   }
-  const name = decodeURIComponent(filename || '');
+  const name = safeDecodeName(filename);
+  if (name === null) {
+    return Response.json({ error: 'bad request' }, { status: 400 });
+  }
   const release = await getLatestRelease(env);
   // Exact-name match against the latest release only: no path traversal,
   // no arbitrary-URL proxying.
@@ -198,6 +254,11 @@ async function getLocalManifest(request, env) {
 }
 
 async function serveLocalFile(request, env, filename, contentType) {
+  // Defence in depth. Both callers already compare `filename` against a value in
+  // the checked-in manifest, but that safety lives at the call site. A manifest
+  // value containing `../` would turn this into a traversal primitive, so the
+  // filename is validated where it becomes a path.
+  if (!/^[A-Za-z0-9._-]+$/.test(filename)) return null;
   const res = await env.ASSETS.fetch(new Request(new URL(`/downloads/${filename}`, request.url)));
   if (!res.ok || !res.body) return null;
   const headers = new Headers();
@@ -211,7 +272,7 @@ async function serveLocalFile(request, env, filename, contentType) {
 }
 
 // Anonymous A/B counters: first-party, aggregate only. Payload is
-// {exp, variant, goal} — no IP storage, no fingerprint, hourly buckets.
+// {exp, variant, goal}, no IP storage, no fingerprint, hourly buckets.
 // Mirrors scripts/promo/exp-beacon.mjs (kept in sync); counts feed
 // promo/exp-report.md via GET /api/exp-report.
 const expCounters = new Map();
@@ -230,15 +291,15 @@ function recordExpHit(exp, variant, goal) {
   variant = String(variant || '').slice(0, 8);
   goal = String(goal || '').slice(0, 24);
   if (!/^[a-z0-9-]+$/.test(exp) || !/^[ABC]$/.test(variant) || !EXP_GOALS.has(goal)) return false;
+  // Hard cap. The previous sweep only removed keys from *other* hours, so an
+  // attacker sending distinct `exp` values inside one hour grew the map without
+  // limit, and /api/exp-report is unauthenticated, so its cost is charged on
+  // every public GET. Reject once full rather than sweeping.
+  if (expCounters.size >= 5000 && !expCounters.has(`${exp}:${variant}:${goal}`)) {
+    return false;
+  }
   const k = `${exp}:${variant}:${goal}:${expHour()}`;
   expCounters.set(k, (expCounters.get(k) || 0) + 1);
-  if (expCounters.size > 5000) {
-    const cutoff = expHour();
-    for (const key of expCounters.keys()) {
-      if (!key.endsWith(cutoff)) expCounters.delete(key);
-      if (expCounters.size <= 3000) break;
-    }
-  }
   return true;
 }
 
@@ -250,6 +311,36 @@ function expReport() {
     out[exp][variant][goal] = (out[exp][variant][goal] || 0) + n;
   }
   return out;
+}
+
+// ── Global outbound budget ──
+//
+// Every rate limit here is per-IP, which means the ceiling scales with the
+// attacker's IP supply. With 2000 live IPs at 3 submissions/hour, an attacker
+// can drive ~6000 GitHub API calls/hour against the single shared
+// GITHUB_TOKEN (rated at 5000/hour) and exhaust it inside an hour, at which
+// point /api/release and every download route start failing for REAL visitors.
+//
+// A per-IP limit does not protect a shared upstream quota. This does: one
+// module-level hourly ceiling on outbound calls, checked before spending.
+const OUTBOUND_MAX_PER_HOUR = 400;
+
+let outboundSpent = 0;
+let outboundHour = 0;
+
+/** True when there is still room to make an upstream call this hour. */
+function outboundBudgetAvailable() {
+  const hour = Math.floor(Date.now() / 3_600_000);
+  if (hour !== outboundHour) {
+    outboundHour = hour;
+    outboundSpent = 0;
+  }
+  return outboundSpent < OUTBOUND_MAX_PER_HOUR;
+}
+
+/** Record one upstream call. Call only after deciding to actually make it. */
+function spendOutbound() {
+  outboundSpent += 1;
 }
 
 // Anonymous download counts per OS + waitlist signups. Same discipline as
@@ -324,15 +415,18 @@ async function handleCreateIssue(request, env) {
   // Honeypot: bots fill it, humans never see it.
   if (body.company_hp) return Response.json({ ok: true });
   const name = String(body.name || '')
+    .replace(/[\r\n]/g, ' ')
     .trim()
     .slice(0, 100);
   const email = String(body.email || '')
     .trim()
     .slice(0, 200);
   const title = String(body.title || '')
+    .replace(/[\r\n]/g, ' ')
     .trim()
     .slice(0, 120);
   const details = String(body.details || '')
+    .replace(/\r\n/g, '\n')
     .trim()
     .slice(0, 3000);
   if (
@@ -349,6 +443,14 @@ async function handleCreateIssue(request, env) {
   if (!env.GITHUB_TOKEN) {
     return Response.json({ error: 'server misconfigured' }, { status: 500 });
   }
+  // Global budget BEFORE the per-IP check. Every limit here is per-IP, so the
+  // ceiling scales with the attacker's IP supply: 2000 live IPs at 3/hour is
+  // ~6000 GitHub calls/hour against a token rated 5000/hour, which exhausts the
+  // shared quota inside an hour and breaks /api/release for every real visitor.
+  // 503 says "try later" honestly; a 429 would keep inviting more attempts.
+  if (!outboundBudgetAvailable()) {
+    return Response.json({ error: 'service busy, try again later' }, { status: 503 });
+  }
   const ip = request.headers.get('cf-connecting-ip') || 'unknown';
   if (issueRateLimited(ip)) {
     return Response.json({ error: 'too many reports, try again later' }, { status: 429 });
@@ -358,6 +460,10 @@ async function handleCreateIssue(request, env) {
     body: `Reported via the Lance landing page.\n\nReporter: ${name} <${email}>\n\n${details}`,
     labels: ['user-report'],
   };
+  // One submission can cost TWO upstream calls (the 422 unlabeled retry), so
+  // budget for both rather than discovering the second one mid-flight.
+  spendOutbound();
+  spendOutbound();
   const postIssue = (p) =>
     fetch('https://api.github.com/repos/jdcua/Lance/issues', {
       method: 'POST',
@@ -407,6 +513,54 @@ const TRIAL_CSP = [
 
 function isTrialPath(pathname) {
   return pathname === '/try' || pathname.startsWith('/try/');
+}
+
+// Constant-time string compare for bearer tokens. Length is compared first,
+// which leaks length, acceptable here because the compared value is a header
+// the caller already controls.
+function safeEqual(a, b) {
+  const ba = new TextEncoder().encode(a);
+  const bb = new TextEncoder().encode(b);
+  if (ba.length !== bb.length) return false;
+  let out = 0;
+  for (let i = 0; i < ba.length; i++) out |= ba[i] ^ bb[i];
+  return out === 0;
+}
+
+// Marketing, legal, and promo pages. They hold no user data, but they still
+// load script and post forms, so they get a real policy instead of nothing.
+//
+// Why this can be stricter than the trial on script-src: every executable
+// script in these pages is a same-origin file (app.js, ab-activator.js,
+// launch-*.js). The only inline <script> blocks are application/ld+json and
+// application/json data, which CSP does not treat as scripts. The trial needs
+// 'unsafe-inline' only because its theme pre-paint bootstrap is inline.
+// 'unsafe-inline' for style-src is required, the pages set CSS custom
+// properties through ~30 inline style attributes for animation staggering.
+const LANDING_CSP = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline' https://fonts.bunny.net",
+  "font-src 'self' https://fonts.bunny.net",
+  "img-src 'self' data: blob:",
+  "connect-src 'self'",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+].join('; ');
+
+// Only HTML carries a CSP: applying it to CSS/JS/image responses is noise.
+function landingResponse(res) {
+  const type = res.headers.get('Content-Type') || '';
+  if (!type.includes('text/html')) return res;
+  const headers = new Headers(res.headers);
+  headers.set('Content-Security-Policy', LANDING_CSP);
+  headers.set('X-Content-Type-Options', 'nosniff');
+  headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  headers.set('X-Frame-Options', 'DENY');
+  headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  return new Response(res.body, { status: res.status, headers });
 }
 
 function trialResponse(res) {
@@ -466,17 +620,20 @@ export default {
     }
 
     if (url.pathname === '/api/updates/latest.json') {
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        return Response.json({ error: 'method not allowed' }, { status: 405 });
+      }
       return handleUpdatesLatest(request, env);
     }
 
     if (url.pathname.startsWith('/api/updates/download-local/')) {
       // Temporary local-release override: only the exact bundle named in the
       // checked-in manifest is servable.
-      const filename = decodeURIComponent(
+      const filename = safeDecodeName(
         url.pathname.slice('/api/updates/download-local/'.length).split('/')[0] || '',
       );
       const manifest = await getLocalManifest(request, env);
-      if (!manifest?.mac?.bundle || filename !== manifest.mac.bundle) {
+      if (filename === null || !manifest?.mac?.bundle || filename !== manifest.mac.bundle) {
         return Response.json({ error: 'asset not found' }, { status: 404 });
       }
       const local = await serveLocalFile(request, env, filename, 'application/gzip');
@@ -498,12 +655,22 @@ export default {
     }
 
     if (url.pathname === '/api/exp-report') {
-      return Response.json(
-        { ...expReport(), _totals: totalsReport() },
-        {
-          headers: { 'Cache-Control': 'no-store' },
-        },
-      );
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        return Response.json({ error: 'method not allowed' }, { status: 405 });
+      }
+      // The A/B breakdown and per-OS download counts are launch metrics, a
+      // competitor reading them free costs conversion rate and privacy noise.
+      // Gate the detail behind REPORT_TOKEN when it is set; when it is not, serve
+      // the totals only rather than publishing the experiment board by default.
+      const authed =
+        env.REPORT_TOKEN &&
+        safeEqual(request.headers.get('Authorization') || '', `Bearer ${env.REPORT_TOKEN}`);
+      const body = authed
+        ? { ...expReport(), _totals: totalsReport() }
+        : { _totals: totalsReport() };
+      return Response.json(body, {
+        headers: { 'Cache-Control': 'no-store' },
+      });
     }
 
     if (url.pathname.startsWith('/api/download/')) {
@@ -580,7 +747,7 @@ export default {
               from: env.CONTACT_FROM || 'Lance waitlist <onboarding@resend.dev>',
               to: [email],
               subject: "You're on the Lance v2 list",
-              text: `You're on the list — one email when Lance v2 (local, on-device AI drafting) ships. Nothing else, ever.\n\nDidn't sign up? Ignore this email.\nWant off the list anytime? Reply "forget me".\n\n— Lance (your business data stays on your device)`,
+              text: `You're on the list, one email when Lance v2 (local, on-device AI drafting) ships. Nothing else, ever.\n\nDidn't sign up? Ignore this email.\nWant off the list anytime? Reply "forget me".\n\n, Lance (your business data stays on your device)`,
             }),
           });
         } catch {
@@ -605,13 +772,18 @@ export default {
       } catch {
         return Response.json({ error: 'invalid JSON' }, { status: 400 });
       }
+      // Strip control characters: `name` flows into an outbound Subject and a
+      // Reply-To name-addr pair, so a CRLF in it is header injection into mail
+      // we send. `email` is regex-validated below and cannot carry CR/LF.
       const name = String(body.name || '')
+        .replace(/[\r\n<>"]/g, ' ')
         .trim()
         .slice(0, 100);
       const email = String(body.email || '')
         .trim()
         .slice(0, 200);
       const message = String(body.message || '')
+        .replace(/\r\n/g, '\n')
         .trim()
         .slice(0, 2000);
       // Honeypot: bots fill it, humans never see it.
@@ -621,6 +793,12 @@ export default {
           { error: 'name, a valid email, and a message are required' },
           { status: 400 },
         );
+      }
+      // Rate limit: this route sends outbound email, so without a cap it is
+      // a free mail relay for whoever finds the form first.
+      const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+      if (issueRateLimited(ip)) {
+        return Response.json({ error: 'too many requests, try again later' }, { status: 429 });
       }
 
       try {
@@ -689,16 +867,21 @@ export default {
       '/templates': '/templates/index.html',
     };
     if (STATIC_PAGES[url.pathname]) {
-      return env.ASSETS.fetch(new Request(new URL(STATIC_PAGES[url.pathname], request.url)));
+      const res = await env.ASSETS.fetch(
+        new Request(new URL(STATIC_PAGES[url.pathname], request.url)),
+      );
+      return landingResponse(res);
     }
 
     // Promo SEO pages: /craft/<id>, /alternatives/<slug>, /use/<slug> resolve
     // to their static .html files (generated by scripts/promo/build.mjs).
     const SEO_DIR = /^\/(craft|alternatives|use|tools|rates|templates)\/[^/.]+$/;
     if (SEO_DIR.test(url.pathname)) {
-      return env.ASSETS.fetch(new Request(new URL(url.pathname + '.html', request.url)));
+      const res = await env.ASSETS.fetch(new Request(new URL(url.pathname + '.html', request.url)));
+      return landingResponse(res);
     }
 
-    return env.ASSETS.fetch(request);
+    // Everything else (static assets, /, and any page not listed above).
+    return landingResponse(await env.ASSETS.fetch(request));
   },
 };

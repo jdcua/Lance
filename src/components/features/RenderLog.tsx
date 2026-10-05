@@ -69,7 +69,9 @@ export default function RenderLog({ projectId }: { projectId: string }) {
                   {log.frame_range && <><Layers size={10} className="inline mr-0.5 ml-1" />{log.frame_range}</>}
                 </span>
               </div>
-              <button onClick={() => removeRenderLog(log.id, projectId)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+              <button
+                aria-label="Delete render log"
+                onClick={() => removeRenderLog(log.id, projectId)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                 <Trash2 size={12} />
               </button>
             </div>

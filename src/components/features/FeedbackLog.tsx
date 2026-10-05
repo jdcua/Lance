@@ -223,7 +223,9 @@ export default function FeedbackLog({ clientId }: { clientId: string }) {
                   </div>
                   <p className={`text-[var(--text-primary)] leading-relaxed ${f.actioned ? 'opacity-60' : ''}`}>{f.summary}</p>
                 </div>
-                <button onClick={() => handleDelete(f.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] flex-shrink-0 mt-0.5">
+                <button
+                  aria-label="Delete feedback log"
+                  onClick={() => handleDelete(f.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] flex-shrink-0 mt-0.5">
                   <Trash2 size={12} />
                 </button>
               </div>

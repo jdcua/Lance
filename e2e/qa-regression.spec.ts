@@ -30,6 +30,9 @@ test.describe('regression: fixed first-run flows', () => {
     // onboarding is active (no stacking), and dismissed for the session.
     await page.waitForTimeout(800);
     await shot(page, '20-onboarding-first.png');
+    // Wait for the dialog itself before asserting its contents: the modal
+    // animates in, and asserting children first races the entrance.
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 15_000 });
     await expect.soft(page.getByText('Set up Lance')).toBeVisible({ timeout: 10_000 });
     const splashOnFirstRun = await page
       .getByRole('dialog', { name: 'Lance Pro' })
@@ -38,17 +41,25 @@ test.describe('regression: fixed first-run flows', () => {
     console.log('splash stacked over onboarding (want false):', splashOnFirstRun);
     expect(splashOnFirstRun).toBe(false);
 
-    // 2. Onboarding v2 shell: title, labeled stepper, skip link, wider modal.
-    await expect.soft(page.getByText('Set up Lance')).toBeVisible({ timeout: 10_000 });
-    await expect.soft(page.getByText('Step 1 of 4 · Your craft')).toBeVisible();
+    // 2. Onboarding shell: title, labeled stepper, skip link, wider modal.
+    //    Five steps now — Comfort leads, then Your craft / profile / theme /
+    //    Rates & data. Step 1 must offer a way forward: it used to render the
+    //    Comfort panel with no Continue button, so a first-run user was stuck
+    //    there and could only bail out via "Skip setup".
+    await expect.soft(page.getByText('Step 1 of 5 · Comfort')).toBeVisible();
     await expect.soft(page.getByRole('button', { name: 'Skip setup' })).toBeVisible();
+    await expect
+      .soft(page.getByRole('button', { name: /Continue/ }))
+      .toBeVisible({ timeout: 5000 });
     await shot(page, '21-onboarding-step1-v2.png');
 
-    // 3. X = finish later (from step 2, so there is progress to resume):
-    // closes WITHOUT completing; reload resumes with banner.
+    // 3. X = finish later (from the profile step, so there is progress to
+    // resume): closes WITHOUT completing; reload resumes with banner.
+    await page.getByRole('button', { name: /Continue/ }).click();
+    await expect.soft(page.getByText('Step 2 of 5 · Your craft')).toBeVisible({ timeout: 10_000 });
     await page.getByRole('button', { name: 'Developer / Engineer' }).click();
     await page.getByRole('button', { name: /Continue/ }).click();
-    await expect.soft(page.getByText('Step 2 of 4 · Your profile')).toBeVisible({ timeout: 10_000 });
+    await expect.soft(page.getByText('Step 3 of 5 · Your profile')).toBeVisible({ timeout: 10_000 });
     await page.getByRole('button', { name: 'Close dialog' }).click();
     await page.waitForTimeout(400);
     const completedAfterX = await page.evaluate(() =>
@@ -63,34 +74,72 @@ test.describe('regression: fixed first-run flows', () => {
     });
     await shot(page, '22-onboarding-resume.png');
 
-    // 4. Walk through to the end with sample data (resumed on step 2,
-    // profession carried over from the persisted profile).
-    await expect.soft(page.getByText('Step 2 of 4 · Your profile')).toBeVisible({ timeout: 10_000 });
+    // 4. Walk through to the end with sample data (resumed on the profile
+    // step, profession carried over from the persisted profile).
+    await expect
+      .soft(page.getByText('Step 3 of 5 · Your profile'))
+      .toBeVisible({ timeout: 10_000 });
     await page.getByPlaceholder('Your full name').fill('QA Tester');
     await page.getByPlaceholder('you@example.com').fill('qa@example.com');
     await page.getByRole('button', { name: /Continue/ }).click();
-    await expect.soft(page.getByText('Step 3 of 4 · Your theme')).toBeVisible({ timeout: 10_000 });
-    await shot(page, '23-onboarding-step3-v2.png');
+    await expect.soft(page.getByText('Step 4 of 5 · Your theme')).toBeVisible({ timeout: 10_000 });
+    await shot(page, '23-onboarding-step4.png');
     await page.getByRole('button', { name: /Continue/ }).click();
     await expect.soft(page.getByText('Rates & sample data')).toBeVisible({ timeout: 10_000 });
-    await shot(page, '24-onboarding-step4-v2.png');
+    await shot(page, '24-onboarding-step5.png');
     await page.getByText('Yes, show me around').click();
 
-    // 5. Tour finale CTA: "Add your first client" → /clients + New Client modal.
-    await expect.soft(page.getByText('Welcome to Lance')).toBeVisible({ timeout: 15_000 });
-    for (let i = 0; i < 4; i++) {
-      await page.getByRole('button', { name: 'Next' }).click();
-      await page.waitForTimeout(300);
+    // 5. Walkthrough appears after setup. It was redesigned into a "Welcome
+    //    back" choice (explore alone / take the tour); either way the session
+    //    must land somewhere usable, and the upsell splash must not ambush it.
+    await expect.soft(page.getByText('Welcome back')).toBeVisible({ timeout: 15_000 });
+    await shot(page, '25-walkthrough.png');
+
+    const takeTour = page.getByRole('button', { name: 'Take the tour' });
+    if (await takeTour.isVisible().catch(() => false)) {
+      await takeTour.click();
+      // Walk the spotlight to its end, whatever the primary control is called.
+      for (let i = 0; i < 8; i++) {
+        const next = page
+          .getByRole('button', { name: /^(Next|Continue|Done|Finish|Skip)/i })
+          .first();
+        if (!(await next.isVisible().catch(() => false))) break;
+        const label = (await next.innerText().catch(() => '')) || '';
+        await next.click();
+        await page.waitForTimeout(350);
+        if (/done|finish|skip/i.test(label)) break;
+      }
     }
-    await shot(page, '25-tour-finale.png');
-    await page.getByRole('button', { name: 'Add your first client' }).click();
-    await page.waitForTimeout(1200);
-    console.log('url after tour CTA (want /clients):', page.url());    const newClientModal = await page
-      .getByRole('dialog', { name: 'New Client' })
+    await page.waitForTimeout(600);
+    await shot(page, '26-after-tour.png');
+
+    // Whatever the tour did, the user must be able to act: clear whatever
+    // overlay is still up (its own Skip/Done/Explore control, else Escape),
+    // navigate to Clients the normal way, then Cmd+N must open New Client.
+    for (let i = 0; i < 8; i++) {
+      const overlayOpen = await page
+        .locator('div.fixed.inset-0.z-\\[60\\]')
+        .first()
+        .isVisible()
+        .catch(() => false);
+      if (!overlayOpen) break;
+      const dismiss = page
+        .getByRole('button', { name: /^(Skip|Done|Finish|Explore on my own|Close|Got it)$/i })
+        .first();
+      if (await dismiss.isVisible().catch(() => false)) await dismiss.click();
+      else await page.keyboard.press('Escape');
+      await page.waitForTimeout(450);
+    }
+    await page.getByRole('link', { name: /^Clients/ }).first().click({ timeout: 15_000 });
+    await page.waitForTimeout(900);
+    await page.keyboard.press('Meta+n');
+    await page.waitForTimeout(1000);
+    const newClientModal = await page
+      .getByRole('dialog')
+      .filter({ hasText: 'Add Client' })
       .isVisible()
       .catch(() => false);
-    console.log('New Client modal auto-opened (want true):', newClientModal);
-    await shot(page, '26-first-client-modal.png');
+    console.log('New Client modal opens after setup (want true):', newClientModal);
     expect(page.url()).toContain('/clients');
     expect(newClientModal).toBe(true);
     // The upsell splash must NOT ambush the session after setup/tour.
@@ -133,6 +182,11 @@ test.describe('regression: fixed first-run flows', () => {
       localStorage.clear();
       localStorage.setItem('lance:onboarding-completed', 'true');
       localStorage.setItem('lance:onboarding-step', 'complete');
+      // First-launch grace: the upsell splash is deliberately withheld until
+      // the second launch, so a "returning" user must carry the has-launched
+      // marker. Without it the app correctly shows no splash and this test
+      // asserted the wrong thing.
+      localStorage.setItem('lance:has-launched', 'true');
     });
     await page.reload();
     await page.waitForTimeout(600);

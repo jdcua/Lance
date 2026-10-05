@@ -2,7 +2,7 @@ use crate::db::DbState;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tauri::Manager;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -111,14 +111,62 @@ pub fn get_imports_dir(app: tauri::AppHandle) -> Result<String, String> {
     Ok(ensure_dir(&app, "imports")?.to_str().unwrap_or("").to_string())
 }
 
+/// Largest file any single import/attachment command will write.
+///
+/// A Tauri command is callable by a compromised renderer, and these take
+/// `data: Vec<u8>` straight off the wire. Unbounded, a renderer could ask for
+/// gigabytes and exhaust memory before the write is even attempted. 50MB is the
+/// same ceiling the client-side import path enforces, so this does not change
+/// what the product accepts.
+const MAX_FILE_BYTES: usize = 50 * 1024 * 1024;
+
+/// Reject any filename that is not a single, plain path component.
+///
+/// This is a BLOCKER fix. `dir.join(&filename)` with a renderer-supplied string
+/// is arbitrary file write: `../../.ssh/authorized_keys` resolves outside the
+/// imports directory and `fs::write` creates or truncates it. The sibling
+/// `save_asset_file` already stripped separators, which is how this call site
+/// was identifiable as the odd one out.
+///
+/// Stripping characters is not enough on its own (`....//` and friends), so the
+/// filename is required to BE a component rather than cleaned into one.
+fn safe_component(filename: &str) -> Result<&str, String> {
+    let name = filename.trim();
+    if name.is_empty() {
+        return Err("Filename is required".into());
+    }
+    if name == "." || name == ".." {
+        return Err("Invalid filename".into());
+    }
+    if name.contains('/') || name.contains('\\') {
+        return Err("Filename must not contain a path separator".into());
+    }
+    if name.contains('\0') {
+        return Err("Filename must not contain a null byte".into());
+    }
+    // Reject anything the OS would treat as a separator or drive reference.
+    if Path::new(name).components().count() != 1 {
+        return Err("Invalid filename".into());
+    }
+    Ok(name)
+}
+
 #[tauri::command]
 pub fn save_import_file(
     app: tauri::AppHandle,
     filename: String,
     data: Vec<u8>,
 ) -> Result<String, String> {
+    if data.len() > MAX_FILE_BYTES {
+        return Err("File exceeds the 50MB limit".into());
+    }
     let dir = ensure_dir(&app, "imports")?;
-    let path = dir.join(&filename);
+    let path = dir.join(safe_component(&filename)?);
+    // Belt and braces: confirm the resolved path is still inside dir before
+    // writing. Cheap, and it survives a future change to safe_component.
+    if !path.starts_with(&dir) {
+        return Err("Invalid filename".into());
+    }
     fs::write(&path, data).map_err(|e| format!("Failed to write file: {}", e))?;
     Ok(path.to_str().unwrap_or("").to_string())
 }
@@ -189,9 +237,19 @@ pub fn save_asset_file(
     filename: String,
     data: Vec<u8>,
 ) -> Result<String, String> {
+    if data.len() > MAX_FILE_BYTES {
+        return Err("File exceeds the 50MB limit".into());
+    }
     let dir = ensure_dir(&app, "assets")?;
-    let safe_name = filename.replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], "_");
+    // Same hard check as save_import_file. This one already stripped separators,
+    // but replacing them still leaves `..` and NUL intact, and the resulting name
+    // is what the portal and exports later read back.
+    let name = safe_component(&filename)?;
+    let safe_name = name.replace([':', '*', '?', '"', '<', '>', '|'], "_");
     let path = dir.join(&safe_name);
+    if !path.starts_with(&dir) {
+        return Err("Invalid filename".into());
+    }
     fs::write(&path, data).map_err(|e| format!("Failed to write file: {}", e))?;
     Ok(path.to_str().unwrap_or("").to_string())
 }
@@ -465,4 +523,79 @@ pub fn search_assets(app: tauri::AppHandle, query: String) -> Result<Vec<Attachm
         .filter_map(|r| r.ok())
         .collect();
     Ok(results)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::safe_component;
+
+    /// A Tauri command is callable by a compromised renderer, so a
+    /// renderer-supplied filename is attacker input. `dir.join(name)` with an
+    /// unvalidated name is arbitrary file write.
+    #[test]
+    fn rejects_path_traversal() {
+        for evil in [
+            "../evil",
+            "../../.ssh/authorized_keys",
+            "..",
+            ".",
+            "a/b",
+            "a\\b",
+            "sub/dir/file.txt",
+            "",
+            "   ",
+            "with\0nul",
+        ] {
+            assert!(
+                safe_component(evil).is_err(),
+                "should have rejected {evil:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn accepts_ordinary_filenames() {
+        for good in [
+            "invoices.csv",
+            "Bank Statement Jan.pdf",
+            "report.2026-10.csv",
+            "Ünïcodé name.txt",
+            "file with spaces.docx",
+            "..leading-dots.csv",
+        ] {
+            assert!(
+                safe_component(good).is_ok(),
+                "should have accepted {good:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn never_returns_a_name_that_escapes_its_directory() {
+        use std::path::{Path, PathBuf};
+        let dir = PathBuf::from("/tmp/lance/imports");
+        // Whatever safe_component lets through must not resolve outside dir.
+        for candidate in [
+            "plain.csv",
+            "..leading.csv",
+            "....//x.csv",
+            "%2e%2e/x",
+            "a/../../b.csv",
+            "....csv",
+        ] {
+            if let Ok(name) = safe_component(candidate) {
+                let joined = dir.join(name);
+                assert!(
+                    joined.starts_with(dir.as_path()),
+                    "{candidate:?} escaped: {joined:?}"
+                );
+                // And a single component, so nothing above can re-enter.
+                assert_eq!(
+                    Path::new(name).components().count(),
+                    1,
+                    "{candidate:?} was not a single component"
+                );
+            }
+        }
+    }
 }

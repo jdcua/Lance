@@ -1,7 +1,7 @@
 {
   "$schema": "gen/schemas/desktop-schema.json",
   "productName": "Lance",
-  "version": "0.9.9-1",
+  "version": "0.9.9-2",
   "identifier": "co.MONDAY.lance",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -23,7 +23,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.bunny.net; font-src 'self' https://fonts.bunny.net; img-src 'self' asset: data:; connect-src 'self' https://api.anthropic.com https://pay.paddle.io https://*.paddle.com https://*.placeholderlabsincorporatedlimited.yabbadabbadoo; frame-ancestors 'none'"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.bunny.net; font-src 'self' https://fonts.bunny.net; img-src 'self' asset: data:; connect-src 'self' https://pay.paddle.io https://*.paddle.com https://*.placeholderlabsincorporatedlimited.yabbadabbadoo; frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
     }
   },
   "bundle": {

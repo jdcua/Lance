@@ -122,7 +122,9 @@ export default function DeliverableLog({ projectId }: { projectId: string }) {
                 {d.format && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)]">{d.format}</span>}
                 {d.client_approved && <Check size={12} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0" />}
               </div>
-              <button onClick={() => handleDelete(d.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+              <button
+                aria-label="Delete deliverable log"
+                onClick={() => handleDelete(d.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                 <Trash2 size={12} />
               </button>
             </div>

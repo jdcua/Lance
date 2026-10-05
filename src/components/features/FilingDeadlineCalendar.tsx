@@ -170,7 +170,9 @@ export default function FilingDeadlineCalendar({ clientId }: { clientId: string 
                   )}
                   <span className={`text-[10px] flex-shrink-0 ml-auto ${isOverdue ? 'text-[#DC2626] font-medium' : 'text-[var(--text-tertiary)]'}`}>{d.due_date || '--'}</span>
                 </div>
-                <button onClick={() => handleDelete(d.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                <button
+                  aria-label="Delete filing deadline calendar"
+                  onClick={() => handleDelete(d.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                   <Trash2 size={12} />
                 </button>
               </div>

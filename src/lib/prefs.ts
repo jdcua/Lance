@@ -5,10 +5,16 @@ import { useState, useEffect } from 'react';
  * Stored as one JSON blob; changes broadcast so every consumer updates live.
  */
 export type MotionPref = 'auto' | 'full' | 'off';
+export type ContrastPref = 'auto' | 'standard' | 'high';
+export type TextScalePref = '100' | '112' | '125';
 
 export interface Prefs {
   /** auto = follow OS, full = always animate, off = never animate */
   motion: MotionPref;
+  /** auto = follow OS prefers-contrast, standard = default, high = 7:1 text */
+  contrast: ContrastPref;
+  /** root font scaling: 100/112/125% */
+  textScale: TextScalePref;
   /** soft accent glow behind app content */
   glow: boolean;
   /** trend sparklines under KPI cards */
@@ -25,6 +31,8 @@ const KEY = 'lance:prefs';
 
 export const DEFAULT_PREFS: Prefs = {
   motion: 'auto',
+  contrast: 'auto',
+  textScale: '100',
   glow: true,
   sparklines: true,
   badges: true,

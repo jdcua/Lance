@@ -2,6 +2,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Clock, AlertCircle, GripVertical } from 'lucide-react';
 import type { KanbanCard as KanbanCardType } from '../../types';
+import { parseDateString } from '../../utils/format';
 
 const priorityClasses: Record<string, string> = {
   low: 'border-l-[#16A34A]',
@@ -32,7 +33,12 @@ export default function KanbanCard({ card, onClick }: Props) {
     try { return JSON.parse(card.labels); } catch { return []; }
   })();
 
-  const isOverdue = card.due_date && new Date(card.due_date) < new Date();
+  const isOverdue = (() => {
+    if (!card.due_date) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return parseDateString(card.due_date).getTime() < today.getTime();
+  })();
 
   return (
     <div
@@ -77,7 +83,7 @@ export default function KanbanCard({ card, onClick }: Props) {
           )}
           {card.due_date && (
             <span className={`flex items-center gap-0.5 ${isOverdue ? 'text-[#DC2626] font-medium' : ''}`}>
-              {new Date(card.due_date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })}
+              {parseDateString(card.due_date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })}
             </span>
           )}
           {card.assignee && (

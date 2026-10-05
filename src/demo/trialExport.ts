@@ -10,6 +10,7 @@
 import { fetchBackupTables, createExportEnvelope } from '../utils/backup';
 import { getRuntimeVersion } from '../lib/version';
 import { seedSampleData } from '../utils/seedData';
+import { clearAssetFiles } from './assetStore';
 
 function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
@@ -107,22 +108,43 @@ export function trialHasUnportableFiles(
   );
 }
 
-/** Remove every trial key so the next visit starts blank. */
-export function wipeTrialKeys(): void {
+/** Every storage surface the trial writes to, and the prefix that marks it. */
+const STORAGE_PREFIXES = ['lance:', 'lance_', 'lance-'];
+
+function isLanceKey(key: string): boolean {
+  return STORAGE_PREFIXES.some((prefix) => key.startsWith(prefix));
+}
+
+/**
+ * Remove every trial key so the next visit starts blank.
+ *
+ * This used to be localStorage-only, which made the in-app "Wipe trial data"
+ * button an active lie: it reported success while the attachment bytes stayed
+ * in IndexedDB and sessionStorage keys survived. `lance-inv-tool` (the free
+ * invoice generator's draft, real client names and line items) was missed
+ * entirely because the predicate only matched `lance:` and `lance_`.
+ *
+ * Async because IndexedDB deletion is a real await. Callers must await it.
+ */
+export async function wipeTrialKeys(): Promise<void> {
   const victims: string[] = [];
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && (key.startsWith('lance:') || key.startsWith('lance_'))) victims.push(key);
-    }
-  } catch {
-    return;
-  }
-  for (const key of victims) {
+  for (const store of [localStorage, sessionStorage]) {
     try {
-      localStorage.removeItem(key);
+      for (let i = 0; i < store.length; i++) {
+        const key = store.key(i);
+        if (key && isLanceKey(key)) victims.push(`${store === localStorage ? 'l' : 's'}:${key}`);
+      }
     } catch {
-      continue;
+      /* private mode or storage disabled */
     }
   }
+  for (const victim of victims) {
+    const [scope, key] = victim.split(':');
+    try {
+      (scope === 'l' ? localStorage : sessionStorage).removeItem(key as string);
+    } catch {
+      /* already gone */
+    }
+  }
+  await clearAssetFiles();
 }

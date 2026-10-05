@@ -155,7 +155,9 @@ export default function GasTracker({ projectId }: { projectId: string }) {
                   <DollarSign size={10} /> ${(entry.cost_usd || 0).toFixed(2)}
                 </span>
               </div>
-              <button onClick={() => handleDelete(entry.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+              <button
+                aria-label="Delete gas tracker"
+                onClick={() => handleDelete(entry.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                 <Trash2 size={12} />
               </button>
             </div>

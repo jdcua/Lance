@@ -76,12 +76,20 @@ describe('portable attachment blobs', () => {
     expect(result.blobsSkipped).toBe(0);
     expect(written.b2).toBe('idb-restored:red.png');
     const db = await getDb();
-    const rows = await db.select<{ file_path: string }[]>(`SELECT file_path FROM attachments WHERE id = 'b2'`);
+    const rows = await db.select<{ file_path: string }[]>(
+      `SELECT file_path FROM attachments WHERE id = 'b2'`,
+    );
     expect(rows[0]?.file_path).toBe('idb-restored:red.png');
   });
 
   it('skips oversized blobs without failing the import', async () => {
-    const big = { id: 'big', filename: 'huge.bin', mime_type: 'application/octet-stream', size_bytes: 1, data: 'AAAA' };
+    const big = {
+      id: 'big',
+      filename: 'huge.bin',
+      mime_type: 'application/octet-stream',
+      size_bytes: 1,
+      data: 'AAAA',
+    };
     const envelope: BackupEnvelope = {
       lance_backup: true,
       version: '0.9.9',

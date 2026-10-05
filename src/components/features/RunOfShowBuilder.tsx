@@ -159,13 +159,19 @@ export default function RunOfShowBuilder({ projectId }: { projectId: string }) {
                 </div>
               </div>
               <div className="flex items-center gap-0.5 ml-2 flex-shrink-0">
-                <button onClick={() => handleMove(item.id, 'up')} disabled={i === 0} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30">
+                <button
+                  aria-label="Move up"
+                  onClick={() => handleMove(item.id, 'up')} disabled={i === 0} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30">
                   <ChevronUp size={12} />
                 </button>
-                <button onClick={() => handleMove(item.id, 'down')} disabled={i === items.length - 1} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30">
+                <button
+                  aria-label="Move down"
+                  onClick={() => handleMove(item.id, 'down')} disabled={i === items.length - 1} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30">
                   <ChevronDown size={12} />
                 </button>
-                <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-1">
+                <button
+                  aria-label="Delete run of show builder"
+                  onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-1">
                   <Trash2 size={12} />
                 </button>
               </div>

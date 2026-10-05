@@ -152,7 +152,9 @@ export default function ConsultantLog({ projectId }: { projectId: string }) {
                 {c.fee != null && <span className="text-[var(--accent-ink,var(--accent))] font-medium">${c.fee.toFixed(2)}</span>}
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusBadgeClasses[c.status] || statusBadgeClasses.contracted}`}>{c.status}</span>
               </div>
-              <button onClick={() => handleDelete(c.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+              <button
+                aria-label="Delete consultant log"
+                onClick={() => handleDelete(c.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                 <Trash2 size={12} />
               </button>
             </div>

@@ -139,7 +139,9 @@ export default function ChainLog({ projectId }: { projectId: string }) {
                   <span className="text-[10px] text-[var(--text-tertiary)] flex-shrink-0 ml-auto">#{event.block_number}</span>
                 )}
               </div>
-              <button onClick={() => handleDelete(event.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+              <button
+                aria-label="Delete chain log"
+                onClick={() => handleDelete(event.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                 <Trash2 size={12} />
               </button>
             </div>

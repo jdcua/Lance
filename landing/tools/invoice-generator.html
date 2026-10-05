@@ -129,12 +129,14 @@
     </style>
   </head>
   <body>
+<div id="sbar"></div>
+<div id="cursorGlow" aria-hidden="true"></div>
     <nav id="nav" class="scrolled">
       <div class="nav-inner">
-        <a href="https://lance.cuajuandiego.workers.dev/" class="nav-brand">Lance</a>
+        <a href="https://lance.cuajuandiego.workers.dev/" class="nav-brand" aria-label="Lance home"><svg class="brand-mark" viewBox="0 0 24 24" width="18" height="18"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#FFFFFF"/><path d="M7 18 V9.5 h2.6 v5.9 h4.9 V18 Z" fill="#0B3B2A"/><path d="M18.6 6.4 L17 9.9 L15.1 8 Z" fill="#0E9F6E"/><path d="M12.1 12.9 L17.2 7.8" stroke="#0E9F6E" stroke-width="2.2" stroke-linecap="butt"/></svg>Lance</a>
         <ul class="nav-links">
           <li><a href="https://lance.cuajuandiego.workers.dev/#pricing">Pricing</a></li>
-          <li><a href="https://lance.cuajuandiego.workers.dev/#download">Free Download</a></li>
+          <li><a href="https://lance.cuajuandiego.workers.dev/try/">Try in browser</a></li><li><a href="https://lance.cuajuandiego.workers.dev/#download">Free Download</a></li>
         </ul>
       </div>
     </nav>
@@ -326,5 +328,12 @@
         calc();
       })();
     </script>
-  </body>
+  <footer><div class="foot-word" aria-hidden="true">LANCE</div><div class="container footer-grid"><div class="foot-brand">
+<a href="https://lance.cuajuandiego.workers.dev/" class="nav-brand">Lance</a>
+<p>Built by independent freelancers.</p>
+<div class="footer-links"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/refunds">Refunds</a><a href="https://lance.cuajuandiego.workers.dev/#contact">Contact</a></div>
+<p class="footer-copy mono">© 2026 Lance. Your business data stays on your device.</p>
+</div></div></footer>
+<script>(function(){var nav=document.getElementById('nav');var sbar=document.getElementById('sbar');function onScroll(){var y=window.scrollY;if(nav)nav.classList.toggle('scrolled',y>40);if(sbar){var max=document.documentElement.scrollHeight-window.innerHeight;sbar.style.width=(max>0?(y/max)*100:0)+'%';}}document.addEventListener('scroll',onScroll,{passive:true});onScroll();})();</script>
+</body>
 </html>

@@ -291,7 +291,7 @@ export default function TaskLog({ clientId }: { clientId: string }) {
                   </span>
                 )}
               </div>
-              <button
+              <button aria-label="Delete task log"
                 onClick={() => handleDelete(t.id)}
                 className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0"
               >

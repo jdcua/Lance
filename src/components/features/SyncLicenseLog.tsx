@@ -171,7 +171,9 @@ export default function SyncLicenseLog({ projectId }: { projectId?: string }) {
                     {l.fee != null && <span className="text-[var(--accent-ink,var(--accent))] font-medium">${l.fee.toFixed(2)}</span>}
                     {l.royalty && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent-ink,var(--accent))]">royalty</span>}
                   </div>
-                  <button onClick={() => handleDelete(l.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                  <button
+                    aria-label="Delete sync license log"
+                    onClick={() => handleDelete(l.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                     <Trash2 size={12} />
                   </button>
                 </div>

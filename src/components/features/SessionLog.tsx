@@ -91,7 +91,9 @@ export default function SessionLog({ clientId, projectId }: { clientId?: string;
                     {s.action_items && <span><FileText size={10} className="inline mr-0.5" />{s.action_items.length > 40 ? s.action_items.slice(0, 40) + '...' : s.action_items}</span>}
                   </div>
                 </div>
-                <button onClick={() => removeSession(s.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                <button
+                  aria-label="Delete session log"
+                  onClick={() => removeSession(s.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                   <Trash2 size={12} />
                 </button>
               </div>

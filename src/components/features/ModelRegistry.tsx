@@ -165,7 +165,9 @@ export default function ModelRegistry({ projectId }: { projectId: string }) {
                   <span className="text-[10px] text-[var(--text-tertiary)] truncate flex-shrink-0">{model.metrics}</span>
                 )}
               </div>
-              <button onClick={() => handleDelete(model.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+              <button
+                aria-label="Delete model registry"
+                onClick={() => handleDelete(model.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                 <Trash2 size={12} />
               </button>
             </div>

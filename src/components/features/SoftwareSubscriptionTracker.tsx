@@ -185,7 +185,9 @@ export default function SoftwareSubscriptionTracker() {
                   {e.date}
                 </span>
               </div>
-              <button onClick={() => handleDelete(e.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+              <button
+                aria-label="Delete software subscription tracker"
+                onClick={() => handleDelete(e.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                 <Trash2 size={12} />
               </button>
             </div>

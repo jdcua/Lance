@@ -131,7 +131,9 @@ export default function ImpactMeasurement({ projectId }: { projectId: string }) 
                       {hitTarget ? 'On target' : 'Below target'}
                     </span>
                   </div>
-                  <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                  <button
+                    aria-label="Delete impact measurement"
+                    onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                     <Trash2 size={12} />
                   </button>
                 </div>

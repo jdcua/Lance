@@ -175,7 +175,9 @@ export default function ComplianceFrameworkLog({ projectId }: { projectId: strin
                   >
                     {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
                   </select>
-                  <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                  <button
+                    aria-label="Delete compliance framework log"
+                    onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                     <Trash2 size={12} />
                   </button>
                 </div>

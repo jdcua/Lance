@@ -126,7 +126,9 @@ export default function MetricSnapshot({ projectId }: { projectId: string }) {
                       {onTarget ? 'On target' : 'Behind'}
                     </span>
                   </div>
-                  <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                  <button
+                    aria-label="Delete metric snapshot"
+                    onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                     <Trash2 size={12} />
                   </button>
                 </div>

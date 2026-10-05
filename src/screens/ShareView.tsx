@@ -40,32 +40,68 @@ const ALLOWED_TAGS = new Set([
   'th',
 ]);
 
-/** Client-side equivalent of the Rust `sanitize_html` allowlist. */
+// Elements whose text content is code/markup, never prose. When one of these
+// shows up we drop it AND its text; for any other disallowed element we keep
+// the text so "…<span>freelance</span>…" still reads as "freelance".
+const OPAQUE_TAGS = new Set(['script', 'style', 'template', 'noscript', 'title', 'iframe']);
+
+// Only these attributes survive, and only on these elements. Deliberately
+// excludes href/src/style/action: a link or an image in a shared proposal is
+// both a tracking pixel and an exfiltration channel.
+const ALLOWED_ATTRS = 'colspan,rowspan';
+
+// A malicious body can nest tags thousands deep; rebuilding the tree
+// recursively would blow the stack. Past this depth we keep the text only.
+const MAX_DEPTH = 100;
+
+function copySafeAttrs(from: Element, to: Element): void {
+  for (const name of ALLOWED_ATTRS.split(',')) {
+    const value = from.getAttribute(name);
+    // setAttribute, never innerHTML: the value cannot become markup.
+    if (value !== null && /^\d{1,3}$/.test(value)) to.setAttribute(name, value);
+  }
+}
+
+function rebuildNode(doc: Document, node: Node, target: Element, depth: number): void {
+  if (depth > MAX_DEPTH) return;
+
+  if (node.nodeType === Node.TEXT_NODE) {
+    target.appendChild(doc.createTextNode(node.nodeValue ?? ''));
+    return;
+  }
+  if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+  const el = node as Element;
+  const tag = el.tagName.toLowerCase();
+  if (OPAQUE_TAGS.has(tag)) return;
+
+  if (!ALLOWED_TAGS.has(tag)) {
+    // Unknown wrapper: keep the words inside it, discard the element itself.
+    for (const child of Array.from(el.childNodes)) rebuildNode(doc, child, target, depth + 1);
+    return;
+  }
+
+  const kept = doc.createElement(tag);
+  copySafeAttrs(el, kept);
+  for (const child of Array.from(el.childNodes)) rebuildNode(doc, child, kept, depth + 1);
+  target.appendChild(kept);
+}
+
+/**
+ * Client-side equivalent of the Rust `sanitize_html` allowlist.
+ *
+ * This parses with the browser's own HTML parser and rebuilds the tree node by
+ * node. It must NOT be a regex filter: HTML5 accepts `/` as an attribute
+ * separator (`<img/onerror=alert(1)>`), so any regex that assumes whitespace
+ * before attributes is trivially bypassed, which is exactly how the previous
+ * version of this function leaked every proposal body in the app.
+ */
 function sanitizeShareHtml(html: string): string {
   if (!html) return '';
-  let out = html
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, '')
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, '')
-    .replace(/<iframe\b[^>]*>[\s\S]*?<\/iframe\s*>/gi, '')
-    .replace(/<object\b[^>]*>[\s\S]*?<\/object\s*>/gi, '')
-    .replace(/<embed\b[^>]*\/?>/gi, '')
-    .replace(/<form\b[^>]*>[\s\S]*?<\/form\s*>/gi, '')
-    .replace(/<input\b[^>]*\/?>/gi, '')
-    .replace(/<textarea\b[^>]*>[\s\S]*?<\/textarea\s*>/gi, '')
-    .replace(/<select\b[^>]*>[\s\S]*?<\/select\s*>/gi, '')
-    .replace(/<button\b[^>]*\/?>/gi, '')
-    .replace(/<link\b[^>]*\/?>/gi, '')
-    .replace(/<meta\b[^>]*\/?>/gi, '')
-    .replace(/<base\b[^>]*\/?>/gi, '');
-  // Strip event handlers and javascript: URLs
-  out = out
-    .replace(/\s+on[a-z][a-z0-9]*\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
-    .replace(/\s+(href|src|xlink:href|formaction)\s*=\s*"?\s*javascript:[^"\s>]*/gi, '');
-  // Drop any tag outside the allowlist (keep inner content); strip attributes on allowed tags
-  out = out.replace(/<(\/?)([a-zA-Z][a-zA-Z0-9]*)(?:\s[^>]*)?>/g, (match, slash, tag) =>
-    ALLOWED_TAGS.has(tag.toLowerCase()) ? `<${slash}${tag.toLowerCase()}>` : '',
-  );
-  return out;
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const out = doc.createElement('div');
+  for (const child of Array.from(doc.body.childNodes)) rebuildNode(doc, child, out, 0);
+  return out.innerHTML;
 }
 
 const PORTAL_CSS = `

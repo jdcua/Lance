@@ -187,7 +187,7 @@ export default function ProductSpecBuilder({ projectId }: { projectId: string })
             <div key={spec.id}>
               <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
                 <div className="flex-1 min-w-0 flex items-center gap-2">
-                  <button
+                  <button aria-label="Next"
                     onClick={() => setExpanded(expanded === spec.id ? null : spec.id)}
                     className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                   >
@@ -201,7 +201,9 @@ export default function ProductSpecBuilder({ projectId }: { projectId: string })
                     {new Date(spec.created_at).toLocaleDateString()}
                   </span>
                 </div>
-                <button onClick={() => handleDelete(spec.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                <button
+                  aria-label="Delete product spec builder"
+                  onClick={() => handleDelete(spec.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                   <Trash2 size={12} />
                 </button>
               </div>

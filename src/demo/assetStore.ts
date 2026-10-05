@@ -161,6 +161,68 @@ export async function clearAssetFiles(): Promise<void> {
 }
 
 /**
+ * How many files and how many bytes are stored in IndexedDB.
+ *
+ * The privacy panel reports these separately from localStorage, because
+ * attachment bytes live here and counting only localStorage understates what
+ * the trial is keeping, which is how the panel came to claim "0 B across 0
+ * keys" while a client's PDF was still on disk.
+ */
+export async function countAssetFiles(): Promise<number> {
+  if (!idbAvailable()) return memoryFallback.size;
+  try {
+    const db = await openDb();
+    return await new Promise<number>((resolve) => {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const req = tx.objectStore(STORE_NAME).count();
+      req.onsuccess = () => {
+        db.close();
+        resolve(req.result);
+      };
+      req.onerror = () => {
+        db.close();
+        resolve(memoryFallback.size);
+      };
+    });
+  } catch {
+    return 0;
+  }
+}
+
+export async function assetBytes(): Promise<number> {
+  if (!idbAvailable()) {
+    let total = 0;
+    for (const blob of memoryFallback.values()) total += blob.size;
+    return total;
+  }
+  try {
+    const db = await openDb();
+    return await new Promise<number>((resolve) => {
+      let total = 0;
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const req = tx.objectStore(STORE_NAME).openCursor();
+      req.onsuccess = () => {
+        const cursor = req.result;
+        if (!cursor) {
+          db.close();
+          resolve(total);
+          return;
+        }
+        const value = cursor.value as Blob | undefined;
+        total += value?.size ?? 0;
+        cursor.continue();
+      };
+      req.onerror = () => {
+        db.close();
+        resolve(total);
+      };
+    });
+  } catch {
+    return 0;
+  }
+}
+
+/**
  * Resolve a stored file_path to something an <img> can use.
  * idb: paths → cached blob: URL (null while loading or when missing).
  * Anything else → the desktop asset:// URL, unchanged behavior.

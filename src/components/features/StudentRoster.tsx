@@ -193,7 +193,9 @@ export default function StudentRoster({ clientId }: { clientId: string }) {
                       {student.status}
                     </span>
                   </div>
-                  <button onClick={(e) => { e.stopPropagation(); handleDelete(student.id); }} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                  <button
+                    aria-label="Delete student roster"
+                    onClick={(e) => { e.stopPropagation(); handleDelete(student.id); }} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                     <Trash2 size={12} />
                   </button>
                 </div>

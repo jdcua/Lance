@@ -315,7 +315,7 @@ export default function CommissionQueue({ clientId }: { clientId?: string }) {
                   <span className="text-[10px] font-mono text-[var(--text-tertiary)] w-4 text-right">
                     {i + 1}
                   </span>
-                  <button
+                  <button aria-label="Next"
                     onClick={() => setExpanded(expanded === c.id ? null : c.id)}
                     className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                   >
@@ -339,21 +339,21 @@ export default function CommissionQueue({ clientId }: { clientId?: string }) {
                   )}
                 </div>
                 <div className="flex items-center gap-0.5 ml-2">
-                  <button
+                  <button aria-label="Move up"
                     onClick={() => handleReorder(i, 'up')}
                     disabled={i === 0}
                     className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30"
                   >
                     <ChevronUp size={12} />
                   </button>
-                  <button
+                  <button aria-label="Move down"
                     onClick={() => handleReorder(i, 'down')}
                     disabled={i === sorted.length - 1}
                     className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30"
                   >
                     <ChevronDown size={12} />
                   </button>
-                  <button
+                  <button aria-label="Delete commission queue"
                     onClick={() => handleDelete(c.id)}
                     className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-1"
                   >

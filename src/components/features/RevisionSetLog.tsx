@@ -135,7 +135,9 @@ export default function RevisionSetLog({ projectId }: { projectId: string }) {
                 {s.changes_summary && <p className="text-[var(--text-secondary)] leading-relaxed">{s.changes_summary}</p>}
                 {s.distributed_to && <p className="text-[10px] text-[var(--text-tertiary)]">Distributed to: {s.distributed_to}</p>}
               </div>
-              <button onClick={() => handleDelete(s.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0 mt-0.5">
+              <button
+                aria-label="Delete revision set log"
+                onClick={() => handleDelete(s.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0 mt-0.5">
                 <Trash2 size={12} />
               </button>
             </div>

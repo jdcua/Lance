@@ -148,7 +148,9 @@ export default function CampaignTracker({ projectId }: { projectId: string }) {
                     <span className="font-medium text-[var(--text-primary)]">{c.name}</span>
                     {c.channel && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)]">{c.channel}</span>}
                   </div>
-                  <button onClick={() => handleDelete(c.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                  <button
+                    aria-label="Delete campaign tracker"
+                    onClick={() => handleDelete(c.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                     <Trash2 size={12} />
                   </button>
                 </div>

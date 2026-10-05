@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
 import { Search, FileText, FolderKanban, Receipt, PenLine, Users, Sparkles, Clock, DollarSign, Paperclip, ArrowRight } from 'lucide-react';
 import { formatCurrency } from '../../utils/format';
+import { rankSearch } from '../../utils/searchRank';
 import { getShortcutModifierLabel } from '../../utils/shortcuts';
 
 type ResultItem = {
@@ -107,7 +108,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
 
   const results = useMemo((): ResultItem[] => {
     if (!debouncedQuery.trim()) return [];
-    const q = debouncedQuery.toLowerCase();
+    const q = debouncedQuery.trim();
 
     const items: ResultItem[] = [];
 
@@ -128,86 +129,62 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
       }
     }
 
-    clients.forEach((c) => {
-      if ((c.name || '').toLowerCase().includes(q) || (c.company || '').toLowerCase().includes(q)) {
-        items.push({ id: c.id, label: c.name, sublabel: 'Client' + (c.company ? ` · ${c.company}` : ''), type: 'client', path: `/clients` });
-      }
-    });
-    proposals.forEach((p) => {
-      if ((p.title || '').toLowerCase().includes(q)) {
-        items.push({ id: p.id, label: p.title, sublabel: 'Proposal', type: 'proposal', path: `/proposals` });
-      }
-    });
-    projects.forEach((p) => {
-      if ((p.title || '').toLowerCase().includes(q)) {
-        items.push({ id: p.id, label: p.title, sublabel: 'Project', type: 'project', path: `/projects` });
-      }
-    });
-    invoices.forEach((inv) => {
+    for (const c of rankSearch(clients, (x) => [x.name || '', x.company || ''], q, MAX_PER_GROUP.client)) {
+      items.push({ id: c.id, label: c.name, sublabel: 'Client' + (c.company ? ` · ${c.company}` : ''), type: 'client', path: `/clients` });
+    }
+    for (const p of rankSearch(proposals, (x) => [x.title || ''], q, MAX_PER_GROUP.proposal)) {
+      items.push({ id: p.id, label: p.title, sublabel: 'Proposal', type: 'proposal', path: `/proposals` });
+    }
+    for (const p of rankSearch(projects, (x) => [x.title || ''], q, MAX_PER_GROUP.project)) {
+      items.push({ id: p.id, label: p.title, sublabel: 'Project', type: 'project', path: `/projects` });
+    }
+    for (const inv of rankSearch(
+      invoices,
+      (x) => [x.invoice_number || '', clients.find((c) => c.id === x.client_id)?.name || ''],
+      q,
+      MAX_PER_GROUP.invoice,
+    )) {
       const clientName = clients.find((c) => c.id === inv.client_id)?.name || '';
-      if (
-        (inv.invoice_number || '').toLowerCase().includes(q) ||
-        clientName.toLowerCase().includes(q)
-      ) {
-        items.push({ id: inv.id, label: inv.invoice_number, sublabel: `Invoice${clientName ? ` · ${clientName}` : ''}`, type: 'invoice', path: `/invoices` });
-      }
-    });
-    contracts.forEach((c) => {
-      if ((c.title || '').toLowerCase().includes(q)) {
-        items.push({ id: c.id, label: c.title, sublabel: 'Contract', type: 'contract', path: `/contracts` });
-      }
-    });
+      items.push({ id: inv.id, label: inv.invoice_number, sublabel: `Invoice${clientName ? ` · ${clientName}` : ''}`, type: 'invoice', path: `/invoices` });
+    }
+    for (const c of rankSearch(contracts, (x) => [x.title || ''], q, MAX_PER_GROUP.contract)) {
+      items.push({ id: c.id, label: c.title, sublabel: 'Contract', type: 'contract', path: `/contracts` });
+    }
 
-    timeEntries.forEach((t) => {
-      if ((t.description || '').toLowerCase().includes(q)) {
-        const project = projects.find((p) => p.id === t.project_id);
-        const projectName = project?.title || 'Unknown';
-        items.push({
-          id: t.id,
-          label: t.description || 'No description',
-          sublabel: `${projectName} · ${formatDateShort(t.start_time)} · ${t.duration_minutes ? formatDuration(t.duration_minutes) : 'In progress'}`,
-          type: 'time_entry',
-          path: '/time',
-        });
-      }
-    });
+    for (const t of rankSearch(timeEntries, (x) => [x.description || ''], q, MAX_PER_GROUP.time_entry)) {
+      const project = projects.find((p) => p.id === t.project_id);
+      const projectName = project?.title || 'Unknown';
+      items.push({
+        id: t.id,
+        label: t.description || 'No description',
+        sublabel: `${projectName} · ${formatDateShort(t.start_time)} · ${t.duration_minutes ? formatDuration(t.duration_minutes) : 'In progress'}`,
+        type: 'time_entry',
+        path: '/time',
+      });
+    }
 
-    expenses.forEach((e) => {
-      if ((e.description || '').toLowerCase().includes(q)) {
-        items.push({
-          id: e.id,
-          label: e.description,
-          sublabel: `${e.category} · ${formatCurrency(e.amount, profile?.currency)} on ${formatDateShort(e.date)}`,
-          type: 'expense',
-          path: '/finance',
-        });
-      }
-    });
+    for (const e of rankSearch(expenses, (x) => [x.description || '', x.category || ''], q, MAX_PER_GROUP.expense)) {
+      items.push({
+        id: e.id,
+        label: e.description,
+        sublabel: `${e.category} · ${formatCurrency(e.amount, profile?.currency)} on ${formatDateShort(e.date)}`,
+        type: 'expense',
+        path: '/finance',
+      });
+    }
 
-    allAttachments.forEach((a) => {
-      const tags = parseTags(a.tags);
-      const nameMatch = (a.filename || '').toLowerCase().includes(q);
-      const tagMatch = tags.some((t: string) => (t || '').toLowerCase().includes(q));
-      if (nameMatch || tagMatch) {
-        const locationLabel = a.entity_type === 'library' ? 'Library' : a.entity_type;
-        items.push({
-          id: a.id,
-          label: a.filename,
-          sublabel: `${a.mime_type} · ${locationLabel}`,
-          type: 'asset',
-          path: `/assets?highlight=${a.id}`,
-        });
-      }
-    });
+    for (const a of rankSearch(allAttachments, (x) => [x.filename || '', ...parseTags(x.tags)], q, MAX_PER_GROUP.asset)) {
+      const locationLabel = a.entity_type === 'library' ? 'Library' : a.entity_type;
+      items.push({
+        id: a.id,
+        label: a.filename,
+        sublabel: `${a.mime_type} · ${locationLabel}`,
+        type: 'asset',
+        path: `/assets?highlight=${a.id}`,
+      });
+    }
 
-    const grouped: Record<string, ResultItem[]> = {};
-    items.forEach((i) => {
-      if (!grouped[i.type]) grouped[i.type] = [];
-      const max = MAX_PER_GROUP[i.type] || 4;
-      if (grouped[i.type].length < max) grouped[i.type].push(i);
-    });
-
-    const flat = Object.values(grouped).flat();
+    const flat = items;
 
     if (flat.length > 0) {
       flat.push({

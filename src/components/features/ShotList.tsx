@@ -213,13 +213,19 @@ export default function ShotList({ projectId }: { projectId: string }) {
                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0 ${STATUS_COLORS[shot.status] || ''}`} onClick={() => startEdit(shot)} title="Click to edit">{shot.status}</span>
                   </div>
                   <div className="flex items-center gap-0.5 ml-2 flex-shrink-0">
-                    <button onClick={() => handleMove(shot.id, 'up')} disabled={i === 0} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30">
+                    <button
+                      aria-label="Move up"
+                      onClick={() => handleMove(shot.id, 'up')} disabled={i === 0} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30">
                       <ChevronUp size={12} />
                     </button>
-                    <button onClick={() => handleMove(shot.id, 'down')} disabled={i === shots.length - 1} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30">
+                    <button
+                      aria-label="Move down"
+                      onClick={() => handleMove(shot.id, 'down')} disabled={i === shots.length - 1} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30">
                       <ChevronDown size={12} />
                     </button>
-                    <button onClick={() => handleDelete(shot.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-1">
+                    <button
+                      aria-label="Delete shot list"
+                      onClick={() => handleDelete(shot.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-1">
                       <Trash2 size={12} />
                     </button>
                   </div>

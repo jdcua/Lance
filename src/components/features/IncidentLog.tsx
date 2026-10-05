@@ -175,11 +175,15 @@ export default function IncidentLog({ projectId }: { projectId: string }) {
               </div>
               <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
                 {incident.status !== 'resolved' && (
-                  <button onClick={() => handleResolve(incident.id)} className="text-[var(--text-tertiary)] hover:text-[#16A34A]">
+                  <button
+                    aria-label="Confirm incident log"
+                    onClick={() => handleResolve(incident.id)} className="text-[var(--text-tertiary)] hover:text-[#16A34A]">
                     <CheckCircle2 size={12} />
                   </button>
                 )}
-                <button onClick={() => handleDelete(incident.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                <button
+                  aria-label="Delete incident log"
+                  onClick={() => handleDelete(incident.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                   <Trash2 size={12} />
                 </button>
               </div>

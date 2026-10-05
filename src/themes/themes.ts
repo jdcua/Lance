@@ -18,6 +18,8 @@ export const THEMES: Theme[] = [
       '--text-secondary': '#68675F',
       '--text-tertiary': '#75756F',
       '--accent': '#1EC98A',
+
+      '--accent-on': '#181716',
       '--accent-ink': '#0B6B4A',
       '--accent-hover': '#18B47C',
       '--accent-bg': 'rgba(30,201,138,0.1)',
@@ -49,6 +51,8 @@ export const THEMES: Theme[] = [
       '--text-secondary': '#898883',
       '--text-tertiary': '#8E8D88',
       '--accent': '#1EC98A',
+
+      '--accent-on': '#181716',
       '--accent-ink': '#1EC98A',
       '--accent-hover': '#18B47C',
       '--accent-bg': 'rgba(30,201,138,0.1)',
@@ -87,7 +91,9 @@ export const THEMES: Theme[] = [
       '--text-primary': '#2C1810',
       '--text-secondary': '#7A6255',
       '--text-tertiary': '#87705F',
-      '--accent': '#C4622D',
+      '--accent': '#B65B2A',
+
+      '--accent-on': '#FFFFFF',
       '--accent-ink': '#8F421E',
       '--accent-hover': '#A84E22',
       '--accent-bg': 'rgba(196,98,45,0.08)',
@@ -118,7 +124,9 @@ export const THEMES: Theme[] = [
       '--text-primary': '#FDF5EE',
       '--text-secondary': '#C4A99A',
       '--text-tertiary': '#A68B7C',
-      '--accent': '#C4622D',
+      '--accent': '#B65B2A',
+
+      '--accent-on': '#FFFFFF',
       '--accent-ink': '#DA9370',
       '--accent-hover': '#A84E22',
       '--accent-bg': 'rgba(196,98,45,0.12)',
@@ -158,6 +166,8 @@ export const THEMES: Theme[] = [
       '--text-secondary': '#929AA4',
       '--text-tertiary': '#868E99',
       '--accent': '#3FB950',
+
+      '--accent-on': '#181716',
       '--accent-ink': '#3FB950',
       '--accent-hover': '#2EA043',
       '--accent-bg': 'rgba(63,185,80,0.08)',
@@ -189,6 +199,8 @@ export const THEMES: Theme[] = [
       '--text-secondary': '#929AA4',
       '--text-tertiary': '#868E99',
       '--accent': '#3FB950',
+
+      '--accent-on': '#181716',
       '--accent-ink': '#3FB950',
       '--accent-hover': '#2EA043',
       '--accent-bg': 'rgba(63,185,80,0.08)',
@@ -227,7 +239,9 @@ export const THEMES: Theme[] = [
       '--text-primary': '#1A1A18',
       '--text-secondary': '#6B6860',
       '--text-tertiary': '#76756F',
-      '--accent': '#4A7FA5',
+      '--accent': '#477A9E',
+
+      '--accent-on': '#FFFFFF',
       '--accent-ink': '#35617E',
       '--accent-hover': '#3A6A8C',
       '--accent-bg': 'rgba(74,127,165,0.08)',
@@ -259,6 +273,8 @@ export const THEMES: Theme[] = [
       '--text-secondary': '#A0A098',
       '--text-tertiary': '#9A9990',
       '--accent': '#5B9ABD',
+
+      '--accent-on': '#181716',
       '--accent-ink': '#7AADCA',
       '--accent-hover': '#4A7FA5',
       '--accent-bg': 'rgba(74,127,165,0.12)',
@@ -297,7 +313,9 @@ export const THEMES: Theme[] = [
       '--text-primary': '#1A1530',
       '--text-secondary': '#6B6585',
       '--text-tertiary': '#6F6987',
-      '--accent': '#8B5CF6',
+      '--accent': '#8457EA',
+
+      '--accent-on': '#FFFFFF',
       '--accent-ink': '#6A3DE0',
       '--accent-hover': '#7C3AED',
       '--accent-bg': 'rgba(139,92,246,0.08)',
@@ -328,7 +346,9 @@ export const THEMES: Theme[] = [
       '--text-primary': '#EDEBF8',
       '--text-secondary': '#A09AB5',
       '--text-tertiary': '#8F88AD',
-      '--accent': '#8B5CF6',
+      '--accent': '#8457EA',
+
+      '--accent-on': '#FFFFFF',
       '--accent-ink': '#B191F9',
       '--accent-hover': '#7C3AED',
       '--accent-bg': 'rgba(139,92,246,0.12)',
@@ -368,6 +388,8 @@ export const THEMES: Theme[] = [
       '--text-secondary': '#B0A898',
       '--text-tertiary': '#A39E93',
       '--accent': '#D97706',
+
+      '--accent-on': '#181716',
       '--accent-ink': '#F0A020',
       '--accent-hover': '#B45309',
       '--accent-bg': 'rgba(217,119,6,0.12)',
@@ -399,6 +421,8 @@ export const THEMES: Theme[] = [
       '--text-secondary': '#B0A898',
       '--text-tertiary': '#A39E93',
       '--accent': '#D97706',
+
+      '--accent-on': '#181716',
       '--accent-ink': '#E6A256',
       '--accent-hover': '#B45309',
       '--accent-bg': 'rgba(217,119,6,0.12)',
@@ -438,6 +462,8 @@ export const THEMES: Theme[] = [
       '--text-secondary': '#5B6478',
       '--text-tertiary': '#66708A',
       '--accent': '#1E40AF',
+
+      '--accent-on': '#FFFFFF',
       '--accent-ink': '#1E40AF',
       '--accent-hover': '#1E3A8A',
       '--accent-bg': 'rgba(30,64,175,0.08)',
@@ -469,6 +495,8 @@ export const THEMES: Theme[] = [
       '--text-secondary': '#94A0B8',
       '--text-tertiary': '#8B96B3',
       '--accent': '#3B6FE0',
+
+      '--accent-on': '#FFFFFF',
       '--accent-ink': '#769AE9',
       '--accent-hover': '#1E40AF',
       '--accent-bg': 'rgba(59,111,224,0.12)',
@@ -499,11 +527,49 @@ export function getTheme(id: string): Theme {
 }
 
 export function applyTheme(theme: Theme): void {
+  applyThemePalette(theme);
+  loadThemeFonts(theme.id);
+}
+
+/**
+ * High-contrast override, applied as INLINE custom properties.
+ *
+ * This has to be inline, not a stylesheet rule. `applyTheme` writes the whole
+ * palette as inline custom props on <html> (see the dark-mode note below), and
+ * inline custom properties beat every stylesheet rule in the cascade, so the
+ * `.contrast-high` class in index.css resolved to nothing. The High Contrast
+ * preference, the `prefers-contrast: more` auto-boost, and the onboarding copy
+ * promising "7:1 body text" were all dead: 46 elements stayed at #75756F.
+ *
+ * Values are derived from whatever --text-primary currently is, so this works
+ * across all 13 themes and both light and dark without a table of overrides.
+ */
+export function applyContrastBoost(root: HTMLElement = document.documentElement): void {
+  const primary = getComputedStyle(root).getPropertyValue('--text-primary').trim();
+  if (!primary) return;
+
+  const el = root;
+  if (el.classList.contains('contrast-high')) {
+    // Body and secondary text both go to primary: same colour, so maximum
+    // contrast against whatever surface the theme uses.
+    el.style.setProperty('--text-secondary', primary);
+    el.style.setProperty('--text-tertiary', primary);
+    el.style.setProperty('--border-color', primary);
+  } else {
+    // Clear only what we set, so a later applyTheme() owns the palette again.
+    el.style.removeProperty('--text-secondary');
+    el.style.removeProperty('--text-tertiary');
+    el.style.removeProperty('--border-color');
+  }
+}
+
+/** Write a theme palette onto <html>. Internal; prefer applyTheme(). */
+function applyThemePalette(theme: Theme): void {
   const root = document.documentElement;
 
   // Write the ACTIVE palette inline. A previous implementation always wrote
   // the light palette inline and kept dark values in a `.dark` stylesheet
-  // block — but inline custom properties beat stylesheet rules in the
+  // block, but inline custom properties beat stylesheet rules in the
   // cascade, so dark mode silently never applied. Reading the live `.dark`
   // flag here makes every caller (App effect, Settings toggle, onboarding)
   // correct as long as it toggles the class first, which they all do.
@@ -527,9 +593,8 @@ export function applyTheme(theme: Theme): void {
   root.style.setProperty('--font-display', theme.fontDisplay);
   root.style.setProperty('--font-body', theme.fontBody);
   root.dataset.theme = theme.id;
-
-  // Load theme-specific fonts if needed
-  loadThemeFonts(theme.id);
+  // Re-apply the contrast boost: writing the palette above clears it.
+  applyContrastBoost(root);
 }
 
 const loadedFontSets = new Set<string>();

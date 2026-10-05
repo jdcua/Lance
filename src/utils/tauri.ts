@@ -28,7 +28,14 @@ function lsGet<T>(key: string): T[] {
     // Hand-edited or version-skewed values can be valid JSON of the wrong
     // shape (an object where a list belongs). Return [] instead of letting
     // .find/.filter throw ten frames later.
-    return Array.isArray(val) ? (val as T[]) : [];
+    if (!Array.isArray(val)) return [];
+    // Rows are objects by construction. A null/primitive entry — from a
+    // hand-edited store, a partial restore, or a truncated write — used to
+    // reach every caller and detonate on the first `.status` read, blanking
+    // the whole app (the Dashboard and the follow-up engine both died on a
+    // single bad row). Drop the junk at the boundary so no caller has to
+    // defend itself, and so one bad row costs you that row, not the session.
+    return val.filter((r) => r !== null && typeof r === 'object') as T[];
   } catch { return []; }
 }
 
@@ -38,9 +45,16 @@ function lsGetRecord(key: string): Record<string, StoreRow[]> {
     const raw = localStorage.getItem(LS_PREFIX + key);
     if (!raw) return {};
     const val: unknown = JSON.parse(raw);
-    return val && typeof val === 'object' && !Array.isArray(val)
-      ? (val as Record<string, StoreRow[]>)
-      : {};
+    if (!val || typeof val !== 'object' || Array.isArray(val)) return {};
+    // Same boundary rule as lsGet: a corrupt key's value must be a list of
+    // objects, or the callers iterating it throw.
+    const out: Record<string, StoreRow[]> = {};
+    for (const [k, v] of Object.entries(val as Record<string, unknown>)) {
+      if (Array.isArray(v)) {
+        out[k] = v.filter((r) => r !== null && typeof r === 'object') as StoreRow[];
+      }
+    }
+    return out;
   } catch { return {}; }
 }
 
@@ -249,7 +263,11 @@ const list: StoreRow[] = all[key];
 
   // ── get_all_follow_up_logs (bulk: all statuses) ──
   if (cmd === 'get_all_follow_up_logs') {
-    const all = (lsGet<StoreRow>('follow_up_logs') as unknown) as Record<string, StoreRow[]>;
+    // lsGetRecord, not lsGet: follow_up_logs is keyed `type:id`, not a list.
+    // lsGet returns [] for a non-array, so this read always produced an empty
+    // history in browser mode — the follow-up log rendered blank even after
+    // drafts were logged. The cast to Record never made that [] into a record.
+    const all = lsGetRecord('follow_up_logs');
     const flat: StoreRow[] = [];
     for (const key of Object.keys(all || {})) {
       const list: StoreRow[] = all[key];

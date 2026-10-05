@@ -17,6 +17,7 @@ import Button from './components/ui/Button';
 import ToastContainer from './components/ui/Toast';
 import CommandPalette from './components/ui/CommandPalette';
 import QuickTimeLogModal from './components/ui/QuickTimeLogModal';
+import OnboardingComfort from './components/ui/OnboardingComfort';
 import Walkthrough from './components/ui/Walkthrough';
 import SpotlightTour from './components/ui/SpotlightTour';
 import SplashScreen from './components/ui/SplashScreen';
@@ -61,6 +62,32 @@ import TestModeBanner from './demo/TestModeBanner';
 
 // Max upsell-splash views per app version for unlicensed users.
 export const SPLASH_MAX_VIEWS = 3;
+
+/**
+ * Run `fn` at the next idle opportunity, but never later than `ms`.
+ *
+ * Startup work deferred to requestIdleCallback alone can be starved for a long
+ * time on a busy machine or a heavy page load — the browser only grants idle
+ * time when it has some to spare. The trial's sample business is seeded that
+ * way, so a first-time visitor could sit looking at an empty app for as long
+ * as the machine stayed busy. Racing a timer keeps the deferral (it still does
+ * not compete with first paint) without making correctness depend on the
+ * browser ever going idle.
+ */
+export function idleOrTimeout(fn: () => void, ms = 400): () => void {
+  let ran = false;
+  const once = () => {
+    if (ran) return;
+    ran = true;
+    fn();
+  };
+  const timer = setTimeout(once, ms);
+  const idle = requestIdleCallback(once);
+  return () => {
+    clearTimeout(timer);
+    cancelIdleCallback(idle);
+  };
+}
 
 export default function App() {
   const {
@@ -522,7 +549,7 @@ export default function App() {
   // Auto-generate recurring invoices on startup (deferred after first render)
   useEffect(() => {
     if (!profileLoaded || hasRanAutoGen) return;
-    const handle = requestIdleCallback(() => {
+    const cancel = idleOrTimeout(() => {
       setHasRanAutoGen(true);
       // Trial always opens with a full sample business so every screen
       // has something real to click. Unlimited tries: Reset restores this.
@@ -576,8 +603,9 @@ export default function App() {
         /* achievement check is non-critical */
       }
     });
-    return () => cancelIdleCallback(handle);
+    return cancel;
   }, [profileLoaded, hasRanAutoGen, loadRecurringInvoices, loadInvoices, loadClients, addToast]);
+
 
   // Deferred recurring invoice check · runs after first render via idle callback
   useEffect(() => {
@@ -1152,7 +1180,7 @@ export default function App() {
         </a>
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <TestModeBanner />
+          {__TEST_MODE__ ? <TestModeBanner /> : null}
           <Topbar />
           {isTrial() ? <TrialBanner /> : null}
           <AIBar />
@@ -1413,7 +1441,7 @@ function OnboardingFlow({
     if (showOnboarding) {
       const storedStep = localStorage.getItem('lance:onboarding-step');
       const parsedStep = storedStep && storedStep !== 'complete' ? parseInt(storedStep) : NaN;
-      if (parsedStep >= 1 && parsedStep <= 4) {
+      if (parsedStep >= 1 && parsedStep <= 5) {
         setOnboardingStep(parsedStep);
         setIsResuming(true);
         if (profile) {
@@ -1542,7 +1570,10 @@ function OnboardingFlow({
     'w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)] text-[var(--text-primary)]';
   const labelClass = 'block text-xs font-medium text-[var(--text-secondary)] mb-1';
 
-  const STEP_LABELS = ['Your craft', 'Your profile', 'Your theme', 'Rates & data'];
+  const STEP_LABELS = ['Comfort', 'Your craft', 'Your profile', 'Your theme', 'Rates & data'];
+  // Clamp once and reuse: the counter, the aria-label and the dots all read the
+  // same value, so they cannot disagree about how many steps there are.
+  const clampedStep = Math.min(Math.max(onboardingStep, 1), STEP_LABELS.length);
 
   return (
     <Modal open={showOnboarding} onClose={handleOnboardingClose} title="Set up Lance" size="md">
@@ -1554,8 +1585,7 @@ function OnboardingFlow({
         )}
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs text-[var(--text-tertiary)]" aria-live="polite">
-            Step {Math.min(onboardingStep, 4)} of 4 &middot;{' '}
-            {STEP_LABELS[Math.min(onboardingStep, 4) - 1]}
+            Step {clampedStep} of {STEP_LABELS.length} &middot; {STEP_LABELS[clampedStep - 1]}
           </span>
           <button
             onClick={handleOnboardingSkip}
@@ -1564,20 +1594,43 @@ function OnboardingFlow({
             Skip setup
           </button>
         </div>
-        <div className="flex justify-center gap-2 mb-1">
-          {/* [1, 2, 3, 4, 5] -> AI disabled for v1.0.0 */}
-          {[1, 2, 3, 4].map((step) => (
+        <div
+          className="flex justify-center gap-2 mb-1"
+          role="img"
+          aria-label={`Setup step ${clampedStep} of ${STEP_LABELS.length}: ${STEP_LABELS[clampedStep - 1]}`}
+        >
+          {STEP_LABELS.map((label, i) => (
             <div
-              key={step}
+              key={label}
+              aria-hidden="true"
               className={`w-2 h-2 rounded-full transition-all ${
-                step <= onboardingStep ? 'bg-[var(--accent)]' : 'bg-[var(--border-color)]'
+                i + 1 <= clampedStep ? 'bg-[var(--accent)]' : 'bg-[var(--border-color)]'
               }`}
             />
           ))}
         </div>
 
-        {/* Step 1: Welcome + Profession */}
+        {/* Step 1: Comfort — access needs first so everything after adapts.
+            Needs its own Continue: the panel is all segmented controls, so
+            without a footer row the first-run user had no way off step 1
+            except "Skip setup", which throws away the whole setup. */}
         {onboardingStep === 1 && (
+          <>
+            <OnboardingComfort />
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[11px] text-[var(--text-tertiary)]">
+                All of these also live in Settings.
+              </span>
+              <Button onClick={handleOnboardingNext} size="sm">
+                Continue &rarr;
+              </Button>
+            </div>
+          </>
+        )}
+        {/* Step 2: craft picker. This was gated on step === 1 alongside the
+            Comfort panel above, which left step 2 — labelled "Your craft" in
+            STEP_LABELS — rendering an empty modal with only X and Skip. */}
+        {onboardingStep === 2 && (
           <>
             <div className="text-center space-y-2">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Welcome to Lance</h3>
@@ -1597,13 +1650,14 @@ function OnboardingFlow({
                         profession: archetype.id as Profession,
                       });
                     }}
+                    aria-pressed={onboardingForm.profession === archetype.id}
                     className={`flex items-center gap-2 px-3 py-2.5 text-xs font-medium rounded-[8px] border transition-colors text-left ${
                       onboardingForm.profession === archetype.id
                         ? 'bg-[var(--accent-bg)] border-[var(--accent)] text-[var(--text-primary)]'
                         : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40'
                     }`}
                   >
-                    <span className="text-base flex-shrink-0">{archetype.emoji}</span>
+                    <span className="text-base flex-shrink-0" aria-hidden="true">{archetype.emoji}</span>
                     <span className="leading-snug line-clamp-2">{archetype.label}</span>
                   </button>
                 ),
@@ -1662,7 +1716,7 @@ function OnboardingFlow({
         )}
 
         {/* Step 2: Profile */}
-        {onboardingStep === 2 && (
+        {onboardingStep === 3 && (
           <>
             <div className="text-center mb-2">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">
@@ -1692,6 +1746,8 @@ function OnboardingFlow({
                 </label>
                 <input
                   type="email"
+                  aria-invalid={validationErrors.email ? true : undefined}
+                  aria-describedby={validationErrors.email ? 'onboarding-email-error' : undefined}
                   value={onboardingForm.email}
                   onChange={(e) => {
                     setOnboardingForm({ ...onboardingForm, email: e.target.value });
@@ -1713,7 +1769,7 @@ function OnboardingFlow({
                   }}
                 />
                 {validationErrors.email && (
-                  <p className="text-red-500 text-xs mt-1">{validationErrors.email}</p>
+                  <p id="onboarding-email-error" role="alert" className="text-red-500 text-xs mt-1">{validationErrors.email}</p>
                 )}
                 {validationErrors.email && emailStumbles >= 2 && (
                   <p className="text-xs text-[var(--text-tertiary)] mt-1">
@@ -1758,7 +1814,7 @@ function OnboardingFlow({
         )}
 
         {/* Step 3: Themes */}
-        {onboardingStep === 3 && (
+        {onboardingStep === 4 && (
           <>
             <div className="text-center mb-3">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">
@@ -1840,7 +1896,7 @@ function OnboardingFlow({
         )}
 
         {/* Step 4: AI Setup (COMMENTED OUT FOR v1.0.0)
-        {onboardingStep === 4 && (
+        {onboardingStep === 5 && (
           <>
             <div className="text-center mb-2">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">AI Assistant</h3>
@@ -1892,7 +1948,7 @@ function OnboardingFlow({
         */}
 
         {/* Step 4 (Formerly 5): Rates & Final */}
-        {onboardingStep === 4 && (
+        {onboardingStep === 5 && (
           <>
             <div className="text-center mb-2">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">

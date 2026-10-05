@@ -58,14 +58,16 @@ export default function RevisionTracker({ projectId }: { projectId: string }) {
           {list.map((r) => (
             <div key={r.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
               <div className="flex-1 min-w-0 flex items-center gap-2">
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] flex-shrink-0 ${r.approved ? 'bg-[var(--accent)] text-white' : 'bg-[var(--border-color)] text-[var(--text-secondary)]'}`}>
+                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] flex-shrink-0 ${r.approved ? 'bg-[var(--accent)] text-[var(--accent-on)]' : 'bg-[var(--border-color)] text-[var(--text-secondary)]'}`}>
                   {r.round_number}
                 </span>
                 <span className={`${r.approved ? 'text-[var(--text-tertiary)]' : 'text-[var(--text-primary)]'}`}>{r.change_summary || '--'}</span>
               </div>
               <div className="flex items-center gap-1">
                 {r.approved ? <Check size={12} className="text-[var(--accent-ink,var(--accent))]" /> : <RotateCcw size={12} className="text-[var(--text-tertiary)]" />}
-                <button onClick={() => removeRevision(r.id, projectId)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-1">
+                <button
+                  aria-label="Delete revision tracker"
+                  onClick={() => removeRevision(r.id, projectId)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-1">
                   <Trash2 size={12} />
                 </button>
               </div>

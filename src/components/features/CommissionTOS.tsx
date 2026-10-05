@@ -170,7 +170,7 @@ export default function CommissionTOS() {
             <div key={t.id}>
               <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
                 <div className="flex-1 min-w-0 flex items-center gap-2">
-                  <button
+                  <button aria-label="Next"
                     onClick={() => setExpanded(expanded === t.id ? null : t.id)}
                     className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                   >
@@ -196,7 +196,7 @@ export default function CommissionTOS() {
                       <Check size={12} />
                     </button>
                   )}
-                  <button
+                  <button aria-label="Delete commission tos"
                     onClick={() => handleDelete(t.id)}
                     className="text-[var(--text-tertiary)] hover:text-[#A32D2D]"
                   >

@@ -14,13 +14,30 @@ use std::time::Duration;
 use tauri::{AppHandle, Emitter};
 use tokio::runtime::Runtime;
 use tokio::sync::Mutex;
-use tower_http::timeout::TimeoutLayer;
+use axum::response::IntoResponse;
+use tower_http::{limit::RequestBodyLimitLayer, timeout::TimeoutLayer};
 
 const RATE_LIMIT_MAX: u64 = 60;
 const RATE_LIMIT_WINDOW_SECS: u64 = 60;
 const TOKEN_LOOKUP_FAIL_MAX: u64 = 10;
 const TOKEN_LOOKUP_LOCKOUT_SECS: u64 = 300;
 const REQUEST_TIMEOUT_SECS: u64 = 30;
+
+/// Cap on concurrent portal requests.
+///
+/// Without this a local process can hold connections open indefinitely; each one
+/// opens its own SQLite handle. The permit is released when the response future
+/// is dropped, so a panicking handler cannot leak capacity.
+///
+/// Accepting the connection when the limit is already reached would just move
+/// the queue into the kernel backlog, which is what the timeout is for, so
+/// excess requests are shed immediately instead.
+const MAX_CONCURRENT_REQUESTS: usize = 64;
+
+// A portal response is a name, a signature and one enum value. A kilobyte is
+// generous by two orders of magnitude, and it is checked BEFORE serde parses the
+// body, so an unauthenticated caller cannot make us allocate.
+const MAX_REQUEST_BODY_BYTES: usize = 16 * 1024;
 
 fn chrono_now() -> String {
     Utc::now().to_rfc3339()
@@ -254,17 +271,22 @@ fn build_portal_html(conn: &Connection, token: &TokenRecord) -> Result<String, S
 
         let name_placeholder = token.client_name.as_deref().unwrap_or(&client_val);
 
-        let action_section = if let Some(resp) = response {
+        let action_section = if let Some(resp_raw) = response {
             let resp_date =
                 token.client_response_at.as_deref().map(format_date).unwrap_or_default();
             let name = token.client_name.as_deref().unwrap_or("Client");
+            // Escape at the sink. This interpolation used neither escape_html nor
+            // sanitize_html, the only unescaped one on the page, and its only
+            // protection was a DB CHECK that no migration backfills into an
+            // existing database.
+            let resp = escape_html(resp_raw);
             format!(
                 r#"<div class="response-banner {}">
                     <div class="response-icon">{}</div>
                     <div>{} this proposal on {}</div>
                 </div>"#,
                 resp,
-                if resp == "accepted" { "&#10003;" } else { "&#10007;" },
+                if resp_raw == "accepted" { "&#10003;" } else { "&#10007;" },
                 escape_html(name),
                 escape_html(&resp_date),
             )
@@ -348,7 +370,7 @@ fn build_portal_html(conn: &Connection, token: &TokenRecord) -> Result<String, S
  <head>
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>{} — Proposal</title>
+ <title>{}, Proposal</title>
  {}
  </head>
  <body>
@@ -493,7 +515,7 @@ fn build_portal_html(conn: &Connection, token: &TokenRecord) -> Result<String, S
  <head>
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>{} — Contract</title>
+ <title>{}, Contract</title>
  {}
  </head>
  <body>
@@ -533,7 +555,10 @@ fn security_headers() -> axum::http::HeaderMap {
     headers.insert(
         HeaderName::from_static("content-security-policy"),
         HeaderValue::from_static(
-            "default-src 'self'; style-src 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:",
+            // form-action is NOT covered by default-src, and it is the directive
+            // that stops an injected handler exfiltrating the page: a form POST
+            // is a top-level navigation, so connect-src would not stop it.
+            "default-src 'self'; style-src 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; form-action 'none'; base-uri 'none'; frame-ancestors 'none'; object-src 'none'",
         ),
     );
     headers.insert(
@@ -624,11 +649,40 @@ async fn serve_portal(
     }
 }
 
+/// Anti-CSRF check for the respond endpoint.
+///
+/// Scope, stated honestly: this stops a WEB PAGE loaded in the freelancer's
+/// browser from POSTing on a client's behalf. A cross-origin `fetch` carrying a
+/// custom header triggers a CORS preflight, and this server registers no OPTIONS
+/// route and sends no `Access-Control-Allow-*` header, so the browser refuses it.
+/// A plain form POST cannot set the header at all. That is the whole job, and it
+/// works.
+///
+/// It is NOT authentication against a local process. Anything running as the
+/// user can set this header, read the portal HTML to learn the token, or open
+/// `lance.db` directly. Tightening the header value would buy nothing, because
+/// every value a stronger check needs is already sitting in a file the same local
+/// caller can read. The real controls for that position are filesystem
+/// permissions on the app data directory, which are outside this file.
+///
+/// The compare is constant-time anyway; it costs nothing and removes the habit.
 fn check_portal_header(headers: &axum::http::HeaderMap) -> bool {
-    headers.get("X-Lance-Client").map(|v| v.as_bytes() == b"portal").unwrap_or(false)
+    let expected = b"portal";
+    let Some(value) = headers.get("X-Lance-Client").map(|v| v.as_bytes()) else {
+        return false;
+    };
+    if value.len() != expected.len() {
+        return false;
+    }
+    let mut diff = 0u8;
+    for (a, b) in value.iter().zip(expected.iter()) {
+        diff |= a ^ b;
+    }
+    diff == 0
 }
 
 async fn handle_respond(
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
     State(state): State<AppState>,
     Path(token): Path<String>,
     headers: axum::http::HeaderMap,
@@ -639,13 +693,37 @@ async fn handle_respond(
         return Err((axum::http::StatusCode::FORBIDDEN, "Access denied.".to_string()));
     }
 
+    // Same guard as serve_portal. This route previously had NEITHER limiter, so
+    // it was an unthrottled token oracle: it returns 404 for unknown, 410 for
+    // expired, 409 for already-answered and 200 on success, so a caller holding
+    // a leaked partial token could confirm it and learn its state as fast as the
+    // socket allowed. Tokens are 256-bit so blind enumeration is infeasible, but
+    // confirming a leaked one is exactly the case that matters.
+    if !state.check_rate_limit(&token).await {
+        return Err((
+            axum::http::StatusCode::TOO_MANY_REQUESTS,
+            "Too many requests.".to_string(),
+        ));
+    }
+    let source = addr.ip().to_string();
+    if !state.record_token_failure(&source).await {
+        return Err((
+            axum::http::StatusCode::TOO_MANY_REQUESTS,
+            "Too many failed attempts.".to_string(),
+        ));
+    }
+
     let conn = db_connection(&state.db_path)
-        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e))?;
+        .map_err(|_| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, "Database unavailable.".to_string()))?;
 
     let record = find_token(&conn, &token)
-        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e))?
+        .map_err(|_| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, "Database unavailable.".to_string()))?
         .ok_or_else(|| (axum::http::StatusCode::NOT_FOUND, "Share link not found.".to_string()))?;
 
+    // The client needs honest feedback, but the client is the legitimate holder
+    // of this token. The oracle that mattered was the unthrottled probe, which
+    // the guard above now closes; the messages here stay specific because the
+    // only party who can receive them is someone who already has the token.
     if record.client_response.is_some() {
         return Err((
             axum::http::StatusCode::CONFLICT,
@@ -659,26 +737,30 @@ async fn handle_respond(
         }
     }
 
-    let sanitized_name = if let Some(ref name) = payload.client_name {
-        let trimmed = name.trim();
-        if trimmed.len() > 200 {
-            trimmed[..200].to_string()
-        } else {
-            trimmed.to_string()
-        }
-    } else {
-        "Client".to_string()
-    };
+    // Truncate by character, not by byte index. `trimmed[..200]` panics when the
+    // cut lands inside a multi-byte character, and [profile.release] sets
+    // panic = "abort", so that panic aborts the whole app: one POST from anyone
+    // holding a share link, with 199 ASCII bytes followed by a 3-byte character.
+    let sanitized_name = payload
+        .client_name
+        .as_deref()
+        .map(|name| name.trim().chars().take(200).collect::<String>())
+        .unwrap_or_else(|| "Client".to_string());
 
-    let sanitized_sig = if let Some(ref sig) = payload.client_signature {
-        let trimmed = sig.trim();
-        if trimmed.len() > 200 {
-            trimmed[..200].to_string()
-        } else {
-            trimmed.to_string()
-        }
-    } else {
-        "Unknown".to_string()
+    let sanitized_sig = payload
+        .client_signature
+        .as_deref()
+        .map(|sig| sig.trim().chars().take(200).collect::<String>())
+        .unwrap_or_else(|| "Unknown".to_string());
+
+    // Boundary validation. `client_response` reaches the portal HTML, so it is
+    // a closed enum here rather than trusting the DB CHECK, which no migration
+    // backfills into an existing database.
+    let response = match payload.response.as_str() {
+        "accepted" => "accepted",
+        "declined" => "declined",
+        "signed" => "signed",
+        _ => return Err((axum::http::StatusCode::BAD_REQUEST, "Invalid response.".into())),
     };
 
     let now = chrono_now();
@@ -698,11 +780,11 @@ async fn handle_respond(
     } else {
         conn.execute(
             "UPDATE share_tokens SET client_response = ?1, client_response_at = ?2, client_name = ?3 WHERE token = ?4",
-            rusqlite::params![payload.response, now, sanitized_name, token],
+            rusqlite::params![response, now, sanitized_name, token],
         )
         .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-        if payload.response == "accepted" {
+        if response == "accepted" {
             conn.execute(
                 "UPDATE proposals SET status = 'accepted' WHERE id = ?1",
                 rusqlite::params![record.entity_id],
@@ -762,11 +844,45 @@ pub fn start_server(db_path: String, app_handle: AppHandle) -> Result<ServerHand
         token_failures: Arc::new(Mutex::new(HashMap::new())),
     };
 
+    let permits = std::sync::Arc::new(tokio::sync::Semaphore::new(MAX_CONCURRENT_REQUESTS));
     let app = Router::new()
-        .route("/share/{token}", get(serve_portal))
-        .route("/share/{token}/respond", post(handle_respond))
+        // axum 0.7 uses `:param` (matchit normalises params to `b':'`, see
+        // matchit-0.7 tree.rs). The `{token}` spelling is axum 0.8 syntax, so
+        // BOTH of these were being registered as literal paths containing the
+        // text "{token}" and never matched a request. Every share link 404'd
+        // with an empty body, and the portal has been dead on arrival. Verified
+        // by inserting a real token into share_tokens and requesting it.
+        .route("/share/:token", get(serve_portal))
+        .route("/share/:token/respond", post(handle_respond))
         .with_state(state)
-        .layer(TimeoutLayer::new(Duration::from_secs(REQUEST_TIMEOUT_SECS)));
+        .layer(TimeoutLayer::new(Duration::from_secs(REQUEST_TIMEOUT_SECS)))
+        // The body cap was the half of the `limit` feature that was enabled but
+        // never wired up. A portal response is a name, a signature and one enum;
+        // axum's implicit 2MB limit meant an unauthenticated caller could make
+        // serde allocate 2MB per request. Checked before parsing.
+        .layer(RequestBodyLimitLayer::new(MAX_REQUEST_BODY_BYTES))
+        // Concurrency last, so it wraps everything beneath it: a request that
+        // cannot get a permit is shed before it reaches a handler or opens a
+        // SQLite handle. `try_acquire_owned` means we shed rather than queue,
+        // because queueing would just move the backlog into the kernel.
+        .layer(axum::middleware::from_fn(move |req: axum::extract::Request, next: axum::middleware::Next| {
+            let permits = permits.clone();
+            async move {
+                match permits.clone().try_acquire_owned() {
+                    Ok(permit) => {
+                        let response = next.run(req).await;
+                        drop(permit);
+                        response
+                    }
+                    Err(_) => (
+                        axum::http::StatusCode::TOO_MANY_REQUESTS,
+                        [(axum::http::header::CONTENT_TYPE, "text/plain; charset=utf-8")],
+                        "Portal busy",
+                    )
+                        .into_response(),
+                }
+            }
+        }));
 
     let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<()>();
 
@@ -775,8 +891,18 @@ pub fn start_server(db_path: String, app_handle: AppHandle) -> Result<ServerHand
     let _ = app_handle.emit("portal-server-ready", PortalServerReadyPayload { port });
 
     runtime.spawn(async move {
-        let listener =
-            tokio::net::TcpListener::from_std(listener).expect("Failed to convert listener");
+        // Not .expect(): [profile.release] sets panic = "abort", so a failure
+        // here would kill the whole desktop app rather than just the portal
+        // server. try_bind_sequential already guarantees the listener is
+        // non-blocking (tokio's from_std panics on a blocking socket), but a
+        // portal that fails to start must not be able to take the app with it.
+        let listener = match tokio::net::TcpListener::from_std(listener) {
+            Ok(l) => l,
+            Err(e) => {
+                eprintln!("[portal] listener conversion failed, portal disabled: {e}");
+                return;
+            }
+        };
         axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>())
             .with_graceful_shutdown(async {
                 let _ = shutdown_rx.await;
@@ -800,10 +926,16 @@ fn try_bind_sequential(ports: &[u16]) -> Result<(std::net::TcpListener, u16), St
             return Ok((listener, port));
         }
     }
+    // Not .unwrap(): same reasoning as the from_std call above, panic = "abort"
+    // turns this into an app kill on the fallback path.
     std::net::TcpListener::bind("127.0.0.1:0")
-        .map(|listener| {
-            let port = listener.local_addr().unwrap().port();
-            (listener, port)
+        .map_err(|e| format!("Failed to bind to any port: {}", e))
+        .and_then(|listener| {
+            let port = listener
+                .local_addr()
+                .map_err(|e| format!("Failed to read listener address: {}", e))?
+                .port();
+            Ok((listener, port))
         })
         .map_err(|e| format!("Failed to bind to any port: {}", e))
         .and_then(|(listener, port)| {
@@ -812,4 +944,52 @@ fn try_bind_sequential(ports: &[u16]) -> Result<(std::net::TcpListener, u16), St
                 .map_err(|e| format!("Failed to configure listener: {}", e))?;
             Ok((listener, port))
         })
+}
+
+#[cfg(test)]
+mod portal_tests {
+    use super::{check_portal_header, MAX_REQUEST_BODY_BYTES};
+    use axum::http::{HeaderMap, HeaderValue};
+
+    fn headers_with(value: &str) -> HeaderMap {
+        let mut h = HeaderMap::new();
+        h.insert("X-Lance-Client", HeaderValue::from_str(value).unwrap());
+        h
+    }
+
+    /// The anti-CSRF property: a browser cannot forge this cross-origin,
+    /// because setting a custom header forces a preflight that this server
+    /// never answers. That is the control, and it must not regress.
+    #[test]
+    fn accepts_exact_header_only() {
+        assert!(check_portal_header(&headers_with("portal")));
+    }
+
+    #[test]
+    fn rejects_missing_wrong_and_near_miss_headers() {
+        assert!(!check_portal_header(&HeaderMap::new()), "missing header");
+        assert!(!check_portal_header(&headers_with("Portal")), "case differs");
+        assert!(!check_portal_header(&headers_with("porta1")), "transposed char");
+        assert!(!check_portal_header(&headers_with("portal ")), "trailing space");
+        assert!(!check_portal_header(&headers_with(" portal")), "leading space");
+        assert!(!check_portal_header(&headers_with("portalx")), "prefix");
+        assert!(!check_portal_header(&headers_with("")), "empty");
+    }
+
+    /// A 256-bit token is the real secret; the body carries a name, a signature
+    /// and one enum. The cap must sit far below what a real request needs.
+    #[test]
+    fn body_cap_is_generous_for_real_payloads() {
+        let realistic = r#"{"response":"accepted","client_name":"Riley Chen","client_signature":"Riley Chen","notes":"Thanks, sending the deposit today."}"#;
+        assert!(
+            realistic.len() < MAX_REQUEST_BODY_BYTES,
+            "a realistic response must fit under the cap"
+        );
+    }
+
+    #[test]
+    fn body_cap_rejects_an_abusive_payload() {
+        let abusive = "x".repeat(MAX_REQUEST_BODY_BYTES + 1);
+        assert!(abusive.len() > MAX_REQUEST_BODY_BYTES);
+    }
 }

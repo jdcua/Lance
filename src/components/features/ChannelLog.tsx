@@ -113,7 +113,9 @@ export default function ChannelLog({ projectId }: { projectId: string }) {
             <span key={c.id} className={`inline-flex items-center gap-1 px-2 py-1 rounded-[6px] text-[11px] font-medium ${CHANNEL_COLORS[c.channel] || CHANNEL_COLORS.other}`}>
               <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: CHANNEL_DOT_COLORS[c.channel] || CHANNEL_DOT_COLORS.other }} />
               {c.channel}
-              <button onClick={(e) => { e.stopPropagation(); handleToggle(c.channel); }} className="ml-0.5 hover:opacity-70">
+              <button
+                aria-label="Close"
+                onClick={(e) => { e.stopPropagation(); handleToggle(c.channel); }} className="ml-0.5 hover:opacity-70">
                 <X size={10} />
               </button>
             </span>

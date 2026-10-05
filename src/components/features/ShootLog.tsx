@@ -70,7 +70,9 @@ export default function ShootLog({ projectId }: { projectId: string }) {
                   {s.hours_on_location != null && <><Clock size={10} className="inline mr-0.5 ml-1" />{s.hours_on_location}h</>}
                 </span>
               </div>
-              <button onClick={() => removeShoot(s.id, projectId)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+              <button
+                aria-label="Delete shoot log"
+                onClick={() => removeShoot(s.id, projectId)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                 <Trash2 size={12} />
               </button>
             </div>

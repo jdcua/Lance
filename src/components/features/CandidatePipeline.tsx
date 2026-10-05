@@ -182,7 +182,9 @@ export default function CandidatePipeline({ clientId }: { clientId: string }) {
                       >
                         {candidate.name}
                       </button>
-                      <button onClick={() => handleDelete(candidate.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-1 flex-shrink-0">
+                      <button
+                        aria-label="Delete candidate pipeline"
+                        onClick={() => handleDelete(candidate.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-1 flex-shrink-0">
                         <Trash2 size={10} />
                       </button>
                     </div>

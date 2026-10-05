@@ -1,0 +1,7 @@
+[
+ {
+  "sev": "S3",
+  "area": "corrupt",
+  "msg": "null-rows: 7 console errors (e.g. [PhaseTracker] loadPhases failed: TypeError: Cannot read properties of null (reading 'proj)"
+ }
+]

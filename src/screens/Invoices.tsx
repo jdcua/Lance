@@ -376,7 +376,7 @@ export default function Invoices() {
     // Typo guard (mirrors the expense form): computed totals can only be
     // absurd via a mistyped rate/quantity.
     if (total > 999999999.99 || !(total >= 0)) {
-      addToast('That total looks off — please check rates and quantities for typos', 'error');
+      addToast('That total looks off, please check rates and quantities for typos', 'error');
       return;
     }
     const invoice_number = sanitizeInvoiceNumber(form.invoice_number);
@@ -594,9 +594,16 @@ export default function Invoices() {
     return Math.max(0, inv.total - getPaidTotal(inv.id));
   };
 
+  // Money is compared in integer CENTS, never in floats. Totals are persisted as
+  // raw f64 (invoices.rs stores whatever JS summed), so `3 × 10.005 = 30.015`
+  // is stored while Intl renders "$30.02". Comparing 30.015 >= 30.02 in floats
+  // made the *displayed* balance unpayable: the guard rejected the exact amount
+  // the app had just shown the user.
   const computeInvoiceStatus = (inv: Invoice, paidTotal: number): Invoice['status'] => {
-    if (paidTotal >= inv.total) return 'paid';
-    if (paidTotal > 0) return 'partial';
+    const paidCents = Math.round(paidTotal * 100);
+    const totalCents = Math.round(inv.total * 100);
+    if (paidCents >= totalCents) return 'paid';
+    if (paidCents > 0) return 'partial';
     // No payments remain. A previously paid/partial invoice must revert to a
     // billable state instead of staying 'paid' with zero payments.
     if (inv.status === 'draft') return 'draft';
@@ -614,13 +621,15 @@ export default function Invoices() {
         addToast('Payment amount must be greater than zero', 'error');
         return;
       }
-      // Guard against overpayment: total paid must never exceed the invoice total.
+      // Guard against overpayment: total paid must never exceed the invoice
+      // total. Compared in cents so a stored float total does not reject the
+      // rounded amount the UI just displayed.
       const paidSoFar = useStore
         .getState()
         .payments.filter((p) => p.invoice_id === paymentInv.id)
         .reduce((s, p) => s + p.amount, 0);
       const remaining = Math.max(0, paymentInv.total - paidSoFar);
-      if (amount > remaining) {
+      if (Math.round(amount * 100) > Math.round(remaining * 100)) {
         setPaymentSaving(false);
         addToast(`Payment exceeds remaining balance of ${fmtInv(remaining, paymentInv)}`, 'error');
         return;
@@ -637,10 +646,15 @@ export default function Invoices() {
           ? sanitizeInput(paymentForm.notes).slice(0, MAX_LENGTHS.notes)
           : undefined,
       });
+      // Read the payments back AFTER the insert, and do NOT add `amount` again:
+      // addPayment already appended the new row. The extra `+ amount` made a
+      // $500 payment on a $1000 invoice report the invoice as fully paid while
+      // the balance still said $500, the freelancer thinks they are owed
+      // nothing.
       const updatedPayments = useStore
         .getState()
         .payments.filter((p) => p.invoice_id === paymentInv.id);
-      const paidTotal = updatedPayments.reduce((s, p) => s + p.amount, 0) + amount;
+      const paidTotal = updatedPayments.reduce((s, p) => s + p.amount, 0);
       const newStatus = computeInvoiceStatus(paymentInv, paidTotal);
       const isFullyPaid = newStatus === 'paid';
       if (newStatus !== paymentInv.status || isFullyPaid) {
@@ -1009,7 +1023,7 @@ export default function Invoices() {
   if (loading)
     return (
       <div className="p-6">
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="h-24 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />
           ))}
@@ -1025,7 +1039,7 @@ export default function Invoices() {
   return (
     <div className="p-6">
       <LoadError error={invoicesError} onRetry={() => loadInvoices()} />
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
         <MetricCard
           label="Outstanding"
           value={moneyValue(
@@ -1155,7 +1169,7 @@ export default function Invoices() {
                 const remaining = getRemainingBalance(inv);
                 const invPayments = payments.filter((p) => p.invoice_id === inv.id);
                 // The follow-up strip below already carries its own Record
-                // Payment action — hide the duplicate in the action row.
+                // Payment action, hide the duplicate in the action row.
                 const hasFollowUpStrip =
                   inv.status !== 'paid' &&
                   pendingFollowUps.some(
@@ -1501,7 +1515,7 @@ export default function Invoices() {
                                     </span>
                                   )}
                                 </div>
-                                <button
+                                <button aria-label="Delete invoices"
                                   onClick={() =>
                                     setConfirmDeletePayment({ id: p.id, invoiceId: inv.id })
                                   }

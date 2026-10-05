@@ -1,0 +1,134 @@
+name: Security
+
+# OWASP Top 10:2025 A03 (Software Supply Chain Failures) and A08 (Software or
+# Data Integrity Failures). This is the gate that makes the rest of the
+# security posture hold, without it, a CVE in any transitive dependency merges
+# silently, which is exactly how a HIGH advisory in the Tiptap editor
+# (@tiptap/core prototype pollution, user-visible in the built bundle) survived
+# in this repo until 2026-10-02.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Monday 05:37 UTC. Catches advisories published over the weekend, which a
+    # push/PR-only gate would not see until the next commit.
+    - cron: '37 5 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  npm-audit:
+    name: npm audit (shipped dependencies)
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # --ignore-scripts: nothing in this job builds a native binding, so deny
+      # every install script outright. The release job still runs them (and
+      # needs fsevents on macOS), see release.yml.
+      - run: npm ci --ignore-scripts
+
+      # Prod tree only, hard gate. Shipping a high/critical advisory to users is
+      # the failure that matters; gating the dev tree as well just trains people
+      # to reach for `npm audit fix --force`, which is how @tiptap/core got
+      # pinned below its own advisory floor in the first place.
+      - name: No high or critical advisory in shipped dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      # Dev tree: reported, never blocking. A new dev advisory should be visible
+      # in the run summary without being a merge blocker.
+      - name: Summarise dev-only advisories (non-blocking)
+        run: |
+          npm audit --json > /tmp/audit-dev.json || true
+          node -e '
+            const j = require("/tmp/audit-dev.json");
+            const m = (j.metadata || {}).vulnerabilities || {};
+            const rows = Object.values(j.vulnerabilities || {})
+              .map((v) => `| \`${v.name}\` | ${v.severity} | ${v.isDirect ? "direct" : "transitive"} |`)
+              .join("\n");
+            require("fs").appendFileSync(
+              process.env.GITHUB_STEP_SUMMARY,
+              "### npm audit, development tree (non-blocking)\n\n" +
+                `critical ${m.critical || 0} · high ${m.high || 0} · moderate ${m.moderate || 0} · low ${m.low || 0}\n\n` +
+                (rows ? `| package | severity | scope |\n|---|---|---|\n${rows}\n` : "Clean.\n"),
+            );
+          '
+
+  cargo-audit:
+    name: cargo audit (lockfile-accurate)
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Linux deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+
+      # Without --locked, cargo silently re-resolves the graph whenever the
+      # lockfile's own version drifts from Cargo.toml, so the lockfile you audit
+      # stops being the lockfile you build. --locked turns that drift into a
+      # build failure. This caught a real incident: a `cargo tree` invocation
+      # during the 2026-10-02 audit rewrote Cargo.lock in place.
+      - name: Cargo.lock is in sync with Cargo.toml
+        working-directory: src-tauri
+        run: cargo tree --locked --depth 0
+
+      - uses: rustsec/audit-check@69366f33c96575abad1ee0dba8212993eecbe998 # v2.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # rustsec/audit-check's `ignore:` input is additive and silent, it will not
+      # fail if you ignore something that is not vulnerable, which is how audit
+      # gates decay into decoration. This step is the actual gate: it reasons
+      # about patch availability and validates the allowlist itself.
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+
+      - name: Advisory gate
+        working-directory: src-tauri
+        run: |
+          cargo audit --json > /tmp/cargo-audit.json || true
+          node ../.github/security/check-cargo-audit.mjs \
+            /tmp/cargo-audit.json \
+            ../.github/security/cargo-audit-allow.json \
+            "${GITHUB_STEP_SUMMARY}"
+
+  xlsx-pin:
+    name: xlsx tarball is hash-pinned
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      # `xlsx` resolves from a CDN tarball, not the npm registry, because
+      # SheetJS moved off npm. package-lock.json carries an integrity hash so
+      # `npm ci` verifies the bytes, but that hash lives in the lockfile, so
+      # anyone who can change package.json can change the hash in the same
+      # commit. Duplicating the expected hash in package.json (via the
+      # `overrides`-adjacent comment convention this step enforces) means an
+      # attacker has to modify two files, one of which is otherwise inert.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - run: node .github/security/check-xlsx-pin.mjs

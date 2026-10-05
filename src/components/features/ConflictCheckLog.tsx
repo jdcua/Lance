@@ -165,7 +165,9 @@ export default function ConflictCheckLog({ clientId }: { clientId: string }) {
                   </span>
                   <span className="text-[10px] text-[var(--text-tertiary)] flex-shrink-0 ml-auto">{check.check_date || '--'}</span>
                 </div>
-                <button onClick={() => handleDelete(check.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                <button
+                  aria-label="Delete conflict check log"
+                  onClick={() => handleDelete(check.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                   <Trash2 size={12} />
                 </button>
               </div>

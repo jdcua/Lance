@@ -194,7 +194,9 @@ export default function PlacementLog({ clientId }: { clientId: string }) {
                     </select>
                   </td>
                   <td className="py-1.5 px-2">
-                    <button onClick={() => handleDelete(placement.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                    <button
+                      aria-label="Delete placement log"
+                      onClick={() => handleDelete(placement.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                       <Trash2 size={12} />
                     </button>
                   </td>

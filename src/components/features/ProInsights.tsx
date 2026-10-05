@@ -113,7 +113,7 @@ export default function ProInsights() {
           <TrendingUp size={16} className="text-[var(--text-tertiary)]" />
           <h3 className="text-sm font-semibold text-[var(--text-primary)]">Projections and Signals</h3>
         </div>
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           <LockedPanel
             title="3-Month Forecast"
             headline={formatCurrency(forecast.total, currency)}
@@ -164,7 +164,7 @@ export default function ProInsights() {
           </p>
         </div>
       )}
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <Card>
           <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">3-Month Forecast</h3>
           <p className="text-[26px] font-bold text-[var(--text-primary)]" style={{ fontFamily: "'Syne', sans-serif" }}>

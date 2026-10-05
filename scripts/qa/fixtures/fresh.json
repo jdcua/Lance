@@ -1,0 +1,10 @@
+{
+ "lance:trial-reset-v1": "done",
+ "lance:theme-mode": "light",
+ "lance:changelog-cache-expiry": "1790962598326",
+ "lance:changelog-cache": "[{\"version\":\"0.9.9-1\",\"date\":\"2026-10-02\",\"items\":[\"Release notes unavailable for this version — check GitHub for details.\"]},{\"version\":\"0.9.3\",\"date\":\"2026-08-07\",\"items\":[\"Bug fixes and improvements\"]}]",
+ "lance:theme": "motion",
+ "lance:sidebar-visited": "[\"/\"]",
+ "lance:telemetry": "[{\"t\":\"2026-10-02T16:36:37.905Z\",\"event\":\"app_launch\"},{\"t\":\"2026-10-02T16:36:37.906Z\",\"event\":\"app_launch\"},{\"t\":\"2026-10-02T16:36:38.873Z\",\"event\":\"onboarding_step\",\"data\":{\"step\":2}},{\"t\":\"2026-10-02T16:36:39.240Z\",\"event\":\"onboarding_step\",\"data\":{\"step\":3}},{\"t\":\"2026-10-02T16:36:39.589Z\",\"event\":\"onboarding_step\",\"data\":{\"step\":4}},{\"t\":\"2026-10-02T16:36:39.920Z\",\"event\":\"onboarding_step\",\"data\":{\"step\":5}},{\"t\":\"2026-10-02T16:36:40.258Z\",\"event\":\"onboarding_done\"}]",
+ "lance:last-run-version": "0.9.9-1"
+}

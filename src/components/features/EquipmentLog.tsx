@@ -112,7 +112,9 @@ export default function EquipmentLog({ projectId }: { projectId: string }) {
                 </span>
                 {item.notes && <span className="text-[var(--text-tertiary)] ml-2">-- {item.notes}</span>}
               </div>
-              <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+              <button
+                aria-label="Delete equipment log"
+                onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                 <Trash2 size={12} />
               </button>
             </div>

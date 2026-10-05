@@ -151,7 +151,9 @@ export default function CancellationMonitor({ clientId }: { clientId: string }) 
                   <span className="text-[#DC2626] flex-shrink-0">${c.refund_amount.toFixed(2)}</span>
                 )}
               </div>
-              <button onClick={() => handleDelete(c.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+              <button
+                aria-label="Delete cancellation monitor"
+                onClick={() => handleDelete(c.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                 <Trash2 size={12} />
               </button>
             </div>

@@ -317,36 +317,54 @@ pub fn create_invoice_payment(
     let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let id = uuid::Uuid::new_v4().to_string();
     let created_at = Utc::now().to_rfc3339();
-    conn.execute(
+
+    // Atomic: the payment row and the derived invoice status must land
+    // together. Previously the INSERT committed, then the status UPDATE ran
+    // separately with its error discarded (`let _ =`), so a failure between
+    // them left a recorded payment against a still-unpaid invoice. The client
+    // recomputes status itself, but the database is the source of truth for
+    // exports, reports, and the portal.
+    let tx = conn
+        .unchecked_transaction()
+        .map_err(|_| "Database operation failed".to_string())?;
+
+    tx.execute(
         "INSERT INTO invoice_payments (id, invoice_id, amount, payment_date, payment_method, reference, notes, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
         rusqlite::params![id, payload.invoice_id, payload.amount, payload.payment_date, payload.payment_method, payload.reference, payload.notes, created_at],
     ).map_err(|_| "Database operation failed".to_string())?;
 
-    let total_paid: f64 = conn
+    // Summed and compared in integer CENTS. A raw f64 comparison is the bug
+    // that made a displayed balance unpayable: 3 x 10.005 stores as 30.015 but
+    // renders as $30.02, and `30.015 >= 30.02` is false. See the same fix in
+    // src/screens/Invoices.tsx.
+    let total_paid: f64 = tx
         .query_row(
             "SELECT COALESCE(SUM(amount), 0) FROM invoice_payments WHERE invoice_id = ?",
             [&payload.invoice_id],
             |row| row.get(0),
         )
         .unwrap_or(0.0);
-    let invoice_total: f64 = conn
+    let invoice_total: f64 = tx
         .query_row(
             "SELECT total FROM invoices WHERE id = ?",
             [&payload.invoice_id],
             |row| row.get(0),
         )
         .unwrap_or(0.0);
-    let new_status = if total_paid >= invoice_total {
+    let new_status = if cents(total_paid) >= cents(invoice_total) {
         "paid"
-    } else if total_paid > 0.0 {
+    } else if cents(total_paid) > 0 {
         "partial"
     } else {
         "sent"
     };
-    let _ = conn.execute(
+    tx.execute(
         "UPDATE invoices SET status = ?1 WHERE id = ?2 AND status NOT IN ('paid', 'draft')",
         rusqlite::params![new_status, payload.invoice_id],
-    );
+    )
+    .map_err(|_| "Database operation failed".to_string())?;
+
+    tx.commit().map_err(|_| "Database operation failed".to_string())?;
 
     Ok(InvoicePayment {
         id,
@@ -358,6 +376,11 @@ pub fn create_invoice_payment(
         notes: payload.notes,
         created_at,
     })
+}
+
+/// Round a currency amount to whole cents for comparison purposes.
+fn cents(amount: f64) -> i64 {
+    (amount * 100.0).round() as i64
 }
 
 #[tauri::command]

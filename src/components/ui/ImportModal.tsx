@@ -688,10 +688,10 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                               <table className="w-full text-xs">
                                 <thead>
                                   <tr className="bg-[var(--bg-secondary)]">
-                                    <th className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--text-secondary)] uppercase">Description</th>
-                                    <th className="px-3 py-1.5 text-right text-[10px] font-semibold text-[var(--text-secondary)] uppercase">Qty</th>
-                                    <th className="px-3 py-1.5 text-right text-[10px] font-semibold text-[var(--text-secondary)] uppercase">Price</th>
-                                    <th className="px-3 py-1.5 text-right text-[10px] font-semibold text-[var(--text-secondary)] uppercase">Total</th>
+                                    <th scope="col" className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--text-secondary)] uppercase">Description</th>
+                                    <th scope="col" className="px-3 py-1.5 text-right text-[10px] font-semibold text-[var(--text-secondary)] uppercase">Qty</th>
+                                    <th scope="col" className="px-3 py-1.5 text-right text-[10px] font-semibold text-[var(--text-secondary)] uppercase">Price</th>
+                                    <th scope="col" className="px-3 py-1.5 text-right text-[10px] font-semibold text-[var(--text-secondary)] uppercase">Total</th>
                                   </tr>
                                 </thead>
                                 <tbody>

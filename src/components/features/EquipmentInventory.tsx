@@ -229,7 +229,9 @@ export default function EquipmentInventory({ clientId }: { clientId: string }) {
                 )}
                 {item.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">{item.notes}</span>}
               </div>
-              <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+              <button
+                aria-label="Delete equipment inventory"
+                onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                 <Trash2 size={12} />
               </button>
             </div>

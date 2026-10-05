@@ -169,7 +169,9 @@ export default function BOMTracker({ projectId }: { projectId: string }) {
                   <td className="py-1.5 px-2 text-right text-[var(--text-primary)] font-medium">${((item.cost || 0) * (item.quantity || 0)).toFixed(2)}</td>
                   <td className="py-1.5 px-2 text-right text-[var(--text-tertiary)]">{item.lead_time_days ? `${item.lead_time_days}d` : '--'}</td>
                   <td className="py-1.5 px-2">
-                    <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                    <button
+                      aria-label="Delete bom tracker"
+                      onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                       <Trash2 size={12} />
                     </button>
                   </td>

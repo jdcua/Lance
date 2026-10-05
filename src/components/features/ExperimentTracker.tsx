@@ -157,7 +157,9 @@ export default function ExperimentTracker({ projectId }: { projectId: string }) 
                   <p className="text-[var(--text-secondary)] mt-0.5 ml-5">{exp.notes}</p>
                 )}
               </div>
-              <button onClick={() => handleDelete(exp.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0 mt-0.5">
+              <button
+                aria-label="Delete experiment tracker"
+                onClick={() => handleDelete(exp.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0 mt-0.5">
                 <Trash2 size={12} />
               </button>
             </div>

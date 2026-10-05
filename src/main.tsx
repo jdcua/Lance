@@ -43,7 +43,7 @@ if (!('cancelIdleCallback' in window)) {
 // Served over plain http (LAN IPs, some WebViews) it is missing and all
 // 170+ id generations throw. Backfill once so every call site keeps working.
 import { safeRandomUUID } from './utils/uuid';
-import { isTrial } from './demo/isDemo';
+import { isTrial, hasTrialPath } from './demo/isDemo';
 if (typeof crypto !== 'undefined' && typeof crypto.randomUUID !== 'function') {
   (crypto as unknown as { randomUUID: () => string }).randomUUID = safeRandomUUID;
 }
@@ -58,9 +58,18 @@ if (isTrial() && typeof document !== 'undefined') {
 
 // Trial: handwritten service worker caches the app shell for offline use.
 // Same-origin only. No analytics, no push, no background sync.
-if (isTrial() && 'serviceWorker' in navigator) {
+//
+// Gated on hasTrialPath, not isTrial: the worker only exists at /try/, and
+// registering anywhere else made the browser fetch a path that answers with
+// the SPA fallback (text/html) — "The script has an unsupported MIME type".
+// Dev with ?trial=1 is the exact case that logged it on every load.
+if (hasTrialPath() && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/try/trial-sw.js', { scope: '/try/' }).catch(() => {});
+    navigator.serviceWorker
+      .register('/try/trial-sw.js', { scope: '/try/' })
+      .catch(() => {
+        /* offline shell is an enhancement, never a hard requirement */
+      });
   });
 }
 
@@ -69,9 +78,35 @@ function Root() {
   // The Motion pref must also silence CSS animations (spinners, skeletons,
   // entrances): MotionConfig only governs the motion library. 'auto' leaves
   // everything to the OS-level media query already in index.css.
+  // Device auto-detect: contrast follows OS prefers-contrast unless the user
+  // overrode it; text scale + motion-off come straight from prefs. Runs in
+  // both the desktop app and the trial (same code, same classes).
   useEffect(() => {
     document.documentElement.classList.toggle('motion-off', prefs.motion === 'off');
-  }, [prefs.motion]);
+    document.documentElement.classList.toggle('textscale-112', prefs.textScale === '112');
+    document.documentElement.classList.toggle('textscale-125', prefs.textScale === '125');
+  }, [prefs.motion, prefs.textScale]);
+  // Contrast auto-detection is a SUBSCRIPTION, not a one-time read. Reading
+  // matchMedia().matches at startup meant a user who turned on Increase Contrast
+  // in OS Settings while Lance was running saw nothing happen until they
+  // relaunched. Listening to 'change' makes "auto follows your device settings"
+  // true for as long as the app is open.
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const query = window.matchMedia('(prefers-contrast: more)');
+    const apply = () => {
+      const osWantsContrast = query.matches;
+      const high = prefs.contrast === 'high' || (prefs.contrast === 'auto' && osWantsContrast);
+      document.documentElement.classList.toggle('contrast-high', high);
+      document.documentElement.classList.toggle(
+        'contrast-auto-boost',
+        prefs.contrast === 'auto' && osWantsContrast,
+      );
+    };
+    apply();
+    query.addEventListener('change', apply);
+    return () => query.removeEventListener('change', apply);
+  }, [prefs.contrast]);
   return (
     <MotionConfig
       reducedMotion={prefs.motion === 'off' ? 'always' : prefs.motion === 'full' ? 'never' : 'user'}

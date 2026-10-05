@@ -119,7 +119,7 @@ export default function ReportCadence({ clientId }: { clientId: string }) {
           <span className="text-xs text-[var(--text-secondary)]">Frequency:</span>
           <div className="flex gap-1">
             {FREQUENCIES.map(f => (
-              <label key={f} className={`px-2 py-1 rounded-[6px] text-[11px] cursor-pointer transition-colors ${form.frequency === f ? 'bg-[var(--accent)] text-white' : 'bg-[var(--bg-card)] text-[var(--text-secondary)] hover:bg-[var(--border-color)]'}`}>
+              <label key={f} className={`px-2 py-1 rounded-[6px] text-[11px] cursor-pointer transition-colors ${form.frequency === f ? 'bg-[var(--accent)] text-[var(--accent-on)]' : 'bg-[var(--bg-card)] text-[var(--text-secondary)] hover:bg-[var(--border-color)]'}`}>
                 <input type="radio" name="frequency" value={f} checked={form.frequency === f} onChange={() => setForm({ frequency: f })} className="hidden" />
                 {f}
               </label>

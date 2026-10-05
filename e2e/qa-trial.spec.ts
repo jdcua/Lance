@@ -66,9 +66,12 @@ test.describe('trial mode', () => {
   });
 
   test('reset removes created data and restores seeds', async ({ page }) => {
+    await page.goto('/clients?trial=1');
+    // Dismiss onboarding AFTER navigating. It opens on whatever route you land
+    // on, so checking for the Skip button before goto always finds nothing and
+    // leaves the modal covering the page.
     const skip = page.getByRole('button', { name: 'Skip setup' });
     if ((await skip.count()) > 0) await skip.click();
-    await page.goto('/clients?trial=1');
     await expect(page.getByText(/Jordan Avery/).first()).toBeVisible({ timeout: 20000 });
     await page.getByText('Add client').click();
     await page.getByPlaceholder('Client name').fill('E2E Testerson');
@@ -101,9 +104,9 @@ test.describe('trial mode', () => {
   });
 
   test('uploaded file bytes survive a reload (IndexedDB, zero server)', async ({ page }) => {
+    await page.goto('/assets?trial=1');
     const skip = page.getByRole('button', { name: 'Skip setup' });
     if ((await skip.count()) > 0) await skip.click();
-    await page.goto('/assets?trial=1');
     // 1x1 red PNG fixture, no fixture file needed.
     const red = Buffer.from(
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',

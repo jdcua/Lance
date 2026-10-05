@@ -176,7 +176,7 @@ export default function SOPStore({ clientId }: { clientId: string }) {
           className={inputClass + ' pl-7'}
         />
         {searchQuery && (
-          <button
+          <button aria-label="Close"
             onClick={() => setSearchQuery('')}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
           >
@@ -234,13 +234,13 @@ export default function SOPStore({ clientId }: { clientId: string }) {
                   <span className="font-medium text-[var(--text-primary)] truncate">{sop.title}</span>
                 </button>
                 <div className="flex items-center gap-1 ml-2 flex-shrink-0">
-                  <button
+                  <button aria-label="Edit sop store"
                     onClick={() => handleEdit(sop)}
                     className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] p-0.5"
                   >
                     <Edit2 size={12} />
                   </button>
-                  <button
+                  <button aria-label="Delete sop store"
                     onClick={() => handleDelete(sop.id)}
                     className="text-[var(--text-tertiary)] hover:text-[#A32D2D] p-0.5"
                   >

@@ -231,7 +231,9 @@ export default function SprintBoard({ projectId }: { projectId: string }) {
                         >
                           <div className="flex items-start justify-between gap-1">
                             <span className="text-[var(--text-primary)] leading-tight flex-1 min-w-0">{task.title}</span>
-                            <button onClick={(e) => { e.stopPropagation(); handleDelete(task.id); }} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] opacity-0 group-hover:opacity-100 flex-shrink-0">
+                            <button
+                              aria-label="Delete sprint board"
+                              onClick={(e) => { e.stopPropagation(); handleDelete(task.id); }} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] opacity-0 group-hover:opacity-100 flex-shrink-0">
                               <Trash2 size={11} />
                             </button>
                           </div>

@@ -166,7 +166,9 @@ export default function AnalysisDeliverableLog({ projectId }: { projectId: strin
                   </span>
                 )}
               </div>
-              <button onClick={() => handleDelete(d.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+              <button
+                aria-label="Delete analysis deliverable log"
+                onClick={() => handleDelete(d.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                 <Trash2 size={12} />
               </button>
             </div>

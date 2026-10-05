@@ -168,7 +168,7 @@ export default function ContentTypeLibrary({ clientId }: { clientId: string }) {
             <div key={item.id}>
               <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
                 <div className="flex-1 min-w-0 flex items-center gap-2">
-                  <button
+                  <button aria-label="Next"
                     onClick={() => setExpanded(expanded === item.id ? null : item.id)}
                     className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                   >
@@ -181,7 +181,9 @@ export default function ContentTypeLibrary({ clientId }: { clientId: string }) {
                     </span>
                   )}
                 </div>
-                <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                <button
+                  aria-label="Delete content type library"
+                  onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                   <Trash2 size={12} />
                 </button>
               </div>

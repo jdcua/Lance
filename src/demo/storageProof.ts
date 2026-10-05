@@ -1,16 +1,21 @@
 /**
  * Storage proof for the trial.
  *
- * Everything the trial stores lives under these localStorage keys and
- * nowhere else. This module only READS sizes — it never sends anything.
- * Keep each function under 5 branches for easy review.
+ * This module only READS sizes, it never sends anything.
+ *
+ * Scope, stated precisely: these are the localStorage and sessionStorage TEXT
+ * keys. Attachment BYTES live in IndexedDB (demo/assetStore.ts) and the app
+ * shell lives in Cache Storage (public/trial-sw.js). Neither is counted here ,
+ * the panel reports them as separate lines rather than pretending they are part
+ * of this total. An earlier version of this file claimed the key list was
+ * "everything the trial stores … and nowhere else", which made the wipe button
+ * and the storage display agree with each other and both be wrong.
+ *
+ * The prefix list matches wipeTrialKeys exactly, including `lance-`, which is
+ * what the free invoice generator uses.
  */
-
-/** Every key the trial may write: the store tables plus profile, prefs,
- *  onboarding, achievements, caches. Same universe wipeTrialKeys removes,
- *  so the panel and the wipe button never disagree. */
 function isTrialKey(key: string): boolean {
-  return key.startsWith('lance:') || key.startsWith('lance_');
+  return key.startsWith('lance:') || key.startsWith('lance_') || key.startsWith('lance-');
 }
 
 export interface StorageEntry {
@@ -35,13 +40,17 @@ function sizeOfKey(key: string): StorageEntry | null {
 
 function listTrialKeys(): string[] {
   const out: string[] = [];
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && isTrialKey(key)) out.push(key);
+  // Both text stores. sessionStorage held the import-classification banner,
+  // which the wipe missed entirely.
+  for (const store of [localStorage, sessionStorage]) {
+    try {
+      for (let i = 0; i < store.length; i++) {
+        const key = store.key(i);
+        if (key && isTrialKey(key)) out.push(key);
+      }
+    } catch {
+      /* private mode: this store contributes nothing */
     }
-  } catch {
-    return out;
   }
   return out.sort();
 }

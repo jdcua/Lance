@@ -177,7 +177,7 @@ export default function StyleTagSystem({ projectId }: { projectId: string }) {
               className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${getTagColor(t.tag)}`}
             >
               {t.tag}
-              <button
+              <button aria-label="Close"
                 onClick={() => handleRemove(t.id)}
                 className="hover:opacity-70"
               >

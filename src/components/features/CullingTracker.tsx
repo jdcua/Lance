@@ -125,7 +125,9 @@ export default function CullingTracker({ projectId }: { projectId: string }) {
                   {s.editing_hours != null && <><Edit3 size={10} className="inline mr-0.5 ml-1" />{s.editing_hours}h edit</>}
                 </span>
               </div>
-              <button onClick={() => handleDelete(s.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+              <button
+                aria-label="Delete culling tracker"
+                onClick={() => handleDelete(s.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                 <Trash2 size={12} />
               </button>
             </div>

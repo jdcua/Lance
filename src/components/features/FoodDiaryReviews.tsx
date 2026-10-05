@@ -183,7 +183,9 @@ export default function FoodDiaryReviews({ clientId }: { clientId: string }) {
                     <span className="text-[var(--text-primary)] truncate">{e.foods || '--'}</span>
                     {e.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">{e.notes}</span>}
                   </div>
-                  <button onClick={() => handleDelete(e.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                  <button
+                    aria-label="Delete food diary reviews"
+                    onClick={() => handleDelete(e.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                     <Trash2 size={12} />
                   </button>
                 </div>

@@ -79,7 +79,9 @@ export default function DatasetLog({ projectId }: { projectId: string }) {
                   {d.format_type && <span className="ml-1">{d.format_type}</span>}
                 </span>
               </div>
-              <button onClick={() => removeDataset(d.id, projectId)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+              <button
+                aria-label="Delete dataset log"
+                onClick={() => removeDataset(d.id, projectId)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                 <Trash2 size={12} />
               </button>
             </div>

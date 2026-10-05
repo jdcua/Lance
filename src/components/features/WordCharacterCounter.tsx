@@ -326,7 +326,7 @@ export default function WordCharacterCounter({ timeEntryId }: { timeEntryId?: st
                           <span>S: <span className="text-[var(--text-primary)]">{cnt?.source_words ?? '--'}</span></span>
                           <span>T: <span className="text-[var(--text-primary)]">{cnt?.target_words ?? '--'}</span></span>
                           <span>C: <span className="text-[var(--text-primary)]">{cnt?.characters ?? '--'}</span></span>
-                          <button
+                          <button aria-label="Edit word character counter"
                             onClick={() => handleEdit(te.id)}
                             className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] p-0.5"
                           >

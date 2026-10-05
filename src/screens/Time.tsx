@@ -266,7 +266,7 @@ export default function TimeScreen() {
 
   if (loading) return (
     <div className="p-6">
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />)}
       </div>
       <div className="h-16 rounded-[8px] bg-[var(--bg-secondary)] skeleton-pulse mb-4" />
@@ -285,7 +285,7 @@ export default function TimeScreen() {
 
       {tab === 'timer' ? (
         <>
-          <div className="grid grid-cols-4 gap-3 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
             <MetricCard label="Today" value={formatDuration(todaysMinutes)} color="gray" />
             <MetricCard label="This Week" value={formatDuration(weekMinutes)} color="gray" />
             <MetricCard label="Unbilled" value={formatDuration(unbilledMinutes)} subtext="billable hours" color={unbilledMinutes > 0 ? 'amber' : 'gray'} />
@@ -423,14 +423,14 @@ export default function TimeScreen() {
           {/* SECTION 2 · Streak Stats + SECTION 5 · Project Filter */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <button
+              <button aria-label="Previous"
                 onClick={() => setHeatmapYear((y) => y - 1)}
                 className="p-0.5 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
               >
                 <ChevronLeft size={16} />
               </button>
               <span className="text-sm font-semibold text-[var(--text-primary)]">{heatmapYear}</span>
-              <button
+              <button aria-label="Next"
                 onClick={() => setHeatmapYear((y) => Math.min(y + 1, now.getFullYear()))}
                 className="p-0.5 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                 disabled={heatmapYear >= now.getFullYear()}
@@ -450,7 +450,7 @@ export default function TimeScreen() {
             </select>
           </div>
 
-          <div className="grid grid-cols-5 gap-3 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
             <MetricCard
               label="Current Streak"
               value={`${streakStats.currentStreak} day${streakStats.currentStreak !== 1 ? 's' : ''}`}
@@ -561,7 +561,7 @@ export default function TimeScreen() {
                       <span className="text-xs font-semibold text-[var(--text-primary)]">
                         {DAY_NAMES_FULL[selectedCell.date.getDay()]}, {MONTHS_SHORT[selectedCell.date.getMonth()]} {selectedCell.date.getDate()}
                       </span>
-                      <button
+                      <button aria-label="Close"
                         onClick={() => { setSelectedCell(null); setSelectedCellPos(null); }}
                         className="p-0.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                       >

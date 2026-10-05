@@ -164,7 +164,9 @@ export default function DeliverableTracker({ clientId }: { clientId: string }) {
                         {d.type && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)] flex-shrink-0">{d.type}</span>}
                         {d.due_date && <span className="text-[10px] text-[var(--text-tertiary)] flex-shrink-0">{d.due_date}</span>}
                       </div>
-                      <button onClick={() => handleDelete(d.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                      <button
+                        aria-label="Delete deliverable tracker"
+                        onClick={() => handleDelete(d.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                         <Trash2 size={12} />
                       </button>
                     </div>

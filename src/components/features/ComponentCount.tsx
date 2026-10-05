@@ -180,20 +180,28 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
                       autoFocus
                       onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') cancelEdit(); }}
                     />
-                    <button onClick={handleSaveEdit} className="text-[#16A34A] hover:text-[#15803D]">
+                    <button
+                      aria-label="Confirm component count"
+                      onClick={handleSaveEdit} className="text-[#16A34A] hover:text-[#15803D]">
                       <Check size={12} />
                     </button>
-                    <button onClick={cancelEdit} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
+                    <button
+                      aria-label="Close"
+                      onClick={cancelEdit} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
                       <X size={12} />
                     </button>
                   </>
                 ) : (
                   <>
                     <span className="font-semibold text-[var(--text-primary)] min-w-[24px] text-right">{item.count}</span>
-                    <button onClick={() => startEdit(item)} className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))]">
+                    <button
+                      aria-label="Edit component count"
+                      onClick={() => startEdit(item)} className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))]">
                       <Edit3 size={11} />
                     </button>
-                    <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                    <button
+                      aria-label="Delete component count"
+                      onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                       <Trash2 size={12} />
                     </button>
                   </>

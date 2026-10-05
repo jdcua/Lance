@@ -147,7 +147,7 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
         role="dialog"
         aria-modal="true"
         aria-label="Unlock Pro depth"
-        className="w-[520px] bg-[var(--bg-card)] rounded-[16px] shadow-2xl px-8 py-8"
+        className="w-[520px] max-w-[calc(100vw-32px)] max-h-[85vh] overflow-y-auto mx-4 bg-[var(--bg-card)] rounded-[16px] shadow-2xl px-8 py-8"
         style={{ fontFamily: "'Inter', sans-serif" }}
       >
         <div className="flex items-start justify-between mb-6">
@@ -183,7 +183,7 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
               onClick={() => setActiveTab(plan.id)}
               className={`flex-1 py-3 px-4 rounded-[10px] text-sm font-medium transition-all ${
                 activeTab === plan.id
-                  ? 'bg-[var(--accent)] text-white'
+                  ? 'bg-[var(--accent)] text-[var(--accent-on)]'
                   : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
               }`}
             >
@@ -228,7 +228,7 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
                   <p className="text-sm text-[var(--text-secondary)]">{plan.description}</p>
                 </div>
                 {plan.badge && activeTab === plan.id && (
-                  <span className="px-2 py-0.5 text-[10px] font-semibold bg-[var(--accent)] text-white rounded-full">
+                  <span className="px-2 py-0.5 text-[10px] font-semibold bg-[var(--accent)] text-[var(--accent-on)] rounded-full">
                     {plan.badge}
                   </span>
                 )}

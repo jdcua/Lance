@@ -148,7 +148,7 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
               onClick={() => setTab('url')}
               className={`flex-1 text-[10px] py-1 rounded-[4px] font-medium transition-colors ${
                 tab === 'url'
-                  ? 'bg-[var(--accent)] text-white'
+                  ? 'bg-[var(--accent)] text-[var(--accent-on)]'
                   : 'bg-[var(--border-color)] text-[var(--text-tertiary)]'
               }`}
             >
@@ -158,7 +158,7 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
               onClick={() => setTab('asset')}
               className={`flex-1 text-[10px] py-1 rounded-[4px] font-medium transition-colors ${
                 tab === 'asset'
-                  ? 'bg-[var(--accent)] text-white'
+                  ? 'bg-[var(--accent)] text-[var(--accent-on)]'
                   : 'bg-[var(--border-color)] text-[var(--text-tertiary)]'
               }`}
             >
@@ -255,7 +255,7 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
                     </span>
                   </div>
                 )}
-                <button
+                <button aria-label="Delete reference board"
                   onClick={() => handleDelete(item.id)}
                   className="absolute top-1 right-1 w-5 h-5 rounded-full bg-[#A32D2D]/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                 >

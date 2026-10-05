@@ -147,20 +147,20 @@ export default function PhaseTracker({ projectId, defaultPhases }: { projectId: 
                   <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
                     <span className="text-[var(--text-primary)]">Delete "{p.phase_name}"?</span>
                     <div className="flex items-center gap-1">
-                      <button onClick={() => handleDelete(p.id)} className="text-[#A32D2D] px-1"><Check size={12} /></button>
-                      <button onClick={() => setConfirmDelete(null)} className="text-[var(--text-tertiary)] px-1"><X size={12} /></button>
+                      <button onClick={() => handleDelete(p.id)} aria-label={`Confirm delete ${p.phase_name}`} className="text-[#A32D2D] px-1"><Check size={12} /></button>
+                      <button onClick={() => setConfirmDelete(null)} aria-label="Cancel delete" className="text-[var(--text-tertiary)] px-1"><X size={12} /></button>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
                     <div className="flex-1 min-w-0 flex items-center gap-2">
-                      <button onClick={() => handleStatusToggle(p)} title="Click to cycle status">
+                      <button onClick={() => handleStatusToggle(p)} aria-label={`Cycle status of ${p.phase_name}`} title="Click to cycle status">
                         <Circle size={12} fill={p.color || '#888'} stroke={p.color || '#888'} />
                       </button>
                       <span className={`font-medium ${p.status === 'completed' ? 'text-[var(--text-tertiary)] line-through' : 'text-[var(--text-primary)]'}`}>{p.phase_name}</span>
                       <span className="ml-1">{statusBadge(p.status)}</span>
                     </div>
-                    <button onClick={() => setConfirmDelete(p.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                    <button onClick={() => setConfirmDelete(p.id)} aria-label={`Delete ${p.phase_name}`} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                       <Trash2 size={12} />
                     </button>
                   </div>

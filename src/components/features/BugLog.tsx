@@ -179,11 +179,15 @@ export default function BugLog({ projectId }: { projectId: string }) {
               </div>
               <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
                 {bug.status !== 'resolved' && (
-                  <button onClick={() => handleResolve(bug.id)} className="text-[var(--text-tertiary)] hover:text-[#16A34A]">
+                  <button
+                    aria-label="Confirm bug log"
+                    onClick={() => handleResolve(bug.id)} className="text-[var(--text-tertiary)] hover:text-[#16A34A]">
                     <CheckCircle2 size={12} />
                   </button>
                 )}
-                <button onClick={() => handleDelete(bug.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                <button
+                  aria-label="Delete bug log"
+                  onClick={() => handleDelete(bug.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                   <Trash2 size={12} />
                 </button>
               </div>

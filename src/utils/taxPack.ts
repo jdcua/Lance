@@ -1,4 +1,5 @@
 import type { Invoice, Expense, Client } from '../types';
+import { csvCellValue as csvCell } from '../import/parsers/spreadsheet';
 
 export interface TaxQuarter {
   quarter: string;
@@ -51,10 +52,12 @@ export function buildTaxPack(
   clients: Client[],
   year: number,
 ): TaxPack {
-  const paid = invoices.filter((i) => i.status === 'paid' && yearOf(i.paid_at || i.created_at) === year);
+  const paid = invoices.filter(
+    (i) => i.status === 'paid' && yearOf(i.paid_at || i.created_at) === year,
+  );
   const yearExpenses = expenses.filter((e) => yearOf(e.date) === year);
   const outstanding = invoices
-    .filter((i) => (i.status === 'sent' || i.status === 'partial' || i.status === 'overdue'))
+    .filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue')
     .reduce((s, i) => s + i.total, 0);
 
   const revenuePaid = paid.reduce((s, i) => s + i.total, 0);
@@ -65,7 +68,9 @@ export function buildTaxPack(
       const m = new Date(i.paid_at || i.created_at).getUTCMonth();
       return Math.floor(m / 3) + 1 === q;
     });
-    const qExp = yearExpenses.filter((e) => Math.floor(new Date(e.date).getUTCMonth() / 3) + 1 === q);
+    const qExp = yearExpenses.filter(
+      (e) => Math.floor(new Date(e.date).getUTCMonth() / 3) + 1 === q,
+    );
     return {
       quarter: `Q${q}`,
       revenue: qPaid.reduce((s, i) => s + i.total, 0),
@@ -108,11 +113,6 @@ export function buildTaxPack(
   };
 }
 
-function csvCell(v: string | number): string {
-  const s = String(v);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
-
 /** Accountant-ready CSV: summary, quarters, per-client, categories. */
 export function taxPackCsv(pack: TaxPack): string {
   const lines: string[] = [
@@ -136,7 +136,11 @@ export function taxPackCsv(pack: TaxPack): string {
 }
 
 /** Browser and webview safe file download. */
-export function downloadTextFile(filename: string, text: string, mime = 'text/csv;charset=utf-8'): void {
+export function downloadTextFile(
+  filename: string,
+  text: string,
+  mime = 'text/csv;charset=utf-8',
+): void {
   const blob = new Blob([text], { type: mime });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

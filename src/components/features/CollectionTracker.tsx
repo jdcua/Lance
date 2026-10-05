@@ -185,7 +185,9 @@ export default function CollectionTracker({ projectId }: { projectId: string }) 
                   >
                     {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
                   </select>
-                  <button onClick={() => handleDelete(col.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                  <button
+                    aria-label="Delete collection tracker"
+                    onClick={() => handleDelete(col.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                     <Trash2 size={12} />
                   </button>
                 </div>

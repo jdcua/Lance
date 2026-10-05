@@ -4,6 +4,7 @@ import { useStore } from '../store';
 import type { Project } from '../types';
 import { Search, FileText, FolderKanban, Receipt, PenLine, Users, Clock, DollarSign, Paperclip, ChevronRight } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
+import { rankSearch } from '../utils/searchRank';
 
 function formatDateShort(iso: string): string {
   return new Date(iso).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' });
@@ -52,6 +53,7 @@ export default function SearchScreen() {
   const timeEntries = useStore((s) => s.timeEntries);
   const expenses = useStore((s) => s.expenses);
   const allAttachments = useStore((s) => s.allAttachments);
+  const profile = useStore((s) => s.profile);
   const loadClients = useStore((s) => s.loadClients);
   const loadProposals = useStore((s) => s.loadProposals);
   const loadProjects = useStore((s) => s.loadProjects);
@@ -78,12 +80,12 @@ export default function SearchScreen() {
 
   const results = useMemo((): Record<string, SearchResult[]> => {
     if (!query.trim()) return {};
-    const q = query.toLowerCase();
+    const q = query.trim();
+    const LIM = 30;
 
     const groups: Record<string, SearchResult[]> = {};
 
-    groups.client = clients
-      .filter((c) => (c.name || '').toLowerCase().includes(q) || (c.company || '').toLowerCase().includes(q))
+    groups.client = rankSearch(clients, (c) => [c.name || '', c.company || ''], q, LIM)
       .map((c) => ({
         id: c.id,
         label: c.name,
@@ -92,8 +94,7 @@ export default function SearchScreen() {
         path: `/clients?selected=${c.id}`,
       }));
 
-    groups.proposal = proposals
-      .filter((p) => (p.title || '').toLowerCase().includes(q))
+    groups.proposal = rankSearch(proposals, (p) => [p.title || ''], q, LIM)
       .map((p) => ({
         id: p.id,
         label: p.title,
@@ -102,8 +103,7 @@ export default function SearchScreen() {
         path: '/proposals',
       }));
 
-    groups.project = projects
-      .filter((p) => (p.title || '').toLowerCase().includes(q))
+    groups.project = rankSearch(projects, (p) => [p.title || ''], q, LIM)
       .map((p) => ({
         id: p.id,
         label: p.title,
@@ -112,8 +112,12 @@ export default function SearchScreen() {
         path: '/projects',
       }));
 
-    groups.invoice = invoices
-      .filter((inv) => (inv.invoice_number || '').toLowerCase().includes(q))
+    groups.invoice = rankSearch(
+      invoices,
+      (inv) => [inv.invoice_number || '', clients.find((c) => c.id === inv.client_id)?.name || ''],
+      q,
+      LIM,
+    )
       .map((inv) => ({
         id: inv.id,
         label: inv.invoice_number,
@@ -122,8 +126,7 @@ export default function SearchScreen() {
         path: '/invoices',
       }));
 
-    groups.contract = contracts
-      .filter((c) => (c.title || '').toLowerCase().includes(q))
+    groups.contract = rankSearch(contracts, (c) => [c.title || ''], q, LIM)
       .map((c) => ({
         id: c.id,
         label: c.title,
@@ -132,8 +135,7 @@ export default function SearchScreen() {
         path: '/contracts',
       }));
 
-    groups.time_entry = timeEntries
-      .filter((t) => (t.description || '').toLowerCase().includes(q))
+    groups.time_entry = rankSearch(timeEntries, (t) => [t.description || ''], q, LIM)
       .map((t) => {
         const project = projects.find((p: Project) => p.id === t.project_id);
         return {
@@ -145,21 +147,16 @@ export default function SearchScreen() {
         };
       });
 
-    groups.expense = expenses
-      .filter((e) => (e.description || '').toLowerCase().includes(q))
+    groups.expense = rankSearch(expenses, (e) => [e.description || '', e.category || ''], q, LIM)
       .map((e) => ({
         id: e.id,
         label: e.description,
-        sublabel: `${e.category} · ${formatCurrency(e.amount)} · ${formatDateShort(e.date)}`,
+        sublabel: `${e.category} · ${formatCurrency(e.amount, profile?.currency)} · ${formatDateShort(e.date)}`,
         type: 'expense',
         path: '/finance',
       }));
 
-    groups.asset = allAttachments
-      .filter((a) => {
-        const tags = parseTags(a.tags);
-        return (a.filename || '').toLowerCase().includes(q) || tags.some((t) => (t || '').toLowerCase().includes(q));
-      })
+    groups.asset = rankSearch(allAttachments, (a) => [a.filename || '', ...parseTags(a.tags)], q, LIM)
       .map((a) => ({
         id: a.id,
         label: a.filename,
@@ -169,7 +166,7 @@ export default function SearchScreen() {
       }));
 
     return groups;
-  }, [query, clients, proposals, projects, invoices, contracts, timeEntries, expenses, allAttachments]);
+  }, [query, clients, proposals, projects, invoices, contracts, timeEntries, expenses, allAttachments, profile?.currency]);
 
   const totalResults = Object.values(results).reduce((sum, items) => sum + items.length, 0);
 

@@ -151,7 +151,9 @@ export default function ClientProgressWidget({ clientId }: { clientId: string })
                   <span className="text-[var(--text-tertiary)] truncate">{p.notes}</span>
                 )}
               </div>
-              <button onClick={() => handleDelete(p.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+              <button
+                aria-label="Delete client progress widget"
+                onClick={() => handleDelete(p.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                 <Trash2 size={12} />
               </button>
             </div>

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Rocket } from 'lucide-react';
 import Button from './Button';
 import { useStore } from '../../store';
@@ -17,6 +18,20 @@ interface WalkthroughProps {
  */
 export default function Walkthrough({ open, onClose, onStartTour }: WalkthroughProps) {
   const profile = useStore((s) => s.profile);
+
+  // Escape closes, like every other modal — the shortcuts sheet advertises it.
+  // It did not work here: this dialog is hand-rolled rather than <Modal>, so it
+  // got none of the shared Escape handling, and a keyboard user had to tab to
+  // a button to get out.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+
   if (!open) return null;
 
   const plan = getTourPlan(profile?.profession || 'default', loadDrive());

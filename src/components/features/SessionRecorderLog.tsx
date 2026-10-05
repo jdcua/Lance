@@ -210,7 +210,9 @@ export default function SessionRecorderLog({ clientId, projectId }: { clientId?:
                   {new Date(r.created_at).toLocaleDateString()}
                 </span>
               </div>
-              <button onClick={() => handleDelete(r.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+              <button
+                aria-label="Delete session recorder log"
+                onClick={() => handleDelete(r.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                 <Trash2 size={12} />
               </button>
             </div>

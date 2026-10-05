@@ -140,7 +140,9 @@ export default function PlatformLog({ projectId }: { projectId: string }) {
             {engines.map(engine => (
               <span key={engine} className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${getEngineColor(engine)}`}>
                 {engine}
-                <button onClick={() => handleToggleEngine(engine)} className="hover:opacity-70">
+                <button
+                  aria-label="Close"
+                  onClick={() => handleToggleEngine(engine)} className="hover:opacity-70">
                   <X size={10} />
                 </button>
               </span>
@@ -172,7 +174,9 @@ export default function PlatformLog({ projectId }: { projectId: string }) {
             {platforms.map(platform => (
               <span key={platform} className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${getPlatformColor(platform)}`}>
                 {platform}
-                <button onClick={() => handleTogglePlatform(platform)} className="hover:opacity-70">
+                <button
+                  aria-label="Close"
+                  onClick={() => handleTogglePlatform(platform)} className="hover:opacity-70">
                   <X size={10} />
                 </button>
               </span>

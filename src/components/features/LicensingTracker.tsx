@@ -286,7 +286,7 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
                         </span>
                       )}
                     </div>
-                    <button
+                    <button aria-label="Delete licensing tracker"
                       onClick={() => handleDelete(l.id)}
                       className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0"
                     >

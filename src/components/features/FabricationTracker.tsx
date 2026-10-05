@@ -192,7 +192,9 @@ export default function FabricationTracker({ projectId }: { projectId: string })
                   <td className="py-1.5 px-2 text-[var(--text-secondary)]">{item.fab_house || '--'}</td>
                   <td className="py-1.5 px-2 text-right text-[var(--text-primary)]">${(item.cost || 0).toFixed(2)}</td>
                   <td className="py-1.5 px-2">
-                    <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                    <button
+                      aria-label="Delete fabrication tracker"
+                      onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                       <Trash2 size={12} />
                     </button>
                   </td>

@@ -164,7 +164,9 @@ export default function FeedbackAggregator({ clientId }: { clientId: string }) {
                 </div>
                 <p className={`text-[var(--text-primary)] leading-relaxed ${item.actioned ? 'opacity-60' : ''}`}>{item.comment}</p>
               </div>
-              <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] flex-shrink-0 mt-0.5">
+              <button
+                aria-label="Delete feedback aggregator"
+                onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] flex-shrink-0 mt-0.5">
                 <Trash2 size={12} />
               </button>
             </div>

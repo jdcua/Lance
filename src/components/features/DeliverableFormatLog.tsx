@@ -171,7 +171,9 @@ export default function DeliverableFormatLog({ projectId }: { projectId: string 
                 >
                   {item.delivered ? <CheckCircle2 size={12} /> : <Check size={12} />}
                 </button>
-                <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                <button
+                  aria-label="Delete deliverable format log"
+                  onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                   <Trash2 size={12} />
                 </button>
               </div>

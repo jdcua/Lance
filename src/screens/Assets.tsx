@@ -359,7 +359,7 @@ export default function Assets() {
   );
 
   const renderAssetList = (assets: Attachment[]) => (
-    <div className="border border-[var(--border-color)] rounded-[12px] overflow-hidden">
+    <div className="border border-[var(--border-color)] rounded-[12px] overflow-x-auto"><div className="min-w-[560px]">
       <div className="grid grid-cols-[1fr_100px_120px_80px] items-center px-4 py-2 bg-[var(--bg-secondary)] border-b border-[var(--border-color)]">
         <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
           Name
@@ -391,7 +391,7 @@ export default function Assets() {
               {relativeDate(asset.created_at)}
             </span>
             <div className="flex justify-end">
-              <button
+              <button aria-label="Delete assets"
                 onClick={(e) => {
                   e.stopPropagation();
                   setDeleteConfirm(asset);
@@ -404,6 +404,7 @@ export default function Assets() {
           </div>
         );
       })}
+      </div>
     </div>
   );
 
@@ -503,7 +504,7 @@ export default function Assets() {
           className="w-full pl-9 pr-10 py-2 text-sm border border-[var(--border-color)] rounded-[10px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
         />
         {searchQuery && (
-          <button
+          <button aria-label="Close"
             onClick={() => {
               setSearchQuery('');
               setSearchResults(null);
@@ -551,7 +552,7 @@ export default function Assets() {
                   <span
                     className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full ${
                       isActive
-                        ? 'bg-[var(--accent)] text-white'
+                        ? 'bg-[var(--accent)] text-[var(--accent-on)]'
                         : 'bg-[var(--border-color)] text-[var(--text-tertiary)]'
                     }`}
                   >
@@ -593,13 +594,23 @@ export default function Assets() {
       </div>
 
       {/* Content */}
-      {scopeAssets.length === 0 ? (
+      {scopeAssets.length === 0 && searchResults === null ? (
         <div className="text-center py-16">
           <Package size={40} className="mx-auto mb-3 text-[var(--text-tertiary)] opacity-40" />
-          <p className="text-sm text-[var(--text-secondary)]">No assets yet</p>
-          <p className="text-xs text-[var(--text-tertiary)] mt-1">
+          <p className="text-sm font-medium text-[var(--text-primary)]">No assets yet</p>
+          <p className="text-xs text-[var(--text-tertiary)] mt-1 mb-4">
             Upload files or import them through the Import system
           </p>
+          <label className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-[8px] bg-[var(--accent)] text-[var(--accent-on)] hover:opacity-90 cursor-pointer">
+            Upload your first file
+            <input type="file" multiple className="hidden" onChange={(e) => { if (e.target.files) handleUpload(e.target.files); e.target.value = ''; }} />
+          </label>
+        </div>
+      ) : searchResults !== null && searchResults.length === 0 ? (
+        <div className="text-center py-16">
+          <Search size={40} className="mx-auto mb-3 text-[var(--text-tertiary)] opacity-40" />
+          <p className="text-sm text-[var(--text-secondary)]">No assets match your search</p>
+          <p className="text-xs text-[var(--text-tertiary)] mt-1">Try a different name or tag.</p>
         </div>
       ) : searchResults !== null ? (
         viewMode === 'grid' ? (
@@ -730,7 +741,7 @@ export default function Assets() {
                     className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded-full bg-[var(--bg-secondary)] text-[var(--text-primary)]"
                   >
                     {tag}
-                    <button
+                    <button aria-label="Close"
                       onClick={() => handleRemoveTag(previewAsset, tag)}
                       className="hover:text-[var(--danger)]"
                     >

@@ -158,13 +158,19 @@ export default function CurriculumTracker({ projectId }: { projectId: string }) 
                 )}
               </div>
               <div className="flex items-center gap-0.5 ml-2 flex-shrink-0">
-                <button onClick={() => handleMove(item.id, 'up')} disabled={idx === 0} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30">
+                <button
+                  aria-label="Move up"
+                  onClick={() => handleMove(item.id, 'up')} disabled={idx === 0} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30">
                   <ChevronUp size={12} />
                 </button>
-                <button onClick={() => handleMove(item.id, 'down')} disabled={idx === items.length - 1} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30">
+                <button
+                  aria-label="Move down"
+                  onClick={() => handleMove(item.id, 'down')} disabled={idx === items.length - 1} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30">
                   <ChevronDown size={12} />
                 </button>
-                <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                <button
+                  aria-label="Delete curriculum tracker"
+                  onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                   <Trash2 size={12} />
                 </button>
               </div>

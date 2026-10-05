@@ -178,11 +178,15 @@ export default function AuditFindingLog({ projectId }: { projectId: string }) {
                 </div>
                 <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
                   {!finding.resolved && (
-                    <button onClick={() => handleResolve(finding.id)} className="text-[var(--text-tertiary)] hover:text-[#16A34A]">
+                    <button
+                      aria-label="Confirm audit finding log"
+                      onClick={() => handleResolve(finding.id)} className="text-[var(--text-tertiary)] hover:text-[#16A34A]">
                       <CheckCircle2 size={12} />
                     </button>
                   )}
-                  <button onClick={() => handleDelete(finding.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                  <button
+                    aria-label="Delete audit finding log"
+                    onClick={() => handleDelete(finding.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
                     <Trash2 size={12} />
                   </button>
                 </div>

@@ -58,3 +58,13 @@ if (!w.matchMedia) {
       dispatchEvent: () => false,
     }) as MediaQueryList;
 }
+
+// jsdom also lacks requestIdleCallback/cancelIdleCallback. main.tsx polyfills
+// them for the app entrypoint, but tests import modules directly and never
+// load main.tsx, so mirror that shim here.
+if (!w.requestIdleCallback) {
+  w.requestIdleCallback = (cb: () => void): ReturnType<typeof setTimeout> => setTimeout(cb, 1);
+}
+if (!w.cancelIdleCallback) {
+  w.cancelIdleCallback = (id: ReturnType<typeof setTimeout>): void => clearTimeout(id);
+}

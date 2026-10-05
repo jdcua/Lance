@@ -136,7 +136,9 @@ export default function CreativeRotationLog({ projectId }: { projectId: string }
                   <span className="font-medium text-[var(--text-primary)]">{item.creative_name}</span>
                   {item.platform && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--border-color)] text-[var(--text-tertiary)]">{item.platform}</span>}
                 </div>
-                <button onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                <button
+                  aria-label="Delete creative rotation log"
+                  onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
                   <Trash2 size={12} />
                 </button>
               </div>

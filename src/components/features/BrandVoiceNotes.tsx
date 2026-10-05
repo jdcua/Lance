@@ -139,7 +139,9 @@ export default function BrandVoiceNotes({ clientId }: { clientId: string }) {
               <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
                 {showForm ? 'Cancel' : 'Edit'}
               </Button>
-              <button onClick={handleDelete} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] p-1">
+              <button
+                aria-label="Delete brand voice notes"
+                onClick={handleDelete} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] p-1">
                 <Trash2 size={12} />
               </button>
             </>

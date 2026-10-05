@@ -1,4 +1,5 @@
 import type { Invoice, Expense, Client } from '../types';
+import { csvCellValue as csvCell } from '../import/parsers/spreadsheet';
 
 export interface YearQuarter {
   quarter: string;
@@ -32,7 +33,11 @@ function yearOf(iso: string | undefined): number | null {
 }
 
 /** Years present in the data, newest first. Always includes current year. */
-export function yearSummaryYears(invoices: Invoice[], expenses: Expense[], now = new Date()): number[] {
+export function yearSummaryYears(
+  invoices: Invoice[],
+  expenses: Expense[],
+  now = new Date(),
+): number[] {
   const years = new Set<number>([now.getFullYear()]);
   for (const inv of invoices) {
     const y = yearOf(inv.paid_at || inv.created_at);
@@ -54,10 +59,12 @@ export function buildYearSummary(
   clients: Client[],
   year: number,
 ): YearSummary {
-  const paid = invoices.filter((i) => i.status === 'paid' && yearOf(i.paid_at || i.created_at) === year);
+  const paid = invoices.filter(
+    (i) => i.status === 'paid' && yearOf(i.paid_at || i.created_at) === year,
+  );
   const yearExpenses = expenses.filter((e) => yearOf(e.date) === year);
   const outstanding = invoices
-    .filter((i) => (i.status === 'sent' || i.status === 'partial' || i.status === 'overdue'))
+    .filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue')
     .reduce((s, i) => s + i.total, 0);
 
   const revenuePaid = paid.reduce((s, i) => s + i.total, 0);
@@ -68,7 +75,9 @@ export function buildYearSummary(
       const m = new Date(i.paid_at || i.created_at).getUTCMonth();
       return Math.floor(m / 3) + 1 === q;
     });
-    const qExp = yearExpenses.filter((e) => Math.floor(new Date(e.date).getUTCMonth() / 3) + 1 === q);
+    const qExp = yearExpenses.filter(
+      (e) => Math.floor(new Date(e.date).getUTCMonth() / 3) + 1 === q,
+    );
     return {
       quarter: `Q${q}`,
       revenue: qPaid.reduce((s, i) => s + i.total, 0),
@@ -114,11 +123,6 @@ export function buildYearSummary(
 /** @deprecated Use buildYearSummary instead. */
 export const buildTaxPack = buildYearSummary;
 
-function csvCell(v: string | number): string {
-  const s = String(v);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
-
 /** Year-summary CSV: summary, quarters, per-client, categories. For your own records. */
 export function yearSummaryCsv(pack: YearSummary): string {
   const lines: string[] = [
@@ -145,7 +149,11 @@ export function yearSummaryCsv(pack: YearSummary): string {
 export const taxPackCsv = yearSummaryCsv;
 
 /** Browser and webview safe file download. */
-export function downloadTextFile(filename: string, text: string, mime = 'text/csv;charset=utf-8'): void {
+export function downloadTextFile(
+  filename: string,
+  text: string,
+  mime = 'text/csv;charset=utf-8',
+): void {
   const blob = new Blob([text], { type: mime });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

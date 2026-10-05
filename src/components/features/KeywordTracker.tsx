@@ -104,7 +104,9 @@ export default function KeywordTracker({ clientId }: { clientId: string }) {
                 )}
                 {k.target_position != null && <> → #{k.target_position}</>}
               </span>
-              <button onClick={() => removeKeyword(k.id, clientId)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+              <button
+                aria-label="Delete keyword tracker"
+                onClick={() => removeKeyword(k.id, clientId)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
                 <Trash2 size={12} />
               </button>
             </div>

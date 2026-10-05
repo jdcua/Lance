@@ -14,7 +14,7 @@ const colors = {
   error: 'bg-[var(--danger-bg)] text-[var(--danger)] border-[var(--danger)]/20',
   info: 'bg-[var(--info-bg)] text-[var(--info-ink,var(--info))] border-[var(--info)]/20',
   warning: 'bg-[var(--medium-conf-bg)] text-[var(--medium-conf-text)] border-[var(--medium-conf-text)]/20',
-  unlock: 'bg-[var(--accent)] text-white border-[var(--accent)]',
+  unlock: 'bg-[var(--accent)] text-[var(--accent-on)] border-[var(--accent)]',
 };
 
 export default function ToastContainer() {
@@ -25,8 +25,8 @@ export default function ToastContainer() {
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          role="status"
-          aria-live="polite"
+          role={toast.type === 'error' ? 'alert' : 'status'}
+          aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
           onMouseEnter={() => pause(toast.id)}
           onMouseLeave={() => resume(toast.id)}
           className={`pointer-events-auto flex flex-col gap-2 px-4 py-3 rounded-[8px] border shadow-lg text-sm max-w-sm animate-slide-in ${colors[toast.type]}`}
