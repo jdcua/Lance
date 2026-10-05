@@ -635,6 +635,17 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
+    // Never serve the worker's own source or deploy config, even if the
+    // assets upload includes them. Without this, /_worker.js (all API logic
+    // and route structure) is a public static file.
+    if (
+      url.pathname === '/_worker.js' ||
+      url.pathname === '/wrangler.jsonc' ||
+      url.pathname === '/wrangler.toml'
+    ) {
+      return Response.json({ error: 'not found' }, { status: 404 });
+    }
+
     if (isTrialPath(url.pathname)) {
       return handleTrial(request, env);
     }
