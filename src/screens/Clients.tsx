@@ -17,7 +17,7 @@ import { useVisibleList, MoreRows } from '../components/ui/useVisibleList';
 import { formatCurrency, relativeDate, todayLocalISO } from '../utils/format';
 import { getCurrencySymbol, CURRENCIES } from '../lib/currency';
 import { checkAndNotify } from '../achievements/notify';
-import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
+import { sanitizeInput, sanitizePhone, MAX_LENGTHS } from '../utils/sanitize';
 
 const commIcons: Record<string, typeof MessageSquare> = {
   note: MessageSquare,
@@ -208,7 +208,7 @@ export default function Clients() {
 
   /** Persist the displayed dial code with the number (skip if already international). */
   const normalizePhone = (raw: string, dialCode: string): string => {
-    const clean = sanitizeInput(raw).trim();
+    const clean = sanitizePhone(sanitizeInput(raw));
     if (/^\+/.test(clean)) return clean;
     return `${dialCode}${clean.replace(/^[0\s]+/, '')}`;
   };

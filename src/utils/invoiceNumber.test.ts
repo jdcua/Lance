@@ -28,4 +28,10 @@ describe('invoice numbers', () => {
     expect(sanitizeInvoiceNumber('  INV-12  ')).toBe('INV-12');
     expect(sanitizeInvoiceNumber('')).toBe('');
   });
+
+  it('collapses dot runs so traversal segments cannot survive', () => {
+    expect(sanitizeInvoiceNumber('../../../etc/passwd')).not.toContain('..');
+    expect(sanitizeInvoiceNumber('INV-2026/07')).toBe('INV-2026/07');
+    expect(sanitizeInvoiceNumber('INV.2.5')).toBe('INV.2.5');
+  });
 });

@@ -385,6 +385,9 @@ export default function Invoices() {
       addToast('Enter an invoice number', 'error');
       return;
     }
+    if (invoice_number !== form.invoice_number.trim()) {
+      addToast('Cleaned invalid characters from the invoice number', 'info');
+    }
     setSaving(true);
     try {
       // Invoice numbers must be unique across all invoices (case-insensitive:
@@ -890,10 +893,14 @@ export default function Invoices() {
           ? sanitizeInput(i.description).slice(0, MAX_LENGTHS.description)
           : '',
       }));
+      const recurringTitle = sanitizeInput(riForm.title).slice(0, MAX_LENGTHS.title);
+      if (recurringTitle !== riForm.title) {
+        addToast('Trimmed the recurring title to fit (300 characters max)', 'info');
+      }
       const data = {
         client_id: riForm.client_id,
         project_id: riForm.project_id || undefined,
-        title: sanitizeInput(riForm.title).slice(0, MAX_LENGTHS.title),
+        title: recurringTitle,
         frequency: riForm.frequency,
         line_items: lineItems,
         subtotal: riSubtotal,
@@ -1926,6 +1933,7 @@ export default function Invoices() {
               value={riForm.title}
               onChange={(e) => setRiForm({ ...riForm, title: e.target.value })}
               placeholder="e.g. Monthly retainer"
+              maxLength={MAX_LENGTHS.title}
               className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
             />
           </div>

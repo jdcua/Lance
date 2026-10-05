@@ -1818,13 +1818,25 @@ export const useStore = create<UnifiedStore>((set, get) => {
       }
     },
     createMetricDef: async (data) => {
-      const def = await invoke<MetricDefinition>('create_metric_definition', { payload: data });
+      // Metric names/units render raw in widgets and feed SQL-adjacent
+      // filters: sanitize at the store boundary so every caller is covered.
+      const clean = {
+        ...data,
+        name: sanitizeInput(data.name || '').trim(),
+        unit_label: data.unit_label ? sanitizeInput(data.unit_label).trim() || undefined : undefined,
+      };
+      const def = await invoke<MetricDefinition>('create_metric_definition', { payload: clean });
       set({ metricDefs: [...get().metricDefs, def] });
       return def;
     },
     updateMetricDef: async (data) => {
-      await invoke('update_metric_definition', { payload: data });
-      set({ metricDefs: get().metricDefs.map((d) => (d.id === data.id ? { ...d, ...data } : d)) });
+      const clean = {
+        ...data,
+        name: sanitizeInput(data.name || '').trim(),
+        unit_label: data.unit_label ? sanitizeInput(data.unit_label).trim() || undefined : undefined,
+      };
+      await invoke('update_metric_definition', { payload: clean });
+      set({ metricDefs: get().metricDefs.map((d) => (d.id === data.id ? { ...d, ...clean } : d)) });
     },
     deleteMetricDef: async (id) => {
       await invoke('delete_metric_definition', { id });

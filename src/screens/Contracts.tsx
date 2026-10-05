@@ -152,6 +152,9 @@ export default function Contracts() {
   const handleSave = async () => {
     const title = sanitizeInput(form.title).trim();
     if (!title || !form.client_id) return;
+    if (title !== form.title.trim()) {
+      addToast('Cleaned invalid characters from the contract title', 'info');
+    }
     setSaving(true);
     try {
       const client = clients.find((c) => c.id === form.client_id);

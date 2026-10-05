@@ -45,6 +45,16 @@ export function sanitizeInput(value: string): string {
 }
 
 /**
+ * Phone numbers: tel-safe characters only (digits, +, separators).
+ * Letters and slashes never belong in a dial string, so they are stripped
+ * rather than stored verbatim.
+ */
+export function sanitizePhone(value: string): string {
+  if (!value) return '';
+  return value.replace(/[^0-9+()\-.\s]/g, '').trim();
+}
+
+/**
  * Truncate string to max length.
  */
 export function truncate(value: string, maxLength: number): string {
