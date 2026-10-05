@@ -1,0 +1,112 @@
+name: Deploy license worker
+
+# The license worker fulfills Paddle purchases: verifies the webhook
+# signature, maps the price to a tier, claims a pre-minted key from the KV
+# pool, and emails it. It was gitignored and hand-deployed, which meant the
+# running copy silently drifted from the source: in Oct 2026 the deployed
+# build answered an unknown price with 200 {"ok":true} instead of 503,
+# Paddle stopped retrying, and a real paid customer received nothing with no
+# error anywhere. Tracking the source and deploying from CI closes both gaps:
+# the code has history, and what runs is what is on main.
+#
+# Secrets are NOT set here. They live on the Worker (wrangler secret put) and
+# wrangler preserves them across deploys. This workflow only uploads code.
+#
+# Setup (one time): CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID, the same
+# two secrets deploy-landing.yml already uses. That token needs
+# Workers Scripts:Edit. KV data is never touched by a deploy.
+#
+# Deploys are manual by default. Fulfillment code touches money and the KV
+# key pool, so it ships on request rather than on every push. Bump
+# workflow_dispatch inputs to force a redeploy after a manual change.
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Why this deploy (shown in the run log)'
+        required: false
+        default: 'manual dispatch'
+
+concurrency:
+  # Never let two deploys race. A partial upload could leave the worker
+  # running code that mismatches its KV bindings.
+  group: deploy-license-worker
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+
+      # Pin the same wrangler version deploy-landing.yml uses. The worker has
+      # no dependencies, so there is nothing to install here.
+      - name: Deploy license worker
+        working-directory: license-worker
+        env:
+          CLOUDFLARE_API_TOKEN_RAW: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID_RAW: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          REASON: ${{ github.event.inputs.reason }}
+        run: |
+          set -euo pipefail
+          missing=0
+          [ -z "$CLOUDFLARE_API_TOKEN_RAW" ] && { echo "::error::CLOUDFLARE_API_TOKEN secret is not set."; missing=1; }
+          [ -z "$CLOUDFLARE_ACCOUNT_ID_RAW" ] && { echo "::error::CLOUDFLARE_ACCOUNT_ID secret is not set."; missing=1; }
+          [ "$missing" -ne 0 ] && exit 1
+
+          # Pasted secrets often carry a trailing space or newline, which
+          # wrangler rejects. Trim rather than failing on whitespace.
+          export CLOUDFLARE_API_TOKEN="$(printf '%s' "$CLOUDFLARE_API_TOKEN_RAW" | tr -d '[:space:]')"
+          export CLOUDFLARE_ACCOUNT_ID="$(printf '%s' "$CLOUDFLARE_ACCOUNT_ID_RAW" | tr -d '[:space:]')"
+          unset CLOUDFLARE_API_TOKEN_RAW CLOUDFLARE_ACCOUNT_ID_RAW
+
+          echo "Reason: ${REASON:-not provided}"
+          npx -y wrangler@4.147.0 deploy
+
+      # A deploy that succeeds but leaves the worker unreachable is worse than
+      # a failed deploy, because fulfillment would 500 on every purchase with
+      # no signal from the deploy step itself.
+      - name: Smoke test the deployed worker
+        run: |
+          set -euo pipefail
+          base="https://lance-license.cuajuandiego.workers.dev"
+
+          # /validate must answer 200 with a JSON verdict. A bogus key is
+          # expected to come back invalid; that proves the route, the KV
+          # binding, and JSON serialization all work after the upload.
+          code=$(curl -sS -o /tmp/lance_validate.json -w '%{http_code}' --max-time 20 \
+            -X POST -H 'Content-Type: application/json' \
+            -d '{"key":"LANCE-AAAA-AAAA-AAAA-AAAA"}' "$base/validate")
+          echo "POST /validate -> $code $(cat /tmp/lance_validate.json)"
+
+          if [ "$code" != "200" ]; then
+            echo "::error::Worker did not answer 200 on /validate after deploy."
+            exit 1
+          fi
+
+          grep -q '"valid"' /tmp/lance_validate.json || {
+            echo "::error::/validate response is missing the valid field."
+            exit 1
+          }
+
+          # An unsigned webhook must be rejected. If this ever returns 200 the
+          # signature check is broken and anyone could mint themselves a key.
+          code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 \
+            -X POST -H 'Content-Type: application/json' -d '{}' "$base/webhooks/paddle")
+          echo "POST /webhooks/paddle (unsigned) -> $code"
+
+          if [ "$code" != "401" ]; then
+            echo "::error::Unsigned webhook was not rejected (got $code, want 401). Signature verification is compromised."
+            exit 1
+          fi
+
+          echo "Smoke tests passed."

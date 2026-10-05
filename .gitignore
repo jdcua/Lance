@@ -46,8 +46,12 @@ playwright-report/
 docs/MONETIZATION_ONE_SHOT.md
 docs/BUILD_STATUS.md
 
-# License worker (deployed separately, not committed)
-license-worker/
+# License worker local state. The worker SOURCE is tracked (worker.js and
+# wrangler.jsonc) so fulfillment logic has git history and CI deploys it.
+# Only the wrangler cache and any local secret files stay out.
+license-worker/.wrangler/
+license-worker/.dev.vars
+license-worker/.env
 
 # Repo hygiene strays
 src/store/index.ts.bak
