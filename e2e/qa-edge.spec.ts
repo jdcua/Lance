@@ -28,14 +28,21 @@ function errors(page: any) {
 }
 
 test.describe('edge cases, new-user eyes', () => {
-  test('E1: Skip setup link → tour still offered, no half-profile', async ({ page }) => {
+  test('E1: Skip setup link → no tour queued, lands in usable app', async ({ page }) => {
     const { ce, pe } = errors(page);
     await fresh(page);
     await page.getByRole('button', { name: 'Skip setup' }).click();
     await page.waitForTimeout(600);
+    // Deliberate product decision (App handleOnboardingSkip): skipping means
+    // "leave me alone" — no tour is queued, so the user lands straight in a
+    // usable app instead of behind a second modal. A skipped run still writes
+    // a minimal profile so backups stay importable.
     await expect
       .soft(page.getByRole('button', { name: 'Take the tour' }))
-      .toBeVisible({ timeout: 10_000 });
+      .not.toBeVisible({ timeout: 10_000 });
+    await expect
+      .soft(page.getByText('Set up Lance'))
+      .not.toBeVisible({ timeout: 10_000 });
     await shot(page, '32-skip-goes-to-tour.png');
     console.log(
       'completed flag:',
@@ -72,6 +79,8 @@ test.describe('edge cases, new-user eyes', () => {
   test('E3: whitespace-only name + weird rates', async ({ page }) => {
     const { ce, pe } = errors(page);
     await fresh(page);
+    // Step 1 is Comfort since the 5-step flow: Continue before the craft grid.
+    await page.getByRole('button', { name: /Continue/ }).click();
     await page.getByRole('button', { name: 'Developer / Engineer' }).click();
     await page.getByRole('button', { name: /Continue/ }).click();
     await page.getByPlaceholder('Your full name').fill('   ');
@@ -88,7 +97,7 @@ test.describe('edge cases, new-user eyes', () => {
       'negative rate accepted in field (observe):',
       await page.getByPlaceholder('e.g. 75').inputValue(),
     );
-    await page.getByText('Skip -- start fresh').click();
+    await page.getByText('Skip · start fresh').click();
     await page.waitForTimeout(1500);
     await shot(page, '35-fresh-empty-dashboard.png');
     console.log('ERRORS:', JSON.stringify([...ce, ...pe].slice(0, 10)));
@@ -144,9 +153,12 @@ test.describe('edge cases, new-user eyes', () => {
 
   test('E5: splash Try-Pro with no checkout configured', async ({ page }) => {
     const { ce, pe } = errors(page);
+    // has-launched marks a RETURNING session: brand-new users get first-launch
+    // grace (app before upsell), so the splash only appears from launch two on.
     await fresh(page, {
       'lance:onboarding-completed': 'true',
       'lance:onboarding-step': 'complete',
+      'lance:has-launched': 'true',
     });
     await expect
       .soft(page.getByRole('dialog', { name: 'Lance Pro' }))
@@ -169,9 +181,11 @@ test.describe('edge cases, new-user eyes', () => {
 
   test('E6: upgrade modal tabs + Escape on dashboard (no settings race)', async ({ page }) => {
     const { ce, pe } = errors(page);
+    // See E5: splash needs a returning session.
     await fresh(page, {
       'lance:onboarding-completed': 'true',
       'lance:onboarding-step': 'complete',
+      'lance:has-launched': 'true',
     });
     // Dismiss splash first.
     await expect

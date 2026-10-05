@@ -49,9 +49,14 @@ test.describe('first-run exploratory QA', () => {
     console.log('splash at ~1.7s:', splashAt17, '| splash at ~4.2s:', splashAt42);
     await shot(page, '03-after-splash.png');
 
-    // 2. Onboarding step 1: profession grid.
-    const step1 = page.getByText('What do you do?');
-    await expect.soft(step1).toBeVisible({ timeout: 10_000 });
+    // 2. Onboarding step 1: Comfort (access prefs first, then the craft grid).
+    await expect.soft(page.getByText('Make yourself comfortable')).toBeVisible({ timeout: 10_000 });
+    await shot(page, '04-onboarding-step1-comfort.png');
+    await page.getByRole('button', { name: /Continue/ }).click();
+
+    // 2b. Onboarding step 2: profession grid.
+    const step2 = page.getByText('What do you do?');
+    await expect.soft(step2).toBeVisible({ timeout: 10_000 });
     await shot(page, '04-onboarding-step1.png');
     const archetypeButtons = await page
       .locator('button:has-text("Designer"), button')
@@ -85,26 +90,46 @@ test.describe('first-run exploratory QA', () => {
     });
     await shot(page, '07-onboarding-step3-themes.png');
 
-    // 5. Step 4: rates + sample data.
+    // 5. Step 5: rates + sample data.
     await page.getByRole('button', { name: /Continue/ }).click();
-    await expect.soft(page.getByText('Final Details')).toBeVisible({
+    await expect.soft(page.getByText('Rates & sample data')).toBeVisible({
       timeout: 10_000,
     });
     await shot(page, '08-onboarding-step4.png');
     await page.getByPlaceholder('e.g. 75').fill('80');
     await page.getByText('Yes, show me around').click();
 
-    // 6. Walkthrough tour slides.
-    await expect.soft(page.getByText('Welcome to Lance')).toBeVisible({
-      timeout: 15_000,
-    });
-    await shot(page, '09-walkthrough-slide1.png');
-    for (let i = 2; i <= 5; i++) {
-      await page.getByRole('button', { name: 'Next' }).click();
-      await page.waitForTimeout(400);
-      await shot(page, `09-walkthrough-slide${i}.png`);
+    // 6. Walkthrough: intro card offers the hands-on spotlight tour.
+    await expect
+      .soft(page.getByRole('button', { name: 'Take the tour' }))
+      .toBeVisible({ timeout: 15_000 });
+    await shot(page, '09-walkthrough-intro.png');
+    await page.getByRole('button', { name: 'Take the tour' }).click();
+    // Spotlight tour length and per-step CTAs are dynamic (depend on the
+    // archetype plan), so walk until Get Started appears instead of
+    // hardcoding buttons or a slide count.
+    for (let i = 0; i < 14; i++) {
+      const done = page.getByRole('button', { name: 'Get Started' });
+      if (await done.isVisible().catch(() => false)) {
+        await done.click();
+        break;
+      }
+      const advance = page.getByRole('button', { name: /^(Show me|Next)/ });
+      if (await advance.isVisible().catch(() => false)) {
+        await advance.click();
+        await page.waitForTimeout(400);
+        await shot(page, `09-walkthrough-slide${i + 1}.png`);
+        continue;
+      }
+      // Action steps carry a custom CTA (e.g. "Try it"): take the primary.
+      const cta = page.locator('[role="dialog"] button:not([aria-label="Skip tour"])').last();
+      if (await cta.isVisible().catch(() => false)) {
+        await cta.click();
+        await page.waitForTimeout(400);
+        continue;
+      }
+      throw new Error('tour shows no advance control');
     }
-    await page.getByRole('button', { name: 'Get Started' }).click();
     await page.waitForTimeout(800);
     await shot(page, '10-dashboard-after-onboarding.png');
 

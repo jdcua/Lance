@@ -1267,6 +1267,11 @@ export default function App() {
           }}
           onStartTour={() => {
             setShowWalkthrough(false);
+            // Hand ownership to the spotlight: without clearing the pending
+            // flag, the walkthrough effect re-opens this intro the moment it
+            // closes, stacking it under the running tour (and leaving it open
+            // after the tour finishes, blocking the dashboard).
+            localStorage.removeItem('lance:tour-pending');
             setShowSpotlight(true);
           }}
         />
@@ -1375,7 +1380,7 @@ function OnboardingFlow({
   showOnboarding: boolean;
   setShowOnboarding: (s: boolean) => void;
 }) {
-  const { saveProfile, profile } = useStore();
+  const { saveProfile, profile, profileLoaded } = useStore();
   const [onboardingStep, setOnboardingStep] = useState(1);
   // Free-tool bridge: ?rate=85&currency=USD from the rate calculator
   // pre-fills onboarding (validated; only for fresh starts, never over
@@ -1437,8 +1442,22 @@ function OnboardingFlow({
 
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+  // Restore-on-open runs ONCE per open, not on every profile change.
+  // The old effect depended on `profile`, and every Next fires a
+  // fire-and-forget persistStep → saveProfile, which mints a new profile
+  // object. If that save resolved after the user typed on step 3, the effect
+  // re-ran and overwrote the form with the just-saved (still-empty) profile,
+  // silently wiping their name. Gating on profileLoaded keeps the resume
+  // prefill for returning users without ever clobbering live input.
+  const restoredForOpen = useRef(false);
   useEffect(() => {
-    if (showOnboarding) {
+    if (!showOnboarding) {
+      restoredForOpen.current = false;
+      return;
+    }
+    if (restoredForOpen.current || !profileLoaded) return;
+    restoredForOpen.current = true;
+    {
       const storedStep = localStorage.getItem('lance:onboarding-step');
       const parsedStep = storedStep && storedStep !== 'complete' ? parseInt(storedStep) : NaN;
       if (parsedStep >= 1 && parsedStep <= 5) {
@@ -1461,7 +1480,7 @@ function OnboardingFlow({
         setIsResuming(false);
       }
     }
-  }, [showOnboarding, profile]);
+  }, [showOnboarding, profile, profileLoaded]);
 
   const persistStep = async (step: number) => {
     localStorage.setItem('lance:onboarding-step', step.toString());

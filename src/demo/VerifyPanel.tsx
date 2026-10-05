@@ -62,29 +62,27 @@ export default function VerifyPanel() {
         Text and rows in this browser: <strong>{formatBytes(total)}</strong> across {entries.length}{' '}
         keys.
       </p>
-      {/* Full key list sits behind a disclosure: the proof stays one click
-          away, and reads as designed UI rather than a devtools panel. */}
-      <details className="group">
-        <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-[8px] border border-[var(--border-color)] bg-[var(--bg-secondary)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)] [&::-webkit-details-marker]:hidden">
-          <span aria-hidden="true" className="text-[10px] text-[var(--text-tertiary)] transition-transform group-open:rotate-90">▶</span>
-          Show all {entries.length} keys · {formatBytes(total)}
-        </summary>
-        <ul className="mt-2 max-h-[220px] space-y-1 overflow-y-auto rounded-[8px] border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2">
-          {entries.map((e) => (
-            <li
-              key={e.key}
-              className="flex items-center justify-between gap-2 rounded-[6px] bg-[var(--bg-card)] px-2 py-1"
-            >
-              <code className="truncate font-mono text-[11px] text-[var(--text-primary)]">
-                {e.key}
-              </code>
-              <span className="shrink-0 rounded-full bg-[var(--accent-bg)] px-1.5 py-px text-[10px] font-semibold text-[var(--accent-ink,var(--accent))]">
-                {formatBytes(e.bytes)}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </details>
+      {/* Full key list, themed as designed UI (mono keys, size pills,
+          scroll-capped) rather than a devtools paste. Always visible once
+          the panel is open: the user clicked "Prove it" to see proof. */}
+      <p className="text-xs font-medium text-[var(--text-secondary)]">
+        All {entries.length} keys · {formatBytes(total)}
+      </p>
+      <ul className="max-h-[220px] space-y-1 overflow-y-auto rounded-[8px] border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2">
+        {entries.map((e) => (
+          <li
+            key={e.key}
+            className="flex items-center justify-between gap-2 rounded-[6px] bg-[var(--bg-card)] px-2 py-1"
+          >
+            <code className="truncate font-mono text-[11px] text-[var(--text-primary)]">
+              {e.key}
+            </code>
+            <span className="shrink-0 rounded-full bg-[var(--accent-bg)] px-1.5 py-px text-[10px] font-semibold text-[var(--accent-ink,var(--accent))]">
+              {formatBytes(e.bytes)}
+            </span>
+          </li>
+        ))}
+      </ul>
       <p>
         Files you attached: <strong>{formatBytes(files.bytes)}</strong> across {files.count} files.
       </p>
