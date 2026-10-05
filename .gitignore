@@ -58,6 +58,7 @@ lint.txt
 *.png
 !landing/og-image.png
 !landing/favicon.png
+!assets/build/*.png
 *.jpg
 *.jpeg
 *.webp

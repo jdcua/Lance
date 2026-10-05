@@ -35,6 +35,14 @@
     "longDescription": "Win work. Run projects. Get paid. Run your business.",
     "copyright": "Copyright © 2026 Placeholder Labs Incorporated Limited. All rights reserved.",
     "category": "Productivity",
+    "macOS": {
+      "dmg": {
+        "background": "../assets/build/dmg-background.png",
+        "windowSize": { "width": 660, "height": 400 },
+        "appPosition": { "x": 180, "y": 170 },
+        "applicationFolderPosition": { "x": 480, "y": 170 }
+      }
+    },
     "externalBin": [],
     "resources": []
   },
