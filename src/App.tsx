@@ -1016,12 +1016,19 @@ export default function App() {
           clientId = '';
         }
         if (!projectId || !clientId) {
-          const firstProject = state.projects.find((p) => p.status === 'active');
-          if (firstProject) {
-            projectId = firstProject.id;
-            clientId = firstProject.client_id;
-          } else {
+          // No valid memory: a single active project is unambiguous, but with
+          // several the toggle must not silently pick one — hours logged to
+          // the wrong project end up on the wrong invoice. Ask instead of
+          // guessing; Quick Log or any timer run remembers the choice.
+          const active = state.projects.filter((p) => p.status === 'active');
+          if (active.length === 1) {
+            projectId = active[0].id;
+            clientId = active[0].client_id;
+          } else if (active.length === 0) {
             addToast('No active project available to start timer', 'error');
+            return;
+          } else {
+            addToast('Pick a project for the timer first — log time once via Quick Log', 'error');
             return;
           }
         }

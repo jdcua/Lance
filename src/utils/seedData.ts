@@ -614,6 +614,20 @@ async function runSeed(): Promise<void> {
 
     localStorage.setItem('lance:seeded', 'true');
     localStorage.setItem('lance:seeded-toast-shown', 'true');
+    // Default the timer to the sample business's flagship project — but only
+    // when the user has no remembered choice. The global toggle asks rather
+    // than guesses with several active projects, and the trial seeds three,
+    // so without this every first timer press in the demo would error.
+    try {
+      if (!localStorage.getItem('lance:last-timer-config')) {
+        localStorage.setItem(
+          'lance:last-timer-config',
+          JSON.stringify({ projectId: proj1.id, clientId: client1.id }),
+        );
+      }
+    } catch {
+      /* private mode */
+    }
   } catch (err) {
     console.error('[seedData] seedSampleData failed:', err);
   }

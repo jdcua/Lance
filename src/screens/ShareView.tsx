@@ -20,6 +20,7 @@ const ALLOWED_TAGS = new Set([
   'b',
   'i',
   'u',
+  'a',
   'h1',
   'h2',
   'h3',
@@ -45,10 +46,13 @@ const ALLOWED_TAGS = new Set([
 // the text so "…<span>freelance</span>…" still reads as "freelance".
 const OPAQUE_TAGS = new Set(['script', 'style', 'template', 'noscript', 'title', 'iframe']);
 
-// Only these attributes survive, and only on these elements. Deliberately
-// excludes href/src/style/action: a link or an image in a shared proposal is
-// both a tracking pixel and an exfiltration channel.
+// Only these attributes survive, and only on these elements. Links are
+// freelancer-authored (portfolio, payment URLs), so `a[href]` is allowed —
+// but scheme-gated to http/https/mailto with rel=noopener, mirroring the
+// Rust sanitize_html url_schemes. Images stay banned outright: unlike a
+// visible link, an <img> phones home silently (tracking pixel).
 const ALLOWED_ATTRS = 'colspan,rowspan';
+const LINK_SCHEMES = /^(https?:|mailto:)/i;
 
 // A malicious body can nest tags thousands deep; rebuilding the tree
 // recursively would blow the stack. Past this depth we keep the text only.
@@ -59,6 +63,13 @@ function copySafeAttrs(from: Element, to: Element): void {
     const value = from.getAttribute(name);
     // setAttribute, never innerHTML: the value cannot become markup.
     if (value !== null && /^\d{1,3}$/.test(value)) to.setAttribute(name, value);
+  }
+  if (to.tagName.toLowerCase() === 'a') {
+    const href = (from.getAttribute('href') || '').trim();
+    if (LINK_SCHEMES.test(href)) {
+      to.setAttribute('href', href);
+      to.setAttribute('rel', 'noopener');
+    }
   }
 }
 
@@ -96,7 +107,7 @@ function rebuildNode(doc: Document, node: Node, target: Element, depth: number):
  * before attributes is trivially bypassed, which is exactly how the previous
  * version of this function leaked every proposal body in the app.
  */
-function sanitizeShareHtml(html: string): string {
+export function sanitizeShareHtml(html: string): string {
   if (!html) return '';
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const out = doc.createElement('div');
@@ -123,6 +134,7 @@ const PORTAL_CSS = `
   .share-body h1, .share-body h2, .share-body h3 { margin: 20px 0 8px; line-height: 1.3; }
   .share-body ul, .share-body ol { padding-left: 22px; margin: 8px 0; }
   .share-body blockquote { border-left: 3px solid #d2d2d7; margin: 12px 0; padding: 4px 14px; color: #515154; }
+  .share-body a { color: #0071e3; text-decoration: underline; text-underline-offset: 2px; }
   .share-actions { margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e5e7; }
   .share-field { width: 100%; box-sizing: border-box; padding: 12px 14px; font-size: 15px; border: 1px solid #d2d2d7; border-radius: 10px; margin-bottom: 12px; outline: none; }
   .share-field:focus { border-color: #0071e3; box-shadow: 0 0 0 3px rgba(0,113,227,0.15); }

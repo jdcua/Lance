@@ -89,14 +89,12 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
 
   let entries: ChangelogEntry[] = [];
 
-  // 2. Release notes, newest source first. The repo is private, so the
-  // public GitHub API always 404s — prefer our worker proxy (identical
-  // payload shape), keep direct GitHub for collaborators, then git log.
-  // Fully offline clients skip the network entirely with zero console noise.
-  const releaseEndpoints = [
-    'https://lance.cuajuandiego.workers.dev/api/release',
-    'https://api.github.com/repos/jdcua/Lance/releases?per_page=20',
-  ];
+  // 2. Release notes: our worker proxy first, then local git tags (dev).
+  // There is deliberately no direct-GitHub fallback: the repo is private,
+  // so an unauthenticated api.github.com call can never succeed — it only
+  // produces a console 404 on every load. Fully offline clients skip the
+  // network entirely with zero console noise.
+  const releaseEndpoints = ['https://lance.cuajuandiego.workers.dev/api/release'];
   if (typeof navigator === 'undefined' || navigator.onLine !== false) {
     for (const url of releaseEndpoints) {
       try {

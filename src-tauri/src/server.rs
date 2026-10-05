@@ -168,7 +168,12 @@ fn sanitize_html(html: &str) -> String {
     let clean_tags: std::collections::HashSet<&str> =
         ["script", "style", "iframe", "object", "embed", "form", "input"].into_iter().collect();
     cleaner
-        .add_tags(&["p", "strong", "em", "h1", "h2", "ul", "ol", "li", "blockquote", "hr", "br"])
+        .add_tags(&["p", "strong", "em", "a", "h1", "h2", "ul", "ol", "li", "blockquote", "hr", "br"])
+        .add_tag_attributes("a", &["href", "title"])
+        // Links are freelancer-authored (portfolio, payment URLs), not
+        // attacker input — but href stays scheme-gated by ammonia's default
+        // url_schemes (no javascript:/data:) and never inherits a target.
+        .link_rel(Some("noopener"))
         .clean_content_tags(clean_tags)
         .id_prefix(None);
     cleaner.clean(html).to_string()
@@ -991,5 +996,26 @@ mod portal_tests {
     fn body_cap_rejects_an_abusive_payload() {
         let abusive = "x".repeat(MAX_REQUEST_BODY_BYTES + 1);
         assert!(abusive.len() > MAX_REQUEST_BODY_BYTES);
+    }
+
+    /// Proposal links are freelancer-authored (portfolio, payment URLs), so
+    /// safe schemes survive with rel=noopener; dangerous schemes and event
+    /// handlers die while the link text is preserved.
+    #[test]
+    fn links_survive_with_safe_schemes_only() {
+        let https = super::sanitize_html(r#"<p>See <a href="https://example.com/work">portfolio</a></p>"#);
+        assert!(
+            https.contains(r#"<a href="https://example.com/work" rel="noopener">portfolio</a>"#),
+            "https link kept with rel: {https}"
+        );
+        let mailto = super::sanitize_html(r#"<a href="mailto:a@example.com">mail</a>"#);
+        assert!(mailto.contains("mailto:a@example.com"), "mailto kept: {mailto}");
+        for bad in ["javascript:alert(1)", "data:text/html,<b>x</b>", "vbscript:msgbox(1)"] {
+            let out = super::sanitize_html(&format!(r#"<a href="{bad}">click</a>"#));
+            assert!(!out.contains("href="), "dangerous scheme stripped ({bad}): {out}");
+            assert!(out.contains("click"), "link text survives: {out}");
+        }
+        let handler = super::sanitize_html(r#"<a href="https://example.com" onclick="alert(1)">x</a>"#);
+        assert!(!handler.contains("onclick"), "event handler stripped: {handler}");
     }
 }
