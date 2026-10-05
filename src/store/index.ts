@@ -2297,7 +2297,30 @@ export const useStore = create<UnifiedStore>((set, get) => {
       }
     },
     createRenderLog: async (data) => {
-      const log = await invoke<ArchetypeRenderLog>('create_render_log', { payload: data });
+      // Guard at the store boundary (single choke point: addRenderLog
+      // delegates here): durations must be finite non-negative numbers
+      // within a sane cap, text fields sanitized. NaN/negative/garbage
+      // previously stored verbatim and poisoned aggregates.
+      const MAX_RENDER_MINUTES = 525600; // 1 year; renders take hours, not eons
+      const rawDuration = data.duration_minutes;
+      const duration =
+        typeof rawDuration === 'number' &&
+        isFinite(rawDuration) &&
+        rawDuration >= 0 &&
+        rawDuration <= MAX_RENDER_MINUTES
+          ? Math.floor(rawDuration)
+          : undefined;
+      const clean = {
+        ...data,
+        pass_name: data.pass_name ? sanitizeInput(data.pass_name).trim() || undefined : undefined,
+        duration_minutes: duration,
+        software: data.software ? sanitizeInput(data.software).trim() || undefined : undefined,
+        frame_range: data.frame_range
+          ? sanitizeInput(data.frame_range).trim() || undefined
+          : undefined,
+        notes: data.notes ? sanitizeInput(data.notes).trim() || undefined : undefined,
+      };
+      const log = await invoke<ArchetypeRenderLog>('create_render_log', { payload: clean });
       set({ renderLogs: [log, ...get().renderLogs] });
       return log;
     },

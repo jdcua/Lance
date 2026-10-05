@@ -6,9 +6,11 @@ import { useState, useEffect } from 'react';
 import { useStore } from '../../store';
 import Button from '../ui/Button';
 import { Plus, Trash2, Clock, Monitor, Layers } from 'lucide-react';
+import { useToasts } from '../../store/toastStore';
 
 export default function RenderLog({ projectId }: { projectId: string }) {
   const { renderLogs, loadRenderLogs, addRenderLog, removeRenderLog } = useStore();
+  const addToast = useToasts((s) => s.add);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ pass_name: '', duration_minutes: '', software: '', frame_range: '', notes: '' });
   const [saving, setSaving] = useState(false);
@@ -19,6 +21,16 @@ export default function RenderLog({ projectId }: { projectId: string }) {
 
   const handleSave = async () => {
     if (!form.pass_name.trim()) return;
+    // Validate before the store coerces: an explicit reject tells the user
+    // what went wrong instead of silently dropping their input.
+    const rawDuration = form.duration_minutes.trim();
+    if (rawDuration !== '') {
+      const parsed = Number(rawDuration);
+      if (!isFinite(parsed) || parsed < 0 || parsed > 525600) {
+        addToast('Enter a valid duration in minutes (0–525600)', 'error');
+        return;
+      }
+    }
     setSaving(true);
     try {
       await addRenderLog({ project_id: projectId, pass_name: form.pass_name || undefined, duration_minutes: form.duration_minutes ? parseInt(form.duration_minutes) : undefined, software: form.software || undefined, frame_range: form.frame_range || undefined, notes: form.notes || undefined });
@@ -43,7 +55,7 @@ export default function RenderLog({ projectId }: { projectId: string }) {
         <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
           <input type="text" placeholder="Pass name (e.g. Beauty, AO, Shadow)" value={form.pass_name} onChange={(e) => setForm({ ...form, pass_name: e.target.value })} className={inputClass} autoFocus />
           <div className="grid grid-cols-2 gap-2">
-            <input type="number" placeholder="Duration (min)" value={form.duration_minutes} onChange={(e) => setForm({ ...form, duration_minutes: e.target.value })} className={inputClass} />
+            <input type="number" min="0" placeholder="Duration (min)" value={form.duration_minutes} onChange={(e) => setForm({ ...form, duration_minutes: e.target.value })} className={inputClass} />
             <input type="text" placeholder="Software" value={form.software} onChange={(e) => setForm({ ...form, software: e.target.value })} className={inputClass} />
           </div>
           <input type="text" placeholder="Frame range (e.g. 1–240)" value={form.frame_range} onChange={(e) => setForm({ ...form, frame_range: e.target.value })} className={inputClass} />
