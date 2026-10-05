@@ -62,14 +62,18 @@ export default function VerifyPanel() {
         Text and rows in this browser: <strong>{formatBytes(total)}</strong> across {entries.length}{' '}
         keys.
       </p>
-      <ul>
-        {entries.slice(0, 20).map((e) => (
-          <li key={e.key}>
-            {e.key} · {formatBytes(e.bytes)}
-          </li>
-        ))}
-      </ul>
-      {entries.length > 20 ? <p>…and {entries.length - 20} more.</p> : null}
+      {/* Full key list sits behind a disclosure: the proof stays one click
+          away, but the raw key dump no longer reads like a devtools panel. */}
+      <details>
+        <summary>Show all {entries.length} keys</summary>
+        <ul>
+          {entries.map((e) => (
+            <li key={e.key}>
+              {e.key} · {formatBytes(e.bytes)}
+            </li>
+          ))}
+        </ul>
+      </details>
       <p>
         Files you attached: <strong>{formatBytes(files.bytes)}</strong> across {files.count} files.
       </p>

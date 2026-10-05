@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { MotionConfig } from 'motion/react';
 import { usePrefs } from './lib/prefs';
+import { applyContrastBoost } from './themes/themes';
 import { router } from './router';
 import './index.css';
 
@@ -102,6 +103,10 @@ function Root() {
         'contrast-auto-boost',
         prefs.contrast === 'auto' && osWantsContrast,
       );
+      // The class alone changes nothing: applyTheme writes the palette as
+      // inline custom props, which beat the `.contrast-high` stylesheet rule.
+      // Re-run the boost so the pref takes effect without a theme re-apply.
+      applyContrastBoost(document.documentElement);
     };
     apply();
     query.addEventListener('change', apply);

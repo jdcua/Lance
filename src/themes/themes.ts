@@ -555,12 +555,21 @@ export function applyContrastBoost(root: HTMLElement = document.documentElement)
     el.style.setProperty('--text-secondary', primary);
     el.style.setProperty('--text-tertiary', primary);
     el.style.setProperty('--border-color', primary);
-  } else {
-    // Clear only what we set, so a later applyTheme() owns the palette again.
+    el.dataset.contrastBoosted = '1';
+  } else if (el.dataset.contrastBoosted === '1') {
+    // Boost was on and is now off: clear only the inline overrides so the
+    // theme palette owns the three vars again.
+    delete el.dataset.contrastBoosted;
     el.style.removeProperty('--text-secondary');
     el.style.removeProperty('--text-tertiary');
     el.style.removeProperty('--border-color');
   }
+  // Otherwise: never boosted, nothing to clear. An earlier version removed
+  // the three vars unconditionally here, which wiped the palette that
+  // applyThemePalette had just written: app-wide, --border-color backgrounds
+  // went transparent (4 of 5 onboarding progress dots invisible),
+  // --border-color borders fell back to currentColor, and secondary/tertiary
+  // text inherited full-brightness primary (flattened hierarchy).
 }
 
 /** Write a theme palette onto <html>. Internal; prefer applyTheme(). */
