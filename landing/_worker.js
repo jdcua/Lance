@@ -18,6 +18,24 @@ function githubHeaders(env, accept) {
 }
 
 async function getLatestRelease(env) {
+  // NOTE: /releases/latest excludes prereleases, so it kept answering 0.9.2
+  // through the entire 0.9.9 beta line: downloads, the landing version label,
+  // and the in-app updater all served stale builds while new ones shipped.
+  // List instead and take the most recently published non-draft release, so
+  // betas actually reach users and a future full release takes over on its own.
+  try {
+    const res = await fetch('https://api.github.com/repos/jdcua/Lance/releases?per_page=20', {
+      headers: githubHeaders(env),
+    });
+    if (res.ok) {
+      const all = await res.json();
+      const live = (Array.isArray(all) ? all : []).filter((r) => r && !r.draft && r.published_at);
+      live.sort((a, b) => (a.published_at < b.published_at ? 1 : -1));
+      if (live[0]) return live[0];
+    }
+  } catch {
+    /* fall through to /releases/latest */
+  }
   const res = await fetch(RELEASE_API, { headers: githubHeaders(env) });
   if (!res.ok) return null;
   try {
@@ -227,11 +245,13 @@ async function handleUpdatesDownload(filename, env) {
   return new Response(upstream.body, { status: 200, headers });
 }
 
-// TEMPORARY local-release override (until GitHub Actions minutes renew).
+// Local-release override for manual testing ONLY (opt-in, never automatic).
 // `node scripts/prepare-local-release.cjs` copies a local Tauri build into
-// landing/downloads/ + writes manifest.json there. When the manifest exists,
-// mac downloads/updater entries come from those files; everything else still
-// comes from GitHub. Delete landing/downloads/ to revert to GitHub-only.
+// landing/downloads/ + writes manifest.json there. The updater ignores it
+// unless `?local=1` is passed; /api/download/mac and /api/release still honor
+// it when present, so do NOT commit landing/downloads/ (it once shadowed the
+// real releases in production for weeks). Delete the directory to revert fully
+// to GitHub-only.
 let manifestCache = null;
 
 async function getLocalManifest(request, env) {
@@ -642,7 +662,12 @@ export default {
     }
 
     if (url.pathname.startsWith('/api/updates/download/')) {
-      const filename = url.pathname.slice('/api/updates/download/'.length).split('/')[0];
+      const raw = url.pathname.slice('/api/updates/download/'.length).split('/')[0];
+      // Same allowlist as download-local: never proxy an arbitrary string.
+      const filename = safeDecodeName(raw);
+      if (filename === null) {
+        return Response.json({ error: 'bad request' }, { status: 400 });
+      }
       return handleUpdatesDownload(filename, env);
     }
 
