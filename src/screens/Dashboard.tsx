@@ -486,7 +486,7 @@ export default function Dashboard() {
         </Card>
       )}
 
-      <StaggerGroup className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6" stagger={0.08}>
+      <StaggerGroup className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6" stagger={0.08}>
         {effectiveArchetype.dashboard.metricCards.map((card) => (
           <StaggerItem key={card.id}>
           <MetricCard

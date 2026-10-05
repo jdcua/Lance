@@ -31,6 +31,24 @@ import { entityTypeLabel } from '../../import/classifier';
 import { useStore } from '../../store';
 import { useToasts } from '../../store/toastStore';
 
+/**
+ * A processed file counts as imported only if it created records.
+ * Zero-record results (spreadsheet with no mappable rows, unknown entity)
+ * are skipped — history and toasts must not claim work that never happened.
+ * Exported for tests.
+ */
+export function tallyImport(
+  created: number,
+  tally: { imported: number; skipped: number },
+): 'imported' | 'skipped' {
+  if (created > 0) {
+    tally.imported++;
+    return 'imported';
+  }
+  tally.skipped++;
+  return 'skipped';
+}
+
 interface ImportModalProps {
   open: boolean;
   onClose: () => void;
@@ -151,8 +169,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
   const handleImport = async () => {
     setStep(4);
     setImporting(true);
-    let imported = 0;
-    const skipped = skipCount;
+    const tally = { imported: 0, skipped: skipCount };
     let errors = 0;
 
     const active = detections.filter(d => !d.skipped);
@@ -198,14 +215,19 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
             target_entity: 'attachment',
             status: 'imported',
           });
-          imported++;
+          tally.imported++;
           continue;
         }
 
+        // Only a file that actually created records counts as imported.
+        // Zero-record results (e.g. a spreadsheet with no mappable line
+        // items) log as skipped, so the history and the success toast stop
+        // claiming work that never happened.
+        let created = 0;
         if (detection.fileType === 'spreadsheet') {
-          await importSpreadsheet(detection, filePath);
+          created = await importSpreadsheet(detection, filePath);
         } else if (detection.fileType === 'document') {
-          await importDocument(detection, filePath);
+          created = await importDocument(detection, filePath);
         }
 
         await logImport({
@@ -214,30 +236,29 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
           file_path: filePath,
           detected_type: effectiveType,
           target_entity: mapEntityTypeToTable(effectiveType),
-          status: 'imported',
+          status: tallyImport(created, tally),
         });
-        imported++;
       } catch (err) {
         errors++;
         console.error(`Import failed for ${detection.file.name}:`, err);
       }
     }
 
-    setImportedCount(imported);
-    setSkipCount(skipped + detections.filter(d => d.skipped).length);
+    setImportedCount(tally.imported);
+    setSkipCount(tally.skipped + detections.filter(d => d.skipped).length);
     setErrorCount(errors);
     setImporting(false);
     setStep(5);
 
-    if (imported > 0) {
-      addToast(`Successfully imported ${imported} item${imported !== 1 ? 's' : ''}`, 'success');
+    if (tally.imported > 0) {
+      addToast(`Successfully imported ${tally.imported} item${tally.imported !== 1 ? 's' : ''}`, 'success');
     }
     if (errors > 0) {
       addToast(`${errors} import${errors !== 1 ? 's' : ''} failed`, 'error');
     }
   };
 
-  const importSpreadsheet = async (detection: ImportDetection, _filePath: string) => {
+  const importSpreadsheet = async (detection: ImportDetection, _filePath: string): Promise<number> => {
     const mappers = await import('../../import/mappers');
     const mapping = detection.columnMapping || {};
     const rows = detection.preview.rows || [];
@@ -249,11 +270,11 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
         for (const data of clientData) {
           await addClient(data);
         }
-        break;
+        return clientData.length;
       }
       case 'invoice': {
         const lineItems = mappers.mapToLineItems(rows, mapping);
-        if (lineItems.length === 0) return;
+        if (lineItems.length === 0) return 0;
         const subtotal = lineItems.reduce((sum: number, li) => sum + li.total, 0);
         if (!clients.length) await loadClients();
         const latestClients = useStore.getState().clients;
@@ -271,7 +292,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
           due_date: undefined,
           notes: `Imported from ${detection.file.name}`,
         });
-        break;
+        return 1;
       }
       case 'project_list': {
         const projectData = mappers.mapToProjects(rows, mapping);
@@ -291,14 +312,14 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
             notes: data.notes,
           });
         }
-        break;
+        return projectData.length;
       }
       case 'expense_list': {
         const expenseData = mappers.mapToExpenses(rows, mapping);
         for (const data of expenseData) {
           await addExpense(data);
         }
-        break;
+        return expenseData.length;
       }
       case 'financial_data': {
         // Financial data is ambiguous · import as expense list
@@ -306,12 +327,14 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
         for (const data of expenseData) {
           await addExpense(data);
         }
-        break;
+        return expenseData.length;
       }
+      default:
+        return 0;
     }
   };
 
-  const importDocument = async (detection: ImportDetection, _filePath: string) => {
+  const importDocument = async (detection: ImportDetection, _filePath: string): Promise<number> => {
     const { extractDocumentPrefill } = await import('../../import/mappers');
     const prefill = extractDocumentPrefill(detection);
 
@@ -344,7 +367,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
           due_date: prefill.due_date,
           notes: `Imported from ${detection.file.name}`,
         });
-        break;
+        return 1;
       }
       case 'contract': {
         if (!clients.length) await loadClients();
@@ -363,7 +386,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
           status: 'draft',
           body: prefill.body,
         });
-        break;
+        return 1;
       }
       case 'proposal': {
         if (!clients.length) await loadClients();
@@ -385,8 +408,10 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
           rate_type: 'flat',
           body: prefill.body,
         });
-        break;
+        return 1;
       }
+      default:
+        return 0;
     }
   };
 
