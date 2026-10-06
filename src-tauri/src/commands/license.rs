@@ -13,11 +13,22 @@ pub fn validate_license(key: String) -> Result<bool, String> {
 
 #[tauri::command]
 pub async fn validate_license_online(key: String) -> Result<OnlineValidationResult, String> {
-    // Worker endpoint - will be configured via env var or config
+    // Worker endpoint, baked in at compile time from LANCE_LICENSE_WORKER_URL.
     // Empty string counts as unset (CI passes empty strings for missing secrets).
-    let worker_url = option_env!("LANCE_LICENSE_WORKER_URL")
-        .filter(|url| !url.is_empty())
-        .unwrap_or("https://lance-license.your-subdomain.workers.dev");
+    //
+    // The placeholder used to live here, which made a misconfigured build fail
+    // as an opaque DNS error rather than a clear "not configured". Now it
+    // returns a named error, and offline HMAC plus the cool-down still work, so
+    // a customer is never locked out by a build problem.
+    let worker_url = match option_env!("LANCE_LICENSE_WORKER_URL").filter(|u| !u.is_empty()) {
+        Some(url) => url,
+        None => {
+            return Err(
+                "license worker not configured in this build (LANCE_LICENSE_WORKER_URL unset)"
+                    .to_string(),
+            )
+        }
+    };
     
     // POST JSON body: keys in GET query strings land in access logs.
     // (Older builds used GET; the worker still accepts it.)
