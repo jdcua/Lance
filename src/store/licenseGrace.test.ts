@@ -170,6 +170,53 @@ describe('license period expiry', () => {
   });
 });
 
+describe('loadProfile keeps isLicensed in step with the tier', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useStore.setState({ profile: null, isLicensed: false });
+    vi.restoreAllMocks();
+  });
+
+  // isLicensed drives theme unlocks and the "Licensed" badge; getActiveTier
+  // drives feature gates. They read different fields, so a lapsed period left
+  // the badge and all seven themes unlocked while features correctly locked.
+  // Both now go through paidTierActive.
+
+  it('reports not licensed when the period has elapsed', async () => {
+    const stored = profile({
+      license_expires_at: new Date(Date.now() - 86400000).toISOString(),
+    });
+    localStorage.setItem('lance:profile', JSON.stringify(stored));
+
+    await useStore.getState().loadProfile();
+
+    expect(useStore.getState().isLicensed).toBe(false);
+    expect(useStore.getState().getActiveTier()).toBe('expired');
+  });
+
+  it('reports licensed while the period is running', async () => {
+    const stored = profile({
+      license_expires_at: new Date(Date.now() + 20 * DAY).toISOString(),
+    });
+    localStorage.setItem('lance:profile', JSON.stringify(stored));
+
+    await useStore.getState().loadProfile();
+
+    expect(useStore.getState().isLicensed).toBe(true);
+    expect(useStore.getState().getActiveTier()).toBe('pro');
+  });
+
+  it('keeps a lifetime key licensed with no expiry', async () => {
+    const stored = profile({ license_tier: 'lifetime', license_expires_at: null });
+    localStorage.setItem('lance:profile', JSON.stringify(stored));
+
+    await useStore.getState().loadProfile();
+
+    expect(useStore.getState().isLicensed).toBe(true);
+    expect(useStore.getState().getActiveTier()).toBe('lifetime');
+  });
+});
+
 describe('activateLicense records the tier', () => {
   beforeEach(() => {
     localStorage.clear();

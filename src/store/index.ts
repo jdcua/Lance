@@ -124,6 +124,25 @@ function licensePeriodEnded(expiresAt?: string | null): boolean {
   return Date.now() > at;
 }
 
+/**
+ * True when a profile carries an unexpired paid tier.
+ *
+ * isLicensed (themes, the Licensed badge) and getActiveTier (feature gates) must
+ * agree. getActiveTier learned about license_expires_at while these two call
+ * sites only checked license_tier, so a lapsed monthly period kept the badge
+ * and every theme unlocked while feature gates correctly reported free.
+ */
+function paidTierActive(profile: {
+  license_key?: string | null;
+  license_tier?: string | null;
+  license_expires_at?: string | null;
+} | null): boolean {
+  if (!profile?.license_key) return false;
+  const tier = profile.license_tier;
+  if (tier !== 'pro' && tier !== 'lifetime') return false;
+  return !licensePeriodEnded(profile.license_expires_at);
+}
+
 function isTauriRuntime(): boolean {
   return (
     typeof window !== 'undefined' &&
@@ -1365,15 +1384,17 @@ export const useStore = create<UnifiedStore>((set, get) => {
         if (profile && profile.exchange_rates !== undefined) {
           profile.exchange_rates = normalizeRates(profile.exchange_rates);
         }
-        // isLicensed drives theme unlocks, so it must reflect a real verdict.
-        // In a browser the offline check does not exist, so the stored
-        // license_tier (written by activateLicense from the worker) is the
-        // signal: a browser cannot re-verify offline and must not pretend to.
-        const licensed = profile?.license_key
-          ? isTauriRuntime()
-            ? await cachedValidateLicense(profile.license_key)
-            : (profile.license_tier === 'pro' || profile.license_tier === 'lifetime')
-          : false;
+        // isLicensed drives theme unlocks and the "Licensed" badge, so it must
+        // reflect a real verdict. In a browser the offline check does not exist,
+        // so the stored license_tier (written by activateLicense from the worker)
+        // is the signal, subject to the same period check getActiveTier applies.
+        // Without that, an elapsed monthly period still showed "Pro licensed"
+        // with every theme unlocked, because only getActiveTier knew about
+        // license_expires_at.
+        let licensed = paidTierActive(profile);
+        if (licensed && isTauriRuntime() && profile?.license_key) {
+          licensed = await cachedValidateLicense(profile.license_key);
+        }
         set({ profile, profileLoaded: true, isLicensed: licensed });
         // Rehydrate test mode across reloads: the flag outlives the page,
         // and loadProfile is the real boot entry point. Guarded by the
@@ -1471,11 +1492,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
         }
       }
       await invoke('upsert_user_profile', { payload: sanitized });
-      const licensed = sanitized.license_key
-        ? isTauriRuntime()
-          ? await cachedValidateLicense(sanitized.license_key)
-          : (sanitized.license_tier === 'pro' || sanitized.license_tier === 'lifetime')
-        : false;
+      const licensed = paidTierActive(sanitized);
       set({ profile: sanitized, isLicensed: licensed });
       if (ratesNote) get().addToast(ratesNote, 'info', 6000);
     },
