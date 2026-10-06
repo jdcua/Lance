@@ -103,6 +103,51 @@ async function cachedValidateLicense(key: string): Promise<boolean> {
   return valid;
 }
 
+/**
+ * Synchronous Tauri check, for the two call sites that need it before an
+ * await. The dynamic import in utils/tauri cannot answer "am I in Tauri?"
+ * without already being inside an async function.
+ */
+function isTauriRuntime(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof (window as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ === 'object'
+  );
+}
+
+/**
+ * Ask the worker whether a key is real, and for which tier. This is the ONLY
+ * authority available in browser mode: there is no Rust offline check there,
+ * so after validateLicenseKey stopped returning a truthy {} from the shim's
+ * catch-all, activation in a browser had no working path at all.
+ *
+ * The worker is authoritative anyway. It knows the tier and whether the key was
+ * revoked, which the offline HMAC cannot tell you.
+ */
+async function validateLicenseOnline(
+  key: string,
+): Promise<{ valid: boolean; tier?: string; message?: string } | null> {
+  try {
+    const { isTauri } = await import('../utils/tauri');
+    if (isTauri()) {
+      return await invoke<{ valid: boolean; tier: string; message: string }>(
+        'validate_license_online',
+        { key },
+      );
+    }
+    const res = await fetch(`${licenseWorkerUrl()}/validate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key }),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    console.warn('[license] Online validation failed.', err);
+    return null;
+  }
+}
+
 const invoke = async <T>(cmd: string, args?: Record<string, unknown>): Promise<T> => {
   const { tauriInvoke } = await import('../utils/tauri');
   return tauriInvoke<T>(cmd, args);
@@ -1304,9 +1349,15 @@ export const useStore = create<UnifiedStore>((set, get) => {
         if (profile && profile.exchange_rates !== undefined) {
           profile.exchange_rates = normalizeRates(profile.exchange_rates);
         }
-        const licensed = !!(
-          profile?.license_key && (await cachedValidateLicense(profile.license_key))
-        );
+        // isLicensed drives theme unlocks, so it must reflect a real verdict.
+        // In a browser the offline check does not exist, so the stored
+        // license_tier (written by activateLicense from the worker) is the
+        // signal: a browser cannot re-verify offline and must not pretend to.
+        const licensed = profile?.license_key
+          ? isTauriRuntime()
+            ? await cachedValidateLicense(profile.license_key)
+            : (profile.license_tier === 'pro' || profile.license_tier === 'lifetime')
+          : false;
         set({ profile, profileLoaded: true, isLicensed: licensed });
         // Rehydrate test mode across reloads: the flag outlives the page,
         // and loadProfile is the real boot entry point. Guarded by the
@@ -1404,60 +1455,52 @@ export const useStore = create<UnifiedStore>((set, get) => {
         }
       }
       await invoke('upsert_user_profile', { payload: sanitized });
-      const licensed = !!(
-        sanitized.license_key && (await cachedValidateLicense(sanitized.license_key))
-      );
+      const licensed = sanitized.license_key
+        ? isTauriRuntime()
+          ? await cachedValidateLicense(sanitized.license_key)
+          : (sanitized.license_tier === 'pro' || sanitized.license_tier === 'lifetime')
+        : false;
       set({ profile: sanitized, isLicensed: licensed });
       if (ratesNote) get().addToast(ratesNote, 'info', 6000);
     },
     activateLicense: async (key) => {
-      // Guard the shape BEFORE any check. validateLicenseKey returns the
-      // result of tauriInvoke('validate_license'), and browser mode has no
-      // handler for that command, so it fell through to the catch-all that
-      // returns {}. {} is truthy, so cachedValidateLicense reported EVERY
-      // string as a valid license: pasting "hello" granted Pro. Confirmed in
-      // the live /try/ build with a mangled key that still showed Licensed.
+      // Shape first. validateLicenseKey returns tauriInvoke('validate_license'),
+      // and browser mode has no handler for it, so it fell to the shim's
+      // catch-all returning {}. {} is truthy, so every string passed and
+      // pasting "hello" granted Pro. Confirmed live: a mangled key showed
+      // "Licensed".
       if (!validateLicenseKeyFormat(key)) return false;
-      if (!(await cachedValidateLicense(key))) return false;
+
       const profile = get().profile;
       if (!profile) return false;
 
-      // Ask the worker which tier this key is really for. The offline check
-      // in validate_license only answers true/false, so without this the
-      // profile recorded license_key with no license_tier, and
-      // getActiveTier() fell through to the trial clock and resolved 'free'.
-      // Themes appeared unlocked while every other Pro feature stayed locked,
-      // and `pingLicenseServer` was the only thing that ever set the tier.
+      const { isTauri } = await import('../utils/tauri');
+
+      // Desktop: the offline HMAC proves the key was minted by us and works
+      // with no network. Then confirm with the worker for the tier.
+      if (isTauri()) {
+        if (!(await cachedValidateLicense(key))) return false;
+      }
+
+      // The worker is authoritative for tier and revocation, which the offline
+      // check cannot know. It is also the ONLY source of truth in a browser.
+      const online = await validateLicenseOnline(key);
+
       let tier: LicenseTier = 'pro';
-      try {
-        const { isTauri } = await import('../utils/tauri');
-        const result = isTauri()
-          ? await invoke<{ valid: boolean; tier: string; message: string }>(
-              'validate_license_online',
-              { key },
-            )
-          : await fetch(`${licenseWorkerUrl()}/validate`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ key }),
-            }).then((r) => {
-              if (!r.ok) throw new Error(`license worker returned ${r.status}`);
-              return r.json();
-            });
-        if (result?.valid && result.tier) {
-          tier = result.tier as LicenseTier;
-        } else {
-          // Offline-valid but unknown to the worker: either an offline-only
-          // key or a worker outage. Pro is the safe default, since the key
-          // already passed the HMAC check. pingLicenseServer corrects the
-          // tier later when the worker is reachable.
-          console.warn(
-            '[license] Online validation unavailable for a valid key; assuming pro.',
-            result?.message,
-          );
-        }
-      } catch (err) {
-        console.warn('[license] Could not reach license worker during activation.', err);
+      if (online?.valid) {
+        tier = (online.tier || 'pro') as LicenseTier;
+      } else if (online) {
+        // The worker answered and said no: revoked, refunded, or never issued.
+        if (!isTauri()) return false;
+        // Desktop keeps the offline-valid key during its cool-down rather than
+        // refusing activation outright; pingLicenseServer applies the window.
+        console.warn('[license] Worker rejected an offline-valid key:', online.message);
+      } else {
+        // Worker unreachable. Desktop falls back to the offline verdict.
+        // A browser has nothing to fall back on, so refuse rather than grant
+        // Pro to an unverified key.
+        if (!isTauri()) return false;
+        console.warn('[license] Worker unreachable during activation; using offline check.');
       }
 
       const now = new Date().toISOString();
