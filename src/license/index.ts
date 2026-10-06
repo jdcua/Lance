@@ -12,9 +12,15 @@
  */
 export async function validateLicenseKey(key: string): Promise<boolean> {
   if (!key || typeof key !== 'string') return false;
+  // Coerce to a real boolean. In browser mode tauriInvoke returns {} for
+  // commands the shim does not implement, and {} is truthy: every string,
+  // including "hello", validated as a license and granted Pro. Requiring
+  // `true` makes an unimplemented or malformed response mean "not valid",
+  // which is the only safe reading.
   try {
     const { tauriInvoke } = await import('../utils/tauri');
-    return await tauriInvoke<boolean>('validate_license', { key });
+    const result = await tauriInvoke<unknown>('validate_license', { key });
+    return result === true;
   } catch {
     return false;
   }

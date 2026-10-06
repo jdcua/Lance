@@ -2313,12 +2313,20 @@ export default function Settings() {
                 type="text"
                 value={licenseKey}
                 onChange={(e) => {
-                  const raw = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+                  // Strip formatting, then drop the LANCE prefix before
+                  // regrouping. The old code kept 'LANCE' AND re-sliced from
+                  // index 5 of a value that still contained it, so pasting a
+                  // real key produced LANCE-ANCE-NCMW-5XKT-HFWR: the prefix
+                  // duplicated and the key was silently mangled.
+                  const cleaned = e.target.value
+                    .replace(/[^A-Za-z0-9]/g, '')
+                    .toUpperCase();
+                  const raw = cleaned.startsWith('LANCE') ? cleaned.slice(5) : cleaned;
                   let formatted = 'LANCE';
-                  if (raw.length > 5) formatted += '-' + raw.slice(5, 9);
-                  if (raw.length > 9) formatted += '-' + raw.slice(9, 13);
-                  if (raw.length > 13) formatted += '-' + raw.slice(13, 17);
-                  if (raw.length > 17) formatted += '-' + raw.slice(17, 21);
+                  if (raw.length > 0) formatted += '-' + raw.slice(0, 4);
+                  if (raw.length > 4) formatted += '-' + raw.slice(4, 8);
+                  if (raw.length > 8) formatted += '-' + raw.slice(8, 12);
+                  if (raw.length > 12) formatted += '-' + raw.slice(12, 16);
                   setLicenseKey(formatted);
                   setLicenseError('');
                   setLicenseSuccess(false);

@@ -37,7 +37,7 @@ import type {
   PortalActivity,
 } from '../types';
 import type { Achievement } from '../achievements/index';
-import { validateLicenseKey } from '../license';
+import { validateLicenseKey, validateLicenseKeyFormat } from '../license';
 import { sanitizeInput, truncate, MAX_LENGTHS } from '../utils/sanitize';
 import { DAY_MS } from '../utils/format';
 import type { LicenseTier } from '../lib/constants';
@@ -96,6 +96,7 @@ function licenseValidationIsStale(validatedAt?: string | null): boolean {
 }
 
 async function cachedValidateLicense(key: string): Promise<boolean> {
+  if (!validateLicenseKeyFormat(key)) return false;
   if (licenseCache.has(key)) return licenseCache.get(key)!;
   const valid = await validateLicenseKey(key);
   licenseCache.set(key, valid);
@@ -1410,6 +1411,13 @@ export const useStore = create<UnifiedStore>((set, get) => {
       if (ratesNote) get().addToast(ratesNote, 'info', 6000);
     },
     activateLicense: async (key) => {
+      // Guard the shape BEFORE any check. validateLicenseKey returns the
+      // result of tauriInvoke('validate_license'), and browser mode has no
+      // handler for that command, so it fell through to the catch-all that
+      // returns {}. {} is truthy, so cachedValidateLicense reported EVERY
+      // string as a valid license: pasting "hello" granted Pro. Confirmed in
+      // the live /try/ build with a mangled key that still showed Licensed.
+      if (!validateLicenseKeyFormat(key)) return false;
       if (!(await cachedValidateLicense(key))) return false;
       const profile = get().profile;
       if (!profile) return false;
