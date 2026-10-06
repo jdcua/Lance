@@ -76,6 +76,9 @@ jobs:
       # a failed deploy, because fulfillment would 500 on every purchase with
       # no signal from the deploy step itself.
       - name: Smoke test the deployed worker
+        env:
+          # Optional. Lets the check below report pool size. Absent is fine.
+          ADMIN_TOKEN: ${{ secrets.LICENSE_ADMIN_TOKEN }}
         run: |
           set -euo pipefail
           base="https://lance-license.cuajuandiego.workers.dev"
@@ -107,6 +110,26 @@ jobs:
           if [ "$code" != "401" ]; then
             echo "::error::Unsigned webhook was not rejected (got $code, want 401). Signature verification is compromised."
             exit 1
+          fi
+
+          # Warn when the pool is empty. This is not fatal: an empty pool only
+          # breaks fulfillment once someone buys, and minting is a manual,
+          # slow brute force. But a paid customer hitting an empty pool gets
+          # nothing until an owner notices, so surface it on every deploy.
+          pool=""
+          if [ -n "${ADMIN_TOKEN:-}" ]; then
+            pool=$(curl -sS --max-time 20 \
+              -H "Authorization: Bearer $ADMIN_TOKEN" \
+              "$base/admin/kv?prefix=pool%3A" 2>/dev/null || echo '')
+          fi
+          if [ -n "$pool" ]; then
+            count=$(printf '%s' "$pool" | grep -o '"name"' | wc -l | tr -d ' ')
+            echo "Pool keys available: ${count:-?}"
+            if [ "${count:-0}" = "0" ]; then
+              echo "::warning::License key pool is EMPTY. Any purchase right now will be held in pending: and no key will be issued. Mint with scripts/generate-license.cjs before taking real sales."
+            fi
+          else
+            echo "::warning::Could not read pool size (ADMIN_TOKEN not provided to this workflow)."
           fi
 
           echo "Smoke tests passed."

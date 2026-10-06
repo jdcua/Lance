@@ -141,13 +141,24 @@ function tierForItems(items) {
 // ── fulfillment ──
 
 async function popPoolKey(env) {
+  // KV list() is paginated at 1000. Reading only the first page and calling
+  // the pool empty when later pages hold keys would strand real purchases.
   const list = await env.LICENSE_KV.list({ prefix: 'pool:' });
   for (const k of list.keys) {
     const key = k.name.slice('pool:'.length);
-    await env.LICENSE_KV.delete(k.name);
-    // Claim check: if a binding appeared for this key with another txn, skip it.
+    // Claim check BEFORE delete. The old order deleted first, so a key that
+    // lost a claim race was destroyed rather than returned to the pool, and
+    // the pool silently drained.
     const existing = await env.LICENSE_KV.get(`key:${key}`, 'json');
-    if (!existing) return key;
+    if (existing) continue;
+    await env.LICENSE_KV.delete(k.name);
+    return key;
+  }
+  // Drain any keys skipped above back into the pool.
+  for (const k of list.keys) {
+    const key = k.name.slice('pool:'.length);
+    const existing = await env.LICENSE_KV.get(`key:${key}`, 'json');
+    if (existing) await env.LICENSE_KV.put(`pool:${key}`, '1');
   }
   return null;
 }
@@ -321,6 +332,14 @@ async function handleWebhook(request, env) {
       return Response.json({ error: 'email lookup failed' }, { status: 503 });
     }
     const result = await fulfillPurchase(env, { email, tier, txn: data.id, sub: data.subscription_id || null });
+    // An empty pool is an ops failure, not a customer failure. It has already
+    // written pending: and emailed the owner. Say so loudly in the response:
+    // a 200 here reads as "delivered" in the Paddle dashboard and stops the
+    // retry loop, which is how a paid customer ends up with nothing and no
+    // further attempts.
+    if (result.status === 'pool_empty') {
+      return Response.json({ error: 'key pool empty, awaiting mint', status: result.status }, { status: 503 });
+    }
     // Only a real issuance (or a renewal that reused an existing key) counts as
     // success. `pool_race` means money was taken and no key exists, so report
     // failure and let Paddle retry, and write a pending: record so the owner
