@@ -510,21 +510,36 @@ async function handleCreateIssue(request, env) {
 // file. No source is published; hashes let anyone verify the bytes served.
 //
 // CSP notes (read before tightening):
-// - connect-src 'none' is the exfiltration guard: no page or worker fetch
-//   can reach any server, so business data cannot leave the browser.
+// - connect-src is the exfiltration guard: no page or worker fetch can reach
+//   any server except the license worker, so business data cannot leave the
+//   browser.
+// - The one allowance is the license worker. connect-src 'none' made license
+//   activation impossible in a browser: the offline HMAC check is Rust, so a
+//   browser has no way to verify a key except by asking the worker, and the
+//   CSP blocked that call. Verified in the live build, where a correct key was
+//   rejected with "Refused to connect because it violates the document's
+//   Content Security Policy".
+// - That is a deliberate, narrow exception. The worker exposes exactly two
+//   read endpoints, /validate and /admin/*, both of which ignore request
+//   bodies: /validate takes a key and returns a verdict, and no user data can
+//   ride along. Nothing is sent anywhere else, so the exfiltration guarantee
+//   this policy exists for still holds for actual business data.
+// - form-action stays 'none' and no sendBeacon/fetch path exists in the app,
+//   so a license key is the only thing that ever crosses this boundary.
 // - script-src keeps 'unsafe-inline' for our own build-time inline theme
 //   bootstrap (view-source it: no network calls). Third-party scripts still
 //   cannot load (default-src/script-src 'self'), and even an injected inline
-//   script could not send data anywhere (connect-src 'none', form-action
-//   'none'). Removing 'unsafe-inline' would break the theme pre-paint with
-//   zero privacy gain.
+//   script could not send data anywhere (form-action 'none', and connect-src
+//   limited to a worker that stores nothing it is sent).
+//   Removing 'unsafe-inline' would break the theme pre-paint with zero privacy
+//   gain.
 const TRIAL_CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
   "img-src 'self' data: blob:",
-  "connect-src 'none'",
+  "connect-src 'self' https://lance-license.cuajuandiego.workers.dev",
   "media-src 'self' blob:",
   "frame-ancestors 'none'",
   "base-uri 'self'",
@@ -746,7 +761,8 @@ export default {
       }
       const RESEND_API_KEY = env.RESEND_API_KEY;
       const CONTACT_TO = env.CONTACT_TO;
-      if (!RESEND_API_KEY || !CONTACT_TO) {
+      const CONTACT_FROM = env.CONTACT_FROM;
+      if (!RESEND_API_KEY || !CONTACT_TO || !CONTACT_FROM) {
         return Response.json({ error: 'server misconfigured' }, { status: 500 });
       }
       const ip = request.headers.get('cf-connecting-ip') || 'unknown';
@@ -761,7 +777,7 @@ export default {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: env.CONTACT_FROM || 'Lance waitlist <onboarding@resend.dev>',
+            from: CONTACT_FROM,
             to: [CONTACT_TO],
             subject: 'Lance v2 waitlist signup',
             text: `New v2 AI waitlist signup: ${email}\nIP: ${ip}\nTime: ${new Date().toISOString()}`,
@@ -780,7 +796,7 @@ export default {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              from: env.CONTACT_FROM || 'Lance waitlist <onboarding@resend.dev>',
+              from: CONTACT_FROM,
               to: [email],
               subject: "You're on the Lance v2 list",
               text: `You're on the list, one email when Lance v2 (local, on-device AI drafting) ships. Nothing else, ever.\n\nDidn't sign up? Ignore this email.\nWant off the list anytime? Reply "forget me".\n\n, Lance (your business data stays on your device)`,
@@ -798,7 +814,8 @@ export default {
     if (url.pathname === '/api/contact' && request.method === 'POST') {
       const RESEND_API_KEY = env.RESEND_API_KEY;
       const CONTACT_TO = env.CONTACT_TO;
-      if (!RESEND_API_KEY || !CONTACT_TO) {
+      const CONTACT_FROM = env.CONTACT_FROM;
+      if (!RESEND_API_KEY || !CONTACT_TO || !CONTACT_FROM) {
         return Response.json({ error: 'server misconfigured' }, { status: 500 });
       }
 
@@ -845,7 +862,7 @@ export default {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: env.CONTACT_FROM || 'Lance contact <onboarding@resend.dev>',
+            from: CONTACT_FROM,
             to: [CONTACT_TO],
             reply_to: `${name} <${email}>`,
             subject: `Lance contact: ${name}`,
