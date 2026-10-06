@@ -77,8 +77,10 @@ jobs:
       # no signal from the deploy step itself.
       - name: Smoke test the deployed worker
         env:
-          # Optional. Lets the check below report pool size. Absent is fine.
           ADMIN_TOKEN: ${{ secrets.LICENSE_ADMIN_TOKEN }}
+          # Used to verify the pool against the offline check the shipped app
+          # performs. See the pool-integrity step below.
+          LANCE_LICENSE_SECRET: ${{ secrets.LANCE_LICENSE_SECRET }}
         run: |
           set -euo pipefail
           base="https://lance-license.cuajuandiego.workers.dev"
@@ -137,3 +139,22 @@ jobs:
           fi
 
           echo "Smoke tests passed."
+
+      # The gap that let six unsellable keys sit in the pool: /validate returns
+      # valid:true for any key with a key: record, because it short-circuits
+      # before the HMAC. Only the offline check the shipped app runs can tell
+      # whether a key is actually redeemable, so verify that directly. A FAIL
+      # here means the worker's LANCE_LICENSE_SECRET and the one the mint script
+      # used have diverged, and every key in the pool would be rejected by a
+      # desktop install the moment a customer pasted it in.
+      - name: Verify pool keys pass the offline check
+        env:
+          ADMIN_TOKEN: ${{ secrets.LICENSE_ADMIN_TOKEN }}
+          LANCE_LICENSE_SECRET: ${{ secrets.LANCE_LICENSE_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ADMIN_TOKEN:-}" ] || [ -z "${LANCE_LICENSE_SECRET:-}" ]; then
+            echo "::warning::Skipping pool integrity check (ADMIN_TOKEN or LANCE_LICENSE_SECRET unset)."
+            exit 0
+          fi
+          node scripts/check-pool-hmac.cjs
