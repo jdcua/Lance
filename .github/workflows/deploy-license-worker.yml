@@ -122,14 +122,18 @@ jobs:
               -H "Authorization: Bearer $ADMIN_TOKEN" \
               "$base/admin/kv?prefix=pool%3A" 2>/dev/null || echo '')
           fi
+
           if [ -n "$pool" ]; then
-            count=$(printf '%s' "$pool" | grep -o '"name"' | wc -l | tr -d ' ')
-            echo "Pool keys available: ${count:-?}"
-            if [ "${count:-0}" = "0" ]; then
+            # grep exits 1 when it matches nothing, which under `set -o pipefail`
+            # would abort the step. An empty pool is the case we most need to
+            # report, so count with a construct that always succeeds.
+            count=$(printf '%s' "$pool" | tr ',' '\n' | grep -c '"name"' || true)
+            echo "Pool keys available: $count"
+            if [ "$count" = "0" ]; then
               echo "::warning::License key pool is EMPTY. Any purchase right now will be held in pending: and no key will be issued. Mint with scripts/generate-license.cjs before taking real sales."
             fi
           else
-            echo "::warning::Could not read pool size (ADMIN_TOKEN not provided to this workflow)."
+            echo "::warning::Could not read pool size (ADMIN_TOKEN not set, or /admin/kv rejected it)."
           fi
 
           echo "Smoke tests passed."
