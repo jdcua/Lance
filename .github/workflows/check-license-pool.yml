@@ -84,6 +84,9 @@ jobs:
         if: steps.pool.outputs.short == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Explicit target: without a checkout step there is no git repo, and
+          # `gh issue` then fails with "fatal: not a git repository".
+          REPO: ${{ github.repository }}
           COUNT: ${{ steps.pool.outputs.count }}
           THRESHOLD: ${{ steps.pool.outputs.threshold }}
         run: |
@@ -91,7 +94,7 @@ jobs:
           title="License key pool low: ${COUNT} keys remaining"
 
           # Reuse the open issue instead of filing a new one every 6 hours.
-          existing=$(gh issue list --state open --limit 100 \
+          existing=$(gh issue list --repo "$REPO" --state open --limit 100 \
             --json number,title --jq ".[] | select(.title | startswith(\"License key pool low\")) | .number" | head -1)
 
           body=$(cat <<EOF
@@ -143,11 +146,11 @@ jobs:
 
           if [ -n "$existing" ]; then
             echo "Updating issue #$existing"
-            gh issue comment "$existing" --body "$body"
+            gh issue comment "$existing" --repo "$REPO" --body "$body"
           else
             echo "Opening new issue"
-            gh issue create --title "$title" --body "$body" --label ops 2>/dev/null \
-              || gh issue create --title "$title" --body "$body"
+            gh issue create --repo "$REPO" --title "$title" --body "$body" --label ops 2>/dev/null \
+              || gh issue create --repo "$REPO" --title "$title" --body "$body"
           fi
 
       - name: Summary
