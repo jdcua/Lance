@@ -124,6 +124,22 @@ const ownerAlert = (env, subject, text) =>
     ? sendEmail(env, env.LICENSE_OWNER_EMAIL, `[Lance license] ${subject}`, text)
     : Promise.resolve(false);
 
+/**
+ * End of the billed period, or null for a one-time purchase.
+ *
+ * Paddle sends billing_period on a subscription transaction
+ * (starts_at/ends_at) and omits it entirely for a one-time charge, so the
+ * absence is the reliable lifetime signal. This is the data that was already
+ * arriving and being thrown away: the worker hardcoded expires_at:null in the
+ * validate response, and the app stored license_expires_at without ever reading
+ * it, so a monthly customer kept Pro forever.
+ */
+function periodEnd(data) {
+  const ends = data.billing_period?.ends_at;
+  if (typeof ends !== 'string' || Number.isNaN(new Date(ends).getTime())) return null;
+  return ends;
+}
+
 function tierForItems(items) {
   for (const item of items || []) {
     // Paddle sends the ID as price_id on the line item, and nests it under
@@ -164,7 +180,7 @@ async function popPoolKey(env) {
 }
 
 async function fulfillPurchase(env, purchase) {
-  // purchase: { email, tier, txn, sub }
+  // purchase: { email, tier, txn, sub, expires_at }
   const done = await env.LICENSE_KV.get(`txn:${purchase.txn}`);
   if (done) return { status: 'already_fulfilled', key: done };
 
@@ -173,6 +189,15 @@ async function fulfillPurchase(env, purchase) {
     const existing = await env.LICENSE_KV.get(`sub:${purchase.sub}`, 'json');
     if (existing && existing.length > 0) {
       await env.LICENSE_KV.put(`txn:${purchase.txn}`, existing[0]);
+      // A renewal extends the subscription, so the key's expiry must move with
+      // it. Without this the original period's end date stuck and a paying
+      // monthly customer lost Pro at the first renewal boundary.
+      const prior = await env.LICENSE_KV.get(`key:${existing[0]}`, 'json');
+      if (prior && purchase.expires_at && prior.expires_at !== purchase.expires_at) {
+        prior.expires_at = purchase.expires_at;
+        prior.renewed_at = new Date().toISOString();
+        await env.LICENSE_KV.put(`key:${existing[0]}`, JSON.stringify(prior));
+      }
       return { status: 'renewal_reused', key: existing[0] };
     }
   }
@@ -184,7 +209,21 @@ async function fulfillPurchase(env, purchase) {
       await ownerAlert(env, 'Key pool empty', `Pool exhausted fulfilling ${purchase.txn} (${purchase.email}, ${purchase.tier}). Mint more keys and POST /admin/fulfill.`);
       return { status: 'pool_empty' };
     }
-    const record = { tier: purchase.tier, email: purchase.email, txn: purchase.txn, sub: purchase.sub || null, issued_at: new Date().toISOString(), revoked: false };
+    // expires_at is the end of the billed period for a subscription, and null
+    // for a one-time lifetime purchase. The app gates the tier on it, so a
+    // monthly customer downgrades when the period ends rather than only when
+    // they cancel. It used to be hardcoded null in the validate response and
+    // the app stored license_expires_at without ever reading it, so monthly
+    // subscribers kept Pro indefinitely.
+    const record = {
+      tier: purchase.tier,
+      email: purchase.email,
+      txn: purchase.txn,
+      sub: purchase.sub || null,
+      expires_at: purchase.expires_at || null,
+      issued_at: new Date().toISOString(),
+      revoked: false,
+    };
     await env.LICENSE_KV.put(`key:${key}`, JSON.stringify(record));
     const check = await env.LICENSE_KV.get(`key:${key}`, 'json');
     if (!check || check.txn !== purchase.txn) continue; // lost a race; try next pool key
@@ -260,7 +299,30 @@ async function handleValidate(url, env, request) {
     if (record.revoked) {
       return Response.json({ valid: false, tier: 'expired', expires_at: null, message: 'License revoked' });
     }
-    return Response.json({ valid: true, tier: record.tier, expires_at: null, message: 'License valid' });
+    // An elapsed period ends the entitlement. Reported as 'expired' rather than
+    // revoked so the app can distinguish "your term ran out" from "you were
+    // refunded" and word it correctly. A renewal moves expires_at forward, so
+    // this only trips when a subscription genuinely lapses.
+    const expired =
+      typeof record.expires_at === 'string' &&
+      !Number.isNaN(new Date(record.expires_at).getTime()) &&
+      Date.now() > new Date(record.expires_at).getTime();
+    if (expired) {
+      return Response.json({
+        valid: false,
+        tier: 'expired',
+        expires_at: record.expires_at,
+        message: 'Subscription period ended',
+      });
+    }
+    // expires_at is real now, not always null. It used to be hardcoded here,
+    // which is why monthly subscribers never lost access.
+    return Response.json({
+      valid: true,
+      tier: record.tier,
+      expires_at: record.expires_at ?? null,
+      message: 'License valid',
+    });
   }
   // No KV record: the key was never issued by us (or was never fulfilled), so
   // there is no tier to grant and nothing to revoke. The HMAC check is kept as
@@ -331,7 +393,13 @@ async function handleWebhook(request, env) {
       await ownerAlert(env, 'Email lookup failed', `Transaction ${data.id} (${tier}) completed but customer email could not be resolved. Resolve manually.`);
       return Response.json({ error: 'email lookup failed' }, { status: 503 });
     }
-    const result = await fulfillPurchase(env, { email, tier, txn: data.id, sub: data.subscription_id || null });
+    const result = await fulfillPurchase(env, {
+      email,
+      tier,
+      txn: data.id,
+      sub: data.subscription_id || null,
+      expires_at: periodEnd(data),
+    });
     // An empty pool is an ops failure, not a customer failure. It has already
     // written pending: and emailed the owner. Say so loudly in the response:
     // a 200 here reads as "delivered" in the Paddle dashboard and stops the

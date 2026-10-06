@@ -123,6 +123,53 @@ describe('license cool-down after a revoked key', () => {
   });
 });
 
+describe('license period expiry', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useStore.setState({ profile: null, isLicensed: false });
+    vi.restoreAllMocks();
+  });
+
+  // license_expires_at was written to the profile and never read, while the
+  // worker returned a hardcoded expires_at: null. Monthly subscribers therefore
+  // kept Pro indefinitely. Both ends are now real.
+
+  it('downgrades when the billed period has elapsed', () => {
+    useStore.setState({
+      profile: profile({
+        license_expires_at: new Date(Date.now() - 86400000).toISOString(),
+      }),
+    });
+    expect(useStore.getState().getActiveTier()).toBe('expired');
+  });
+
+  it('keeps Pro while the period is still running', () => {
+    useStore.setState({
+      profile: profile({
+        license_expires_at: new Date(Date.now() + 20 * DAY).toISOString(),
+      }),
+    });
+    expect(useStore.getState().getActiveTier()).toBe('pro');
+  });
+
+  it('never expires a lifetime key, which carries no expiry', () => {
+    useStore.setState({
+      profile: profile({ license_tier: 'lifetime', license_expires_at: null }),
+    });
+    expect(useStore.getState().getActiveTier()).toBe('lifetime');
+  });
+
+  it('keeps a paid tier for keys issued before expiry tracking existed', () => {
+    useStore.setState({ profile: profile() });
+    expect(useStore.getState().getActiveTier()).toBe('pro');
+  });
+
+  it('ignores an unparseable expiry rather than locking the customer out', () => {
+    useStore.setState({ profile: profile({ license_expires_at: 'not-a-date' }) });
+    expect(useStore.getState().getActiveTier()).toBe('pro');
+  });
+});
+
 describe('activateLicense records the tier', () => {
   beforeEach(() => {
     localStorage.clear();

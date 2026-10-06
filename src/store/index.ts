@@ -108,6 +108,22 @@ async function cachedValidateLicense(key: string): Promise<boolean> {
  * await. The dynamic import in utils/tauri cannot answer "am I in Tauri?"
  * without already being inside an async function.
  */
+/**
+ * True when a license's billed period has elapsed.
+ *
+ * license_expires_at is the end of the paid period for a subscription and null
+ * for lifetime. An unparseable or absent value means "no expiry", so a lifetime
+ * key and any key issued before this field existed both keep working. Without
+ * this, a monthly customer was never downgraded: the worker returned
+ * expires_at: null and this field was written but never read.
+ */
+function licensePeriodEnded(expiresAt?: string | null): boolean {
+  if (!expiresAt) return false;
+  const at = new Date(expiresAt).getTime();
+  if (Number.isNaN(at)) return false;
+  return Date.now() > at;
+}
+
 function isTauriRuntime(): boolean {
   return (
     typeof window !== 'undefined' &&
@@ -1658,9 +1674,12 @@ export const useStore = create<UnifiedStore>((set, get) => {
           // recorded here but nothing read it on the happy path, so the "2-day
           // grace" the comment described never actually applied.
           //
-          // getActiveTier() now treats an unexpired license_grace_until as
-          // still-licensed, and the catch branch below downgrades once it has
-          // passed. That is where the cool-down is enforced.
+          // getActiveTier() also reads license_expires_at, so a lapsed monthly
+          // period expires on its own even between pings. The cool-down applies
+          // here too, deliberately: a renewal webhook or a dunning retry can
+          // land a few days late, and losing Pro immediately would punish
+          // someone who already paid. Net effect is roughly 7 days past the
+          // period end.
           const profile = get().profile;
           if (!profile) return;
           const stillPro = result.tier !== 'free' && result.tier !== 'expired';
@@ -1735,7 +1754,18 @@ export const useStore = create<UnifiedStore>((set, get) => {
         // removed the key during the window should not silently keep Pro
         // forever, so the key is still required.
         if (serverTier === 'pro' || serverTier === 'lifetime') {
-          if (profile.license_key) return serverTier;
+          if (!profile.license_key) {
+            /* key gone, fall through */
+          } else if (licensePeriodEnded(profile.license_expires_at)) {
+            // The billed period has elapsed. Read here rather than trusting the
+            // server tier alone: the app is offline much of the time, and this
+            // field was previously stored and NEVER read, so a monthly
+            // subscriber kept Pro indefinitely. Lifetime records carry no expiry
+            // (null), so they are unaffected.
+            return 'expired';
+          } else {
+            return serverTier;
+          }
         } else {
           return serverTier;
         }
