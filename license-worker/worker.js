@@ -395,17 +395,32 @@ async function handleAdminFulfill(request, env) {  const auth = request.headers.
   }
   const pending = await env.LICENSE_KV.list({ prefix: 'pending:' });
   const fulfilled = [];
+  const emailFailed = [];
   const stillPending = [];
   for (const k of pending.keys) {
     const purchase = await env.LICENSE_KV.get(k.name, 'json');
     if (!purchase || !purchase.email) {
-      stillPending.push(k.name);
+      stillPending.push(purchase?.txn || k.name.slice('pending:'.length));
       continue;
     }
     const result = await fulfillPurchase(env, purchase);
-    (result.status === 'fulfilled' ? fulfilled : stillPending).push(purchase.txn);
+    // Classify on the real status. The old check was
+    // `result.status === 'fulfilled'`, so a successful issue whose email
+    // bounced (`fulfilled_email_failed`) and an already-issued txn
+    // (`already_fulfilled`, `renewal_reused`) were all reported as still
+    // pending. Fulfillment deletes the pending: record on success, so a
+    // post-hoc read finds nothing either, which is what made a successful
+    // run look like a total failure during a real incident.
+    if (result.status === 'fulfilled' || result.status === 'fulfilled_email_failed') {
+      fulfilled.push(purchase.txn);
+      if (result.status === 'fulfilled_email_failed') emailFailed.push(purchase.txn);
+    } else if (result.status === 'already_fulfilled' || result.status === 'renewal_reused') {
+      fulfilled.push(purchase.txn);
+    } else {
+      stillPending.push(purchase.txn);
+    }
   }
-  return Response.json({ ok: true, fulfilled, still_pending: stillPending });
+  return Response.json({ ok: true, fulfilled, email_failed: emailFailed, still_pending: stillPending });
 }
 
 export default {

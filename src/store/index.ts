@@ -53,8 +53,12 @@ import { sanitizeRates, normalizeRates } from '../lib/currency';
 
 // Public URL of the license worker. Mirrors the value baked into the desktop
 // binary via LANCE_LICENSE_WORKER_URL; needed here because browser mode has no
-// Rust to make the request.
-const LICENSE_WORKER_URL = 'https://lance-license.your-subdomain.workers.dev';
+// Rust to make the request. Set VITE_LICENSE_WORKER_URL at build time for
+// production builds. The placeholder below is a fallback only and must not
+// ship in a production build.
+const LICENSE_WORKER_URL =
+  (import.meta as unknown as { env?: Record<string, string | undefined> }).env
+    ?.VITE_LICENSE_WORKER_URL || 'https://lance-license.your-subdomain.workers.dev';
 
 const licenseCache = new Map<string, boolean>();
 
@@ -1389,8 +1393,54 @@ export const useStore = create<UnifiedStore>((set, get) => {
       if (!(await cachedValidateLicense(key))) return false;
       const profile = get().profile;
       if (!profile) return false;
+
+      // Ask the worker which tier this key is really for. The offline check
+      // in validate_license only answers true/false, so without this the
+      // profile recorded license_key with no license_tier, and
+      // getActiveTier() fell through to the trial clock and resolved 'free'.
+      // Themes appeared unlocked while every other Pro feature stayed locked,
+      // and `pingLicenseServer` was the only thing that ever set the tier.
+      let tier: LicenseTier = 'pro';
+      try {
+        const { isTauri } = await import('../utils/tauri');
+        const result = isTauri()
+          ? await invoke<{ valid: boolean; tier: string; message: string }>(
+              'validate_license_online',
+              { key },
+            )
+          : await fetch(`${LICENSE_WORKER_URL}/validate`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ key }),
+            }).then((r) => {
+              if (!r.ok) throw new Error(`license worker returned ${r.status}`);
+              return r.json();
+            });
+        if (result?.valid && result.tier) {
+          tier = result.tier as LicenseTier;
+        } else {
+          // Offline-valid but unknown to the worker: either an offline-only
+          // key or a worker outage. Pro is the safe default, since the key
+          // already passed the HMAC check. pingLicenseServer corrects the
+          // tier later when the worker is reachable.
+          console.warn(
+            '[license] Online validation unavailable for a valid key; assuming pro.',
+            result?.message,
+          );
+        }
+      } catch (err) {
+        console.warn('[license] Could not reach license worker during activation.', err);
+      }
+
       const now = new Date().toISOString();
-      const updated = { ...profile, license_key: key, licensed_at: now };
+      const updated = {
+        ...profile,
+        license_key: key,
+        licensed_at: now,
+        license_tier: tier,
+        license_validated_at: now,
+        isLicensed: true,
+      };
       await invoke('upsert_user_profile', { payload: updated });
       set({ profile: updated, isLicensed: true });
       return true;
