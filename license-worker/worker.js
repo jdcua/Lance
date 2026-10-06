@@ -360,13 +360,66 @@ async function handleWebhook(request, env) {
       const record = await env.LICENSE_KV.get(`key:${k}`, 'json');
       if (record) {
         record.revoked = true;
+        record.revoked_reason = 'subscription_canceled';
         await env.LICENSE_KV.put(`key:${k}`, JSON.stringify(record));
       }
     }
     return Response.json({ ok: true, revoked: keys.length });
   }
 
+  // Refunds and chargebacks. subscription.canceled does NOT cover these: a
+  // customer can refund a one-time lifetime purchase outright, and a chargeback
+  // on a subscription reverses payment without cancelling the subscription.
+  // Neither sends subscription.canceled, so without these branches a refunded
+  // customer keeps Pro forever. Confirmed in Oct 2026: a refunded transaction
+  // left its key at revoked:false.
+  //
+  // transaction.refunded carries the original transaction under
+  // data.transaction_id, so the key is found through the txn: marker.
+  if (event.event_type === 'transaction.refunded') {
+    const txnId = data.transaction_id || data.id;
+    const key = await env.LICENSE_KV.get(`txn:${txnId}`);
+    const result = key ? await revokeKey(env, key, 'refunded') : { revoked: 0 };
+    if (key) {
+      await ownerAlert(
+        env,
+        'License revoked by refund',
+        `Transaction ${txnId} was refunded; key ${key} revoked. The customer keeps access during the app's cool-down window.`,
+      );
+    }
+    await markEventDone();
+    return Response.json({ ok: true, ...result, txn: txnId });
+  }
+
+  // Chargebacks are the reverse flow: money is taken back by the bank, so the
+  // key goes immediately rather than waiting out a grace window. Flagged in
+  // Paddle's dashboard for manual review as well.
+  if (event.event_type === 'transaction.chargebacked' || event.event_type === 'transaction.disputed') {
+    const txnId = data.transaction_id || data.id;
+    const key = await env.LICENSE_KV.get(`txn:${txnId}`);
+    const result = key ? await revokeKey(env, key, 'chargeback') : { revoked: 0 };
+    await ownerAlert(
+      env,
+      'License revoked by chargeback',
+      `Transaction ${txnId} was charged back; key ${key || 'unknown'} revoked. This one is not a customer-initiated refund.`,
+    );
+    await markEventDone();
+    return Response.json({ ok: true, ...result, txn: txnId });
+  }
+
   return Response.json({ ok: true, ignored: event.event_type });
+}
+
+/** Flip a key to revoked and record why, for audit. */
+async function revokeKey(env, key, reason) {
+  const record = await env.LICENSE_KV.get(`key:${key}`, 'json');
+  if (!record) return { revoked: 0 };
+  if (record.revoked) return { revoked: 0, already: true };
+  record.revoked = true;
+  record.revoked_reason = reason;
+  record.revoked_at = new Date().toISOString();
+  await env.LICENSE_KV.put(`key:${key}`, JSON.stringify(record));
+  return { revoked: 1, key };
 }
 
 function requireAdmin(request, env) {

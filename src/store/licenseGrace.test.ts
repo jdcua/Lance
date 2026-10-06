@@ -93,6 +93,20 @@ describe('license cool-down after a revoked key', () => {
     expect(useStore.getState().profile?.license_grace_until).toBeUndefined();
   });
 
+  it('keeps Pro after a refund, since revocation starts the cool-down not access loss', async () => {
+    // A refund revokes server-side. The app must keep working for 7 days so
+    // someone who refunds by mistake, or whose payment reversed, is not locked
+    // out of work already done. Verified against the real worker: revoking a
+    // key makes /validate return tier 'expired', which is what starts the clock.
+    workerSaysExpired();
+    useStore.setState({ profile: profile() });
+
+    await useStore.getState().pingLicenseServer();
+
+    expect(useStore.getState().getActiveTier()).toBe('pro');
+    expect(useStore.getState().profile?.license_grace_until).toBeTruthy();
+  });
+
   it('does not advance the cool-down when the worker is unreachable', async () => {
     const original = new Date(Date.now() + 2 * DAY).toISOString();
     useStore.setState({ profile: profile({ license_grace_until: original }) });
