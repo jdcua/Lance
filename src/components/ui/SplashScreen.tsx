@@ -128,7 +128,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
         <p className="text-sm text-[var(--text-secondary)] mb-6">Freelancer OS</p>
 
         <p className="text-xs text-[var(--text-tertiary)] mb-5">
-          Version {appVersion} &middot; Built by Placeholder Labs Incorporated Limited
+          Version {appVersion} &middot; Built by Lance
         </p>
 
         <div className="border-t border-[var(--border-color)] my-5" />

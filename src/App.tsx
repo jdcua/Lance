@@ -1,6 +1,6 @@
 /**
  * Lance · Freelancer OS
- * Built by Placeholder Labs Incorporated Limited (placeholderlabsincorporatedlimited.yabbadabbadoo)
+ * Built by Lance
  *
  * Privacy: Lance collects no telemetry. See PRIVACY.md.
  * License: Proprietary. See LICENSE.md.
@@ -605,7 +605,6 @@ export default function App() {
     });
     return cancel;
   }, [profileLoaded, hasRanAutoGen, loadRecurringInvoices, loadInvoices, loadClients, addToast]);
-
 
   // Deferred recurring invoice check · runs after first render via idle callback
   useEffect(() => {
@@ -1683,7 +1682,9 @@ function OnboardingFlow({
                         : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40'
                     }`}
                   >
-                    <span className="text-base flex-shrink-0" aria-hidden="true">{archetype.emoji}</span>
+                    <span className="text-base flex-shrink-0" aria-hidden="true">
+                      {archetype.emoji}
+                    </span>
                     <span className="leading-snug line-clamp-2">{archetype.label}</span>
                   </button>
                 ),
@@ -1795,7 +1796,9 @@ function OnboardingFlow({
                   }}
                 />
                 {validationErrors.email && (
-                  <p id="onboarding-email-error" role="alert" className="text-red-500 text-xs mt-1">{validationErrors.email}</p>
+                  <p id="onboarding-email-error" role="alert" className="text-red-500 text-xs mt-1">
+                    {validationErrors.email}
+                  </p>
                 )}
                 {validationErrors.email && emailStumbles >= 2 && (
                   <p className="text-xs text-[var(--text-tertiary)] mt-1">

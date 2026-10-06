@@ -1088,6 +1088,8 @@
             <a href="/terms">Terms</a>
             <a href="/refunds">Refunds</a>
             <a href="#contact">Contact</a>
+            <!-- TODO(owner): replace support@example.com with the real support inbox -->
+            <a href="mailto:support@example.com">support@example.com</a>
           </div>
           <p class="footer-copy mono">© 2026 Lance. Your business data stays on your device.</p>
         </div>
@@ -1095,6 +1097,11 @@
           <div class="foot-form-block">
             <p class="foot-form-title">Contact</p>
             <p class="foot-form-sub">Questions, refunds, or just saying hi.</p>
+            <p class="foot-form-sub">
+              Prefer email?
+              <a href="mailto:support@example.com">support@example.com</a>
+              <!-- TODO(owner): replace support@example.com with the real support inbox -->
+            </p>
             <form id="contact-form" class="mini-form" novalidate>
               <input
                 type="text"
@@ -1184,6 +1191,9 @@
               />
               <button type="submit" id="ir-submit" class="ghost-btn ghost-sm">Report issue</button>
               <p id="ir-status" class="form-status" role="status"></p>
+              <p class="foot-form-sub">
+                Reports are stored in a private repository and used only to respond to you.
+              </p>
             </form>
           </div>
         </div>

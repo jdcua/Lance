@@ -66,5 +66,5 @@ the open-findings register, see `SECURITY_DESIGN_NOTES.md`.
 
 ## Responsible Disclosure
 
-Security issues: security@placeholderlabsincorporatedlimited.yabbadabbadoo
+Security issues: [SUPPORT EMAIL]
 We aim to respond within 48 hours.

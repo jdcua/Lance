@@ -86,8 +86,8 @@
             <span class="hl-line blur-in" style="--d: 80ms"><span>Privacy Policy</span></span>
           </h1>
           <p class="hero-sub blur-in" style="--d: 160ms">
-            Effective 2026 · Lance is local-first. Your business data lives on your device, never in
-            the cloud.
+            Effective 2026 · Last updated October 5, 2026 · Lance is local-first. Your business
+            data lives on your device, never in the cloud.
           </p>
           <div class="hero-cta blur-in" style="--d: 240ms">
             <a href="https://lance.cuajuandiego.workers.dev/try/" class="shimmer magnetic"
@@ -130,41 +130,80 @@
           <div class="bcard b-2">
             <div class="b-title">What leaves your device</div>
             <div class="b-desc">
-              <strong>Update check.</strong> On launch, Lance fetches a version file from GitHub
-              Releases. GitHub sees a normal HTTPS request (your IP, the app version in the URL). No
-              account, no identifier, no usage data.<br /><br /><strong>Changelog.</strong> The
-              “What’s new” screen fetches public release notes from the GitHub API. Same as above:
-              no identifier, no usage data.<br /><br /><strong>License validation.</strong> Only if
-              you enter a Pro license key: the key is checked against our license server so paid
-              features unlock. Keyless users send nothing.<br /><br /><strong>Checkout.</strong>
-              Only if you click buy: your browser opens Paddle (our merchant of record), which
+              <strong>Update checks and downloads.</strong> The app asks our own Cloudflare worker
+              for the latest version, and downloads run through that worker too. The worker fetches
+              release files from GitHub with a server token, so GitHub sees the worker rather than
+              your IP directly. Requests carry only what is needed to serve the right file, such as
+              the app version. No account, no identifier, no usage data.<br /><br /><strong
+                >Changelog.</strong
+              >
+              The “What’s new” screen shows the same public release notes over the same path. Same
+              privacy as above.<br /><br /><strong>License validation.</strong> Only if you enter a
+              Pro license key: the app sends only the key to our license server so paid features
+              unlock. Keyless users send nothing. The server stores the key, its tier, the purchaser
+              email we received from Paddle, the Paddle transaction and subscription IDs, the issue
+              date, and a revoked flag used for refunds. No device IDs, ever.<br /><br /><strong
+                >Checkout.</strong
+              >
+              Only if you click buy: your browser opens Paddle, our merchant of record, which
               handles payment, tax, and receipts under Paddle’s own privacy policy.<br /><br /><strong
                 >Contact form.</strong
               >
-              If you use the contact form on this site, your name, email, and message are emailed to
-              us so we can reply. Nothing else.<br /><br /><strong>v2 waitlist (opt-in).</strong>
-              One confirmation now and a single email when v2 ships. No newsletter, no sharing,
-              ever. Reply “forget me” anytime and it’s deleted.<br /><br /><strong
-                >Anonymous A/B counts.</strong
+              If you use the contact form on this site, we receive your name, email, and message by
+              email through Resend so we can reply. Nothing else.<br /><br /><strong
+                >v2 waitlist (opt-in).</strong
               >
-              This site counts anonymous views and clicks per variant. We store no IP address for
-              these, and build no fingerprint. A 30-day cookie remembers which version of a page you
-              saw so the page does not change on you.
+              Email address only, sent through Resend. One confirmation now and a single email when
+              v2 ships. No newsletter, no sharing, ever. Reply “forget me” anytime and it’s
+              deleted.<br /><br /><strong>Bug reports.</strong> If you use the bug form, we receive
+              your name, email, a short title, and details. Reports are stored in our private GitHub
+              repository, labeled “user-report” so they stay easy to find, and used only to respond
+              to you.<br /><br /><strong>Anonymous A/B counts.</strong> One small experiment is
+              running on the download button text. We count anonymous views and clicks per variant.
+              We store no IP address for these, and build no fingerprint. A 30-day cookie
+              (lance_ab_hero-cta) remembers which button text you saw so the page does not change on
+              you.
             </div>
           </div>
           <div class="bcard b-2">
             <div class="b-title">What never happens</div>
             <div class="b-desc">
-              No analytics, no usage tracking, no crash reports sent anywhere.<br /><br />No
-              advertising identifiers, no third-party trackers, no fingerprinting of your screen,
-              hardware, or clipboard. Your business data never leaves your device.<br /><br />No
+              No third-party analytics, no usage tracking, no crash reports sent anywhere.<br /><br />No
+              advertising identifiers, no third-party trackers in the app, no fingerprinting of your
+              screen, hardware, or clipboard. Your business data never leaves your device.<br /><br />No
               account system. There is nothing to sign into and no server holding your data.<br /><br /><b
-                >Web fonts.</b
+                >Rate limiting.</b
               >
-              This website and the desktop app load their typefaces from a third-party font host,
-              which sees your IP address and browser as any web host does. That is the only third
-              party involved. The browser trial loads no fonts from anywhere and makes no
-              third-party request at all.
+              Our workers look at IP addresses only to slow down abuse. Those addresses live in
+              short-lived memory and are never written to storage. Cloudflare still sees IPs because
+              it hosts this site, as any host does.<br /><br /><b>Web fonts.</b> This website and the
+              desktop app load their typefaces from Bunny Fonts (fonts.bunny.net), which sees your
+              IP address and browser as any web host does. The browser trial loads no remote fonts
+              and makes no third-party request at all.
+            </div>
+          </div>
+          <div class="bcard b-2">
+            <div class="b-title">How long we keep messages</div>
+            <div class="b-desc">
+              Contact and bug report messages are kept only as long as needed to help you and to keep
+              a basic support history. Waitlist addresses are kept only until v2 ships, or until you
+              ask to be removed.<br /><br />To see, correct, or delete anything you sent us, email
+              <a href="mailto:support@example.com">support@example.com</a>
+              <!-- TODO(owner): replace support@example.com with the real support inbox -->
+              from the same address you used, and tell us what to do. We reply to every request
+              ourselves.
+            </div>
+          </div>
+          <div class="bcard b-2">
+            <div class="b-title">Children and changes</div>
+            <div class="b-desc">
+              Lance is built for freelancers running a business. It is not directed at children, and
+              we do not knowingly collect anything from children.<br /><br />When this policy
+              changes in a meaningful way, we will post the new version on this page, update the
+              last-updated date above, and note what changed. Small clarifications are dated but not
+              announced elsewhere.<br /><br />Questions about any of this:
+              <a href="mailto:support@example.com">support@example.com</a>.
+              <!-- TODO(owner): replace support@example.com with the real support inbox -->
             </div>
           </div>
         </div>
@@ -193,7 +232,9 @@
           <p>Built by independent freelancers.</p>
           <div class="footer-links">
             <a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/refunds">Refunds</a
-            ><a href="https://lance.cuajuandiego.workers.dev/#contact">Contact</a>
+            ><a href="https://lance.cuajuandiego.workers.dev/#contact">Contact</a
+            ><!-- TODO(owner): replace support@example.com with the real support inbox -->
+            <a href="mailto:support@example.com">support@example.com</a>
           </div>
           <p class="footer-copy mono">© 2026 Lance. Your business data stays on your device.</p>
         </div>
