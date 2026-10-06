@@ -67,6 +67,13 @@ const licenseCache = new Map<string, boolean>();
 // install instead of waiting for a reinstall.
 const LICENSE_REVALIDATE_MS = 7 * 24 * 60 * 60 * 1000;
 
+// Cool-down after the worker stops accepting a key (refund, chargeback, or an
+// explicit revoke). The customer keeps full Pro for this long instead of
+// losing access the moment a payment reverses, then drops to free. Chosen to
+// match the revalidation interval: a downgrade is therefore observed within
+// about two weeks of the reversal, never instantly.
+const LICENSE_GRACE_DAYS = 7;
+
 /** True when the key has never been validated, or the last check is stale. */
 function licenseValidationIsStale(validatedAt?: string | null): boolean {
   if (!validatedAt) return true;
@@ -1569,38 +1576,63 @@ export const useStore = create<UnifiedStore>((set, get) => {
           set({ profile: updated, isLicensed: true });
           console.log('[license] Online validation OK:', result.tier);
         } else if (result.tier) {
-          // Server said invalid/expired/revoked but gave us a tier. Record it
-          // and start a 2-day grace, so a customer who refunded does not lose
-          // access mid-session while a transient worker failure cannot lock
-          // them out. `revoked` arrives here as tier 'expired'.
+          // The worker says this key is no longer good (revoked after a refund
+          // or a chargeback arrives as tier 'expired'). Do NOT drop the tier
+          // immediately: keep Pro running and start the cool-down window.
+          //
+          // The previous behaviour wrote the bad tier straight to the profile
+          // and set isLicensed false, so a refund locked someone out of work
+          // they had already paid for with no warning. The grace timestamp was
+          // recorded here but nothing read it on the happy path, so the "2-day
+          // grace" the comment described never actually applied.
+          //
+          // getActiveTier() now treats an unexpired license_grace_until as
+          // still-licensed, and the catch branch below downgrades once it has
+          // passed. That is where the cool-down is enforced.
           const profile = get().profile;
           if (!profile) return;
+          const stillPro = result.tier !== 'free' && result.tier !== 'expired';
           const updated = {
             ...profile,
             currency: profile.currency || 'CAD',
-            license_tier: result.tier,
-            license_expires_at: result.expires_at,
+            license_tier: stillPro ? result.tier : profile.license_tier,
+            license_expires_at: result.expires_at ?? profile.license_expires_at,
             license_validated_at: new Date().toISOString(),
-            license_grace_until: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+            license_grace_until: new Date(
+              Date.now() + LICENSE_GRACE_DAYS * DAY_MS,
+            ).toISOString(),
           };
           await invoke('upsert_user_profile', { payload: updated });
-          set({
-            profile: updated,
-            isLicensed: result.tier !== 'free' && result.tier !== 'expired',
-          });
-          console.warn('[license] Online validation failed, grace started:', result.message);
+          set({ profile: updated, isLicensed: true });
+          console.warn(
+            `[license] Key reported ${result.tier} (${result.message}). ` +
+              `Keeping Pro for ${LICENSE_GRACE_DAYS} days.`,
+          );
         }
       } catch (e) {
+        // Worker unreachable. This is NOT evidence the key is bad, so the
+        // cool-down clock must NOT be advanced here: an offline customer would
+        // otherwise lose Pro purely because they lost wifi. Only the network
+        // path can end the grace, and only after it has genuinely elapsed.
         console.warn('[license] Online ping failed, using cached/offline:', e);
-        const profile = get().profile;
-        if (profile?.license_validated_at && profile.license_grace_until) {
-          const graceUntil = new Date(profile.license_grace_until).getTime();
-          if (Date.now() > graceUntil) {
-            const updated = { ...profile, license_tier: 'free', isLicensed: false };
-            await invoke('upsert_user_profile', { payload: updated });
-            set({ profile: updated, isLicensed: false });
-            console.warn('[license] Grace period expired, downgraded to free');
-          }
+      }
+
+      // Cool-down expiry. Runs on every ping, success or failure, because the
+      // grace can lapse while the worker is unreachable and the downgrade must
+      // still happen. Persisted so the tier survives a restart.
+      const current = get().profile;
+      if (current?.license_tier && current.license_grace_until) {
+        const graceUntil = new Date(current.license_grace_until).getTime();
+        if (!isNaN(graceUntil) && Date.now() > graceUntil) {
+          const updated = {
+            ...current,
+            license_tier: 'free' as LicenseTier,
+            license_grace_until: undefined,
+            isLicensed: false,
+          };
+          await invoke('upsert_user_profile', { payload: updated });
+          set({ profile: updated, isLicensed: false });
+          console.warn('[license] Cool-down ended, downgraded to free');
         }
       }
     },
@@ -1626,8 +1658,15 @@ export const useStore = create<UnifiedStore>((set, get) => {
       // a stale 'pro' tier granting free Pro forever.
       if (profile.license_tier) {
         const serverTier = profile.license_tier as LicenseTier;
-        if (serverTier !== 'pro' && serverTier !== 'lifetime') return serverTier;
-        if (profile.license_key) return serverTier;
+        // A paid tier held during its cool-down keeps working, key or not:
+        // the key is still on disk because we never clear it, but a user who
+        // removed the key during the window should not silently keep Pro
+        // forever, so the key is still required.
+        if (serverTier === 'pro' || serverTier === 'lifetime') {
+          if (profile.license_key) return serverTier;
+        } else {
+          return serverTier;
+        }
       }
       // Deliberately NOT `else if (profile.license_key) return 'lifetime'`.
       // With no server-recorded tier, inferring 'lifetime' from the mere
