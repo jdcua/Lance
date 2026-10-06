@@ -427,6 +427,32 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const headers = { 'Access-Control-Allow-Origin': '*' };
+
+    // CORS preflight for browser callers. A POST with a JSON content-type is
+    // not a "simple" request, so the browser sends OPTIONS first, and there
+    // was no handler for it: the request fell through to the 404 branch and
+    // the preflight failed with "does not pass access control check". Browser
+    // license activation was therefore impossible even once the trial CSP
+    // allowed the worker.
+    //
+    // Only /validate and the two admin GETs are preflighted. /webhooks/paddle
+    // is deliberately excluded: Paddle is a server-to-server caller and does
+    // not preflight, so answering OPTIONS there would only widen the surface.
+    if (request.method === 'OPTIONS') {
+      if (url.pathname === '/validate' || url.pathname === '/admin/kv' || url.pathname === '/admin/fulfill') {
+        return new Response(null, {
+          status: 204,
+          headers: {
+            ...headers,
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Access-Control-Max-Age': '86400',
+          },
+        });
+      }
+      return new Response(null, { status: 405, headers });
+    }
+
     if (url.pathname === '/validate' && (request.method === 'GET' || request.method === 'POST')) {
       const res = await handleValidate(url, env, request);
       const body = await res.text();
