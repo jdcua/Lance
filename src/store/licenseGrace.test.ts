@@ -20,6 +20,13 @@ const KEY = 'LANCE-TEST-TEST-TEST-TEST';
 const profile = (over: Record<string, unknown> = {}) =>
   ({ currency: 'CAD', license_key: KEY, license_tier: 'pro', ...over }) as never;
 
+/**
+ * Browser-mode pings fetch the worker directly, so these tests mock fetch
+ * rather than caring about the baked-in URL. The value is empty under vitest,
+ * so '/validate' resolves to the test origin and the mocked fetch intercepts
+ * it regardless of path.
+ */
+
 /** Stand in for the worker rejecting the key. tier 'expired' is what it sends. */
 const workerSaysExpired = () =>
   vi.spyOn(globalThis, 'fetch').mockResolvedValue({
@@ -38,6 +45,7 @@ describe('license cool-down after a revoked key', () => {
     useStore.setState({ profile: null, isLicensed: false });
     vi.restoreAllMocks();
   });
+
 
   it('keeps Pro when the worker reports the key expired', async () => {
     workerSaysExpired();
@@ -89,7 +97,8 @@ describe('license cool-down after a revoked key', () => {
     const original = new Date(Date.now() + 2 * DAY).toISOString();
     useStore.setState({ profile: profile({ license_grace_until: original }) });
 
-    // A fetch that rejects stands in for the worker being offline.
+    // A fetch that rejects stands in for the worker being offline. The URL is
+    // set so the failure is the network, not a missing configuration.
     const spy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
 
     await useStore.getState().pingLicenseServer();

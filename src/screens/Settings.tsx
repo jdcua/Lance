@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useStore } from '../store';
+import { useStore, licenseWorkerUnconfigured } from '../store';
 import { isTauri as isTauriApp } from '../utils/tauri';
 import { trialDaysRemaining } from '../lib/trial';
 import { getFeatureFlags } from '../lib/constants';
@@ -881,6 +881,12 @@ export default function Settings() {
                         Lance is free to use. A license removes the launch screen and unlocks all
                         themes immediately.
                       </p>
+                      {licenseWorkerUnconfigured() && (
+                        <p className="text-xs text-[var(--danger)] mb-3">
+                          This build has no license server configured, so a key cannot be
+                          checked online. Offline validation still works.
+                        </p>
+                      )}
                       <div className="flex items-center gap-3">
                         <Button
                           variant="primary"

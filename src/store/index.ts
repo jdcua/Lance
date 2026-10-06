@@ -53,12 +53,25 @@ import { sanitizeRates, normalizeRates } from '../lib/currency';
 
 // Public URL of the license worker. Mirrors the value baked into the desktop
 // binary via LANCE_LICENSE_WORKER_URL; needed here because browser mode has no
-// Rust to make the request. Set VITE_LICENSE_WORKER_URL at build time for
-// production builds. The placeholder below is a fallback only and must not
-// ship in a production build.
-const LICENSE_WORKER_URL =
+// Rust to make the request. Set VITE_LICENSE_WORKER_URL at build time.
+//
+// Deploys were missing this for the public /try/ build, so browser mode fell
+// back to the placeholder below, every online activation 404'd, and
+// activateLicense quietly assumed 'pro'. The same miss also left every buy
+// button in the browser build reporting "Checkout is not configured".
+const licenseWorkerUrl = (): string =>
   (import.meta as unknown as { env?: Record<string, string | undefined> }).env
-    ?.VITE_LICENSE_WORKER_URL || 'https://lance-license.your-subdomain.workers.dev';
+    ?.VITE_LICENSE_WORKER_URL || '';
+
+/**
+ * True when a build could not reach the real license worker. Surfaced in
+ * Settings so a misconfigured build is visible instead of silently degrading.
+ */
+export function licenseWorkerUnconfigured(): boolean {
+  return !licenseWorkerUrl();
+}
+
+
 
 const licenseCache = new Map<string, boolean>();
 
@@ -1415,7 +1428,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
               'validate_license_online',
               { key },
             )
-          : await fetch(`${LICENSE_WORKER_URL}/validate`, {
+          : await fetch(`${licenseWorkerUrl()}/validate`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ key }),
@@ -1544,6 +1557,13 @@ export const useStore = create<UnifiedStore>((set, get) => {
         // In browser mode we call the worker directly, otherwise a trial user
         // redeeming a key could never be validated online at all, since Rust
         // is not there to do it.
+        //
+        // Browser mode with no baked-in worker URL fetches '/validate', which
+        // resolves to the current origin and returns the app's own HTML, so
+        // r.json() throws. That lands in the catch below, which logs and leaves
+        // the tier alone. The placeholder URL that used to be here made this a
+        // silent 404 against a non-existent host instead; the real fix is
+        // wiring VITE_LICENSE_WORKER_URL into the browser build.
         const result = isTauri()
           ? await invoke<{
               valid: boolean;
@@ -1551,7 +1571,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
               expires_at?: string;
               message: string;
             }>('validate_license_online', { key: profile.license_key })
-          : await fetch(`${LICENSE_WORKER_URL}/validate`, {
+          : await fetch(`${licenseWorkerUrl()}/validate`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ key: profile.license_key }),
@@ -1559,6 +1579,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
               if (!r.ok) throw new Error(`license worker returned ${r.status}`);
               return r.json();
             });
+
 
         if (result.valid) {
           const profile = get().profile;

@@ -40,7 +40,30 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - run: npm run build:trial
+
+      # The /try/ build is served publicly from Cloudflare, and unlike the
+      # desktop build there is no Rust layer to fall back on: browser mode calls
+      # the license worker directly (src/store/index.ts) and, with no URL baked
+      # in, fell back to the https://lance-license.your-subdomain.workers.dev
+      # placeholder. That made every browser activation fail its online check and
+      # silently assume 'pro' instead of recording the real tier.
+      #
+      # Checkout needs the same treatment: PADDLE_CHECKOUT_URL and the three
+      # price IDs are only wired into release.yml, so every buy button in the
+      # browser trial reported "Checkout is not configured in this build".
+      #
+      # These are public values by design (price IDs are in the shipped binary
+      # already, and the worker URL is not a credential). The license worker
+      # still requires a valid signature on every webhook, so exposing its URL
+      # grants nothing.
+      - name: Build trial
+        env:
+          VITE_LICENSE_WORKER_URL: ${{ secrets.LANCE_LICENSE_WORKER_URL }}
+          VITE_PADDLE_CHECKOUT_URL: ${{ secrets.PADDLE_CHECKOUT_URL }}
+          VITE_PADDLE_MONTHLY_PRICE_ID: ${{ secrets.PADDLE_MONTHLY_PRICE_ID }}
+          VITE_PADDLE_YEARLY_PRICE_ID: ${{ secrets.PADDLE_YEARLY_PRICE_ID }}
+          VITE_PADDLE_ONETIME_PRICE_ID: ${{ secrets.PADDLE_ONETIME_PRICE_ID }}
+        run: npm run build:trial
 
       - name: Check Cloudflare credentials
         env:
