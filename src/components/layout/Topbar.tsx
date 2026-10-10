@@ -19,6 +19,7 @@ const pageTitles: Record<string, string> = {
   '/settings': 'Settings',
   '/achievements': 'Achievements',
   '/follow-ups': 'Follow-ups',
+  '/pipeline': 'Pipeline',
   '/assets': 'Assets',
   '/search': 'Search',
   '/archetype': 'Archetype',

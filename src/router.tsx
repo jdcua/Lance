@@ -20,6 +20,7 @@ const AchievementsPage = lazyRetry(() => import('./screens/Achievements'));
 const Assets = lazyRetry(() => import('./screens/Assets'));
 const SearchScreen = lazyRetry(() => import('./screens/Search'));
 const FollowUps = lazyRetry(() => import('./screens/FollowUps'));
+const Pipeline = lazyRetry(() => import('./screens/Pipeline'));
 const ArchetypePicker = lazyRetry(() => import('./screens/ArchetypePicker'));
 const ShareView = lazyRetry(() => import('./screens/ShareView'));
 const NotFound = lazyRetry(() => import('./screens/NotFound'));
@@ -88,6 +89,7 @@ export const router = createBrowserRouter(
         { path: 'time', element: lazyRoute(<Time />, 'list') },
         { path: 'invoices', element: lazyRoute(<Invoices />, 'table') },
         { path: 'follow-ups', element: lazyRoute(<FollowUps />, 'table') },
+        { path: 'pipeline', element: lazyRoute(<Pipeline />, 'cards') },
         { path: 'clients', element: lazyRoute(<Clients />, 'detail') },
         { path: 'finance', element: lazyRoute(<Finance />, 'dashboard') },
         { path: 'insights', element: lazyRoute(<Insights />, 'cards') },

@@ -46,6 +46,7 @@ import {
   Calculator,
   Pen,
   Bell,
+  Columns3,
   ChevronDown,
   ChevronUp,
   type LucideIcon,
@@ -199,11 +200,15 @@ export default function Sidebar() {
   // MORE-group progressive disclosure. Search is wayfinding and always
   // shows; the rest reveal on use or via "show all".
   const showImport = showAll;
+  const showPipeline =
+    showAll ||
+    proposals.length + contracts.length + projects.length + invoices.length > 0 ||
+    visited.has('/pipeline');
   const showFollowUps = showAll || pendingFollowUps.length > 0 || visited.has('/follow-ups');
   const showAchievements = showAll || visited.has('/achievements');
   const showArchetype = showAll || visited.has('/archetype');
   const hiddenMoreCount =
-    (showImport ? 0 : 1) + (showFollowUps ? 0 : 1) + (showAchievements ? 0 : 1) + (showArchetype ? 0 : 1);
+    (showImport ? 0 : 1) + (showPipeline ? 0 : 1) + (showFollowUps ? 0 : 1) + (showAchievements ? 0 : 1) + (showArchetype ? 0 : 1);
   const hiddenTotal = sidebarItems.hiddenCount + hiddenMoreCount;
 
   return (
@@ -336,6 +341,15 @@ export default function Sidebar() {
             label="Search"
             expanded={isExpanded}
           />
+          {showPipeline &&
+          <SideLink
+            to="/pipeline"
+            title="Pipeline"
+            icon={Columns3}
+            label="Pipeline"
+            expanded={isExpanded}
+          />
+          }
           {showFollowUps &&
           <SideLink
             to="/follow-ups"
