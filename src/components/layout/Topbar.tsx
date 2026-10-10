@@ -3,6 +3,7 @@ import { Search, Timer } from 'lucide-react';
 import { getShortcutModifierLabel } from '../../utils/shortcuts';
 import Fade from '../motion/Fade';
 import Magnetic from '../motion/Magnetic';
+import SyncChip from '../ui/SyncChip';
 
 const pageTitles: Record<string, string> = {
   '/': 'Dashboard',
@@ -51,6 +52,8 @@ export default function Topbar() {
         </kbd>
       </button>
       </Magnetic>
+
+      <SyncChip />
 
       <button
         onClick={() => document.dispatchEvent(new CustomEvent('lance:toggle-timer'))}
