@@ -23,6 +23,7 @@ import { useVisibleList, MoreRows } from '../components/ui/useVisibleList';
 import { generateFollowUpDraft, generateSubjectLine, openMailTo } from '../utils/followUpTemplates';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
+import { maybeFirstSendMoment } from '../utils/firstWin';
 
 const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'dark'> = {
   draft: 'warning',
@@ -138,6 +139,7 @@ export default function Proposals() {
       // Sending completes via the share link: open it so the proposal
       // actually reaches the client instead of only flipping status.
       setShareModal({ entityType: 'proposal', entityId: p.id });
+      maybeFirstSendMoment(() => useStore.getState().getActiveTier());
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to send', 'error');
     }

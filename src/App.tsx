@@ -27,6 +27,7 @@ import DropZoneOverlay from './components/ui/DropZoneOverlay';
 import UpdaterModal from './components/ui/UpdaterModal';
 import UpgradeModal from './components/ui/UpgradeModal';
 import ShortcutsModal from './components/ui/ShortcutsModal';
+import OrbitField from './components/motion/OrbitField';
 import { useStore } from './store';
 import { useToasts } from './store/toastStore';
 import { useAutoUpdater } from './hooks/useAutoUpdater';
@@ -1600,6 +1601,7 @@ function OnboardingFlow({
         {onboardingStep === 2 && (
           <>
             <div className="text-center space-y-2">
+              <OrbitField />
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Welcome to Lance</h3>
               <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                 Your freelance business, all in one place. About a minute of setup, free forever.

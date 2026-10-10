@@ -270,6 +270,9 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
               </Button>
             </div>
           ))}
+          <Button variant="secondary" size="lg" className="w-full mt-2" onClick={onClose}>
+            Continue free
+          </Button>
         </div>
 
         {checkoutNotice && (

@@ -244,6 +244,21 @@ button, a, input, textarea, select {
   animation: timer-breathe 4s ease-in-out infinite;
 }
 
+/* Onboarding/landing orbit: slow tool rings around the mark. Transform
+   rotation only; ambient-motion silences it under calm + reduced-motion. */
+@keyframes orbit-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-orbit-slow {
+  animation: orbit-spin 36s linear infinite;
+}
+
+.animate-orbit-slower {
+  animation: orbit-spin 60s linear infinite;
+}
+
 /* ── Dark mode ── */
 html.dark body,
 html.dark #root {
