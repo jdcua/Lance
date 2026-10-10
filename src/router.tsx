@@ -70,7 +70,7 @@ function lazyRoute(element: ReactNode) {
               {[...Array(4)].map((_, i) => (
                 <div
                   key={i}
-                  className="h-16 bg-[var(--bg-secondary)] rounded-[12px] skeleton-pulse"
+                  className="h-16 bg-[var(--bg-secondary)] rounded-lg skeleton-pulse"
                 />
               ))}
             </div>

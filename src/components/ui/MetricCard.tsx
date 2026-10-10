@@ -38,7 +38,7 @@ export default function MetricCard({ label, value, subtext, trend, color = 'gray
   const showDelta = delta ?? '';
 
   return (
-    <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[14px] p-5 shadow-[var(--card-shadow)] transition-all duration-200 hover:border-[var(--text-tertiary)] hover:shadow-[var(--card-hover-shadow)] min-w-0 group" title={tooltip}>
+    <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg p-5 shadow-[var(--card-shadow)] transition-all duration-200 hover:border-[var(--text-tertiary)] hover:shadow-[var(--card-hover-shadow)] min-w-0 group" title={tooltip}>
       <div className="flex items-center gap-2 mb-2.5 min-w-0">
         {icon && (
           <span
@@ -58,7 +58,7 @@ export default function MetricCard({ label, value, subtext, trend, color = 'gray
           </span>
         )}
       </div>
-      <div className="text-[26px] font-semibold text-[var(--text-primary)] mb-1 break-words leading-tight tracking-tight tnum">{value}</div>
+      <div className="text-[var(--text-display)] font-semibold text-[var(--text-primary)] mb-1 break-words leading-tight tracking-tight tnum">{value}</div>
       {subtext && (
         <p className={`text-xs ${trendColor} break-words`}>
           {trend === 'up' ? '↑ ' : trend === 'down' ? '↓ ' : ''}{subtext}

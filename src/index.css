@@ -280,12 +280,33 @@ html.dark * {
   animation: drop-zone-icon-pulse 2s ease-in-out infinite;
 }
 
-/* ── Linear-grade design tokens ── */
+/* ── Linear-grade design tokens ──
+   Canonical values live in src/design/tokens.ts; this block mirrors them.
+   Do not introduce competing literals — use var(--radius-*) etc. */
 :root {
   --ring: rgba(30,201,138,.35);
-  --radius-card: 14px;
-  --radius-control: 8px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+  --radius-card: var(--radius-xl);
+  --radius-control: var(--radius-sm);
+  --space-card-x: 24px;
+  --space-card-y: 20px;
+  --space-metric: 20px;
+  --space-modal-x: 24px;
+  --space-modal-y: 16px;
+  --text-display: 26px;
+  --text-title: 16px;
+  --dur-tap: 120ms;
+  --dur-ui: 150ms;
+  --dur-enter: 200ms;
+  --dur-hero: 450ms;
+  --dur-chart: 600ms;
+  --ease-out: cubic-bezier(.22,1,.36,1);
   --shadow-pop: 0 8px 28px rgba(0,0,0,.14), 0 2px 6px rgba(0,0,0,.08);
+  --shadow-button: 0 1px 2px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.22);
+  --shadow-button-flat: 0 1px 2px rgba(0,0,0,0.05);
   /* Signature dark rail — fixed across themes, the app's anchor */
   --sb-bg: #141417;
   --sb-bg-hover: rgba(255,255,255,.055);
@@ -294,6 +315,18 @@ html.dark * {
   --sb-text-active: #f4f4f6;
   --sb-border: rgba(255,255,255,.07);
   --sb-label: #8e8e99;
+}
+
+/* Intensity control (prefs.intensity, default balanced; see
+   src/design/tokens.ts). Calm disables ambient motion and caps hero moments
+   at the daily-motion ceiling; expressive is honored on landing/onboarding
+   surfaces only — the app never reads it as permission for orbit/spin. */
+[data-intensity='calm'] .ambient-motion {
+  animation: none !important;
+}
+[data-intensity='calm'] .animate-rise,
+[data-intensity='calm'] .animate-fade-scale-in {
+  animation-duration: var(--dur-ui) !important;
 }
 
 /* Rail-safe accent text: the sidebar rail is fixed-dark across themes, so

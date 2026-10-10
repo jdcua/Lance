@@ -84,7 +84,8 @@ function Root() {
     document.documentElement.classList.toggle('motion-off', prefs.motion === 'off');
     document.documentElement.classList.toggle('textscale-112', prefs.textScale === '112');
     document.documentElement.classList.toggle('textscale-125', prefs.textScale === '125');
-  }, [prefs.motion, prefs.textScale]);
+    document.documentElement.dataset.intensity = prefs.intensity || 'balanced';
+  }, [prefs.motion, prefs.textScale, prefs.intensity]);
   // Contrast auto-detection is a SUBSCRIPTION, not a one-time read. Reading
   // matchMedia().matches at startup meant a user who turned on Increase Contrast
   // in OS Settings while Lance was running saw nothing happen until they

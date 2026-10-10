@@ -70,7 +70,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`relative bg-[var(--bg-card)] shadow-xl w-full ${sizeClasses[size]} ${size === 'full' ? 'mx-0 max-h-none rounded-none' : 'mx-4 max-h-[85vh] rounded-[12px]'} flex flex-col animate-fade-scale-in`}
+        className={`relative bg-[var(--bg-card)] shadow-xl w-full ${sizeClasses[size]} ${size === 'full' ? 'mx-0 max-h-none rounded-none' : 'mx-4 max-h-[85vh] rounded-md'} flex flex-col animate-fade-scale-in`}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
       >

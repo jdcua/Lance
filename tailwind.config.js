@@ -1,4 +1,7 @@
 /** @type {import('tailwindcss').Config} */
+// Radii/typography mirror src/design/tokens.ts (single source of truth).
+// `card` = 16px (Card.tsx), `component` = 8px (buttons/inputs). Aliases sm–xl
+// match --radius-* so new code can use `rounded-xl` instead of arbitrary values.
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   darkMode: "selector",
@@ -31,7 +34,11 @@ export default {
         sans:    ["'Inter'", "sans-serif"],
       },
       borderRadius: {
-        card: "12px",
+        sm: "8px",
+        md: "12px",
+        lg: "14px",
+        xl: "16px",
+        card: "16px",
         component: "8px",
       },
     },

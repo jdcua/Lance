@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import type { Intensity } from '../design/tokens';
+import { INTENSITY_DEFAULT } from '../design/tokens';
 
 /**
  * Personalize prefs — local-only UI preferences, no migration needed.
@@ -11,6 +13,13 @@ export type TextScalePref = '100' | '112' | '125';
 export interface Prefs {
   /** auto = follow OS, full = always animate, off = never animate */
   motion: MotionPref;
+  /**
+   * Expressivity dial (default balanced). Balanced = one ambient + one hero
+   * per screen, daily motion under ~150ms. Calm = no ambient, hero capped at
+   * the daily ceiling. Expressive unlocks richer moments on landing +
+   * onboarding only — the app stays calm. prefers-reduced-motion always wins.
+   */
+  intensity: Intensity;
   /** auto = follow OS prefers-contrast, standard = default, high = 7:1 text */
   contrast: ContrastPref;
   /** root font scaling: 100/112/125% */
@@ -31,6 +40,7 @@ const KEY = 'lance:prefs';
 
 export const DEFAULT_PREFS: Prefs = {
   motion: 'auto',
+  intensity: INTENSITY_DEFAULT,
   contrast: 'auto',
   textScale: '100',
   glow: true,
