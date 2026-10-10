@@ -5,6 +5,8 @@ import type { Client, Communication, MetricDefinition } from '../types';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import { getEmptyCopy } from '../components/ui/emptyCopy';
+import Timeline, { type TimelineItem } from '../components/ui/Timeline';
+import SharedView from '../components/motion/SharedView';
 import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
@@ -172,6 +174,9 @@ export default function Clients() {
     projects, loadProjects,
     proposals, loadProposals,
     invoices, loadInvoices,
+    contracts, loadContracts,
+    payments, loadPayments,
+    portalActivity, loadPortalActivity,
     profile, loadProfile,
     metricDefs, loadMetricDefs, addMetricDef, updateMetricDef, removeMetricDef, removeMetricValue,
     metricValues, loadMetricValues, logMetricValue,
@@ -195,7 +200,7 @@ export default function Clients() {
   const [editCommText, setEditCommText] = useState('');
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState<'overview' | 'metrics'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'metrics' | 'timeline'>('overview');
   const [showMetricForm, setShowMetricForm] = useState(false);
   const [editingMetric, setEditingMetric] = useState<MetricDefinition | null>(null);
   const [metricForm, setMetricForm] = useState({ name: '', metric_type: 'number' as MetricDefinition['metric_type'], unit_label: '', is_headline: false });
@@ -215,10 +220,10 @@ export default function Clients() {
   };
 
   useEffect(() => {
-    Promise.all([loadClients(), loadProjects(), loadProposals(), loadInvoices(), loadProfile()])
+    Promise.all([loadClients(), loadProjects(), loadProposals(), loadInvoices(), loadContracts(), loadPayments(), loadProfile()])
       .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
-  }, [loadClients, loadProjects, loadProposals, loadInvoices, loadProfile, addToast]);
+  }, [loadClients, loadProjects, loadProposals, loadInvoices, loadContracts, loadPayments, loadProfile, addToast]);
 
   useEffect(() => {
     if (clients.length > 0 && !selectedId) {
@@ -237,7 +242,8 @@ export default function Clients() {
 
   useEffect(() => {
     loadCommunications();
-  }, [loadCommunications]);
+    loadPortalActivity();
+  }, [loadCommunications, loadPortalActivity]);
 
   useEffect(() => {
     loadMetricDefs();
@@ -249,6 +255,61 @@ export default function Clients() {
   }, [loadMetricTemplates]);
 
   const selectedClient = clients.find((c) => c.id === selectedId);
+
+  /** Relationship timeline: real entities only, newest first in Timeline. */
+  const clientTimeline: TimelineItem[] = useMemo(() => {
+    if (!selectedId) return [];
+    const items: TimelineItem[] = [];
+    for (const p of proposals.filter((x) => x.client_id === selectedId)) {
+      items.push({
+        id: `proposal-${p.id}`, kind: 'proposal', date: p.sent_at || p.created_at,
+        title: p.title, sub: `Proposal · ${p.status}`, to: '/proposals',
+      });
+    }
+    for (const c of contracts.filter((x) => x.client_id === selectedId)) {
+      items.push({
+        id: `contract-${c.id}`, kind: 'contract', date: c.signed_at || c.created_at,
+        title: c.title, sub: `Contract · ${c.status}`, to: '/contracts',
+      });
+    }
+    for (const i of invoices.filter((x) => x.client_id === selectedId)) {
+      items.push({
+        id: `invoice-${i.id}`, kind: 'invoice', date: i.created_at,
+        title: `Invoice ${i.invoice_number}`, sub: `${formatCurrency(i.total, profile?.currency)} · ${i.status}`,
+        to: '/invoices',
+      });
+    }
+    for (const pay of payments) {
+      const inv = invoices.find((x) => x.id === pay.invoice_id);
+      if (!inv || inv.client_id !== selectedId) continue;
+      items.push({
+        id: `payment-${pay.id}`, kind: 'payment', date: pay.payment_date,
+        title: `${formatCurrency(pay.amount, profile?.currency)} payment`,
+        sub: `${inv.invoice_number} · ${pay.payment_method}`, to: '/invoices',
+      });
+    }
+    for (const m of communications.filter((x) => x.client_id === selectedId)) {
+      items.push({
+        id: `message-${m.id}`, kind: 'message', date: m.date || m.created_at,
+        title: m.type.charAt(0).toUpperCase() + m.type.slice(1), detail: m.summary,
+      });
+    }
+    for (const a of portalActivity) {
+      const entity =
+        a.entity_type === 'proposal'
+          ? proposals.find((x) => x.id === a.entity_id)
+          : a.entity_type === 'contract'
+            ? contracts.find((x) => x.id === a.entity_id)
+            : undefined;
+      if (!entity || entity.client_id !== selectedId) continue;
+      items.push({
+        id: `portal-${a.token}-${a.timestamp}`, kind: 'portal', date: a.timestamp,
+        title: a.activity, sub: entity.title,
+        to: a.entity_type === 'proposal' ? '/proposals' : '/contracts',
+      });
+    }
+    return items;
+  }, [selectedId, proposals, contracts, invoices, payments, communications, portalActivity, profile?.currency]);
   const selectedCountry = useMemo(() => COUNTRY_OPTIONS.find((country) => country.code === phoneCountry) || COUNTRY_OPTIONS[0], [phoneCountry]);
 
   const getClientStatus = (clientId: string) => {
@@ -555,7 +616,7 @@ export default function Clients() {
             >
               <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getClientStatus(c.id)}`} title={projects.some(p => p.client_id === c.id && p.status === 'active') ? 'Active project' : proposals.some(p => p.client_id === c.id && (p.status === 'sent' || p.status === 'draft')) ? 'Proposal open' : communications.some(co => co.client_id === c.id) ? 'Has communication log' : 'No activity'} />
               <span className={`text-xs truncate ${selectedId === c.id ? 'text-[var(--accent-ink,var(--accent))] font-medium' : 'text-[var(--text-primary)]'}`}>
-                {c.name}
+                <SharedView layoutId={`client-name-${c.id}`}>{c.name}</SharedView>
               </span>
             </button>
           ))}
@@ -601,7 +662,9 @@ export default function Clients() {
             <>
               <div className="flex items-start justify-between mb-6">
                 <div>
-                  <h2 className="text-lg font-semibold text-[var(--text-primary)]">{selectedClient.name}</h2>
+                  <SharedView layoutId={`client-name-${selectedClient.id}`}>
+                    <h2 className="text-lg font-semibold text-[var(--text-primary)]">{selectedClient.name}</h2>
+                  </SharedView>
                   <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)] mt-1">
                     {selectedClient.email && (
                       <span className="flex items-center gap-1">
@@ -649,7 +712,7 @@ export default function Clients() {
 
               {/* Tabs */}
               <div className="flex items-center gap-1 mb-4 border-b border-[var(--border-color)]">
-                {(['overview', 'metrics'] as const).map((tab) => (
+                {(['overview', 'metrics', 'timeline'] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -660,7 +723,7 @@ export default function Clients() {
                     }`}
                     style={{ fontFamily: "'Syne', sans-serif" }}
                   >
-                    {tab === 'overview' ? 'Overview' : 'Metrics'}
+                    {tab === 'overview' ? 'Overview' : tab === 'metrics' ? 'Metrics' : 'Timeline'}
                     {activeTab === tab && (
                       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--accent)] rounded-full" />
                     )}
@@ -1163,6 +1226,11 @@ export default function Clients() {
                     )}
                   </div>
                 </div>
+              )}
+
+              {/* Timeline tab */}
+              {activeTab === 'timeline' && selectedId && (
+                <Timeline items={clientTimeline} />
               )}
             </>
           );
