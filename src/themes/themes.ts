@@ -1,5 +1,4 @@
 import type { Theme } from './index';
-import { isTrial } from '../demo/isDemo';
 
 export const THEMES: Theme[] = [
   {
@@ -597,26 +596,9 @@ function applyThemePalette(theme: Theme): void {
 const loadedFontSets = new Set<string>();
 
 function loadThemeFonts(themeId: Theme['id']): void {
-  const fontUrls: Record<string, string> = {
-    default: 'syne:400,600,700,800|inter:400,500',
-    studio: 'playfair-display:400,500,600|source-serif-4:400,500',
-    terminal: '', // JetBrains Mono already loaded by default
-    craft: 'lora:400,500,600|source-sans-3:400,500',
-    motion: 'space-grotesk:400,500,600|inter:400,500',
-    lens: 'cormorant-garamond:400,500,600|inter:400,500',
-    scale: 'inter:400,500,600',
-  };
-
-  const url = fontUrls[themeId];
-  if (!url || loadedFontSets.has(themeId)) return;
-
-  // Trial serves zero third-party requests: skip webfonts entirely and let
-  // the system-font fallbacks in --font-display/--font-body take over.
-  if (isTrial()) return;
-
-  const link = document.createElement('link');
-  link.href = `https://fonts.bunny.net/css?family=${url}`;
-  link.rel = 'stylesheet';
-  document.head.appendChild(link);
+  // Fonts are self-hosted now (src/fonts.css + public/fonts, OFL): every
+  // family ships with the app, so there is nothing to lazy-load and no
+  // third-party request to make — including in the trial. Kept as a no-op
+  // guard so callers (applyTheme) stay untouched.
   loadedFontSets.add(themeId);
 }

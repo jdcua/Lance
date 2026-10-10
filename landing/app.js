@@ -86,10 +86,7 @@ function applyTheme(id) {
   document.querySelectorAll('.theme-tab').forEach((x) => x.classList.toggle('active', x.dataset.theme === id));
   document.querySelectorAll('.theme-preview').forEach((p) => p.classList.toggle('active', p.id === 'tp-' + id));
   if (t.fonts && !loadedFonts[id]) {
-    const l = document.createElement('link');
-    l.href = 'https://fonts.bunny.net/css?family=' + t.fonts;
-    l.rel = 'stylesheet';
-    document.head.appendChild(l);
+    // Theme fonts are self-hosted (landing/fonts.css): mark loaded, no CDN.
     loadedFonts[id] = true;
   }
   try { localStorage.setItem('lance-theme', id); } catch (e) { /* private mode */ }
