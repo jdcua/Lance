@@ -240,6 +240,23 @@ meteorShower('dlMeteors', 18);
     vis.addEventListener('pointerleave', () => { tilt.style.transform = ''; });
   }
 
+  // scroll parallax: orbs drift against scroll, hero visual settles gently.
+  // rAF-throttled, passive, skipped entirely under reduced motion.
+  if (!RM) {
+    const orbs = [document.querySelector('.orb-a'), document.querySelector('.orb-b')].filter(Boolean);
+    let ticking = false;
+    document.addEventListener('scroll', () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY || 0;
+        orbs.forEach((o, i) => { o.style.translate = '0 ' + (y * (i === 0 ? -0.04 : 0.06)).toFixed(1) + 'px'; });
+        if (vis && y < window.innerHeight) vis.style.translate = '0 ' + (y * 0.03).toFixed(1) + 'px';
+        ticking = false;
+      });
+    }, { passive: true });
+  }
+
   // magnetic pull (Motion magnetic, vanilla)
   if (!RM && matchMedia('(pointer:fine)').matches) {
     document.querySelectorAll('.magnetic').forEach((el) => {

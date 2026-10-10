@@ -99,7 +99,7 @@
                 "name": "Is my data really never in the cloud?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Yes. Lance stores everything on your device — no accounts, no cloud sync, no trackers. There is nothing to breach because there is no server holding your data."
+                  "text": "Yes. Your business data (clients, projects, invoices) stays in a database on your device — no accounts, no cloud sync, no trackers. The app checks for updates, validates Pro license keys, and opens Paddle for checkout; those requests carry no business data."
                 }
               },
               {
@@ -181,7 +181,7 @@
       { "h1": "Your freelance business, on your machine." }
     </script>
     <script type="application/json" data-exp-fragment="pricing-order:B">
-      { "order": ["lifetime", "pro", "free"], "ribbon": "Launch $149" }
+      { "order": ["lifetime", "pro", "free"] }
     </script>
     <!-- EXP-FRANMENTS-END -->
   </head>
@@ -266,7 +266,7 @@
           </h1>
           <p class="hero-sub blur-in" style="--d: 380ms">
             Proposals, contracts, time tracking, invoices and client insights in one fast app. Your
-            data never touches the cloud.
+            business data stays on your machine.
           </p>
           <div class="hero-cta blur-in" style="--d: 480ms" data-exp="hero-cta">
             <a href="#download" class="shimmer magnetic" id="heroBtn"
@@ -280,7 +280,7 @@
           </div>
           <div class="hero-stats blur-in" style="--d: 580ms">
             <div class="hstat">
-              <div class="hstat-val"><span class="ticker" data-ticker="41">0</span></div>
+              <div class="hstat-val"><span class="ticker" data-ticker="44">0</span></div>
               <div class="hstat-lbl mono">crafts built-in</div>
             </div>
             <div class="hstat">
@@ -295,6 +295,14 @@
         </div>
 
         <div class="hero-visual blur-in" style="--d: 400ms" id="heroVisual">
+          <div class="orbit-wrap" aria-hidden="true">
+            <div class="orbit-ring orbit-a">
+              <span class="orbit-chip">INV</span><span class="orbit-chip c2">PDF</span><span class="orbit-chip c3">$</span>
+            </div>
+            <div class="orbit-ring orbit-b">
+              <span class="orbit-chip c4">CRM</span><span class="orbit-chip c5">TIME</span>
+            </div>
+          </div>
           <div class="mock-tilt" id="mockTilt">
             <div class="mock">
               <div class="mock-chrome">
@@ -536,8 +544,8 @@
     </div>
     <noscript
       ><p>
-        Win work. Run projects. Get paid. Local first, 100% offline, your data, free forever, no
-        cloud, keyboard first, 41 crafts.
+        Win work. Run projects. Get paid. Local first, offline-first, your data, free forever, no
+        cloud account, keyboard first, 44 crafts.
       </p></noscript
     >
 
@@ -750,7 +758,7 @@
     <section class="stats-sec">
       <div class="container stats-grid">
         <div class="stat blur-in">
-          <div class="stat-v"><span class="ticker" data-ticker="41">0</span></div>
+          <div class="stat-v"><span class="ticker" data-ticker="44">0</span></div>
           <div class="stat-l mono">profession profiles</div>
         </div>
         <div class="stat blur-in" style="--d: 100ms">
@@ -815,7 +823,7 @@
               <li>Recurring invoices, expenses, metrics</li>
               <li>All current themes</li>
             </ul>
-            <p class="price-note mono">Forever free. No account. No cloud.</p>
+            <p class="price-note mono">Forever free. No account. Local-first.</p>
           </div>
           <div class="price-card pro blur-in beam-host" style="--d: 120ms" id="proCard">
             <div class="border-beam" aria-hidden="true"><span></span></div>
@@ -902,8 +910,10 @@
             </button>
             <div class="faq-a" id="faq-a2" role="region" aria-labelledby="faq-q2">
               <p>
-                Yes. Lance stores everything on your device — no accounts, no cloud sync, no
-                trackers. There is nothing to breach because there is no server holding your data.
+                Yes. Your business data (clients, projects, invoices) stays in a database on
+                your device — no accounts, no cloud sync, no trackers. The app checks for
+                updates, validates Pro license keys, and opens Paddle for checkout; those
+                requests carry no business data.
               </p>
             </div>
           </div>
