@@ -3,6 +3,8 @@ import { useStore } from '../store';
 import type { Expense, Invoice, InvoicePayment, Milestone } from '../types';
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
+import RunwayScrubber from '../components/ui/RunwayScrubber';
+import MoneyFlow from '../components/ui/MoneyFlow';
 import LoadError from '../components/ui/LoadError';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
@@ -420,6 +422,12 @@ export default function Finance() {
     ? convertByCurrency(outstandingByCurrency, profCur, rates)
     : null;
   const convProfit = showConverted && convRevenue != null ? convRevenue - totalExpenses : null;
+
+  // Typical-month inputs for MoneyFlow: trailing averages, read-only.
+  const paidVals = Object.values(monthlyPaid);
+  const expVals = Object.values(monthlyExpenses);
+  const avgIncome = paidVals.length > 0 ? paidVals.reduce((s, v) => s + v, 0) / paidVals.length : 0;
+  const avgExpenses = expVals.length > 0 ? expVals.reduce((s, v) => s + v, 0) / expVals.length : 0;
 
   const saveRate = async (cur: string, raw: string) => {
     if (!profile) return;
@@ -1062,6 +1070,11 @@ export default function Finance() {
               }
               tooltip="Months until projected balance reaches zero (requires current balance input)"
             />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <RunwayScrubber cashFlow={cashFlow} fmt={fmt} />
+            <MoneyFlow income={avgIncome} expenses={avgExpenses} fmt={fmt} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

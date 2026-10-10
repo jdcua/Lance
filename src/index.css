@@ -212,6 +212,27 @@ button, a, input, textarea, select {
   animation: skeleton-pulse 1.5s ease-in-out infinite;
 }
 
+/* Drawn-in charts: scale from baseline once, transform only (compositor
+   cheap). Applied to runway/money-flow bars; like entrances, silenced by
+   reduced-motion and .motion-off above. */
+@keyframes chart-draw-y {
+  from { transform: scaleY(0); opacity: 0.4; }
+  to { transform: scaleY(1); opacity: 1; }
+}
+
+@keyframes chart-draw-x {
+  from { transform: scaleX(0); opacity: 0.4; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+
+.chart-draw {
+  animation: chart-draw-y var(--dur-chart) var(--ease-out) both;
+}
+
+.chart-draw-x {
+  animation: chart-draw-x var(--dur-chart) var(--ease-out) both;
+}
+
 /* ── Dark mode ── */
 html.dark body,
 html.dark #root {
