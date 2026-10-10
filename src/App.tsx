@@ -26,6 +26,7 @@ import ImportModal from './components/ui/ImportModal';
 import DropZoneOverlay from './components/ui/DropZoneOverlay';
 import UpdaterModal from './components/ui/UpdaterModal';
 import UpgradeModal from './components/ui/UpgradeModal';
+import ShortcutsModal from './components/ui/ShortcutsModal';
 import { useStore } from './store';
 import { useToasts } from './store/toastStore';
 import { useAutoUpdater } from './hooks/useAutoUpdater';
@@ -1312,70 +1313,11 @@ export default function App() {
         <UpdaterModal />
 
         {/* Keyboard shortcuts cheat sheet */}
-        <Modal
-          open={showShortcuts}
-          onClose={() => setShowShortcuts(false)}
-          title="Keyboard Shortcuts"
-          size="sm"
-        >
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              {[
-                [`${getShortcutModifierLabel()} + K`, 'Command palette'],
-                [`${getShortcutModifierLabel()} + N`, 'New item (contextual)'],
-                [`${getShortcutModifierLabel()} + ,`, 'Settings'],
-                [`${getShortcutModifierLabel()} + /`, 'Shortcuts'],
-                [`${getShortcutModifierLabel()} + 1–8`, 'Jump to section'],
-                [`${getShortcutModifierLabel()} + Shift + T`, 'Start/Stop timer'],
-                [`${getShortcutModifierLabel()} + Shift + L`, 'Quick log time'],
-                ['Escape', 'Close modal / palette'],
-              ].map(([key, desc]) => (
-                <div
-                  key={key}
-                  className="flex items-center justify-between col-span-2 px-3 py-1.5 rounded-[6px] hover:bg-[var(--bg-secondary)]"
-                >
-                  <kbd className="text-[11px] font-mono text-[var(--accent-ink,var(--accent))] bg-[var(--accent-bg)] px-1.5 py-0.5 rounded-[4px]">
-                    {key}
-                  </kbd>
-                  <span className="text-[var(--text-secondary)]">{desc}</span>
-                </div>
-              ))}
-            </div>
-            <DynamicShortcutLegend />
-          </div>
-        </Modal>
+        <ShortcutsModal open={showShortcuts} onClose={() => setShowShortcuts(false)} />
 
         <ToastContainer />
       </div>
     </ErrorBoundary>
-  );
-}
-
-function DynamicShortcutLegend() {
-  const profile = useStore((s) => s.profile);
-  const config = getArchetype(profile?.profession || 'default');
-  const sidebarPaths = config.sidebar.map((s) => s.path);
-  const sidebarLabels = config.sidebar.map((s) => s.label);
-
-  const items = sidebarPaths.slice(0, 8).map((path, i) => {
-    const label = sidebarLabels[i] || path.replace('/', '');
-    return { label: label.charAt(0).toUpperCase() + label.slice(1), num: i + 1 };
-  });
-
-  if (items.length === 0) return null;
-
-  return (
-    <div className="pt-2 border-t border-[var(--border-color)]">
-      <p className="text-[10px] text-[var(--text-tertiary)] text-center">
-        {items.map((item, i) => (
-          <span key={item.num}>
-            {item.label} = {getShortcutModifierLabel()}
-            {item.num}
-            {i < items.length - 1 ? ' · ' : ''}
-          </span>
-        ))}
-      </p>
-    </div>
   );
 }
 
