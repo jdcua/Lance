@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { useStore } from '../store';
 import type { Invoice, LineItem, RecurringInvoice as RecurringInvoiceType } from '../types';
 import Button from '../components/ui/Button';
+import EmptyState from '../components/ui/EmptyState';
 import LoadError from '../components/ui/LoadError';
 import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
@@ -1141,29 +1142,28 @@ export default function Invoices() {
 
       {activeTab === 'all' ? (
         invoices.length === 0 ? (
-          <Card className="text-center py-16 flex flex-col items-center">
-            <Receipt size={40} className="text-[var(--text-tertiary)] mb-4" />
-            <h2 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">
-              No invoices yet
-            </h2>
-            <p className="text-[13px] text-[var(--text-secondary)] max-w-xs mb-5">
-              Create your first invoice to start getting paid.
-            </p>
-            {clients.length === 0 ? (
-              <div className="text-center">
+          <EmptyState
+            screen="invoices"
+            icon={<Receipt size={40} className="text-[var(--text-tertiary)] mb-4" />}
+            hint={
+              clients.length === 0 ? (
                 <p className="text-xs text-[var(--warning-text)] mb-3">
                   Add at least one client before creating an invoice.
                 </p>
+              ) : undefined
+            }
+            action={
+              clients.length === 0 ? (
                 <Button size="sm" disabled={true}>
                   New Invoice
                 </Button>
-              </div>
-            ) : (
-              <Button onClick={handleCreateFromEmptyState} size="sm" variant="secondary">
-                New Invoice
-              </Button>
-            )}
-          </Card>
+              ) : (
+                <Button onClick={handleCreateFromEmptyState} size="sm" variant="secondary">
+                  New Invoice
+                </Button>
+              )
+            }
+          />
         ) : filteredInvoices.length === 0 && search ? (
           <Card className="text-center py-12">
             <p className="text-sm text-[var(--text-tertiary)]">No invoices match "{search}"</p>

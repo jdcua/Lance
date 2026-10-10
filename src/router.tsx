@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import { lazy, Suspense, type ComponentType, type ReactNode } from 'react';
 import App from './App';
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import Skeleton, { type SkeletonVariant } from './components/ui/Skeleton';
 import { hasTrialPath } from './demo/isDemo';
 
 const Dashboard = lazyRetry(() => import('./screens/Dashboard'));
@@ -59,26 +60,10 @@ function lazyRetry<T extends ComponentType<any>>(importer: () => Promise<{ defau
       }),
   );
 }
-function lazyRoute(element: ReactNode) {
+function lazyRoute(element: ReactNode, skeleton: SkeletonVariant = 'list') {
   return (
     <ErrorBoundary>
-      <Suspense
-        fallback={
-          <div className="p-6 space-y-6">
-            <div className="h-6 w-24 bg-[var(--bg-secondary)] rounded skeleton-pulse" />
-            <div className="space-y-3">
-              {[...Array(4)].map((_, i) => (
-                <div
-                  key={i}
-                  className="h-16 bg-[var(--bg-secondary)] rounded-lg skeleton-pulse"
-                />
-              ))}
-            </div>
-          </div>
-        }
-      >
-        {element}
-      </Suspense>
+      <Suspense fallback={<Skeleton variant={skeleton} />}>{element}</Suspense>
     </ErrorBoundary>
   );
 }
@@ -94,23 +79,23 @@ export const router = createBrowserRouter(
       path: '/',
       element: <App />,
       children: [
-        { index: true, element: lazyRoute(<Dashboard />) },
-        { path: 'archetype', element: lazyRoute(<ArchetypePicker />) },
-        { path: 'proposals', element: lazyRoute(<Proposals />) },
-        { path: 'proposals/new', element: lazyRoute(<NewProposal />) },
-        { path: 'contracts', element: lazyRoute(<Contracts />) },
-        { path: 'projects', element: lazyRoute(<Projects />) },
-        { path: 'time', element: lazyRoute(<Time />) },
-        { path: 'invoices', element: lazyRoute(<Invoices />) },
-        { path: 'follow-ups', element: lazyRoute(<FollowUps />) },
-        { path: 'clients', element: lazyRoute(<Clients />) },
-        { path: 'finance', element: lazyRoute(<Finance />) },
-        { path: 'insights', element: lazyRoute(<Insights />) },
-        { path: 'settings', element: lazyRoute(<SettingsView />) },
-        { path: 'achievements', element: lazyRoute(<AchievementsPage />) },
-        { path: 'assets', element: lazyRoute(<Assets />) },
-        { path: 'search', element: lazyRoute(<SearchScreen />) },
-        { path: '*', element: lazyRoute(<NotFound />) },
+        { index: true, element: lazyRoute(<Dashboard />, 'dashboard') },
+        { path: 'archetype', element: lazyRoute(<ArchetypePicker />, 'cards') },
+        { path: 'proposals', element: lazyRoute(<Proposals />, 'table') },
+        { path: 'proposals/new', element: lazyRoute(<NewProposal />, 'form') },
+        { path: 'contracts', element: lazyRoute(<Contracts />, 'table') },
+        { path: 'projects', element: lazyRoute(<Projects />, 'cards') },
+        { path: 'time', element: lazyRoute(<Time />, 'list') },
+        { path: 'invoices', element: lazyRoute(<Invoices />, 'table') },
+        { path: 'follow-ups', element: lazyRoute(<FollowUps />, 'table') },
+        { path: 'clients', element: lazyRoute(<Clients />, 'detail') },
+        { path: 'finance', element: lazyRoute(<Finance />, 'dashboard') },
+        { path: 'insights', element: lazyRoute(<Insights />, 'cards') },
+        { path: 'settings', element: lazyRoute(<SettingsView />, 'form') },
+        { path: 'achievements', element: lazyRoute(<AchievementsPage />, 'cards') },
+        { path: 'assets', element: lazyRoute(<Assets />, 'cards') },
+        { path: 'search', element: lazyRoute(<SearchScreen />, 'list') },
+        { path: '*', element: lazyRoute(<NotFound />, 'list') },
       ],
     },
     {

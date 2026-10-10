@@ -4,6 +4,7 @@ import { useStore } from '../store';
 import type { Client, Communication, MetricDefinition } from '../types';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
+import { getEmptyCopy } from '../components/ui/emptyCopy';
 import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
@@ -585,11 +586,11 @@ export default function Clients() {
           <div className="flex items-center justify-center h-full">
             <div className="text-center py-16">
               <Users size={40} className="text-[var(--text-tertiary)] mx-auto mb-3 opacity-40" />
-              <p className="text-sm font-medium text-[var(--text-primary)]">{clients.length === 0 ? 'No clients yet' : 'Select a client or add a new one.'}</p>
+              <p className="text-sm font-medium text-[var(--text-primary)]">{clients.length === 0 ? getEmptyCopy('clients').headline : 'Select a client or add a new one.'}</p>
               {clients.length === 0 && (
                 <>
-                  <p className="text-xs text-[var(--text-tertiary)] mt-1 mb-4">Everything in Lance starts with a client. Add your first to get going.</p>
-                  <button onClick={openNew} className="text-xs font-medium px-3 py-1.5 rounded-[8px] bg-[var(--accent)] text-[var(--accent-on)] hover:opacity-90">Add your first client</button>
+                  <p className="text-xs text-[var(--text-tertiary)] mt-1 mb-4">{getEmptyCopy('clients').sub}</p>
+                  <button onClick={openNew} className="text-xs font-medium px-3 py-1.5 rounded-sm bg-[var(--accent)] text-[var(--accent-on)] hover:opacity-90">Add your first client</button>
                 </>
               )}
             </div>

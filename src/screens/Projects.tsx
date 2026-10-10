@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useStore } from '../store';
 import type { Project, Milestone } from '../types';
 import Button from '../components/ui/Button';
+import EmptyState from '../components/ui/EmptyState';
 import LoadError from '../components/ui/LoadError';
 import Card from '../components/ui/Card';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
@@ -443,19 +444,22 @@ export default function Projects() {
       )}
 
       {projects.length === 0 ? (
-        <Card className="text-center py-16 flex flex-col items-center">
-          <FolderKanban size={40} className="text-[var(--text-tertiary)] mb-4" />
-          <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No projects yet</h3>
-          <p className="text-[13px] text-[var(--text-secondary)] max-w-xs mb-5">Create your first project to start tracking work.</p>
-          {clients.length === 0 ? (
-            <div className="text-center">
+        <EmptyState
+          screen="projects"
+          icon={<FolderKanban size={40} className="text-[var(--text-tertiary)] mb-4" />}
+          hint={
+            clients.length === 0 ? (
               <p className="text-xs text-[var(--warning-text)] mb-3">Add at least one client before creating a project.</p>
+            ) : undefined
+          }
+          action={
+            clients.length === 0 ? (
               <Button size="sm" disabled={true}>New Project</Button>
-            </div>
-          ) : (
-            <Button onClick={openNewProject} size="sm" variant="secondary">New Project</Button>
-          )}
-        </Card>
+            ) : (
+              <Button onClick={openNewProject} size="sm" variant="secondary">New Project</Button>
+            )
+          }
+        />
       ) : filtered.length === 0 && search ? (
         <Card className="text-center py-12">
           <p className="text-sm text-[var(--text-tertiary)]">No projects match "{search}"</p>

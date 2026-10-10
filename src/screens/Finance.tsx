@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useStore } from '../store';
 import type { Expense, Invoice, InvoicePayment, Milestone } from '../types';
 import Button from '../components/ui/Button';
+import EmptyState from '../components/ui/EmptyState';
 import LoadError from '../components/ui/LoadError';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
@@ -856,7 +857,10 @@ export default function Finance() {
                 Expenses by Category
               </h2>
               {expensesByCategory.length === 0 ? (
-                <p className="text-xs text-[var(--text-secondary)]">No expenses recorded yet.</p>
+                <EmptyState
+                  screen="expenses"
+                  compact
+                />
               ) : (
                 <div className="space-y-2">
                   {expensesByCategory.map((cat) => (
