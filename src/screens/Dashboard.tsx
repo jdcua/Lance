@@ -9,6 +9,7 @@ import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import Button from '../components/ui/Button';
 import LoadError from '../components/ui/LoadError';
+import TodayQueue from '../components/ui/TodayQueue';
 import Fade from '../components/motion/Fade';
 import { StaggerGroup, StaggerItem } from '../components/motion/Stagger';
 import AnimatedNumber from '../components/motion/AnimatedNumber';
@@ -390,6 +391,8 @@ export default function Dashboard() {
         </div>
       </div>
       </Fade>
+
+      {!loading && <TodayQueue />}
 
       {showChecklist && (
         <Card className="mb-6 border-[var(--accent)]/20 bg-[var(--accent-bg)]">
