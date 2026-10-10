@@ -2,6 +2,7 @@ import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import ClientSelect from '../../components/ui/ClientSelect';
+import DocPreview from '../../components/ui/DocPreview';
 import { AlertTriangle, Clock, Copy, Mail, Trash2 } from 'lucide-react';
 import { formatCurrency } from '../../utils/format';
 import { getCurrencySymbol } from '../../lib/currency';
@@ -41,7 +42,8 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
         title={editing ? 'Edit Invoice' : 'New Invoice'}
         size="lg"
       >
-        <div className="space-y-4">
+        <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+          <div className="space-y-4 min-w-0">
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
@@ -270,6 +272,35 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
             <Button onClick={handleSave} loading={saving} disabled={!form.client_id} size="sm">
               {editing ? 'Save Changes' : 'Create Invoice'}
             </Button>
+          </div>
+          </div>
+          <div className="hidden lg:block min-w-0">
+            <DocPreview
+              eyebrow="Invoice"
+              title={form.invoice_number || 'New invoice'}
+              from={profile?.name}
+              to={clients.find((c) => c.id === form.client_id)?.name}
+              meta={[
+                ...(form.due_date ? [['Due', form.due_date] as [string, string]] : []),
+                ...(form.status ? [['Status', form.status] as [string, string]] : []),
+              ]}
+              lines={items.map((li) => ({
+                description: li.description,
+                detail:
+                  li.quantity > 1
+                    ? `${li.quantity} × ${formatCurrency(li.unit_price)}`
+                    : undefined,
+                amount: formatCurrency(li.total),
+              }))}
+              totals={[
+                { label: 'Subtotal', value: formatCurrency(subtotal) },
+                ...(total - subtotal > 0
+                  ? [{ label: `Tax${form.tax_rate ? ` (${form.tax_rate}%)` : ''}`, value: formatCurrency(total - subtotal) }]
+                  : []),
+                { label: 'Total', value: formatCurrency(total), strong: true },
+              ]}
+              notes={form.notes || undefined}
+            />
           </div>
         </div>
       </Modal>

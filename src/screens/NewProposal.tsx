@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
+import DocPreview from '../components/ui/DocPreview';
 import RichEditor from '../components/ui/RichEditor';
 import ClientSelect from '../components/ui/ClientSelect';
 import { textToHtml } from '../utils/textToHtml';
@@ -146,7 +147,7 @@ export default function NewProposal() {
   if (loading) return <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>
 
   return (
-    <div className="p-6 max-w-2xl">
+    <div className="p-6 max-w-5xl">
       <button
         onClick={() => navigate('/proposals')}
         className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-6 transition-colors"
@@ -157,6 +158,8 @@ export default function NewProposal() {
 
       <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-6">New Proposal</h2>
 
+      <div className="grid gap-6 lg:grid-cols-[1fr_380px] items-start">
+        <div className="min-w-0">
       <Card className="mb-6">
         <div className="space-y-4">
           <div>
@@ -319,6 +322,25 @@ export default function NewProposal() {
           {expiryPreview}
         </p>
       )}
+        </div>
+        <div className="hidden lg:block min-w-0 lg:sticky lg:top-6">
+          <DocPreview
+            eyebrow="Proposal"
+            title={form.title}
+            from={profile?.name}
+            to={clients.find((c) => c.id === form.client_id)?.name}
+            meta={(
+              [
+                form.rate ? ['Rate', `${currencySymbol}${form.rate}${form.rate_type === 'hourly' ? ' /hr' : ''}`] : null,
+                form.timeline ? ['Timeline', form.timeline] : null,
+                form.project_type ? ['Type', form.project_type] : null,
+              ] as ([string, string] | null)[]
+            ).filter((x): x is [string, string] => x !== null)}
+            bodyHtml={form.body || undefined}
+            notes={form.scope ? `Scope: ${form.scope}` : undefined}
+          />
+        </div>
+      </div>
     </div>
   );
 }

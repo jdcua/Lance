@@ -10,6 +10,7 @@ import Badge from '../components/ui/Badge';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import ClientSelect from '../components/ui/ClientSelect';
 import RichEditor from '../components/ui/RichEditor';
+import DocPreview from '../components/ui/DocPreview';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { ensureHtml } from '../utils/textToHtml';
 import { useToasts } from '../store/toastStore';
@@ -599,8 +600,9 @@ export default function Contracts() {
         </div>
       )}
 
-      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Contract' : 'New Contract'} size="md">
-        <div className="space-y-4">
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Contract' : 'New Contract'} size="lg">
+        <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+          <div className="space-y-4 min-w-0">
           <div>
             <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Client *</label>
             <ClientSelect
@@ -635,6 +637,16 @@ export default function Contracts() {
             <Button onClick={handleSave} loading={saving} disabled={!form.title.trim() || !form.client_id} size="sm">
               {editing ? 'Save Changes' : 'Create Contract'}
             </Button>
+          </div>
+          </div>
+          <div className="hidden lg:block min-w-0">
+            <DocPreview
+              eyebrow="Contract"
+              title={form.title}
+              from={profile?.name}
+              to={clients.find((c) => c.id === form.client_id)?.name}
+              bodyHtml={form.body || undefined}
+            />
           </div>
         </div>
       </Modal>
