@@ -16,6 +16,7 @@ export default function TimerRing({ elapsedMinutes, label }: { elapsedMinutes: n
     <div
       className="ambient-motion timer-breathe inline-flex items-center gap-3"
       role="timer"
+      aria-live="off"
       aria-label={`Timer running: ${text} on ${label}`}
     >
       <svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true">
