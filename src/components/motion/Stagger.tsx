@@ -43,7 +43,8 @@ export function StaggerItem({ children, className }: { children: ReactNode; clas
       opacity: 1,
       y: 0,
       filter: 'blur(0px)',
-      transition: { duration: 0.5, ease: [...EASE] },
+      // Hero cap (tokens.motion.dur.hero = 450ms): entrances never exceed it.
+      transition: { duration: 0.45, ease: [...EASE] },
     },
   };
   return (

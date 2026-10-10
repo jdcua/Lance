@@ -33,9 +33,11 @@ export default function SyncChip({ syncing = false }: { syncing?: boolean }) {
     <button
       onClick={() => navigate('/settings')}
       title={
-        online
-          ? 'Online features unlocked: sync, hosted portal, reminders. Manage license.'
-          : 'Offline: your data stays on this machine. See plans.'
+        tier === 'trial'
+          ? 'Trial: full Pro features on this device. See plans.'
+          : online
+            ? 'Paid license active on this device. Manage license.'
+            : 'Offline: your data stays on this machine. See plans.'
       }
       aria-label={`License status: ${label}`}
       className={`flex items-center gap-1.5 text-[11px] font-medium pl-2 pr-2.5 py-1 border rounded-full transition-colors ${
