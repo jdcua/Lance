@@ -15,6 +15,8 @@ import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 import { getUnlockedAchievementKeys } from '../achievements/checker';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { relativeDate } from '../utils/format';
+import WeekView from '../components/ui/WeekView';
+import TimerRing from '../components/ui/TimerRing';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 import {
   computeHeatmapGrid,
@@ -66,7 +68,7 @@ const TabBar = ({
   showHeatmap,
 }: {
   tab: string;
-  setTab: (t: 'timer' | 'heatmap') => void;
+  setTab: (t: 'timer' | 'heatmap' | 'week') => void;
   showHeatmap: boolean;
 }) => (
   <div className="flex items-center gap-4 mb-6">
@@ -79,6 +81,16 @@ const TabBar = ({
       }`}
     >
       Timer
+    </button>
+    <button
+      onClick={() => setTab('week')}
+      className={`text-sm font-medium pb-1.5 border-b-2 transition-colors ${
+        tab === 'week'
+          ? 'text-[var(--text-primary)] border-[var(--accent)]'
+          : 'text-[var(--text-tertiary)] border-transparent hover:text-[var(--text-secondary)]'
+      }`}
+    >
+      Week
     </button>
     {showHeatmap && (
       <button
@@ -128,7 +140,7 @@ export default function TimeScreen() {
     null,
   );
   const [deleting, setDeleting] = useState(false);
-  const [tab, setTab] = useState<'timer' | 'heatmap'>('timer');
+  const [tab, setTab] = useState<'timer' | 'heatmap' | 'week'>('timer');
   const pagedEntries = useVisibleList(timeEntries, `${timeEntries.length}`);
   const [showHeatmap, setShowHeatmap] = useState(false);
 
@@ -370,6 +382,14 @@ export default function TimeScreen() {
 
       {tab === 'timer' ? (
         <>
+          {activeTimer && (
+            <Card className="mb-6 flex items-center">
+              <TimerRing
+                elapsedMinutes={activeTimer.elapsed}
+                label={getProjectName(activeTimer.entry.project_id)}
+              />
+            </Card>
+          )}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
             <MetricCard label="Today" value={formatDuration(todaysMinutes)} color="gray" />
             <MetricCard label="This Week" value={formatDuration(weekMinutes)} color="gray" />
@@ -556,6 +576,9 @@ export default function TimeScreen() {
             </>
           )}
         </>
+      ) : tab === 'week' ? (
+        /* ── Week tab · read-only Mon–Sun grid ── */
+        <WeekView entries={timeEntries} />
       ) : (
         /* ── Heatmap tab ── */
         <>

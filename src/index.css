@@ -233,6 +233,17 @@ button, a, input, textarea, select {
   animation: chart-draw-x var(--dur-chart) var(--ease-out) both;
 }
 
+/* Timer breathe: slow tactile pulse, running timers only. Ambient-motion so
+   calm intensity + reduced-motion/.motion-off silence it. */
+@keyframes timer-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+.timer-breathe {
+  animation: timer-breathe 4s ease-in-out infinite;
+}
+
 /* ── Dark mode ── */
 html.dark body,
 html.dark #root {
