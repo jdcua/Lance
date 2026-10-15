@@ -7,6 +7,7 @@ import Card from '../components/ui/Card';
 import { getEmptyCopy } from '../components/ui/emptyCopy';
 import Timeline, { type TimelineItem } from '../components/ui/Timeline';
 import SharedView from '../components/motion/SharedView';
+import { clientPaymentBehavior, RISK_LABEL } from '../utils/paymentBehavior';
 import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
@@ -772,6 +773,43 @@ export default function Clients() {
                           <span className="text-xs text-[var(--warning-text)]">{formatCurrency(overview.outstanding, profile?.currency)} outstanding</span>
                         </div>
                       )}
+                      {(() => {
+                        const behavior = selectedId
+                          ? clientPaymentBehavior(selectedId, invoices, payments)
+                          : null;
+                        if (!behavior) return null;
+                        const tone =
+                          behavior.risk === 'prompt'
+                            ? 'text-[var(--accent-ink,var(--accent))]'
+                            : behavior.risk === 'typical'
+                              ? 'text-[var(--text-secondary)]'
+                              : behavior.risk === 'unknown'
+                                ? 'text-[var(--text-tertiary)]'
+                                : 'text-[var(--warning-text)]';
+                        const line =
+                          behavior.paidCount === 0 && behavior.openOverdue === 0
+                            ? 'No payment history yet.'
+                            : [
+                                behavior.avgDaysLate != null
+                                  ? `averages ${behavior.avgDaysLate} days late across ${behavior.paidCount}`
+                                  : null,
+                                behavior.onTimePct != null ? `${behavior.onTimePct}% on time` : null,
+                                behavior.openOverdue > 0
+                                  ? `${behavior.openOverdue} overdue now`
+                                  : null,
+                              ]
+                                .filter(Boolean)
+                                .join(' · ') + '.';
+                        return (
+                          <div className="col-span-4 mt-1 pt-2 border-t border-[var(--border-color)] flex items-center gap-2">
+                            <Clock size={13} className="text-[var(--text-tertiary)] flex-shrink-0" />
+                            <span className={`text-xs font-medium ${tone}`}>
+                              {RISK_LABEL[behavior.risk]}
+                            </span>
+                            <span className="text-xs text-[var(--text-tertiary)]">{line}</span>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </Card>
 
