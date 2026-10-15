@@ -27,7 +27,10 @@ describe('Invoices tabs survive the split', () => {
 
   it('empty list invites the first invoice', async () => {
     render(<Invoices />);
-    expect(await screen.findByText('No invoices yet')).toBeTruthy();
+    // EmptyState copy rotates daily — accept any bank variant.
+    expect(
+      await screen.findByText(/No invoices yet|The till is quiet|Zero paperwork, so far/),
+    ).toBeTruthy();
     expect(screen.getAllByText('New Invoice').length).toBeGreaterThanOrEqual(1);
   });
 
