@@ -10,8 +10,10 @@ interface FadeProps {
 }
 
 /**
- * Motion-Primitives style entrance: blur + rise + fade, fired once in view.
- * Honors prefers-reduced-motion via the root MotionConfig.
+ * Entrance: rise + fade, fired once in view. Transform/opacity only —
+ * blur() was dropped: animating backdrop filters repaints every frame and
+ * janks on dense screens (dashboard grids, long lists). Honors
+ * prefers-reduced-motion via the root MotionConfig.
  */
 export default function Fade({ children, delay = 0, y = 14, className, once = true }: FadeProps) {
   const reduce = useReducedMotion();
@@ -19,10 +21,10 @@ export default function Fade({ children, delay = 0, y = 14, className, once = tr
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y, filter: 'blur(8px)' }}
-      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      initial={{ opacity: 0, y }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once, margin: '-40px' }}
-      transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.45, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </motion.div>

@@ -38,12 +38,13 @@ export function StaggerItem({ children, className }: { children: ReactNode; clas
   const reduce = useReducedMotion();
   if (reduce) return <div className={className}>{children}</div>;
   const item: Variants = {
-    hidden: { opacity: 0, y: 16, filter: 'blur(6px)' },
+    hidden: { opacity: 0, y: 16 },
     show: {
       opacity: 1,
       y: 0,
-      filter: 'blur(0px)',
       // Hero cap (tokens.motion.dur.hero = 450ms): entrances never exceed it.
+      // No blur: filter animation repaints every frame; opacity + transform
+      // stay on the compositor (see Fade).
       transition: { duration: 0.45, ease: [...EASE] },
     },
   };
