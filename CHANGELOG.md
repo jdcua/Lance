@@ -15,7 +15,7 @@
 - **Weekly digest**: a Monday habit card summarizing shipped, paid, and open work
 - **Get paid directly**: add bank or payment instructions once; they print on every PDF and DOCX invoice
 - **First-run checklist**: setup steps that open the real forms, plus a guided tour option
-- **Local-first telemetry**: on-device activity with a transparency panel; nothing ever uploaded
+- **Local-first activity log**: on-device activity counts with a transparency panel; nothing ever uploaded
 
 ### Fixed
 - Splash screen no longer vanishes mid-read; modals layer in a sane order

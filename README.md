@@ -43,7 +43,7 @@ Built by [Lance freelancers](https://lance.cuajuandiego.workers.dev).
 
 **Themes.** 7 color themes (Default, Studio, Terminal, Craft, Motion, Lens, Scale) with 8 accent colors. Light and dark mode. Compact layout option for dense screens.
 
-**Privacy.** No telemetry. No analytics. No crash reporting. No sign-up required. Lance is a desktop app. Your SQLite database stays on your machine. The only outbound request it ever makes is the auto-updater version check. Client payments go straight to you: add your bank or payment instructions once and they print on every invoice. Lance never processes payments and never takes a cut.
+**Privacy.** No telemetry. No analytics. No crash reporting. No sign-up required. Lance is a desktop app. Your SQLite database stays on your machine. The app only reaches the network to check for updates, validate a Pro license key you enter, and open Paddle when you click buy — none of which carry your business data. Client payments go straight to you: add your bank or payment instructions once and they print on every invoice. Lance never processes payments and never takes a cut.
 
 ## Download
 
