@@ -70,6 +70,85 @@ const onScreen = (el, cb, opt) => {
   o.observe(el);
 };
 
+/* ── intentional glide: slow where the story needs it, native elsewhere ──
+   Wheel is damped only inside the scroll-scrubbed zones (manifesto
+   text-reveal + showcase) so those beats read deliberately; everything
+   else scrolls natively. Uses real scroll position, so sticky /
+   IntersectionObserver keep working. Skipped under reduced motion,
+   touch, pinch-zoom, and ?noglide=1. */
+(function () {
+  if (RM) return;
+  if (!matchMedia('(pointer:fine)').matches) return;
+  if (new URLSearchParams(location.search).has('noglide')) return;
+  const SLOW = 0.55; // <1 = slower wheel travel inside slow zones
+  const EASE = 0.075; // lower = heavier, more "intentional"
+  let target = window.scrollY, current = target, raf = 0, gliding = false;
+  const max = () => Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+  // Slow-zone bounds, cached (recomputed on scroll/resize, not per wheel tick).
+  let zones = [];
+  function measure() {
+    const vh = window.innerHeight;
+    zones = ['treveal', 'showcase'].map((id) => {
+      const el = $(id);
+      if (!el) return null;
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      return [top - vh * 0.5, top + el.offsetHeight + vh * 0.25];
+    }).filter(Boolean);
+  }
+  const inSlowZone = (y) => zones.some(([a, b]) => y >= a && y <= b);
+  function frame() {
+    const diff = target - current;
+    if (Math.abs(diff) < 0.5) {
+      current = target;
+      window.scrollTo(0, target);
+      gliding = false;
+      return;
+    }
+    current += diff * EASE;
+    window.scrollTo(0, Math.round(current));
+    raf = requestAnimationFrame(frame);
+  }
+  function kick() {
+    if (!gliding) {
+      gliding = true;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(frame);
+    }
+  }
+  function cancel() {
+    if (!gliding) return;
+    cancelAnimationFrame(raf);
+    gliding = false;
+    current = window.scrollY;
+    target = current;
+  }
+  measure();
+  window.addEventListener('resize', () => { measure(); target = Math.min(target, max()); }, { passive: true });
+  window.addEventListener('wheel', (e) => {
+    if (e.ctrlKey || e.metaKey) return; // pinch-zoom: leave native
+    if (e.shiftKey) return; // horizontal scroll: leave native
+    if (e.target.closest && e.target.closest('[data-native-scroll]')) return;
+    if (!inSlowZone(window.scrollY)) { cancel(); return; } // outside story: native
+    const mode = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? window.innerHeight : 1;
+    const dy = e.deltaY * mode;
+    if (!dy) return;
+    e.preventDefault();
+    if (!gliding) { current = window.scrollY; target = current; }
+    target = Math.max(0, Math.min(max(), target + dy * SLOW));
+    kick();
+  }, { passive: false });
+  // Adopt native scrolls we didn't cause (keys, scrollbar drag, touch, anchors).
+  let syncT = 0;
+  document.addEventListener('scroll', () => {
+    if (!gliding) {
+      clearTimeout(syncT);
+      syncT = setTimeout(() => { current = window.scrollY; target = current; measure(); }, 80);
+    }
+  }, { passive: true });
+  ['keydown', 'touchstart', 'pointerdown'].forEach((ev) =>
+    window.addEventListener(ev, cancel, { passive: true }));
+})();
+
 /* ── THEME SYSTEM ── */
 const loadedFonts = {};
 function applyTheme(id) {
@@ -458,20 +537,24 @@ function bentoVis(kind) {
 (function () {
   const outer = $('showcase');
   if (!outer) return;
-  outer.style.height = ((SHOW_STEPS.length + 1) * 100) + 'vh';
+  // Intentionally slow scrub: 140vh of scroll per step (was 100vh).
+  const STEP_VH = 140;
+  const setHeight = () => {
+    outer.style.height = ((SHOW_STEPS.length * STEP_VH) + 100) + 'vh';
+  };
+  setHeight();
   const dots = $('showDots');
   SHOW_STEPS.forEach((_, i) => {
     const d = document.createElement('button');
     d.className = 'sdot' + (i === 0 ? ' on' : '');
     d.setAttribute('aria-label', 'Go to step ' + (i + 1));
     d.addEventListener('click', () => {
-      window.scrollTo({ top: outer.offsetTop + i * window.innerHeight + 2, behavior: 'smooth' });
+      const y = outer.offsetTop + i * window.innerHeight * (STEP_VH / 100) + 2;
+      window.scrollTo({ top: y, behavior: 'smooth' });
     });
     dots.appendChild(d);
   });
-  window.addEventListener('resize', () => {
-    outer.style.height = ((SHOW_STEPS.length + 1) * 100) + 'vh';
-  });
+  window.addEventListener('resize', setHeight);
   let step = 0;
   function apply(i) {
     step = i;
