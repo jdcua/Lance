@@ -3,7 +3,8 @@ import Card from './Card';
 
 const KEY = 'lance:set-aside-pct';
 
-function loadPct(): number | null {
+/** The user's own set-aside %, shared read-only with the affordability banner. */
+export function loadSetAsidePct(): number | null {
   try {
     const raw = localStorage.getItem(KEY);
     if (raw == null) return null;
@@ -28,7 +29,7 @@ export default function MoneyFlow({
   expenses: number;
   fmt: (n: number) => string;
 }) {
-  const [pct, setPct] = useState<number | null>(loadPct);
+  const [pct, setPct] = useState<number | null>(loadSetAsidePct);
   const setAside = pct == null ? 0 : Math.max(0, income * (pct / 100));
   const keep = Math.max(0, income - expenses - setAside);
   const max = Math.max(1, income);

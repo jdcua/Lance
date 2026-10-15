@@ -8,6 +8,7 @@ import RetainerBurnDown from '../../components/features/RetainerBurnDown';
 import { formatMonth, formatDate, formatCurrency } from '../../utils/format';
 import { Plus, Pencil, Trash2, BarChart3, ChevronDown, Upload } from 'lucide-react';
 import { MoneyLines, type FinanceBag } from './shared';
+import AffordabilityBanner from './AffordabilityBanner';
 
 /**
  * Finance overview tab: summary cards, monthly table, expenses, rates.
@@ -25,7 +26,8 @@ export default function OverviewSection({ bag }: { bag: FinanceBag }) {
     setShowBankImport, expenses, foreignFiltered,
   } = bag;
   return (
-        <>
+    <>
+      <AffordabilityBanner monthlyPaid={monthlyPaid} monthlyExpenses={monthlyExpenses} fmt={fmt} />
           {hasMixedCurrencies && (
             <div className="mb-4 px-3 py-2 rounded-[8px] bg-[var(--info-bg)] border border-[var(--info)]/20 flex items-start gap-2 text-xs">
               <span className="text-[var(--info-ink,var(--info))] mt-px flex-shrink-0">ⓘ</span>
