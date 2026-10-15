@@ -1,9 +1,18 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
-import { Upload, ArrowRight, Check } from 'lucide-react';
+import { Upload, ArrowRight, Check, Banknote } from 'lucide-react';
 import { useStore } from '../../store';
 import { useToasts } from '../../store/toastStore';
+import { checkAndNotify } from '../../achievements/notify';
+import { sanitizeInput } from '../../utils/sanitize';
+import { formatCurrency } from '../../utils/format';
+import { celebrationLevel, recordCelebration, celebrationToast } from '../../lib/celebration';
+import {
+  suggestInvoiceMatches,
+  invoiceRemaining,
+  type RowMatch,
+} from '../../utils/reconcile';
 import {
   detectBankColumns,
   parseBankRows,
@@ -16,16 +25,23 @@ const CATEGORIES = ['Software', 'Equipment', 'Office', 'Travel', 'Marketing', 'F
 
 /**
  * Bank statement import: maps any bank CSV to expenses. Outflows import
- * (deduplicated); inflows are counted and skipped with an explanation
- * because revenue belongs to invoices, not expenses.
+ * (deduplicated); inflows match open invoices so a deposit becomes a
+ * recorded payment with one confirm — never auto-applied.
  */
 export default function BankImportModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { expenses, addExpense } = useStore();
+  const {
+    expenses, addExpense, invoices, payments, clients,
+    createPayment, deletePayment, updateInvoice,
+    pendingFollowUps, updateFollowUpStatus,
+  } = useStore();
   const addToast = useToasts((s) => s.add);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [rows, setRows] = useState<ParsedBankRow[]>([]);
+  const [incomeRows, setIncomeRows] = useState<ParsedBankRow[]>([]);
+  const [recorded, setRecorded] = useState<Set<number>>(new Set());
+  const [recording, setRecording] = useState<number | null>(null);
   const [skipped, setSkipped] = useState(0);
   const [income, setIncome] = useState(0);
   const [duplicates, setDuplicates] = useState(0);
@@ -37,6 +53,9 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
   const reset = () => {
     setStep(1);
     setRows([]);
+    setIncomeRows([]);
+    setRecorded(new Set());
+    setRecording(null);
     setSkipped(0);
     setIncome(0);
     setDuplicates(0);
@@ -94,7 +113,10 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
       ).length;
       setRows(fresh.filter((r) => !existing.has(expenseFingerprint(r.date, r.amount, r.description))));
       setDuplicates(dupes);
-      setIncome(parsed.filter((r) => r.direction === 'in').length);
+      const incoming = parsed.filter((r) => r.direction === 'in');
+      setIncomeRows(incoming);
+      setRecorded(new Set());
+      setIncome(incoming.length);
       setSkipped(bad);
       setMapping(map);
       setStep(2);
@@ -125,6 +147,92 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
     setImporting(false);
   };
 
+  const matches: RowMatch[] = useMemo(
+    () =>
+      suggestInvoiceMatches(
+        incomeRows,
+        invoices,
+        payments,
+        (id) => clients.find((c) => c.id === id)?.name,
+      ),
+    [incomeRows, invoices, payments, clients],
+  );
+
+  const invoiceById = (id: string) => invoices.find((i) => i.id === id);
+
+  const handleRecordMatch = async (rowIdx: number, invoiceId: string) => {
+    const inv = invoiceById(invoiceId);
+    const row = incomeRows[rowIdx];
+    if (!inv || !row || recording !== null) return;
+    // Invoice-side truth: record the remaining balance, never the row.
+    // Exact matches agree to the cent; anything else never reaches here.
+    const remaining = invoiceRemaining(inv, payments);
+    if (remaining <= 0) {
+      addToast('That invoice is already fully paid', 'info');
+      return;
+    }
+    setRecording(rowIdx);
+    try {
+      const prev = { ...inv };
+      const payment = await createPayment({
+        invoice_id: inv.id,
+        amount: Math.round(remaining * 100) / 100,
+        payment_date: row.date,
+        payment_method: 'Bank Transfer',
+        reference: sanitizeInput(row.description).slice(0, 500),
+        notes: 'Matched from bank import',
+      });
+      const updated = useStore
+        .getState()
+        .payments.filter((p) => p.invoice_id === inv.id);
+      const paidTotal = updated.reduce((s, p) => s + p.amount, 0);
+      const fullyPaid = Math.round(paidTotal * 100) >= Math.round(inv.total * 100);
+      const next = fullyPaid ? 'paid' : paidTotal > 0 ? 'partial' : inv.status;
+      if (next !== inv.status) {
+        await updateInvoice({
+          ...inv,
+          status: next as typeof inv.status,
+          paid_at: next === 'paid' ? new Date().toISOString() : inv.paid_at,
+        });
+      }
+      if (fullyPaid) {
+        const fu = useStore
+          .getState()
+          .pendingFollowUps.find((f) => f.entity_type === 'invoice' && f.entity_id === inv.id);
+        if (fu) await updateFollowUpStatus(fu.id, 'paid', 'auto-resolved').catch(() => {});
+        const level = celebrationLevel('invoice-paid');
+        if (level === 'full') addToast(`🎉 ${celebrationToast('invoice-paid')}`, 'success');
+        else if (level === 'reduced') addToast(celebrationToast('invoice-paid'), 'success');
+        recordCelebration('invoice-paid');
+      }
+      await checkAndNotify(useStore.getState(), addToast);
+      setRecorded((prevSet) => new Set(prevSet).add(rowIdx));
+      addToast(`Matched ${inv.invoice_number} — payment recorded.`, 'success', undefined, [
+        {
+          label: 'Undo',
+          onClick: async () => {
+            try {
+              await deletePayment(payment.id);
+              await updateInvoice(prev);
+              setRecorded((prevSet) => {
+                const nextSet = new Set(prevSet);
+                nextSet.delete(rowIdx);
+                return nextSet;
+              });
+              addToast('Undone — payment removed, status restored.', 'info');
+            } catch (err) {
+              addToast(`Couldn't undo: ${String(err)}`, 'error');
+            }
+          },
+        },
+      ]);
+    } catch (err) {
+      addToast(`Couldn't record payment: ${String(err)}`, 'error');
+    } finally {
+      setRecording(null);
+    }
+  };
+
   return (
     <Modal open={open} onClose={handleClose} title="Import bank statement" size="md">
       {step === 1 && (
@@ -138,7 +246,7 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
               Drop a bank CSV here, or click to browse
             </p>
             <p className="text-xs text-[var(--text-tertiary)]">
-              Works with most banks. Outflows import as expenses; inflows are skipped.
+              Works with most banks. Outflows import as expenses; inflows match open invoices below.
             </p>
           </div>
           <input
@@ -168,7 +276,7 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
               <span className="text-[var(--text-tertiary)]"> ({duplicates} already imported, skipped)</span>
             )}
             {income > 0 && (
-              <span className="text-[var(--text-tertiary)]">. {income} incoming row{income === 1 ? '' : 's'} skipped: revenue belongs to invoices.</span>
+              <span className="text-[var(--text-tertiary)]">. {income} incoming row{income === 1 ? '' : 's'} below — match them to invoices.</span>
             )}
             {skipped > 0 && (
               <span className="text-[var(--text-tertiary)]"> {skipped} unreadable row{skipped === 1 ? '' : 's'} skipped.</span>
@@ -211,6 +319,64 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
               {importing ? 'Importing...' : <>Import {rows.length} expenses <ArrowRight size={14} /></>}
             </Button>
           </div>
+          {matches.length > 0 && (
+            <div className="pt-2 border-t border-[var(--border-color)]">
+              <div className="flex items-center gap-2 mb-2 mt-1">
+                <Banknote size={14} className="text-[var(--accent-ink,var(--accent))]" />
+                <p className="text-xs font-semibold text-[var(--text-primary)]">
+                  Incoming deposits matched to invoices
+                </p>
+              </div>
+              <p className="text-[11px] text-[var(--text-tertiary)] mb-2">
+                Confirm each one — recording creates the real payment with the invoice's
+                remaining balance, never the row alone.
+              </p>
+              <div className="space-y-1.5 max-h-[220px] overflow-y-auto">
+                {matches.map((m, i) => {
+                  const top = m.matches[0];
+                  const inv = top ? invoiceById(top.invoiceId) : undefined;
+                  const done = recorded.has(i);
+                  return (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between gap-2 px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[var(--text-primary)] truncate">{m.row.description}</p>
+                        <p className="text-[var(--text-tertiary)]">
+                          {m.row.date} · {formatCurrency(m.row.amount)}
+                          {inv && top && (
+                            <> → {inv.invoice_number} ({top.confidence})</>
+                          )}
+                          {!inv && ' · no open invoice matches'}
+                        </p>
+                        {inv && top && (
+                          <p className="text-[var(--text-tertiary)] truncate" title={top.reasons.join(' · ')}>
+                            {top.reasons.join(' · ')}
+                          </p>
+                        )}
+                      </div>
+                      {inv && top && !done && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={recording !== null}
+                          onClick={() => handleRecordMatch(i, top.invoiceId)}
+                        >
+                          {recording === i ? 'Recording…' : 'Record payment'}
+                        </Button>
+                      )}
+                      {done && (
+                        <span className="text-[11px] font-medium text-[var(--accent-ink,var(--accent))] flex-shrink-0">
+                          Recorded ✓
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
