@@ -13,6 +13,8 @@
     "fs:allow-write-file",
     "fs:allow-write-text-file",
     "shell:allow-open",
-    "opener:default"
+    "opener:default",
+    "updater:default",
+    "process:allow-restart"
   ]
 }

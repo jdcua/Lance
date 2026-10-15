@@ -41,6 +41,14 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
 
+      # The updater manifest advertises one macOS artifact for both
+      # darwin-aarch64 and darwin-x86_64, so the mac build must be a true
+      # universal binary — a bare `tauri build` on macos-latest (arm64) ships
+      # ARM-only code to Intel users. Install the universal target first.
+      - name: Add macOS universal target
+        if: runner.os == 'macOS'
+        run: rustup target add universal-apple-darwin
+
       - name: Install Linux deps
         if: runner.os == 'Linux'
         run: |
@@ -74,7 +82,7 @@ jobs:
           unset KEY RAW_SIGNING_KEY
 
       - name: Build Tauri
-        run: npm run tauri build
+        run: ${{ runner.os == 'macOS' && 'npm run build:mac' || 'npm run tauri build' }}
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ env.TAURI_SIGNING_PRIVATE_KEY_CLEAN }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
