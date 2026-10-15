@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   DndContext,
@@ -67,7 +67,10 @@ interface CardData {
   meta?: string;
 }
 
-function PipeCard({ card, disabled }: { card: CardData; disabled?: boolean }) {
+// Memoized: the board re-renders on every store update (portal polling,
+// timer ticks elsewhere), but cards only change when their data does.
+// Without this, each poll re-measured every card's layout animation.
+const PipeCard = memo(function PipeCard({ card, disabled }: { card: CardData; disabled?: boolean }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `${card.kind}:${card.id}`,
     data: { card },
@@ -91,7 +94,7 @@ function PipeCard({ card, disabled }: { card: CardData; disabled?: boolean }) {
       </div>
     </motion.div>
   );
-}
+});
 
 function Column({
   stage,
