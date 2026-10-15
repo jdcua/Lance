@@ -19,7 +19,6 @@ import { relativeDate } from '../utils/format';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 import { Plus, Pencil, Trash2, Eye, PenLine, Search, Copy, FileText, Share2, Link, Download } from 'lucide-react';
 import ShareModal from '../components/ShareModal';
-import { exportContractPDF, exportContractDOCX } from '../export';
 import { getArchetype } from '../archetypes';
 
 const statusBadge: Record<string, 'success' | 'warning' | 'info' | 'danger'> = {
@@ -204,10 +203,12 @@ export default function Contracts() {
     }
   };
 
-  const handleExportPDF = (c: Contract) => {
+  const handleExportPDF = async (c: Contract) => {
     const client = clients.find((cl) => cl.id === c.client_id);
     if (client && profile) {
-      exportContractPDF(c, client, profile);
+      // Renderer chunk loads on first export, never on route load.
+      const { exportContractPDF } = await import('../export');
+      await exportContractPDF(c, client, profile);
       tryUnlock('first_export', addToast);
     } else if (!client) {
       addToast('Contract has no client on file', 'error');
@@ -217,10 +218,11 @@ export default function Contracts() {
     setExportDropdown(null);
   };
 
-  const handleExportDOCX = (c: Contract) => {
+  const handleExportDOCX = async (c: Contract) => {
     const client = clients.find((cl) => cl.id === c.client_id);
     if (client && profile) {
-      exportContractDOCX(c, client, profile);
+      const { exportContractDOCX } = await import('../export');
+      await exportContractDOCX(c, client, profile);
       tryUnlock('first_export', addToast);
     } else if (!client) {
       addToast('Contract has no client on file', 'error');

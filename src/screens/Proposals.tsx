@@ -7,7 +7,6 @@ import LoadError from '../components/ui/LoadError';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
-import { exportProposalPDF, exportProposalDOCX } from '../export';
 import { formatCurrency } from '../utils/format';
 import { formatDate } from '../utils/format';
 import { relativeDate, parseDateString, DAY_MS } from '../utils/format';
@@ -170,10 +169,12 @@ export default function Proposals() {
     }
   };
 
-  const handleExportPDF = (p: Proposal) => {
+  const handleExportPDF = async (p: Proposal) => {
     const client = getClient(p.client_id);
     if (client && profile) {
-      exportProposalPDF(p, client, profile);
+      // Renderer chunk loads on first export, never on route load.
+      const { exportProposalPDF } = await import('../export');
+      await exportProposalPDF(p, client, profile);
       tryUnlock('first_export', addToast);
     }
     setExportDropdown(null);
@@ -255,10 +256,11 @@ export default function Proposals() {
     }
   };
 
-  const handleExportDOCX = (p: Proposal) => {
+  const handleExportDOCX = async (p: Proposal) => {
     const client = getClient(p.client_id);
     if (client && profile) {
-      exportProposalDOCX(p, client, profile);
+      const { exportProposalDOCX } = await import('../export');
+      await exportProposalDOCX(p, client, profile);
       tryUnlock('first_export', addToast);
     }
     setExportDropdown(null);

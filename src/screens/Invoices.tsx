@@ -5,7 +5,6 @@ import Button from '../components/ui/Button';
 import LoadError from '../components/ui/LoadError';
 import MetricCard from '../components/ui/MetricCard';
 import { useVisibleList } from '../components/ui/useVisibleList';
-import { exportInvoicePDF, exportInvoiceDOCX } from '../export';
 import {
   formatCurrency,
   relativeDate,
@@ -899,11 +898,13 @@ export default function Invoices() {
     }
   };
 
-  const handleExportPDF = (inv: Invoice) => {
+  const handleExportPDF = async (inv: Invoice) => {
     try {
       const client = getClient(inv.client_id);
       if (client && profile) {
-        exportInvoicePDF(inv, client, profile);
+        // Renderer chunk (~2MB) loads on first export, never on route load.
+        const { exportInvoicePDF } = await import('../export');
+        await exportInvoicePDF(inv, client, profile);
         tryUnlock('first_export', addToast);
       }
     } catch (err) {
@@ -911,11 +912,12 @@ export default function Invoices() {
     }
     setExportDropdown(null);
   };
-  const handleExportDOCX = (inv: Invoice) => {
+  const handleExportDOCX = async (inv: Invoice) => {
     try {
       const client = getClient(inv.client_id);
       if (client && profile) {
-        exportInvoiceDOCX(inv, client, profile);
+        const { exportInvoiceDOCX } = await import('../export');
+        await exportInvoiceDOCX(inv, client, profile);
         tryUnlock('first_export', addToast);
       }
     } catch (err) {
