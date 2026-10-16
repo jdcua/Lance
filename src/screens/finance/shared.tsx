@@ -90,6 +90,8 @@ export interface FinanceBag {
   saveRate: (cur: string, raw: string) => void;
   revenueByCurrency: Record<string, number>;
   outstandingByCurrency: Record<string, number>;
+  atRiskSlowPayers: number;
+  atRiskProfTotal: number;
   totalPaidRevenue: number;
   totalExpenses: number;
   totalOutstanding: number;

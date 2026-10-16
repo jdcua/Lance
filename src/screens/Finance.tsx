@@ -27,6 +27,7 @@ import {
   type ScenarioParams,
 } from '../lib/forecast';
 import { TrendingUp } from 'lucide-react';
+import { clientPaymentBehavior } from '../utils/paymentBehavior';
 import { convertAmount, convertByCurrency, ratesCover, sanitizeRates } from '../lib/currency';
 import OverviewSection from './finance/OverviewSection';
 import ForecastSection from './finance/ForecastSection';
@@ -338,6 +339,25 @@ export default function Finance() {
       outstandingByCurrency[cur] = (outstandingByCurrency[cur] || 0) + i.total;
     });
 
+  // At-risk revenue: unpaid totals owed by slow/risky payers, from their own
+  // history. Amounts shown only in the profile currency; mixed-currency
+  // views show the slow-payer count, never a cross-currency sum.
+  const riskCache = new Map<string, string>();
+  const atRiskRows = finvoices
+    .filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue')
+    .filter((i) => {
+      let r = riskCache.get(i.client_id || '');
+      if (r === undefined) {
+        r = clientPaymentBehavior(i.client_id || '', invoices, payments).risk;
+        riskCache.set(i.client_id || '', r);
+      }
+      return r === 'slow' || r === 'risky';
+    });
+  const atRiskSlowPayers = new Set(atRiskRows.map((i) => i.client_id)).size;
+  const atRiskProfTotal = atRiskRows
+    .filter((i) => (i.currency || currency || 'CAD') === profCur)
+    .reduce((s, i) => s + i.total, 0);
+
   const revenueByCurrency: Record<string, number> = {};
   finvoices
     .filter((i) => i.status === 'paid')
@@ -394,7 +414,7 @@ export default function Finance() {
     hasMixedCurrencies, showConverted, ratesCoverAll, foreignCurs, invoiceCurrencies,
     curFilter, setCurFilter, expandedMonth, setExpandedMonth,
     showRates, setShowRates, rateDrafts, setRateDrafts, savingRates, saveRate,
-    revenueByCurrency, outstandingByCurrency,
+    revenueByCurrency, outstandingByCurrency, atRiskSlowPayers, atRiskProfTotal,
     totalPaidRevenue, totalExpenses, totalOutstanding, profit,
     convRevenue, convOutstanding, convProfit,
     monthlyPaidByCurrency, monthlyExpenses, monthlyPaid, allMonths,

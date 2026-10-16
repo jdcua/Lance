@@ -19,7 +19,7 @@ export default function OverviewSection({ bag }: { bag: FinanceBag }) {
     fmt, hasMixedCurrencies, showConverted, profCur, rates, invoiceCurrencies,
     curFilter, setCurFilter, expandedMonth, setExpandedMonth, showRates, setShowRates,
     rateDrafts, setRateDrafts, savingRates, saveRate, ratesCoverAll, foreignCurs,
-    revenueByCurrency, outstandingByCurrency, totalPaidRevenue, totalExpenses,
+    revenueByCurrency, outstandingByCurrency, atRiskSlowPayers, atRiskProfTotal, totalPaidRevenue, totalExpenses,
     totalOutstanding, profit, convRevenue, convOutstanding, convProfit,
     monthlyPaidByCurrency, monthlyExpenses, monthlyPaid, allMonths,
     expensesByCategory, pagedExpenses, openNew, openEdit, setConfirmDelete,
@@ -196,7 +196,15 @@ export default function OverviewSection({ bag }: { bag: FinanceBag }) {
                   fmt(totalOutstanding)
                 )
               }
-              subtext={showConverted ? `converted to ${profCur} at your rates` : 'unpaid invoices'}
+              subtext={
+                showConverted
+                  ? `converted to ${profCur} at your rates`
+                  : atRiskSlowPayers > 0
+                    ? hasMixedCurrencies
+                      ? `unpaid invoices · ${atRiskSlowPayers} slow payer${atRiskSlowPayers === 1 ? '' : 's'}`
+                      : `unpaid invoices · ${fmt(atRiskProfTotal)} from ${atRiskSlowPayers} slow payer${atRiskSlowPayers === 1 ? '' : 's'}`
+                    : 'unpaid invoices'
+              }
               color="amber"
             />
           </div>
