@@ -994,6 +994,14 @@ export default function Invoices() {
     );
   });
 
+  // Archetype deposit hint: typical upfront % for this craft, computed
+  // live from the subtotal. Display only — never auto-added to the invoice.
+  const depositPct = archetype?.depositPercentage ?? 0;
+  const depositHint =
+    !editing && depositPct > 0 && subtotal > 0
+      ? { pct: depositPct, amount: (subtotal * depositPct) / 100 }
+      : null;
+
   // Section prop bag: shell-local state, handlers, and derived figures.
   // Sections are verbatim relocation; computations stay here.
   const bag: InvoicesBag = {
@@ -1020,7 +1028,7 @@ export default function Invoices() {
     handleSave, handleDelete, handleRecordPayment, handleDeletePayment,
     handleSendReminder, handleSaveRecurring, handleToggleActive,
     handleMarkSent, handleDuplicate, handleAddLateFee, handleExportPDF, handleExportDOCX,
-    addToast,
+    addToast, depositHint,
   };
 
   if (loading)

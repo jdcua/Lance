@@ -30,7 +30,7 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
     fmtInvDisplay, getClientName, hourlyRate, unbilledTime,
     sanitizeInvoiceNumber, addItem, addRiItem, importSelectedTime, handleClientChange,
     handleSave, handleDelete, handleRecordPayment, handleDeletePayment,
-    handleSendReminder, handleSaveRecurring,
+    handleSendReminder, handleSaveRecurring, depositHint,
   } = bag;
   return (
 
@@ -252,6 +252,12 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
                 {formatCurrency(total)}
               </span>
             </div>
+            {depositHint && (
+              <p className="text-[11px] text-[var(--text-tertiary)]">
+                Typical deposit for your craft: {depositHint.pct}% ({formatCurrency(depositHint.amount)}).
+                Add a line above if you take deposits upfront.
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">

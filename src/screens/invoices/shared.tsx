@@ -160,6 +160,7 @@ export interface InvoicesBag {
   exportDropdown: string | null;
   setExportDropdown: (v: string | null) => void;
   sanitizeInvoiceNumber: (s: string) => string;
+  depositHint: { pct: number; amount: number } | null;
   addItem: () => void;
   addRiItem: () => void;
   importSelectedTime: () => void;
