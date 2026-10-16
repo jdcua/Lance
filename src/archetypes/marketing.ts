@@ -64,6 +64,9 @@ const marketing: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'retainer', 'hourly'],
   defaultRateLabel: 'per hour',
+
+  depositPercentage: 30,
+  paymentTerms: 14,
   maxRevisions: 3,
 
 

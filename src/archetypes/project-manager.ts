@@ -64,6 +64,9 @@ const projectManager: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'hourly', 'retainer'],
   defaultRateLabel: 'per hour',
+
+  depositPercentage: 30,
+  paymentTerms: 14,
   maxRevisions: 3,
 
 

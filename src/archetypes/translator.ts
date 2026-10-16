@@ -65,6 +65,9 @@ const translator: ArchetypeConfig = {
 
   proposalTypes: ['per-word', 'flat', 'hourly'],
   defaultRateLabel: 'per word',
+
+  depositPercentage: 30,
+  paymentTerms: 14,
   maxRevisions: 2,
 
 

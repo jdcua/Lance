@@ -66,6 +66,9 @@ const consultant: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'hourly', 'retainer'],
   defaultRateLabel: 'per session',
+
+  depositPercentage: 30,
+  paymentTerms: 14,
   maxRevisions: 3,
 
   contractPresets: [

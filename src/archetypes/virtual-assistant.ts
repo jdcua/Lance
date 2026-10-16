@@ -65,6 +65,9 @@ const virtualAssistant: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'retainer', 'hourly'],
   defaultRateLabel: 'per hour',
+
+  depositPercentage: 0,
+  paymentTerms: 30,
   maxRevisions: 1,
 
 

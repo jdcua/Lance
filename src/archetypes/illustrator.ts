@@ -65,6 +65,9 @@ const illustrator: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'per-piece', 'hourly'],
   defaultRateLabel: 'per commission',
+
+  depositPercentage: 30,
+  paymentTerms: 14,
   maxRevisions: 2,
 
 

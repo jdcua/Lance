@@ -64,6 +64,9 @@ const eventPlanner: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'per-event', 'hourly'],
   defaultRateLabel: 'per event',
+
+  depositPercentage: 50,
+  paymentTerms: 7,
   maxRevisions: 3,
 
 

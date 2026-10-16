@@ -64,6 +64,9 @@ const nutritionist: ArchetypeConfig = {
 
   proposalTypes: ['per-session', 'per-plan', 'retainer'],
   defaultRateLabel: 'per consultation',
+
+  depositPercentage: 0,
+  paymentTerms: 7,
   maxRevisions: 2,
 
 

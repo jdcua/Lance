@@ -65,6 +65,9 @@ const architect: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'hourly', 'milestone'],
   defaultRateLabel: 'per hour',
+
+  depositPercentage: 30,
+  paymentTerms: 14,
   maxRevisions: 3,
 
 

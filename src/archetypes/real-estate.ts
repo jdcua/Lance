@@ -64,6 +64,9 @@ const realEstate: ArchetypeConfig = {
 
   proposalTypes: ['commission-based', 'flat', 'hourly'],
   defaultRateLabel: 'per closing',
+
+  depositPercentage: 0,
+  paymentTerms: 30,
   maxRevisions: 2,
 
 

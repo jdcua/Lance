@@ -66,6 +66,9 @@ const writer: ArchetypeConfig = {
 
   proposalTypes: ['per-word', 'flat', 'hourly'],
   defaultRateLabel: 'per word',
+
+  depositPercentage: 30,
+  paymentTerms: 14,
   maxRevisions: 3,
 
 

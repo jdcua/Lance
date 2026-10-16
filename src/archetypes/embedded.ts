@@ -64,6 +64,9 @@ const embedded: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'hourly', 'project'],
   defaultRateLabel: 'per hour',
+
+  depositPercentage: 30,
+  paymentTerms: 14,
   maxRevisions: 2,
 
 

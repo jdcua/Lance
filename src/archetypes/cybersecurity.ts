@@ -64,6 +64,9 @@ const cybersecurity: ArchetypeConfig = {
 
   proposalTypes: ['hourly', 'flat', 'retainer'],
   defaultRateLabel: 'per hour',
+
+  depositPercentage: 30,
+  paymentTerms: 14,
   maxRevisions: 2,
 
 

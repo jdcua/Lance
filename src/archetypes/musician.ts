@@ -65,6 +65,9 @@ const musician: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'hourly', 'per-track'],
   defaultRateLabel: 'per hour',
+
+  depositPercentage: 50,
+  paymentTerms: 7,
   maxRevisions: 2,
 
 

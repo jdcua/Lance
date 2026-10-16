@@ -64,6 +64,9 @@ const recruiter: ArchetypeConfig = {
 
   proposalTypes: ['commission-based', 'retainer', 'flat'],
   defaultRateLabel: 'per placement',
+
+  depositPercentage: 0,
+  paymentTerms: 30,
   maxRevisions: 1,
 
 

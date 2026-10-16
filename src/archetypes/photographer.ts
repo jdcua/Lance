@@ -66,6 +66,9 @@ const photographer: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'hourly', 'per-shoot'],
   defaultRateLabel: 'per shoot',
+
+  depositPercentage: 50,
+  paymentTerms: 7,
   maxRevisions: 3,
 
 

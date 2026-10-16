@@ -59,6 +59,9 @@ const defaultArchetype: ArchetypeConfig = {
   ],
   proposalTypes: ['flat', 'hourly'],
   defaultRateLabel: 'per hour',
+
+  depositPercentage: 0,
+  paymentTerms: 14,
   maxRevisions: 3,
 
 

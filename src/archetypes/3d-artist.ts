@@ -63,6 +63,9 @@ const threeDArtist: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'hourly', 'project'],
   defaultRateLabel: 'per hour',
+
+  depositPercentage: 50,
+  paymentTerms: 7,
   maxRevisions: 3,
 
 

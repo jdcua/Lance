@@ -64,6 +64,9 @@ const growth: ArchetypeConfig = {
 
   proposalTypes: ['retainer', 'flat', 'hourly'],
   defaultRateLabel: 'per hour',
+
+  depositPercentage: 30,
+  paymentTerms: 14,
   maxRevisions: 2,
 
 

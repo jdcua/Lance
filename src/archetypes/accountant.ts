@@ -62,6 +62,9 @@ const accountant: ArchetypeConfig = {
 
   proposalTypes: ['hourly', 'flat', 'retainer'],
   defaultRateLabel: 'per hour',
+
+  depositPercentage: 0,
+  paymentTerms: 30,
   maxRevisions: 2,
 
 

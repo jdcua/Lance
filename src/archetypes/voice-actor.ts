@@ -64,6 +64,9 @@ const voiceActor: ArchetypeConfig = {
 
   proposalTypes: ['per-session', 'flat', 'hourly'],
   defaultRateLabel: 'per session',
+
+  depositPercentage: 50,
+  paymentTerms: 7,
   maxRevisions: 2,
 
 

@@ -64,6 +64,9 @@ const aiEngineer: ArchetypeConfig = {
 
   proposalTypes: ['hourly', 'flat', 'project'],
   defaultRateLabel: 'per hour',
+
+  depositPercentage: 30,
+  paymentTerms: 14,
   maxRevisions: 2,
 
 

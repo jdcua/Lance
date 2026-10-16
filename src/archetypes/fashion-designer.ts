@@ -64,6 +64,9 @@ const fashionDesigner: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'per-look', 'hourly'],
   defaultRateLabel: 'per look',
+
+  depositPercentage: 50,
+  paymentTerms: 7,
   maxRevisions: 2,
 
 

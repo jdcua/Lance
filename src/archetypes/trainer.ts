@@ -64,6 +64,9 @@ const trainer: ArchetypeConfig = {
 
   proposalTypes: ['per-session', 'per-program', 'retainer'],
   defaultRateLabel: 'per session',
+
+  depositPercentage: 0,
+  paymentTerms: 7,
   maxRevisions: 2,
 
 

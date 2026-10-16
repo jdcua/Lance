@@ -63,6 +63,9 @@ const animator: ArchetypeConfig = {
 
   proposalTypes: ['hourly', 'flat', 'project'],
   defaultRateLabel: 'per hour',
+
+  depositPercentage: 50,
+  paymentTerms: 7,
   maxRevisions: 3,
 
 

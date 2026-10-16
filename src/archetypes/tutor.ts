@@ -64,6 +64,9 @@ const tutor: ArchetypeConfig = {
 
   proposalTypes: ['per-session', 'flat', 'hourly'],
   defaultRateLabel: 'per session',
+
+  depositPercentage: 0,
+  paymentTerms: 7,
   maxRevisions: 2,
 
 

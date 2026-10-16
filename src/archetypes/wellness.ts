@@ -64,6 +64,9 @@ const wellness: ArchetypeConfig = {
 
   proposalTypes: ['per-session', 'retainer', 'flat'],
   defaultRateLabel: 'per session',
+
+  depositPercentage: 0,
+  paymentTerms: 7,
   maxRevisions: 2,
 
 

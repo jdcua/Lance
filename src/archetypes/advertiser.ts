@@ -65,6 +65,9 @@ const advertiser: ArchetypeConfig = {
 
   proposalTypes: ['flat', 'retainer', 'per-campaign'],
   defaultRateLabel: 'per campaign',
+
+  depositPercentage: 30,
+  paymentTerms: 14,
   maxRevisions: 3,
 
 
