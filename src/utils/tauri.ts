@@ -838,9 +838,13 @@ const PADDLE_PRICE_IDS: Record<'monthly' | 'yearly' | 'onetime', string> = {
 const PADDLE_CHECKOUT_BASE =
   (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_PADDLE_CHECKOUT_URL || '';
 
+const WORKER_URL =
+  (import.meta as unknown as { env?: Record<string, string | undefined> }).env
+    ?.VITE_LICENSE_WORKER_URL || '';
+
 export function isCheckoutConfigured(): boolean {
   return (
-    PADDLE_CHECKOUT_BASE.length > 0 &&
+    WORKER_URL.length > 0 &&
     PADDLE_PRICE_IDS.monthly.length > 0 &&
     !PADDLE_PRICE_IDS.monthly.startsWith('<')
   );
@@ -855,17 +859,48 @@ export function isCheckoutConfigured(): boolean {
  */
 export async function openCheckout(tier: 'monthly' | 'yearly' | 'onetime'): Promise<boolean> {
   const priceId = PADDLE_PRICE_IDS[tier];
-  if (!PADDLE_CHECKOUT_BASE || !priceId || priceId.startsWith('<')) {
+  if (!priceId || priceId.startsWith('<')) {
     console.warn('[paddle] Checkout not configured for', tier);
     return false;
   }
-  const url = `${PADDLE_CHECKOUT_BASE}?price_id=${priceId}`;
 
-  if (isTauri()) {
-    const { openUrl } = await import('@tauri-apps/plugin-opener');
-    await openUrl(url);
-  } else {
-    window.open(url, '_blank', 'noopener,noreferrer');
+  // Prefer a transaction minted on demand by the license worker, so checkout
+  // works without a baked-in hosted-checkout base URL.
+  if (WORKER_URL) {
+    try {
+      const res = await fetch(`${WORKER_URL}/checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ price_id: priceId }),
+      });
+      if (res.ok) {
+        const { url } = await res.json();
+        if (url) {
+          if (isTauri()) {
+            const { openUrl } = await import('@tauri-apps/plugin-opener');
+            await openUrl(url);
+          } else {
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }
+          return true;
+        }
+      }
+    } catch (err) {
+      console.warn('[paddle] Worker checkout failed, falling back:', err);
+    }
   }
-  return true;
+
+  // Fallback to a baked-in hosted checkout base URL if present.
+  if (PADDLE_CHECKOUT_BASE) {
+    const url = `${PADDLE_CHECKOUT_BASE}?price_id=${priceId}`;
+    if (isTauri()) {
+      const { openUrl } = await import('@tauri-apps/plugin-opener');
+      await openUrl(url);
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+    return true;
+  }
+
+  return false;
 }
