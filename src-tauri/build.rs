@@ -1,4 +1,8 @@
 fn main() {
+    // Re-run this build script when these env vars change, otherwise Cargo
+    // may reuse a cached LANCE_LICENSE_HASH from a previous build.
+    println!("cargo:rerun-if-env-changed=LANCE_LICENSE_SECRET");
+    println!("cargo:rerun-if-env-changed=LANCE_LICENSE_WORKER_URL");
     let secret = std::env::var("LANCE_LICENSE_SECRET").unwrap_or_else(|_| {
         println!("cargo:warning=LANCE_LICENSE_SECRET not set — using dev placeholder");
         "dev-secret-do-not-use-in-production".to_string()
