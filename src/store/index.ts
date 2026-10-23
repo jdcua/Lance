@@ -49,7 +49,7 @@ import {
   restoreTrashEntry as restoreTrashRow,
   type TrashEntry,
 } from '../utils/trash';
-import { sanitizeRates, normalizeRates } from '../lib/currency';
+import { sanitizeRates, normalizeRates, defaultCurrency } from '../lib/currency';
 
 // Public URL of the license worker. Mirrors the value baked into the desktop
 // binary via LANCE_LICENSE_WORKER_URL; needed here because browser mode has no
@@ -1504,7 +1504,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
       // "Licensed".
       if (!validateLicenseKeyFormat(key)) return false;
 
-      const profile = get().profile;
+      // A fresh install can reach the license dialog before onboarding has
+      // written a profile. Requiring one here made every activation on that
+      // path report "Invalid license key" even for a valid key.
+      let profile = get().profile;
+      if (!profile) {
+        await get().saveProfile({ currency: defaultCurrency() } as UserProfile);
+        profile = get().profile;
+      }
       if (!profile) return false;
 
       const { isTauri } = await import('../utils/tauri');
