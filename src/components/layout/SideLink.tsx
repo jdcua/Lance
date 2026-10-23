@@ -39,7 +39,7 @@ export default function SideLink({
       data-tour={tour}
       title={title}
       className={({ isActive }) =>
-        `relative flex items-center gap-2.5 px-3 h-[38px] text-[13.5px] font-medium transition-colors duration-150 rounded-[10px] ${
+        `relative flex items-center gap-2.5 px-3 h-[44px] text-[13.5px] font-medium transition-colors duration-150 rounded-[10px] ${
           !expanded ? 'justify-center px-0' : ''
         } ${isActive ? 'text-[var(--sb-text-active)]' : 'text-[var(--sb-text)] hover:text-[var(--sb-text-active)] hover:bg-[var(--sb-bg-hover)]'} ${className}`
       }

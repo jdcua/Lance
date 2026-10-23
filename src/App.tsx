@@ -19,7 +19,7 @@ import CommandPalette from './components/ui/CommandPalette';
 import QuickTimeLogModal from './components/ui/QuickTimeLogModal';
 import OnboardingComfort from './components/ui/OnboardingComfort';
 import Walkthrough from './components/ui/Walkthrough';
-import SpotlightTour from './components/ui/SpotlightTour';
+import ProWelcome from './components/ui/ProWelcome';import SpotlightTour from './components/ui/SpotlightTour';
 import SplashScreen from './components/ui/SplashScreen';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import ImportModal from './components/ui/ImportModal';
@@ -84,10 +84,15 @@ export function idleOrTimeout(fn: () => void, ms = 400): () => void {
     fn();
   };
   const timer = setTimeout(once, ms);
-  const idle = requestIdleCallback(once);
+  // main.tsx polyfills this on first browser paint, but a jsdom render (or a
+  // browser without the API) never defines it, so fall back to the timer.
+  const idle =
+    typeof requestIdleCallback === 'function'
+      ? requestIdleCallback(once)
+      : null;
   return () => {
     clearTimeout(timer);
-    cancelIdleCallback(idle);
+    if (idle !== null) cancelIdleCallback(idle);
   };
 }
 
@@ -179,7 +184,7 @@ export default function App() {
   const [showSpotlight, setShowSpotlight] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeTrigger, setUpgradeTrigger] = useState<string | null>(null);
-
+  const [showProWelcome, setShowProWelcome] = useState(false);
   const openUpgradeModal = (triggerFeature?: string) => {
     setUpgradeTrigger(triggerFeature || null);
     setShowUpgradeModal(true);
@@ -194,6 +199,29 @@ export default function App() {
     return () => document.removeEventListener('lance:open-upgrade', handler);
   }, []);
 
+  // Premium onboarding: show once after a license is activated.
+  useEffect(() => {
+    const show = () => {
+      try {
+        if (localStorage.getItem('lance:pro-onboarding-completed') === 'true') return;
+        setShowProWelcome(true);
+      } catch {
+        /* private mode */
+      }
+    };
+    const handler = () => show();
+    document.addEventListener('lance:pro-activated', handler);
+    // Also react to a pending flag set during activation (survives reload).
+    try {
+      if (localStorage.getItem('lance:pro-onboarding-pending') === 'true') {
+        localStorage.removeItem('lance:pro-onboarding-pending');
+        show();
+      }
+    } catch {
+      /* private mode */
+    }
+    return () => document.removeEventListener('lance:pro-activated', handler);
+  }, []);
   // Time entries are logged through the global quick-log modal (the Time
   // screen has no new-entry trigger of its own). This wires the checklist
   // and the Cmd/Ctrl+N shortcut, which previously dispatched to nothing.
@@ -1284,6 +1312,18 @@ export default function App() {
           }}
         />
 
+        <ProWelcome
+          open={showProWelcome}
+          onClose={() => {
+            setShowProWelcome(false);
+            try {
+              localStorage.setItem('lance:pro-onboarding-completed', 'true');
+              localStorage.removeItem('lance:pro-onboarding-pending');
+            } catch {
+              /* private mode */
+            }
+          }}
+        />
         <SpotlightTour
           open={showSpotlight}
           onClose={() => {

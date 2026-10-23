@@ -681,6 +681,12 @@ export default function Settings() {
       if (success) {
         setLicenseSuccess(true);
         addToast('Lance is now licensed. All themes unlocked.', 'unlock');
+         try {
+           localStorage.setItem('lance:pro-onboarding-pending', 'true');
+         } catch {
+           /* private mode */
+         }
+         document.dispatchEvent(new CustomEvent('lance:pro-activated'));
         setUnlockedThemes(
           new Set(['default', 'studio', 'terminal', 'craft', 'motion', 'lens', 'scale']),
         );

@@ -24,7 +24,7 @@ export default function SyncChip({ syncing = false }: { syncing?: boolean }) {
       : tier === 'lifetime'
         ? 'Lifetime'
         : tier === 'trial'
-          ? `Trial · ${trialDaysRemaining(profile?.trial_started_at)}d`
+          ? `Trial · ${trialDaysRemaining(profile?.trial_started_at)}d left`
           : tier === 'expired'
             ? 'Expired'
             : 'Local';

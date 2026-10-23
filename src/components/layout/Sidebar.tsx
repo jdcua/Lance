@@ -20,6 +20,7 @@ import {
   Package,
   Camera,
   Monitor,
+            Menu,
   Clapperboard,
   Code2,
   Palette,
@@ -87,17 +88,30 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('lance:sidebar-collapsed') === 'true');
   const [hovered, setHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  const [mobileOpen, setMobileOpen] = useState(false);
   // Progressive disclosure: new users see essentials; the sidebar grows with
   // their business. One-way data/visit unlocks + a manual "show all" toggle.
   const [showAll, setShowAll] = useState(() => localStorage.getItem(SIDEBAR_FULL_KEY) === 'true');
   const [visited, setVisited] = useState<Set<string>>(loadVisited);
-  const isExpanded = (!collapsed || hovered) && !isMobile;
+  const isExpanded = (mobileOpen && isMobile) || ((!collapsed || hovered) && !isMobile);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
+  useEffect(() => {
+    if (!isMobile) setMobileOpen(false);
+  }, [isMobile]);
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMobileOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mobileOpen]);
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
   const { isLicensed, proposals, projects, invoices, allAttachments, pendingFollowUps, profile, clients, contracts, timeEntries, expenses, getActiveTier } = useStore((s) => ({
     isLicensed: s.isLicensed,
     proposals: s.proposals,
@@ -210,11 +224,33 @@ export default function Sidebar() {
   const hiddenMoreCount =
     (showImport ? 0 : 1) + (showPipeline ? 0 : 1) + (showFollowUps ? 0 : 1) + (showAchievements ? 0 : 1) + (showArchetype ? 0 : 1);
   const hiddenTotal = sidebarItems.hiddenCount + hiddenMoreCount;
+  const asideClassName = isMobile
+    ? `fixed inset-y-0 left-0 z-50 w-64 h-full flex flex-col bg-[var(--sb-bg)] border-r border-[var(--sb-border)] transition-transform duration-200 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`
+    : `${isExpanded ? 'w-[248px]' : 'w-[60px]'} h-full flex flex-col bg-[var(--sb-bg)] border-r border-[var(--sb-border)] flex-shrink-0 transition-[width] duration-200`;
 
   return (
+    <>
+      {isMobile && (
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className="fixed left-3 top-3 z-[60] flex h-11 w-11 items-center justify-center rounded-[10px] bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm md:hidden"
+          aria-label="Open navigation menu"
+        >
+          <Menu size={20} />
+        </button>
+      )}
+      {isMobile && mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+        />
+      )}
     <aside
       aria-label="Primary navigation"
-      className={`${isExpanded ? 'w-[248px]' : 'w-[60px]'} h-full flex flex-col bg-[var(--sb-bg)] border-r border-[var(--sb-border)] flex-shrink-0 transition-[width] duration-200`}
+      className={asideClassName}
+      onClick={() => { if (isMobile) setMobileOpen(false); }}
       onMouseEnter={() => collapsed && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -403,7 +439,7 @@ export default function Sidebar() {
         ) : null}
       </nav>
 
-      <div className="border-t border-[var(--sb-border)] p-2">
+      <div className="border-t border-[var(--sb-border)] px-2 pt-2 pb-3">
         <SideLink
           to="/settings"
           title="Settings"
@@ -436,7 +472,7 @@ export default function Sidebar() {
               </span>
               <Settings size={13} className="text-[var(--sb-label)] flex-shrink-0" />
             </button>
-            <p className="text-[10px] text-[var(--sb-label)] leading-relaxed px-2.5 pt-2">
+            <p className="text-[10px] text-[var(--sb-text)] leading-relaxed px-2.5 pt-2 pb-2">
               <span className="font-medium">{getShortcutModifierLabel()}1</span>-8 navigate &middot; <span className="font-medium">{getShortcutModifierLabel()}N</span> new
             </p>
           </div>
@@ -456,5 +492,6 @@ export default function Sidebar() {
         )}
       </div>
     </aside>
+    </>
   );
 }

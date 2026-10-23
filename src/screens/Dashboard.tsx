@@ -383,9 +383,17 @@ export default function Dashboard() {
             <Button
               size="sm"
               variant="primary"
-              onClick={() => { navigate('/invoices'); setTimeout(() => document.dispatchEvent(new CustomEvent('lance:add-invoice')), 350); }}
+              onClick={() => {
+                if (clients.length === 0) {
+                  navigate('/clients');
+                  setTimeout(() => document.dispatchEvent(new CustomEvent('lance:add-client')), 350);
+                } else {
+                  navigate('/invoices');
+                  setTimeout(() => document.dispatchEvent(new CustomEvent('lance:add-invoice')), 350);
+                }
+              }}
             >
-              <Plus size={13} /> New invoice
+              <Plus size={13} /> {clients.length === 0 ? 'New client' : 'New invoice'}
             </Button>
           </Magnetic>
         </div>
