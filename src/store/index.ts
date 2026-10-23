@@ -161,14 +161,16 @@ function isTauriRuntime(): boolean {
  */
 async function validateLicenseOnline(
   key: string,
-): Promise<{ valid: boolean; tier?: string; message?: string } | null> {
+): Promise<{ valid: boolean; tier?: string; expires_at?: string | null; message?: string } | null> {
   try {
     const { isTauri } = await import('../utils/tauri');
     if (isTauri()) {
-      return await invoke<{ valid: boolean; tier: string; message: string }>(
-        'validate_license_online',
-        { key },
-      );
+      return await invoke<{
+        valid: boolean;
+        tier: string;
+        expires_at: string | null;
+        message: string;
+      }>('validate_license_online', { key });
     }
     const res = await fetch(`${licenseWorkerUrl()}/validate`, {
       method: 'POST',
@@ -1544,13 +1546,16 @@ export const useStore = create<UnifiedStore>((set, get) => {
       }
 
       const now = new Date().toISOString();
+      // This object is sent over the Tauri IPC boundary to the Rust
+      // UpsertProfilePayload (which has deny_unknown_fields). UI-only flags
+      // like isLicensed must stay out of it or the whole activation fails.
       const updated = {
         ...profile,
         license_key: key,
         licensed_at: now,
         license_tier: tier,
+        license_expires_at: online?.valid ? (online.expires_at ?? undefined) : profile.license_expires_at,
         license_validated_at: now,
-        isLicensed: true,
       };
       await invoke('upsert_user_profile', { payload: updated });
       set({ profile: updated, isLicensed: true });
@@ -1682,7 +1687,6 @@ export const useStore = create<UnifiedStore>((set, get) => {
             license_expires_at: result.expires_at,
             license_validated_at: new Date().toISOString(),
             license_grace_until: undefined,
-            isLicensed: true,
           };
           await invoke('upsert_user_profile', { payload: updated });
           set({ profile: updated, isLicensed: true });
@@ -1743,7 +1747,6 @@ export const useStore = create<UnifiedStore>((set, get) => {
             ...current,
             license_tier: 'free' as LicenseTier,
             license_grace_until: undefined,
-            isLicensed: false,
           };
           await invoke('upsert_user_profile', { payload: updated });
           set({ profile: updated, isLicensed: false });
