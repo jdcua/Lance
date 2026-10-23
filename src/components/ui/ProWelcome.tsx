@@ -72,6 +72,9 @@ export default function ProWelcome({ open, onClose }: { open: boolean; onClose: 
               {PRO_FEATURES[step].body}
             </p>
           </div>
+          <p className="text-xs text-[var(--text-muted)] text-center mt-3">
+            Plus every future Pro feature and detail, unlocked while your license is active.
+          </p>
           <div className="flex items-center justify-center gap-1.5 mt-3">
             {PRO_FEATURES.map((_, i) => (
               <span
