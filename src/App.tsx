@@ -1224,10 +1224,17 @@ export default function App() {
             tabIndex={0}
             id="main-content"
             aria-label="Main content"
-            className={`flex-1 overflow-y-auto ${prefs.glow ? 'bg-[radial-gradient(70%_380px_at_50%_-120px,var(--accent-bg),transparent)]' : ''}`}
+            className="flex-1 overflow-y-auto"
           >
             <Outlet key={location.pathname} />
           </main>
+          <div role="contentinfo" aria-label="Status" className="h-[28px] flex items-center justify-between px-4 border-t border-[var(--border-color)] bg-[var(--bg-card)] text-[10px] text-[var(--text-tertiary)] flex-shrink-0 print:hidden">
+            <span className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+              Lance · your business, on your machine
+            </span>
+            <span className="hidden md:inline">⌘K search · ⌘N new · ⌘1–8 navigate</span>
+          </div>
         </div>
 
         {/* Splash screen · shown on launch when unlicensed. Suppressed while
@@ -1611,7 +1618,7 @@ function OnboardingFlow({
             <div
               key={label}
               aria-hidden="true"
-              className={`w-2 h-2 rounded-full transition-all ${
+              className={`w-2 h-2 rounded-full transition-colors ${
                 i + 1 <= clampedStep ? 'bg-[var(--accent)]' : 'bg-[var(--border-color)]'
               }`}
             />
@@ -2009,7 +2016,6 @@ function OnboardingFlow({
             </div>
             <div className="p-3 rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-card)] space-y-3">
               <div className="flex items-start gap-2.5">
-                <span className="text-lg flex-shrink-0">🗂</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-[var(--text-primary)]">
                     Start with sample data?
