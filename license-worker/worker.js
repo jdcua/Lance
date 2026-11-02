@@ -544,6 +544,43 @@ async function handleAdminFulfill(request, env) {  const auth = request.headers.
   return Response.json({ ok: true, fulfilled, email_failed: emailFailed, still_pending: stillPending });
 }
 
+async function handleCheckout(request, env) {
+  if (!env.PADDLE_API_KEY) {
+    return Response.json({ error: 'server misconfigured' }, { status: 500 });
+  }
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: 'bad payload' }, { status: 400 });
+  }
+  const priceId = body?.price_id;
+  if (!priceId || !PRICE_TIERS[priceId]) {
+    return Response.json({ error: 'unknown price' }, { status: 400 });
+  }
+  const res = await fetch('https://api.paddle.com/transactions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.PADDLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      items: [{ price_id: priceId, quantity: 1 }],
+      collection_mode: 'automatic',
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    return Response.json({ error: 'paddle error', detail: text.slice(0, 500) }, { status: 502 });
+  }
+  const data = await res.json();
+  const url = data?.data?.checkout?.url;
+  if (!url) {
+    return Response.json({ error: 'no checkout url' }, { status: 502 });
+  }
+  return Response.json({ url });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -560,7 +597,7 @@ export default {
     // is deliberately excluded: Paddle is a server-to-server caller and does
     // not preflight, so answering OPTIONS there would only widen the surface.
     if (request.method === 'OPTIONS') {
-      if (url.pathname === '/validate' || url.pathname === '/admin/kv' || url.pathname === '/admin/fulfill') {
+      if (url.pathname === '/validate' || url.pathname === '/checkout' || url.pathname === '/admin/kv' || url.pathname === '/admin/fulfill') {
         return new Response(null, {
           status: 204,
           headers: {
@@ -576,6 +613,11 @@ export default {
 
     if (url.pathname === '/validate' && (request.method === 'GET' || request.method === 'POST')) {
       const res = await handleValidate(url, env, request);
+      const body = await res.text();
+      return new Response(body, { status: res.status, headers: { ...headers, 'Content-Type': 'application/json' } });
+    }
+    if (url.pathname === '/checkout' && request.method === 'POST') {
+      const res = await handleCheckout(request, env);
       const body = await res.text();
       return new Response(body, { status: res.status, headers: { ...headers, 'Content-Type': 'application/json' } });
     }
