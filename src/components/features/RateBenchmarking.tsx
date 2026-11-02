@@ -152,7 +152,7 @@ export default function RateBenchmarking() {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
             Rate Benchmarking
           </h4>
         </div>
@@ -168,7 +168,7 @@ export default function RateBenchmarking() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Per-Word Rate
         </h4>
       </div>
@@ -181,19 +181,19 @@ export default function RateBenchmarking() {
         <div className="space-y-2">
           <div className="grid grid-cols-2 gap-2">
             <div className="px-3 py-2.5 bg-[var(--bg-secondary)] rounded-[6px]">
-              <div className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide">Latest</div>
+              <div className="text-[10px] text-[var(--text-tertiary)]">Latest</div>
               <div className="flex items-center gap-1 mt-1">
                 <DollarSign size={14} className="text-[var(--text-primary)]" />
-                <span className="text-lg font-bold text-[var(--text-primary)] tabular-nums">
+                <span className="text-lg font-semibold text-[var(--text-primary)] tabular-nums">
                   {formatRate(stats.latest)}
                 </span>
               </div>
             </div>
             <div className="px-3 py-2.5 bg-[var(--bg-secondary)] rounded-[6px]">
-              <div className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide">Trend</div>
+              <div className="text-[10px] text-[var(--text-tertiary)]">Trend</div>
               <div className="flex items-center gap-1.5 mt-1">
                 {trendIcon(stats.trend)}
-                <span className={`text-sm font-bold tabular-nums ${trendColor(stats.trend)}`}>
+                <span className={`text-sm font-semibold tabular-nums ${trendColor(stats.trend)}`}>
                   {stats.trend === 'up' ? 'Rising' : stats.trend === 'down' ? 'Falling' : 'Stable'}
                 </span>
               </div>
@@ -202,29 +202,29 @@ export default function RateBenchmarking() {
 
           <div className="grid grid-cols-3 gap-2">
             <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px]">
-              <div className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide">
+              <div className="text-[10px] text-[var(--text-tertiary)]">
                 3-Month Avg
               </div>
-              <div className="text-sm font-bold text-[var(--text-primary)] tabular-nums mt-0.5">
+              <div className="text-sm font-semibold text-[var(--text-primary)] tabular-nums mt-0.5">
                 {stats.threeMonthAvg != null ? formatRate(stats.threeMonthAvg) : '--'}
               </div>
             </div>
             <div className="px-3 py-2 bg-[#16A34A]/10 rounded-[6px]">
-              <div className="text-[10px] text-[#16A34A]/70 uppercase tracking-wide">Highest</div>
-              <div className="text-sm font-bold text-[#16A34A] tabular-nums mt-0.5">
+              <div className="text-[10px] text-[#16A34A]/70">Highest</div>
+              <div className="text-sm font-semibold text-[#16A34A] tabular-nums mt-0.5">
                 {stats.highest != null ? formatRate(stats.highest) : '--'}
               </div>
             </div>
             <div className="px-3 py-2 bg-[#DC2626]/10 rounded-[6px]">
-              <div className="text-[10px] text-[#DC2626]/70 uppercase tracking-wide">Lowest</div>
-              <div className="text-sm font-bold text-[#DC2626] tabular-nums mt-0.5">
+              <div className="text-[10px] text-[#DC2626]/70">Lowest</div>
+              <div className="text-sm font-semibold text-[#DC2626] tabular-nums mt-0.5">
                 {stats.lowest != null ? formatRate(stats.lowest) : '--'}
               </div>
             </div>
           </div>
 
           <div className="pt-1">
-            <h5 className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide mb-1">
+            <h5 className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1">
               History ({stats.allPairs.length})
             </h5>
             <div className="space-y-1 max-h-48 overflow-y-auto">

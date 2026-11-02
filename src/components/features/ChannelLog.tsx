@@ -72,7 +72,7 @@ export default function ChannelLog({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Channels</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Channels</h4>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {[1, 2, 3, 4].map(i => <div key={i} className="h-6 w-16 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
@@ -84,7 +84,7 @@ export default function ChannelLog({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Channels ({activeChannels.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Channels ({activeChannels.length})</h4>
       </div>
 
       <div className="flex flex-wrap gap-1.5">

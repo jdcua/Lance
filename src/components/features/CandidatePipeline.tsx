@@ -163,7 +163,7 @@ export default function CandidatePipeline({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
             Pipeline
           </h4>
         </div>
@@ -187,7 +187,7 @@ export default function CandidatePipeline({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Pipeline ({totalCount})
         </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
@@ -263,7 +263,7 @@ export default function CandidatePipeline({ clientId }: { clientId: string }) {
               <div key={col.key} className="space-y-1">
                 <div className="flex items-center gap-1.5 mb-1">
                   <div className={`w-2 h-2 rounded-full ${columnColors[col.key] || ''}`} />
-                  <span className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">
+                  <span className="text-[10px] font-semibold text-[var(--text-tertiary)]">
                     {col.label}
                   </span>
                   <span className="text-[10px] text-[var(--text-tertiary)]">{items.length}</span>

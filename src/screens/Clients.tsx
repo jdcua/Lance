@@ -591,7 +591,7 @@ export default function Clients() {
       {/* Left panel · client list */}
       <div className="w-full md:w-[240px] border-b md:border-b-0 md:border-r border-[var(--border-color)] bg-[var(--bg-card)] flex-shrink-0 flex flex-col max-h-[38vh] md:max-h-none">
         <div className="px-4 py-3 border-b border-[var(--border-color)] space-y-2">
-          <h2 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Clients</h2>
+          <h2 className="text-xs font-semibold text-[var(--text-secondary)]">Clients</h2>
           <LoadError error={clientsError} onRetry={() => loadClients()} />
           <div className="relative">
             <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
@@ -736,7 +736,7 @@ export default function Clients() {
               {activeTab === 'overview' && (
                 <>
                   <Card className="mb-6">
-                    <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-3">Overview</h3>
+                    <h3 className="text-xs font-semibold text-[var(--text-secondary)] mb-3">Overview</h3>
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                       <div>
                         <div className="flex items-center gap-1.5 mb-0.5">
@@ -815,7 +815,7 @@ export default function Clients() {
 
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Communication log</h3>
+                      <h3 className="text-xs font-semibold text-[var(--text-secondary)]">Communication log</h3>
                       <button
                         onClick={() => { setShowLogForm(!showLogForm); setLogForm({ type: 'note', date: todayLocalISO(), summary: '' }); }}
                         className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline flex items-center gap-1"
@@ -973,7 +973,7 @@ export default function Clients() {
                   {/* Templates */}
                   {metricTemplates.length > 0 && metricDefs.filter((d) => d.client_id === selectedId).length === 0 && (
                     <Card>
-                      <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-3">
+                      <h3 className="text-xs font-semibold text-[var(--text-secondary)] mb-3">
                         Apply a template
                       </h3>
                       <div className="flex flex-wrap gap-2">

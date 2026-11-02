@@ -148,7 +148,7 @@ export default function SyncLicenseLog({ projectId }: { projectId?: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
             Sync Licenses
           </h4>
         </div>
@@ -164,7 +164,7 @@ export default function SyncLicenseLog({ projectId }: { projectId?: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Sync Licenses ({licenses.length})
         </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
@@ -272,7 +272,7 @@ export default function SyncLicenseLog({ projectId }: { projectId?: string }) {
         <div className="space-y-2">
           {sortedGroups.map((group) => (
             <div key={group} className="space-y-1">
-              <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase">
+              <span className="text-[10px] font-semibold text-[var(--text-secondary)]">
                 {group}
               </span>
               {grouped[group].map((l) => (

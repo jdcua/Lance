@@ -134,7 +134,7 @@ export default function DeliverableFormatLog({ projectId }: { projectId: string 
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
             Format Deliverables
           </h4>
         </div>
@@ -150,7 +150,7 @@ export default function DeliverableFormatLog({ projectId }: { projectId: string 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Format Deliverables ({items.length})
           {deliveredCount > 0 && (
             <span className="ml-1 text-[var(--accent-ink,var(--accent))]">

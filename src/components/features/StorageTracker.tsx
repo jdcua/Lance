@@ -65,7 +65,7 @@ export default function StorageTracker({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Storage</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Storage</h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Log Storage
         </Button>
@@ -82,7 +82,7 @@ export default function StorageTracker({ projectId }: { projectId: string }) {
             </span>
           </div>
           <div className="h-2 w-full bg-[var(--bg-card)] rounded-full overflow-hidden">
-            <div className="h-full bg-[var(--accent)] rounded-full transition-all" style={{ width: `${ratioPercent}%` }} />
+            <div className="h-full bg-[var(--accent)] rounded-full transition-colors" style={{ width: `${ratioPercent}%` }} />
           </div>
         </div>
       )}

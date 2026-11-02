@@ -136,7 +136,7 @@ export default function ABVariantLog({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
             A/B Variants
           </h4>
         </div>
@@ -152,7 +152,7 @@ export default function ABVariantLog({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           A/B Variants ({variants.length})
         </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
@@ -227,7 +227,7 @@ export default function ABVariantLog({ projectId }: { projectId: string }) {
         <div className="space-y-3">
           {Object.entries(groupedTests).map(([testName, testVariants]) => (
             <div key={testName} className="space-y-1">
-              <div className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase px-1">
+              <div className="text-[10px] font-semibold text-[var(--text-tertiary)] px-1">
                 {testName} ({testVariants.length})
               </div>
               {testVariants.map((v) => (

@@ -102,7 +102,7 @@ export default function PlatformLog({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Platforms</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Platforms</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
@@ -114,11 +114,11 @@ export default function PlatformLog({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Platforms</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Platforms</h4>
       </div>
 
       <div>
-        <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide mb-1.5">Engine</p>
+        <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1.5">Engine</p>
         <div className="flex flex-wrap gap-1.5">
           {ENGINES.map(engine => {
             const selected = engines.includes(engine);
@@ -152,7 +152,7 @@ export default function PlatformLog({ projectId }: { projectId: string }) {
       </div>
 
       <div>
-        <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide mb-1.5">Target Platform</p>
+        <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1.5">Target Platform</p>
         <div className="flex flex-wrap gap-1.5">
           {TARGET_PLATFORMS.map(platform => {
             const selected = platforms.includes(platform);

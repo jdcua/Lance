@@ -24,8 +24,7 @@ export interface Prefs {
   contrast: ContrastPref;
   /** root font scaling: 100/112/125% */
   textScale: TextScalePref;
-  /** soft accent glow behind app content */
-  glow: boolean;
+
   /** trend sparklines under KPI cards */
   sparklines: boolean;
   /** count badges on sidebar nav */
@@ -43,7 +42,7 @@ export const DEFAULT_PREFS: Prefs = {
   intensity: INTENSITY_DEFAULT,
   contrast: 'auto',
   textScale: '100',
-  glow: true,
+
   sparklines: true,
   badges: true,
   digest: true,

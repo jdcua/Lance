@@ -36,7 +36,7 @@ function LockedPanel({
           PRO
         </span>
       </div>
-      <p className="text-[26px] font-bold text-[var(--text-primary)]" style={{ fontFamily: "'Syne', sans-serif" }}>
+      <p className="text-[26px] font-semibold text-[var(--text-primary)]" style={{ fontFamily: "'Syne', sans-serif" }}>
         {headline}
       </p>
       <p className="text-xs text-[var(--text-secondary)] mt-1 mb-4 leading-relaxed">{blurb}</p>
@@ -167,7 +167,7 @@ export default function ProInsights() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <Card>
           <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">3-Month Forecast</h3>
-          <p className="text-[26px] font-bold text-[var(--text-primary)]" style={{ fontFamily: "'Syne', sans-serif" }}>
+          <p className="text-[26px] font-semibold text-[var(--text-primary)]" style={{ fontFamily: "'Syne', sans-serif" }}>
             {formatCurrency(Math.round(forecast.total), currency)}
           </p>
           <div className="space-y-2.5 mt-4">
@@ -199,7 +199,7 @@ export default function ProInsights() {
             </p>
           ) : (
             <>
-              <p className="text-[26px] font-bold text-[var(--text-primary)]" style={{ fontFamily: "'Syne', sans-serif" }}>
+              <p className="text-[26px] font-semibold text-[var(--text-primary)]" style={{ fontFamily: "'Syne', sans-serif" }}>
                 {formatCurrency(Math.round(rate.effective * 100) / 100, currency)}/h
               </p>
               {rate.stated !== null && (

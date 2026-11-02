@@ -38,21 +38,21 @@ export default function MetricCard({ label, value, subtext, trend, color = 'gray
   const showDelta = delta ?? '';
 
   return (
-    <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg p-5 shadow-[var(--card-shadow)] transition-all duration-200 hover:border-[var(--text-tertiary)] hover:shadow-[var(--card-hover-shadow)] min-w-0 group" title={tooltip}>
+    <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg p-5 shadow-[var(--card-shadow)] transition-colors duration-200 hover:border-[var(--text-tertiary)] hover:shadow-[var(--card-hover-shadow)] min-w-0 group" title={tooltip}>
       <div className="flex items-center gap-2 mb-2.5 min-w-0">
         {icon && (
           <span
-            className="w-7 h-7 rounded-[8px] grid place-items-center flex-shrink-0 transition-transform duration-200 group-hover:scale-105"
+            className="w-7 h-7 rounded-[8px] grid place-items-center flex-shrink-0"
             style={{ background: tintBg[color], color: tintFg[color] }}
           >
             {icon}
           </span>
         )}
-        <p className="text-[11px] max-sm:text-[10px] font-medium text-[var(--text-secondary)] uppercase tracking-[0.6px] break-words flex-1 min-w-0">{label}</p>
+        <p className="text-[11px] max-sm:text-[10px] font-medium text-[var(--text-secondary)] break-words flex-1 min-w-0">{label}</p>
         {showDelta && (
           <span
-            className="text-[11px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 tnum"
-            style={{ background: tintBg[trend === 'down' ? 'red' : color], color: tintFg[trend === 'down' ? 'red' : color] }}
+            className="text-[11px] font-semibold flex-shrink-0 tnum"
+            style={{ color: tintFg[trend === 'down' ? 'red' : color] }}
           >
             {showDelta}
           </span>

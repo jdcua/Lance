@@ -127,7 +127,7 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Mood Board</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Mood Board</h4>
         </div>
         <div className="grid grid-cols-3 gap-2">
           {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-24 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
@@ -139,7 +139,7 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Mood Board ({items.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Mood Board ({items.length})</h4>
         <Button variant="ghost" size="sm" onClick={() => { setShowForm(!showForm); setAddMode('url'); }}>
           <Plus size={12} /> Add Item
         </Button>

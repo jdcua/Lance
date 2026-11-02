@@ -143,7 +143,7 @@ export default function TaskLog({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Tasks</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Tasks</h4>
         </div>
         <div className="flex gap-1.5">
           {[1, 2, 3, 4].map((i) => (
@@ -162,7 +162,7 @@ export default function TaskLog({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Tasks ({tasks.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Tasks ({tasks.length})</h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Log Task
         </Button>

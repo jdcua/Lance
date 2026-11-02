@@ -116,7 +116,7 @@ export default function BiomarkerTracker({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Biomarkers</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Biomarkers</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -130,7 +130,7 @@ export default function BiomarkerTracker({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Biomarkers ({biomarkers.length})
         </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>

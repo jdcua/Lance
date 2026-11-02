@@ -12,7 +12,7 @@ export default function TestModeBanner() {
     <div
       role="alert"
       aria-label="Test mode active"
-      className="px-6 py-1.5 text-center text-xs font-bold tracking-widest uppercase text-white print:hidden"
+      className="px-6 py-1.5 text-center text-xs font-semibold text-white print:hidden"
       style={{
         background: 'repeating-linear-gradient(-45deg, #7c2d12 0 12px, #111827 12px 24px)',
       }}

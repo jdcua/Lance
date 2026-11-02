@@ -125,7 +125,7 @@ export default function ProductSpecBuilder({ projectId }: { projectId: string })
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
             Product Specs
           </h4>
         </div>
@@ -141,7 +141,7 @@ export default function ProductSpecBuilder({ projectId }: { projectId: string })
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Product Specs ({specs.length})
         </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
@@ -245,7 +245,7 @@ export default function ProductSpecBuilder({ projectId }: { projectId: string })
                 <div className="mt-1 px-3 py-2 bg-[var(--bg-secondary)]/50 rounded-[6px] text-xs space-y-2">
                   {spec.problem && (
                     <div>
-                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase">
+                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)]">
                         Problem
                       </p>
                       <p className="text-[var(--text-secondary)]">{spec.problem}</p>
@@ -253,7 +253,7 @@ export default function ProductSpecBuilder({ projectId }: { projectId: string })
                   )}
                   {spec.solution && (
                     <div>
-                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase">
+                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)]">
                         Solution
                       </p>
                       <p className="text-[var(--text-secondary)]">{spec.solution}</p>
@@ -261,7 +261,7 @@ export default function ProductSpecBuilder({ projectId }: { projectId: string })
                   )}
                   {spec.success_metrics && (
                     <div>
-                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase">
+                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)]">
                         Success Metrics
                       </p>
                       <p className="text-[var(--text-secondary)]">{spec.success_metrics}</p>

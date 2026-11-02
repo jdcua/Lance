@@ -185,7 +185,7 @@ export default function FeedbackLog({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
             Feedback
           </h4>
         </div>
@@ -205,7 +205,7 @@ export default function FeedbackLog({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Feedback ({filtered.length})
         </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
@@ -342,7 +342,7 @@ export default function FeedbackLog({ clientId }: { clientId: string }) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <Icon size={11} className="text-[var(--text-tertiary)]" />
-                    <span className="text-[10px] font-medium text-[var(--text-tertiary)] uppercase">
+                    <span className="text-[10px] font-medium text-[var(--text-tertiary)]">
                       {MEDIUM_LABELS[f.medium]}
                     </span>
                     <span className="text-[10px] text-[var(--text-tertiary)]">

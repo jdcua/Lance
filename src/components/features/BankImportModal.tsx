@@ -201,7 +201,7 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
           .pendingFollowUps.find((f) => f.entity_type === 'invoice' && f.entity_id === inv.id);
         if (fu) await updateFollowUpStatus(fu.id, 'paid', 'auto-resolved').catch(() => {});
         const level = celebrationLevel('invoice-paid');
-        if (level === 'full') addToast(`🎉 ${celebrationToast('invoice-paid')}`, 'success');
+        if (level === 'full') addToast(celebrationToast('invoice-paid'), 'success');
         else if (level === 'reduced') addToast(celebrationToast('invoice-paid'), 'success');
         recordCelebration('invoice-paid');
       }
@@ -368,7 +368,7 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
                       )}
                       {done && (
                         <span className="text-[11px] font-medium text-[var(--accent-ink,var(--accent))] flex-shrink-0">
-                          Recorded ✓
+                          Recorded
                         </span>
                       )}
                     </div>

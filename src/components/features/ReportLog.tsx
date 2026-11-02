@@ -83,7 +83,7 @@ export default function ReportLog({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Reports</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Reports</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
@@ -95,7 +95,7 @@ export default function ReportLog({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Reports ({reports.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Reports ({reports.length})</h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Add Report
         </Button>
@@ -143,25 +143,25 @@ export default function ReportLog({ clientId }: { clientId: string }) {
                   <div className="px-3 pb-3 pt-1 space-y-2 border-t border-[var(--border-color)]">
                     {r.traffic_notes && (
                       <div>
-                        <p className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase mb-0.5">Traffic</p>
+                        <p className="text-[10px] font-semibold text-[var(--text-secondary)] mb-0.5">Traffic</p>
                         <p className="text-[var(--text-primary)]">{r.traffic_notes}</p>
                       </div>
                     )}
                     {r.ranking_notes && (
                       <div>
-                        <p className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase mb-0.5">Rankings</p>
+                        <p className="text-[10px] font-semibold text-[var(--text-secondary)] mb-0.5">Rankings</p>
                         <p className="text-[var(--text-primary)]">{r.ranking_notes}</p>
                       </div>
                     )}
                     {r.conversion_notes && (
                       <div>
-                        <p className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase mb-0.5">Conversions</p>
+                        <p className="text-[10px] font-semibold text-[var(--text-secondary)] mb-0.5">Conversions</p>
                         <p className="text-[var(--text-primary)]">{r.conversion_notes}</p>
                       </div>
                     )}
                     {r.summary && (
                       <div>
-                        <p className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase mb-0.5">Summary</p>
+                        <p className="text-[10px] font-semibold text-[var(--text-secondary)] mb-0.5">Summary</p>
                         <p className="text-[var(--text-primary)]">{r.summary}</p>
                       </div>
                     )}

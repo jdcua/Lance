@@ -163,7 +163,7 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
               onClick={() => handleSelect(archetype.id)}
               onMouseEnter={() => setExpanded(archetype.id)}
               onMouseLeave={() => setExpanded(null)}
-              className={`relative text-left p-4 rounded-[12px] border transition-all duration-200 ${
+              className={`relative text-left p-4 rounded-[12px] border transition-colors duration-200 ${
                 isSelected
                   ? 'bg-[var(--accent-bg)] ring-2 ring-[var(--accent)] border-[var(--accent)]'
                   : isCustom
@@ -210,7 +210,7 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
                     {archetype.psychProfile}
                   </p>
                   <div className="space-y-1">
-                    <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">Key Features</p>
+                    <p className="text-[10px] font-semibold text-[var(--text-tertiary)]">Key Features</p>
                     {archetype.archetypeFeatures.slice(0, 3).map((f) => (
                       <div key={f.id} className="flex items-center gap-1.5">
                         <Sparkles size={10} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0" />

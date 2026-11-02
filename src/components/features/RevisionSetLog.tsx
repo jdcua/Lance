@@ -82,7 +82,7 @@ export default function RevisionSetLog({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Revision Sets</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Revision Sets</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
@@ -94,7 +94,7 @@ export default function RevisionSetLog({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Revision Sets ({sets.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Revision Sets ({sets.length})</h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Add Set
         </Button>
@@ -126,7 +126,7 @@ export default function RevisionSetLog({ projectId }: { projectId: string }) {
             <div key={s.id} className="flex items-start justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
               <div className="flex-1 min-w-0 space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1 text-[var(--accent-ink,var(--accent))] font-bold text-sm">
+                  <span className="flex items-center gap-1 text-[var(--accent-ink,var(--accent))] font-semibold text-sm">
                     <Hash size={12} />
                     {s.set_number}
                   </span>

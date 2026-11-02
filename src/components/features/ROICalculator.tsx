@@ -21,7 +21,7 @@ export default function ROICalculator() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">ROI Calculator</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">ROI Calculator</h4>
       </div>
 
       <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-3">
@@ -40,13 +40,13 @@ export default function ROICalculator() {
           <div className="grid grid-cols-2 gap-2">
             <div className="p-2 bg-[var(--bg-card)] rounded-[6px] text-center">
               <p className="text-[10px] text-[var(--text-tertiary)]">ROI %</p>
-              <p className={`text-sm font-bold tabular-nums ${roiPct > 0 ? 'text-[#2ECC71]' : roiPct < 0 ? 'text-[#E74C3C]' : 'text-[var(--text-primary)]'}`}>
+              <p className={`text-sm font-semibold tabular-nums ${roiPct > 0 ? 'text-[#2ECC71]' : roiPct < 0 ? 'text-[#E74C3C]' : 'text-[var(--text-primary)]'}`}>
                 {roiPct >= 0 ? '+' : ''}{roiPct.toFixed(1)}%
               </p>
             </div>
             <div className="p-2 bg-[var(--bg-card)] rounded-[6px] text-center">
               <p className="text-[10px] text-[var(--text-tertiary)]">ROI Ratio</p>
-              <p className="text-sm font-bold tabular-nums text-[var(--text-primary)]">
+              <p className="text-sm font-semibold tabular-nums text-[var(--text-primary)]">
                 {roiRatio.toFixed(2)}x
               </p>
             </div>

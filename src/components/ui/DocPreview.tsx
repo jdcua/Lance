@@ -42,12 +42,12 @@ export default function DocPreview({
   return (
     <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/40 overflow-hidden">
       <div className="px-3 py-1.5 border-b border-[var(--border-color)]">
-        <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.6px]">
+        <p className="text-[10px] font-semibold text-[var(--text-tertiary)]">
           Live preview
         </p>
       </div>
       <div className="p-5 bg-[var(--bg-card)]">
-        <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.6px] mb-1">
+        <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1">
           {eyebrow}
         </p>
         <h3 className="text-base font-semibold text-[var(--text-primary)] mb-3 break-words">

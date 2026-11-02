@@ -44,7 +44,7 @@ export default function ColumnMapper({
     <div className="space-y-3">
       {/* Mapping summary */}
       <div className="flex items-center justify-between px-1">
-        <span className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide font-medium">
+        <span className="text-[10px] text-[var(--text-tertiary)] font-medium">
           Column Mapping
         </span>
         <span className="text-[10px] text-[var(--text-tertiary)]">
@@ -61,9 +61,9 @@ export default function ColumnMapper({
       <div className="border border-[var(--border-color)] rounded-[8px] overflow-hidden">
         {/* Header row */}
         <div className="grid grid-cols-[1fr_32px_1fr] items-center px-3 py-2 bg-[var(--bg-secondary)] border-b border-[var(--border-color)]">
-          <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Source Column</span>
+          <span className="text-[10px] font-semibold text-[var(--text-secondary)]">Source Column</span>
           <span />
-          <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Lance Field</span>
+          <span className="text-[10px] font-semibold text-[var(--text-secondary)]">Lance Field</span>
         </div>
 
         {headers.map((header, idx) => {
@@ -137,7 +137,7 @@ export default function ColumnMapper({
       {/* Preview table */}
       {previewRows && previewRows.length > 0 && mappedCount > 0 && (
         <div className="mt-3">
-          <span className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide font-medium mb-2 block">
+          <span className="text-[10px] text-[var(--text-tertiary)] font-medium mb-2 block">
             Preview (first {Math.min(previewRows.length, 5)} rows)
           </span>
           <div className="border border-[var(--border-color)] rounded-[8px] overflow-x-auto">
@@ -147,7 +147,7 @@ export default function ColumnMapper({
                   {Object.entries(columnMapping)
                     .filter(([, field]) => field)
                     .map(([header, field]) => (
-                      <th key={header} className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--accent-ink,var(--accent))] uppercase tracking-wide whitespace-nowrap border-b border-[var(--border-color)]">
+                      <th key={header} className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--accent-ink,var(--accent))] whitespace-nowrap border-b border-[var(--border-color)]">
                         {field.replace(/_/g, ' ')}
                       </th>
                     ))}

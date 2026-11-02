@@ -100,7 +100,7 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Component Count</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Component Count</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
@@ -112,7 +112,7 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Components ({items.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Components ({items.length})</h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Add Component
         </Button>
@@ -123,7 +123,7 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
         <div className="flex items-center gap-2 px-3 py-2 bg-[var(--accent)]/10 rounded-[6px] text-xs">
           <Box size={14} className="text-[var(--accent-ink,var(--accent))]" />
           <span className="text-[var(--text-primary)] font-medium">Total components:</span>
-          <span className="text-[var(--accent-ink,var(--accent))] font-bold">{totalComponents}</span>
+          <span className="text-[var(--accent-ink,var(--accent))] font-semibold">{totalComponents}</span>
         </div>
       )}
 

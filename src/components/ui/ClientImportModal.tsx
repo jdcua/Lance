@@ -317,7 +317,7 @@ export default function ClientImportModal({
           {stepDots.map((s) => (
             <div
               key={s}
-              className={`w-2 h-2 rounded-full transition-all ${
+              className={`w-2 h-2 rounded-full transition-colors ${
                 s < step
                   ? 'bg-[var(--accent)]'
                   : s === step
@@ -441,7 +441,7 @@ export default function ClientImportModal({
                   <thead>
                     <tr className="bg-[var(--bg-secondary)]">
                       {rawHeaders.map((h) => (
-                        <th key={h} className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--text-secondary)] uppercase whitespace-nowrap">
+                        <th key={h} className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--text-secondary)] whitespace-nowrap">
                           {h}
                         </th>
                       ))}
@@ -527,7 +527,7 @@ export default function ClientImportModal({
             </p>
             <div className="w-full h-1 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
               <div
-                className="h-full bg-[var(--accent)] transition-all duration-300 ease-out rounded-full"
+                className="h-full bg-[var(--accent)] transition-colors duration-300 ease-out rounded-full"
                 style={{
                   width: `${progress.total > 0 ? (progress.current / progress.total) * 100 : 0}%`,
                 }}
@@ -573,19 +573,19 @@ export default function ClientImportModal({
               <table className="w-full text-xs">
                 <thead>
                   <tr className="bg-[var(--bg-secondary)] sticky top-0">
-                    <th className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--text-secondary)] uppercase">
+                    <th className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--text-secondary)]">
                       Name
                     </th>
-                    <th className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--text-secondary)] uppercase">
+                    <th className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--text-secondary)]">
                       Email
                     </th>
-                    <th className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--text-secondary)] uppercase">
+                    <th className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--text-secondary)]">
                       Company
                     </th>
-                    <th className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--text-secondary)] uppercase">
+                    <th className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--text-secondary)]">
                       Status
                     </th>
-                    <th className="px-3 py-1.5 text-center text-[10px] font-semibold text-[var(--text-secondary)] uppercase">
+                    <th className="px-3 py-1.5 text-center text-[10px] font-semibold text-[var(--text-secondary)]">
                       Action
                     </th>
                   </tr>
@@ -681,7 +681,7 @@ export default function ClientImportModal({
             <div className="flex justify-center gap-6 text-xs">
               {summary.imported > 0 && (
                 <div className="text-center">
-                  <span className="block text-lg font-bold text-[var(--accent-ink,var(--accent))]">
+                  <span className="block text-lg font-semibold text-[var(--accent-ink,var(--accent))]">
                     {summary.imported}
                   </span>
                   <span className="text-[var(--text-tertiary)]">Imported</span>
@@ -689,7 +689,7 @@ export default function ClientImportModal({
               )}
               {summary.skipped > 0 && (
                 <div className="text-center">
-                  <span className="block text-lg font-bold text-[var(--text-tertiary)]">
+                  <span className="block text-lg font-semibold text-[var(--text-tertiary)]">
                     {summary.skipped}
                   </span>
                   <span className="text-[var(--text-tertiary)]">Skipped</span>
@@ -697,7 +697,7 @@ export default function ClientImportModal({
               )}
               {summary.merged > 0 && (
                 <div className="text-center">
-                  <span className="block text-lg font-bold text-[var(--accent-bg)]">
+                  <span className="block text-lg font-semibold text-[var(--accent-bg)]">
                     {summary.merged}
                   </span>
                   <span className="text-[var(--text-tertiary)]">Merged</span>
@@ -705,7 +705,7 @@ export default function ClientImportModal({
               )}
               {summary.failed > 0 && (
                 <div className="text-center">
-                  <span className="block text-lg font-bold text-[var(--danger)]">
+                  <span className="block text-lg font-semibold text-[var(--danger)]">
                     {summary.failed}
                   </span>
                   <span className="text-[var(--text-tertiary)]">Failed</span>
@@ -714,7 +714,7 @@ export default function ClientImportModal({
             </div>
             {summary.failures.length > 0 && (
               <div className="text-left mt-4">
-                <p className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1">
+                <p className="text-[10px] font-semibold text-[var(--text-secondary)] mb-1">
                   Failed rows
                 </p>
                 <div className="bg-[var(--bg-secondary)] rounded-[6px] p-2 max-h-[120px] overflow-y-auto">

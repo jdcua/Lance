@@ -83,7 +83,7 @@ export default function DeliveryTracker({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Delivery</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Delivery</h4>
         <Button variant="ghost" size="sm" onClick={() => delivery ? setEditing(!editing) : handleSave()}>
           {delivery ? (editing ? 'Cancel' : 'Edit') : 'Set Delivery'}
         </Button>

@@ -88,7 +88,7 @@ export default function TodayQueue() {
     }
     if (prevCount.current > 0 && rows.length === 0) {
       const level = celebrationLevel('queue-cleared');
-      if (level === 'full') addToast(`🎉 ${celebrationToast('queue-cleared')}`, 'success');
+      if (level === 'full') addToast(celebrationToast('queue-cleared'), 'success');
       else if (level === 'reduced') addToast(celebrationToast('queue-cleared'), 'success');
       recordCelebration('queue-cleared');
     }
@@ -124,7 +124,7 @@ export default function TodayQueue() {
                   <span className="block text-[13px] font-medium text-[var(--text-primary)]">{r.text}</span>
                   <span className="block text-[11px] text-[var(--text-tertiary)] truncate">{r.sub}</span>
                 </span>
-                <ChevronRight size={14} className="text-[var(--text-tertiary)] group-hover:text-[var(--text-primary)] group-hover:translate-x-[1px] transition-all flex-shrink-0" />
+                <ChevronRight size={14} className="text-[var(--text-tertiary)] group-hover:text-[var(--text-primary)] group-hover:translate-x-[1px] transition-colors flex-shrink-0" />
               </button>
             ))}
           </div>

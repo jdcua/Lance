@@ -232,7 +232,7 @@ export default function FeatureScopeBoard({ projectId }: { projectId: string }) 
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
             Feature Scope
           </h4>
         </div>
@@ -248,7 +248,7 @@ export default function FeatureScopeBoard({ projectId }: { projectId: string }) 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Feature Scope ({features.length})
         </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
@@ -340,7 +340,7 @@ export default function FeatureScopeBoard({ projectId }: { projectId: string }) 
               <div key={group.key}>
                 <button
                   onClick={() => toggleCollapse(group.key)}
-                  className={`flex items-center gap-1.5 w-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${group.color} ${group.bg} rounded-[4px]`}
+                  className={`flex items-center gap-1.5 w-full px-2 py-1 text-[10px] font-semibold ${group.color} ${group.bg} rounded-[4px]`}
                 >
                   {isCollapsed ? <ChevronRight size={10} /> : <ChevronDown size={10} />}
                   {group.label} ({groupFeatures.length})

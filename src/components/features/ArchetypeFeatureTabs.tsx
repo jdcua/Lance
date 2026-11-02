@@ -43,7 +43,7 @@ function FeaturePanel({ feature, context }: { feature: ArchetypeFeatureDef; cont
   return (
     <div className="p-3 bg-[var(--bg-card)] rounded-[8px] border border-[var(--border-color)]">
       <div className="mb-2 flex items-center gap-2">
-        <span className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">{feature.name}</span>
+        <span className="text-[10px] font-semibold text-[var(--text-tertiary)]">{feature.name}</span>
       </div>
       <Component {...props} />
     </div>

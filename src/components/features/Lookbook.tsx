@@ -106,7 +106,7 @@ export default function Lookbook({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Lookbook</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Lookbook</h4>
         </div>
         <div className="grid grid-cols-3 gap-2">
           {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-20 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
@@ -118,7 +118,7 @@ export default function Lookbook({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Lookbook ({entries.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Lookbook ({entries.length})</h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Add Entry
         </Button>
@@ -130,7 +130,7 @@ export default function Lookbook({ clientId }: { clientId: string }) {
           <textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} className={inputClass + ' resize-none'} />
           {allAttachments.length > 0 && (
             <div className="space-y-1">
-              <p className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide">Select Assets</p>
+              <p className="text-[10px] text-[var(--text-tertiary)]">Select Assets</p>
               <div className="max-h-32 overflow-y-auto space-y-1 bg-[var(--bg-card)] rounded-[6px] p-2">
                 {allAttachments.slice(0, 20).map((asset) => {
                   const selected = getAssetIds(form.asset_ids).includes(asset.id);

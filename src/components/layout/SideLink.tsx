@@ -39,11 +39,11 @@ export default function SideLink({
       data-tour={tour}
       title={title}
       className={({ isActive }) =>
-        `relative flex items-center gap-2.5 px-3 h-[44px] text-[13.5px] font-medium transition-colors duration-150 rounded-[10px] ${
+        `relative flex items-center gap-2.5 px-3 h-[36px] text-[13.5px] font-medium transition-colors duration-150 rounded-[10px] ${
           !expanded ? 'justify-center px-0' : ''
         } ${isActive ? 'text-[var(--sb-text-active)]' : 'text-[var(--sb-text)] hover:text-[var(--sb-text-active)] hover:bg-[var(--sb-bg-hover)]'} ${className}`
       }
-      style={{ fontFamily: "'Syne', sans-serif" }}
+      style={{ fontFamily: "'Inter', sans-serif" }}
     >
       {({ isActive }) => (
         <>
@@ -54,7 +54,7 @@ export default function SideLink({
               <motion.span
                 layoutId="sb-active-pill"
                 className="absolute inset-0 rounded-[10px] bg-[var(--sb-bg-active)] shadow-[inset_0_1px_0_rgba(255,255,255,0.07)]"
-                transition={{ type: 'spring', stiffness: 480, damping: 38 }}
+                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
               />
             ))}
           <span

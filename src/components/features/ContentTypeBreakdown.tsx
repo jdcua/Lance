@@ -45,7 +45,7 @@ export default function ContentTypeBreakdown({ clientId }: { clientId?: string }
   if (loading) {
     return (
       <div className="space-y-2">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Content Types</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Content Types</h4>
         {[1, 2, 3].map(i => <div key={i} className="h-6 bg-[var(--bg-secondary)] rounded-[4px] animate-pulse" />)}
       </div>
     );
@@ -55,7 +55,7 @@ export default function ContentTypeBreakdown({ clientId }: { clientId?: string }
 
   return (
     <div className="space-y-3">
-      <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Content Types</h4>
+      <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Content Types</h4>
       {counts.length === 0 ? (
         <p className="text-xs text-[var(--text-tertiary)]">No content posts yet.</p>
       ) : (
@@ -68,7 +68,7 @@ export default function ContentTypeBreakdown({ clientId }: { clientId?: string }
                 <span className="text-[10px] text-[var(--text-secondary)] w-20 flex-shrink-0">{ct}</span>
                 <div className="flex-1 h-4 bg-[var(--bg-secondary)] rounded-[4px] overflow-hidden">
                   <div
-                    className="h-full rounded-[4px] transition-all"
+                    className="h-full rounded-[4px] transition-colors"
                     style={{ width: `${pct}%`, backgroundColor: TYPE_COLORS[ct] || '#888' }}
                   />
                 </div>

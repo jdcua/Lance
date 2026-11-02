@@ -151,7 +151,7 @@ export default function AssetComplexityLog({ projectId }: { projectId: string })
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
             Asset Complexity
           </h4>
         </div>
@@ -167,7 +167,7 @@ export default function AssetComplexityLog({ projectId }: { projectId: string })
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Asset Complexity
         </h4>
         {record && !editing && (

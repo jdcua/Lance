@@ -392,7 +392,7 @@ export default function Proposals() {
       )}
       {heatOn && rescueList.length > 0 && (
         <div className="mb-4 px-4 py-3 rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-secondary)]/50">
-          <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.8px] mb-2">
+          <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-2">
             Needs a nudge · {rescueList.length} going cold
           </p>
           <div className="space-y-1.5">
@@ -629,7 +629,7 @@ export default function Proposals() {
                         <div className="px-3 py-2.5 rounded-[8px] bg-[var(--accent-bg)]/30 border border-[var(--accent)]/20">
                           <div className="flex items-center gap-1.5 mb-1.5">
                             <Bell size={12} className="text-[var(--accent-ink,var(--accent))]" />
-                            <span className="text-[10px] font-semibold text-[var(--accent-ink,var(--accent))] uppercase tracking-wide">Follow-up Draft · Stage {fu.stage}</span>
+                            <span className="text-[10px] font-semibold text-[var(--accent-ink,var(--accent))]">Follow-up Draft · Stage {fu.stage}</span>
                             <span className="text-[10px] text-[var(--text-tertiary)]">{daysElapsed}d since sent</span>
                             {!hasEmail && (
                               <span className="text-[10px] text-[var(--warning-text)]">No email</span>

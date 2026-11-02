@@ -71,7 +71,7 @@ export default function ShortcutsModal({
       <div className="space-y-4">
         {GROUPS.map((g) => (
           <div key={g.title}>
-            <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.6px] mb-1.5">
+            <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1.5">
               {g.title}
             </p>
             <div className="space-y-0.5">

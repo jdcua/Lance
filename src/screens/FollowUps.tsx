@@ -284,7 +284,7 @@ export default function FollowUps() {
   }
 
   return (
-    <div className="p-6 max-w-5xl">
+    <div className="p-6 max-w-7xl">
       <LoadError
         error={followUpsError}
         onRetry={() => { loadInvoices(); loadProposals(); loadClients(); }}

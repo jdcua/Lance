@@ -52,7 +52,7 @@ export default function RateCalculator() {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Rate Calculator</h3>
+          <h3 className="text-xs font-semibold text-[var(--text-secondary)]">Rate Calculator</h3>
         </div>
         <div className="space-y-2">
           {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
@@ -64,7 +64,7 @@ export default function RateCalculator() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Rate Calculator</h3>
+        <h3 className="text-xs font-semibold text-[var(--text-secondary)]">Rate Calculator</h3>
         <Button variant="ghost" size="sm" onClick={handleSaveTarget} loading={saving} disabled={!profile}>
           <Calculator size={12} /> Save Target
         </Button>
@@ -73,7 +73,7 @@ export default function RateCalculator() {
       <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
         <div className="grid grid-cols-3 gap-2">
           <div>
-            <label className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide block mb-1">Monthly Target ($)</label>
+            <label className="text-[10px] text-[var(--text-tertiary)] block mb-1">Monthly Target ($)</label>
             <input
               type="number"
               min={0}
@@ -84,7 +84,7 @@ export default function RateCalculator() {
             />
           </div>
           <div>
-            <label className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide block mb-1">Avail. Hours/Mo</label>
+            <label className="text-[10px] text-[var(--text-tertiary)] block mb-1">Avail. Hours/Mo</label>
             <input
               type="number"
               min={0}
@@ -95,7 +95,7 @@ export default function RateCalculator() {
             />
           </div>
           <div>
-            <label className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide block mb-1">Expenses ($)</label>
+            <label className="text-[10px] text-[var(--text-tertiary)] block mb-1">Expenses ($)</label>
             <input
               type="number"
               min={0}
@@ -113,7 +113,7 @@ export default function RateCalculator() {
               <div className="flex items-center gap-1.5">
                 <DollarSign size={14} className="text-[var(--accent-ink,var(--accent))]" />
                 <div>
-                  <div className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide">Required Rate</div>
+                  <div className="text-[10px] text-[var(--text-tertiary)]">Required Rate</div>
                   <div className="text-sm font-semibold text-[var(--text-primary)]">
                     ${requiredRate.toFixed(2)}<span className="text-[10px] font-normal text-[var(--text-tertiary)]"> /hr</span>
                   </div>
@@ -123,7 +123,7 @@ export default function RateCalculator() {
               <div className="flex items-center gap-1.5">
                 <TrendingUp size={14} className="text-[var(--accent-ink,var(--accent))]" />
                 <div>
-                  <div className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide">Annual Equivalent</div>
+                  <div className="text-[10px] text-[var(--text-tertiary)]">Annual Equivalent</div>
                   <div className="text-sm font-semibold text-[var(--text-primary)]">
                     ${annualRequired.toLocaleString(undefined, { maximumFractionDigits: 0 })}<span className="text-[10px] font-normal text-[var(--text-tertiary)]"> /yr</span>
                   </div>
@@ -135,7 +135,7 @@ export default function RateCalculator() {
                   <div className="flex items-center gap-1.5">
                     <Clock size={14} className="text-[var(--accent-ink,var(--accent))]" />
                     <div>
-                      <div className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide">At ${currentRate}/hr</div>
+                      <div className="text-[10px] text-[var(--text-tertiary)]">At ${currentRate}/hr</div>
                       <div className="text-sm font-semibold text-[var(--text-primary)]">
                         {hoursNeededAtCurrentRate}<span className="text-[10px] font-normal text-[var(--text-tertiary)]"> hrs/mo</span>
                       </div>

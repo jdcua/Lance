@@ -82,7 +82,7 @@ export default function BrandVault() {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Brand Vault</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Brand Vault</h4>
         </div>
         <div className="flex gap-1.5">
           {SUBCATEGORIES.map((cat) => <div key={cat} className="h-6 w-20 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
@@ -97,7 +97,7 @@ export default function BrandVault() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Brand Vault ({brandAssets.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Brand Vault ({brandAssets.length})</h4>
         <Button variant="ghost" size="sm" onClick={() => { setShowUpload(!showUpload); setActiveCategory('Logo Files'); }}>
           <Upload size={12} /> Upload Asset
         </Button>

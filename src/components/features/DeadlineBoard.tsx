@@ -75,7 +75,7 @@ export default function DeadlineBoard() {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
             Deadlines
           </h4>
         </div>
@@ -91,7 +91,7 @@ export default function DeadlineBoard() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Deadlines ({projectsWithDates.length})
         </h4>
       </div>
@@ -113,10 +113,10 @@ export default function DeadlineBoard() {
                   style={{ borderLeftColor: color.text.replace('text-[', '').replace(']', '') }}
                 >
                   <div className={`flex flex-col items-center justify-center min-w-[40px] ${color.text}`}>
-                    <span className="text-lg font-bold leading-none">
+                    <span className="text-lg font-semibold leading-none">
                       {days < 0 ? Math.abs(days) : days}
                     </span>
-                    <span className="text-[9px] uppercase leading-none mt-0.5">
+                    <span className="text-[9px] leading-none mt-0.5">
                       {days < 0 ? 'days late' : 'days'}
                     </span>
                   </div>
@@ -173,7 +173,7 @@ export default function DeadlineBoard() {
 
           {projectsWithoutDates.length > 0 && (
             <div className="space-y-1">
-              <h5 className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide px-1">
+              <h5 className="text-[10px] font-semibold text-[var(--text-tertiary)] px-1">
                 Needs Deadline ({projectsWithoutDates.length})
               </h5>
               {projectsWithoutDates.map((project) => (

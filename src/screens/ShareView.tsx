@@ -122,12 +122,12 @@ const PORTAL_CSS = `
   .share-logo { width: 34px; height: 34px; border-radius: 9px; background: #111; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; }
   .share-brand-name { font-weight: 600; font-size: 15px; }
   .share-brand-tag { font-size: 12px; color: #86868b; }
-  .share-prepped { font-size: 12px; color: #86868b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .share-prepped { font-size: 12px; color: #86868b; text-transform:; letter-spacing: 0.08em; margin-bottom: 6px; }
   .share-title { font-size: 26px; font-weight: 700; margin: 0 0 6px; line-height: 1.2; }
   .share-subtitle { font-size: 14px; color: #6e6e73; margin-bottom: 24px; }
   .share-meta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 28px; }
   .share-meta-item { flex: 1 1 140px; background: #f5f5f7; border-radius: 12px; padding: 12px 14px; box-sizing: border-box; }
-  .share-meta-label { font-size: 11px; color: #86868b; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .share-meta-label { font-size: 11px; color: #86868b; text-transform:; letter-spacing: 0.06em; margin-bottom: 4px; }
   .share-meta-value { font-size: 15px; font-weight: 600; }
   .share-divider { border: none; border-top: 1px solid #e5e5e7; margin: 24px 0; }
   .share-body { font-size: 15px; line-height: 1.65; color: #1d1d1f; word-break: break-word; }

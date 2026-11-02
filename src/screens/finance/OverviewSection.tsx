@@ -227,7 +227,7 @@ export default function OverviewSection({ bag }: { bag: FinanceBag }) {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[10px] uppercase tracking-wide text-[var(--text-secondary)]">
+                  <div className="flex items-center justify-between text-[10px] text-[var(--text-secondary)]">
                     <span>Month</span>
                     {hasMixedCurrencies ? (
                       <span className="text-right">Income by currency</span>
@@ -319,7 +319,7 @@ export default function OverviewSection({ bag }: { bag: FinanceBag }) {
                                   key={cur}
                                   className="flex items-center justify-between text-xs"
                                 >
-                                  <span className="text-[10px] font-bold text-[var(--text-secondary)] bg-[var(--bg-secondary)] rounded-[4px] px-1.5 py-0.5 tnum">
+                                  <span className="text-[10px] font-semibold text-[var(--text-secondary)] bg-[var(--bg-secondary)] rounded-[4px] px-1.5 py-0.5 tnum">
                                     {cur}
                                   </span>
                                   <div className="grid grid-cols-3 gap-3 w-64 text-right">

@@ -197,7 +197,7 @@ export default function Sidebar() {
     // sections reveal instead of reshuffling on every unlock.
     const visiblePaths = new Set(visibleItems.map((i) => i.path));
     const groups: { label: string; items: SidebarItemDef[] }[] = [];
-    const groupLabels = ['WORK', 'MANAGE', 'ANALYZE'];
+    const groupLabels = ['Work', 'Manage', 'Analyze'];
     const splitSize = Math.max(1, Math.ceil(items.length / 3));
 
     for (let i = 0; i < items.length; i += splitSize) {
@@ -265,7 +265,7 @@ export default function Sidebar() {
             >
               <BrandLogo size={22} className="text-[var(--accent)]" />
             </button>
-            <span className="font-bold text-[15px] text-[var(--sb-text-active)] flex-1 tracking-tight" style={{ fontFamily: "'Syne', sans-serif" }}>Lance</span>
+            <span className="font-semibold text-[15px] text-[var(--sb-text-active)] flex-1 tracking-tight" style={{ fontFamily: "'Syne', sans-serif" }}>Lance</span>
           </>
         )}
         {!isExpanded && (
@@ -308,7 +308,7 @@ export default function Sidebar() {
         {sidebarItems.groups.map((group) => (
           <div key={group.label} className="mb-4">
             {isExpanded && (
-              <p className="px-3 mb-1.5 text-[10px] font-semibold text-[var(--sb-label)] uppercase tracking-[1px]" style={{ fontFamily: "'Syne', sans-serif" }}>
+              <p className="px-3 mb-1.5 text-[10px] font-semibold text-[var(--sb-label)]" style={{ fontFamily: "'Inter', sans-serif" }}>
                 {group.label}
               </p>
             )}
@@ -355,15 +355,15 @@ export default function Sidebar() {
         {/* Always-available items (progressively disclosed) */}
         <div className="mb-4">
           {isExpanded && (
-            <p className="px-3 mb-1.5 text-[10px] font-semibold text-[var(--sb-label)] uppercase tracking-[1px]" style={{ fontFamily: "'Syne', sans-serif" }}>
-              MORE
+            <p className="px-3 mb-1.5 text-[10px] font-semibold text-[var(--sb-label)]" style={{ fontFamily: "'Inter', sans-serif" }}>
+              More
             </p>
           )}
           {showImport &&
           <button
             onClick={() => document.dispatchEvent(new CustomEvent('lance:open-import'))}
-            className={`w-full flex items-center gap-2.5 px-3 h-[38px] text-[13.5px] font-medium transition-all duration-150 text-[var(--sb-text)] hover:text-[var(--sb-text-active)] hover:bg-[var(--sb-bg-hover)] rounded-[10px] ${!isExpanded ? 'justify-center px-0' : ''}`}
-            style={{ fontFamily: "'Syne', sans-serif" }}
+            className={`w-full flex items-center gap-2.5 px-3 h-[36px] text-[13.5px] font-medium transition-colors duration-150 text-[var(--sb-text)] hover:text-[var(--sb-text-active)] hover:bg-[var(--sb-bg-hover)] rounded-[10px] ${!isExpanded ? 'justify-center px-0' : ''}`}
+            style={{ fontFamily: "'Inter', sans-serif" }}
             title="Import"
           >
             <Upload size={16} />
@@ -454,7 +454,7 @@ export default function Sidebar() {
               className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-[10px] hover:bg-[var(--sb-bg-hover)] transition-colors text-left"
               title="Profile & settings"
             >
-              <span className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--accent)] to-[#0ea5e9] text-[#06281d] text-[11px] font-bold grid place-items-center flex-shrink-0">
+              <span className="w-8 h-8 rounded-full bg-[var(--accent)] text-[var(--accent-on)] text-[11px] font-semibold grid place-items-center flex-shrink-0">
                 {(profile?.name?.trim()?.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase() || 'L')}
               </span>
               <span className="flex-1 min-w-0">
@@ -462,7 +462,6 @@ export default function Sidebar() {
                   {profile?.name?.trim() || 'Freelancer'}
                 </span>
                 <span className={`flex items-center gap-1 text-[10.5px] font-medium ${isLicensed || (isTrial && trialDaysRemaining(profile?.trial_started_at) > 0) ? 'sb-accent-text' : 'text-[var(--sb-label)]'}`}>
-                  <Sparkles size={9} />
                   {isLicensed
                     ? 'Pro licensed'
                     : isTrial

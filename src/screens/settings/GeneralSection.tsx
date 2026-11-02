@@ -37,7 +37,7 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
   return (
     <>
       {/* Profile section header */}
-      <div className="text-xs uppercase tracking-widest text-[var(--text-secondary)] font-semibold mb-4">
+      <div className="text-xs text-[var(--text-secondary)] font-semibold mb-4">
         Profile
       </div>
 

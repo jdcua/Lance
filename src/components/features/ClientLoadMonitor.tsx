@@ -121,7 +121,7 @@ export default function ClientLoadMonitor() {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Client Load</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Client Load</h4>
         </div>
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
@@ -136,7 +136,7 @@ export default function ClientLoadMonitor() {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Client Load</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Client Load</h4>
         </div>
         <p className="text-xs text-[var(--text-tertiary)] py-2">No active retainers found.</p>
       </div>
@@ -146,7 +146,7 @@ export default function ClientLoadMonitor() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Client Load</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Client Load</h4>
         <span className="text-[10px] text-[var(--text-tertiary)]">{sorted.length} retainer{sorted.length !== 1 ? 's' : ''}</span>
       </div>
 
@@ -161,7 +161,7 @@ export default function ClientLoadMonitor() {
             </div>
             <div className="w-full h-1.5 bg-[var(--bg-card)] rounded-full overflow-hidden mb-1">
               <div
-                className={`h-full rounded-full transition-all ${getBarColor(item.percent)}`}
+                className={`h-full rounded-full transition-colors ${getBarColor(item.percent)}`}
                 style={{ width: `${Math.min(item.percent, 100)}%` }}
               />
             </div>

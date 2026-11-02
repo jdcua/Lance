@@ -823,7 +823,7 @@ export default function TimeScreen() {
                   </span>
                   <div className="w-full flex-1 flex flex-col justify-end">
                     <div
-                      className="w-full rounded-t-sm transition-all duration-300"
+                      className="w-full rounded-t-sm transition-colors duration-300"
                       style={{
                         height: `${maxDOW > 0 ? (bar.avgHours / maxDOW) * 100 : 0}%`,
                         minHeight: bar.avgHours > 0 ? '2px' : '0',

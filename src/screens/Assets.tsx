@@ -293,7 +293,7 @@ export default function Assets() {
               e.preventDefault();
               setContextMenu({ asset, x: e.clientX, y: e.clientY });
             }}
-            className={`group relative flex flex-col rounded-[12px] border overflow-hidden transition-all duration-150 hover:border-[var(--accent)]/40 hover:shadow-sm text-left ${
+            className={`group relative flex flex-col rounded-[12px] border overflow-hidden transition-colors duration-150 hover:border-[var(--accent)]/40 hover:shadow-sm text-left ${
               highlightedId === asset.id
                 ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/40'
                 : isUnclassified
@@ -360,13 +360,13 @@ export default function Assets() {
   const renderAssetList = (assets: Attachment[]) => (
     <div className="border border-[var(--border-color)] rounded-[12px] overflow-x-auto"><div className="min-w-[560px]">
       <div className="grid grid-cols-[1fr_100px_120px_80px] items-center px-4 py-2 bg-[var(--bg-secondary)] border-b border-[var(--border-color)]">
-        <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <span className="text-[10px] font-semibold text-[var(--text-secondary)]">
           Name
         </span>
-        <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide text-right">
+        <span className="text-[10px] font-semibold text-[var(--text-secondary)] text-right">
           Size
         </span>
-        <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide text-right">
+        <span className="text-[10px] font-semibold text-[var(--text-secondary)] text-right">
           Modified
         </span>
         <span />
@@ -395,7 +395,7 @@ export default function Assets() {
                   e.stopPropagation();
                   setDeleteConfirm(asset);
                 }}
-                className="p-1 rounded-[6px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] opacity-0 group-hover:opacity-100 transition-all"
+                className="p-1 rounded-[6px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] opacity-0 group-hover:opacity-100 transition-colors"
               >
                 <Trash2 size={14} />
               </button>
@@ -624,7 +624,7 @@ export default function Assets() {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Clock size={14} className="text-[var(--text-tertiary)]" />
-                <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+                <span className="text-[10px] font-semibold text-[var(--text-secondary)]">
                   Recently Added
                 </span>
               </div>
@@ -637,7 +637,7 @@ export default function Assets() {
             <div>
               <div className="flex items-center gap-2 mb-3 mt-5">
                 <Package size={14} className="text-[var(--text-tertiary)]" />
-                <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+                <span className="text-[10px] font-semibold text-[var(--text-secondary)]">
                   All Assets ({scopeAssets.length})
                 </span>
               </div>
@@ -729,7 +729,7 @@ export default function Assets() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Tag size={12} className="text-[var(--text-tertiary)]" />
-                <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+                <span className="text-[10px] font-semibold text-[var(--text-secondary)]">
                   Tags
                 </span>
               </div>
@@ -866,7 +866,7 @@ export default function Assets() {
             </div>
           </button>
           <div className="border-t border-[var(--border-color)] pt-2">
-            <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide px-1 mb-2">
+            <p className="text-[10px] font-semibold text-[var(--text-tertiary)] px-1 mb-2">
               Clients
             </p>
             {clients.map((c) => (
@@ -886,7 +886,7 @@ export default function Assets() {
             ))}
           </div>
           <div className="border-t border-[var(--border-color)] pt-2">
-            <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide px-1 mb-2">
+            <p className="text-[10px] font-semibold text-[var(--text-tertiary)] px-1 mb-2">
               Projects
             </p>
             {projects.map((p) => {

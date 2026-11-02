@@ -89,7 +89,7 @@ export default function ComplexityTagger({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Analysis Complexity</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Analysis Complexity</h4>
         </div>
         <div className="h-32 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
       </div>
@@ -99,7 +99,7 @@ export default function ComplexityTagger({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Analysis Complexity</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Analysis Complexity</h4>
         <div className="flex items-center gap-2">
           {lastSaved && (
             <span className="text-[10px] text-[var(--text-tertiary)]">Saved {lastSaved}</span>
@@ -119,7 +119,7 @@ export default function ComplexityTagger({ projectId }: { projectId: string }) {
           {TIERS.map((tier) => (
             <label
               key={tier.value}
-              className={`flex items-center gap-2 px-3 py-2 rounded-[6px] text-xs cursor-pointer border transition-all ${
+              className={`flex items-center gap-2 px-3 py-2 rounded-[6px] text-xs cursor-pointer border transition-colors ${
                 selectedTier === tier.value
                   ? 'bg-[var(--bg-card)] border-[var(--accent)]'
                   : 'bg-[var(--bg-secondary)] border-transparent hover:bg-[var(--bg-card)]'

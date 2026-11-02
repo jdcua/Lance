@@ -112,7 +112,7 @@ export default function ProgramBuilder({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Programs</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Programs</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
@@ -124,7 +124,7 @@ export default function ProgramBuilder({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Programs ({programs.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Programs ({programs.length})</h4>
         <Button variant="ghost" size="sm" onClick={() => setShowAdd(!showAdd)}>
           <Plus size={12} /> New Program
         </Button>

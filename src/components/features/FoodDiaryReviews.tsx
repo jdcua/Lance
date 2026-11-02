@@ -117,7 +117,7 @@ export default function FoodDiaryReviews({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
             Food Diary
           </h4>
         </div>
@@ -133,7 +133,7 @@ export default function FoodDiaryReviews({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Food Diary ({entries.length})
         </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
@@ -195,7 +195,7 @@ export default function FoodDiaryReviews({ clientId }: { clientId: string }) {
         <div className="space-y-3">
           {Object.entries(groupedByDate).map(([date, dayEntries]) => (
             <div key={date} className="space-y-1">
-              <div className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase px-1">
+              <div className="text-[10px] font-semibold text-[var(--text-tertiary)] px-1">
                 {date} ({dayEntries.length})
               </div>
               {dayEntries.map((e) => (

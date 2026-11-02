@@ -45,7 +45,7 @@ export default function PostingPerformanceNotes({ clientId }: { clientId?: strin
   if (loading) {
     return (
       <div className="space-y-2">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Recent Posts</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Recent Posts</h4>
         {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[4px] animate-pulse" />)}
       </div>
     );
@@ -53,7 +53,7 @@ export default function PostingPerformanceNotes({ clientId }: { clientId?: strin
 
   return (
     <div className="space-y-2">
-      <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Recent Posts</h4>
+      <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Recent Posts</h4>
       {posts.length === 0 ? (
         <p className="text-xs text-[var(--text-tertiary)]">No posted content yet.</p>
       ) : (

@@ -133,7 +133,7 @@ export default function PhaseGateTracker({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Phase Gates</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Phase Gates</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
@@ -145,7 +145,7 @@ export default function PhaseGateTracker({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Phase Gates ({completedCount}/{phases.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Phase Gates ({completedCount}/{phases.length})</h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Add Phase
         </Button>
@@ -157,7 +157,7 @@ export default function PhaseGateTracker({ projectId }: { projectId: string }) {
             <span>Overall progress: {overallPercent}%</span>
           </div>
           <div className="h-2 w-full bg-[var(--border-color)] rounded-full overflow-hidden">
-            <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${overallPercent}%` }} />
+            <div className={`h-full rounded-full transition-colors ${barColor}`} style={{ width: `${overallPercent}%` }} />
           </div>
         </div>
       )}

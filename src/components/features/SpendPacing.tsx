@@ -78,7 +78,7 @@ export default function SpendPacing({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Spend Pacing</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Spend Pacing</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
@@ -90,7 +90,7 @@ export default function SpendPacing({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Spend Pacing ({items.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Spend Pacing ({items.length})</h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Add Period
         </Button>
@@ -137,7 +137,7 @@ export default function SpendPacing({ projectId }: { projectId: string }) {
                   <span>${item.actual.toLocaleString()} / ${item.budget.toLocaleString()}</span>
                 </div>
                 <div className="w-full h-1.5 bg-[var(--border-color)] rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-all ${over ? 'bg-[#E74C3C]' : 'bg-[var(--accent)]'}`} style={{ width: `${pct}%` }} />
+                  <div className={`h-full rounded-full transition-colors ${over ? 'bg-[#E74C3C]' : 'bg-[var(--accent)]'}`} style={{ width: `${pct}%` }} />
                 </div>
               </div>
             );

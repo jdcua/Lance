@@ -58,8 +58,8 @@ export default function ProWelcome({ open, onClose }: { open: boolean; onClose: 
         </div>
 
         <div className="px-8 pb-4">
-          <div className="flex items-center gap-2 mb-3 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">
-            <Sparkles size={12} />
+          <div className="flex items-center gap-2 mb-3 text-xs font-medium text-[var(--text-muted)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
             <span>
               Feature {step + 1} of {PRO_FEATURES.length}
             </span>
@@ -79,7 +79,7 @@ export default function ProWelcome({ open, onClose }: { open: boolean; onClose: 
             {PRO_FEATURES.map((_, i) => (
               <span
                 key={i}
-                className={`h-1.5 rounded-full transition-all ${
+                className={`h-1.5 rounded-full transition-colors ${
                   i === step ? 'w-6 bg-[var(--accent)]' : 'w-1.5 bg-[var(--border)]'
                 }`}
               />

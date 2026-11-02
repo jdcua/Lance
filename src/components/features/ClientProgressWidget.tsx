@@ -84,7 +84,7 @@ export default function ClientProgressWidget({ clientId }: { clientId: string })
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Progress</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Progress</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
@@ -98,7 +98,7 @@ export default function ClientProgressWidget({ clientId }: { clientId: string })
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Progress ({progress.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Progress ({progress.length})</h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Log Progress
         </Button>

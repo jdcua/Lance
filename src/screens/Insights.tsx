@@ -282,11 +282,11 @@ export default function Insights() {
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="bg-[var(--bg-secondary)]">
-                      <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Client</th>
-                      <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Metric</th>
-                      <th className="px-4 py-2.5 text-center text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Trend</th>
-                      <th className="px-4 py-2.5 text-right text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Latest</th>
-                      <th className="px-4 py-2.5 text-right text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Previous</th>
+                      <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-[var(--text-secondary)]">Client</th>
+                      <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-[var(--text-secondary)]">Metric</th>
+                      <th className="px-4 py-2.5 text-center text-[10px] font-semibold text-[var(--text-secondary)]">Trend</th>
+                      <th className="px-4 py-2.5 text-right text-[10px] font-semibold text-[var(--text-secondary)]">Latest</th>
+                      <th className="px-4 py-2.5 text-right text-[10px] font-semibold text-[var(--text-secondary)]">Previous</th>
                     </tr>
                   </thead>
                   <tbody>

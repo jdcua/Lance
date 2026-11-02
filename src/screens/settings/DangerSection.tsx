@@ -16,7 +16,7 @@ export default function DangerSection({ bag }: { bag: SettingsBag }) {
   return (
     <>
       {/* Danger Zone section header */}
-      <div className="text-xs uppercase tracking-widest text-[var(--text-danger)] font-semibold mb-4 text-[var(--danger)]">
+      <div className="text-xs text-[var(--text-danger)] font-semibold mb-4 text-[var(--danger)]">
         Danger Zone
       </div>
 

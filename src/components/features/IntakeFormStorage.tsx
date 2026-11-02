@@ -77,7 +77,7 @@ export default function IntakeFormStorage({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Intake Form</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Intake Form</h4>
         </div>
         <div className="h-32 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
       </div>
@@ -87,7 +87,7 @@ export default function IntakeFormStorage({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Intake Form</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Intake Form</h4>
         <div className="flex items-center gap-2">
           {intake && (
             <span className="text-[10px] text-[var(--text-tertiary)]">

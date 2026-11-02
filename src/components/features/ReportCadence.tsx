@@ -101,7 +101,7 @@ export default function ReportCadence({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Report Cadence</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Report Cadence</h4>
         </div>
         <div className="h-16 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
       </div>
@@ -111,7 +111,7 @@ export default function ReportCadence({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Report Cadence</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Report Cadence</h4>
       </div>
 
       <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-3">

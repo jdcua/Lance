@@ -107,7 +107,7 @@ export default function RetainerHealthScore({ clientId }: { clientId: string }) 
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Retainer Health</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Retainer Health</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
@@ -125,13 +125,13 @@ export default function RetainerHealthScore({ clientId }: { clientId: string }) 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Retainer Health</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Retainer Health</h4>
       </div>
 
       <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-3">
         <div className="flex items-center gap-3">
           <div className={`w-12 h-12 rounded-full flex items-center justify-center ${scoreBg(overallScore)} text-white`}>
-            <span className="text-lg font-bold">{overallScore}</span>
+            <span className="text-lg font-semibold">{overallScore}</span>
           </div>
           <div>
             <p className="text-xs font-semibold text-[var(--text-primary)]">Overall Health Score</p>
@@ -155,7 +155,7 @@ export default function RetainerHealthScore({ clientId }: { clientId: string }) 
                   <span className={`font-medium ${scoreColor(s.score)}`}>{s.score}%</span>
                 </div>
                 <div className="h-1.5 bg-[var(--border-color)] rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-all ${scoreBg(s.score)}`} style={{ width: `${Math.max(2, s.score)}%` }} />
+                  <div className={`h-full rounded-full transition-colors ${scoreBg(s.score)}`} style={{ width: `${Math.max(2, s.score)}%` }} />
                 </div>
               </div>
             );

@@ -116,7 +116,7 @@ function Column({
     >
       <div className="flex items-center gap-1.5 mb-3 px-1">
         <Icon size={13} className="text-[var(--text-secondary)]" />
-        <h2 className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-[0.6px]">
+        <h2 className="text-[11px] font-semibold text-[var(--text-secondary)]">
           {STAGE_LABEL[stage]}
         </h2>
         <span className="ml-auto text-[11px] font-semibold text-[var(--text-tertiary)] tnum">
@@ -329,7 +329,7 @@ export default function Pipeline() {
         );
         if (fu) await updateFollowUpStatus(fu.id, 'paid', 'auto-resolved').catch(() => {});
         const level = celebrationLevel('invoice-paid');
-        if (level === 'full') addToast(`🎉 ${celebrationToast('invoice-paid')}`, 'success');
+        if (level === 'full') addToast(celebrationToast('invoice-paid'), 'success');
         else if (level === 'reduced') addToast(celebrationToast('invoice-paid'), 'success');
         recordCelebration('invoice-paid');
       } else {

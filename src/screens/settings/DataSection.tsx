@@ -670,7 +670,7 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
   return (
     <>
       {/* Data & Backup section header */}
-      <div className="text-xs uppercase tracking-widest text-[var(--text-secondary)] font-semibold mb-4">
+      <div className="text-xs text-[var(--text-secondary)] font-semibold mb-4">
         Data &amp; Backup
       </div>
 
@@ -879,7 +879,7 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
                   }}
                   className="sr-only peer"
                 />
-                <div className="w-9 h-5 bg-[var(--border-color)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--accent)]" />
+                <div className="w-9 h-5 bg-[var(--border-color)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-colors peer-checked:bg-[var(--accent)]" />
               </label>
             </div>
 
@@ -1052,7 +1052,7 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
             <div className="space-y-3">
               {Object.entries(TEMPLATE_LABELS).map(([key, label]) => (
                 <div key={key}>
-                  <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1">
+                  <label className="block text-[10px] font-semibold text-[var(--text-secondary)] mb-1">
                     {label}
                   </label>
                   <textarea
@@ -1085,7 +1085,7 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
             <div className="space-y-3">
               {Object.entries(TEMPLATE_LABELS).map(([key, label]) => (
                 <div key={`subj-${key}`}>
-                  <label className="block text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1">
+                  <label className="block text-[10px] font-semibold text-[var(--text-secondary)] mb-1">
                     {label}
                   </label>
                   <input

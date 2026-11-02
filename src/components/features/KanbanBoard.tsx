@@ -264,7 +264,7 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
   if (unavailable) {
     return (
       <div className="space-y-2 rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-secondary)] p-4">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Kanban Board</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Kanban Board</h4>
         <p className="text-xs text-[var(--text-tertiary)]">Kanban board is available in the desktop app. In the browser preview it is disabled.</p>
       </div>
     );
@@ -274,7 +274,7 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Kanban Board</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Kanban Board</h4>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2">
           {[1, 2, 3, 4].map(i => <div key={i} className="w-[260px] h-40 bg-[var(--bg-secondary)] rounded-[8px] animate-pulse flex-shrink-0" />)}
@@ -288,7 +288,7 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Kanban Board ({totalCards})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Kanban Board ({totalCards})</h4>
         <Button variant="ghost" size="sm" onClick={() => setShowAddColumn(true)}>
           <Plus size={12} /> Add Column
         </Button>

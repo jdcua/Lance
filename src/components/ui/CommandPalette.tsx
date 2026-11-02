@@ -277,7 +277,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
           {!debouncedQuery ? (
             <div className="px-4 py-4 space-y-4">
               <div>
-                <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider mb-2">Keyboard shortcuts</p>
+                <p className="text-[10px] font-semibold text-[var(--text-tertiary)] tracking-wider mb-2">Keyboard shortcuts</p>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
                   {[
                     [`${modifier}K`, 'Open command palette'],
@@ -297,7 +297,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
                 </div>
               </div>
               <div>
-                <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider mb-1.5">Quick search</p>
+                <p className="text-[10px] font-semibold text-[var(--text-tertiary)] tracking-wider mb-1.5">Quick search</p>
                 <p className="text-xs text-[var(--text-tertiary)]">Type to search clients, proposals, projects, invoices, contracts, time entries, expenses, assets&hellip;</p>
               </div>
             </div>
@@ -313,7 +313,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
                   <div key={type} className="mb-3 last:mb-0">
                     {isFooterGroup && <div className="px-4 mb-1"><div className="border-t border-[var(--border-color)] pt-2" /></div>}
                     {!isFooterGroup && (
-                      <p className="px-4 mb-1 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">{typeLabels[type] || type}</p>
+                      <p className="px-4 mb-1 text-[10px] font-semibold text-[var(--text-tertiary)] tracking-wider">{typeLabels[type] || type}</p>
                     )}
                     {items.map((item) => {
                       const Icon = typeIcons[item.type] || Users;

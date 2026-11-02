@@ -100,7 +100,7 @@ export default function ContentTypeLibrary({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Content Types</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Content Types</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -114,7 +114,7 @@ export default function ContentTypeLibrary({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Content Types ({items.length})
         </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
@@ -191,13 +191,13 @@ export default function ContentTypeLibrary({ clientId }: { clientId: string }) {
                 <div className="mt-1 px-3 py-2 bg-[var(--bg-secondary)]/50 rounded-[6px] text-xs space-y-2">
                   {item.template && (
                     <div>
-                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase">Template</p>
+                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)]">Template</p>
                       <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{item.template}</p>
                     </div>
                   )}
                   {item.notes && (
                     <div>
-                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase">Notes</p>
+                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)]">Notes</p>
                       <p className="text-[var(--text-secondary)]">{item.notes}</p>
                     </div>
                   )}

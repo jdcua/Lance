@@ -77,7 +77,7 @@ export default function ServiceBlueprint({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Service Blueprint</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Service Blueprint</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
@@ -89,7 +89,7 @@ export default function ServiceBlueprint({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Service Blueprint ({items.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Service Blueprint ({items.length})</h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Add Component
         </Button>

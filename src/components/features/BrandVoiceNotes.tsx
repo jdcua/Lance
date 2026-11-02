@@ -122,7 +122,7 @@ export default function BrandVoiceNotes({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Brand Voice</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Brand Voice</h4>
         </div>
         <div className="h-20 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
       </div>
@@ -132,7 +132,7 @@ export default function BrandVoiceNotes({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Brand Voice</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Brand Voice</h4>
         <div className="flex items-center gap-1">
           {brandVoice && (
             <>
@@ -205,19 +205,19 @@ export default function BrandVoiceNotes({ clientId }: { clientId: string }) {
           )}
           {brandVoice.attributes && (
             <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
-              <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase mb-1">Attributes</p>
+              <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1">Attributes</p>
               <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{brandVoice.attributes}</p>
             </div>
           )}
           {brandVoice.examples && (
             <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
-              <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase mb-1">Examples</p>
+              <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1">Examples</p>
               <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{brandVoice.examples}</p>
             </div>
           )}
           {brandVoice.dos_donts && (
             <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
-              <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase mb-1">Do's / Don'ts</p>
+              <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1">Do's / Don'ts</p>
               <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{brandVoice.dos_donts}</p>
             </div>
           )}

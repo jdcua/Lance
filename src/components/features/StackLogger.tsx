@@ -120,7 +120,7 @@ export default function StackLogger({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
             Tech Stack
           </h4>
         </div>
@@ -139,7 +139,7 @@ export default function StackLogger({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Tech Stack ({items.length})
         </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
@@ -202,7 +202,7 @@ export default function StackLogger({ projectId }: { projectId: string }) {
             return (
               <div key={cat}>
                 <div
-                  className={`text-[10px] font-semibold uppercase tracking-wide ${categoryColors[cat]} px-2 py-0.5 rounded-[4px] inline-block mb-1.5`}
+                  className={`text-[10px] font-semibold ${categoryColors[cat]} px-2 py-0.5 rounded-[4px] inline-block mb-1.5`}
                 >
                   {categoryLabel[cat]}
                 </div>

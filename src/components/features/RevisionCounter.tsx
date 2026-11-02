@@ -94,7 +94,7 @@ export default function RevisionCounter({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Revisions</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Revisions</h4>
         <Button variant="ghost" size="sm" onClick={handleAddRound} loading={saving}>
           <Plus size={12} /> Add Round
         </Button>
@@ -102,7 +102,7 @@ export default function RevisionCounter({ projectId }: { projectId: string }) {
 
       <div className={`flex items-center justify-center gap-3 px-4 py-3 rounded-[8px] ${bgColor}`}>
         <RotateCcw size={16} className={countColor} />
-        <span className={`text-lg font-bold ${countColor}`}>
+        <span className={`text-lg font-semibold ${countColor}`}>
           {currentRound} / {revisionLimit}
         </span>
         <span className={`text-xs ${countColor}`}>

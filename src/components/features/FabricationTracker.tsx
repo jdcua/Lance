@@ -161,7 +161,7 @@ export default function FabricationTracker({ projectId }: { projectId: string })
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
             Fabrication
           </h4>
         </div>
@@ -177,7 +177,7 @@ export default function FabricationTracker({ projectId }: { projectId: string })
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Fabrication ({items.length})
         </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
@@ -275,22 +275,22 @@ export default function FabricationTracker({ projectId }: { projectId: string })
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-[var(--border-color)]">
-                <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">
+                <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)]">
                   Item
                 </th>
-                <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">
+                <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)]">
                   Status
                 </th>
-                <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">
+                <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)]">
                   Start
                 </th>
-                <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">
+                <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)]">
                   Done
                 </th>
-                <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">
+                <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)]">
                   Fab House
                 </th>
-                <th className="text-right py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">
+                <th className="text-right py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)]">
                   Cost
                 </th>
                 <th className="w-8" />

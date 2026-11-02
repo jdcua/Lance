@@ -167,7 +167,7 @@ export default function RetainerManager({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
             Retainer
           </h4>
         </div>
@@ -179,7 +179,7 @@ export default function RetainerManager({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Retainer
         </h4>
         <div className="flex items-center gap-1">
@@ -278,7 +278,7 @@ export default function RetainerManager({ clientId }: { clientId: string }) {
             </div>
             <div className="w-full h-2 bg-[var(--bg-card)] rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all ${barColor}`}
+                className={`h-full rounded-full transition-colors ${barColor}`}
                 style={{ width: `${Math.min(percentUsed, 100)}%` }}
               />
             </div>

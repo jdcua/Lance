@@ -448,7 +448,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
           {stepDots.map((s) => (
             <div
               key={s}
-              className={`w-2 h-2 rounded-full transition-all ${
+              className={`w-2 h-2 rounded-full transition-colors ${
                 s < step ? 'bg-[var(--accent)]' :
                 s === step ? 'bg-[var(--accent)] scale-125' :
                 'bg-[var(--border-color)]'
@@ -499,7 +499,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
             </div>
             {importHistory.length > 0 && (
               <div className="pt-2 border-t border-[var(--border-color)]">
-                <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide mb-2">
+                <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-2">
                   Recent imports ({importHistory.length})
                 </p>
                 <div className="space-y-1 max-h-32 overflow-y-auto">
@@ -541,7 +541,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
             {/* Scanning progress bar */}
             <div className="w-full h-1 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
               <div
-                className="h-full bg-[var(--accent)] transition-all duration-300 ease-out rounded-full"
+                className="h-full bg-[var(--accent)] transition-colors duration-300 ease-out rounded-full"
                 style={{ width: `${scanProgress.total > 0 ? (scanProgress.current / scanProgress.total) * 100 : 0}%` }}
               />
             </div>
@@ -646,7 +646,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                     {currentDetection.fileType !== 'image' && (
                       <div className="p-3 rounded-[8px] bg-[var(--bg-secondary)] border border-[var(--border-color)] space-y-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Detected as:</span>
+                          <span className="text-[10px] font-semibold text-[var(--text-secondary)]">Detected as:</span>
                           <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                             currentDetection.confidence >= 0.7
                               ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]'
@@ -658,7 +658,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                           </span>
                         </div>
                         <div>
-                          <label className="text-[10px] font-semibold text-[var(--text-accent)] uppercase tracking-wide mb-1.5 block">
+                          <label className="text-[10px] font-semibold text-[var(--text-accent)] mb-1.5 block">
                             Change:
                           </label>
                           <select aria-label="Currentdetection.useroverride || currentdetection.detectedentity"
@@ -690,7 +690,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                       <div className="space-y-3">
                         {currentDetection.preview.extractedFields && Object.keys(currentDetection.preview.extractedFields).length > 0 && (
                           <div>
-                            <span className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide font-medium mb-2 block">
+                            <span className="text-[10px] text-[var(--text-tertiary)] font-medium mb-2 block">
                               Extracted Fields
                             </span>
                             <div className="grid grid-cols-2 gap-2">
@@ -706,17 +706,17 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
 
                         {currentDetection.preview.extractedLineItems && currentDetection.preview.extractedLineItems.length > 0 && (
                           <div>
-                            <span className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide font-medium mb-2 block">
+                            <span className="text-[10px] text-[var(--text-tertiary)] font-medium mb-2 block">
                               Detected Line Items ({currentDetection.preview.extractedLineItems.length})
                             </span>
                             <div className="border border-[var(--border-color)] rounded-[8px] overflow-x-auto">
                               <table className="w-full text-xs">
                                 <thead>
                                   <tr className="bg-[var(--bg-secondary)]">
-                                    <th scope="col" className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--text-secondary)] uppercase">Description</th>
-                                    <th scope="col" className="px-3 py-1.5 text-right text-[10px] font-semibold text-[var(--text-secondary)] uppercase">Qty</th>
-                                    <th scope="col" className="px-3 py-1.5 text-right text-[10px] font-semibold text-[var(--text-secondary)] uppercase">Price</th>
-                                    <th scope="col" className="px-3 py-1.5 text-right text-[10px] font-semibold text-[var(--text-secondary)] uppercase">Total</th>
+                                    <th scope="col" className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--text-secondary)]">Description</th>
+                                    <th scope="col" className="px-3 py-1.5 text-right text-[10px] font-semibold text-[var(--text-secondary)]">Qty</th>
+                                    <th scope="col" className="px-3 py-1.5 text-right text-[10px] font-semibold text-[var(--text-secondary)]">Price</th>
+                                    <th scope="col" className="px-3 py-1.5 text-right text-[10px] font-semibold text-[var(--text-secondary)]">Total</th>
                                   </tr>
                                 </thead>
                                 <tbody>
@@ -842,19 +842,19 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
             <div className="flex justify-center gap-6 text-xs">
               {importedCount > 0 && (
                 <div className="text-center">
-                  <span className="block text-lg font-bold text-[var(--accent-ink,var(--accent))]">{importedCount}</span>
+                  <span className="block text-lg font-semibold text-[var(--accent-ink,var(--accent))]">{importedCount}</span>
                   <span className="text-[var(--text-tertiary)]">Imported</span>
                 </div>
               )}
               {skipCount > 0 && (
                 <div className="text-center">
-                  <span className="block text-lg font-bold text-[var(--text-tertiary)]">{skipCount}</span>
+                  <span className="block text-lg font-semibold text-[var(--text-tertiary)]">{skipCount}</span>
                   <span className="text-[var(--text-tertiary)]">Skipped</span>
                 </div>
               )}
               {errorCount > 0 && (
                 <div className="text-center">
-                  <span className="block text-lg font-bold text-[var(--danger)]">{errorCount}</span>
+                  <span className="block text-lg font-semibold text-[var(--danger)]">{errorCount}</span>
                   <span className="text-[var(--text-tertiary)]">Failed</span>
                 </div>
               )}

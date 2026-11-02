@@ -285,7 +285,7 @@ function AgingReport({
         {bucketOrder.map((bucket) => (
           <div key={bucket} style={{ borderTop: `3px solid ${bucketColor[bucket]}` }}>
             <Card className="text-center">
-              <p className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide mb-1">
+              <p className="text-[10px] text-[var(--text-tertiary)] mb-1">
                 {bucketLabel[bucket]}
               </p>
               <p className="text-sm font-semibold" style={{ color: bucketColor[bucket] }}>

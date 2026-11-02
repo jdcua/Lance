@@ -34,7 +34,7 @@ export default function StatusReportGenerator({ projectId }: { projectId: string
   if (loading) {
     return (
       <div className="space-y-3">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Status Report</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Status Report</h4>
         <div className="space-y-2">
           <div className="h-8 bg-[var(--bg-secondary)] rounded-[4px] animate-pulse" />
           <div className="h-8 bg-[var(--bg-secondary)] rounded-[4px] animate-pulse" />
@@ -46,7 +46,7 @@ export default function StatusReportGenerator({ projectId }: { projectId: string
 
   return (
     <div className="space-y-3">
-      <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Status Report</h4>
+      <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Status Report</h4>
 
       <div className="space-y-2">
         <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px]">

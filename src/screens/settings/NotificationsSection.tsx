@@ -20,7 +20,7 @@ export default function NotificationsSection({ bag }: { bag: SettingsBag }) {
   return (
     <>
       {/* Preferences section header */}
-      <div className="text-xs uppercase tracking-widest text-[var(--text-secondary)] font-semibold mb-4">
+      <div className="text-xs text-[var(--text-secondary)] font-semibold mb-4">
         Notifications
       </div>
 
@@ -145,15 +145,7 @@ export default function NotificationsSection({ bag }: { bag: SettingsBag }) {
               ))}
             </div>
           </div>
-          <PrefToggle
-            checked={prefs.glow}
-            onChange={(v) => {
-              setPref('glow', v);
-              markSaved();
-            }}
-            label="Ambient glow"
-            hint="Soft accent wash behind app content"
-          />
+
           <PrefToggle
             checked={prefs.sparklines}
             onChange={(v) => {
@@ -221,7 +213,7 @@ export default function NotificationsSection({ bag }: { bag: SettingsBag }) {
                 }}
                 className="sr-only peer"
               />
-              <div className="w-9 h-5 bg-[var(--border-color)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--accent)]" />
+              <div className="w-9 h-5 bg-[var(--border-color)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-colors peer-checked:bg-[var(--accent)]" />
             </label>
           </div>
 

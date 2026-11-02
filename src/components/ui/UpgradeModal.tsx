@@ -181,7 +181,7 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
               role="tab"
               aria-selected={activeTab === plan.id}
               onClick={() => setActiveTab(plan.id)}
-              className={`flex-1 py-3 px-4 rounded-[10px] text-sm font-medium transition-all ${
+              className={`flex-1 py-3 px-4 rounded-[10px] text-sm font-medium transition-colors ${
                 activeTab === plan.id
                   ? 'bg-[var(--accent)] text-[var(--accent-on)]'
                   : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
@@ -208,7 +208,7 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={`p-5 rounded-[12px] border-2 transition-all ${
+              className={`p-5 rounded-[12px] border-2 transition-colors ${
                 activeTab === plan.id
                   ? 'border-[var(--accent)] bg-[var(--accent-bg)]'
                   : 'border-[var(--border-color)] bg-[var(--bg-secondary)]'
@@ -218,7 +218,7 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
                 <div>
                   <div className="flex items-baseline gap-2 mb-1">
                     <span
-                      className="text-[28px] font-bold text-[var(--text-primary)]"
+                      className="text-[28px] font-semibold text-[var(--text-primary)]"
                       style={{ fontFamily: "'Syne', sans-serif" }}
                     >
                       {plan.price}
@@ -239,8 +239,11 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
                 size="lg"
                 className="w-full"
                 onClick={() => {
-                  if (activeTab !== plan.id) setActiveTab(plan.id);
-                  else handleCheckout(plan.id as 'monthly' | 'yearly' | 'onetime');
+                  // One click on a plan's CTA buys that plan. Requiring a
+                  // second click after selecting the tab made it look like
+                  // checkout was ignoring the chosen tier.
+                  setActiveTab(plan.id);
+                  handleCheckout(plan.id as 'monthly' | 'yearly' | 'onetime');
                 }}
                 disabled={loading !== null}
               >

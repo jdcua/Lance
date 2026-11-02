@@ -90,7 +90,7 @@ export default function ComponentInventory({ projectId }: { projectId: string })
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Inventory</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Inventory</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
@@ -102,7 +102,7 @@ export default function ComponentInventory({ projectId }: { projectId: string })
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Inventory ({items.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Inventory ({items.length})</h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Add Component
         </Button>
@@ -145,12 +145,12 @@ export default function ComponentInventory({ projectId }: { projectId: string })
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-[var(--border-color)]">
-                <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">Component</th>
-                <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">Footprint</th>
-                <th className="text-right py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">Qty</th>
-                <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">Supplier</th>
-                <th className="text-right py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">Unit $</th>
-                <th className="text-right py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">Total</th>
+                <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)]">Component</th>
+                <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)]">Footprint</th>
+                <th className="text-right py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)]">Qty</th>
+                <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)]">Supplier</th>
+                <th className="text-right py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)]">Unit $</th>
+                <th className="text-right py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)]">Total</th>
                 <th className="w-8" />
               </tr>
             </thead>

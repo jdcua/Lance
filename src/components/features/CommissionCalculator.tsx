@@ -24,21 +24,21 @@ export default function CommissionCalculator() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Commission Calculator</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Commission Calculator</h4>
       </div>
 
       <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-3">
         <div className="grid grid-cols-3 gap-2">
           <div>
-            <label className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide block mb-1">Deal Amount ($)</label>
+            <label className="text-[10px] text-[var(--text-tertiary)] block mb-1">Deal Amount ($)</label>
             <input type="number" placeholder="0.00" value={dealAmount} onChange={(e) => setDealAmount(e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide block mb-1">Commission %</label>
+            <label className="text-[10px] text-[var(--text-tertiary)] block mb-1">Commission %</label>
             <input type="number" placeholder="e.g. 3" value={commissionRate} onChange={(e) => setCommissionRate(e.target.value)} className={inputClass} step="0.1" />
           </div>
           <div>
-            <label className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide block mb-1">Your Split %</label>
+            <label className="text-[10px] text-[var(--text-tertiary)] block mb-1">Your Split %</label>
             <input type="number" placeholder="100" value={splitPct} onChange={(e) => setSplitPct(e.target.value)} className={inputClass} step="0.1" />
           </div>
         </div>
@@ -49,16 +49,16 @@ export default function CommissionCalculator() {
               <div className="p-2 bg-[var(--bg-card)] rounded-[6px]">
                 <div className="flex items-center gap-1.5 mb-1">
                   <TrendingUp size={12} className="text-[var(--accent-ink,var(--accent))]" />
-                  <p className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide">Total Commission</p>
+                  <p className="text-[10px] text-[var(--text-tertiary)]">Total Commission</p>
                 </div>
-                <p className="text-sm font-bold text-[var(--text-primary)] tabular-nums">${totalCommission.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p className="text-sm font-semibold text-[var(--text-primary)] tabular-nums">${totalCommission.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
               <div className="p-2 bg-[var(--bg-card)] rounded-[6px]">
                 <div className="flex items-center gap-1.5 mb-1">
                   <DollarSign size={12} className="text-[#16A34A]" />
-                  <p className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wide">Your Share</p>
+                  <p className="text-[10px] text-[var(--text-tertiary)]">Your Share</p>
                 </div>
-                <p className="text-sm font-bold text-[#16A34A] tabular-nums">${yourShare.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p className="text-sm font-semibold text-[#16A34A] tabular-nums">${yourShare.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
             </div>
 

@@ -150,7 +150,7 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
             Licenses
           </h4>
         </div>
@@ -179,7 +179,7 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
       )}
 
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Licenses ({licenses.length})
         </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
@@ -257,7 +257,7 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
           {Object.entries(grouped).map(([type, items]) => (
             <div key={type}>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-[10px] font-semibold uppercase text-[var(--text-tertiary)]">
+                <span className="text-[10px] font-semibold text-[var(--text-tertiary)]">
                   {type}
                 </span>
                 <span className="text-[10px] text-[var(--text-tertiary)]">

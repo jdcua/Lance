@@ -134,7 +134,7 @@ export default function DeliverableTracker({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
             Deliverables
           </h4>
         </div>
@@ -150,7 +150,7 @@ export default function DeliverableTracker({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Deliverables ({deliverables.length})
         </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
@@ -232,7 +232,7 @@ export default function DeliverableTracker({ clientId }: { clientId: string }) {
             return (
               <div key={period} className="space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase">
+                  <span className="text-[10px] font-semibold text-[var(--text-secondary)]">
                     {period}
                   </span>
                   <span className="text-[10px] text-[var(--text-tertiary)]">
@@ -240,7 +240,7 @@ export default function DeliverableTracker({ clientId }: { clientId: string }) {
                   </span>
                   <div className="flex-1 h-1.5 bg-[var(--border-color)] rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all ${barColor}`}
+                      className={`h-full rounded-full transition-colors ${barColor}`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>

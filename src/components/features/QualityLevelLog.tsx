@@ -122,7 +122,7 @@ export default function QualityLevelLog({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Quality Level</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Quality Level</h4>
         </div>
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
@@ -136,7 +136,7 @@ export default function QualityLevelLog({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Quality Level</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Quality Level</h4>
         <Button size="sm" onClick={handleSave} loading={saving}>
           <Save size={12} /> Save
         </Button>

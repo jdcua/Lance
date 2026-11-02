@@ -13,7 +13,6 @@ import TodayQueue from '../components/ui/TodayQueue';
 import Fade from '../components/motion/Fade';
 import { StaggerGroup, StaggerItem } from '../components/motion/Stagger';
 import AnimatedNumber from '../components/motion/AnimatedNumber';
-import Magnetic from '../components/motion/Magnetic';
 import { usePrefs } from '../lib/prefs';
 import { relativeDate, formatCurrency, DAY_MS } from '../utils/format';
 import { useToasts } from '../store/toastStore';
@@ -329,18 +328,17 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-6 max-w-[1120px]">
+    <div className="p-6 max-w-[1440px]">
       <LoadError
         error={dashboardError}
         onRetry={() => { loadInvoices(); loadClients(); loadProjects(); }}
       />
       <Fade className="relative overflow-hidden rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-card)] shadow-[var(--card-shadow)] p-6 mb-6" y={18}>
-        <div aria-hidden className="pointer-events-none absolute -top-24 -right-16 w-72 h-72 rounded-full bg-[var(--accent)] opacity-[0.13] blur-[80px]" />
-        <div aria-hidden className="pointer-events-none absolute -bottom-28 -left-10 w-72 h-72 rounded-full bg-[var(--accent)] opacity-[0.07] blur-[80px]" />
+
         <div className="relative flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.8px] text-[var(--text-primary)] mb-1.5">{todayLabel}</p>
-          <h2 className="text-[30px] leading-[1.1] font-bold tracking-tight text-balance text-[var(--text-primary)]">
+          <p className="text-[11px] font-medium text-[var(--text-secondary)] mb-1.5">{todayLabel}</p>
+          <h2 className="text-[30px] leading-[1.1] font-medium tracking-tight text-balance text-[var(--text-primary)]">
             {effectiveArchetype.dashboard.greeting}
           </h2>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
@@ -349,10 +347,11 @@ export default function Dashboard() {
               : effectiveArchetype.dashboard.subgreeting}
           </p>
           {hasData && (
-            <div className="flex flex-wrap items-center gap-2 mt-3">
-              <span className="text-xs font-semibold tnum px-2.5 py-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">
-                <AnimatedNumber value={outstandingTotal} format={(n) => formatCurrency(n, profile?.currency)} /> outstanding
+            <div className="flex flex-wrap items-baseline gap-3 mt-4">
+              <span className="text-[32px] leading-none font-medium tnum text-[var(--text-primary)]">
+                <AnimatedNumber value={outstandingTotal} format={(n) => formatCurrency(n, profile?.currency)} />
               </span>
+              <span className="text-xs font-medium text-[var(--text-secondary)]">outstanding</span>
               {overdueCount > 0 && (
                 <span className="text-xs font-semibold tnum px-2.5 py-1 rounded-full bg-[var(--danger-bg)] text-[var(--danger)]">
                   {overdueCount} overdue
@@ -379,23 +378,21 @@ export default function Dashboard() {
           >
             <Clock size={13} /> Log time
           </Button>
-          <Magnetic className="inline-flex">
-            <Button
-              size="sm"
-              variant="primary"
-              onClick={() => {
-                if (clients.length === 0) {
-                  navigate('/clients');
-                  setTimeout(() => document.dispatchEvent(new CustomEvent('lance:add-client')), 350);
-                } else {
-                  navigate('/invoices');
-                  setTimeout(() => document.dispatchEvent(new CustomEvent('lance:add-invoice')), 350);
-                }
-              }}
-            >
-              <Plus size={13} /> {clients.length === 0 ? 'New client' : 'New invoice'}
-            </Button>
-          </Magnetic>
+          <Button
+            size="sm"
+            variant="primary"
+            onClick={() => {
+              if (clients.length === 0) {
+                navigate('/clients');
+                setTimeout(() => document.dispatchEvent(new CustomEvent('lance:add-client')), 350);
+              } else {
+                navigate('/invoices');
+                setTimeout(() => document.dispatchEvent(new CustomEvent('lance:add-invoice')), 350);
+              }
+            }}
+          >
+            <Plus size={13} /> {clients.length === 0 ? 'New client' : 'New invoice'}
+          </Button>
         </div>
       </div>
       </Fade>
@@ -418,7 +415,7 @@ export default function Dashboard() {
               <p className="text-xs text-[var(--text-secondary)] mb-2.5">Everything in Lance starts with a client. Each step opens the real thing.</p>
               <div className="h-1 rounded-full bg-[var(--bg-secondary)] overflow-hidden mb-3">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-hover)] transition-all duration-500"
+                  className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-500"
                   style={{ width: `${Math.round((steps.filter((s) => s.done).length / steps.length) * 100)}%` }}
                 />
               </div>
@@ -512,12 +509,13 @@ export default function Dashboard() {
         ))}
       </StaggerGroup>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-6">
       {/* Portal Activity */}
       {portalActivity.length > 0 && (
-        <Card className="mb-6 border-[var(--accent)]/20">
+        <Card className="border-[var(--accent)]/20">
           <div className="flex items-center gap-2 mb-3">
             <Link size={14} className="text-[var(--accent-ink,var(--accent))]" />
-            <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Portal Activity</h3>
+            <h3 className="text-xs font-medium text-[var(--text-secondary)]">Portal activity</h3>
           </div>
           <div className="space-y-1.5">
             {portalActivity.slice(0, 5).map((act, i) => (
@@ -532,10 +530,10 @@ export default function Dashboard() {
 
       {/* Needs Attention · Follow-ups */}
       {activeFollowUps.length > 0 && (
-        <Card className="mb-6 border-[var(--accent)]/20">
+        <Card className="border-[var(--accent)]/20">
           <div className="flex items-center gap-2 mb-3">
             <Bell size={14} className="text-[var(--accent-ink,var(--accent))]" />
-            <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Needs Attention</h3>
+            <h3 className="text-xs font-medium text-[var(--text-secondary)]">Needs attention</h3>
             <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">{activeFollowUps.length}</span>
           </div>
           <div className="space-y-2">
@@ -583,6 +581,8 @@ export default function Dashboard() {
           </div>
         </Card>
       )}
+
+      </div>
 
       {/* Quick Actions */}
       {hasData && effectiveArchetype.dashboard.quickActions.length > 0 && (

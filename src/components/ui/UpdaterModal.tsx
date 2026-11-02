@@ -64,7 +64,7 @@ export default function UpdaterModal() {
     <Modal open={updateAvailable} onClose={isDownloading ? () => {} : handleLater} title="Software Update Available" size="sm">
       <div className="space-y-4">
         <div className="flex items-start gap-3 p-3 rounded-[8px] bg-[var(--bg-secondary)] border border-[var(--border-color)]">
-          <Sparkles size={18} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0 mt-0.5" />
+          <Download size={18} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-medium text-[var(--text-primary)]">Lance {updateData.version} is here</p>
             <p className="text-xs text-[var(--text-tertiary)] mt-1">

@@ -208,7 +208,7 @@ export default function SprintBoard({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
             Sprint Board
           </h4>
         </div>
@@ -224,7 +224,7 @@ export default function SprintBoard({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Sprint Board ({tasks.length})
         </h4>
         <Button
@@ -306,7 +306,7 @@ export default function SprintBoard({ projectId }: { projectId: string }) {
             return (
               <div key={col.key} className="flex flex-col">
                 <div className="flex items-center justify-between px-1 py-1.5 mb-1">
-                  <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+                  <span className="text-[10px] font-semibold text-[var(--text-secondary)]">
                     {col.label}
                   </span>
                   <span className="text-[10px] text-[var(--text-tertiary)]">
@@ -403,7 +403,7 @@ export default function SprintBoard({ projectId }: { projectId: string }) {
                         </div>
                       ) : (
                         <div
-                          className="px-2 py-1.5 bg-[var(--bg-secondary)] rounded-[6px] text-xs cursor-pointer hover:brightness-110 transition-all"
+                          className="px-2 py-1.5 bg-[var(--bg-secondary)] rounded-[6px] text-xs cursor-pointer hover:brightness-110 transition-colors"
                           onClick={() => handleEditToggle(task)}
                         >
                           <div className="flex items-start justify-between gap-1">

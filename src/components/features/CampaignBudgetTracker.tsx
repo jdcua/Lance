@@ -117,7 +117,7 @@ export default function CampaignBudgetTracker({ projectId }: { projectId: string
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
             Campaign Budgets
           </h4>
         </div>
@@ -133,7 +133,7 @@ export default function CampaignBudgetTracker({ projectId }: { projectId: string
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Campaign Budgets ({items.length})
         </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
@@ -242,7 +242,7 @@ export default function CampaignBudgetTracker({ projectId }: { projectId: string
                 </div>
                 <div className="w-full h-1.5 bg-[var(--border-color)] rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all ${overBudget ? 'bg-[#E74C3C]' : 'bg-[var(--accent)]'}`}
+                    className={`h-full rounded-full transition-colors ${overBudget ? 'bg-[#E74C3C]' : 'bg-[var(--accent)]'}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>

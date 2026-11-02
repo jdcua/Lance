@@ -185,7 +185,7 @@ export default function LanguagePairTracker({ projectId }: { projectId: string }
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Language Pairs</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Language Pairs</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -199,7 +199,7 @@ export default function LanguagePairTracker({ projectId }: { projectId: string }
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Language Pairs</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Language Pairs</h4>
       </div>
 
       {/* Selected pairs */}
@@ -224,7 +224,7 @@ export default function LanguagePairTracker({ projectId }: { projectId: string }
 
       {/* Common pair suggestions */}
       <div>
-        <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide mb-1.5">Common Pairs</p>
+        <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1.5">Common Pairs</p>
         <div className="flex flex-wrap gap-1.5">
           {COMMON_PAIRS.map((pair) => {
             const selected = isPairAdded(pair.source, pair.target);
@@ -248,7 +248,7 @@ export default function LanguagePairTracker({ projectId }: { projectId: string }
 
       {/* Custom entry */}
       <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
-        <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wide">Custom Pair</p>
+        <p className="text-[10px] font-semibold text-[var(--text-tertiary)]">Custom Pair</p>
         <div className="flex items-center gap-2">
           <input
             type="text"
