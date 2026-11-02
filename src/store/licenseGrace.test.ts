@@ -83,14 +83,23 @@ describe('license cool-down after a revoked key', () => {
   });
 
   it('downgrades once the cool-down has elapsed', async () => {
+    // Deterministic: this test is about the local cool-down clock, not the
+    // network. Simulate the worker being unreachable so no fresh 'expired'
+    // response can re-arm the grace window (which is what the leak from the
+    // previous mock used to do, making this pass/fail by test order).
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
     const expired = new Date(Date.now() - DAY).toISOString();
     useStore.setState({ profile: profile({ license_grace_until: expired }) });
+    // Keep the test offline: a local .env may point the worker URL at the
+    // real service, and a live answer must not decide this local-clock test.
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
 
     await useStore.getState().pingLicenseServer();
 
     expect(useStore.getState().profile?.license_tier).toBe('free');
     expect(useStore.getState().getActiveTier()).toBe('free');
     expect(useStore.getState().profile?.license_grace_until).toBeUndefined();
+    vi.unstubAllGlobals();
   });
 
   it('keeps Pro after a refund, since revocation starts the cool-down not access loss', async () => {

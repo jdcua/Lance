@@ -864,8 +864,20 @@ export async function openCheckout(tier: 'monthly' | 'yearly' | 'onetime'): Prom
     return false;
   }
 
-  // Prefer a transaction minted on demand by the license worker, so checkout
-  // works without a baked-in hosted-checkout base URL.
+  // Prefer the configured hosted checkout. It is the reliable path and keeps
+  // the selected tier in the price_id query param. The worker endpoint is a
+  // fallback for builds that do not ship a hosted-checkout URL.
+  if (PADDLE_CHECKOUT_BASE) {
+    const url = `${PADDLE_CHECKOUT_BASE}?price_id=${priceId}`;
+    if (isTauri()) {
+      const { openUrl } = await import('@tauri-apps/plugin-opener');
+      await openUrl(url);
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+    return true;
+  }
+
   if (WORKER_URL) {
     try {
       const res = await fetch(`${WORKER_URL}/checkout`, {
@@ -888,18 +900,6 @@ export async function openCheckout(tier: 'monthly' | 'yearly' | 'onetime'): Prom
     } catch (err) {
       console.warn('[paddle] Worker checkout failed, falling back:', err);
     }
-  }
-
-  // Fallback to a baked-in hosted checkout base URL if present.
-  if (PADDLE_CHECKOUT_BASE) {
-    const url = `${PADDLE_CHECKOUT_BASE}?price_id=${priceId}`;
-    if (isTauri()) {
-      const { openUrl } = await import('@tauri-apps/plugin-opener');
-      await openUrl(url);
-    } else {
-      window.open(url, '_blank', 'noopener,noreferrer');
-    }
-    return true;
   }
 
   return false;
