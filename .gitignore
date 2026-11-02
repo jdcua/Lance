@@ -92,3 +92,4 @@ promo-video/out/
 promo-video/*.log
 dist-artifacts/
 vite.config.ts.timestamp-*.mjs
+.qa/swarm2/
