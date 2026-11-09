@@ -21,7 +21,7 @@ const Assets = lazyRetry(() => import('./screens/Assets'));
 const SearchScreen = lazyRetry(() => import('./screens/Search'));
 const FollowUps = lazyRetry(() => import('./screens/FollowUps'));
 const Pipeline = lazyRetry(() => import('./screens/Pipeline'));
-const ArchetypePicker = lazyRetry(() => import('./screens/ArchetypePicker'));
+const OnboardingScreen = lazyRetry(() => import('./screens/Onboarding'));
 const ShareView = lazyRetry(() => import('./screens/ShareView'));
 const NotFound = lazyRetry(() => import('./screens/NotFound'));
 
@@ -97,6 +97,7 @@ export const router = createBrowserRouter(
         { path: 'achievements', element: lazyRoute(<AchievementsPage />, 'cards') },
         { path: 'assets', element: lazyRoute(<Assets />, 'cards') },
         { path: 'search', element: lazyRoute(<SearchScreen />, 'list') },
+        { path: 'onboarding', element: lazyRoute(<OnboardingScreen />, 'cards') },
         { path: '*', element: lazyRoute(<NotFound />, 'list') },
       ],
     },

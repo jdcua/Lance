@@ -55,8 +55,6 @@ import {
 import { useStore } from '../../store';
 import { usePrefs } from '../../lib/prefs';
 import { trialDaysRemaining } from '../../lib/trial';
-import { getArchetype } from '../../archetypes';
-import type { SidebarItemDef } from '../../archetypes';
 import { commands } from '../../lib/commands';
 import { getShortcutModifierLabel } from '../../utils/shortcuts';
 import { setMobileNavOpen, useMobileNavOpen } from '../../lib/mobileNav';
@@ -195,57 +193,49 @@ export default function Sidebar() {
     localStorage.setItem('lance:sidebar-collapsed', String(next));
   };
 
-  const archetype = useMemo(() => getArchetype(profile?.profession || 'default'), [profile?.profession]);
-
-  const badgeMap: Record<string, number> = useMemo(() => ({
-    draftProposals: proposals.filter((p) => p.status === 'draft').length,
-    activeProjects: projects.filter((p) => p.status === 'active').length,
-    unpaidInvoices: invoices.filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').length,
-    totalAssets: allAttachments.length,
-    proposalFollowUps: pendingFollowUps.filter((f) => f.entity_type === 'proposal').length,
-    invoiceFollowUps: pendingFollowUps.filter((f) => f.entity_type === 'invoice').length,
-  }), [proposals, projects, invoices, allAttachments, pendingFollowUps]);
-
   const sidebarItems = useMemo(() => {
-    const items = archetype.sidebar || [];
-    // Progressive disclosure: the first 3 archetype items are the core loop
-    // and always show. The rest reveal when the user has data there, has
-    // visited, or flips "show all". The sidebar grows with the business
-    // instead of interrogating a day-one user with 9+ sections.
+    // Default nav items shown progressively — replaces the old archetype-driven sidebar.
+    const defaultItems = [
+      { id: 'clients', label: 'Clients', path: '/clients', icon: Users },
+      { id: 'projects', label: 'Projects', path: '/projects', icon: FolderKanban },
+      { id: 'invoices', label: 'Invoices', path: '/invoices', icon: Receipt },
+      { id: 'contracts', label: 'Contracts', path: '/contracts', icon: FileEdit },
+      { id: 'finance', label: 'Finance', path: '/finance', icon: Banknote },
+      { id: 'time', label: 'Time', path: '/time', icon: Clock },
+      { id: 'proposals', label: 'Proposals', path: '/proposals', icon: FileText },
+      { id: 'follow-ups', label: 'Follow-ups', path: '/follow-ups', icon: Bell },
+      { id: 'pipeline', label: 'Pipeline', path: '/pipeline', icon: Columns3 },
+      { id: 'insights', label: 'Insights', path: '/insights', icon: BarChart3 },
+      { id: 'achievements', label: 'Achievements', path: '/achievements', icon: Trophy },
+      { id: 'assets', label: 'Assets', path: '/assets', icon: Package },
+      { id: 'search', label: 'Search', path: '/search', icon: Search },
+    ];
     const hasData: Record<string, boolean> = {
       clients: clients.length > 0,
       projects: projects.length > 0,
-      time: timeEntries.length > 0,
       invoices: invoices.length > 0,
       finance: invoices.length > 0 || expenses.length > 0,
-      contracts: contracts.length > 0,
       proposals: proposals.length > 0,
+      contracts: contracts.length > 0,
+      time: timeEntries.length > 0,
       assets: allAttachments.length > 0,
-      insights: clients.length > 0,
     };
-    const ESSENTIAL_COUNT = 3;
+    const ESSENTIAL_COUNT = 4;
     const visibleItems = showAll
-      ? items
-      : items.filter((item, i) => i < ESSENTIAL_COUNT || hasData[item.id] || visited.has(item.path));
-    const hiddenCount = items.length - visibleItems.length;
-    // Group by the archetype's original thirds (WORK/MANAGE/ANALYZE), then
-    // drop groups with nothing visible, so labels keep their meaning as
-    // sections reveal instead of reshuffling on every unlock.
+      ? defaultItems
+      : defaultItems.filter((item, i) => i < ESSENTIAL_COUNT || hasData[item.id] || visited.has(item.path));
+    const hiddenCount = defaultItems.length - visibleItems.length;
     const visiblePaths = new Set(visibleItems.map((i) => i.path));
-    const groups: { label: string; items: SidebarItemDef[] }[] = [];
+    const groups: { label: string; items: typeof defaultItems }[] = [];
     const groupLabels = ['Work', 'Manage', 'Analyze'];
-    const splitSize = Math.max(1, Math.ceil(items.length / 3));
-
-    for (let i = 0; i < items.length; i += splitSize) {
-      const groupItems = items.slice(i, i + splitSize).filter((item) => visiblePaths.has(item.path));
+    const splitSize = Math.max(1, Math.ceil(defaultItems.length / 3));
+    for (let i = 0; i < defaultItems.length; i += splitSize) {
+      const groupItems = defaultItems.slice(i, i + splitSize).filter((item) => visiblePaths.has(item.path));
       if (groupItems.length === 0) continue;
-      groups.push({
-        label: groupLabels[Math.floor(i / splitSize)] || 'MORE',
-        items: groupItems,
-      });
+      groups.push({ label: groupLabels[Math.floor(i / splitSize)] || 'MORE', items: groupItems });
     }
     return { items: visibleItems, groups, hiddenCount };
-  }, [archetype, showAll, visited, clients.length, projects.length, timeEntries.length, invoices.length, expenses.length, contracts.length, proposals.length, allAttachments.length]);
+  }, [showAll, visited, clients.length, projects.length, invoices.length, expenses.length, contracts.length, proposals.length, allAttachments.length, timeEntries.length]);
 
   // MORE-group progressive disclosure. Search is wayfinding and always
   // shows; the rest reveal on use or via "show all".
@@ -256,9 +246,8 @@ export default function Sidebar() {
     visited.has('/pipeline');
   const showFollowUps = showAll || pendingFollowUps.length > 0 || visited.has('/follow-ups');
   const showAchievements = showAll || visited.has('/achievements');
-  const showArchetype = showAll || visited.has('/archetype');
   const hiddenMoreCount =
-    (showImport ? 0 : 1) + (showPipeline ? 0 : 1) + (showFollowUps ? 0 : 1) + (showAchievements ? 0 : 1) + (showArchetype ? 0 : 1);
+    (showImport ? 0 : 1) + (showPipeline ? 0 : 1) + (showFollowUps ? 0 : 1) + (showAchievements ? 0 : 1);
   const hiddenTotal = sidebarItems.hiddenCount + hiddenMoreCount;
   const asideClassName = isMobile
     ? `fixed inset-y-0 left-0 z-40 w-72 max-w-[86vw] h-full flex flex-col glass-dark border-r border-[var(--sb-border)] transition-transform duration-200 ${mobileOpen ? 'translate-x-0 visible' : '-translate-x-full invisible'}`

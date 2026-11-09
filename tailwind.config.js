@@ -34,6 +34,7 @@ export default {
         sans:    ["'Inter'", "sans-serif"],
       },
       borderRadius: {
+        xs: "6px",
         sm: "8px",
         md: "12px",
         lg: "14px",
