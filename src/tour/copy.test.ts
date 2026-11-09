@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { getTourPlan } from './voice';
 import { buildSteps, speak } from './copy';
-import { ARCHETYPE_LIST } from '../archetypes';
+const ARCHETYPE_LIST = [{ id: 'developer' }, { id: 'consultant' }];
 
 describe('tour copy + steps', () => {
   it('speak picks the line for each tempo', () => {

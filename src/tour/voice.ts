@@ -1,4 +1,4 @@
-import { getArchetype } from '../archetypes';
+
 
 /**
  * Tour coach voice engine.
@@ -207,20 +207,28 @@ export interface TourPlan {
 }
 
 /** Build the personalized tour plan: greeting, curriculum, route, voice. */
+const TOUR_PLANS: Record<string, { greeting: string; subgreeting: string; actions: { label: string; action: string }[]; stops: { id: string; label: string; path: string }[] }> = {
+  developer: {
+    greeting: "What's shipping today?",
+    subgreeting: 'Your build, your pace.',
+    actions: [{ label: 'Log Time', action: 'add-time' }],
+    stops: [{ id: 'time', label: 'Time', path: '/time' }, { id: 'projects', label: 'Projects', path: '/projects' }, { id: 'finance', label: 'Finance', path: '/finance' }],
+  },
+  consultant: {
+    greeting: 'Who are you serving today?',
+    subgreeting: 'Your clients, your craft.',
+    actions: [{ label: 'Log Session', action: 'add-time' }, { label: 'New Client', action: 'add-client' }],
+    stops: [{ id: 'clients', label: 'Clients', path: '/clients' }, { id: 'finance', label: 'Finance', path: '/finance' }, { id: 'invoices', label: 'Invoices', path: '/invoices' }],
+  },
+};
+
 export function getTourPlan(profession: string, drive: DriveSetting | null = null): TourPlan {
-  const config = getArchetype(profession || 'default');
+  const plan = TOUR_PLANS[profession] || TOUR_PLANS.developer;
   return {
-    greeting: config.dashboard.greeting,
-    subgreeting: config.dashboard.subgreeting,
-    actions: (config.dashboard.quickActions || []).map((q) => ({
-      label: q.label,
-      action: q.action,
-    })),
-    stops: (config.sidebar || []).slice(0, 3).map((s) => ({
-      id: s.id,
-      label: s.label,
-      path: s.path,
-    })),
+    greeting: plan.greeting,
+    subgreeting: plan.subgreeting,
+    actions: plan.actions,
+    stops: plan.stops,
     voice: resolveVoice(profession, drive),
   };
 }

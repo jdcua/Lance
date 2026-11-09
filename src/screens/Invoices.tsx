@@ -30,7 +30,7 @@ import { recordTrialValue } from '../utils/trialValue';
 import { recordTelemetry } from '../utils/telemetry';
 import { getFeatureFlags } from '../lib/constants';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
-import { getArchetype } from '../archetypes';
+
 import InvoiceList from './invoices/InvoiceList';
 import RecurringList from './invoices/RecurringList';
 import InvoiceModals from './invoices/InvoiceModals';
@@ -142,8 +142,7 @@ export default function Invoices() {
     markFollowedUp: false,
   });
 
-  // Archetype-aware invoice defaults
-  const archetype = useMemo(() => getArchetype(profile?.profession || ''), [profile?.profession]);
+
   // Smart dunning (Pro): overdue drafts speak in the freelancer's voice and
   // can carry an accrued late fee. Free tiers render default templates.
   const dunningTone: DunningTone | undefined = useMemo(() => {
@@ -195,8 +194,8 @@ export default function Invoices() {
     }
   };
   const defaultPaymentTerms = useMemo(
-    () => archetype?.paymentTerms ?? profile?.payment_terms ?? 14,
-    [archetype, profile?.payment_terms],
+    () => profile?.payment_terms ?? 14,
+    [profile?.payment_terms],
   );
 
   useEffect(() => {
@@ -997,11 +996,7 @@ export default function Invoices() {
 
   // Archetype deposit hint: typical upfront % for this craft, computed
   // live from the subtotal. Display only — never auto-added to the invoice.
-  const depositPct = archetype?.depositPercentage ?? 0;
-  const depositHint =
-    !editing && depositPct > 0 && subtotal > 0
-      ? { pct: depositPct, amount: (subtotal * depositPct) / 100 }
-      : null;
+  const depositHint = null;
 
   // Section prop bag: shell-local state, handlers, and derived figures.
   // Sections are verbatim relocation; computations stay here.

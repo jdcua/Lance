@@ -15,7 +15,7 @@ import { useToasts } from '../store/toastStore';
 import { checkAndNotify } from '../achievements/notify';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 import { maybeFirstSendMoment } from '../utils/firstWin';
-import { getArchetype } from '../archetypes';
+
 
 export default function NewProposal() {
   const { clients, loadClients, addProposal, profile, loadProfile } = useStore();
@@ -28,9 +28,7 @@ export default function NewProposal() {
   const [loading, setLoading] = useState(true);
   const aiEnabled = profile?.ai_enabled ?? false;
 
-  // Get archetype config from profile's profession
-  const archetype = useMemo(() => getArchetype(profile?.profession || ''), [profile?.profession]);
-  const proposalTypes = useMemo(() => archetype?.proposalTypes || ['flat', 'hourly', 'project'], [archetype]);
+  const proposalTypes = ['flat', 'hourly', 'project'];
 
   const [form, setForm] = useState<{
     client_id: string;

@@ -33,6 +33,7 @@ import ToastContainer from './components/ui/Toast';
 import CommandPalette from './components/ui/CommandPalette';
 import QuickTimeLogModal from './components/ui/QuickTimeLogModal';
 import OnboardingComfort from './components/ui/OnboardingComfort';
+import Onboarding from './screens/Onboarding';
 import Walkthrough from './components/ui/Walkthrough';
 import ProWelcome from './components/ui/ProWelcome';import SpotlightTour from './components/ui/SpotlightTour';
 import SplashScreen from './components/ui/SplashScreen';

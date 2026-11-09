@@ -41,6 +41,7 @@ import {
   BarChart4,
   Settings2,
   Briefcase,
+  Banknote,
   CheckSquare,
   Calendar,
   Calculator,
@@ -163,6 +164,7 @@ export default function Sidebar() {
   const isTrial = getActiveTier() === 'trial';
   const prefs = usePrefs();
   const showBadges = prefs.badges;
+  const badgeMap = { unpaidInvoices: 0, draftProposals: 0, activeProjects: 0, totalAssets: 0 };
 
   // Remember every section the user visits (palette, deep link, tour CTA…).
   // Visited sections stay visible: nothing the user found gets taken away.
@@ -246,6 +248,8 @@ export default function Sidebar() {
     visited.has('/pipeline');
   const showFollowUps = showAll || pendingFollowUps.length > 0 || visited.has('/follow-ups');
   const showAchievements = showAll || visited.has('/achievements');
+  const showArchetype = showAll || visited.has('/archetype');
+  // archetype sidebar entry removed
   const hiddenMoreCount =
     (showImport ? 0 : 1) + (showPipeline ? 0 : 1) + (showFollowUps ? 0 : 1) + (showAchievements ? 0 : 1);
   const hiddenTotal = sidebarItems.hiddenCount + hiddenMoreCount;
@@ -345,7 +349,7 @@ export default function Sidebar() {
               </p>
             )}
             {group.items.map((item) => {
-              const Icon = ICON_MAP[item.icon] || Package;
+              const Icon = item.icon;
               const badgeKey = item.path === '/proposals' ? 'draftProposals'
                 : item.path === '/projects' ? 'activeProjects'
                 : item.path === '/invoices' ? 'unpaidInvoices'
@@ -363,10 +367,10 @@ export default function Sidebar() {
                   expanded={isExpanded}
                   badge={
                     <>
-                      {showBadges && isExpanded && item.badge === 'new' && (
+                      {showBadges && isExpanded && (item as any).badge === 'new' && (
                         <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] sb-accent-text">New</span>
                       )}
-                      {showBadges && isExpanded && item.badge === 'alert' && badgeMap.unpaidInvoices > 0 && (
+                      {showBadges && isExpanded && (item as any).badge === 'alert' && badgeMap.unpaidInvoices > 0 && (
                         <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--danger-bg)] text-[var(--danger)]">{badgeMap.unpaidInvoices}</span>
                       )}
                       {showBadges && isExpanded && badgeKey && badgeMap[badgeKey] > 0 && (
@@ -440,15 +444,6 @@ export default function Sidebar() {
             title="Achievements"
             icon={Trophy}
             label="Achievements"
-            expanded={isExpanded}
-          />
-          }
-          {showArchetype &&
-          <SideLink focusable={!isMobile || mobileOpen}
-            to="/archetype"
-            title="Archetype"
-            icon={Sparkles}
-            label="Archetype"
             expanded={isExpanded}
           />
           }

@@ -20,7 +20,6 @@ type CommandDetail = {
   'lance:add-project': undefined;
   'lance:add-contract': undefined;
   'lance:add-expense': undefined;
-  'lance:open-archetype-picker': undefined;
   'lance:edit-client': string;
   'lance:prefs-changed': undefined;
 };
