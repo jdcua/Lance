@@ -240,7 +240,6 @@ const FeatureComponents: Record<string, unknown> = {
   VulnerabilityLog: lazy(() => import('./VulnerabilityLog')),
   RemediationTracker: lazy(() => import('./RemediationTracker')),
   ComplianceFrameworkLog: lazy(() => import('./ComplianceFrameworkLog')),
-  AuditTracker: lazy(() => import('./AuditFindingLog')),
 
   // ── Embedded ──
   BOMTracker: lazy(() => import('./BOMTracker')),
