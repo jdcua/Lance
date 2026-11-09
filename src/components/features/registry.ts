@@ -308,10 +308,10 @@ const FeatureComponents: Record<string, unknown> = {
   PostingPerformanceNotes: lazy(() => import('./PostingPerformanceNotes')),
 
   // ── Translator extras ──
-  CATToolLog: lazy(() => import('./ToolComputeLog')),
+
 
   // ── Virtual Assistant extras ──
-  RecurringTaskTemplates: lazy(() => import('./SOPStore')),
+
   ScopeAlert: lazy(() => import('./ScopeAlert')),
   SOPs: lazy(() => import('./SOPStore')),
 
@@ -363,13 +363,15 @@ const FeatureComponents: Record<string, unknown> = {
   ReportCadenceWidget: lazy(() => import('./ReportCadence')),
   PhaseGateWidget: lazy(() => import('./PhaseGateTracker')),
   InfraHealthWidget: lazy(() => import('./InfraDashboard')),
-  SpendPacingDashboard: lazy(() => import('./SpendPacing')),
-  CommissionCalculatorWidget: lazy(() => import('./CommissionCalculator')),
+
+
 
   // ── Simple utility widgets ──
   RecentTime: lazy(() => import('./RecentTimeWidget')),
   RecentInvoices: lazy(() => import('./RecentInvoicesWidget')),
 };
+
+export const FEATURE_COMPONENT_NAMES = Object.keys(FeatureComponents);
 
 export function getFeatureComponent(name: string): ComponentType<Record<string, unknown>> | null {
   return (FeatureComponents[name] as ComponentType<Record<string, unknown>> | undefined) || null;

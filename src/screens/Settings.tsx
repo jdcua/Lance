@@ -15,7 +15,6 @@ import { Check, AlertTriangle } from 'lucide-react';
 import { applyTheme, getTheme } from '../themes/themes';
 import { commands } from '../lib/commands';
 import type { ThemeId } from '../themes';
-import { PROFESSION_THEME, type Profession } from '../themes';
 import { getUnlockedThemes, getUnlockedAchievementKeys } from '../achievements/checker';
 import { clearSampleData } from '../utils/seedData';
 import {
@@ -33,6 +32,7 @@ import { formatTableCounts } from '../utils/backup';
 import { ACCENT_COLORS } from './settings/shared';
 import GeneralSection from './settings/GeneralSection';
 import AppearanceSection from './settings/AppearanceSection';
+import FeatureSettings from './settings/FeatureSettings';
 import NotificationsSection from './settings/NotificationsSection';
 import DataSection from './settings/DataSection';
 import DangerSection from './settings/DangerSection';
@@ -91,6 +91,19 @@ export default function Settings() {
   const [density, setDensity] = useState<string>('comfortable');
   const [accentColor, setAccentColor] = useState<string>('sage');
   const [unlockedAchievements, setUnlockedAchievements] = useState<Set<string>>(new Set());
+  const [features, setFeaturesState] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem('lance:features');
+      return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+  });
+  const setFeatures = useCallback((action: React.SetStateAction<Record<string, boolean>>) => {
+    setFeaturesState((prev) => {
+      const next = typeof action === 'function' ? (action as (p: Record<string, boolean>) => Record<string, boolean>)(prev) : action;
+      try { localStorage.setItem('lance:features', JSON.stringify(next)); } catch { /* private mode */ }
+      return next;
+    });
+  }, []);
   const densityInitRef = useRef(false);
   const accentInitRef = useRef(false);
   const [form, setForm] = useState<UserProfile>({
@@ -111,12 +124,13 @@ export default function Settings() {
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const formInitialized = useRef(false);
   const [section, setSection] = useState<
-    'general' | 'appearance' | 'notifications' | 'data' | 'danger-zone'
+    'general' | 'appearance' | 'features' | 'notifications' | 'data' | 'danger-zone'
   >('general');
   const innerModalOpenRef = useRef(false);
   const NAV_ITEMS = [
     { id: 'general' as const, label: 'General' },
     { id: 'appearance' as const, label: 'Appearance' },
+    { id: 'features' as const, label: 'Features' },
     { id: 'notifications' as const, label: 'Notifications' },
     { id: 'data' as const, label: 'Data & Backup' },
     { id: 'danger-zone' as const, label: 'Danger Zone', danger: true },
@@ -199,10 +213,6 @@ export default function Settings() {
       Promise.all([getUnlockedThemes(), getUnlockedAchievementKeys()]).then(
         ([unlocked, achievementKeys]) => {
           const set = new Set(['default', ...unlocked]);
-          const prof = profile?.profession as Profession | undefined;
-          if (prof && PROFESSION_THEME[prof]) {
-            set.add(PROFESSION_THEME[prof]);
-          }
           setUnlockedThemes(set);
           setUnlockedAchievements(new Set(achievementKeys));
         },
@@ -759,6 +769,8 @@ export default function Settings() {
     setAutoBackupFreq,
     autoBackupPath,
     setAutoBackupPath,
+    features,
+    setFeatures,
     autoBackupLoaded,
     saveAutoBackupState,
     handleExportData,
@@ -809,6 +821,8 @@ export default function Settings() {
             {section === 'general' && <GeneralSection bag={bag} />}
 
             {section === 'appearance' && <AppearanceSection bag={bag} />}
+
+            {section === 'features' && <FeatureSettings bag={bag} />}
 
             {section === 'notifications' && <NotificationsSection bag={bag} />}
 

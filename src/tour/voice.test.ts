@@ -7,7 +7,7 @@ import {
   loadDrive,
   saveDrive,
 } from './voice';
-import { ARCHETYPE_LIST } from '../archetypes';
+const ARCHETYPE_LIST = [{ id: 'developer' }, { id: 'consultant' }];
 
 describe('tour voice engine', () => {
   it('covers every selectable archetype with a voice family', () => {

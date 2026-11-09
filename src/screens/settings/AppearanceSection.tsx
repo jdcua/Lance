@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { useToasts } from '../../store/toastStore';
 import Card from '../../components/ui/Card';
 import { Lock } from 'lucide-react';
 import { THEMES, applyTheme } from '../../themes/themes';
+import { STORAGE_KEYS } from '../../lib/constants';
 import { SectionHead, ACCENT_COLORS, type SettingsBag } from './shared';
 
 /**
@@ -10,6 +12,22 @@ import { SectionHead, ACCENT_COLORS, type SettingsBag } from './shared';
 export default function AppearanceSection({ bag }: { bag: SettingsBag }) {
   const { form, autoSave, saved } = bag;
   const addToast = useToasts((s) => s.add);
+  const [colours, setColours] = useState<{ base: string; secondary: string; accent: string }>(() => ({
+    base: localStorage.getItem(STORAGE_KEYS.COLOUR_BASE) || '#F8F7F3',
+    secondary: localStorage.getItem(STORAGE_KEYS.COLOUR_SECONDARY) || '#EFEFEA',
+    accent: localStorage.getItem(STORAGE_KEYS.COLOUR_ACCENT) || '#FFAD00',
+  }));
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--colour-base', colours.base);
+    root.style.setProperty('--colour-secondary', colours.secondary);
+    root.style.setProperty('--colour-accent', colours.accent);
+    try {
+      localStorage.setItem(STORAGE_KEYS.COLOUR_BASE, colours.base);
+      localStorage.setItem(STORAGE_KEYS.COLOUR_SECONDARY, colours.secondary);
+      localStorage.setItem(STORAGE_KEYS.COLOUR_ACCENT, colours.accent);
+    } catch { /* private mode */ }
+  }, [colours]);
 
   return (
     <>
@@ -169,6 +187,24 @@ export default function AppearanceSection({ bag }: { bag: SettingsBag }) {
           </div>
         </Card>
       )}
+
+      {/* Colour triplet */}
+      <Card className="mb-6">
+        <SectionHead title="Colours" isSaved={false} />
+        <div className="grid grid-cols-3 gap-3">
+          {(['base', 'secondary', 'accent'] as const).map((key) => (
+            <label key={key} className="flex flex-col gap-1 text-xs">
+              <span className="text-[var(--text-secondary)] capitalize">{key}</span>
+              <input
+                type="color"
+                value={colours[key]}
+                onChange={(e) => setColours((c) => ({ ...c, [key]: e.target.value }))}
+                className="w-full h-9 rounded-sm border border-[var(--border-color)] bg-[var(--bg-card)]"
+              />
+            </label>
+          ))}
+        </div>
+      </Card>
     </>
   );
 }

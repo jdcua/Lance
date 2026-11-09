@@ -20,7 +20,7 @@ import { relativeDate } from '../utils/format';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 import { Plus, Pencil, Trash2, Eye, PenLine, Search, Copy, FileText, Share2, Link, Download } from 'lucide-react';
 import ShareModal from '../components/ShareModal';
-import { getArchetype } from '../archetypes';
+
 
 const statusBadge: Record<string, 'success' | 'warning' | 'info' | 'danger'> = {
   draft: 'warning',
@@ -296,21 +296,9 @@ export default function Contracts() {
   });
   const pagedContracts = useVisibleList(filtered, `${search}|${tab}`);
 
-  // Archetype-specific contract presets
-  const archetype = useMemo(() => getArchetype(profile?.profession || ''), [profile?.profession]);
-  const archetypeContractPresets = useMemo(() => archetype?.contractPresets || [], [archetype]);
-
   const allTemplatesWithArchetype = useMemo(() => {
-    const archetypePresets = archetypeContractPresets.map((cp) => ({
-      ...cp,
-      id: `archetype:${cp.name}`,
-      created_at: '',
-      category: cp.category,
-      body: cp.body,
-      variables: cp.variables,
-    }));
-    return [...PREBUILT_TEMPLATES.map((t) => ({ ...t, id: `prebuilt:${t.name}`, created_at: '' })), ...archetypePresets, ...contractTemplates];
-  }, [archetypeContractPresets, contractTemplates]);
+    return [...PREBUILT_TEMPLATES.map((t) => ({ ...t, id: `prebuilt:${t.name}`, created_at: '' })), ...contractTemplates];
+  }, [contractTemplates]);
 
   if (loading) return (
     <div className="p-6">

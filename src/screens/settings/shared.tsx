@@ -93,6 +93,8 @@ export interface SettingsBag {
   autoBackupPath: string;
   setAutoBackupPath: (v: string) => void;
   autoBackupLoaded: boolean;
+  features: Record<string, boolean>;
+  setFeatures: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   saveAutoBackupState: (enabled: boolean, frequency: string, path?: string) => void;
   handleExportData: () => void;
   handleImportData: () => void;

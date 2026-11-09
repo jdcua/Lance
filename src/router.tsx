@@ -81,7 +81,6 @@ export const router = createBrowserRouter(
       element: <App />,
       children: [
         { index: true, element: lazyRoute(<Dashboard />, 'dashboard') },
-        { path: 'archetype', element: lazyRoute(<ArchetypePicker />, 'cards') },
         { path: 'proposals', element: lazyRoute(<Proposals />, 'table') },
         { path: 'proposals/new', element: lazyRoute(<NewProposal />, 'form') },
         { path: 'contracts', element: lazyRoute(<Contracts />, 'table') },

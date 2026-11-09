@@ -1,21 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import Users from 'lucide-react/dist/esm/icons/users';
-import FolderKanban from 'lucide-react/dist/esm/icons/folder-kanban';
-import Clock from 'lucide-react/dist/esm/icons/clock';
-import FileText from 'lucide-react/dist/esm/icons/file-text';
-import Receipt from 'lucide-react/dist/esm/icons/receipt';
-import Bell from 'lucide-react/dist/esm/icons/bell';
-import Search from 'lucide-react/dist/esm/icons/search';
-import Trophy from 'lucide-react/dist/esm/icons/trophy';
-import BarChart3 from 'lucide-react/dist/esm/icons/bar-chart-3';
-import Columns3 from 'lucide-react/dist/esm/icons/columns-3';
-import Banknote from 'lucide-react/dist/esm/icons/banknote';
-import FileEdit from 'lucide-react/dist/esm/icons/file-edit';
+import { CheckCircle, Users, FolderKanban, Clock, FileText, Receipt, Bell, Search, Trophy, BarChart3, Columns3, Banknote, FileEdit } from 'lucide-react';
 import { useStore } from '../store';
-import { applyTheme } from '../themes/themes';
+import { applyTheme, getTheme } from '../themes/themes';
 
 interface FeatureItem {
   key: string;
@@ -50,12 +38,21 @@ const SCHEMES = [
   { id: 'gold', label: 'Gold', base: '#FEF3C7', secondary: '#FBBF24', accent: '#D97706' },
 ];
 
+const PROFESSIONS: { id: string; label: string; features: string[]; schemeId: string }[] = [
+  { id: 'developer', label: 'Developer', features: ['clients','projects','time','proposals','invoices','contracts','followUps','search','achievements','insights','pipeline','finance'], schemeId: 'slate' },
+  { id: 'designer', label: 'Designer', features: ['clients','projects','time','proposals','invoices','contracts','followUps','search','achievements','insights'], schemeId: 'violet' },
+  { id: 'writer', label: 'Writer', features: ['clients','projects','time','proposals','invoices','contracts','followUps','search','achievements','insights'], schemeId: 'amber' },
+  { id: 'consultant', label: 'Consultant', features: ['clients','projects','time','proposals','invoices','contracts','followUps','search','achievements','insights','pipeline','finance'], schemeId: 'indigo' },
+  { id: 'photographer', label: 'Photographer', features: ['clients','projects','time','proposals','invoices','contracts','followUps','search','achievements'], schemeId: 'slate' },
+  { id: 'marketer', label: 'Marketer', features: ['clients','projects','time','proposals','invoices','contracts','followUps','search','achievements','insights','pipeline'], schemeId: 'sky' },
+];
+
 interface OnboardingProps {
-  visible: boolean;
-  onClose: () => void;
+  visible?: boolean;
+  onClose?: () => void;
 }
 
-export default function Onboarding({ visible, onClose }: OnboardingProps) {
+export default function Onboarding({ visible = true, onClose = () => {} }: OnboardingProps = {}) {
   const { saveProfile, profile, profileLoaded } = useStore();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
@@ -74,6 +71,7 @@ export default function Onboarding({ visible, onClose }: OnboardingProps) {
   });
   const [schemeId, setSchemeId] = useState('amber');
   const [currentScheme, setCurrentScheme] = useState(SCHEMES[0]);
+  const [selectedProfession, setSelectedProfession] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
 
@@ -98,6 +96,7 @@ export default function Onboarding({ visible, onClose }: OnboardingProps) {
       await saveProfile({
         ...form,
         hourly_rate: form.hourly_rate ? parseFloat(form.hourly_rate) : undefined,
+        payment_terms: form.payment_terms ? Number(form.payment_terms) : 14,
       });
     } catch { /* best-effort */ }
   }, [form, saveProfile]);
@@ -105,11 +104,17 @@ export default function Onboarding({ visible, onClose }: OnboardingProps) {
   const applyScheme = useCallback((scheme: typeof SCHEMES[number]) => {
     setCurrentScheme(scheme);
     localStorage.setItem('lance:scheme-id', scheme.id);
-    document.documentElement.style.setProperty('--colour-base', scheme.base);
-    document.documentElement.style.setProperty('--colour-secondary', scheme.secondary);
-    document.documentElement.style.setProperty('--colour-accent', scheme.accent);
-    document.documentElement.dataset.theme = 'default';
-    document.documentElement.classList.remove('dark');
+    const t = getTheme('default');
+    applyTheme(t);
+    const root = document.documentElement;
+    root.style.setProperty('--colour-base', scheme.base);
+    root.style.setProperty('--colour-secondary', scheme.secondary);
+    root.style.setProperty('--colour-accent', scheme.accent);
+    try {
+      localStorage.setItem('lance:colour-base', scheme.base);
+      localStorage.setItem('lance:colour-secondary', scheme.secondary);
+      localStorage.setItem('lance:colour-accent', scheme.accent);
+    } catch { /* private mode */ }
     const mode = localStorage.getItem('lance:theme-mode') || 'light';
     document.documentElement.classList.toggle('dark', mode === 'dark');
   }, []);
@@ -140,7 +145,7 @@ export default function Onboarding({ visible, onClose }: OnboardingProps) {
     }
   };
 
-  const STEP_LABELS = ['Suggested starting point', 'Features & colour', 'Rates & finish'];
+  const STEP_LABELS = ['Profession (optional)', 'Features & colour', 'Rates & finish'];
   const clamped = Math.min(Math.max(step, 1), 3);
 
   return (
@@ -169,22 +174,39 @@ export default function Onboarding({ visible, onClose }: OnboardingProps) {
             ))}
           </div>
 
-          {/* Step 1: Suggested starting point */}
+          {/* Step 1: Profession suggestion (optional) */}
           {step === 1 && (
             <>
-              <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">Get started in Lance</h3>
+              <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">What do you do?</h3>
               <p className="text-sm text-[var(--text-secondary)] leading-relaxed mt-1 mb-3">
-                Quickly personalise your workspace — feature checklist, colour scheme, and rates. All skippable; defaults work fine anywhere.
+                Optional. Pick a suggestion to pre-tick features and colours; you can skip and set up later.
               </p>
-              <div className="flex items-start gap-3 p-3 border border-[var(--border-color)] rounded-sm bg-[var(--bg-secondary)] text-left">
-                <CheckCircle size={18} className="text-[var(--success)] flex-shrink-0" />
-                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                  Pick your preferred features and accent colours. Change anything anytime in Settings.
-                </p>
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                {PROFESSIONS.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => {
+                      setSelectedProfession(p.id);
+                      const checked: Record<string, boolean> = {};
+                      for (const f of FEATURES) checked[f.key] = p.features.includes(f.key);
+                      setFeatureChecked(checked);
+                      const scheme = SCHEMES.find((s) => s.id === p.schemeId) || SCHEMES[0];
+                      applyScheme(scheme);
+                      setSchemeId(scheme.id);
+                    }}
+                    className={`px-3 py-2 rounded-sm text-xs text-left border transition-colors ${
+                      selectedProfession === p.id
+                        ? 'bg-[var(--accent-bg)] border-[var(--accent)] text-[var(--text-primary)]'
+                        : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
               </div>
               <div className="flex justify-between pt-1">
-                <span className="text-[11px] text-[var(--text-tertiary)]">Suggested starting point — optional</span>
-                <Button onClick={handleNext} size="sm">Skip →</Button>
+                <span className="text-[11px] text-[var(--text-tertiary)]">Optional · skip anytime</span>
+                <Button onClick={handleNext} size="sm">Continue →</Button>
               </div>
             </>
           )}
