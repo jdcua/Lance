@@ -16,7 +16,7 @@ export default function ROICalculator() {
   const roiRatio = costNum > 0 ? (revenueNum / costNum) : 0;
   const hasData = cost.trim() !== '' || revenue.trim() !== '';
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
 
   return (
     <div className="space-y-3">
@@ -24,7 +24,7 @@ export default function ROICalculator() {
         <h4 className="text-xs font-semibold text-[var(--text-secondary)]">ROI Calculator</h4>
       </div>
 
-      <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-3">
+      <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-3">
         <div className="grid grid-cols-2 gap-2">
           <div>
             <label className="text-[10px] text-[var(--text-tertiary)] block mb-1">Campaign Cost ($)</label>
@@ -38,13 +38,13 @@ export default function ROICalculator() {
 
         {hasData && (
           <div className="grid grid-cols-2 gap-2">
-            <div className="p-2 bg-[var(--bg-card)] rounded-[6px] text-center">
+            <div className="p-2 glass rounded-xs text-center">
               <p className="text-[10px] text-[var(--text-tertiary)]">ROI %</p>
               <p className={`text-sm font-semibold tabular-nums ${roiPct > 0 ? 'text-[#2ECC71]' : roiPct < 0 ? 'text-[#E74C3C]' : 'text-[var(--text-primary)]'}`}>
                 {roiPct >= 0 ? '+' : ''}{roiPct.toFixed(1)}%
               </p>
             </div>
-            <div className="p-2 bg-[var(--bg-card)] rounded-[6px] text-center">
+            <div className="p-2 glass rounded-xs text-center">
               <p className="text-[10px] text-[var(--text-tertiary)]">ROI Ratio</p>
               <p className="text-sm font-semibold tabular-nums text-[var(--text-primary)]">
                 {roiRatio.toFixed(2)}x
@@ -54,7 +54,7 @@ export default function ROICalculator() {
         )}
 
         {hasData && (
-          <div className={`flex items-center gap-2 px-3 py-2 rounded-[6px] text-xs font-medium ${profit > 0 ? 'bg-[#2ECC71]/10 text-[#2ECC71]' : profit < 0 ? 'bg-[#E74C3C]/10 text-[#E74C3C]' : 'bg-[var(--border-color)]/50 text-[var(--text-secondary)]'}`}>
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-xs text-xs font-medium ${profit > 0 ? 'bg-[#2ECC71]/10 text-[#2ECC71]' : profit < 0 ? 'bg-[#E74C3C]/10 text-[#E74C3C]' : 'bg-[var(--border-color)]/50 text-[var(--text-secondary)]'}`}>
             {profit > 0 ? <TrendingUp size={14} /> : profit < 0 ? <TrendingDown size={14} /> : null}
             {profit >= 0 ? 'Profit' : 'Loss'}: ${Math.abs(profit).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>

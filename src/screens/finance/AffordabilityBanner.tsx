@@ -42,7 +42,7 @@ export default function AffordabilityBanner({
 
   return (
     <div
-      className="mb-4 px-3 py-2.5 rounded-[8px] bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center gap-2.5"
+      className="mb-4 px-3 py-2.5 rounded-sm bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center gap-2.5"
       role="status"
     >
       <Icon size={15} className={`${tone} flex-shrink-0`} />

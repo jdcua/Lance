@@ -47,7 +47,7 @@ export default function ProgramTrackerWidget({ clientId }: { clientId: string })
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Active Programs</h4>
         </div>
         <div className="space-y-1">
-          {[1, 2].map(i => <div key={i} className="h-10 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
+          {[1, 2].map(i => <div key={i} className="h-10 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
         </div>
       </div>
     );
@@ -64,7 +64,7 @@ export default function ProgramTrackerWidget({ clientId }: { clientId: string })
       ) : (
         <div className="space-y-1">
           {programs.map((program) => (
-            <div key={program.id} className="px-3 py-2.5 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+            <div key={program.id} className="px-3 py-2.5 bg-[var(--bg-secondary)] rounded-xs text-xs">
               <div className="flex items-center gap-2 mb-1">
                 <Dumbbell size={10} className="text-[var(--text-tertiary)] flex-shrink-0" />
                 <span className="font-semibold text-[var(--text-primary)]">{program.name}</span>

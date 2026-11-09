@@ -75,7 +75,7 @@ export default function ChannelLog({ projectId }: { projectId: string }) {
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Channels</h4>
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {[1, 2, 3, 4].map(i => <div key={i} className="h-6 w-16 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-6 w-16 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
         </div>
       </div>
     );
@@ -94,7 +94,7 @@ export default function ChannelLog({ projectId }: { projectId: string }) {
             <button
               key={ch}
               onClick={() => handleToggle(ch)}
-              className={`inline-flex items-center gap-1 px-2 py-1 rounded-[6px] text-[11px] font-medium transition-colors ${
+              className={`inline-flex items-center gap-1 px-2 py-1 rounded-xs text-[11px] font-medium transition-colors ${
                 active ? CHANNEL_COLORS[ch] || CHANNEL_COLORS.other : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--border-color)]'
               }`}
             >
@@ -110,7 +110,7 @@ export default function ChannelLog({ projectId }: { projectId: string }) {
       ) : (
         <div className="flex flex-wrap gap-1.5">
           {channels.map(c => (
-            <span key={c.id} className={`inline-flex items-center gap-1 px-2 py-1 rounded-[6px] text-[11px] font-medium ${CHANNEL_COLORS[c.channel] || CHANNEL_COLORS.other}`}>
+            <span key={c.id} className={`inline-flex items-center gap-1 px-2 py-1 rounded-xs text-[11px] font-medium ${CHANNEL_COLORS[c.channel] || CHANNEL_COLORS.other}`}>
               <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: CHANNEL_DOT_COLORS[c.channel] || CHANNEL_DOT_COLORS.other }} />
               {c.channel}
               <button

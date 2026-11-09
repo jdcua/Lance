@@ -153,9 +153,9 @@ export default function FabricationTracker({ projectId }: { projectId: string })
   const totalCost = items.reduce((sum, i) => sum + (i.cost || 0), 0);
 
   const inputClass =
-    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
   const selectClass =
-    'w-full px-2 py-1 text-[11px] border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1 text-[11px] border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
@@ -167,7 +167,7 @@ export default function FabricationTracker({ projectId }: { projectId: string })
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
           ))}
         </div>
       </div>
@@ -198,7 +198,7 @@ export default function FabricationTracker({ projectId }: { projectId: string })
       )}
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <input
             type="text"
             placeholder="Item name"
@@ -272,7 +272,7 @@ export default function FabricationTracker({ projectId }: { projectId: string })
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+          <table className="data-table w-full text-xs">
             <thead>
               <tr className="border-b border-[var(--border-color)]">
                 <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-[var(--text-tertiary)]">

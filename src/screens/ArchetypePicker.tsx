@@ -5,6 +5,7 @@ import { useToasts } from '../store/toastStore';
 import { getArchetype, ARCHETYPE_LIST, ARCHETYPE_CATEGORIES } from '../archetypes';
 import type { ArchetypeId } from '../archetypes';
 import { applyTheme, getTheme } from '../themes/themes';
+import { commands } from '../lib/commands';
 import Button from '../components/ui/Button';
 import { Search, Check, Sparkles, ArrowRight } from 'lucide-react';
 
@@ -69,7 +70,7 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
     const hasDepthFeatures = (archetype.archetypeFeatures?.length || 0) > 0;
     if (!isFirstRun && !isProTier && hasDepthFeatures) {
       console.info('[ArchetypePicker] gated: archetypeDepth requires Pro');
-      document.dispatchEvent(new CustomEvent('lance:open-upgrade', { detail: `Archetype depth: ${archetype.label}` }));
+      commands.dispatch('lance:open-upgrade', `Archetype depth: ${archetype.label}`);
       addToast('Archetype depth is a Pro feature', 'info');
       return;
     }
@@ -112,9 +113,9 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>
+        <h1 className="font-display text-xl font-semibold text-[var(--text-primary)] mb-2">
           What do you do?
-        </h2>
+        </h1>
         <p className="text-sm text-[var(--text-secondary)]">
           Pick your profession to tailor Lance to your workflow. You can change this anytime.
         </p>
@@ -129,7 +130,7 @@ export default function ArchetypePicker({ onSelect, onClose, showApply = true, c
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search professions..."
-            className="w-full pl-9 pr-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+            className="w-full pl-9 pr-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
           />
         </div>
         <div className="flex gap-1.5 flex-wrap">

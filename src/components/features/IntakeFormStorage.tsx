@@ -71,7 +71,7 @@ export default function IntakeFormStorage({ clientId }: { clientId: string }) {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
 
   if (loading) {
     return (
@@ -79,7 +79,7 @@ export default function IntakeFormStorage({ clientId }: { clientId: string }) {
         <div className="flex items-center justify-between">
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Intake Form</h4>
         </div>
-        <div className="h-32 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+        <div className="h-32 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
       </div>
     );
   }

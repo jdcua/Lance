@@ -10,6 +10,7 @@ import SharedView from '../components/motion/SharedView';
 import { clientPaymentBehavior, RISK_LABEL } from '../utils/paymentBehavior';
 import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
+import { commands } from '../lib/commands';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import Sparkline from '../components/ui/Sparkline';
 import { Plus, Pencil, Trash2, Mail, Phone, Building2, MessageSquare, PhoneCall, MailOpen, Users, X, Check, FileText, FolderKanban, Receipt, Clock, Search, Star, Copy, Upload } from 'lucide-react';
@@ -350,9 +351,9 @@ export default function Clients() {
   // and the Cmd/Ctrl+N shortcut dispatched from App.tsx. (The shortcut was
   // previously dispatched here but nothing listened.)
   useEffect(() => {
-    const handler = () => openNew();
-    document.addEventListener('lance:add-client', handler);
-    return () => document.removeEventListener('lance:add-client', handler);
+    const onAddClient = () => openNew();
+    commands.on('lance:add-client', onAddClient);
+    return () => commands.off('lance:add-client', onAddClient);
   }, []);
 
   const openEdit = (client: Client) => {
@@ -569,18 +570,18 @@ export default function Clients() {
 
   if (loading) return (
     <div className="flex flex-col md:flex-row h-full">
-      <div className="w-[240px] border-r border-[var(--border-color)] bg-[var(--bg-card)] flex-shrink-0">
+      <div className="w-[240px] border-r border-[var(--glass-border)] glass flex-shrink-0">
         <div className="px-4 py-3 border-b border-[var(--border-color)]">
           <div className="h-4 w-16 bg-[var(--bg-secondary)] rounded skeleton-pulse" />
         </div>
         <div className="py-2 space-y-1 px-2">
-          {[...Array(5)].map((_, i) => <div key={i} className="h-10 bg-[var(--bg-secondary)] rounded-[6px] skeleton-pulse" />)}
+          {[...Array(5)].map((_, i) => <div key={i} className="h-10 bg-[var(--bg-secondary)] rounded-xs skeleton-pulse" />)}
         </div>
       </div>
       <div className="flex-1 p-6 space-y-4">
         <div className="h-6 w-48 bg-[var(--bg-secondary)] rounded skeleton-pulse" />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-16 bg-[var(--bg-secondary)] rounded-[8px] skeleton-pulse" />)}
+          {[...Array(4)].map((_, i) => <div key={i} className="h-16 bg-[var(--bg-secondary)] rounded-sm skeleton-pulse" />)}
         </div>
       </div>
     </div>
@@ -589,9 +590,9 @@ export default function Clients() {
   return (
     <div className="flex flex-col md:flex-row h-full">
       {/* Left panel · client list */}
-      <div className="w-full md:w-[240px] border-b md:border-b-0 md:border-r border-[var(--border-color)] bg-[var(--bg-card)] flex-shrink-0 flex flex-col max-h-[38vh] md:max-h-none">
+      <div className="w-full md:w-[240px] border-b md:border-b-0 md:border-r border-[var(--glass-border)] glass flex-shrink-0 flex flex-col max-h-[38vh] md:max-h-none">
         <div className="px-4 py-3 border-b border-[var(--border-color)] space-y-2">
-          <h2 className="text-xs font-semibold text-[var(--text-secondary)]">Clients</h2>
+          <h1 className="text-xs font-semibold text-[var(--text-secondary)]">Clients</h1>
           <LoadError error={clientsError} onRetry={() => loadClients()} />
           <div className="relative">
             <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
@@ -600,7 +601,7 @@ export default function Clients() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Filter..."
-              className="w-full pl-7 pr-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]"
+              className="w-full pl-7 pr-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]"
             />
           </div>
         </div>
@@ -691,7 +692,7 @@ export default function Clients() {
                   <button
                     onClick={() => openEdit(selectedClient)}
                     aria-label="Edit client"
-                    className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+                    className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
                     title="Edit client"
                   >
                     <Pencil size={14} />
@@ -699,7 +700,7 @@ export default function Clients() {
                   <button
                     onClick={() => setConfirmDialog({ id: selectedClient.id, name: selectedClient.name })}
                     aria-label="Delete client"
-                    className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
+                    className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
                     title="Delete client"
                   >
                     <Trash2 size={14} />
@@ -722,7 +723,7 @@ export default function Clients() {
                         ? 'text-[var(--accent-ink,var(--accent))]'
                         : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
                     }`}
-                    style={{ fontFamily: "'Syne', sans-serif" }}
+                   
                   >
                     {tab === 'overview' ? 'Overview' : tab === 'metrics' ? 'Metrics' : 'Timeline'}
                     {activeTab === tab && (
@@ -834,7 +835,7 @@ export default function Clients() {
                                 <button
                                   key={t}
                                   onClick={() => setLogForm({ ...logForm, type: t })}
-                                  className={`flex items-center gap-1 px-3 py-1.5 rounded-[6px] text-xs transition-colors ${
+                                  className={`flex items-center gap-1 px-3 py-1.5 rounded-xs text-xs transition-colors ${
                                     logForm.type === t
                                       ? 'bg-[var(--accent)] text-[var(--accent-on)]'
                                       : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
@@ -852,7 +853,7 @@ export default function Clients() {
                               type="date"
                               value={logForm.date}
                               onChange={(e) => setLogForm({ ...logForm, date: e.target.value })}
-                              className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]"
+                              className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)]"
                             />
                           </div>
                           <div>
@@ -861,7 +862,7 @@ export default function Clients() {
                               onChange={(e) => setLogForm({ ...logForm, summary: e.target.value })}
                               placeholder="What happened?"
                               rows={3}
-                              className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none"
+                              className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none"
                               autoFocus
                             />
                           </div>
@@ -883,7 +884,7 @@ export default function Clients() {
                           return (
                             <div
                               key={comm.id}
-                              className="flex items-start gap-3 px-3 py-2.5 rounded-[8px] hover:bg-[var(--bg-secondary)] transition-colors group"
+                              className="flex items-start gap-3 px-3 py-2.5 rounded-sm hover:bg-[var(--bg-secondary)] transition-colors group"
                               onMouseEnter={() => setHoveredComm(comm.id)}
                               onMouseLeave={() => { setHoveredComm(null); setDeleteConfirm(null); }}
                             >
@@ -898,7 +899,7 @@ export default function Clients() {
                                       value={editCommText}
                                       onChange={(e) => setEditCommText(e.target.value)}
                                       rows={2}
-                                      className="w-full px-2 py-1.5 text-[13px] border border-[var(--accent)] rounded-[6px] focus:outline-none resize-none"
+                                      className="w-full px-2 py-1.5 text-[13px] border border-[var(--accent)] rounded-xs focus:outline-none resize-none"
                                       autoFocus
                                     />
                                     <div className="flex justify-end gap-1.5 mt-1.5">
@@ -980,7 +981,7 @@ export default function Clients() {
                         {metricTemplates.map((tpl) => (
                           <span
                             key={tpl.id}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] border border-[var(--border-color)] text-xs text-[var(--text-secondary)] hover:border-[var(--accent)]/30 hover:text-[var(--text-primary)] transition-colors bg-[var(--bg-secondary)]"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-[var(--border-color)] text-xs text-[var(--text-secondary)] hover:border-[var(--accent)]/30 hover:text-[var(--text-primary)] transition-colors bg-[var(--bg-secondary)]"
                           >
                                 <button
                                   onClick={() => handleApplyTemplate(tpl.name)}
@@ -1058,7 +1059,7 @@ export default function Clients() {
                                   });
                                   setShowMetricForm(true);
                                 }}
-                                className="p-1 rounded-[6px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+                                className="p-1 rounded-xs text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
                               >
                                 <Pencil size={12} />
                               </button>
@@ -1067,14 +1068,14 @@ export default function Clients() {
                                   <button
                                     onClick={async () => { await removeMetricDef(def.id, selectedId); setMetricDeleteConfirm(null); }}
                                     aria-label="Confirm delete metric"
-                                    className="p-1 rounded-[6px] text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
+                                    className="p-1 rounded-xs text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
                                   >
                                     <Check size={12} />
                                   </button>
                                   <button
                                     onClick={() => setMetricDeleteConfirm(null)}
                                     aria-label="Cancel delete metric"
-                                    className="p-1 rounded-[6px] text-[var(--text-tertiary)] hover:bg-[var(--bg-secondary)] transition-colors"
+                                    className="p-1 rounded-xs text-[var(--text-tertiary)] hover:bg-[var(--bg-secondary)] transition-colors"
                                   >
                                     <X size={12} />
                                   </button>
@@ -1082,7 +1083,7 @@ export default function Clients() {
                               ) : (
                               <button aria-label="Delete clients"
                                 onClick={() => setMetricDeleteConfirm(def.id)}
-                                className="p-1 rounded-[6px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
+                                className="p-1 rounded-xs text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
                               >
                                 <Trash2 size={12} />
                               </button>
@@ -1113,7 +1114,7 @@ export default function Clients() {
                           </summary>
                           <div className="mt-1.5 space-y-1">
                             {values.map((v) => (
-                              <div key={v.id} className="flex items-center justify-between px-2 py-1 rounded-[6px] hover:bg-[var(--bg-secondary)] text-xs group/val">
+                              <div key={v.id} className="flex items-center justify-between px-2 py-1 rounded-xs hover:bg-[var(--bg-secondary)] text-xs group/val">
                                 <span className="text-[var(--text-secondary)] tabular-nums">
                                   {v.value}{def.unit_label ? ` ${def.unit_label}` : ''} · <span className="text-[var(--text-tertiary)]">{v.period || relativeDate(v.created_at)}</span>
                                 </span>
@@ -1159,7 +1160,7 @@ export default function Clients() {
                                   value={valueForm.value}
                                   onChange={(e) => { const v = e.target.value; if (def.metric_type !== 'text' && Number(v) < 0) return; setValueForm({ ...valueForm, value: v }); }}
                                   placeholder={`Value${def.unit_label ? ` (${def.unit_label})` : ''}`}
-                                  className="w-full px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+                                  className="w-full px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
                                   onKeyDown={(e) => { if (e.key === 'Enter') handleLogValue(def.id); }}
                                   autoFocus
                                 />
@@ -1169,7 +1170,7 @@ export default function Clients() {
                                   type="date"
                                   value={valueForm.period}
                                   onChange={(e) => setValueForm({ ...valueForm, period: e.target.value })}
-                                  className="w-full px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                                  className="w-full px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                                 />
                               </div>
                               <Button size="sm" onClick={() => handleLogValue(def.id)}>Log</Button>
@@ -1218,7 +1219,7 @@ export default function Clients() {
                               value={metricForm.name}
                               onChange={(e) => setMetricForm({ ...metricForm, name: e.target.value })}
                               placeholder="Metric name (e.g. CPM, ROAS, Story Points)"
-                              className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+                              className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
                               autoFocus
                               onKeyDown={(e) => { if (e.key === 'Enter') handleSaveMetricDef(); }}
                             />
@@ -1227,7 +1228,7 @@ export default function Clients() {
                             <select aria-label="Metric type"
                               value={metricForm.metric_type}
                               onChange={(e) => setMetricForm({ ...metricForm, metric_type: e.target.value as MetricDefinition['metric_type'] })}
-                              className="px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                              className="px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                             >
                               <option value="number">Number</option>
                               <option value="percentage">Percentage</option>
@@ -1239,7 +1240,7 @@ export default function Clients() {
                               value={metricForm.unit_label}
                               onChange={(e) => setMetricForm({ ...metricForm, unit_label: e.target.value })}
                               placeholder="Unit (e.g. per 1000)"
-                              className="flex-1 px-3 py-1.5 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+                              className="flex-1 px-3 py-1.5 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
                             />
                             <label className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] cursor-pointer flex-shrink-0">
                               <input
@@ -1279,14 +1280,15 @@ export default function Clients() {
       <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Client' : 'New Client'} size="md">
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Name *</label>
+            <label htmlFor="client-name" className="form-label">Name *</label>
             <input
+              id="client-name"
               type="text"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="Client name"
               maxLength={MAX_LENGTHS.name}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               autoFocus
             />
             {formErrors.name && (
@@ -1295,24 +1297,26 @@ export default function Clients() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Email</label>
+              <label htmlFor="client-email" className="form-label">Email</label>
               <input
+                id="client-email"
                 type="email"
                 value={form.email}
                 onChange={(e) => { setForm({ ...form, email: e.target.value }); setFormErrors({}); }}
                 placeholder="email@example.com"
                 maxLength={MAX_LENGTHS.email}
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               />
               {formErrors.email && (
                 <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
               )}
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Phone</label>
+              <label htmlFor="client-phone" className="form-label">Phone</label>
               <div className="flex items-center gap-0">
                 <span className="px-3 py-2 text-sm border border-r-0 border-[var(--border-color)] rounded-l-[8px] text-[var(--text-tertiary)] bg-[var(--bg-secondary)] whitespace-nowrap">{selectedCountry.dialCode}</span>
                 <input
+                  id="client-phone"
                   type="text"
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
@@ -1324,22 +1328,23 @@ export default function Clients() {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Company</label>
+            <label htmlFor="client-company" className="form-label">Company</label>
             <input
+              id="client-company"
               type="text"
               value={form.company}
               onChange={(e) => setForm({ ...form, company: e.target.value })}
               placeholder="Company name"
               maxLength={MAX_LENGTHS.company}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Preferred currency</label>
-            <select aria-label="Preferred currency"
+            <label htmlFor="client-currency" className="form-label">Preferred currency</label>
+            <select id="client-currency"
               value={form.preferred_currency}
               onChange={(e) => setForm({ ...form, preferred_currency: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
             >
               <option value="">Use profile default ({profile?.currency || 'CAD'})</option>
               {[...CURRENCIES].map((c) => (
@@ -1349,14 +1354,14 @@ export default function Clients() {
             <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Used when creating invoices for this client</p>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Notes</label>
-            <textarea
+            <label htmlFor="client-notes" className="form-label">Notes</label>
+            <textarea id="client-notes"
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
               placeholder="Any notes about this client..."
               rows={3}
               maxLength={MAX_LENGTHS.notes}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 resize-none"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 resize-none"
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
@@ -1381,7 +1386,7 @@ export default function Clients() {
             value={templateName}
             onChange={(e) => setTemplateName(e.target.value)}
             placeholder="Template name (e.g. Paid Ads Client)"
-            className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+            className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
             autoFocus
             onKeyDown={(e) => { if (e.key === 'Enter') handleSaveAsTemplate(); }}
           />

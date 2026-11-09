@@ -77,7 +77,7 @@ export default function ReportLog({ clientId }: { clientId: string }) {
     } catch (e) { console.error('[ReportLog] delete failed:', e); }
   };
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
 
   if (loading) {
     return (
@@ -86,7 +86,7 @@ export default function ReportLog({ clientId }: { clientId: string }) {
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Reports</h4>
         </div>
         <div className="space-y-1">
-          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
+          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
         </div>
       </div>
     );
@@ -102,7 +102,7 @@ export default function ReportLog({ clientId }: { clientId: string }) {
       </div>
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className={inputClass} />
           <input type="text" placeholder="Traffic notes" value={form.traffic_notes} onChange={(e) => setForm({ ...form, traffic_notes: e.target.value })} className={inputClass} />
           <input type="text" placeholder="Ranking notes" value={form.ranking_notes} onChange={(e) => setForm({ ...form, ranking_notes: e.target.value })} className={inputClass} />
@@ -122,7 +122,7 @@ export default function ReportLog({ clientId }: { clientId: string }) {
           {reports.map(r => {
             const isExpanded = expandedId === r.id;
             return (
-              <div key={r.id} className="bg-[var(--bg-secondary)] rounded-[6px] text-xs overflow-hidden">
+              <div key={r.id} className="bg-[var(--bg-secondary)] rounded-xs text-xs overflow-hidden">
                 <button
                   onClick={() => setExpandedId(isExpanded ? null : r.id)}
                   className="w-full flex items-center justify-between px-3 py-2 hover:bg-[var(--border-color)]/30 transition-colors"

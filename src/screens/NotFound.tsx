@@ -12,7 +12,7 @@ export default function NotFound() {
     <div className="flex items-center justify-center h-full">
       <Card className="text-center py-16 flex flex-col items-center max-w-sm">
         <Compass size={48} className="text-[var(--text-tertiary)] mb-4" />
-        <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-1">Off the map</h2>
+        <h1 className="font-display text-lg font-semibold text-[var(--text-primary)] mb-1">Off the map</h1>
         <p className="text-sm text-[var(--text-secondary)] mb-1">
           This corner of Lance doesn't exist — but the work is still where you left it.
         </p>

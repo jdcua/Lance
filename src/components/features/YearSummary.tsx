@@ -4,6 +4,7 @@ import { getFeatureFlags } from '../../lib/constants';
 import { buildYearSummary, yearSummaryCsv, yearSummaryYears, downloadTextFile } from '../../utils/yearSummary';
 import { formatCurrency } from '../../utils/format';
 import { convertByCurrency } from '../../lib/currency';
+import { commands } from '../../lib/commands';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import ProgressBar from '../ui/ProgressBar';
@@ -51,7 +52,7 @@ export default function YearSummary() {
 
   const handleDownload = () => {
     if (!unlocked) {
-      document.dispatchEvent(new CustomEvent('lance:open-upgrade', { detail: 'year summary CSV' }));
+      commands.dispatch('lance:open-upgrade', 'year summary CSV');
       return;
     }
     downloadTextFile(`lance-year-summary-${pack.year}.csv`, yearSummaryCsv(pack));
@@ -73,7 +74,7 @@ export default function YearSummary() {
           value={pack.year}
           onChange={(e) => setYear(parseInt(e.target.value, 10))}
           aria-label="Summary year"
-          className="px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+          className="px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
         >
           {years.map((y) => (
             <option key={y} value={y}>
@@ -90,7 +91,7 @@ export default function YearSummary() {
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div>
           <p className="text-[10px] text-[var(--text-secondary)]">Revenue</p>
-          <p className="text-lg font-semibold text-[var(--accent-ink,var(--accent))]" style={{ fontFamily: "'Syne', sans-serif" }}>
+          <p className="text-lg font-semibold text-[var(--accent-ink,var(--accent))]">
             {formatCurrency(Math.round(pack.revenuePaid), currency)}
           </p>
           {convertedRevenue != null && (
@@ -101,13 +102,13 @@ export default function YearSummary() {
         </div>
         <div>
           <p className="text-[10px] text-[var(--text-secondary)]">Expenses</p>
-          <p className="text-lg font-semibold text-[var(--danger)]" style={{ fontFamily: "'Syne', sans-serif" }}>
+          <p className="text-lg font-semibold text-[var(--danger)]">
             {formatCurrency(Math.round(pack.expenses), currency)}
           </p>
         </div>
         <div>
           <p className="text-[10px] text-[var(--text-secondary)]">Profit</p>
-          <p className="text-lg font-semibold text-[var(--text-primary)]" style={{ fontFamily: "'Syne', sans-serif" }}>
+          <p className="text-lg font-semibold text-[var(--text-primary)]">
             {formatCurrency(Math.round(pack.profit), currency)}
           </p>
         </div>

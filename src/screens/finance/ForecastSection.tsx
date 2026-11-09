@@ -19,7 +19,7 @@ export default function ForecastSection({ bag }: { bag: FinanceBag }) {
   return (
         <>
           {hasMixedCurrencies && (
-            <div className="mb-4 px-3 py-2 rounded-[8px] bg-[var(--info-bg)] border border-[var(--info)]/20 flex items-start gap-2 text-xs">
+            <div className="mb-4 px-3 py-2 rounded-sm bg-[var(--info-bg)] border border-[var(--info)]/20 flex items-start gap-2 text-xs">
               <span className="text-[var(--info-ink,var(--info))] mt-px flex-shrink-0">ⓘ</span>
               <span className="text-[var(--text-secondary)]">
                 {showConverted ? (
@@ -229,7 +229,7 @@ export default function ForecastSection({ bag }: { bag: FinanceBag }) {
                   value={currentBalance}
                   onChange={(e) => setCurrentBalance(e.target.value)}
                   placeholder="0.00"
-                  className="w-28 px-2 py-1 text-xs border border-[var(--border-color)] rounded-[6px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+                  className="w-28 px-2 py-1 text-xs border border-[var(--border-color)] rounded-xs placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
                 />
               </div>
             </div>
@@ -353,7 +353,7 @@ export default function ForecastSection({ bag }: { bag: FinanceBag }) {
                     <button
                       key={mode}
                       onClick={() => setScenario({ ...scenario, mode })}
-                      className={`px-3 py-1.5 text-xs rounded-[8px] border transition-colors ${
+                      className={`px-3 py-1.5 text-xs rounded-sm border transition-colors ${
                         scenario.mode === mode
                           ? 'bg-[var(--accent)]/10 border-[var(--accent)] text-[var(--accent-ink,var(--accent))] font-medium'
                           : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'

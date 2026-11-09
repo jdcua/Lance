@@ -13,6 +13,7 @@ import {
 import { generateFollowUpDraft, generateSubjectLine, TEMPLATE_LABELS, openMailTo, resolveDunningTone, type DunningTone } from '../utils/followUpTemplates';
 import { computeLateFee, lateFeeParagraph } from '../utils/lateFees';
 import { getFeatureFlags } from '../lib/constants';
+import { commands } from '../lib/commands';
 import { formatCurrency, relativeDate, parseDateString, DAY_MS } from '../utils/format';
 
 type Tab = 'pending' | 'sent' | 'dismissed' | 'all';
@@ -291,7 +292,7 @@ export default function FollowUps() {
       />
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <h1 className="text-lg font-semibold text-[var(--text-primary)]">Follow-ups</h1>
+          <h1 className="font-display text-lg font-semibold text-[var(--text-primary)]">Follow-ups</h1>
           {pendingCount > 0 && (
             <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">
               {pendingCount} pending
@@ -340,16 +341,16 @@ export default function FollowUps() {
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="list-surface divide-y divide-[var(--border-color)]">
         {pagedFollowUps.visible.map((item) => {
           const hasEmail = !!item.clientEmail;
           return (
             <div
               key={item.log.id}
-              className={`p-4 rounded-[12px] border transition-colors ${
+              className={`list-row border-l-[3px] p-4 ${
                 item.log.status === 'pending'
-                  ? 'bg-[var(--bg-card)] border-[var(--border-color)] hover:border-[var(--accent)]/30'
-                  : 'bg-[var(--bg-secondary)]/30 border-[var(--border-color)]/50'
+                  ? 'border-l-[var(--accent)]/70'
+                  : 'border-l-transparent bg-[var(--bg-secondary)]/25'
               }`}
             >
               <div className="flex items-start justify-between gap-4">
@@ -375,7 +376,7 @@ export default function FollowUps() {
                                 : (getProposal(item.log.entity_id)?.client_id || '')
                             );
                             if (client) {
-                              document.dispatchEvent(new CustomEvent('lance:edit-client', { detail: client.id }));
+                              commands.dispatch('lance:edit-client', client.id);
                             }
                           }}
                           className="underline hover:text-[var(--warning-hover)]"
@@ -411,7 +412,7 @@ export default function FollowUps() {
                       <button
                         onClick={() => handleOpenInEmail(item)}
                         disabled={!hasEmail}
-                        className={`flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-medium rounded-[6px] transition-colors ${
+                        className={`flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-medium rounded-xs transition-colors ${
                           hasEmail
                             ? 'btn-accent'
                             : 'text-[var(--text-tertiary)] bg-[var(--bg-secondary)] cursor-not-allowed'
@@ -421,7 +422,7 @@ export default function FollowUps() {
                       </button>
                       <button
                         onClick={() => openEditModal(item)}
-                        className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[6px] transition-colors"
+                        className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-xs transition-colors"
                         title="Edit before sending"
                         aria-label="Edit before sending"
                       >
@@ -429,7 +430,7 @@ export default function FollowUps() {
                       </button>
                       <button
                         onClick={() => handleMarkSent(item.log.id)}
-                        className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[6px] transition-colors"
+                        className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-xs transition-colors"
                         title="Mark as Sent"
                         aria-label="Mark as sent"
                       >
@@ -437,7 +438,7 @@ export default function FollowUps() {
                       </button>
                       <button
                         onClick={() => handleDismiss(item.log.id)}
-                        className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--danger)] rounded-[6px] transition-colors"
+                        className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--danger)] rounded-xs transition-colors"
                         title="Dismiss"
                         aria-label="Dismiss"
                       >
@@ -448,7 +449,7 @@ export default function FollowUps() {
                   {item.log.status === 'dismissed' && (
                     <button
                       onClick={() => handleRestore(item.log.id)}
-                      className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] rounded-[6px] transition-colors"
+                      className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] rounded-xs transition-colors"
                     >
                       <RefreshCw size={10} /> Restore
                     </button>
@@ -473,7 +474,7 @@ export default function FollowUps() {
             emails in your default mail client. You'll need to review and send each one.
           </p>
           {pendingFiltered.some((f) => !f.clientEmail) && (
-            <div className="flex items-start gap-2 p-3 rounded-[8px] bg-[var(--warning-bg)] text-[var(--warning-text)] text-xs">
+            <div className="flex items-start gap-2 p-3 rounded-sm bg-[var(--warning-bg)] text-[var(--warning-text)] text-xs">
               <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
               <span>{pendingFiltered.filter((f) => !f.clientEmail).length} follow-up(s) skipped · no email on file.</span>
             </div>
@@ -492,30 +493,30 @@ export default function FollowUps() {
         {editModal && (
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">To</label>
+              <label className="form-label">To</label>
               <input
                 type="email"
                 value={editModal.email}
                 onChange={(e) => setEditModal({ ...editModal, email: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Subject</label>
+              <label className="form-label">Subject</label>
               <input
                 type="text"
                 value={editModal.subject}
                 onChange={(e) => setEditModal({ ...editModal, subject: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Body</label>
+              <label className="form-label">Body</label>
               <textarea
                 value={editModal.body}
                 onChange={(e) => setEditModal({ ...editModal, body: e.target.value })}
                 rows={10}
-                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] resize-none leading-relaxed"
+                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] resize-none leading-relaxed"
               />
             </div>
             <div className="flex justify-end gap-2 pt-2">
@@ -544,13 +545,13 @@ function FilterDropdown({ filter, setFilter }: { filter: Filter; setFilter: (f: 
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-[6px] hover:bg-[var(--bg-secondary)] transition-colors"
+        className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-xs hover:bg-[var(--bg-secondary)] transition-colors"
       >
         {options.find((o) => o.value === filter)?.label}
         <ChevronDown size={10} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px] shadow-lg py-1 z-10 min-w-[100px]"
+        <div className="absolute right-0 top-full mt-1 glass rounded-sm py-1 z-10 min-w-[100px]"
           onMouseLeave={() => setOpen(false)}
         >
           {options.map((o) => (

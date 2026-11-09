@@ -63,7 +63,7 @@ export default function UpdaterModal() {
   return (
     <Modal open={updateAvailable} onClose={isDownloading ? () => {} : handleLater} title="Software Update Available" size="sm">
       <div className="space-y-4">
-        <div className="flex items-start gap-3 p-3 rounded-[8px] bg-[var(--bg-secondary)] border border-[var(--border-color)]">
+        <div className="flex items-start gap-3 p-3 rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-color)]">
           <Download size={18} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-medium text-[var(--text-primary)]">Lance {updateData.version} is here</p>
@@ -74,13 +74,13 @@ export default function UpdaterModal() {
         </div>
 
         {updateData.body && (
-          <div className="text-xs text-[var(--text-secondary)] bg-[var(--bg-card)] p-3 rounded-[8px] max-h-40 overflow-y-auto whitespace-pre-wrap">
+          <div className="text-xs text-[var(--text-secondary)] bg-[var(--bg-card)] p-3 rounded-sm max-h-40 overflow-y-auto whitespace-pre-wrap">
             {updateData.body}
           </div>
         )}
 
         {isDownloading && (
-          <div className="flex items-center gap-3 p-3 rounded-[8px] bg-[var(--accent-bg)] border border-[var(--accent)]/30">
+          <div className="flex items-center gap-3 p-3 rounded-sm bg-[var(--accent-bg)] border border-[var(--accent)]/30">
             <div className="animate-spin rounded-full h-4 w-4 border-2 border-[var(--accent)] border-t-transparent flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium text-[var(--accent-ink,var(--accent))]">Downloading update...</p>

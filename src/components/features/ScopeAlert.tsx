@@ -59,13 +59,13 @@ export default function ScopeAlert({ clientId }: { clientId?: string }) {
 
   if (loading) {
     return (
-      <div className="h-12 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+      <div className="h-12 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
     );
   }
 
   if (!clientId) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs text-[var(--text-tertiary)]">
+      <div className="flex items-center gap-2 px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs text-[var(--text-tertiary)]">
         <CheckCircle size={14} className="text-[var(--text-tertiary)]" />
         Select a client to check scope.
       </div>
@@ -78,7 +78,7 @@ export default function ScopeAlert({ clientId }: { clientId?: string }) {
 
   if (usagePct >= 90) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 bg-[#DC2626]/10 border border-[#DC2626]/30 rounded-[6px] text-xs">
+      <div className="flex items-center gap-2 px-3 py-2 bg-[#DC2626]/10 border border-[#DC2626]/30 rounded-xs text-xs">
         <AlertTriangle size={14} className="text-[#DC2626] flex-shrink-0" />
         <span className="text-[#DC2626] font-medium">Scope Alert:</span>
         <span className="text-[var(--text-primary)]">Task hours at <strong>{usagePct}%</strong> of monthly retainer. Review scope.</span>
@@ -87,7 +87,7 @@ export default function ScopeAlert({ clientId }: { clientId?: string }) {
   }
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 bg-[#2ECC71]/10 border border-[#2ECC71]/30 rounded-[6px] text-xs">
+    <div className="flex items-center gap-2 px-3 py-2 bg-[#2ECC71]/10 border border-[#2ECC71]/30 rounded-xs text-xs">
       <CheckCircle size={14} className="text-[#2ECC71] flex-shrink-0" />
       <span className="text-[var(--text-primary)]">Hours within scope ({usagePct}% of retainer).</span>
     </div>

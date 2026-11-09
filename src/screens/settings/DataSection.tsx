@@ -3,6 +3,7 @@ import { useStore } from '../../store';
 import { useToasts } from '../../store/toastStore';
 import { isTauri as isTauriApp } from '../../utils/tauri';
 import { getFeatureFlags } from '../../lib/constants';
+import { commands } from '../../lib/commands';
 import {
   TEMPLATE_LABELS,
   DEFAULT_SUBJECT_TEMPLATES,
@@ -130,7 +131,7 @@ function TrashBinSection() {
         {entries.map((e) => (
           <div
             key={e.trashId}
-            className="flex items-center gap-3 px-2 py-1.5 rounded-[6px] hover:bg-[var(--bg-secondary)] text-xs"
+            className="flex items-center gap-3 px-2 py-1.5 rounded-xs hover:bg-[var(--bg-secondary)] text-xs"
           >
             <div className="flex-1 min-w-0">
               <span className="font-medium text-[var(--text-primary)] truncate">{e.label}</span>
@@ -269,7 +270,7 @@ function ExportTemplatesSection() {
   const availableSections = SECTION_OPTIONS[form.type] || [];
 
   const inputClass =
-    'w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)]';
+    'w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)]';
 
   return (
     <div>
@@ -290,7 +291,7 @@ function ExportTemplatesSection() {
           {exportTemplates.map((t) => (
             <div
               key={t.id}
-              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[8px]"
+              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-sm"
             >
               <div>
                 <p className="text-sm font-medium text-[var(--text-primary)]">{t.name}</p>
@@ -301,7 +302,7 @@ function ExportTemplatesSection() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => openEdit(t)}
-                  className="px-2 py-1 text-[10px] text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] rounded-[6px]"
+                  className="px-2 py-1 text-[10px] text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] rounded-xs"
                 >
                   Edit
                 </button>
@@ -309,13 +310,13 @@ function ExportTemplatesSection() {
                   <>
                     <button
                       onClick={() => handleDelete(t.id)}
-                      className="px-2 py-1 text-[10px] text-white bg-[var(--danger)] rounded-[6px]"
+                      className="px-2 py-1 text-[10px] text-white bg-[var(--danger)] rounded-xs"
                     >
                       Sure?
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(null)}
-                      className="px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] rounded-[6px]"
+                      className="px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] rounded-xs"
                     >
                       No
                     </button>
@@ -323,7 +324,7 @@ function ExportTemplatesSection() {
                 ) : (
                   <button
                     onClick={() => handleDelete(t.id)}
-                    className="px-2 py-1 text-[10px] text-[var(--danger)] hover:bg-[var(--danger-bg)] rounded-[6px]"
+                    className="px-2 py-1 text-[10px] text-[var(--danger)] hover:bg-[var(--danger-bg)] rounded-xs"
                   >
                     Delete
                   </button>
@@ -341,12 +342,12 @@ function ExportTemplatesSection() {
       )}
 
       {showForm && (
-        <div className="mt-4 p-4 bg-[var(--bg-secondary)] rounded-[8px] space-y-4">
+        <div className="mt-4 p-4 bg-[var(--bg-secondary)] rounded-sm space-y-4">
           <h4 className="text-sm font-semibold text-[var(--text-primary)]">
             {editing ? 'Edit Template' : 'New Template'}
           </h4>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Template name
             </label>
             <input
@@ -358,7 +359,7 @@ function ExportTemplatesSection() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Document type
             </label>
             <select
@@ -377,7 +378,7 @@ function ExportTemplatesSection() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Header
             </label>
             <input
@@ -389,7 +390,7 @@ function ExportTemplatesSection() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Footer
             </label>
             <input
@@ -401,7 +402,7 @@ function ExportTemplatesSection() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Color scheme
             </label>
             <input
@@ -521,7 +522,7 @@ function ProjectTemplatesSection() {
             const ms = projectTemplateMilestones[tpl.id] || [];
             const isEditing = editing === tpl.id;
             return (
-              <div key={tpl.id} className="bg-[var(--bg-secondary)] rounded-[8px] overflow-hidden">
+              <div key={tpl.id} className="bg-[var(--bg-secondary)] rounded-sm overflow-hidden">
                 <div className="flex items-center justify-between px-3 py-2">
                   {isEditing ? (
                     <div className="flex-1 space-y-2 mr-2">
@@ -529,7 +530,7 @@ function ProjectTemplatesSection() {
                         type="text"
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
-                        className="w-full px-2 py-1 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                        className="w-full px-2 py-1 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') handleSaveEdit(tpl.id);
@@ -541,7 +542,7 @@ function ProjectTemplatesSection() {
                         value={editDescription}
                         onChange={(e) => setEditDescription(e.target.value)}
                         placeholder="Description (optional)"
-                        className="w-full px-2 py-1 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+                        className="w-full px-2 py-1 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
                       />
                       <div className="flex items-center gap-1">
                         <button
@@ -886,7 +887,7 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
             {bag.autoBackupEnabled && (
               <>
                 <div>
-                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                  <label className="form-label">
                     Frequency
                   </label>
                   <select
@@ -897,7 +898,7 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
                       bag.setAutoBackupFreq(freq);
                       bag.saveAutoBackupState(true, freq);
                     }}
-                    className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                    className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                   >
                     <option value="daily">Daily</option>
                     <option value="weekly">Weekly</option>
@@ -905,7 +906,7 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                  <label className="form-label">
                     Backup location
                   </label>
                   <div className="flex items-center gap-2">
@@ -914,7 +915,7 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
                       value={bag.autoBackupPath}
                       readOnly
                       placeholder="Choose a folder..."
-                      className="flex-1 px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-secondary)] text-[var(--text-secondary)] truncate"
+                      className="flex-1 px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-secondary)] text-[var(--text-secondary)] truncate"
                     />
                     <Button
                       variant="secondary"
@@ -990,16 +991,12 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
                     title={!pro ? 'Custom dunning voices are a Pro feature' : undefined}
                     onClick={() => {
                       if (!pro) {
-                        document.dispatchEvent(
-                          new CustomEvent('lance:open-upgrade', {
-                            detail: 'smart dunning voices',
-                          }),
-                        );
+                        commands.dispatch('lance:open-upgrade', 'smart dunning voices');
                         return;
                       }
                       saveFollowUpSettings({ tone });
                     }}
-                    className={`flex-1 px-3 py-2 text-xs font-medium rounded-[8px] border transition-colors capitalize ${
+                    className={`flex-1 px-3 py-2 text-xs font-medium rounded-sm border transition-colors capitalize ${
                       selected
                         ? 'bg-[var(--accent-bg)] border-[var(--accent)] text-[var(--text-primary)]'
                         : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40'
@@ -1066,7 +1063,7 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
                       saveFollowUpSettings({ templates: updated });
                     }}
                     rows={5}
-                    className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none leading-relaxed font-mono"
+                    className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none leading-relaxed font-mono"
                   />
                 </div>
               ))}
@@ -1101,7 +1098,7 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
                       bag.setFuSubjectTemplates(updated);
                       saveFollowUpSettings({ subject_templates: updated });
                     }}
-                    className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+                    className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
                   />
                 </div>
               ))}

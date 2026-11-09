@@ -118,7 +118,7 @@ export default function PhaseTracker({ projectId, defaultPhases }: { projectId: 
   const completed = phases.filter(p => p.status === 'completed').length;
   const total = phases.length;
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
 
   if (loading) {
     return <div className="space-y-3">
@@ -126,7 +126,7 @@ export default function PhaseTracker({ projectId, defaultPhases }: { projectId: 
         <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Phases</h4>
       </div>
       <div className="space-y-1">
-        {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
+        {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
       </div>
     </div>;
   }
@@ -141,7 +141,7 @@ export default function PhaseTracker({ projectId, defaultPhases }: { projectId: 
       </div>
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <input type="text" placeholder="Phase name" value={form.phase_name} onChange={(e) => setForm({ ...form, phase_name: e.target.value })} className={inputClass} autoFocus />
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-[var(--text-tertiary)]">Color:</span>
@@ -173,7 +173,7 @@ export default function PhaseTracker({ projectId, defaultPhases }: { projectId: 
             {phases.map((p) => (
               <div key={p.id}>
                 {confirmDelete === p.id ? (
-                  <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+                  <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
                     <span className="text-[var(--text-primary)]">Delete "{p.phase_name}"?</span>
                     <div className="flex items-center gap-1">
                       <button onClick={() => handleDelete(p.id)} aria-label={`Confirm delete ${p.phase_name}`} className="text-[#A32D2D] px-1"><Check size={12} /></button>
@@ -181,7 +181,7 @@ export default function PhaseTracker({ projectId, defaultPhases }: { projectId: 
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+                  <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
                     <div className="flex-1 min-w-0 flex items-center gap-2">
                       <button onClick={() => handleStatusToggle(p)} aria-label={`Cycle status of ${p.phase_name}`} title="Click to cycle status">
                         <Circle size={12} fill={p.color || '#888'} stroke={p.color || '#888'} />

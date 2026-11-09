@@ -131,9 +131,9 @@ export default function FittingLog({ projectId }: { projectId: string }) {
   };
 
   const inputClass =
-    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
   const selectClass =
-    'w-full px-2 py-1 text-[11px] border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1 text-[11px] border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
@@ -145,7 +145,7 @@ export default function FittingLog({ projectId }: { projectId: string }) {
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
           ))}
         </div>
       </div>
@@ -164,7 +164,7 @@ export default function FittingLog({ projectId }: { projectId: string }) {
       </div>
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <input
             type="text"
             placeholder="Garment name"
@@ -224,7 +224,7 @@ export default function FittingLog({ projectId }: { projectId: string }) {
         <div className="space-y-1">
           {fittings.map((fitting) => (
             <div key={fitting.id}>
-              <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+              <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <Scissors
                     size={10}
@@ -274,7 +274,7 @@ export default function FittingLog({ projectId }: { projectId: string }) {
                 </div>
               </div>
               {expanded === fitting.id && (
-                <div className="mt-1 px-3 py-2 bg-[var(--bg-secondary)]/50 rounded-[6px] text-xs space-y-1">
+                <div className="mt-1 px-3 py-2 bg-[var(--bg-secondary)]/50 rounded-xs text-xs space-y-1">
                   {fitting.adjustments && (
                     <p className="text-[var(--text-secondary)]">{fitting.adjustments}</p>
                   )}

@@ -47,7 +47,7 @@ export default function KanbanCard({ card, onClick }: Props) {
       {...attributes}
       {...listeners}
       onClick={() => onClick(card)}
-      className={`group bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px] cursor-pointer hover:border-[var(--accent)] transition-colors border-l-2 ${priorityClasses[card.priority] || 'border-l-[var(--border-color)]'} ${isDragging ? 'shadow-lg' : 'shadow-sm'}`}
+      className={`group glass border border-[var(--border-color)] rounded-sm cursor-pointer hover:border-[var(--accent)] transition-colors border-l-2 ${priorityClasses[card.priority] || 'border-l-[var(--border-color)]'} ${isDragging ? 'shadow-lg' : 'shadow-sm'}`}
     >
       <div className="p-2 space-y-1.5">
         <div className="flex items-start gap-1">

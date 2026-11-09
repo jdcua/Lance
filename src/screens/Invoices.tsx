@@ -16,6 +16,7 @@ import { getCurrencySymbol } from '../lib/currency';
 import { generateInvoiceNumber, sanitizeInvoiceNumber } from '../utils/invoiceNumber';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 import { useToasts } from '../store/toastStore';
+import { commands } from '../lib/commands';
 import { Plus, Search } from 'lucide-react';
 import {
   generateFollowUpDraft,
@@ -256,9 +257,9 @@ export default function Invoices() {
   // External triggers: first-run checklist + Cmd/Ctrl+N shortcut (App.tsx).
   // (The shortcut was previously dispatched here but nothing listened.)
   useEffect(() => {
-    const handler = () => openNew();
-    document.addEventListener('lance:add-invoice', handler);
-    return () => document.removeEventListener('lance:add-invoice', handler);
+    const onAddInvoice = () => openNew();
+    commands.on('lance:add-invoice', onAddInvoice);
+    return () => commands.off('lance:add-invoice', onAddInvoice);
   });
 
   const handleCreateFromEmptyState = () => {
@@ -1041,7 +1042,7 @@ export default function Invoices() {
         </div>
         <div className="space-y-3">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-14 bg-[var(--bg-secondary)] rounded-[8px] skeleton-pulse" />
+            <div key={i} className="h-14 bg-[var(--bg-secondary)] rounded-sm skeleton-pulse" />
           ))}
         </div>
       </div>
@@ -1049,6 +1050,7 @@ export default function Invoices() {
 
   return (
     <div className="p-6">
+      <h1 className="font-display text-lg font-semibold text-[var(--text-primary)] mb-2">Invoices</h1>
       <LoadError error={invoicesError} onRetry={() => loadInvoices()} />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
         <MetricCard
@@ -1110,7 +1112,7 @@ export default function Invoices() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Filter..."
-            className="w-full pl-8 pr-3 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]"
+            className="w-full pl-8 pr-3 py-1.5 text-xs border border-[var(--border-color)] rounded-xs placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]"
           />
         </div>
         {activeTab === 'all' && (

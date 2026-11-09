@@ -25,6 +25,7 @@ import { formatCurrency, parseDateString, todayLocalISO } from '../utils/format'
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 import { checkAndNotify } from '../achievements/notify';
 import { celebrationLevel, recordCelebration, celebrationToast } from '../lib/celebration';
+import { commands } from '../lib/commands';
 import type { Proposal, Contract, Project, Invoice } from '../types';
 
 type Stage = 'proposal' | 'contract' | 'project' | 'invoice' | 'paid';
@@ -224,7 +225,7 @@ export default function Pipeline() {
         p ? `New invoice opened — bill ${p.title} with real amounts.` : 'New invoice opened — fill in real amounts.',
         'info',
       );
-      setTimeout(() => document.dispatchEvent(new CustomEvent('lance:add-invoice')), 350);
+      setTimeout(() => commands.dispatch('lance:add-invoice'), 350);
     } else if (card.kind === 'invoice' && target === 'paid') {
       const inv = invoices.find((x) => x.id === card.id);
       if (!inv) return;
@@ -370,7 +371,7 @@ export default function Pipeline() {
   return (
     <div className="h-full overflow-x-auto p-4 md:p-6">
       <Fade className="mb-4">
-        <h1 className="text-lg font-semibold text-[var(--text-primary)]">Pipeline</h1>
+        <h1 className="font-display text-lg font-semibold text-[var(--text-primary)]">Pipeline</h1>
         <p className="text-xs text-[var(--text-secondary)]">
           Drag work forward. Each move does the real thing — contracts, projects, payments — with an undo.
         </p>
@@ -421,7 +422,7 @@ export default function Pipeline() {
         <p className="text-xs text-[var(--text-secondary)] mb-3">
           This creates the real next record — nothing shadow, nothing fake. Undo is offered after.
         </p>
-        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Title</label>
+        <label className="form-label">Title</label>
         <input
           value={advanceTitle}
           onChange={(e) => setAdvanceTitle(sanitizeInput(e.target.value).slice(0, 200))}
@@ -441,7 +442,7 @@ export default function Pipeline() {
             </p>
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div>
-                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Amount</label>
+                <label className="form-label">Amount</label>
                 <input
                   value={payAmount}
                   onChange={(e) => setPayAmount(e.target.value)}
@@ -450,7 +451,7 @@ export default function Pipeline() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Date</label>
+                <label className="form-label">Date</label>
                 <input
                   type="date"
                   value={payDate}
@@ -460,7 +461,7 @@ export default function Pipeline() {
               </div>
             </div>
             <div className="mb-4">
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Method</label>
+              <label className="form-label">Method</label>
               <select
                 value={payMethod}
                 onChange={(e) => setPayMethod(e.target.value)}

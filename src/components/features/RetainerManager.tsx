@@ -161,7 +161,7 @@ export default function RetainerManager({ clientId }: { clientId: string }) {
   const monthlyValue = retainer ? retainer.monthly_hours * retainer.rate : 0;
 
   const inputClass =
-    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
@@ -171,7 +171,7 @@ export default function RetainerManager({ clientId }: { clientId: string }) {
             Retainer
           </h4>
         </div>
-        <div className="h-20 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+        <div className="h-20 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
       </div>
     );
   }
@@ -204,7 +204,7 @@ export default function RetainerManager({ clientId }: { clientId: string }) {
       </div>
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="text-[10px] text-[var(--text-tertiary)] mb-0.5 block">Monthly Hours</label>
@@ -267,7 +267,7 @@ export default function RetainerManager({ clientId }: { clientId: string }) {
 
       {retainer ? (
         <div className="space-y-2">
-          <div className={`px-3 py-3 rounded-[8px] ${bgColor}`}>
+          <div className={`px-3 py-3 rounded-sm ${bgColor}`}>
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-medium text-[var(--text-primary)]">
                 {hoursUsed.toFixed(1)} / {monthlyHours} hours
@@ -276,7 +276,7 @@ export default function RetainerManager({ clientId }: { clientId: string }) {
                 {percentUsed.toFixed(0)}%
               </span>
             </div>
-            <div className="w-full h-2 bg-[var(--bg-card)] rounded-full overflow-hidden">
+            <div className="w-full h-2 glass rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-colors ${barColor}`}
                 style={{ width: `${Math.min(percentUsed, 100)}%` }}
@@ -291,7 +291,7 @@ export default function RetainerManager({ clientId }: { clientId: string }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+          <div className="flex items-center gap-4 px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
             <div className="flex items-center gap-1.5">
               <DollarSign size={10} className="text-[var(--text-tertiary)]" />
               <span className="text-[var(--text-primary)] font-medium">

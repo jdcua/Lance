@@ -121,7 +121,7 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
         <BrandLogo size={32} className="text-[var(--accent-ink,var(--accent))] mx-auto mb-2" />
         <h1
           className="text-[28px] font-semibold text-[var(--text-primary)] mb-1"
-          style={{ fontFamily: "'Syne', sans-serif" }}
+         
         >
           Lance
         </h1>
@@ -134,8 +134,8 @@ export default function SplashScreen({ onDismiss }: SplashScreenProps) {
         <div className="border-t border-[var(--border-color)] my-5" />
 
         <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-3">
-          Core is free forever. Pro adds archetype depth · proposals, contracts, invoices,
-          scope-creep protection.
+          Core is free forever — clients, projects, time, invoices and exports stay free.
+          Pro adds archetype depth, scope-creep protection and advanced insights.
         </p>
 
         <div className="flex items-center justify-center gap-3 mb-6">

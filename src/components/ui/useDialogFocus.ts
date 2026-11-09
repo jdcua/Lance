@@ -13,7 +13,7 @@ const FOCUSABLE =
 export function useDialogFocus(
   containerRef: RefObject<HTMLElement | null>,
   open: boolean,
-  opts?: { initialSelector?: string },
+  opts?: { initialSelector?: string; returnFocus?: boolean },
 ): void {
   useEffect(() => {
     if (!open) return;
@@ -61,7 +61,7 @@ export function useDialogFocus(
         active instanceof HTMLElement &&
         active !== document.body &&
         !el.contains(active);
-      if (previouslyFocused && !movedElsewhere) {
+      if (opts?.returnFocus !== false && previouslyFocused && !movedElsewhere) {
         previouslyFocused.focus();
       }
     };

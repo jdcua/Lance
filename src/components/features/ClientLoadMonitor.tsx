@@ -125,7 +125,7 @@ export default function ClientLoadMonitor() {
         </div>
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-12 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+            <div key={i} className="h-12 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
           ))}
         </div>
       </div>
@@ -152,14 +152,14 @@ export default function ClientLoadMonitor() {
 
       <div className="space-y-2">
         {sorted.map((item) => (
-          <div key={item.id} className={`px-3 py-2 rounded-[6px] ${getBgColor(item.percent)}`}>
+          <div key={item.id} className={`px-3 py-2 rounded-xs ${getBgColor(item.percent)}`}>
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-medium text-[var(--text-primary)]">{item.name}</span>
               <span className={`text-[11px] font-semibold ${getTextColor(item.percent)}`}>
                 {item.percent.toFixed(0)}%
               </span>
             </div>
-            <div className="w-full h-1.5 bg-[var(--bg-card)] rounded-full overflow-hidden mb-1">
+            <div className="w-full h-1.5 glass rounded-full overflow-hidden mb-1">
               <div
                 className={`h-full rounded-full transition-colors ${getBarColor(item.percent)}`}
                 style={{ width: `${Math.min(item.percent, 100)}%` }}

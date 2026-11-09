@@ -46,7 +46,7 @@ export default function TrialBanner() {
   }
 
   const btn =
-    'text-xs font-medium px-2.5 py-1 rounded-[6px] border border-[var(--border-color)] ' +
+    'text-xs font-medium px-2.5 py-1 rounded-xs border border-[var(--border-color)] ' +
     'bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] ' +
     'disabled:opacity-50 transition-colors';
 
@@ -86,7 +86,7 @@ export default function TrialBanner() {
       </div>
       {note ? <div className="mt-1 text-xs text-[var(--text-secondary)]">{note}</div> : null}
       {showVerify ? (
-        <div className="mt-2 rounded-[8px] border border-[var(--border-color)] bg-[var(--bg-card)] p-3 text-[13px]">
+        <div className="mt-2 rounded-sm border border-[var(--border-color)] bg-[var(--bg-card)] p-3 text-[13px]">
           <VerifyPanel />
         </div>
       ) : null}

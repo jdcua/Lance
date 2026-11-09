@@ -137,7 +137,7 @@ export default function TaskLog({ clientId }: { clientId: string }) {
   }
 
   const inputClass =
-    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
@@ -147,12 +147,12 @@ export default function TaskLog({ clientId }: { clientId: string }) {
         </div>
         <div className="flex gap-1.5">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-6 w-16 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+            <div key={i} className="h-6 w-16 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
           ))}
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-10 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+            <div key={i} className="h-10 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
           ))}
         </div>
       </div>
@@ -169,7 +169,7 @@ export default function TaskLog({ clientId }: { clientId: string }) {
       </div>
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <input
             type="text"
             placeholder="Task title"
@@ -245,7 +245,7 @@ export default function TaskLog({ clientId }: { clientId: string }) {
 
       {/* Summary */}
       {tasks.length > 0 && (
-        <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] space-y-1">
+        <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs space-y-1">
           <div className="flex items-center gap-2 text-xs">
             <Clock size={12} className="text-[var(--text-tertiary)]" />
             <span className="text-[var(--text-primary)] font-medium">{totalHours.toFixed(1)} hours total</span>
@@ -272,7 +272,7 @@ export default function TaskLog({ clientId }: { clientId: string }) {
           {filtered.map((t) => (
             <div
               key={t.id}
-              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs"
+              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
             >
               <div className="flex-1 min-w-0 flex items-center gap-2">
                 <span className="font-medium text-[var(--text-primary)] truncate">{t.title}</span>

@@ -147,14 +147,14 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
         role="dialog"
         aria-modal="true"
         aria-label="Unlock Pro depth"
-        className="w-[520px] max-w-[calc(100vw-32px)] max-h-[85vh] overflow-y-auto mx-4 bg-[var(--bg-card)] rounded-[16px] shadow-2xl px-8 py-8"
+        className="w-[520px] max-w-[calc(100vw-32px)] max-h-[85vh] overflow-y-auto mx-4 glass rounded-[24px] px-8 py-8"
         style={{ fontFamily: "'Inter', sans-serif" }}
       >
         <div className="flex items-start justify-between mb-6">
           <div>
             <h2
               className="text-[24px] font-semibold text-[var(--text-primary)]"
-              style={{ fontFamily: "'Syne', sans-serif" }}
+             
             >
               Unlock Pro depth
             </h2>
@@ -219,7 +219,7 @@ export default function UpgradeModal({ isOpen, onClose, triggerFeature }: Upgrad
                   <div className="flex items-baseline gap-2 mb-1">
                     <span
                       className="text-[28px] font-semibold text-[var(--text-primary)]"
-                      style={{ fontFamily: "'Syne', sans-serif" }}
+                     
                     >
                       {plan.price}
                     </span>

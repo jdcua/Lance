@@ -115,7 +115,7 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
     } catch (e) { console.error('[MoodBoard] saveNotes failed:', e); }
   };
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
 
   // Filter assets that are images
   const availableAssets = allAttachments.filter(a => {
@@ -130,7 +130,7 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Mood Board</h4>
         </div>
         <div className="grid grid-cols-3 gap-2">
-          {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-24 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
+          {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-24 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
         </div>
       </div>
     );
@@ -147,17 +147,17 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
 
       {/* Add form */}
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <div className="flex gap-1.5">
             <button
               onClick={() => setAddMode('url')}
-              className={`flex-1 px-2 py-1 rounded-[6px] text-[11px] font-medium transition-colors ${addMode === 'url' ? 'bg-[var(--accent)] text-[var(--accent-on)]' : 'bg-[var(--bg-card)] text-[var(--text-secondary)]'}`}
+              className={`flex-1 px-2 py-1 rounded-xs text-[11px] font-medium transition-colors ${addMode === 'url' ? 'bg-[var(--accent)] text-[var(--accent-on)]' : 'glass text-[var(--text-secondary)]'}`}
             >
               <Link size={10} className="inline mr-1" /> Add URL
             </button>
             <button
               onClick={() => { setAddMode('asset'); setShowPicker(true); }}
-              className={`flex-1 px-2 py-1 rounded-[6px] text-[11px] font-medium transition-colors ${addMode === 'asset' ? 'bg-[var(--accent)] text-[var(--accent-on)]' : 'bg-[var(--bg-card)] text-[var(--text-secondary)]'}`}
+              className={`flex-1 px-2 py-1 rounded-xs text-[11px] font-medium transition-colors ${addMode === 'asset' ? 'bg-[var(--accent)] text-[var(--accent-on)]' : 'glass text-[var(--text-secondary)]'}`}
             >
               <Image size={10} className="inline mr-1" /> From Library
             </button>
@@ -178,7 +178,7 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
 
       {/* Asset picker modal */}
       {showPicker && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-medium text-[var(--text-secondary)]">Select Asset</span>
             <button
@@ -197,7 +197,7 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
                 <button
                   key={asset.id}
                   onClick={() => handleAddAsset(asset.id)}
-                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-[6px] hover:bg-[var(--bg-card)] text-xs text-left"
+                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-xs hover:glass text-xs text-left"
                 >
                   <Image size={12} className="text-[var(--text-tertiary)] flex-shrink-0" />
                   <span className="text-[var(--text-primary)] truncate flex-1">{asset.filename}</span>
@@ -217,7 +217,7 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
           {items.map((item, idx) => {
             const asset = item.asset_id ? allAttachments.find(a => a.id === item.asset_id) : null;
             return (
-              <div key={item.id} className="group relative bg-[var(--bg-secondary)] rounded-[6px] overflow-hidden">
+              <div key={item.id} className="group relative bg-[var(--bg-secondary)] rounded-xs overflow-hidden">
                 {/* Preview area */}
                 {asset ? (
                   <div className="h-16 bg-[var(--bg-card)] flex items-center justify-center">
@@ -253,7 +253,7 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
                     aria-label="Move up"
                     onClick={() => handleMove(item.id, 'up')}
                     disabled={idx === 0}
-                    className="p-0.5 rounded-[4px] bg-[var(--bg-card)]/80 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30"
+                    className="p-0.5 rounded-[4px] glass/80 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30"
                   >
                     <ChevronUp size={10} />
                   </button>
@@ -261,14 +261,14 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
                     aria-label="Move down"
                     onClick={() => handleMove(item.id, 'down')}
                     disabled={idx === items.length - 1}
-                    className="p-0.5 rounded-[4px] bg-[var(--bg-card)]/80 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30"
+                    className="p-0.5 rounded-[4px] glass/80 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30"
                   >
                     <ChevronDown size={10} />
                   </button>
                   <button
                     aria-label="Delete mood board item"
                     onClick={() => handleRemove(item.id)}
-                    className="p-0.5 rounded-[4px] bg-[var(--bg-card)]/80 text-[var(--text-tertiary)] hover:text-[#A32D2D]"
+                    className="p-0.5 rounded-[4px] glass/80 text-[var(--text-tertiary)] hover:text-[#A32D2D]"
                   >
                     <Trash2 size={10} />
                   </button>
@@ -276,7 +276,7 @@ export default function MoodBoard({ projectId }: { projectId: string }) {
 
                 {/* External link indicator */}
                 {item.url && (
-                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="absolute bottom-1.5 right-1.5 p-0.5 rounded-[4px] bg-[var(--bg-card)]/60 text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))]">
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="absolute bottom-1.5 right-1.5 p-0.5 rounded-[4px] glass/60 text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))]">
                     <ArrowUpRight size={10} />
                   </a>
                 )}

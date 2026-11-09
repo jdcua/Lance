@@ -176,9 +176,9 @@ export default function ListingTracker({ projectId }: { projectId: string }) {
   const totalValue = listings.reduce((sum, l) => sum + (l.list_price || 0), 0);
 
   const inputClass =
-    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
   const selectClass =
-    'w-full px-2 py-1 text-[11px] border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1 text-[11px] border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
@@ -190,7 +190,7 @@ export default function ListingTracker({ projectId }: { projectId: string }) {
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
           ))}
         </div>
       </div>
@@ -209,7 +209,7 @@ export default function ListingTracker({ projectId }: { projectId: string }) {
       </div>
 
       {listings.length > 0 && (
-        <div className="flex items-center gap-3 px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[6px] text-xs">
+        <div className="flex items-center gap-3 px-3 py-2 glass border border-[var(--border-color)] rounded-xs text-xs">
           <div className="flex items-center gap-1.5 text-[var(--text-secondary)]">
             <Home size={12} className="text-[var(--accent-ink,var(--accent))]" />
             <span>{activeCount} active</span>
@@ -222,7 +222,7 @@ export default function ListingTracker({ projectId }: { projectId: string }) {
       )}
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <input
             type="text"
             placeholder="Property address"
@@ -305,7 +305,7 @@ export default function ListingTracker({ projectId }: { projectId: string }) {
         <div className="space-y-1">
           {listings.map((listing) => (
             <div key={listing.id}>
-              <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+              <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <Home
                     size={10}
@@ -358,7 +358,7 @@ export default function ListingTracker({ projectId }: { projectId: string }) {
                 </div>
               </div>
               {expanded === listing.id && (
-                <div className="mt-1 px-3 py-2 bg-[var(--bg-secondary)]/50 rounded-[6px] text-xs space-y-1">
+                <div className="mt-1 px-3 py-2 bg-[var(--bg-secondary)]/50 rounded-xs text-xs space-y-1">
                   {listing.notes && <p className="text-[var(--text-secondary)]">{listing.notes}</p>}
                   {listing.close_date && (
                     <p className="text-[var(--text-tertiary)]">Closed: {listing.close_date}</p>

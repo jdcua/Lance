@@ -169,7 +169,7 @@ export default function ContentCalendar({ clientId }: { clientId: string }) {
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
   const inputClass =
-    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
 
   const monthLabel = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
@@ -302,7 +302,7 @@ export default function ContentCalendar({ clientId }: { clientId: string }) {
             filteredPosts.map((p) => (
               <div
                 key={p.id}
-                className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs"
+                className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
               >
                 <div className="flex-1 min-w-0 flex items-center gap-2">
                   <span
@@ -338,7 +338,7 @@ export default function ContentCalendar({ clientId }: { clientId: string }) {
       )}
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[10px] text-[var(--text-tertiary)]">Date: {selectedDate}</span>
             <button

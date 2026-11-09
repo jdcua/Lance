@@ -6,6 +6,7 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 import ProgressBar from '../ui/ProgressBar';
 import { formatCurrency } from '../../utils/format';
+import { commands } from '../../lib/commands';
 import { getTrialValue, computeProRoi } from '../../utils/trialValue';
 import {
   computeForecast,
@@ -36,16 +37,14 @@ function LockedPanel({
           PRO
         </span>
       </div>
-      <p className="text-[26px] font-semibold text-[var(--text-primary)]" style={{ fontFamily: "'Syne', sans-serif" }}>
+      <p className="text-[26px] font-semibold text-[var(--text-primary)]">
         {headline}
       </p>
       <p className="text-xs text-[var(--text-secondary)] mt-1 mb-4 leading-relaxed">{blurb}</p>
       <Button
         size="sm"
         className="w-full"
-        onClick={() =>
-          document.dispatchEvent(new CustomEvent('lance:open-upgrade', { detail: feature }))
-        }
+        onClick={() => commands.dispatch('lance:open-upgrade', feature)}
       >
         Unlock with Pro
       </Button>
@@ -167,7 +166,7 @@ export default function ProInsights() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <Card>
           <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">3-Month Forecast</h3>
-          <p className="text-[26px] font-semibold text-[var(--text-primary)]" style={{ fontFamily: "'Syne', sans-serif" }}>
+          <p className="text-[26px] font-semibold text-[var(--text-primary)]">
             {formatCurrency(Math.round(forecast.total), currency)}
           </p>
           <div className="space-y-2.5 mt-4">
@@ -199,7 +198,7 @@ export default function ProInsights() {
             </p>
           ) : (
             <>
-              <p className="text-[26px] font-semibold text-[var(--text-primary)]" style={{ fontFamily: "'Syne', sans-serif" }}>
+              <p className="text-[26px] font-semibold text-[var(--text-primary)]">
                 {formatCurrency(Math.round(rate.effective * 100) / 100, currency)}/h
               </p>
               {rate.stated !== null && (
@@ -209,7 +208,7 @@ export default function ProInsights() {
               )}
               <div className="mt-4">
                 {rate.alert && rate.leakPerHour !== null ? (
-                  <div className="flex items-start gap-2 p-3 rounded-[8px] bg-[var(--warning-bg)]">
+                  <div className="flex items-start gap-2 p-3 rounded-sm bg-[var(--warning-bg)]">
                     <AlertTriangle size={14} className="text-[var(--warning-text)] flex-shrink-0 mt-0.5" />
                     <p className="text-xs text-[var(--warning-text)] leading-relaxed">
                       You keep about {Math.round((rate.effective / (rate.stated || 1)) * 100)}% of your
@@ -218,7 +217,7 @@ export default function ProInsights() {
                     </p>
                   </div>
                 ) : (
-                  <div className="flex items-start gap-2 p-3 rounded-[8px] bg-[var(--accent-bg)]">
+                  <div className="flex items-start gap-2 p-3 rounded-sm bg-[var(--accent-bg)]">
                     <CheckCircle2 size={14} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0 mt-0.5" />
                     <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                       {rate.stated !== null

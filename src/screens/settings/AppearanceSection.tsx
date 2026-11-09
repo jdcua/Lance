@@ -24,7 +24,7 @@ export default function AppearanceSection({ bag }: { bag: SettingsBag }) {
         <div className="flex items-center gap-3 mb-4">
           <button
             onClick={() => autoSave({ theme: 'light' }, 'Appearance')}
-            className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
+            className={`px-4 py-2 text-sm rounded-sm border transition-colors ${
               form.theme === 'light'
                 ? 'bg-[var(--accent)] text-[var(--accent-on)] border-[var(--accent)]'
                 : 'bg-[var(--bg-card)]  text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] border-[var(--border-color)] '
@@ -34,7 +34,7 @@ export default function AppearanceSection({ bag }: { bag: SettingsBag }) {
           </button>
           <button
             onClick={() => autoSave({ theme: 'dark' }, 'Appearance')}
-            className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
+            className={`px-4 py-2 text-sm rounded-sm border transition-colors ${
               form.theme === 'dark'
                 ? 'bg-[var(--accent)] text-[var(--accent-on)] border-[var(--accent)]'
                 : 'bg-[var(--bg-card)]  text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] border-[var(--border-color)] '
@@ -51,7 +51,7 @@ export default function AppearanceSection({ bag }: { bag: SettingsBag }) {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => bag.handleDensityChange('comfortable')}
-                className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
+                className={`px-4 py-2 text-sm rounded-sm border transition-colors ${
                   bag.density === 'comfortable'
                     ? 'bg-[var(--accent)] text-[var(--accent-on)] border-[var(--accent)]'
                     : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-color)]'
@@ -61,7 +61,7 @@ export default function AppearanceSection({ bag }: { bag: SettingsBag }) {
               </button>
               <button
                 onClick={() => bag.handleDensityChange('compact')}
-                className={`px-4 py-2 text-sm rounded-[8px] border transition-colors ${
+                className={`px-4 py-2 text-sm rounded-sm border transition-colors ${
                   bag.density === 'compact'
                     ? 'bg-[var(--accent)] text-[var(--accent-on)] border-[var(--accent)]'
                     : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-color)]'
@@ -94,7 +94,7 @@ export default function AppearanceSection({ bag }: { bag: SettingsBag }) {
                   applyTheme(theme);
                   addToast(`Switched to ${theme.name}`, 'info');
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-[8px] text-left text-sm transition-colors ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-sm text-left text-sm transition-colors ${
                   isActive
                     ? 'bg-[var(--accent-bg)] border border-[var(--accent)]/30'
                     : isUnlocked
@@ -151,7 +151,7 @@ export default function AppearanceSection({ bag }: { bag: SettingsBag }) {
               <button
                 key={color.id}
                 onClick={() => bag.handleAccentChange(color.id)}
-                className={`flex flex-col items-center gap-1.5 px-3 py-3 rounded-[8px] border transition-colors ${
+                className={`flex flex-col items-center gap-1.5 px-3 py-3 rounded-sm border transition-colors ${
                   bag.accentColor === color.id
                     ? 'border-[var(--accent)] bg-[var(--accent-bg)]'
                     : 'border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-secondary)]'

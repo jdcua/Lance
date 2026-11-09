@@ -5,6 +5,7 @@ import { Search, FileText, FolderKanban, Receipt, PenLine, Users, Sparkles, Cloc
 import { formatCurrency } from '../../utils/format';
 import { rankSearch } from '../../utils/searchRank';
 import { getShortcutModifierLabel } from '../../utils/shortcuts';
+import { useDialogFocus } from './useDialogFocus';
 
 type ResultItem = {
   id: string;
@@ -78,8 +79,12 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const wasOpen = useRef(false);
+  // Trap Tab inside the palette. Focus return stays with the effect below so
+  // keyboard users land back in the main region, not on the trigger chip.
+  useDialogFocus(dialogRef, open, { initialSelector: 'input', returnFocus: false });
   // Return focus to the main region on close — the input unmounts, and
   // without this keyboard users are dropped on <body>.
   useEffect(() => {
@@ -214,6 +219,30 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
   const safeIndex = flatResults.length === 0 ? 0 : Math.min(selectedIndex, flatResults.length - 1);
 
   // Keep the keyboard highlight visible inside the scrollable list.
+  // Trap Tab inside the palette so keyboard users can't tab out to
+  // background UI while it's open.
+  useEffect(() => {
+    if (!open) return;
+    const el = document.querySelector('[role="dialog"][aria-label="Command palette"]');
+    if (!el) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const focusable = el.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
     listRef.current
@@ -246,9 +275,10 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
 
   return (
     <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[15vh]" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="fixed inset-0 bg-black/30" />
+      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm animate-fade-in" />
       <div
-        className="relative bg-[var(--bg-card)] rounded-[12px] shadow-2xl border border-[var(--border-color)] w-[560px] max-h-[420px] flex flex-col overflow-hidden animate-fade-scale-in"
+        ref={dialogRef}
+        className="relative glass rounded-[20px] shadow-2xl w-[560px] max-h-[420px] flex flex-col overflow-hidden animate-fade-scale-in"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"

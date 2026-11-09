@@ -28,7 +28,7 @@ export default function ShootLog({ projectId }: { projectId: string }) {
     setSaving(false);
   };
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
 
   return (
     <div className="space-y-3">
@@ -40,7 +40,7 @@ export default function ShootLog({ projectId }: { projectId: string }) {
       </div>
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <input type="date" value={form.shoot_date} onChange={(e) => setForm({ ...form, shoot_date: e.target.value })} className={inputClass} />
           <div className="grid grid-cols-2 gap-2">
             <input type="text" placeholder="Location" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className={inputClass} />
@@ -61,7 +61,7 @@ export default function ShootLog({ projectId }: { projectId: string }) {
       ) : (
         <div className="space-y-1">
           {list.map((s) => (
-            <div key={s.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+            <div key={s.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
               <div className="flex-1 min-w-0">
                 <span className="font-medium text-[var(--text-primary)]">{s.shoot_date?.split('T')[0] || '--'}</span>
                 <span className="text-[var(--text-tertiary)] ml-2">

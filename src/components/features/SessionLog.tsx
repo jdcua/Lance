@@ -72,7 +72,7 @@ export default function SessionLog({
   };
 
   const inputClass =
-    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
 
   return (
     <div className="space-y-3">
@@ -86,7 +86,7 @@ export default function SessionLog({
       </div>
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           {!clientId && (
             <select
               aria-label="Client"
@@ -164,7 +164,7 @@ export default function SessionLog({
             return (
               <div
                 key={s.id}
-                className="flex items-start justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs"
+                className="flex items-start justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
               >
                 <div className="flex-1 min-w-0 space-y-0.5">
                   <div className="flex items-center gap-2">

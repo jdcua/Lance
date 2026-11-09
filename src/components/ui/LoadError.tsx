@@ -11,7 +11,7 @@ export default function LoadError({ error, onRetry }: { error: string | null | u
   return (
     <div
       role="alert"
-      className="mb-4 px-3 py-2 rounded-[8px] bg-[var(--danger-bg)] border border-[var(--danger)]/20 flex items-start gap-2 text-xs"
+      className="mb-4 px-3.5 py-2.5 rounded-[14px] bg-[var(--danger-bg)] border border-[var(--danger)]/20 shadow-sm flex items-start gap-2.5 text-xs animate-fade-in"
     >
       <AlertTriangle size={14} className="text-[var(--danger)] mt-px flex-shrink-0" />
       <div className="flex-1 min-w-0">

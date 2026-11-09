@@ -100,7 +100,7 @@ export default function Lookbook({ clientId }: { clientId: string }) {
     setForm({ ...form, asset_ids: JSON.stringify(updated) });
   };
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
 
   if (loading) {
     return (
@@ -109,7 +109,7 @@ export default function Lookbook({ clientId }: { clientId: string }) {
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Lookbook</h4>
         </div>
         <div className="grid grid-cols-3 gap-2">
-          {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-20 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
+          {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-20 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
         </div>
       </div>
     );
@@ -125,13 +125,13 @@ export default function Lookbook({ clientId }: { clientId: string }) {
       </div>
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <input type="text" placeholder="Lookbook title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={inputClass} autoFocus />
           <textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} className={inputClass + ' resize-none'} />
           {allAttachments.length > 0 && (
             <div className="space-y-1">
               <p className="text-[10px] text-[var(--text-tertiary)]">Select Assets</p>
-              <div className="max-h-32 overflow-y-auto space-y-1 bg-[var(--bg-card)] rounded-[6px] p-2">
+              <div className="max-h-32 overflow-y-auto space-y-1 glass rounded-xs p-2">
                 {allAttachments.slice(0, 20).map((asset) => {
                   const selected = getAssetIds(form.asset_ids).includes(asset.id);
                   return (
@@ -166,7 +166,7 @@ export default function Lookbook({ clientId }: { clientId: string }) {
             const entryAssets = getAttachmentsForAssetIds(entry.asset_ids);
             const isExpanded = expanded === entry.id;
             return (
-              <div key={entry.id} className="bg-[var(--bg-secondary)] rounded-[8px] overflow-hidden">
+              <div key={entry.id} className="bg-[var(--bg-secondary)] rounded-sm overflow-hidden">
                 <div className="flex items-center justify-between px-3 py-2 cursor-pointer" onClick={() => setExpanded(isExpanded ? null : entry.id)}>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-xs text-[var(--text-primary)] truncate">{entry.title}</div>
@@ -186,7 +186,7 @@ export default function Lookbook({ clientId }: { clientId: string }) {
                   <div className="px-3 pb-2">
                     <div className="grid grid-cols-4 gap-2">
                       {entryAssets.map((asset) => (
-                        <div key={asset.id} className="bg-[var(--bg-card)] rounded-[6px] p-2 text-center">
+                        <div key={asset.id} className="glass rounded-xs p-2 text-center">
                           <Image size={16} className="mx-auto mb-1 text-[var(--text-tertiary)]" />
                           <p className="text-[10px] text-[var(--text-primary)] truncate">{asset.filename}</p>
                         </div>

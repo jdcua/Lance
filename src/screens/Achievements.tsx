@@ -31,7 +31,7 @@ export default function AchievementsPage() {
     <div className="p-6">
       <div className="flex items-center gap-2 mb-6">
         <Trophy size={20} className="text-[var(--accent-ink,var(--accent))]" />
-        <h2 className="text-lg font-semibold text-[var(--text-primary)]">Achievements</h2>
+        <h1 className="font-display text-lg font-semibold text-[var(--text-primary)]">Achievements</h1>
         <Badge variant="info">{unlocked.size} / {ACHIEVEMENTS.length}</Badge>
       </div>
 
@@ -47,7 +47,7 @@ export default function AchievementsPage() {
             return (
               <Card
                 key={ach.key}
-                className={isUnlocked ? '' : 'opacity-60'}
+                className={isUnlocked ? '' : 'border border-[var(--border-color)]/40 bg-[var(--bg-secondary)]/10'}
               >
                 <div className="flex items-start gap-3">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${

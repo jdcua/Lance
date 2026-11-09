@@ -16,7 +16,7 @@ export const SectionHead = ({ title, isSaved }: { title: string; isSaved: boolea
 );
 
 export const inputClass =
-  'w-full px-3 py-2 text-sm border border-[var(--border-color)]  rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)]  ';
+  'w-full px-3 py-2 text-sm border border-[var(--border-color)]  rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)]  ';
 export const labelClass =
   'block text-xs font-medium text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-1';
 
@@ -24,6 +24,7 @@ export const currencies = ['CAD', 'USD', 'GBP', 'EUR', 'AUD'];
 export const writingStyles = ['professional', 'warm', 'direct', 'bold'];
 
 export const ACCENT_COLORS = [
+  { id: 'gold', label: 'Gold', hex: '#FFAD00' },
   { id: 'sage', label: 'Sage', hex: '#1EC98A' },
   { id: 'amber', label: 'Amber', hex: '#F59E0B' },
   { id: 'rose', label: 'Rose', hex: '#E11D48' },

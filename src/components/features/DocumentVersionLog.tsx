@@ -95,7 +95,7 @@ export default function DocumentVersionLog({ clientId }: { clientId: string }) {
 
   const docNames = Object.keys(grouped);
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
 
   if (loading) {
     return (
@@ -104,7 +104,7 @@ export default function DocumentVersionLog({ clientId }: { clientId: string }) {
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Document Versions</h4>
         </div>
         <div className="space-y-1">
-          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
+          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
         </div>
       </div>
     );
@@ -120,7 +120,7 @@ export default function DocumentVersionLog({ clientId }: { clientId: string }) {
       </div>
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <input type="text" placeholder="Document name" value={form.doc_name} onChange={(e) => setForm({ ...form, doc_name: e.target.value })} className={inputClass} autoFocus />
           <div className="grid grid-cols-2 gap-2">
             <input type="text" placeholder="Version (e.g. v2.1)" value={form.version} onChange={(e) => setForm({ ...form, version: e.target.value })} className={inputClass} />
@@ -157,7 +157,7 @@ export default function DocumentVersionLog({ clientId }: { clientId: string }) {
                 {!isCollapsed && (
                   <div className="space-y-1 mt-1 ml-4">
                     {versions.map((v) => (
-                      <div key={v.id} className="flex items-center justify-between px-3 py-1.5 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+                      <div key={v.id} className="flex items-center justify-between px-3 py-1.5 bg-[var(--bg-secondary)] rounded-xs text-xs">
                         <div className="flex-1 min-w-0 flex items-center gap-2">
                           <FileText size={10} className="text-[var(--text-tertiary)] flex-shrink-0" />
                           <span className="text-[var(--accent-ink,var(--accent))] font-medium flex-shrink-0">{v.version || '--'}</span>

@@ -315,7 +315,7 @@ function AgingReport({
 
       {/* Table */}
       <Card className="overflow-x-auto">
-        <table className="w-full text-xs">
+        <table className="data-table w-full text-xs">
           <thead>
             <tr className="border-b border-[var(--border-color)]">
               {(
@@ -453,7 +453,7 @@ function AgingReport({
           {(() => {
             const inv = invoices.find((i) => i.id === paymentInvId);
             return inv ? (
-              <div className="px-3 py-2 rounded-[8px] bg-[var(--bg-secondary)]">
+              <div className="px-3 py-2 rounded-sm bg-[var(--bg-secondary)]">
                 <p className="text-xs font-medium text-[var(--text-primary)]">
                   {inv.invoice_number}
                 </p>
@@ -464,18 +464,18 @@ function AgingReport({
             ) : null;
           })()}
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Payment Date
             </label>
             <input
               type="date"
               value={paymentForm.payment_date}
               onChange={(e) => setPaymentForm({ ...paymentForm, payment_date: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)]"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Amount Received
             </label>
             <input
@@ -483,18 +483,18 @@ function AgingReport({
               value={paymentForm.amount}
               onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
               placeholder="0.00"
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Payment Method
             </label>
             <select
               aria-label="Payment Method"
               value={paymentForm.payment_method}
               onChange={(e) => setPaymentForm({ ...paymentForm, payment_method: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
             >
               {[
                 'Bank Transfer',
@@ -515,7 +515,7 @@ function AgingReport({
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Reference / Transaction ID
             </label>
             <input
@@ -523,11 +523,11 @@ function AgingReport({
               value={paymentForm.reference}
               onChange={(e) => setPaymentForm({ ...paymentForm, reference: e.target.value })}
               placeholder="Optional"
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Notes
             </label>
             <textarea
@@ -535,7 +535,7 @@ function AgingReport({
               onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
               placeholder="Optional"
               rows={2}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none"
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">

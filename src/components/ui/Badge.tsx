@@ -12,13 +12,13 @@ const variantClasses: Record<BadgeVariant, string> = {
   warning: 'bg-[var(--warning-bg)] text-[var(--warning-text)]',
   danger: 'bg-[var(--danger-bg)] text-[var(--danger)]',
   info: 'bg-[var(--info-bg)] text-[var(--info-ink,var(--info))]',
-  success: 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]',
+  success: 'bg-[var(--success-bg)] text-[var(--success-ink,var(--success))]',
   dark: 'bg-[var(--bg-card)] text-[var(--text-secondary)] border border-[var(--neutral-border)]',
 };
 
 export default function Badge({ children, variant = 'default' }: BadgeProps) {
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-[6px] text-[11px] font-medium ${variantClasses[variant]}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium ${variantClasses[variant]}`}>
       {children}
     </span>
   );

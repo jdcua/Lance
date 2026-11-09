@@ -58,7 +58,7 @@ export default function ColumnMapper({
       </div>
 
       {/* Mapping rows */}
-      <div className="border border-[var(--border-color)] rounded-[8px] overflow-hidden">
+      <div className="border border-[var(--border-color)] rounded-sm overflow-hidden">
         {/* Header row */}
         <div className="grid grid-cols-[1fr_32px_1fr] items-center px-3 py-2 bg-[var(--bg-secondary)] border-b border-[var(--border-color)]">
           <span className="text-[10px] font-semibold text-[var(--text-secondary)]">Source Column</span>
@@ -114,7 +114,7 @@ export default function ColumnMapper({
               <select aria-label="Mappedfield"
                 value={mappedField}
                 onChange={(e) => handleFieldChange(header, e.target.value)}
-                className={`w-full px-2 py-1.5 text-xs border rounded-[6px] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 appearance-none cursor-pointer ${
+                className={`w-full px-2 py-1.5 text-xs border rounded-xs focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 appearance-none cursor-pointer ${
                   isMatched
                     ? 'border-[var(--accent)]/30 bg-[var(--bg-card)] text-[var(--text-primary)]'
                     : 'border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-tertiary)]'
@@ -140,8 +140,8 @@ export default function ColumnMapper({
           <span className="text-[10px] text-[var(--text-tertiary)] font-medium mb-2 block">
             Preview (first {Math.min(previewRows.length, 5)} rows)
           </span>
-          <div className="border border-[var(--border-color)] rounded-[8px] overflow-x-auto">
-            <table className="w-full text-xs">
+          <div className="border border-[var(--border-color)] rounded-sm overflow-x-auto">
+            <table className="data-table w-full text-xs">
               <thead>
                 <tr className="bg-[var(--bg-secondary)]">
                   {Object.entries(columnMapping)

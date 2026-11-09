@@ -29,7 +29,7 @@ export default function OverviewSection({ bag }: { bag: FinanceBag }) {
     <>
       <AffordabilityBanner monthlyPaid={monthlyPaid} monthlyExpenses={monthlyExpenses} fmt={fmt} />
           {hasMixedCurrencies && (
-            <div className="mb-4 px-3 py-2 rounded-[8px] bg-[var(--info-bg)] border border-[var(--info)]/20 flex items-start gap-2 text-xs">
+            <div className="mb-4 px-3 py-2 rounded-sm bg-[var(--info-bg)] border border-[var(--info)]/20 flex items-start gap-2 text-xs">
               <span className="text-[var(--info-ink,var(--info))] mt-px flex-shrink-0">ⓘ</span>
               <span className="text-[var(--text-secondary)]">
                 {showConverted ? (
@@ -78,7 +78,7 @@ export default function OverviewSection({ bag }: { bag: FinanceBag }) {
                     : 'Add exchange rates to convert totals'}
               </button>
               {showRates && (
-                <div className="mt-2 p-3 rounded-[8px] bg-[var(--bg-secondary)] space-y-2 max-w-sm">
+                <div className="mt-2 p-3 rounded-sm bg-[var(--bg-secondary)] space-y-2 max-w-sm">
                   {foreignCurs.map((c) => (
                     <label
                       key={c}
@@ -98,7 +98,7 @@ export default function OverviewSection({ bag }: { bag: FinanceBag }) {
                         }}
                         aria-label={`Exchange rate: 1 ${c} in ${profCur}`}
                         placeholder="—"
-                        className="w-24 px-2 py-1 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] tnum"
+                        className="w-24 px-2 py-1 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] tnum"
                       />
                       <span>{profCur}</span>
                     </label>
@@ -432,11 +432,11 @@ export default function OverviewSection({ bag }: { bag: FinanceBag }) {
             </Card>
           ) : (
             <>
-              <div className="space-y-2">
+              <div className="list-surface divide-y divide-[var(--border-color)]">
                 {pagedExpenses.visible.map((exp) => (
                   <div
                     key={exp.id}
-                    className="flex items-center gap-3 px-4 py-2.5 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px]"
+                    className="list-row flex items-center gap-3 px-4 py-2.5"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
@@ -459,7 +459,7 @@ export default function OverviewSection({ bag }: { bag: FinanceBag }) {
                       <button
                         onClick={() => openEdit(exp)}
                         aria-label="Edit expense"
-                        className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] rounded-[8px]"
+                        className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] rounded-sm"
                       >
                         <Pencil size={14} />
                       </button>
@@ -468,7 +468,7 @@ export default function OverviewSection({ bag }: { bag: FinanceBag }) {
                           setConfirmDelete({ id: exp.id, description: exp.description })
                         }
                         aria-label="Delete expense"
-                        className="p-1 text-[var(--text-tertiary)] hover:text-[var(--danger)] rounded-[8px]"
+                        className="p-1 text-[var(--text-tertiary)] hover:text-[var(--danger)] rounded-sm"
                       >
                         <Trash2 size={14} />
                       </button>

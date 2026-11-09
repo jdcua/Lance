@@ -139,9 +139,9 @@ export default function AnalysisDeliverableLog({ projectId }: { projectId: strin
   };
 
   const inputClass =
-    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
   const selectClass =
-    'w-full px-2 py-1 text-[11px] border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1 text-[11px] border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
@@ -153,7 +153,7 @@ export default function AnalysisDeliverableLog({ projectId }: { projectId: strin
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
           ))}
         </div>
       </div>
@@ -172,7 +172,7 @@ export default function AnalysisDeliverableLog({ projectId }: { projectId: strin
       </div>
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <input
             type="text"
             placeholder="Deliverable title"
@@ -237,7 +237,7 @@ export default function AnalysisDeliverableLog({ projectId }: { projectId: strin
           {deliverables.map((d) => (
             <div
               key={d.id}
-              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs"
+              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
             >
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 <FileText size={10} className="text-[var(--text-tertiary)] flex-shrink-0" />

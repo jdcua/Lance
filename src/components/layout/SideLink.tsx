@@ -14,6 +14,8 @@ interface SideLinkProps {
   expanded: boolean;
   badge?: ReactNode;
   className?: string;
+  /** When false the link is off-screen (closed mobile drawer) and must leave the tab order. */
+  focusable?: boolean;
 }
 
 /**
@@ -30,6 +32,7 @@ export default function SideLink({
   expanded,
   badge,
   className = '',
+  focusable = true,
 }: SideLinkProps) {
   const reduce = useReducedMotion();
   return (
@@ -38,8 +41,9 @@ export default function SideLink({
       end={end}
       data-tour={tour}
       title={title}
+      tabIndex={focusable === false ? -1 : 0}
       className={({ isActive }) =>
-        `relative flex items-center gap-2.5 px-3 h-[36px] text-[13.5px] font-medium transition-colors duration-150 rounded-[10px] ${
+        `relative flex items-center gap-2.5 px-3 h-[44px] text-[13.5px] font-medium transition-colors duration-150 rounded-[10px] ${
           !expanded ? 'justify-center px-0' : ''
         } ${isActive ? 'text-[var(--sb-text-active)]' : 'text-[var(--sb-text)] hover:text-[var(--sb-text-active)] hover:bg-[var(--sb-bg-hover)]'} ${className}`
       }

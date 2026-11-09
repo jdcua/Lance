@@ -110,7 +110,7 @@ export default function RetainerHealthScore({ clientId }: { clientId: string }) 
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Retainer Health</h4>
         </div>
         <div className="space-y-1">
-          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
+          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
         </div>
       </div>
     );
@@ -128,7 +128,7 @@ export default function RetainerHealthScore({ clientId }: { clientId: string }) 
         <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Retainer Health</h4>
       </div>
 
-      <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-3">
+      <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-3">
         <div className="flex items-center gap-3">
           <div className={`w-12 h-12 rounded-full flex items-center justify-center ${scoreBg(overallScore)} text-white`}>
             <span className="text-lg font-semibold">{overallScore}</span>

@@ -103,7 +103,7 @@ export default function ReportCadence({ clientId }: { clientId: string }) {
         <div className="flex items-center justify-between">
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Report Cadence</h4>
         </div>
-        <div className="h-16 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+        <div className="h-16 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
       </div>
     );
   }
@@ -114,12 +114,12 @@ export default function ReportCadence({ clientId }: { clientId: string }) {
         <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Report Cadence</h4>
       </div>
 
-      <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-3">
+      <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-3">
         <div className="flex items-center gap-2">
           <span className="text-xs text-[var(--text-secondary)]">Frequency:</span>
           <div className="flex gap-1">
             {FREQUENCIES.map(f => (
-              <label key={f} className={`px-2 py-1 rounded-[6px] text-[11px] cursor-pointer transition-colors ${form.frequency === f ? 'bg-[var(--accent)] text-[var(--accent-on)]' : 'bg-[var(--bg-card)] text-[var(--text-secondary)] hover:bg-[var(--border-color)]'}`}>
+              <label key={f} className={`px-2 py-1 rounded-xs text-[11px] cursor-pointer transition-colors ${form.frequency === f ? 'bg-[var(--accent)] text-[var(--accent-on)]' : 'glass text-[var(--text-secondary)] hover:bg-[var(--border-color)]'}`}>
                 <input type="radio" name="frequency" value={f} checked={form.frequency === f} onChange={() => setForm({ frequency: f })} className="hidden" />
                 {f}
               </label>

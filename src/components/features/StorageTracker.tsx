@@ -58,7 +58,7 @@ export default function StorageTracker({ projectId }: { projectId: string }) {
   const totalExported = logs.reduce((sum, l) => sum + (l.exported_gb || 0), 0);
   const ratioPercent = totalRaw > 0 ? Math.min((totalExported / totalRaw) * 100, 100) : 0;
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
 
   if (loading) return <p className="text-xs text-[var(--text-tertiary)] py-2">Loading...</p>;
 
@@ -72,7 +72,7 @@ export default function StorageTracker({ projectId }: { projectId: string }) {
       </div>
 
       {logs.length > 0 && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2 text-xs">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2 text-xs">
           <div className="flex items-center gap-3">
             <span className="text-[var(--text-tertiary)]">
               <HardDrive size={10} className="inline mr-1" />Raw: <span className="font-medium text-[var(--text-primary)]">{totalRaw.toFixed(1)} GB</span>
@@ -81,14 +81,14 @@ export default function StorageTracker({ projectId }: { projectId: string }) {
               <Upload size={10} className="inline mr-1" />Exported: <span className="font-medium text-[var(--text-primary)]">{totalExported.toFixed(1)} GB</span>
             </span>
           </div>
-          <div className="h-2 w-full bg-[var(--bg-card)] rounded-full overflow-hidden">
+          <div className="h-2 w-full glass rounded-full overflow-hidden">
             <div className="h-full bg-[var(--accent)] rounded-full transition-colors" style={{ width: `${ratioPercent}%` }} />
           </div>
         </div>
       )}
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <div className="grid grid-cols-2 gap-2">
             <input type="number" placeholder="Raw GB" step="0.1" value={form.raw_gb} onChange={(e) => setForm({ ...form, raw_gb: e.target.value })} className={inputClass} />
             <input type="number" placeholder="Exported GB" step="0.1" value={form.exported_gb} onChange={(e) => setForm({ ...form, exported_gb: e.target.value })} className={inputClass} />
@@ -106,7 +106,7 @@ export default function StorageTracker({ projectId }: { projectId: string }) {
       ) : (
         <div className="space-y-1">
           {logs.map((l) => (
-            <div key={l.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+            <div key={l.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
               <div className="flex-1 min-w-0">
                 <span className="font-medium text-[var(--text-primary)]">{l.logged_date.split('T')[0]}</span>
                 <span className="text-[var(--text-tertiary)] ml-2">

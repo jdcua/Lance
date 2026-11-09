@@ -64,13 +64,13 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) onCloseRef.current(); }} />
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) onCloseRef.current(); }} />
       <div
         ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`relative bg-[var(--bg-card)] shadow-xl w-full ${sizeClasses[size]} ${size === 'full' ? 'mx-0 max-h-none rounded-none' : 'mx-4 max-h-[85vh] rounded-md'} flex flex-col animate-fade-scale-in`}
+        className={`relative glass shadow-xl w-full ${sizeClasses[size]} ${size === 'full' ? 'mx-0 max-h-none rounded-none' : 'mx-4 max-h-[85vh] rounded-[24px]'} flex flex-col animate-fade-scale-in`}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
       >
@@ -79,7 +79,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
           <button
             onClick={onClose}
             aria-label="Close dialog"
-            className="p-1 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+            className="p-1 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
           >
             <X size={18} />
           </button>

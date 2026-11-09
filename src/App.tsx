@@ -28,6 +28,7 @@ import UpdaterModal from './components/ui/UpdaterModal';
 import UpgradeModal from './components/ui/UpgradeModal';
 import ShortcutsModal from './components/ui/ShortcutsModal';
 import OrbitField from './components/motion/OrbitField';
+import { commands } from './lib/commands';
 import { useStore } from './store';
 import { useToasts } from './store/toastStore';
 import { useAutoUpdater } from './hooks/useAutoUpdater';
@@ -47,16 +48,16 @@ import { getShortcutModifierLabel } from './utils/shortcuts';
 import type { Profession } from './themes';
 import type { UserProfile } from './types';
 import { PROFESSION_THEME } from './themes';
-import { getArchetype, ARCHETYPE_LIST } from './archetypes';
+
 import { driveAxisFor, saveDrive, loadDrive, DRIVE_AXES } from './tour/voice';
+import { getArchetype, ARCHETYPE_LIST } from './archetypes';
 import { checkAchievements } from './achievements/checker';
 import { ACHIEVEMENTS } from './achievements';
 import { seedSampleData } from './utils/seedData';
 import { parseDateString, DAY_MS } from './utils/format';
 import { defaultCurrency } from './lib/currency';
 import { recordTelemetry } from './utils/telemetry';
-import { detectNewOpens, snapshotOpens } from './utils/portalActivity';
-import { getFeatureFlags } from './lib/constants';
+import { usePortalPolling } from './lib/engines/usePortalPolling';
 import { getRuntimeVersion } from './lib/version';
 import { isTrial } from './demo/isDemo';
 import TrialBanner from './demo/TrialBanner';
@@ -190,13 +191,13 @@ export default function App() {
     setShowUpgradeModal(true);
   };
 
-  // Allow any screen to request the upgrade modal via a custom event.
+  // Allow any screen to request the upgrade modal via the command registry.
   useEffect(() => {
-    const handler = (e: Event) => {
-      openUpgradeModal((e as CustomEvent<string>).detail || undefined);
+    const onOpenUpgrade = (detail: string | undefined) => {
+      openUpgradeModal(detail || undefined);
     };
-    document.addEventListener('lance:open-upgrade', handler);
-    return () => document.removeEventListener('lance:open-upgrade', handler);
+    commands.on('lance:open-upgrade', onOpenUpgrade);
+    return () => commands.off('lance:open-upgrade', onOpenUpgrade);
   }, []);
 
   // Premium onboarding: show once after a license is activated.
@@ -209,8 +210,7 @@ export default function App() {
         /* private mode */
       }
     };
-    const handler = () => show();
-    document.addEventListener('lance:pro-activated', handler);
+    commands.on('lance:pro-activated', show);
     // Also react to a pending flag set during activation (survives reload).
     try {
       if (localStorage.getItem('lance:pro-onboarding-pending') === 'true') {
@@ -220,66 +220,19 @@ export default function App() {
     } catch {
       /* private mode */
     }
-    return () => document.removeEventListener('lance:pro-activated', handler);
+    return () => commands.off('lance:pro-activated', show);
   }, []);
   // Time entries are logged through the global quick-log modal (the Time
   // screen has no new-entry trigger of its own). This wires the checklist
   // and the Cmd/Ctrl+N shortcut, which previously dispatched to nothing.
   useEffect(() => {
-    const handler = () => setShowQuickLogModal(true);
-    document.addEventListener('lance:add-time', handler);
-    return () => document.removeEventListener('lance:add-time', handler);
+    const onAddTime = () => setShowQuickLogModal(true);
+    commands.on('lance:add-time', onAddTime);
+    return () => commands.off('lance:add-time', onAddTime);
   }, []);
 
-  // Pro open alerts: when a client opens a shared proposal, Pro and trial
-  // users get pinged with one-click actions (open it, draft a follow-up).
-  // Free tiers still see passive open badges on the Proposals screen.
-  // Polls on the same 30s cadence as the dashboard feed.
-  useEffect(() => {
-    let stopped = false;
-    const seenRef: { current: Record<string, number> } = { current: {} };
-    const check = async () => {
-      try {
-        const store = useStore.getState();
-        await store.loadPortalActivity();
-        if (stopped) return;
-        const fresh = detectNewOpens(useStore.getState().portalActivity, seenRef.current);
-        seenRef.current = snapshotOpens(useStore.getState().portalActivity);
-        if (fresh.length === 0) return;
-        if (getFeatureFlags(store.getActiveTier()).advancedInsights !== true) return;
-        const proposals = useStore.getState().proposals;
-        for (const item of fresh) {
-          const proposal = proposals.find((p) => p.id === item.proposalId);
-          if (!proposal) continue;
-          addToast(`Client opened "${proposal.title}" (${item.opens}x)`, 'info', undefined, [
-            {
-              label: 'Open proposal',
-              onClick: () => navigate('/proposals'),
-            },
-            {
-              label: 'Draft follow-up',
-              onClick: () => {
-                useStore
-                  .getState()
-                  .createFollowUp({ entity_type: 'proposal', entity_id: item.proposalId, stage: 1 })
-                  .then(() => addToast('Follow-up drafted', 'success'))
-                  .catch(() => addToast('Could not draft the follow-up', 'error'));
-              },
-            },
-          ]);
-        }
-      } catch {
-        /* portal polling is best-effort */
-      }
-    };
-    check();
-    const id = setInterval(check, 30000);
-    return () => {
-      stopped = true;
-      clearInterval(id);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Pro open alerts: polled in usePortalPolling hook (src/lib/engines/usePortalPolling.ts).
+  usePortalPolling();
 
   const [showImportModal, setShowImportModal] = useState(false);
   const [importFiles, setImportFiles] = useState<File[] | undefined>(undefined);
@@ -973,14 +926,14 @@ export default function App() {
     };
   }, []);
 
-  // Listen for lance:open-import custom event (sidebar button)
+  // Listen for lance:open-import (sidebar button)
   useEffect(() => {
-    const handler = () => {
+    const onOpenImport = () => {
       setImportFiles(undefined);
       setShowImportModal(true);
     };
-    document.addEventListener('lance:open-import', handler);
-    return () => document.removeEventListener('lance:open-import', handler);
+    commands.on('lance:open-import', onOpenImport);
+    return () => commands.off('lance:open-import', onOpenImport);
   }, []);
 
   const toggleTimer = useCallback(async () => {
@@ -1087,16 +1040,16 @@ export default function App() {
 
   // Listen for lance:toggle-timer from Time page MetricCard click
   useEffect(() => {
-    const handler = () => toggleTimer();
-    document.addEventListener('lance:toggle-timer', handler);
-    return () => document.removeEventListener('lance:toggle-timer', handler);
+    const onToggleTimer = () => toggleTimer();
+    commands.on('lance:toggle-timer', onToggleTimer);
+    return () => commands.off('lance:toggle-timer', onToggleTimer);
   }, [toggleTimer]);
 
   // Open command palette from Topbar search
   useEffect(() => {
-    const handler = () => setShowCommandPalette(true);
-    document.addEventListener('lance:open-command', handler);
-    return () => document.removeEventListener('lance:open-command', handler);
+    const onOpenCommand = () => setShowCommandPalette(true);
+    commands.on('lance:open-command', onOpenCommand);
+    return () => commands.off('lance:open-command', onOpenCommand);
   }, []);
 
   // Keyboard shortcuts
@@ -1150,33 +1103,30 @@ export default function App() {
           navigate('/proposals/new');
         } else if (path.startsWith('/clients')) {
           e.preventDefault();
-          // Trigger client add modal via doc event
-          document.dispatchEvent(new CustomEvent('lance:add-client'));
+          commands.dispatch('lance:add-client');
         } else if (path.startsWith('/invoices')) {
           e.preventDefault();
-          document.dispatchEvent(new CustomEvent('lance:add-invoice'));
+          commands.dispatch('lance:add-invoice');
         } else if (path.startsWith('/projects')) {
           e.preventDefault();
-          document.dispatchEvent(new CustomEvent('lance:add-project'));
+          commands.dispatch('lance:add-project');
         } else if (path.startsWith('/time')) {
           e.preventDefault();
-          document.dispatchEvent(new CustomEvent('lance:add-time'));
+          commands.dispatch('lance:add-time');
         } else if (path.startsWith('/contracts')) {
           e.preventDefault();
-          document.dispatchEvent(new CustomEvent('lance:add-contract'));
+          commands.dispatch('lance:add-contract');
         } else if (path.startsWith('/finance')) {
           e.preventDefault();
-          document.dispatchEvent(new CustomEvent('lance:add-expense'));
+          commands.dispatch('lance:add-expense');
         }
       }
       if (mod && !e.shiftKey && e.key >= '1' && e.key <= '8') {
         e.preventDefault();
         const idx = parseInt(e.key) - 1;
-        const profile = useStore.getState().profile;
-        const config = getArchetype(profile?.profession || 'default');
-        const sidebarPaths = config.sidebar.map((s) => s.path);
-        if (sidebarPaths[idx]) {
-          navigate(sidebarPaths[idx]);
+        const paths = ['/', '/clients', '/projects', '/invoices', '/contracts', '/finance', '/insights', '/settings'];
+        if (paths[idx]) {
+          navigate(paths[idx]);
         }
       }
     };
@@ -1184,33 +1134,28 @@ export default function App() {
     return () => document.removeEventListener('keydown', handler);
   }, [navigate, location, isEditing, toggleTimer]);
 
-  // Listen for lance:open-archetype-picker from Settings
-  useEffect(() => {
-    const handler = () => navigate('/archetype');
-    document.addEventListener('lance:open-archetype-picker', handler);
-    return () => document.removeEventListener('lance:open-archetype-picker', handler);
-  }, [navigate]);
+
 
   // Listen for lance:edit-client from FollowUps (client missing email)
   useEffect(() => {
-    const handler = () => {
+    const onEditClient = () => {
       navigate('/clients');
       addToast('Open the client to add an email address', 'info');
     };
-    document.addEventListener('lance:edit-client', handler);
-    return () => document.removeEventListener('lance:edit-client', handler);
+    commands.on('lance:edit-client', onEditClient);
+    return () => commands.off('lance:edit-client', onEditClient);
   }, [navigate, addToast]);
 
   return (
     <ErrorBoundary>
-      <div className="h-full flex bg-[var(--bg-primary)]">
+      <div className="h-full flex bg-transparent">
         <a
           href="#main-content"
           onClick={(e) => {
             e.preventDefault();
             document.getElementById('main-content')?.focus();
           }}
-          className="sr-only focus:not-sr-only focus:absolute focus:z-[200] focus:m-3 focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:rounded-[8px] focus:bg-[var(--bg-card)] focus:text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--accent)]"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-[200] focus:m-3 focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:rounded-sm focus:bg-[var(--bg-card)] focus:text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--accent)]"
         >
           Skip to main content
         </a>
@@ -1228,7 +1173,7 @@ export default function App() {
           >
             <Outlet key={location.pathname} />
           </main>
-          <div role="contentinfo" aria-label="Status" className="h-[28px] flex items-center justify-between px-4 border-t border-[var(--border-color)] bg-[var(--bg-card)] text-[10px] text-[var(--text-tertiary)] flex-shrink-0 print:hidden">
+          <div role="contentinfo" aria-label="Status" className="h-[28px] flex items-center justify-between px-4 glass border-t-0 text-[10px] text-[var(--text-tertiary)] flex-shrink-0 print:hidden">
             <span className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
               Lance · your business, on your machine
@@ -1406,7 +1351,7 @@ function OnboardingFlow({
     currency: (toolPrefill.currency || defaultCurrency()) as string,
     hourly_rate: toolPrefill.hourly_rate,
     payment_terms: '14',
-    profession: '' as Profession | '',
+    profession: '' as Profession,
     writing_style: 'professional' as string,
     ai_enabled: false,
   });
@@ -1436,15 +1381,12 @@ function OnboardingFlow({
     }
   }, [onboardingForm.profession]);
 
+
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  // Restore-on-open runs ONCE per open, not on every profile change.
-  // The old effect depended on `profile`, and every Next fires a
-  // fire-and-forget persistStep → saveProfile, which mints a new profile
-  // object. If that save resolved after the user typed on step 3, the effect
-  // re-ran and overwrote the form with the just-saved (still-empty) profile,
-  // silently wiping their name. Gating on profileLoaded keeps the resume
-  // prefill for returning users without ever clobbering live input.
+  // Restoring runs once per open, gated on profileLoaded to avoid clobbering
+  // live input during resume. Profile no longer stores profession after
+  // onboarding, so it's a no-op now.
   const restoredForOpen = useRef(false);
   useEffect(() => {
     if (!showOnboarding) {
@@ -1456,7 +1398,7 @@ function OnboardingFlow({
     {
       const storedStep = localStorage.getItem('lance:onboarding-step');
       const parsedStep = storedStep && storedStep !== 'complete' ? parseInt(storedStep) : NaN;
-      if (parsedStep >= 1 && parsedStep <= 5) {
+      if (parsedStep >= 1 && parsedStep <= 3) {
         setOnboardingStep(parsedStep);
         setIsResuming(true);
         if (profile) {
@@ -1548,15 +1490,6 @@ function OnboardingFlow({
         writing_style: onboardingForm.writing_style,
         ai_enabled: onboardingForm.ai_enabled,
       });
-      // Apply profession theme ONLY if user didn't explicitly pick one in Step 3
-      const storedTheme = localStorage.getItem('lance:theme');
-      if (onboardingForm.profession && (!storedTheme || storedTheme === 'default')) {
-        const themeId = PROFESSION_THEME[onboardingForm.profession as Profession] || 'default';
-        if (themeId && themeId !== 'default') {
-          applyTheme(getTheme(themeId));
-          localStorage.setItem('lance:theme', themeId);
-        }
-      }
       if (seedDataRef.current) {
         await seedSampleData();
         // Check for newly unlocked achievements from seed data
@@ -1582,10 +1515,10 @@ function OnboardingFlow({
   };
 
   const inputClass =
-    'w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)] text-[var(--text-primary)]';
-  const labelClass = 'block text-xs font-medium text-[var(--text-secondary)] mb-1';
+    'w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)] text-[var(--text-primary)]';
+  const labelClass = 'form-label';
 
-  const STEP_LABELS = ['Comfort', 'Your craft', 'Your profile', 'Your theme', 'Rates & data'];
+  const STEP_LABELS = ['Suggested starting point', 'Features & colour', 'Finish'];
   // Clamp once and reuse: the counter, the aria-label and the dots all read the
   // same value, so they cannot disagree about how many steps there are.
   const clampedStep = Math.min(Math.max(onboardingStep, 1), STEP_LABELS.length);
@@ -1594,7 +1527,7 @@ function OnboardingFlow({
     <Modal open={showOnboarding} onClose={handleOnboardingClose} title="Set up Lance" size="md">
       <div className="space-y-5">
         {isResuming && (
-          <div className="text-center text-xs text-[var(--text-secondary)] bg-[var(--accent-bg)] py-1.5 px-3 rounded-[6px]">
+          <div className="text-center text-xs text-[var(--text-secondary)] bg-[var(--accent-bg)] py-1.5 px-3 rounded-xs">
             Welcome back. Pick up where you left off.
           </div>
         )}
@@ -1667,7 +1600,7 @@ function OnboardingFlow({
                       });
                     }}
                     aria-pressed={onboardingForm.profession === archetype.id}
-                    className={`flex items-center gap-2 px-3 py-2.5 text-xs font-medium rounded-[8px] border transition-colors text-left ${
+                    className={`flex items-center gap-2 px-3 py-2.5 text-xs font-medium rounded-sm border transition-colors text-left ${
                       onboardingForm.profession === archetype.id
                         ? 'bg-[var(--accent-bg)] border-[var(--accent)] text-[var(--text-primary)]'
                         : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40'
@@ -1718,7 +1651,7 @@ function OnboardingFlow({
                           value: v,
                         });
                       }}
-                      className={`flex-1 px-2 py-2 text-[11px] font-medium rounded-[8px] border transition-colors ${
+                      className={`flex-1 px-2 py-2 text-[11px] font-medium rounded-sm border transition-colors ${
                         driveValue === v
                           ? 'bg-[var(--accent-bg)] border-[var(--accent)] text-[var(--text-primary)]'
                           : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40'
@@ -1866,7 +1799,7 @@ function OnboardingFlow({
                       localStorage.setItem('lance:theme', theme.id);
                       setActiveThemeId(theme.id);
                     }}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-[8px] text-left text-xs transition-colors ${
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-sm text-left text-xs transition-colors ${
                       isActive
                         ? 'bg-[var(--accent-bg)] border-[var(--accent)] text-[var(--text-primary)] border'
                         : isUnlocked
@@ -1925,7 +1858,7 @@ function OnboardingFlow({
               </p>
             </div>
             <div className="space-y-3 py-2">
-              <label className="flex items-start gap-3 p-3 border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-secondary)] cursor-pointer hover:border-[var(--accent)]/50 transition-colors">
+              <label className="flex items-start gap-3 p-3 border border-[var(--border-color)] rounded-sm bg-[var(--bg-secondary)] cursor-pointer hover:border-[var(--accent)]/50 transition-colors">
                 <div className="pt-0.5">
                   <input
                     type="checkbox"

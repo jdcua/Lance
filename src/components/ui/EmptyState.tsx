@@ -20,7 +20,7 @@ export default function EmptyState({ screen = 'generic', icon, action, hint, com
   const copy = getEmptyCopy(screen);
   return (
     <div
-      className={`bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl text-center flex flex-col items-center ${compact ? 'py-8' : 'py-16'}`}
+      className={`surface rounded-[20px] text-center flex flex-col items-center ${compact ? 'py-8' : 'py-16'}`}
     >
       {icon}
       <h2 className="text-[15px] font-medium text-[var(--text-primary)] mb-1.5">{copy.headline}</h2>

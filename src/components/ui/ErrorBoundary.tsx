@@ -52,7 +52,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               <summary className="text-xs text-[var(--text-tertiary)] cursor-pointer hover:text-[var(--text-secondary)]">
                 Error details
               </summary>
-              <pre className="text-[10px] text-[var(--text-tertiary)] mt-2 bg-[var(--bg-secondary)] p-3 rounded-[8px] text-left overflow-auto max-h-32 whitespace-pre-wrap break-all">
+              <pre className="text-[10px] text-[var(--text-tertiary)] mt-2 bg-[var(--bg-secondary)] p-3 rounded-sm text-left overflow-auto max-h-32 whitespace-pre-wrap break-all">
                 {this.state.error?.message || 'Unknown error'}
                 {'\n\n'}
                 {this.state.error?.stack || ''}

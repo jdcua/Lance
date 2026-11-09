@@ -369,7 +369,7 @@ export default function ClientImportModal({
                 id="import-source"
                 value={importSource}
                 onChange={(e) => setImportSource(e.target.value)}
-                className="flex-1 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                className="flex-1 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               >
                 {Object.entries(SOURCE_PRESETS).map(([id, preset]) => (
                   <option key={id} value={id}>
@@ -436,8 +436,8 @@ export default function ClientImportModal({
             </div>
 
             {previewRows.length > 0 && (
-              <div className="border border-[var(--border-color)] rounded-[8px] overflow-x-auto">
-                <table className="w-full text-xs">
+              <div className="border border-[var(--border-color)] rounded-sm overflow-x-auto">
+                <table className="data-table w-full text-xs">
                   <thead>
                     <tr className="bg-[var(--bg-secondary)]">
                       {rawHeaders.map((h) => (
@@ -470,7 +470,7 @@ export default function ClientImportModal({
                 {rawHeaders.map((header) => (
                   <div
                     key={header}
-                    className="flex items-center gap-3 px-3 py-2 bg-[var(--bg-secondary)] rounded-[8px]"
+                    className="flex items-center gap-3 px-3 py-2 bg-[var(--bg-secondary)] rounded-sm"
                   >
                     <span className="text-xs text-[var(--text-primary)] w-1/3 truncate">
                       {header}
@@ -489,7 +489,7 @@ export default function ClientImportModal({
                           return next;
                         });
                       }}
-                      className="flex-1 px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                      className="flex-1 px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     >
                       <option value="">-- Skip --</option>
                       {Object.keys(CLIENT_FIELDS).map((field) => (
@@ -569,8 +569,8 @@ export default function ClientImportModal({
               </div>
             </div>
 
-            <div className="border border-[var(--border-color)] rounded-[8px] overflow-x-auto max-h-[350px] overflow-y-auto">
-              <table className="w-full text-xs">
+            <div className="border border-[var(--border-color)] rounded-sm overflow-x-auto max-h-[350px] overflow-y-auto">
+              <table className="data-table w-full text-xs">
                 <thead>
                   <tr className="bg-[var(--bg-secondary)] sticky top-0">
                     <th className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--text-secondary)]">
@@ -674,7 +674,7 @@ export default function ClientImportModal({
             </div>
             <h3
               className="text-lg font-semibold text-[var(--text-primary)]"
-              style={{ fontFamily: "'Syne', sans-serif" }}
+             
             >
               Import Complete
             </h3>
@@ -717,7 +717,7 @@ export default function ClientImportModal({
                 <p className="text-[10px] font-semibold text-[var(--text-secondary)] mb-1">
                   Failed rows
                 </p>
-                <div className="bg-[var(--bg-secondary)] rounded-[6px] p-2 max-h-[120px] overflow-y-auto">
+                <div className="bg-[var(--bg-secondary)] rounded-xs p-2 max-h-[120px] overflow-y-auto">
                   {summary.failures.map((f, i) => (
                     <p key={i} className="text-[10px] text-[var(--danger)]">{f}</p>
                   ))}

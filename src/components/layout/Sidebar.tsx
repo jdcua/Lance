@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import SideLink from './SideLink';
@@ -20,7 +20,6 @@ import {
   Package,
   Camera,
   Monitor,
-            Menu,
   Clapperboard,
   Code2,
   Palette,
@@ -50,6 +49,7 @@ import {
   Columns3,
   ChevronDown,
   ChevronUp,
+  X,
   type LucideIcon,
 } from 'lucide-react';
 import { useStore } from '../../store';
@@ -57,7 +57,9 @@ import { usePrefs } from '../../lib/prefs';
 import { trialDaysRemaining } from '../../lib/trial';
 import { getArchetype } from '../../archetypes';
 import type { SidebarItemDef } from '../../archetypes';
+import { commands } from '../../lib/commands';
 import { getShortcutModifierLabel } from '../../utils/shortcuts';
+import { setMobileNavOpen, useMobileNavOpen } from '../../lib/mobileNav';
 
 const ICON_MAP: Record<string, LucideIcon> = {
   FileText, PenLine, FolderKanban, Clock, Receipt, Users, BarChart3, Lightbulb,
@@ -87,16 +89,19 @@ export default function Sidebar() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('lance:sidebar-collapsed') === 'true');
   const [hovered, setHovered] = useState(false);
-  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
+  const mobileOpen = useMobileNavOpen();
+  const setMobileOpen = setMobileNavOpen;
   // Progressive disclosure: new users see essentials; the sidebar grows with
   // their business. One-way data/visit unlocks + a manual "show all" toggle.
   const [showAll, setShowAll] = useState(() => localStorage.getItem(SIDEBAR_FULL_KEY) === 'true');
   const [visited, setVisited] = useState<Set<string>>(loadVisited);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
   const isExpanded = (mobileOpen && isMobile) || ((!collapsed || hovered) && !isMobile);
 
   useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 768);
+    const onResize = () => setIsMobile(window.innerWidth < 1024);
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
@@ -105,9 +110,40 @@ export default function Sidebar() {
   }, [isMobile]);
   useEffect(() => {
     if (!mobileOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMobileOpen(false); };
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const focusTimer = window.setTimeout(() => closeButtonRef.current?.focus(), 0);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMobileOpen(false);
+        return;
+      }
+      // Keep keyboard focus inside the drawer while it is open.
+      if (e.key !== 'Tab' || !drawerRef.current) return;
+      const focusables = drawerRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+      // Return focus to the trigger instead of dropping it on the body.
+      const trigger = document.querySelector<HTMLElement>('[data-mobile-nav-trigger]');
+      (trigger ?? previouslyFocused)?.focus?.();
+    };
   }, [mobileOpen]);
   useEffect(() => {
     setMobileOpen(false);
@@ -225,32 +261,27 @@ export default function Sidebar() {
     (showImport ? 0 : 1) + (showPipeline ? 0 : 1) + (showFollowUps ? 0 : 1) + (showAchievements ? 0 : 1) + (showArchetype ? 0 : 1);
   const hiddenTotal = sidebarItems.hiddenCount + hiddenMoreCount;
   const asideClassName = isMobile
-    ? `fixed inset-y-0 left-0 z-50 w-64 h-full flex flex-col bg-[var(--sb-bg)] border-r border-[var(--sb-border)] transition-transform duration-200 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`
-    : `${isExpanded ? 'w-[248px]' : 'w-[60px]'} h-full flex flex-col bg-[var(--sb-bg)] border-r border-[var(--sb-border)] flex-shrink-0 transition-[width] duration-200`;
+    ? `fixed inset-y-0 left-0 z-40 w-72 max-w-[86vw] h-full flex flex-col glass-dark border-r border-[var(--sb-border)] transition-transform duration-200 ${mobileOpen ? 'translate-x-0 visible' : '-translate-x-full invisible'}`
+    : `${isExpanded ? 'w-[248px]' : 'w-[60px]'} h-full flex flex-col glass-dark border-r border-[var(--sb-border)] flex-shrink-0 transition-[width] duration-200`;
 
   return (
     <>
-      {isMobile && (
-        <button
-          type="button"
-          onClick={() => setMobileOpen(true)}
-          className="fixed left-3 top-3 z-[60] flex h-11 w-11 items-center justify-center rounded-[10px] bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm md:hidden"
-          aria-label="Open navigation menu"
-        >
-          <Menu size={20} />
-        </button>
-      )}
       {isMobile && mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 md:hidden"
+          className="fixed inset-0 z-30 bg-black/30 backdrop-blur-sm lg:hidden"
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
         />
       )}
     <aside
+      ref={drawerRef}
+      id="mobile-navigation"
       aria-label="Primary navigation"
       className={asideClassName}
-      onClick={() => { if (isMobile) setMobileOpen(false); }}
+      aria-hidden={isMobile && !mobileOpen ? true : undefined}
+      aria-modal={isMobile && mobileOpen ? true : undefined}
+      role={isMobile && mobileOpen ? 'dialog' : undefined}
+      {...(isMobile && !mobileOpen ? { inert: '' } : {})}
       onMouseEnter={() => collapsed && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -259,19 +290,19 @@ export default function Sidebar() {
           <>
             <button
               onClick={() => navigate('/')}
-              className="flex-shrink-0 p-1 hover:bg-[var(--sb-bg-hover)] rounded-[8px] transition-colors"
+              className="flex-shrink-0 p-1 hover:bg-[var(--sb-bg-hover)] rounded-sm transition-colors"
               title="Dashboard"
               aria-label="Dashboard"
             >
               <BrandLogo size={22} className="text-[var(--accent)]" />
             </button>
-            <span className="font-semibold text-[15px] text-[var(--sb-text-active)] flex-1 tracking-tight" style={{ fontFamily: "'Syne', sans-serif" }}>Lance</span>
+            <span className="font-semibold text-[15px] text-[var(--sb-text-active)] flex-1 tracking-tight">Lance</span>
           </>
         )}
         {!isExpanded && (
           <button
             onClick={() => navigate('/')}
-            className="mx-auto p-1 hover:bg-[var(--sb-bg-hover)] rounded-[8px] transition-colors"
+            className="mx-auto p-1 hover:bg-[var(--sb-bg-hover)] rounded-sm transition-colors"
             title="Dashboard"
             aria-label="Dashboard"
           >
@@ -279,22 +310,34 @@ export default function Sidebar() {
           </button>
         )}
         {isExpanded && (
-          <button
-            onClick={toggleCollapsed}
-            className="p-1 rounded-[6px] text-[var(--sb-label)] hover:text-[var(--sb-text-active)] hover:bg-[var(--sb-bg-hover)] transition-colors"
-            title="Collapse sidebar"
-            aria-label="Collapse sidebar"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-              <line x1="9" y1="3" x2="9" y2="21" />
-            </svg>
-          </button>
+          isMobile ? (
+            <button
+              ref={closeButtonRef}
+              onClick={() => setMobileOpen(false)}
+              className="p-1.5 rounded-[10px] text-[var(--sb-label)] hover:text-[var(--sb-text-active)] hover:bg-[var(--sb-bg-hover)] transition-colors"
+              title="Close navigation"
+              aria-label="Close navigation"
+            >
+              <X size={18} />
+            </button>
+          ) : (
+            <button
+              onClick={toggleCollapsed}
+              className="p-1 rounded-xs text-[var(--sb-label)] hover:text-[var(--sb-text-active)] hover:bg-[var(--sb-bg-hover)] transition-colors"
+              title="Collapse sidebar"
+              aria-label="Collapse sidebar"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <line x1="9" y1="3" x2="9" y2="21" />
+              </svg>
+            </button>
+          )
         )}
       </div>
 
       <nav className="flex-1 overflow-y-auto py-2 px-2">
-        <SideLink
+        <SideLink focusable={!isMobile || mobileOpen}
           to="/"
           end
           tour="nav-dashboard"
@@ -321,7 +364,7 @@ export default function Sidebar() {
                 : null;
 
               return (
-                <SideLink
+                <SideLink focusable={!isMobile || mobileOpen}
                   key={item.path}
                   to={item.path}
                   tour={`nav-${item.id}`}
@@ -361,7 +404,7 @@ export default function Sidebar() {
           )}
           {showImport &&
           <button
-            onClick={() => document.dispatchEvent(new CustomEvent('lance:open-import'))}
+            onClick={() => commands.dispatch('lance:open-import')}
             className={`w-full flex items-center gap-2.5 px-3 h-[36px] text-[13.5px] font-medium transition-colors duration-150 text-[var(--sb-text)] hover:text-[var(--sb-text-active)] hover:bg-[var(--sb-bg-hover)] rounded-[10px] ${!isExpanded ? 'justify-center px-0' : ''}`}
             style={{ fontFamily: "'Inter', sans-serif" }}
             title="Import"
@@ -370,7 +413,7 @@ export default function Sidebar() {
             {isExpanded && 'Import'}
           </button>
           }
-          <SideLink
+          <SideLink focusable={!isMobile || mobileOpen}
             to="/search"
             title="Search"
             icon={Search}
@@ -378,7 +421,7 @@ export default function Sidebar() {
             expanded={isExpanded}
           />
           {showPipeline &&
-          <SideLink
+          <SideLink focusable={!isMobile || mobileOpen}
             to="/pipeline"
             title="Pipeline"
             icon={Columns3}
@@ -387,7 +430,7 @@ export default function Sidebar() {
           />
           }
           {showFollowUps &&
-          <SideLink
+          <SideLink focusable={!isMobile || mobileOpen}
             to="/follow-ups"
             title="Follow-ups"
             icon={Bell}
@@ -403,7 +446,7 @@ export default function Sidebar() {
           />
           }
           {showAchievements &&
-          <SideLink
+          <SideLink focusable={!isMobile || mobileOpen}
             to="/achievements"
             title="Achievements"
             icon={Trophy}
@@ -412,7 +455,7 @@ export default function Sidebar() {
           />
           }
           {showArchetype &&
-          <SideLink
+          <SideLink focusable={!isMobile || mobileOpen}
             to="/archetype"
             title="Archetype"
             icon={Sparkles}
@@ -428,7 +471,7 @@ export default function Sidebar() {
             <button
               onClick={toggleShowAll}
               className={`w-full flex items-center gap-2.5 px-3 h-[32px] text-xs transition-colors text-[var(--sb-label)] hover:text-[var(--sb-text-active)] hover:bg-[var(--sb-bg-hover)] rounded-[10px] ${!isExpanded ? 'justify-center px-0' : ''}`}
-              style={{ fontFamily: "'Syne', sans-serif" }}
+             
               title={showAll ? 'Show fewer sections' : `Show all sections (${hiddenTotal} more)`}
               aria-label={showAll ? 'Show fewer sections' : `Show all sections (${hiddenTotal} more)`}
             >
@@ -440,7 +483,7 @@ export default function Sidebar() {
       </nav>
 
       <div className="border-t border-[var(--sb-border)] px-2 pt-2 pb-3">
-        <SideLink
+        <SideLink focusable={!isMobile || mobileOpen}
           to="/settings"
           title="Settings"
           icon={Settings}
@@ -482,6 +525,7 @@ export default function Sidebar() {
             className="w-full flex items-center justify-center h-[36px] text-[var(--sb-label)] hover:text-[var(--sb-text-active)] hover:bg-[var(--sb-bg-hover)] rounded-[10px] transition-colors"
             title="Expand sidebar"
             aria-label="Expand sidebar"
+            tabIndex={isMobile && !mobileOpen ? -1 : 0}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />

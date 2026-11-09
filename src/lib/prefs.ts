@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Intensity } from '../design/tokens';
 import { INTENSITY_DEFAULT } from '../design/tokens';
+import { commands } from './commands';
 
 /**
  * Personalize prefs — local-only UI preferences, no migration needed.
@@ -65,15 +66,15 @@ export function setPref<K extends keyof Prefs>(key: K, value: Prefs[K]): void {
   } catch {
     /* private mode: prefs just won't persist */
   }
-  window.dispatchEvent(new CustomEvent('lance:prefs-changed'));
+  commands.dispatch('lance:prefs-changed');
 }
 
 export function usePrefs(): Prefs {
   const [prefs, setPrefs] = useState<Prefs>(getPrefs);
   useEffect(() => {
     const handler = () => setPrefs(getPrefs());
-    window.addEventListener('lance:prefs-changed', handler);
-    return () => window.removeEventListener('lance:prefs-changed', handler);
+    commands.on('lance:prefs-changed', handler);
+    return () => commands.off('lance:prefs-changed', handler);
   }, []);
   return prefs;
 }

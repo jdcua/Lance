@@ -43,9 +43,9 @@ export default function Walkthrough({ open, onClose, onStartTour }: WalkthroughP
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={onClose} />
 
-      <div className="relative bg-[var(--bg-card)] rounded-[16px] shadow-2xl w-full max-w-lg mx-4 animate-fade-scale-in overflow-hidden" role="dialog" aria-modal="true" aria-label="Welcome tour">
+      <div className="relative glass rounded-[24px] w-full max-w-lg mx-4 animate-fade-scale-in overflow-hidden" role="dialog" aria-modal="true" aria-label="Welcome tour">
         <div className="px-8 pt-10 pb-8">
           <div className="flex flex-col items-center text-center">
             <div className="w-16 h-16 rounded-full bg-[var(--accent-bg)] flex items-center justify-center mb-5 ring-4 ring-[var(--accent)]/10">

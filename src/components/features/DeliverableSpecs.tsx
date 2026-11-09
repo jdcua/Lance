@@ -110,7 +110,7 @@ export default function DeliverableSpecs({ projectId }: { projectId: string }) {
     setEditing(true);
   };
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
 
   const hasAnyValue = spec && FIELDS.some(f => spec[f.key]);
 
@@ -120,7 +120,7 @@ export default function DeliverableSpecs({ projectId }: { projectId: string }) {
         <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Deliverable Specs</h4>
       </div>
       <div className="space-y-1">
-        {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
+        {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
       </div>
     </div>;
   }
@@ -141,7 +141,7 @@ export default function DeliverableSpecs({ projectId }: { projectId: string }) {
       {!editing && !hasAnyValue ? (
         <p className="text-xs text-[var(--text-tertiary)] py-2">No deliverable specs set. Add your delivery specifications.</p>
       ) : editing ? (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           {FIELDS.map(f => (
             <div key={f.key}>
               <label className="text-[10px] text-[var(--text-tertiary)] block mb-0.5">{f.label}</label>
@@ -171,7 +171,7 @@ export default function DeliverableSpecs({ projectId }: { projectId: string }) {
       ) : (
         <div className="space-y-1">
           {spec && FIELDS.map(f => (
-            <div key={f.key} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+            <div key={f.key} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
               <span className="text-[var(--text-tertiary)]">{f.label}</span>
               <span className="font-medium text-[var(--text-primary)]">{spec[f.key] || '--'}</span>
             </div>

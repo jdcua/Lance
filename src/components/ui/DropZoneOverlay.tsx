@@ -30,7 +30,7 @@ export default function DropZoneOverlay({ visible }: DropZoneOverlayProps) {
 
           <h2
             className="text-xl font-semibold text-[var(--text-primary)] mb-2"
-            style={{ fontFamily: "'Syne', sans-serif" }}
+           
           >
             Drop files to import
           </h2>

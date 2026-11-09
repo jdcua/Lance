@@ -13,6 +13,7 @@ import { relativeDate, parseDateString, DAY_MS } from '../utils/format';
 import { getProposalViews } from '../utils/portalActivity';
 import { scoreProposalHeat, compareHeat, type ProposalHeat } from '../utils/proposalHeat';
 import { getFeatureFlags } from '../lib/constants';
+import { commands } from '../lib/commands';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
@@ -342,7 +343,7 @@ export default function Proposals() {
 
   const toggleSort = (key: SortKey) => {
     if (key === 'heat' && !heatOn) {
-      document.dispatchEvent(new CustomEvent('lance:open-upgrade', { detail: 'hot proposal ranking' }));
+      commands.dispatch('lance:open-upgrade', 'hot proposal ranking');
       return;
     }
     if (sortKey === key) { setSortDir(d => d === 'asc' ? 'desc' : 'asc'); }
@@ -365,7 +366,7 @@ export default function Proposals() {
       <LoadError error={proposalsError} onRetry={() => loadProposals()} />
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-[var(--text-primary)]">Proposals</h2>
+          <h1 className="font-display text-lg font-semibold text-[var(--text-primary)]">Proposals</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-0.5">
             {proposals.filter((p) => p.status === 'draft').length} drafts, {proposals.length} total
           </p>
@@ -379,7 +380,7 @@ export default function Proposals() {
       {/* Rescue queue: cold proposals worth reviving */}
       {!heatOn && rescueList.length > 0 && (
         <button
-          onClick={() => document.dispatchEvent(new CustomEvent('lance:open-upgrade', { detail: 'proposal rescue queue' }))}
+          onClick={() => commands.dispatch('lance:open-upgrade', 'proposal rescue queue')}
           className="w-full mb-4 px-4 py-3 rounded-[10px] border border-[var(--accent)]/30 bg-[var(--accent-bg)] text-left hover:border-[var(--accent)]/60 transition-colors"
         >
           <p className="text-xs font-semibold text-[var(--text-primary)]">
@@ -429,7 +430,7 @@ export default function Proposals() {
           <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
           <input
             type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search proposals..."
-            className="w-full pl-8 pr-3 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]"
+            className="w-full pl-8 pr-3 py-1.5 text-xs border border-[var(--border-color)] rounded-xs placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]"
           />
         </div>
         <div className="flex items-center gap-1">
@@ -472,7 +473,7 @@ export default function Proposals() {
       ) : proposals.length === 0 ? (
         <Card className="text-center py-16 flex flex-col items-center">
           <FileText size={40} className="text-[var(--text-tertiary)] mb-4" />
-          <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No proposals yet</h3>
+          <h2 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">No proposals yet</h2>
           <p className="text-[13px] text-[var(--text-tertiary)] max-w-xs mb-5">Create your first proposal to start winning work.</p>
           <Button onClick={() => navigate('/proposals/new')} size="sm" variant="secondary">New Proposal</Button>
         </Card>
@@ -486,7 +487,7 @@ export default function Proposals() {
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-sm font-semibold text-[var(--text-primary)]">{p.title}</h3>
+                      <h2 className="text-sm font-semibold text-[var(--text-primary)]">{p.title}</h2>
                       {shareTokenIds.has(p.id) && (
                         <Link size={12} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0" />
                       )}
@@ -533,7 +534,7 @@ export default function Proposals() {
                     <button
                       onClick={() => handleConvertToContract(p)}
                       disabled={convertingId === p.id}
-                      className="inline-flex items-center gap-1.5 text-xs font-medium btn-accent px-3 py-1.5 rounded-[8px] transition-colors disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 text-xs font-medium btn-accent px-3 py-1.5 rounded-sm transition-colors disabled:opacity-50"
                     >
                       <FileText size={13} />
                       {convertingId === p.id ? 'Creating...' : 'Convert to contract'}
@@ -554,43 +555,43 @@ export default function Proposals() {
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0 ml-3">
                   {p.status === 'draft' && (
-                    <button onClick={() => handleSend(p)} aria-label="Send proposal" className="p-1.5 rounded-[8px] text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] transition-colors" title="Send">
+                    <button onClick={() => handleSend(p)} aria-label="Send proposal" className="p-1.5 rounded-sm text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] transition-colors" title="Send">
                       <Send size={14} />
                     </button>
                   )}
                   {p.status === 'sent' && (
                     <>
-                      <button onClick={() => handleAccept(p)} aria-label="Accept proposal" className="p-1.5 rounded-[8px] text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] transition-colors" title="Accept">
+                      <button onClick={() => handleAccept(p)} aria-label="Accept proposal" className="p-1.5 rounded-sm text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] transition-colors" title="Accept">
                         <Check size={14} />
                       </button>
-                      <button onClick={() => setShareModal({ entityType: 'proposal', entityId: p.id })} aria-label="Share proposal" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] transition-colors" title="Share">
+                      <button onClick={() => setShareModal({ entityType: 'proposal', entityId: p.id })} aria-label="Share proposal" className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] transition-colors" title="Share">
                         <Share2 size={14} />
                       </button>
                     </>
                   )}
                   {p.status === 'expired' && (
-                    <button onClick={() => handleResend(p)} aria-label="Resend proposal" className="p-1.5 rounded-[8px] text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] transition-colors" title="Resend">
+                    <button onClick={() => handleResend(p)} aria-label="Resend proposal" className="p-1.5 rounded-sm text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] transition-colors" title="Resend">
                       <Send size={14} />
                     </button>
                   )}
                   <div className="relative" ref={exportDropdown === p.id ? dropdownRef : undefined}>
-                    <button onClick={() => setExportDropdown(exportDropdown === p.id ? null : p.id)} aria-label="Export proposal" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors" title="Export">
+                    <button onClick={() => setExportDropdown(exportDropdown === p.id ? null : p.id)} aria-label="Export proposal" className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors" title="Export">
                       <Download size={14} />
                     </button>
                     {exportDropdown === p.id && (
-                      <div className="absolute right-0 top-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px] shadow-lg py-1 z-10 w-28">
+                      <div className="absolute right-0 top-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-sm shadow-lg py-1 z-10 w-28">
                         <button onClick={() => handleExportPDF(p)} className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors">PDF</button>
                         <button onClick={() => handleExportDOCX(p)} className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors">DOCX</button>
                       </div>
                     )}
                   </div>
-                  <button onClick={() => setExpanded(expanded === p.id ? null : p.id)} aria-label="View proposal body" className={`p-1.5 rounded-[8px] transition-colors ${expanded === p.id ? 'text-[var(--accent-ink,var(--accent))] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`} title="View body">
+                  <button onClick={() => setExpanded(expanded === p.id ? null : p.id)} aria-label="View proposal body" className={`p-1.5 rounded-sm transition-colors ${expanded === p.id ? 'text-[var(--accent-ink,var(--accent))] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`} title="View body">
                     <Eye size={14} />
                   </button>
-                  <button onClick={() => handleDuplicate(p)} aria-label="Duplicate proposal" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors" title="Duplicate">
+                  <button onClick={() => handleDuplicate(p)} aria-label="Duplicate proposal" className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors" title="Duplicate">
                     <Copy size={14} />
                   </button>
-                  <button onClick={() => setConfirmDelete({ id: p.id, title: p.title })} aria-label="Delete proposal" className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors">
+                  <button onClick={() => setConfirmDelete({ id: p.id, title: p.title })} aria-label="Delete proposal" className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors">
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -626,7 +627,7 @@ export default function Proposals() {
                       }, followUpSettings.subject_templates);
                       const hasEmail = !!client?.email;
                       return (
-                        <div className="px-3 py-2.5 rounded-[8px] bg-[var(--accent-bg)]/30 border border-[var(--accent)]/20">
+                        <div className="px-3 py-2.5 rounded-sm bg-[var(--accent-bg)]/30 border border-[var(--accent)]/20">
                           <div className="flex items-center gap-1.5 mb-1.5">
                             <Bell size={12} className="text-[var(--accent-ink,var(--accent))]" />
                             <span className="text-[10px] font-semibold text-[var(--accent-ink,var(--accent))]">Follow-up Draft · Stage {fu.stage}</span>
@@ -640,7 +641,7 @@ export default function Proposals() {
                             readOnly
                             rows={5}
                             title="Draft preview · copy it to your mail app to edit and send"
-                            className="w-full px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] resize-none leading-relaxed mb-2"
+                            className="w-full px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] resize-none leading-relaxed mb-2"
                           />
                           <div className="flex items-center gap-1.5">
                             <button
@@ -654,7 +655,7 @@ export default function Proposals() {
                                   addToast('Email opened in your default mail client', 'success');
                                 } catch { addToast('Failed to open email client', 'error'); }
                               }}
-                              className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium btn-accent rounded-[6px] transition-colors"
+                              className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium btn-accent rounded-xs transition-colors"
                             >
                               <Mail size={10} /> Open in Email
                             </button>
@@ -663,25 +664,25 @@ export default function Proposals() {
                                 await navigator.clipboard.writeText(draft);
                                 addToast('Copied to clipboard', 'success');
                               }}
-                              className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-[6px] hover:bg-[var(--bg-secondary)] transition-colors"
+                              className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-xs hover:bg-[var(--bg-secondary)] transition-colors"
                             >
                               <Copy size={10} /> Copy
                             </button>
                             <button
                               onClick={async () => { await updateFollowUpStatus(fu.id, 'sent', 'sent'); addToast('Marked as sent', 'success'); }}
-                              className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-[6px] hover:bg-[var(--bg-secondary)] transition-colors"
+                              className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-xs hover:bg-[var(--bg-secondary)] transition-colors"
                             >
                               <Check size={10} /> Mark Sent
                             </button>
                             <button
                               onClick={async () => { await updateFollowUpStatus(fu.id, 'dismissed', 'dismissed'); addToast('Follow-up dismissed', 'info'); }}
-                              className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-[6px] hover:bg-[var(--bg-secondary)] transition-colors"
+                              className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-xs hover:bg-[var(--bg-secondary)] transition-colors"
                             >
                               <X size={10} /> Dismiss
                             </button>
                             <button
                               onClick={async () => { await updateFollowUpStatus(fu.id, 'responded', 'responded_to'); addToast('Marked as responded', 'success'); }}
-                              className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] rounded-[6px] transition-colors ml-auto"
+                              className="flex items-center gap-1 px-2 py-1 text-[10px] text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] rounded-xs transition-colors ml-auto"
                             >
                               <Check size={10} /> Mark Responded
                             </button>

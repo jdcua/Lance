@@ -113,7 +113,7 @@ export default function StudioCostTracker() {
   const monthlyTotal = getMonthlyTotal();
 
   const inputClass =
-    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
@@ -125,7 +125,7 @@ export default function StudioCostTracker() {
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
           ))}
         </div>
       </div>
@@ -144,7 +144,7 @@ export default function StudioCostTracker() {
       </div>
 
       {expenses.length > 0 && (
-        <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-[8px] space-y-1.5 text-xs">
+        <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-sm space-y-1.5 text-xs">
           <div className="flex items-center gap-4">
             <span className="text-[var(--text-tertiary)]">
               <DollarSign size={10} className="inline mr-0.5" />
@@ -178,7 +178,7 @@ export default function StudioCostTracker() {
       )}
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <input
             type="text"
             placeholder="Description"
@@ -237,7 +237,7 @@ export default function StudioCostTracker() {
           {expenses.map((e) => (
             <div
               key={e.id}
-              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs"
+              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
             >
               <div className="flex-1 min-w-0 flex items-center gap-2">
                 <span className="font-medium text-[var(--text-primary)]">{e.description}</span>

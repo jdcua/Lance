@@ -158,7 +158,7 @@ export default function RateBenchmarking() {
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-10 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+            <div key={i} className="h-10 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
           ))}
         </div>
       </div>
@@ -180,7 +180,7 @@ export default function RateBenchmarking() {
       ) : (
         <div className="space-y-2">
           <div className="grid grid-cols-2 gap-2">
-            <div className="px-3 py-2.5 bg-[var(--bg-secondary)] rounded-[6px]">
+            <div className="px-3 py-2.5 bg-[var(--bg-secondary)] rounded-xs">
               <div className="text-[10px] text-[var(--text-tertiary)]">Latest</div>
               <div className="flex items-center gap-1 mt-1">
                 <DollarSign size={14} className="text-[var(--text-primary)]" />
@@ -189,7 +189,7 @@ export default function RateBenchmarking() {
                 </span>
               </div>
             </div>
-            <div className="px-3 py-2.5 bg-[var(--bg-secondary)] rounded-[6px]">
+            <div className="px-3 py-2.5 bg-[var(--bg-secondary)] rounded-xs">
               <div className="text-[10px] text-[var(--text-tertiary)]">Trend</div>
               <div className="flex items-center gap-1.5 mt-1">
                 {trendIcon(stats.trend)}
@@ -201,7 +201,7 @@ export default function RateBenchmarking() {
           </div>
 
           <div className="grid grid-cols-3 gap-2">
-            <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px]">
+            <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs">
               <div className="text-[10px] text-[var(--text-tertiary)]">
                 3-Month Avg
               </div>
@@ -209,13 +209,13 @@ export default function RateBenchmarking() {
                 {stats.threeMonthAvg != null ? formatRate(stats.threeMonthAvg) : '--'}
               </div>
             </div>
-            <div className="px-3 py-2 bg-[#16A34A]/10 rounded-[6px]">
+            <div className="px-3 py-2 bg-[#16A34A]/10 rounded-xs">
               <div className="text-[10px] text-[#16A34A]/70">Highest</div>
               <div className="text-sm font-semibold text-[#16A34A] tabular-nums mt-0.5">
                 {stats.highest != null ? formatRate(stats.highest) : '--'}
               </div>
             </div>
-            <div className="px-3 py-2 bg-[#DC2626]/10 rounded-[6px]">
+            <div className="px-3 py-2 bg-[#DC2626]/10 rounded-xs">
               <div className="text-[10px] text-[#DC2626]/70">Lowest</div>
               <div className="text-sm font-semibold text-[#DC2626] tabular-nums mt-0.5">
                 {stats.lowest != null ? formatRate(stats.lowest) : '--'}

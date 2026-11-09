@@ -395,7 +395,7 @@ export default function Assets() {
                   e.stopPropagation();
                   setDeleteConfirm(asset);
                 }}
-                className="p-1 rounded-[6px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] opacity-0 group-hover:opacity-100 transition-colors"
+                className="p-1 rounded-xs text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] opacity-0 group-hover:opacity-100 transition-colors"
               >
                 <Trash2 size={14} />
               </button>
@@ -416,7 +416,7 @@ export default function Assets() {
         <div>
           <h1
             className="text-lg font-semibold text-[var(--text-primary)]"
-            style={{ fontFamily: "'Syne', sans-serif" }}
+           
           >
             Assets
           </h1>
@@ -426,12 +426,12 @@ export default function Assets() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex bg-[var(--bg-secondary)] rounded-[8px] p-0.5">
+          <div className="flex bg-[var(--bg-secondary)] rounded-sm p-0.5">
             <button
               onClick={() => setViewMode('grid')}
               aria-label="Grid view"
               aria-pressed={viewMode === 'grid'}
-              className={`p-1.5 rounded-[6px] transition-colors ${viewMode === 'grid' ? 'bg-[var(--bg-card)] shadow-sm text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}
+              className={`p-1.5 rounded-xs transition-colors ${viewMode === 'grid' ? 'bg-[var(--bg-card)] shadow-sm text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}
             >
               <Grid3X3 size={14} />
             </button>
@@ -439,7 +439,7 @@ export default function Assets() {
               onClick={() => setViewMode('list')}
               aria-label="List view"
               aria-pressed={viewMode === 'list'}
-              className={`p-1.5 rounded-[6px] transition-colors ${viewMode === 'list' ? 'bg-[var(--bg-card)] shadow-sm text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}
+              className={`p-1.5 rounded-xs transition-colors ${viewMode === 'list' ? 'bg-[var(--bg-card)] shadow-sm text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}
             >
               <List size={14} />
             </button>
@@ -539,7 +539,7 @@ export default function Assets() {
               <button
                 key={`${item.scope.type}:${item.scope.id}`}
                 onClick={() => setScope(item.scope)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs transition-colors flex-shrink-0 ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs transition-colors flex-shrink-0 ${
                   isActive
                     ? 'bg-[var(--accent)]/10 text-[var(--text-primary)] border border-[var(--accent)]/30'
                     : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-transparent'
@@ -600,7 +600,7 @@ export default function Assets() {
           <p className="text-xs text-[var(--text-tertiary)] mt-1 mb-4">
             Upload files or import them through the Import system
           </p>
-          <label className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-[8px] bg-[var(--accent)] text-[var(--accent-on)] hover:opacity-90 cursor-pointer">
+          <label className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-sm bg-[var(--accent)] text-[var(--accent-on)] hover:opacity-90 cursor-pointer">
             Upload your first file
             <input type="file" multiple className="hidden" onChange={(e) => { if (e.target.files) handleUpload(e.target.files); e.target.value = ''; }} />
           </label>
@@ -664,7 +664,7 @@ export default function Assets() {
         {previewAsset && (
           <div className="space-y-4">
             {/* Preview content */}
-            <div className="bg-[var(--bg-secondary)] rounded-[8px] flex items-center justify-center min-h-[200px] max-h-[400px] overflow-hidden">
+            <div className="bg-[var(--bg-secondary)] rounded-sm flex items-center justify-center min-h-[200px] max-h-[400px] overflow-hidden">
               {isImage(previewAsset.mime_type) && !previewImgFailed ? (
                 <AssetImg
                   filePath={previewAsset.file_path}
@@ -701,23 +701,23 @@ export default function Assets() {
 
             {/* Metadata */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-[var(--bg-secondary)] rounded-[8px] px-3 py-2">
+              <div className="bg-[var(--bg-secondary)] rounded-sm px-3 py-2">
                 <span className="text-[10px] text-[var(--text-tertiary)] block">Size</span>
                 <span className="text-xs text-[var(--text-primary)]">
                   {formatSize(previewAsset.size_bytes)}
                 </span>
               </div>
-              <div className="bg-[var(--bg-secondary)] rounded-[8px] px-3 py-2">
+              <div className="bg-[var(--bg-secondary)] rounded-sm px-3 py-2">
                 <span className="text-[10px] text-[var(--text-tertiary)] block">Type</span>
                 <span className="text-xs text-[var(--text-primary)]">{previewAsset.mime_type}</span>
               </div>
-              <div className="bg-[var(--bg-secondary)] rounded-[8px] px-3 py-2">
+              <div className="bg-[var(--bg-secondary)] rounded-sm px-3 py-2">
                 <span className="text-[10px] text-[var(--text-tertiary)] block">Added</span>
                 <span className="text-xs text-[var(--text-primary)]">
                   {relativeDate(previewAsset.created_at)}
                 </span>
               </div>
-              <div className="bg-[var(--bg-secondary)] rounded-[8px] px-3 py-2">
+              <div className="bg-[var(--bg-secondary)] rounded-sm px-3 py-2">
                 <span className="text-[10px] text-[var(--text-tertiary)] block">Location</span>
                 <span className="text-xs text-[var(--text-primary)] capitalize">
                   {previewAsset.entity_type}
@@ -765,7 +765,7 @@ export default function Assets() {
                       setTagInput('');
                     }
                   }}
-                  className="flex-1 px-2.5 py-1 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+                  className="flex-1 px-2.5 py-1 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
                 />
                 <Button
                   size="sm"
@@ -833,7 +833,7 @@ export default function Assets() {
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleRename();
             }}
-            className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+            className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
             autoFocus
           />
           <div className="flex justify-end gap-2">
@@ -857,7 +857,7 @@ export default function Assets() {
         <div className="space-y-2 max-h-[300px] overflow-y-auto">
           <button
             onClick={() => handleAttachTo('library', 'root')}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[8px] hover:bg-[var(--bg-secondary)] text-left transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-sm hover:bg-[var(--bg-secondary)] text-left transition-colors"
           >
             <FolderOpen size={16} className="text-[var(--accent-ink,var(--accent))]" />
             <div>
@@ -873,7 +873,7 @@ export default function Assets() {
               <button
                 key={c.id}
                 onClick={() => handleAttachTo('client', c.id)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[8px] hover:bg-[var(--bg-secondary)] text-left transition-colors"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-sm hover:bg-[var(--bg-secondary)] text-left transition-colors"
               >
                 <FolderOpen size={16} className="text-[var(--text-tertiary)]" />
                 <div>
@@ -895,7 +895,7 @@ export default function Assets() {
                 <button
                   key={p.id}
                   onClick={() => handleAttachTo('project', p.id)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[8px] hover:bg-[var(--bg-secondary)] text-left transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-sm hover:bg-[var(--bg-secondary)] text-left transition-colors"
                 >
                   <FolderOpen size={16} className="text-[var(--text-tertiary)]" />
                   <div>
@@ -925,7 +925,7 @@ export default function Assets() {
       {/* Context menu */}
       {contextMenu && (
         <div
-          className="fixed z-[60] bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[10px] shadow-lg py-1 min-w-[160px] animate-fade-scale-in"
+          className="fixed z-[60] glass rounded-[10px] py-1 min-w-[160px] animate-fade-scale-in"
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onClick={(e) => e.stopPropagation()}
         >
