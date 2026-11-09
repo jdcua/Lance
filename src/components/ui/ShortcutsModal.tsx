@@ -1,6 +1,3 @@
-import { useStore } from '../../store';
-import { getArchetype } from '../../archetypes';
-import type { SidebarItemDef } from '../../archetypes';
 import { getShortcutModifierLabel } from '../../utils/shortcuts';
 import Modal from './Modal';
 
@@ -31,26 +28,7 @@ const GROUPS: { title: string; rows: [string, string][] }[] = [
 ];
 
 function SectionJumps() {
-  const profile = useStore((s) => s.profile);
-  const config = getArchetype(profile?.profession || 'default');
-  const items = config.sidebar.slice(0, 8).map((s: SidebarItemDef, i: number) => ({
-    label: s.label.charAt(0).toUpperCase() + s.label.slice(1),
-    num: i + 1,
-  }));
-  if (items.length === 0) return null;
-  return (
-    <div className="pt-2 border-t border-[var(--border-color)]">
-      <p className="text-[10px] text-[var(--text-tertiary)] text-center">
-        {items.map((item, i) => (
-          <span key={item.num}>
-            {item.label} = {getShortcutModifierLabel()}
-            {item.num}
-            {i < items.length - 1 ? ' · ' : ''}
-          </span>
-        ))}
-      </p>
-    </div>
-  );
+  return null;
 }
 
 /**

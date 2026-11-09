@@ -16,7 +16,7 @@ import { recordTelemetry } from '../../utils/telemetry';
 import { useToasts } from '../../store/toastStore';
 import Button from '../ui/Button';
 import { Plus, RotateCcw, Lock, FilePlus2 } from 'lucide-react';
-import { getArchetype } from '../../archetypes';
+
 
 export default function RevisionCounter({ projectId }: { projectId: string }) {
   const { revisions, loadRevisions, addRevision, profile, projects, invoices, addInvoice, getActiveTier } = useStore();
@@ -33,8 +33,7 @@ export default function RevisionCounter({ projectId }: { projectId: string }) {
   const list = revisions.filter(r => r.project_id === projectId);
   const nextRound = list.length > 0 ? Math.max(...list.map((r) => r.round_number)) + 1 : 1;
 
-  const archetype = useMemo(() => getArchetype(profile?.profession || ''), [profile?.profession]);
-  const revisionLimit = useMemo(() => archetype?.maxRevisions ?? 3, [archetype]);
+  const revisionLimit = 3;
 
   const currentRound = list.length;
   const overLimit = currentRound > revisionLimit;

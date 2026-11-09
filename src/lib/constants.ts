@@ -175,6 +175,9 @@ export const DEFAULT_FOLLOW_UP_SETTINGS = {
 // ── Local Storage Keys ──
 export const STORAGE_KEYS = {
   THEME: 'lance:theme',
+  COLOUR_BASE: 'lance:colour-base',
+  COLOUR_SECONDARY: 'lance:colour-secondary',
+  COLOUR_ACCENT: 'lance:colour-accent',
   DENSITY: 'lance:density',
   ACCENT_COLOR: 'lance:accent-color',
   SEEDED: 'lance:seeded',

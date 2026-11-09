@@ -19,11 +19,9 @@ import { relativeDate, formatCurrency, DAY_MS } from '../utils/format';
 import { useToasts } from '../store/toastStore';
 import { Play, Receipt, FileText, Users, FolderKanban, Clock, Plus, ArrowRight, CheckCircle2, Circle, Bell, Send, X, Link, Banknote, Clock3, Target } from 'lucide-react';
 import { generateFollowUpDraft } from '../utils/followUpTemplates';
-import { getArchetype } from '../archetypes';
-import type { ArchetypeConfig } from '../archetypes';
 import { getDb } from '../db';
 import type Database from '@tauri-apps/plugin-sql';
-import * as queries from '../archetypes/queries';
+import * as queries from '../lib/metrics';
 import { getFeatureComponent } from '../components/features/registry';
 
 export default function Dashboard() {
@@ -33,7 +31,6 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const prefs = usePrefs();
   const [loading, setLoading] = useState(true);
-  const [archetype, setArchetype] = useState<ArchetypeConfig | null>(null);
   const [metricValues, setMetricValues] = useState<Record<string, string | number>>({});
   const [lastBackupInfo, setLastBackupInfo] = useState<{
     enabled: boolean;
@@ -164,38 +161,25 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, prefs.coachTips]);
 
-  useEffect(() => {
-    if (!profile) return;
-    let config: ArchetypeConfig;
-    if (profile.profession === 'custom' && profile.custom_archetype_config) {
-      try {
-        config = JSON.parse(profile.custom_archetype_config);
-      } catch { /* invalid custom config JSON; fall back to profession archetype */
-        config = getArchetype(profile.profession || 'default');
-      }
-    } else {
-      config = getArchetype(profile.profession || 'default');
-    }
-    setArchetype(config);
-  }, [profile]);
+  const DEFAULT_METRIC_CARDS = [
+    { id: 'activeProjectsCount', label: 'Active projects', color: 'blue' as const },
+    { id: 'totalOutstanding', label: 'Outstanding', color: 'amber' as const },
+    { id: 'totalPaidRevenue', label: 'Paid revenue', color: 'green' as const },
+    { id: 'todaysHours', label: 'Today', color: 'purple' as const },
+  ];
 
   useEffect(() => {
-    if (!archetype) return;
     const loadMetrics = async () => {
       try {
         const db = await getDb();
         const values: Record<string, string | number> = {};
-        for (const card of archetype.dashboard.metricCards) {
+        for (const card of DEFAULT_METRIC_CARDS) {
           try {
-            if (card.query) {
-              values[card.id] = await card.query(db, profile?.id || 1);
+            const queryFn = (queries as Record<string, (db: Database, profileId: number) => Promise<string | number>>)[card.id];
+            if (queryFn) {
+              values[card.id] = await queryFn(db, profile?.id || 1);
             } else {
-              const queryFn = (queries as Record<string, (db: Database, profileId: number) => Promise<string | number>>)[card.id];
-              if (queryFn) {
-                values[card.id] = await queryFn(db, profile?.id || 1);
-              } else {
-                values[card.id] = '--';
-              }
+              values[card.id] = '--';
             }
           } catch { /* metric query failed; show em-dash as fallback */
             values[card.id] = '--';
@@ -205,12 +189,7 @@ export default function Dashboard() {
       } catch { /* db not available in browser mode */ }
     };
     loadMetrics();
-  }, [archetype, profile]);
-
-  if (!archetype) {
-    const config = getArchetype('default');
-    setArchetype(config);
-  }
+  }, [profile]);
 
   const recentInvoices = [...invoices].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5);
   const recentTime = [...timeEntries].filter(t => t.duration_minutes).sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime()).slice(0, 5);
@@ -274,7 +253,6 @@ export default function Dashboard() {
   }
 
   const hasData = clients.length > 0 || invoices.length > 0 || projects.length > 0;
-  const effectiveArchetype = archetype || getArchetype('default');
 
   if (loading) {
     return (
@@ -339,12 +317,12 @@ export default function Dashboard() {
         <div className="min-w-0">
           <p className="text-[11px] font-medium text-[var(--text-secondary)] mb-1.5">{todayLabel}</p>
           <h2 className="text-[30px] leading-[1.1] font-medium tracking-tight text-balance text-[var(--text-primary)]">
-            {effectiveArchetype.dashboard.greeting}
+            Dashboard
           </h2>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
             {profile?.name?.trim()
-              ? `${effectiveArchetype.dashboard.subgreeting.replace('Your', `${profile.name.split(' ')[0]}'s`)}`
-              : effectiveArchetype.dashboard.subgreeting}
+              ? `${profile.name.split(' ')[0]}'s workspace`
+              : 'Overview of your work'}
           </p>
           {hasData && (
             <div className="flex flex-wrap items-baseline gap-3 mt-4">
@@ -495,13 +473,12 @@ export default function Dashboard() {
       )}
 
       <StaggerGroup className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6" stagger={0.08}>
-        {effectiveArchetype.dashboard.metricCards.map((card) => (
+        {DEFAULT_METRIC_CARDS.map((card) => (
           <StaggerItem key={card.id}>
           <MetricCard
             label={card.label}
             value={metricValues[card.id] ?? '...'}
-            color={card.color || 'gray'}
-            tooltip={card.tooltip}
+            color={(card.color as 'amber' | 'blue' | 'gray' | 'green' | 'purple' | 'red') || 'gray'}
             icon={cardIcon(card.id)}
             sparkData={cardSpark(card.id)}
           />
@@ -584,30 +561,8 @@ export default function Dashboard() {
 
       </div>
 
-      {/* Quick Actions */}
-      {hasData && effectiveArchetype.dashboard.quickActions.length > 0 && (
-        <div className="flex gap-2 mb-6">
-          {effectiveArchetype.dashboard.quickActions.map((action) => (
-            <Button
-              key={action.label}
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                if (action.action.startsWith('/')) {
-                  navigate(action.action);
-                } else {
-                  commands.dispatch(`lance:${action.action}` as any);
-                }
-              }}
-            >
-              {action.label}
-            </Button>
-          ))}
-        </div>
-      )}
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <DashboardWidgets archetype={effectiveArchetype} recentInvoices={recentInvoices} recentTime={recentTime} profile={profile} projects={projects} navigate={navigate} />
+        <DashboardWidgets recentInvoices={recentInvoices} recentTime={recentTime} profile={profile} projects={projects} navigate={navigate} />
       </div>
 
       {lastBackupInfo && lastBackupInfo.enabled && (
@@ -626,38 +581,13 @@ export default function Dashboard() {
   );
 }
 
-function DashboardWidgets({ archetype, recentInvoices, recentTime, profile, projects, navigate }: {
-  archetype: ArchetypeConfig;
+function DashboardWidgets({ recentInvoices, recentTime, profile, projects, navigate }: {
   recentInvoices: Invoice[];
   recentTime: TimeEntry[];
   profile: UserProfile | null;
   projects: Project[];
   navigate: (path: string) => void;
 }) {
-  const widgets = archetype.dashboard.widgets || [];
-  const hasCustomWidgets = widgets.length > 0;
-
-  const renderWidget = (widget: { id: string; component: string; priority: number; props?: Record<string, unknown> }) => {
-    const Component = getFeatureComponent(widget.component);
-    if (Component) {
-      return (
-        <Card key={widget.id}>
-          <Suspense fallback={<div className="h-32 skeleton-pulse rounded" />}>
-            {/* Spread declared props (e.g. projectId): rendering bare left
-                project-scoped widgets writing orphan rows. */}
-            <Component {...(widget.props || {})} />
-          </Suspense>
-        </Card>
-      );
-    }
-    return null;
-  };
-
-  if (hasCustomWidgets) {
-    const sorted = [...widgets].sort((a, b) => b.priority - a.priority);
-    return <>{sorted.map(renderWidget)}</>;
-  }
-
   return (
     <>
       <Card>

@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '../store';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
@@ -8,15 +8,12 @@ import Sparkline from '../components/ui/Sparkline';
 import { formatCurrency, DAY_MS } from '../utils/format';
 import { useToasts } from '../store/toastStore';
 import { Lightbulb, BarChart3, TrendingUp, TrendingDown, Minus, Star } from 'lucide-react';
-import { getArchetype } from '../archetypes';
 import ProInsights from '../components/features/ProInsights';
 
 export default function Insights() {
   const { projects, loadProjects, invoices, loadInvoices, timeEntries, loadTimeEntries, clients, loadClients, proposals, loadProposals, expenses, loadExpenses, profile, loadProfile, headlineMetrics, loadHeadlineMetrics, getFinanceSummary } = useStore();
   const addToast = useToasts((s) => s.add);
   const [loaded, setLoaded] = useState(false);
-
-  const archetype = useMemo(() => getArchetype(profile?.profession || 'default'), [profile?.profession]);
 
   useEffect(() => {
     Promise.all([
@@ -96,7 +93,7 @@ export default function Insights() {
   });
   const topProjectsByTime = Object.values(projectTime).sort((a, b) => b.minutes - a.minutes).slice(0, 5);
 
-  const hiddenPanels = archetype.insights.hidePanels || [];
+  const hiddenPanels: string[] = [];
 
   if (!loaded) return (
     <div className="p-6">
@@ -116,7 +113,7 @@ export default function Insights() {
   if (!hasMinimalData) {
     return (
       <div className="p-6">
-        <h1 className="font-display text-lg font-semibold text-[var(--text-primary)] mb-6">{archetype.insights.headline}</h1>
+        <h1 className="font-display text-lg font-semibold text-[var(--text-primary)] mb-6">Insights</h1>
         <Card className="text-center py-16 flex flex-col items-center">
           <Lightbulb size={40} className="text-[var(--text-tertiary)] mb-4" />
           <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">Not enough data yet</h3>
@@ -128,7 +125,7 @@ export default function Insights() {
 
   return (
     <div className="p-6">
-      <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-6">{archetype.insights.headline}</h2>
+      <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-6">Insights</h2>
 
       {mixedInvoiceCurrencies && (
         <p className="text-[11px] text-[var(--text-tertiary)] mb-3">
