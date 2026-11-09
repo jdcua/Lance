@@ -167,7 +167,7 @@ export default function WordTracker({ timeEntryId }: { timeEntryId?: string }) {
   };
 
   const inputClass =
-    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
@@ -179,7 +179,7 @@ export default function WordTracker({ timeEntryId }: { timeEntryId?: string }) {
         </div>
         <div className="space-y-1">
           {[1, 2].map((i) => (
-            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
           ))}
         </div>
       </div>
@@ -194,7 +194,7 @@ export default function WordTracker({ timeEntryId }: { timeEntryId?: string }) {
             Word Count
           </h4>
         </div>
-        <div className="flex items-center gap-2 px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px]">
+        <div className="flex items-center gap-2 px-3 py-2 bg-[var(--bg-secondary)] rounded-xs">
           <input
             type="number"
             placeholder="Word count"
@@ -225,7 +225,7 @@ export default function WordTracker({ timeEntryId }: { timeEntryId?: string }) {
       {!loaded ? (
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
           ))}
         </div>
       ) : recentEntries.length === 0 ? (
@@ -290,7 +290,7 @@ function WordRow({
   };
 
   return (
-    <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+    <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
       <div className="flex-1 min-w-0 flex items-center gap-2">
         <div className="flex-1 min-w-0">
           <div className="text-[var(--text-primary)] truncate font-medium">

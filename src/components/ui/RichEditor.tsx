@@ -110,7 +110,7 @@ export default function RichEditor({ content, onChange, placeholder = 'Start wri
 
   if (!editor) {
     return (
-      <div className="border border-[var(--danger)] rounded-[8px] p-4 text-center">
+      <div className="border border-[var(--danger)] rounded-sm p-4 text-center">
         <p className="text-sm text-[var(--danger)]">
           Failed to initialize editor. Please reload the page.
         </p>
@@ -119,7 +119,7 @@ export default function RichEditor({ content, onChange, placeholder = 'Start wri
   }
 
   return (
-    <div className="border border-[var(--border-color)] rounded-[8px] focus-within:border-[var(--accent)] focus-within:ring-1 focus-within:ring-[var(--accent)]/20 overflow-hidden">
+    <div className="border border-[var(--border-color)] rounded-sm focus-within:border-[var(--accent)] focus-within:ring-1 focus-within:ring-[var(--accent)]/20 overflow-hidden">
       {!readOnly && (
         <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-[var(--border-color)] bg-[var(--bg-primary)] flex-wrap">
           {toolbarItems.map((item) => (

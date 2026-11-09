@@ -46,7 +46,7 @@ export default function KeywordTracker({ clientId }: { clientId: string }) {
     return <TrendingUp size={10} className="text-[#A32D2D]" />;
   };
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
 
   return (
     <div className="space-y-3">
@@ -58,7 +58,7 @@ export default function KeywordTracker({ clientId }: { clientId: string }) {
       </div>
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <input type="text" placeholder="Keyword phrase" value={form.keyword} onChange={(e) => setForm({ ...form, keyword: e.target.value })} className={inputClass} autoFocus />
           <div className="grid grid-cols-3 gap-2">
             <input type="number" placeholder="Start pos" value={form.position_start} onChange={(e) => setForm({ ...form, position_start: e.target.value })} className={inputClass} />
@@ -77,7 +77,7 @@ export default function KeywordTracker({ clientId }: { clientId: string }) {
       ) : (
         <div className="space-y-1">
           {list.map((k) => (
-            <div key={k.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+            <div key={k.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
               <div className="flex-1 min-w-0 flex items-center gap-2">
                 {positionIcon(k.position_current, k.target_position)}
                 <span className="font-medium text-[var(--text-primary)]">{k.keyword}</span>

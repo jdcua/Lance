@@ -45,7 +45,7 @@ export default function TestModePanel() {
               type="button"
               disabled={busy !== ''}
               onClick={() => run(`on-${tier}`, () => enableTestMode(tier))}
-              className="text-xs font-medium px-2.5 py-1 rounded-[6px] border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] disabled:opacity-50"
+              className="text-xs font-medium px-2.5 py-1 rounded-xs border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] disabled:opacity-50"
             >
               {busy === `on-${tier}` ? '…' : `Test as ${tier}`}
             </button>
@@ -74,7 +74,7 @@ export default function TestModePanel() {
               type="button"
               onClick={() => setTestTier(tier)}
               aria-pressed={testMode.tier === tier}
-              className={`text-xs font-medium px-2.5 py-1 rounded-[6px] border capitalize ${
+              className={`text-xs font-medium px-2.5 py-1 rounded-xs border capitalize ${
                 testMode.tier === tier
                   ? 'border-[var(--accent)] bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]'
                   : 'border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
@@ -99,7 +99,7 @@ export default function TestModePanel() {
               type="button"
               disabled={busy !== '' || !profile}
               onClick={() => run(`clock-${key}`, () => setTestTrialClock(days as number | null))}
-              className="text-xs font-medium px-2.5 py-1 rounded-[6px] border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] disabled:opacity-50"
+              className="text-xs font-medium px-2.5 py-1 rounded-xs border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] disabled:opacity-50"
             >
               {busy === `clock-${key}` ? '…' : (label as string)}
             </button>
@@ -113,7 +113,7 @@ export default function TestModePanel() {
             type="button"
             disabled={busy !== ''}
             onClick={() => run('seed', () => seedSampleData().then(() => window.location.reload()))}
-            className="text-xs font-medium px-2.5 py-1 rounded-[6px] border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] disabled:opacity-50"
+            className="text-xs font-medium px-2.5 py-1 rounded-xs border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] disabled:opacity-50"
           >
             {busy === 'seed' ? '…' : 'Seed sample data'}
           </button>
@@ -123,7 +123,7 @@ export default function TestModePanel() {
             onClick={() =>
               run('clear-seed', () => clearSampleData().then(() => window.location.reload()))
             }
-            className="text-xs font-medium px-2.5 py-1 rounded-[6px] border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] disabled:opacity-50"
+            className="text-xs font-medium px-2.5 py-1 rounded-xs border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] disabled:opacity-50"
           >
             {busy === 'clear-seed' ? '…' : 'Clear sample data'}
           </button>
@@ -133,7 +133,7 @@ export default function TestModePanel() {
         type="button"
         disabled={busy !== ''}
         onClick={() => run('exit', () => disableTestMode().then(() => window.location.reload()))}
-        className="text-xs font-semibold px-3 py-1.5 rounded-[6px] bg-[var(--danger)] text-white hover:opacity-90 disabled:opacity-50"
+        className="text-xs font-semibold px-3 py-1.5 rounded-xs bg-[var(--danger)] text-white hover:opacity-90 disabled:opacity-50"
       >
         {busy === 'exit' ? '…' : 'Exit test mode (restore my profile)'}
       </button>

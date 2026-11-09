@@ -46,7 +46,7 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
           <div className="space-y-4 min-w-0">
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              <label className="form-label">
                 Client *
               </label>
               <ClientSelect
@@ -57,13 +57,13 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              <label className="form-label">
                 Project (optional)
               </label>
               <select aria-label="Project"
                 value={form.project_id}
                 onChange={(e) => setForm({ ...form, project_id: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               >
                 <option value="">None</option>
                 {projects
@@ -76,7 +76,7 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              <label className="form-label">
                 Invoice #
               </label>
               <input
@@ -86,30 +86,30 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
                   setForm({ ...form, invoice_number: sanitizeInvoiceNumber(e.target.value) })
                 }
                 maxLength={40}
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)]"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              <label className="form-label">
                 Due Date
               </label>
               <input
                 type="date"
                 value={form.due_date}
                 onChange={(e) => setForm({ ...form, due_date: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)]"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              <label className="form-label">
                 Currency
               </label>
               <select aria-label="Currency"
                 value={form.currency}
                 onChange={(e) => setForm({ ...form, currency: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               >
                 <option value="">
                   {profile?.currency
@@ -140,7 +140,7 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
                 )}
               </div>
               {hourlyRate <= 0 ? (
-                <p className="text-xs text-[var(--warning-text)] bg-[var(--warning-bg)] px-3 py-2 rounded-[6px]">
+                <p className="text-xs text-[var(--warning-text)] bg-[var(--warning-bg)] px-3 py-2 rounded-xs">
                   Set your hourly rate in profile to use time import.
                 </p>
               ) : unbilledTime.length === 0 ? (
@@ -148,14 +148,14 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
                   No unbilled time entries to import.
                 </p>
               ) : (
-                <div className="space-y-1 max-h-36 overflow-y-auto border border-[var(--border-color)] rounded-[8px] p-1">
+                <div className="space-y-1 max-h-36 overflow-y-auto border border-[var(--border-color)] rounded-sm p-1">
                   {unbilledTime.map((t) => {
                     const hours = (t.duration_minutes || 0) / 60;
                     const amount = Math.round(hours * hourlyRate * 100) / 100;
                     return (
                       <label
                         key={t.id}
-                        className={`flex items-center gap-2 px-2 py-1.5 rounded-[6px] cursor-pointer text-xs ${selectedTimeIds.has(t.id) ? 'bg-[var(--accent-bg)]' : 'hover:bg-[var(--bg-secondary)]'}`}
+                        className={`flex items-center gap-2 px-2 py-1.5 rounded-xs cursor-pointer text-xs ${selectedTimeIds.has(t.id) ? 'bg-[var(--accent-bg)]' : 'hover:bg-[var(--bg-secondary)]'}`}
                       >
                         <input
                           type="checkbox"
@@ -195,21 +195,21 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
                     value={item.description}
                     onChange={(e) => updateItem(i, 'description', e.target.value)}
                     placeholder="Description"
-                    className="flex-1 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]"
+                    className="flex-1 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs focus:outline-none focus:border-[var(--accent)]"
                   />
                   <input
                     type="number"
                     value={item.quantity || ''}
                     onChange={(e) => updateItem(i, 'quantity', parseFloat(e.target.value) || 0)}
                     placeholder="Qty"
-                    className="w-16 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]"
+                    className="w-16 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs focus:outline-none focus:border-[var(--accent)]"
                   />
                   <input
                     type="number"
                     value={item.unit_price || ''}
                     onChange={(e) => updateItem(i, 'unit_price', parseFloat(e.target.value) || 0)}
                     placeholder="Rate"
-                    className="w-24 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]"
+                    className="w-24 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs focus:outline-none focus:border-[var(--accent)]"
                   />
                   <span className="text-xs text-[var(--text-secondary)] w-20 text-right font-medium tabular-nums">
                     {formatCurrency(item.total)}
@@ -243,7 +243,7 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
                   setForm({ ...form, tax_rate: Number(v) < 0 ? '0' : v });
                 }}
                 placeholder="0"
-                className="w-20 px-2 py-1 text-xs text-right border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]"
+                className="w-20 px-2 py-1 text-xs text-right border border-[var(--border-color)] rounded-xs focus:outline-none focus:border-[var(--accent)]"
               />
             </div>
             <div className="flex justify-between pt-1 border-t border-[var(--border-color)]">
@@ -260,7 +260,7 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
             )}
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Notes
             </label>
             <textarea
@@ -268,7 +268,7 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
               placeholder="Invoice notes..."
               rows={2}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none"
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
@@ -321,7 +321,7 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              <label className="form-label">
                 Client *
               </label>
               <ClientSelect
@@ -332,7 +332,7 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              <label className="form-label">
                 Frequency
               </label>
               <select aria-label="Frequency"
@@ -343,7 +343,7 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
                     frequency: e.target.value as RecurringInvoiceType['frequency'],
                   })
                 }
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               >
                 <option value="weekly">Weekly</option>
                 <option value="biweekly">Bi-weekly</option>
@@ -352,19 +352,19 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              <label className="form-label">
                 Starts on
               </label>
               <input
                 type="date"
                 value={riForm.next_due}
                 onChange={(e) => setRiForm({ ...riForm, next_due: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)]"
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Title *
             </label>
             <input
@@ -373,7 +373,7 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
               onChange={(e) => setRiForm({ ...riForm, title: e.target.value })}
               placeholder="e.g. Monthly retainer"
               maxLength={MAX_LENGTHS.title}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
             />
           </div>
           <div>
@@ -394,21 +394,21 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
                     value={item.description}
                     onChange={(e) => updateRiItem(i, 'description', e.target.value)}
                     placeholder="Description"
-                    className="flex-1 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]"
+                    className="flex-1 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs focus:outline-none focus:border-[var(--accent)]"
                   />
                   <input
                     type="number"
                     value={item.quantity || ''}
                     onChange={(e) => updateRiItem(i, 'quantity', parseFloat(e.target.value) || 0)}
                     placeholder="Qty"
-                    className="w-16 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]"
+                    className="w-16 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs focus:outline-none focus:border-[var(--accent)]"
                   />
                   <input
                     type="number"
                     value={item.unit_price || ''}
                     onChange={(e) => updateRiItem(i, 'unit_price', parseFloat(e.target.value) || 0)}
                     placeholder="Rate"
-                    className="w-24 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]"
+                    className="w-24 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs focus:outline-none focus:border-[var(--accent)]"
                   />
                   <span className="text-xs text-[var(--text-secondary)] w-20 text-right font-medium tabular-nums">
                     {formatCurrency(item.total)}
@@ -442,7 +442,7 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
                   setRiForm({ ...riForm, tax_rate: Number(v) < 0 ? '0' : v });
                 }}
                 placeholder="0"
-                className="w-20 px-2 py-1 text-xs text-right border border-[var(--border-color)] rounded-[6px] focus:outline-none focus:border-[var(--accent)]"
+                className="w-20 px-2 py-1 text-xs text-right border border-[var(--border-color)] rounded-xs focus:outline-none focus:border-[var(--accent)]"
               />
             </div>
             <div className="flex justify-between pt-1 border-t border-[var(--border-color)]">
@@ -453,7 +453,7 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Notes
             </label>
             <textarea
@@ -461,7 +461,7 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
               onChange={(e) => setRiForm({ ...riForm, notes: e.target.value })}
               placeholder="Invoice notes..."
               rows={2}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] resize-none focus:outline-none focus:border-[var(--accent)]"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm resize-none focus:outline-none focus:border-[var(--accent)]"
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
@@ -489,7 +489,7 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
       >
         <div className="space-y-4">
           {paymentInv && (
-            <div className="px-3 py-2 rounded-[8px] bg-[var(--bg-secondary)]">
+            <div className="px-3 py-2 rounded-sm bg-[var(--bg-secondary)]">
               <p className="text-xs font-medium text-[var(--text-primary)]">
                 {paymentInv.invoice_number}
               </p>
@@ -499,18 +499,18 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
             </div>
           )}
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Payment Date
             </label>
             <input
               type="date"
               value={paymentForm.payment_date}
               onChange={(e) => setPaymentForm({ ...paymentForm, payment_date: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)]"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Amount Received
             </label>
             <input
@@ -522,17 +522,17 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
                 setPaymentForm({ ...paymentForm, amount: Number(v) < 0 ? '0' : v });
               }}
               placeholder="0.00"
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Payment Method
             </label>
             <select aria-label="Payment Method"
               value={paymentForm.payment_method}
               onChange={(e) => setPaymentForm({ ...paymentForm, payment_method: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
             >
               {[
                 'Bank Transfer',
@@ -553,7 +553,7 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Reference / Transaction ID
             </label>
             <input
@@ -561,11 +561,11 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
               value={paymentForm.reference}
               onChange={(e) => setPaymentForm({ ...paymentForm, reference: e.target.value })}
               placeholder="Optional"
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Notes
             </label>
             <textarea
@@ -573,7 +573,7 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
               onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
               placeholder="Optional"
               rows={2}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none"
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
@@ -601,13 +601,13 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
         {reminderInv && (
           <div className="space-y-3">
             {!reminderForm.to && (
-              <div className="flex items-center gap-2 p-2.5 rounded-[8px] bg-[var(--warning-bg)] text-[var(--warning-text)] text-xs">
+              <div className="flex items-center gap-2 p-2.5 rounded-sm bg-[var(--warning-bg)] text-[var(--warning-text)] text-xs">
                 <AlertTriangle size={14} className="flex-shrink-0" />
                 <span>No email on file for this client. Enter one below or add it in Clients.</span>
               </div>
             )}
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              <label className="form-label">
                 To
               </label>
               <input
@@ -615,29 +615,29 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
                 value={reminderForm.to}
                 onChange={(e) => setReminderForm({ ...reminderForm, to: e.target.value })}
                 placeholder="client@example.com"
-                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              <label className="form-label">
                 Subject
               </label>
               <input
                 type="text"
                 value={reminderForm.subject}
                 onChange={(e) => setReminderForm({ ...reminderForm, subject: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              <label className="form-label">
                 Body
               </label>
               <textarea
                 value={reminderForm.body}
                 onChange={(e) => setReminderForm({ ...reminderForm, body: e.target.value })}
                 rows={8}
-                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] resize-none leading-relaxed"
+                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] resize-none leading-relaxed"
               />
             </div>
             <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)] cursor-pointer">

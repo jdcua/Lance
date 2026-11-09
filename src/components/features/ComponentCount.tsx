@@ -94,7 +94,7 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
 
   const totalComponents = items.reduce((s, i) => s + (i.count || 0), 0);
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
 
   if (loading) {
     return (
@@ -103,7 +103,7 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Component Count</h4>
         </div>
         <div className="space-y-1">
-          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
+          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
         </div>
       </div>
     );
@@ -120,7 +120,7 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
 
       {/* Total */}
       {items.length > 0 && (
-        <div className="flex items-center gap-2 px-3 py-2 bg-[var(--accent)]/10 rounded-[6px] text-xs">
+        <div className="flex items-center gap-2 px-3 py-2 bg-[var(--accent)]/10 rounded-xs text-xs">
           <Box size={14} className="text-[var(--accent-ink,var(--accent))]" />
           <span className="text-[var(--text-primary)] font-medium">Total components:</span>
           <span className="text-[var(--accent-ink,var(--accent))] font-semibold">{totalComponents}</span>
@@ -129,7 +129,7 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
 
       {/* Add form */}
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <div className="flex gap-2">
             <input
               type="text"
@@ -163,7 +163,7 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
       ) : (
         <div className="space-y-1">
           {items.map((item) => (
-            <div key={item.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+            <div key={item.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 <Box size={12} className="text-[var(--text-tertiary)] flex-shrink-0" />
                 <span className="text-[var(--text-primary)] truncate">{item.component_name}</span>

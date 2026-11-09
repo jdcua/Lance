@@ -763,13 +763,24 @@ nav.scrolled {
   .orbit-ring, .orbit-chip { animation: none; }
 }
 .mock {
-  background: rgba(19, 19, 21, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(150deg, rgba(28, 28, 32, 0.9), rgba(16, 16, 18, 0.94));
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 18px;
   overflow: hidden;
   box-shadow:
     0 40px 120px rgba(0, 0, 0, 0.6),
-    0 0 80px rgba(var(--green-rgb), 0.1);
+    0 0 80px rgba(var(--green-rgb), 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .mock {
+    background: rgba(16, 16, 18, 0.98);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }
 .mock-chrome {
   height: 42px;

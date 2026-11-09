@@ -6,6 +6,7 @@ import Button from '../components/ui/Button';
 import LoadError from '../components/ui/LoadError';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
+import { commands } from '../lib/commands';
 import MetricCard from '../components/ui/MetricCard';
 import { Plus, Trash2, Clock, Grid3X3, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useToasts } from '../store/toastStore';
@@ -365,11 +366,11 @@ export default function TimeScreen() {
             <div key={i} className="h-24 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />
           ))}
         </div>
-        <div className="h-16 rounded-[8px] bg-[var(--bg-secondary)] skeleton-pulse mb-4" />
+        <div className="h-16 rounded-sm bg-[var(--bg-secondary)] skeleton-pulse mb-4" />
         {[...Array(5)].map((_, i) => (
           <div
             key={i}
-            className="h-10 bg-[var(--bg-secondary)] rounded-[8px] skeleton-pulse mb-2"
+            className="h-10 bg-[var(--bg-secondary)] rounded-sm skeleton-pulse mb-2"
           />
         ))}
       </div>
@@ -377,6 +378,7 @@ export default function TimeScreen() {
 
   return (
     <div className="p-6">
+      <h1 className="font-display text-lg font-semibold text-[var(--text-primary)] mb-2">Time tracking</h1>
       <TabBar tab={tab} setTab={setTab} showHeatmap={showHeatmap} />
       <LoadError error={timeError} onRetry={() => loadTimeEntries()} />
 
@@ -401,8 +403,7 @@ export default function TimeScreen() {
             />
             <div
               onClick={() => {
-                // Dispatch custom event so App.tsx's toggleTimer handles it
-                document.dispatchEvent(new Event('lance:toggle-timer'));
+                commands.dispatch('lance:toggle-timer');
               }}
               className="cursor-pointer"
             >
@@ -424,7 +425,7 @@ export default function TimeScreen() {
                 <div className="flex-1">
                   <label
                     htmlFor="time-entry-project"
-                    className="block text-xs font-medium text-[var(--text-secondary)] mb-1"
+                    className="form-label"
                   >
                     Project
                   </label>
@@ -439,7 +440,7 @@ export default function TimeScreen() {
                         client_id: project?.client_id || '',
                       });
                     }}
-                    className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                    className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     disabled={!!activeTimer}
                     title={activeTimer ? 'Stop the running timer to change project' : 'Project'}
                   >
@@ -465,7 +466,7 @@ export default function TimeScreen() {
                       setDurationMinutes(Math.min(10080, Math.max(0, v)));
                     }}
                     placeholder="30"
-                    className="w-20 px-2 py-2 text-xs border border-[var(--border-color)] rounded-[8px]"
+                    className="w-20 px-2 py-2 text-xs border border-[var(--border-color)] rounded-sm"
                   />
                 </div>
                 <div className="flex-1">
@@ -474,7 +475,7 @@ export default function TimeScreen() {
                     value={entryForm.description}
                     onChange={(e) => setEntryForm({ ...entryForm, description: e.target.value })}
                     placeholder="Description"
-                    className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px]"
+                    className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm"
                   />
                 </div>
                 <Button
@@ -513,11 +514,11 @@ export default function TimeScreen() {
             </Card>
           ) : (
             <>
-              <div className="space-y-2">
+              <div className="list-surface divide-y divide-[var(--border-color)]">
                 {pagedEntries.visible.map((entry) => (
                   <div
                     key={entry.id}
-                    className="flex items-center gap-3 px-4 py-2.5 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px]"
+                    className="list-row flex items-center gap-3 px-4 py-2.5"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
@@ -607,7 +608,7 @@ export default function TimeScreen() {
             <select aria-label="Selectedproject"
               value={selectedProject}
               onChange={(e) => setSelectedProject(e.target.value)}
-              className="px-3 py-1.5 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              className="px-3 py-1.5 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
             >
               <option value="__all__">All Projects</option>
               {projects
@@ -739,7 +740,7 @@ export default function TimeScreen() {
                 {/* Cell popover */}
                 {selectedCell && selectedCellPos && (
                   <div
-                    className="absolute z-20 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[10px] shadow-lg p-3 min-w-[220px]"
+                    className="absolute z-20 glass rounded-[10px] p-3 min-w-[220px]"
                     style={{
                       left: `${selectedCellPos.x}px`,
                       top: `${selectedCellPos.y + 20}px`,

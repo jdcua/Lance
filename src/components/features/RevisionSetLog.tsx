@@ -76,7 +76,7 @@ export default function RevisionSetLog({ projectId }: { projectId: string }) {
     } catch (e) { console.error('[RevisionSetLog] delete failed:', e); }
   };
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
 
   if (loading) {
     return (
@@ -85,7 +85,7 @@ export default function RevisionSetLog({ projectId }: { projectId: string }) {
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Revision Sets</h4>
         </div>
         <div className="space-y-1">
-          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
+          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
         </div>
       </div>
     );
@@ -101,7 +101,7 @@ export default function RevisionSetLog({ projectId }: { projectId: string }) {
       </div>
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className={inputClass} />
           <textarea
             placeholder="Changes summary"
@@ -123,7 +123,7 @@ export default function RevisionSetLog({ projectId }: { projectId: string }) {
       ) : (
         <div className="space-y-1">
           {sets.map((s) => (
-            <div key={s.id} className="flex items-start justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+            <div key={s.id} className="flex items-start justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
               <div className="flex-1 min-w-0 space-y-0.5">
                 <div className="flex items-center gap-2">
                   <span className="flex items-center gap-1 text-[var(--accent-ink,var(--accent))] font-semibold text-sm">

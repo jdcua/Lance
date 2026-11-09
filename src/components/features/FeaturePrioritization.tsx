@@ -84,7 +84,7 @@ export default function FeaturePrioritization({ projectId }: { projectId: string
   };
 
   const selectClass =
-    'w-full px-2 py-1 text-[11px] border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1 text-[11px] border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
@@ -94,7 +94,7 @@ export default function FeaturePrioritization({ projectId }: { projectId: string
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
           ))}
         </div>
       </div>
@@ -116,7 +116,7 @@ export default function FeaturePrioritization({ projectId }: { projectId: string
           {items.map((item) => (
             <div
               key={item.id}
-              className={`flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs border-l-2 ${priorityColors[item.priority] || 'border-l-[var(--border-color)]'}`}
+              className={`flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs border-l-2 ${priorityColors[item.priority] || 'border-l-[var(--border-color)]'}`}
             >
               <div className="flex-1 min-w-0 flex items-center gap-2">
                 <span className="font-medium text-[var(--text-primary)] truncate">{item.title}</span>

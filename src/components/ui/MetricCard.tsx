@@ -38,11 +38,11 @@ export default function MetricCard({ label, value, subtext, trend, color = 'gray
   const showDelta = delta ?? '';
 
   return (
-    <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg p-5 shadow-[var(--card-shadow)] transition-colors duration-200 hover:border-[var(--text-tertiary)] hover:shadow-[var(--card-hover-shadow)] min-w-0 group" title={tooltip}>
+    <div className="surface rounded-[20px] p-6 transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-[3px] hover:shadow-[var(--glass-shadow)] min-w-0 group" title={tooltip}>
       <div className="flex items-center gap-2 mb-2.5 min-w-0">
         {icon && (
           <span
-            className="w-7 h-7 rounded-[8px] grid place-items-center flex-shrink-0"
+            className="w-7 h-7 rounded-sm grid place-items-center flex-shrink-0"
             style={{ background: tintBg[color], color: tintFg[color] }}
           >
             {icon}
@@ -58,7 +58,7 @@ export default function MetricCard({ label, value, subtext, trend, color = 'gray
           </span>
         )}
       </div>
-      <div className="text-[var(--text-display)] font-semibold text-[var(--text-primary)] mb-1 break-words leading-tight tracking-tight tnum">{value}</div>
+      <div className="text-[30px] leading-[1.05] font-semibold text-[var(--text-primary)] mb-1.5 break-words tracking-[-0.03em] tnum">{value}</div>
       {subtext && (
         <p className={`text-xs ${trendColor} break-words`}>
           {trend === 'up' ? '↑ ' : trend === 'down' ? '↓ ' : ''}{subtext}

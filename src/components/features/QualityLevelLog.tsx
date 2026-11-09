@@ -116,7 +116,7 @@ export default function QualityLevelLog({ projectId }: { projectId: string }) {
   };
 
   const inputClass =
-    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
@@ -126,7 +126,7 @@ export default function QualityLevelLog({ projectId }: { projectId: string }) {
         </div>
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+            <div key={i} className="h-16 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
           ))}
         </div>
       </div>
@@ -143,7 +143,7 @@ export default function QualityLevelLog({ projectId }: { projectId: string }) {
       </div>
 
       {quality && (
-        <div className={`p-2 rounded-[6px] border-l-[3px] ${TIER_COLORS[quality.quality_tier] || ''}`}>
+        <div className={`p-2 rounded-xs border-l-[3px] ${TIER_COLORS[quality.quality_tier] || ''}`}>
           <div className="flex items-center gap-1.5">
             {TIER_CONFIG[quality.quality_tier]?.icon}
             <span className="text-xs font-medium text-[var(--text-primary)]">{TIER_CONFIG[quality.quality_tier]?.label || quality.quality_tier}</span>
@@ -161,7 +161,7 @@ export default function QualityLevelLog({ projectId }: { projectId: string }) {
           return (
             <label
               key={tier}
-              className={`flex items-start gap-2 px-3 py-2 rounded-[6px] cursor-pointer border transition-colors ${
+              className={`flex items-start gap-2 px-3 py-2 rounded-xs cursor-pointer border transition-colors ${
                 selected
                   ? TIER_COLORS[tier] + ' border-l-[3px]'
                   : 'bg-[var(--bg-secondary)] border border-transparent hover:bg-[var(--bg-card)]'

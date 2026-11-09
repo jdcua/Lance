@@ -14,6 +14,7 @@ import Fade from '../components/motion/Fade';
 import { StaggerGroup, StaggerItem } from '../components/motion/Stagger';
 import AnimatedNumber from '../components/motion/AnimatedNumber';
 import { usePrefs } from '../lib/prefs';
+import { commands } from '../lib/commands';
 import { relativeDate, formatCurrency, DAY_MS } from '../utils/format';
 import { useToasts } from '../store/toastStore';
 import { Play, Receipt, FileText, Users, FolderKanban, Clock, Plus, ArrowRight, CheckCircle2, Circle, Bell, Send, X, Link, Banknote, Clock3, Target } from 'lucide-react';
@@ -292,13 +293,12 @@ export default function Dashboard() {
   }
 
   // Each step deep-links AND opens the real create form: landing on a list
-  // is not activation, doing the thing is. The time step needs no navigation
-  // because the quick-log modal is global.
+  // is not activation, doing the thing is.
   const runStep = (to: string | null, event: string | null, index: number) => {
     recordTelemetry('checklist_step_done', { step: index });
     if (to) navigate(to);
     if (event) {
-      setTimeout(() => document.dispatchEvent(new CustomEvent(event)), 350);
+      setTimeout(() => commands.dispatch(event as any), 350);
     }
   };
 
@@ -328,12 +328,12 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-6 max-w-[1440px]">
+    <div className="mx-auto max-w-[1440px] p-4 sm:p-6 lg:p-8">
       <LoadError
         error={dashboardError}
         onRetry={() => { loadInvoices(); loadClients(); loadProjects(); }}
       />
-      <Fade className="relative overflow-hidden rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-card)] shadow-[var(--card-shadow)] p-6 mb-6" y={18}>
+      <Fade className="relative overflow-hidden rounded-[24px] glass p-6 sm:p-8 mb-6" y={18}>
 
         <div className="relative flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
@@ -374,7 +374,7 @@ export default function Dashboard() {
           <Button
             size="sm"
             variant="secondary"
-            onClick={() => document.dispatchEvent(new CustomEvent('lance:add-time'))}
+            onClick={() => commands.dispatch('lance:add-time')}
           >
             <Clock size={13} /> Log time
           </Button>
@@ -384,10 +384,10 @@ export default function Dashboard() {
             onClick={() => {
               if (clients.length === 0) {
                 navigate('/clients');
-                setTimeout(() => document.dispatchEvent(new CustomEvent('lance:add-client')), 350);
+                setTimeout(() => commands.dispatch('lance:add-client'), 350);
               } else {
                 navigate('/invoices');
-                setTimeout(() => document.dispatchEvent(new CustomEvent('lance:add-invoice')), 350);
+                setTimeout(() => commands.dispatch('lance:add-invoice'), 350);
               }
             }}
           >
@@ -424,7 +424,7 @@ export default function Dashboard() {
                   <button
                     key={i}
                     onClick={() => runStep(s.to, s.event, i + 1)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[8px] text-left text-xs transition-colors ${
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-sm text-left text-xs transition-colors ${
                       s.done
                         ? 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] line-through cursor-default'
                         : 'bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] border border-[var(--border-color)]'
@@ -443,7 +443,7 @@ export default function Dashboard() {
               onClick={dismissChecklist}
               aria-label="Dismiss setup checklist"
               title="Dismiss"
-              className="p-1 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors flex-shrink-0"
+              className="p-1 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors flex-shrink-0"
             >
               <X size={16} />
             </button>
@@ -486,7 +486,7 @@ export default function Dashboard() {
               onClick={dismissDigest}
               aria-label="Dismiss weekly digest"
               title="Dismiss for this week"
-              className="p-1 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors flex-shrink-0"
+              className="p-1 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors flex-shrink-0"
             >
               <X size={16} />
             </button>
@@ -494,7 +494,7 @@ export default function Dashboard() {
         </Card>
       )}
 
-      <StaggerGroup className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6" stagger={0.08}>
+      <StaggerGroup className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6" stagger={0.08}>
         {effectiveArchetype.dashboard.metricCards.map((card) => (
           <StaggerItem key={card.id}>
           <MetricCard
@@ -509,7 +509,7 @@ export default function Dashboard() {
         ))}
       </StaggerGroup>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
       {/* Portal Activity */}
       {portalActivity.length > 0 && (
         <Card className="border-[var(--accent)]/20">
@@ -519,7 +519,7 @@ export default function Dashboard() {
           </div>
           <div className="space-y-1.5">
             {portalActivity.slice(0, 5).map((act, i) => (
-              <div key={i} className="flex items-center justify-between px-3 py-1.5 rounded-[6px] text-xs">
+              <div key={i} className="flex items-center justify-between px-3 py-1.5 rounded-xs text-xs">
                 <span className="text-[var(--text-primary)]">{act.activity}</span>
                 <span className="text-[10px] text-[var(--text-tertiary)] flex-shrink-0 ml-3">{relativeDate(act.timestamp)}</span>
               </div>
@@ -559,7 +559,7 @@ export default function Dashboard() {
                 freelancerName: profile?.name || 'Freelancer',
               }, followUpSettings.templates);
               return (
-                <div key={fu.id} className="flex items-start justify-between px-3 py-2 rounded-[8px] bg-[var(--bg-secondary)]/50">
+                <div key={fu.id} className="flex items-start justify-between px-3 py-2 rounded-sm bg-[var(--bg-secondary)]/50">
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-medium text-[var(--text-primary)]">
                       {isProposal ? 'Proposal' : 'Invoice'}: {isProposal ? (entity as typeof proposals[0]).title : (entity as typeof invoices[0]).invoice_number}
@@ -568,12 +568,12 @@ export default function Dashboard() {
                     <p className="text-[10px] text-[var(--text-tertiary)] mt-1 line-clamp-2">{draft.split('\n')[0]}</p>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0 ml-3">
-                    <button onClick={async () => { await updateFollowUpStatus(fu.id, 'dismissed', 'dismissed'); }} className="p-1 rounded-[6px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)]" title="Dismiss"><X size={12} /></button>
+                    <button onClick={async () => { await updateFollowUpStatus(fu.id, 'dismissed', 'dismissed'); }} className="p-1 rounded-xs text-[var(--text-tertiary)] hover:text-[var(--text-primary)]" title="Dismiss"><X size={12} /></button>
                     <button onClick={async () => {
                       await navigator.clipboard.writeText(draft);
                       await updateFollowUpStatus(fu.id, 'dismissed', 'dismissed');
                       addToast('Copied to clipboard · dismissed from queue', 'success');
-                    }} className="p-1 rounded-[6px] text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)]" title="Copy & dismiss"><Send size={12} /></button>
+                    }} className="p-1 rounded-xs text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)]" title="Copy & dismiss"><Send size={12} /></button>
                   </div>
                 </div>
               );
@@ -596,7 +596,7 @@ export default function Dashboard() {
                 if (action.action.startsWith('/')) {
                   navigate(action.action);
                 } else {
-                  document.dispatchEvent(new CustomEvent(`lance:${action.action}`));
+                  commands.dispatch(`lance:${action.action}` as any);
                 }
               }}
             >
@@ -669,14 +669,14 @@ function DashboardWidgets({ archetype, recentInvoices, recentTime, profile, proj
           <div className="text-center py-8">
             <Receipt size={32} className="text-[var(--text-tertiary)] mx-auto mb-2" />
             <p className="text-xs text-[var(--text-secondary)]">No invoices yet.</p>
-            <Button onClick={() => { navigate('/invoices'); setTimeout(() => document.dispatchEvent(new CustomEvent('lance:add-invoice')), 350); }} size="sm" variant="secondary" className="mt-3">
+            <Button onClick={() => { navigate('/invoices'); setTimeout(() => commands.dispatch('lance:add-invoice'), 350); }} size="sm" variant="secondary" className="mt-3">
               <Plus size={12} /> New Invoice
             </Button>
           </div>
         ) : (
           <div className="space-y-2">
             {recentInvoices.map((inv) => (
-              <div key={inv.id} className="flex items-center justify-between px-3 py-2 rounded-[8px] hover:bg-[var(--bg-secondary)] transition-colors">
+              <div key={inv.id} className="flex items-center justify-between px-3 py-2 rounded-sm hover:bg-[var(--bg-secondary)] transition-colors">
                 <div>
                   <p className="text-xs font-medium text-[var(--text-primary)]">{inv.invoice_number}</p>
                   <p className="text-[10px] text-[var(--text-tertiary)]">{relativeDate(inv.created_at)}</p>
@@ -712,7 +712,7 @@ function DashboardWidgets({ archetype, recentInvoices, recentTime, profile, proj
               const project = projects.find((p) => p.id === entry.project_id);
               const mins = entry.duration_minutes || 0;
               return (
-                <div key={entry.id} className="flex items-center justify-between px-3 py-2 rounded-[8px] hover:bg-[var(--bg-secondary)] transition-colors">
+                <div key={entry.id} className="flex items-center justify-between px-3 py-2 rounded-sm hover:bg-[var(--bg-secondary)] transition-colors">
                   <div>
                     <p className="text-xs font-medium text-[var(--text-primary)] truncate max-w-[180px]">
                       {entry.description || project?.title || 'Untitled'}

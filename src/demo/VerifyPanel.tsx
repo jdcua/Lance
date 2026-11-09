@@ -68,11 +68,11 @@ export default function VerifyPanel() {
       <p className="text-xs font-medium text-[var(--text-secondary)]">
         All {entries.length} keys · {formatBytes(total)}
       </p>
-      <ul className="max-h-[220px] space-y-1 overflow-y-auto rounded-[8px] border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2">
+      <ul className="max-h-[220px] space-y-1 overflow-y-auto rounded-sm border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2">
         {entries.map((e) => (
           <li
             key={e.key}
-            className="flex items-center justify-between gap-2 rounded-[6px] bg-[var(--bg-card)] px-2 py-1"
+            className="flex items-center justify-between gap-2 rounded-xs bg-[var(--bg-card)] px-2 py-1"
           >
             <code className="truncate font-mono text-[11px] text-[var(--text-primary)]">
               {e.key}

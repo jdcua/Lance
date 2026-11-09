@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
 import { getFeatureFlags } from '../../lib/constants';
+import { commands } from '../../lib/commands';
 import { getDb } from '../../db';
 import {
   computeBurn,
@@ -78,7 +79,7 @@ export default function RetainerBurnDown() {
 
   const handleTopUp = async (clientId: string, clientName: string, overByHours: number, rate: number) => {
     if (!unlocked) {
-      document.dispatchEvent(new CustomEvent('lance:open-upgrade', { detail: 'retainer top-up invoices' }));
+      commands.dispatch('lance:open-upgrade', 'retainer top-up invoices');
       return;
     }
     const amount = Math.round(overByHours * rate * 100) / 100;

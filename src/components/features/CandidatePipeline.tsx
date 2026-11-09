@@ -155,9 +155,9 @@ export default function CandidatePipeline({ clientId }: { clientId: string }) {
   const totalCount = candidates.length;
 
   const inputClass =
-    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
   const selectClass =
-    'w-full px-2 py-1 text-[11px] border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1 text-[11px] border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
@@ -174,7 +174,7 @@ export default function CandidatePipeline({ clientId }: { clientId: string }) {
               {[1, 2].map((j) => (
                 <div
                   key={j}
-                  className="h-12 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse"
+                  className="h-12 bg-[var(--bg-secondary)] rounded-xs animate-pulse"
                 />
               ))}
             </div>
@@ -196,7 +196,7 @@ export default function CandidatePipeline({ clientId }: { clientId: string }) {
       </div>
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <input
             type="text"
             placeholder="Candidate name"
@@ -271,7 +271,7 @@ export default function CandidatePipeline({ clientId }: { clientId: string }) {
                 {items.map((candidate) => (
                   <div
                     key={candidate.id}
-                    className="bg-[var(--bg-secondary)] rounded-[6px] p-2 text-xs space-y-1"
+                    className="bg-[var(--bg-secondary)] rounded-xs p-2 text-xs space-y-1"
                   >
                     <div className="flex items-center justify-between">
                       <button

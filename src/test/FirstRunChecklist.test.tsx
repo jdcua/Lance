@@ -3,6 +3,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Dashboard from '../screens/Dashboard';
 import { useStore } from '../store';
+import { commands } from '../lib/commands';
 import type { Client, Project, Invoice, Proposal, TimeEntry } from '../types';
 
 vi.mock('@tauri-apps/api/core', () => ({
@@ -73,14 +74,14 @@ describe('first-run checklist', () => {
     expect(screen.getByText('Add your first client').closest('button')?.disabled).toBe(true);
   });
 
-  it('step click opens the real create form via event', async () => {
+  it('step click opens the real create form via command', async () => {
     const seen: string[] = [];
-    const handler = (e: Event) => seen.push((e as CustomEvent).type || e.type);
-    document.addEventListener('lance:add-client', handler);
+    const handler = (detail: unknown) => seen.push('lance:add-client');
+    commands.on('lance:add-client', handler as any);
     renderDashboard();
     fireEvent.click(await screen.findByText('Add your first client'));
     await waitFor(() => expect(seen).toContain('lance:add-client'), { timeout: 2000 });
-    document.removeEventListener('lance:add-client', handler);
+    commands.off('lance:add-client', handler as any);
   });
 
   it('dismiss persists and hides the card', async () => {

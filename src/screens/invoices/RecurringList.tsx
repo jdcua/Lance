@@ -81,7 +81,7 @@ export default function RecurringList({ bag }: { bag: InvoicesBag }) {
                   <button
                     onClick={() => openEditRecurring(ri)}
                     aria-label="Edit recurring invoice"
-                    className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
+                    className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
                   >
                     <Pencil size={14} />
                   </button>
@@ -90,7 +90,7 @@ export default function RecurringList({ bag }: { bag: InvoicesBag }) {
                       setConfirmDelete({ id: ri.id, label: ri.title, type: 'recurring' })
                     }
                     aria-label="Delete recurring invoice"
-                    className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)]"
+                    className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)]"
                   >
                     <Trash2 size={14} />
                   </button>

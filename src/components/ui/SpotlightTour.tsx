@@ -5,6 +5,7 @@ import Button from './Button';
 import { useStore } from '../../store';
 import { getTourPlan, loadDrive } from '../../tour/voice';
 import { buildSteps } from '../../tour/copy';
+import { commands } from '../../lib/commands';
 
 interface SpotlightTourProps {
   open: boolean;
@@ -74,7 +75,7 @@ export default function SpotlightTour({ open, onClose }: SpotlightTourProps) {
     }
     const target = step.action.action;
     if (target.startsWith('/')) navigate(target);
-    else document.dispatchEvent(new CustomEvent(`lance:${target}`));
+    else commands.dispatch(`lance:${target}` as any);
     next();
   }, [step, navigate, next]);
 
@@ -149,7 +150,7 @@ export default function SpotlightTour({ open, onClose }: SpotlightTourProps) {
 
       {/* Coach card */}
       <div
-        className={`absolute bg-[var(--bg-card)] rounded-[14px] shadow-2xl p-5 w-[340px] max-w-[calc(100vw-32px)] ${
+        className={`absolute glass rounded-[20px] p-5 w-[340px] max-w-[calc(100vw-32px)] ${
           cardStyle ? '' : 'left-1/2 -translate-x-1/2 bottom-6'
         }`}
         style={cardStyle}

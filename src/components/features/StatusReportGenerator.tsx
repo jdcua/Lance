@@ -49,7 +49,7 @@ export default function StatusReportGenerator({ projectId }: { projectId: string
       <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Status Report</h4>
 
       <div className="space-y-2">
-        <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px]">
+        <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs">
           <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
             <Clock size={14} className="text-[var(--accent-ink,var(--accent))]" />
             Total Hours
@@ -57,7 +57,7 @@ export default function StatusReportGenerator({ projectId }: { projectId: string
           <span className="text-sm font-semibold text-[var(--text-primary)]">{totalHours.toFixed(1)}h</span>
         </div>
 
-        <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px]">
+        <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs">
           <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
             <CheckCircle2 size={14} className="text-[#2ECC71]" />
             Milestones
@@ -68,7 +68,7 @@ export default function StatusReportGenerator({ projectId }: { projectId: string
         </div>
 
         {lastActivity && (
-          <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px]">
+          <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs">
             <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
               <Calendar size={14} className="text-[var(--text-tertiary)]" />
               Last Activity

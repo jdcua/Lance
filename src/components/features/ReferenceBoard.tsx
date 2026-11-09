@@ -108,7 +108,7 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
   };
 
   const inputClass =
-    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
@@ -122,7 +122,7 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
-              className="aspect-square bg-[var(--bg-secondary)] rounded-[8px] animate-pulse"
+              className="aspect-square bg-[var(--bg-secondary)] rounded-sm animate-pulse"
             />
           ))}
         </div>
@@ -142,7 +142,7 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
       </div>
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <div className="flex gap-1">
             <button
               onClick={() => setTab('url')}
@@ -217,7 +217,7 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
             return (
               <div
                 key={item.id}
-                className="relative group bg-[var(--bg-secondary)] rounded-[8px] overflow-hidden"
+                className="relative group bg-[var(--bg-secondary)] rounded-sm overflow-hidden"
               >
                 {asset && asset.mime_type.startsWith('image/') ? (
                   <div className="aspect-square">

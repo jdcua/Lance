@@ -68,7 +68,7 @@ export default function ResourceAllocation({ projectId }: { projectId: string })
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
           ))}
         </div>
       </div>
@@ -84,15 +84,15 @@ export default function ResourceAllocation({ projectId }: { projectId: string })
       </div>
 
       <div className="grid grid-cols-3 gap-2">
-        <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-center">
+        <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-center">
           <p className="text-[10px] text-[var(--text-tertiary)]">Total Hours</p>
           <p className="text-sm font-semibold text-[var(--text-primary)]">{totalHours.toFixed(1)}h</p>
         </div>
-        <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-center">
+        <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-center">
           <p className="text-[10px] text-[var(--text-tertiary)]">Billable</p>
           <p className="text-sm font-semibold text-[#16A34A]">{billableHours.toFixed(1)}h</p>
         </div>
-        <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-center">
+        <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-center">
           <p className="text-[10px] text-[var(--text-tertiary)]">Entries</p>
           <p className="text-sm font-semibold text-[var(--text-primary)]">{projectEntries.length}</p>
         </div>
@@ -103,12 +103,12 @@ export default function ResourceAllocation({ projectId }: { projectId: string })
       ) : (
         <div className="space-y-1">
           {weeklyBuckets.map((bucket) => (
-            <div key={bucket.weekStart} className="px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+            <div key={bucket.weekStart} className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[var(--text-secondary)]">{bucket.weekLabel}</span>
                 <span className="font-semibold text-[var(--text-primary)]">{bucket.totalHours.toFixed(1)}h</span>
               </div>
-              <div className="w-full h-1.5 bg-[var(--bg-card)] rounded-full overflow-hidden">
+              <div className="w-full h-1.5 glass rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full bg-[var(--accent)] transition-colors"
                   style={{ width: `${Math.min((bucket.totalHours / maxWeeklyHours) * 100, 100)}%` }}

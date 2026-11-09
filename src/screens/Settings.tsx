@@ -13,6 +13,7 @@ import { readTextFile, writeFile } from '@tauri-apps/plugin-fs';
 import { open } from '@tauri-apps/plugin-dialog';
 import { Check, AlertTriangle } from 'lucide-react';
 import { applyTheme, getTheme } from '../themes/themes';
+import { commands } from '../lib/commands';
 import type { ThemeId } from '../themes';
 import { PROFESSION_THEME, type Profession } from '../themes';
 import { getUnlockedThemes, getUnlockedAchievementKeys } from '../achievements/checker';
@@ -686,7 +687,7 @@ export default function Settings() {
          } catch {
            /* private mode */
          }
-         document.dispatchEvent(new CustomEvent('lance:pro-activated'));
+         commands.dispatch('lance:pro-activated');
         setUnlockedThemes(
           new Set(['default', 'studio', 'terminal', 'craft', 'motion', 'lens', 'scale']),
         );
@@ -787,7 +788,7 @@ export default function Settings() {
                 <button
                   key={item.id}
                   onClick={() => setSection(item.id)}
-                  className={`w-full text-left px-3 py-2 text-sm rounded-[8px] transition-colors ${
+                  className={`w-full text-left px-3 py-2 text-sm rounded-sm transition-colors ${
                     section === item.id
                       ? item.danger
                         ? 'bg-[var(--danger-bg)] text-[var(--danger)] font-medium'
@@ -829,7 +830,7 @@ export default function Settings() {
         size="sm"
       >
         <div className="space-y-4">
-          <div className="flex items-start gap-3 p-3 rounded-[8px] bg-[var(--danger-bg)]">
+          <div className="flex items-start gap-3 p-3 rounded-sm bg-[var(--danger-bg)]">
             <AlertTriangle size={18} className="text-[var(--danger)] flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-[var(--danger)]">This cannot be undone.</p>
@@ -852,7 +853,7 @@ export default function Settings() {
               value={resetConfirmText}
               onChange={(e) => setResetConfirmText(e.target.value)}
               placeholder="Lance, The Tool for Freelancers"
-              className="w-full px-3 py-2 text-sm rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 bg-[var(--bg-card)] border border-[var(--border-color)] focus:border-[var(--accent)] focus:ring-[var(--accent)]/20"
+              className="w-full px-3 py-2 text-sm rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 bg-[var(--bg-card)] border border-[var(--border-color)] focus:border-[var(--accent)] focus:ring-[var(--accent)]/20"
               autoFocus
             />
           </div>
@@ -930,7 +931,7 @@ export default function Settings() {
                 placeholder="LANCE-XXXX-XXXX-XXXX-XXXX"
                 maxLength={25}
                 disabled={licenseActivating || licenseSuccess}
-                className={`w-full px-3 py-2 text-sm rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 bg-[var(--bg-card)] font-mono tracking-wider ${
+                className={`w-full px-3 py-2 text-sm rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 bg-[var(--bg-card)] font-mono tracking-wider ${
                   licenseError
                     ? 'border border-[var(--danger)] focus:border-[var(--danger)] focus:ring-[var(--danger)]/20'
                     : licenseSuccess
@@ -992,7 +993,7 @@ export default function Settings() {
               Your Lance backup includes all your data · clients, projects, invoices, and everything
               else.
             </p>
-            <div className="flex items-start gap-2 p-3 rounded-[8px] bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+            <div className="flex items-start gap-2 p-3 rounded-sm bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
               <AlertTriangle
                 size={16}
                 className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5"
@@ -1048,7 +1049,7 @@ export default function Settings() {
         size="sm"
       >
         <div className="space-y-4">
-          <div className="flex items-start gap-3 p-3 rounded-[8px] bg-amber-50 dark:bg-amber-900/20">
+          <div className="flex items-start gap-3 p-3 rounded-sm bg-amber-50 dark:bg-amber-900/20">
             <AlertTriangle
               size={18}
               className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5"
@@ -1100,7 +1101,7 @@ export default function Settings() {
             </p>
           </div>
 
-          <div className="p-3 rounded-[8px] bg-[var(--bg-secondary)] border border-[var(--border-color)]">
+          <div className="p-3 rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-color)]">
             <p className="text-xs text-[var(--text-secondary)]">
               {importReplaceMode
                 ? 'REPLACE all existing data with the imported data. This cannot be undone.'
@@ -1147,7 +1148,7 @@ export default function Settings() {
                 value={importReplaceConfirm}
                 onChange={(e) => setImportReplaceConfirm(e.target.value)}
                 placeholder="REPLACE"
-                className="w-full px-3 py-2 text-sm border border-red-300 dark:border-red-700 rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-red-500 font-mono"
+                className="w-full px-3 py-2 text-sm border border-red-300 dark:border-red-700 rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-red-500 font-mono"
               />
             </div>
           )}

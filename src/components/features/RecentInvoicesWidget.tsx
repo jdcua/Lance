@@ -24,7 +24,7 @@ export default function RecentInvoicesWidget() {
       {recent.map((inv) => {
         const client = clients.find((c) => c.id === inv.client_id);
         return (
-          <div key={inv.id} className="flex items-center justify-between px-3 py-1.5 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+          <div key={inv.id} className="flex items-center justify-between px-3 py-1.5 bg-[var(--bg-secondary)] rounded-xs text-xs">
             <div className="flex-1 min-w-0">
               <span className="text-[var(--text-primary)]">
                 {inv.invoice_number}

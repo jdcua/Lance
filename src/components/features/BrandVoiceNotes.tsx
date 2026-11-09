@@ -116,7 +116,7 @@ export default function BrandVoiceNotes({ clientId }: { clientId: string }) {
   };
 
   const inputClass =
-    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
@@ -124,7 +124,7 @@ export default function BrandVoiceNotes({ clientId }: { clientId: string }) {
         <div className="flex items-center justify-between">
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Brand Voice</h4>
         </div>
-        <div className="h-20 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />
+        <div className="h-20 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
       </div>
     );
   }
@@ -155,7 +155,7 @@ export default function BrandVoiceNotes({ clientId }: { clientId: string }) {
       </div>
 
       {(showForm || !brandVoice) && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <input
             type="text"
             placeholder="Brand voice name"
@@ -199,24 +199,24 @@ export default function BrandVoiceNotes({ clientId }: { clientId: string }) {
       {brandVoice && !showForm && (
         <div className="space-y-2">
           {brandVoice.name && (
-            <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+            <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
               <p className="font-medium text-[var(--text-primary)]">{brandVoice.name}</p>
             </div>
           )}
           {brandVoice.attributes && (
-            <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+            <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
               <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1">Attributes</p>
               <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{brandVoice.attributes}</p>
             </div>
           )}
           {brandVoice.examples && (
-            <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+            <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
               <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1">Examples</p>
               <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{brandVoice.examples}</p>
             </div>
           )}
           {brandVoice.dos_donts && (
-            <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+            <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
               <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1">Do's / Don'ts</p>
               <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{brandVoice.dos_donts}</p>
             </div>

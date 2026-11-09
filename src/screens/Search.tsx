@@ -180,7 +180,7 @@ export default function SearchScreen() {
               <div className="h-4 w-24 bg-[var(--bg-secondary)] rounded skeleton-pulse mb-2" />
               <div className="space-y-2">
                 {[...Array(3)].map((_, j) => (
-                  <div key={j} className="h-12 bg-[var(--bg-secondary)] rounded-[8px] skeleton-pulse" />
+                  <div key={j} className="h-12 bg-[var(--bg-secondary)] rounded-sm skeleton-pulse" />
                 ))}
               </div>
             </div>
@@ -202,7 +202,7 @@ export default function SearchScreen() {
             onChange={(e) => setSearchParams({ q: e.target.value }, { replace: true })}
             placeholder="Search clients, proposals, projects, invoices, contracts, time, expenses, assets…"
             aria-label="Search"
-            className="w-full pl-10 pr-4 py-3 text-sm bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[10px] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+            className="w-full pl-10 pr-4 py-3 text-sm glass rounded-[10px] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
           />
         </div>
       </div>
@@ -218,9 +218,9 @@ export default function SearchScreen() {
       ) : (
         <>
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-1">
+        <h1 className="font-display text-lg font-semibold text-[var(--text-primary)] mb-1">
           Search results for "<span className="text-[var(--accent-ink,var(--accent))]">{query}</span>"
-        </h2>
+        </h1>
         <p className="text-sm text-[var(--text-secondary)]">
           {totalResults} result{totalResults !== 1 ? 's' : ''} across {(() => { const n = SECTIONS.filter((s) => (results[s.type]?.length || 0) > 0).length; return `${n} categor${n !== 1 ? 'ies' : 'y'}`; })()}
         </p>
@@ -250,7 +250,7 @@ export default function SearchScreen() {
                     <button
                       key={item.id}
                       onClick={() => navigate(item.path)}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px] hover:bg-[var(--bg-secondary)] transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-sm hover:bg-[var(--bg-secondary)] transition-colors text-left"
                     >
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-[var(--text-primary)] truncate">{item.label}</p>

@@ -160,14 +160,14 @@ export default function NewProposal() {
         Back to Proposals
       </button>
 
-      <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-6">New Proposal</h2>
+      <h1 className="font-display text-lg font-semibold text-[var(--text-primary)] mb-6">New Proposal</h1>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_380px] items-start">
         <div className="min-w-0">
       <Card className="mb-6">
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Client *</label>
+            <label className="form-label">Client *</label>
             <ClientSelect
               clients={clients}
               value={form.client_id}
@@ -177,47 +177,47 @@ export default function NewProposal() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Proposal Title *</label>
+            <label className="form-label">Proposal Title *</label>
             <input
               type="text"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="e.g. Website Redesign Proposal"
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               autoFocus
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Project Type</label>
+            <label className="form-label">Project Type</label>
             <input
               type="text"
               value={form.project_type}
               onChange={(e) => setForm({ ...form, project_type: e.target.value })}
               placeholder="e.g. Brand refresh, Retainer, Audit"
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Scope of Work</label>
+            <label className="form-label">Scope of Work</label>
             <textarea
               value={form.scope}
               onChange={(e) => { setForm({ ...form, scope: e.target.value }); setWarnings([]); setDismissedWarnings(new Set()); }}
               placeholder="Describe the scope of work..."
               rows={3}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 resize-none"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 resize-none"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Rate Type</label>
+              <label className="form-label">Rate Type</label>
               <select
                 value={form.rate_type}
                 aria-label="Rate Type"
                 onChange={(e) => setForm({ ...form, rate_type: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               >
                 {proposalTypes.map((pt) => (
                   <option key={pt} value={pt}>{pt}</option>
@@ -225,24 +225,24 @@ export default function NewProposal() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Rate ({form.rate_type === 'hourly' ? `${currencySymbol}/hr` : form.rate_type === 'per-shoot' ? `${currencySymbol}/shoot` : form.rate_type === 'per-word' ? `${currencySymbol}/word` : form.rate_type === 'per-session' ? `${currencySymbol}/session` : form.rate_type === 'per-track' ? `${currencySymbol}/track` : form.rate_type === 'per-look' ? `${currencySymbol}/look` : form.rate_type === 'per-event' ? `${currencySymbol}/event` : form.rate_type === 'per-commission' ? `${currencySymbol}/commission` : form.rate_type === 'per-plan' ? `${currencySymbol}/plan` : form.rate_type === 'per-closing' ? `${currencySymbol}/closing` : form.rate_type === 'per-campaign' ? `${currencySymbol}/campaign` : form.rate_type === 'per-placement' ? `${currencySymbol}/placement` : form.rate_type === 'per-project' ? `${currencySymbol}/project` : form.rate_type === 'per-track' ? `${currencySymbol}/track` : form.rate_type === 'milestone' ? `${currencySymbol}/milestone` : form.rate_type === 'retainer' ? `${currencySymbol}/retainer` : currencySymbol})</label>
+              <label className="form-label">Rate ({form.rate_type === 'hourly' ? `${currencySymbol}/hr` : form.rate_type === 'per-shoot' ? `${currencySymbol}/shoot` : form.rate_type === 'per-word' ? `${currencySymbol}/word` : form.rate_type === 'per-session' ? `${currencySymbol}/session` : form.rate_type === 'per-track' ? `${currencySymbol}/track` : form.rate_type === 'per-look' ? `${currencySymbol}/look` : form.rate_type === 'per-event' ? `${currencySymbol}/event` : form.rate_type === 'per-commission' ? `${currencySymbol}/commission` : form.rate_type === 'per-plan' ? `${currencySymbol}/plan` : form.rate_type === 'per-closing' ? `${currencySymbol}/closing` : form.rate_type === 'per-campaign' ? `${currencySymbol}/campaign` : form.rate_type === 'per-placement' ? `${currencySymbol}/placement` : form.rate_type === 'per-project' ? `${currencySymbol}/project` : form.rate_type === 'per-track' ? `${currencySymbol}/track` : form.rate_type === 'milestone' ? `${currencySymbol}/milestone` : form.rate_type === 'retainer' ? `${currencySymbol}/retainer` : currencySymbol})</label>
               <input
                 type="number"
                 min={0}
                 value={form.rate}
                 onChange={(e) => { const v = e.target.value; setForm({ ...form, rate: Number(v) < 0 ? '0' : v }); }}
                 placeholder="0.00"
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Timeline</label>
+              <label className="form-label">Timeline</label>
               <input
                 type="text"
                 value={form.timeline}
                 onChange={(e) => setForm({ ...form, timeline: e.target.value })}
                 placeholder="e.g. 4 weeks"
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               />
             </div>
           </div>
@@ -277,7 +277,7 @@ export default function NewProposal() {
           {activeWarnings.map((w) => (
             <div
               key={w.pattern}
-              className="flex items-start gap-2 px-3 py-2 rounded-[8px] bg-[var(--warning-bg)] text-[var(--warning-text)] text-xs"
+              className="flex items-start gap-2 px-3 py-2 rounded-sm bg-[var(--warning-bg)] text-[var(--warning-text)] text-xs"
             >
               <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
               <span className="flex-1">{w.warning}</span>

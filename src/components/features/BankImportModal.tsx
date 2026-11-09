@@ -283,13 +283,13 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
             )}
           </p>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Category for all imported rows
             </label>
             <select aria-label="Category"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
             >
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>
@@ -300,7 +300,7 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
           </div>
           <div className="space-y-1.5 max-h-[240px] overflow-y-auto">
             {rows.slice(0, 30).map((r, i) => (
-              <div key={i} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+              <div key={i} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
                 <span className="text-[var(--text-primary)] truncate">{r.description}</span>
                 <span className="text-[var(--text-secondary)] flex-shrink-0 ml-2">
                   {r.date} · {Math.abs(r.amount).toFixed(2)}
@@ -339,7 +339,7 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
                   return (
                     <div
                       key={i}
-                      className="flex items-center justify-between gap-2 px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs"
+                      className="flex items-center justify-between gap-2 px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-[var(--text-primary)] truncate">{m.row.description}</p>

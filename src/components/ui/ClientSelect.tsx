@@ -73,7 +73,7 @@ export default function ClientSelect({ clients, value, onChange, placeholder = '
     }
   };
 
-  const inputClass = "w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)] text-[var(--text-primary)]";
+  const inputClass = "w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)] text-[var(--text-primary)]";
 
   return (
     <div ref={ref} className="relative">
@@ -94,14 +94,14 @@ export default function ClientSelect({ clients, value, onChange, placeholder = '
       </button>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px] shadow-lg z-20 max-h-[220px] overflow-hidden flex flex-col">
+        <div className="absolute left-0 right-0 top-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-sm shadow-lg z-20 max-h-[220px] overflow-hidden flex flex-col">
           <div className="p-2 border-b border-[var(--border-color)]">
             <input
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search clients..."
-              className="w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]"
+              className="w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]"
               autoFocus
               onClick={e => e.stopPropagation()}
             />

@@ -277,7 +277,7 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Kanban Board</h4>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2">
-          {[1, 2, 3, 4].map(i => <div key={i} className="w-[260px] h-40 bg-[var(--bg-secondary)] rounded-[8px] animate-pulse flex-shrink-0" />)}
+          {[1, 2, 3, 4].map(i => <div key={i} className="w-[260px] h-40 bg-[var(--bg-secondary)] rounded-sm animate-pulse flex-shrink-0" />)}
         </div>
       </div>
     );
@@ -325,7 +325,7 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
                 value={newColumnName}
                 onChange={e => setNewColumnName(e.target.value)}
                 placeholder="Column name..."
-                className="w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+                className="w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
                 autoFocus
                 onKeyDown={e => { if (e.key === 'Enter') handleAddColumn(); if (e.key === 'Escape') setShowAddColumn(false); }}
               />
@@ -363,7 +363,7 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
                 type="text"
                 value={columnSettings.name}
                 onChange={e => setColumnSettings(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                className="w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               />
             </div>
             <div>
@@ -387,7 +387,7 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
                 value={columnSettings.wipLimit}
                 onChange={e => setColumnSettings(prev => ({ ...prev, wipLimit: e.target.value }))}
                 placeholder="No limit"
-                className="w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                className="w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               />
             </div>
               <div className="flex items-center justify-between pt-2 border-t border-[var(--border-color)]">

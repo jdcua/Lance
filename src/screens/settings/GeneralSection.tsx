@@ -8,6 +8,7 @@ import { formatCurrency } from '../../utils/format';
 import { openCheckout } from '../../utils/tauri';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
+import { commands } from '../../lib/commands';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { getArchetype, ARCHETYPE_LIST } from '../../archetypes';
 import { getTheme, applyTheme } from '../../themes/themes';
@@ -396,7 +397,7 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
               variant="secondary"
               size="sm"
               onClick={() => {
-                document.dispatchEvent(new CustomEvent('lance:open-archetype-picker'));
+                commands.dispatch('lance:open-archetype-picker');
               }}
             >
               Change <ArrowRight size={14} />
@@ -428,7 +429,7 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
                       }
                     }
                   }}
-                  className="flex items-center gap-2 px-3 py-2 rounded-[8px] text-xs text-left transition-colors hover:bg-[var(--bg-secondary)] border border-[var(--border-color)] bg-[var(--bg-card)]"
+                  className="flex items-center gap-2 px-3 py-2 rounded-sm text-xs text-left transition-colors hover:bg-[var(--bg-secondary)] border border-[var(--border-color)] bg-[var(--bg-card)]"
                 >
                   <span>{archetype.emoji}</span>
                   <span className="text-[var(--text-primary)] truncate">

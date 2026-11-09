@@ -73,7 +73,7 @@ export default function SLATracker({ projectId }: { projectId: string }) {
   const metCount = slas.filter(s => s.actual && s.target && parseFloat(s.actual) >= parseFloat(s.target)).length;
   const totalCount = slas.length;
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
 
   if (loading) {
     return (
@@ -82,7 +82,7 @@ export default function SLATracker({ projectId }: { projectId: string }) {
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">SLA Tracking</h4>
         </div>
         <div className="space-y-1">
-          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
+          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
         </div>
       </div>
     );
@@ -98,14 +98,14 @@ export default function SLATracker({ projectId }: { projectId: string }) {
       </div>
 
       {totalCount > 0 && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-[6px] bg-[var(--bg-secondary)] text-xs">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xs bg-[var(--bg-secondary)] text-xs">
           <TrendingUp size={10} className="text-[var(--accent-ink,var(--accent))]" />
           <span className="text-[var(--text-primary)]">{metCount}/{totalCount} metrics meeting target</span>
         </div>
       )}
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <input type="text" placeholder="Metric name" value={form.metric_name} onChange={(e) => setForm({ ...form, metric_name: e.target.value })} className={inputClass} autoFocus />
           <div className="grid grid-cols-2 gap-2">
             <input type="text" placeholder="Target value" value={form.target} onChange={(e) => setForm({ ...form, target: e.target.value })} className={inputClass} />
@@ -126,7 +126,7 @@ export default function SLATracker({ projectId }: { projectId: string }) {
           {slas.map((sla) => {
             const isMet = sla.actual && sla.target && parseFloat(sla.actual) >= parseFloat(sla.target);
             return (
-              <div key={sla.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+              <div key={sla.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isMet ? 'bg-[#16A34A]' : 'bg-[#DC2626]'}`} />
                   <span className="font-medium text-[var(--text-primary)] truncate">{sla.metric_name}</span>

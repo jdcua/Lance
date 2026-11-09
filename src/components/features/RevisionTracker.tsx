@@ -29,7 +29,7 @@ export default function RevisionTracker({ projectId }: { projectId: string }) {
     setSaving(false);
   };
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
 
   return (
     <div className="space-y-3">
@@ -41,7 +41,7 @@ export default function RevisionTracker({ projectId }: { projectId: string }) {
       </div>
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <p className="text-[10px] text-[var(--text-tertiary)]">Round {nextRound}</p>
           <input type="text" placeholder="What changed in this revision?" value={changeSummary} onChange={(e) => setChangeSummary(e.target.value)} className={inputClass} autoFocus />
           <div className="flex justify-end gap-2">
@@ -56,7 +56,7 @@ export default function RevisionTracker({ projectId }: { projectId: string }) {
       ) : (
         <div className="space-y-1">
           {list.map((r) => (
-            <div key={r.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+            <div key={r.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
               <div className="flex-1 min-w-0 flex items-center gap-2">
                 <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] flex-shrink-0 ${r.approved ? 'bg-[var(--accent)] text-[var(--accent-on)]' : 'bg-[var(--border-color)] text-[var(--text-secondary)]'}`}>
                   {r.round_number}

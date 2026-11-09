@@ -76,7 +76,7 @@ export default function DeliveryTracker({ projectId }: { projectId: string }) {
   } as const;
   const StatusIcon = statusConfig[status].icon;
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
 
   if (loading) return <p className="text-xs text-[var(--text-tertiary)] py-2">Loading...</p>;
 
@@ -92,7 +92,7 @@ export default function DeliveryTracker({ projectId }: { projectId: string }) {
       {!delivery && !editing ? (
         <p className="text-xs text-[var(--text-tertiary)] py-2">No delivery record yet.</p>
       ) : editing ? (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <div className="grid grid-cols-2 gap-2">
             <input type="number" placeholder="Selects count" value={form.selects_count} onChange={(e) => setForm({ ...form, selects_count: e.target.value })} className={inputClass} />
             <input type="number" placeholder="Delivered count" value={form.delivered_count} onChange={(e) => setForm({ ...form, delivered_count: e.target.value })} className={inputClass} />
@@ -106,14 +106,14 @@ export default function DeliveryTracker({ projectId }: { projectId: string }) {
           </div>
         </div>
       ) : (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2 text-xs">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2 text-xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-[var(--text-tertiary)]">
                 <span className="font-medium text-[var(--text-primary)]">{delivered}</span> / {selects} delivered
               </span>
             </div>
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${statusConfig[status].color} bg-[var(--bg-card)]`}>
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${statusConfig[status].color} glass`}>
               <StatusIcon size={10} /> {statusConfig[status].label}
             </span>
           </div>

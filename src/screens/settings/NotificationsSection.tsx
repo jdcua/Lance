@@ -2,6 +2,7 @@ import type { ChangeEvent } from 'react';
 import { useStore } from '../../store';
 import { setPref, usePrefs, type MotionPref, type ContrastPref, type TextScalePref } from '../../lib/prefs';
 import { getFeatureFlags } from '../../lib/constants';
+import { commands } from '../../lib/commands';
 import Card from '../../components/ui/Card';
 import PrefToggle from '../../components/ui/PrefToggle';
 import { SectionHead, type SettingsBag } from './shared';
@@ -220,7 +221,7 @@ export default function NotificationsSection({ bag }: { bag: SettingsBag }) {
           {/* Delays */}
           <div className="grid grid-cols-2 gap-4 pt-2 border-t border-[var(--border-color)]">
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              <label className="form-label">
                 Proposal delay (days)
               </label>
               <input
@@ -233,14 +234,14 @@ export default function NotificationsSection({ bag }: { bag: SettingsBag }) {
                   bag.setFuProposalDelay(v);
                   saveFollowUpSettings({ proposal_delay_days: v });
                 }}
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               />
               <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
                 First follow-up triggers after this many days of no response.
               </p>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              <label className="form-label">
                 Invoice overdue delay (days)
               </label>
               <input
@@ -253,7 +254,7 @@ export default function NotificationsSection({ bag }: { bag: SettingsBag }) {
                   bag.setFuInvoiceDelay(v);
                   saveFollowUpSettings({ invoice_delay_days: v });
                 }}
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               />
               <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
                 First reminder triggers after due date passes by this many days.
@@ -281,9 +282,7 @@ export default function NotificationsSection({ bag }: { bag: SettingsBag }) {
                 (fn: (e: ChangeEvent<HTMLInputElement>) => void) =>
                 (e: ChangeEvent<HTMLInputElement>) => {
                   if (!pro) {
-                    document.dispatchEvent(
-                      new CustomEvent('lance:open-upgrade', { detail: 'late fees' }),
-                    );
+                    commands.dispatch('lance:open-upgrade', 'late fees');
                     return;
                   }
                   fn(e);
@@ -325,7 +324,7 @@ export default function NotificationsSection({ bag }: { bag: SettingsBag }) {
                         bag.setFuLateFeePercent(v);
                         saveFollowUpSettings({ lateFeePercent: v });
                       })}
-                      className="w-20 px-2 py-1.5 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                      className="w-20 px-2 py-1.5 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     />
                   </label>
                 </div>

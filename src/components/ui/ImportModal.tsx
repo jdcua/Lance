@@ -504,7 +504,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                 </p>
                 <div className="space-y-1 max-h-32 overflow-y-auto">
                   {importHistory.slice(0, 8).map((h) => (
-                    <div key={h.id} className="flex items-center justify-between text-xs px-2 py-1 rounded-[6px] hover:bg-[var(--bg-secondary)]">
+                    <div key={h.id} className="flex items-center justify-between text-xs px-2 py-1 rounded-xs hover:bg-[var(--bg-secondary)]">
                       <span className="truncate text-[var(--text-secondary)]" title={h.filename}>{h.filename}</span>
                       <span className={`flex-shrink-0 ml-2 text-[10px] font-medium ${
                         h.status === 'imported' ? 'text-[var(--accent-ink,var(--accent))]'
@@ -552,7 +552,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
         {step === 3 && (
           <div className="space-y-4">
             {!classificationBannerDismissed && (
-              <div className="flex items-start gap-2 px-3 py-2.5 rounded-[8px] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+              <div className="flex items-start gap-2 px-3 py-2.5 rounded-sm bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
                 <Info size={14} className="text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-blue-800 dark:text-blue-300 font-medium">Classification is a suggestion</p>
@@ -583,7 +583,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                   <button
                     key={i}
                     onClick={() => setReviewIndex(i)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-[8px] text-xs transition-colors flex-shrink-0 ${
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm text-xs transition-colors flex-shrink-0 ${
                       isCurrent
                         ? 'bg-[var(--accent)]/10 text-[var(--text-primary)] border border-[var(--accent)]/30'
                         : isSkipped
@@ -644,7 +644,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                   <>
                     {/* Entity type override */}
                     {currentDetection.fileType !== 'image' && (
-                      <div className="p-3 rounded-[8px] bg-[var(--bg-secondary)] border border-[var(--border-color)] space-y-2">
+                      <div className="p-3 rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-color)] space-y-2">
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] font-semibold text-[var(--text-secondary)]">Detected as:</span>
                           <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
@@ -664,7 +664,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                           <select aria-label="Currentdetection.useroverride || currentdetection.detectedentity"
                             value={currentDetection.userOverride || currentDetection.detectedEntity}
                             onChange={(e) => handleOverrideType(reviewIndex, e.target.value as DetectedEntityType)}
-                            className="w-full px-3 py-2 text-sm border-2 border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 font-medium"
+                            className="w-full px-3 py-2 text-sm border-2 border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 font-medium"
                           >
                             {(['client_list', 'project_list', 'invoice', 'expense_list', 'contract', 'proposal', 'financial_data', 'attachment', 'unknown'] as DetectedEntityType[]).map(t => (
                               <option key={t} value={t}>{entityTypeLabel(t)}</option>
@@ -695,7 +695,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                             </span>
                             <div className="grid grid-cols-2 gap-2">
                               {Object.entries(currentDetection.preview.extractedFields).map(([key, value]) => (
-                                <div key={key} className="bg-[var(--bg-secondary)] rounded-[6px] px-3 py-1.5">
+                                <div key={key} className="bg-[var(--bg-secondary)] rounded-xs px-3 py-1.5">
                                   <span className="text-[10px] text-[var(--text-tertiary)] block">{key.replace(/_/g, ' ')}</span>
                                   <span className="text-xs text-[var(--text-primary)] truncate block">{value}</span>
                                 </div>
@@ -709,8 +709,8 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                             <span className="text-[10px] text-[var(--text-tertiary)] font-medium mb-2 block">
                               Detected Line Items ({currentDetection.preview.extractedLineItems.length})
                             </span>
-                            <div className="border border-[var(--border-color)] rounded-[8px] overflow-x-auto">
-                              <table className="w-full text-xs">
+                            <div className="border border-[var(--border-color)] rounded-sm overflow-x-auto">
+                              <table className="data-table w-full text-xs">
                                 <thead>
                                   <tr className="bg-[var(--bg-secondary)]">
                                     <th scope="col" className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--text-secondary)]">Description</th>
@@ -739,7 +739,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                             <summary className="text-[10px] text-[var(--text-tertiary)] cursor-pointer hover:text-[var(--text-secondary)]">
                               View raw text
                             </summary>
-                            <pre className="mt-1 text-[10px] text-[var(--text-tertiary)] bg-[var(--bg-secondary)] rounded-[6px] p-3 max-h-[150px] overflow-y-auto whitespace-pre-wrap font-mono">
+                            <pre className="mt-1 text-[10px] text-[var(--text-tertiary)] bg-[var(--bg-secondary)] rounded-xs p-3 max-h-[150px] overflow-y-auto whitespace-pre-wrap font-mono">
                               {currentDetection.preview.rawText}
                             </pre>
                           </details>
@@ -753,7 +753,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
                         <img
                           src={currentDetection.preview.imageDataUrl}
                           alt={currentDetection.file.name}
-                          className="rounded-[8px] border border-[var(--border-color)] max-w-[200px] max-h-[200px] object-contain bg-[var(--bg-secondary)]"
+                          className="rounded-sm border border-[var(--border-color)] max-w-[200px] max-h-[200px] object-contain bg-[var(--bg-secondary)]"
                         />
                         <div className="text-xs text-[var(--text-secondary)] space-y-1">
                           <p>{currentDetection.file.name}</p>
@@ -836,7 +836,7 @@ export default function ImportModal({ open, onClose, initialFiles }: ImportModal
             <div className="w-14 h-14 rounded-full bg-[var(--accent-bg)] flex items-center justify-center mx-auto mb-3">
               <Check size={28} className="text-[var(--accent-ink,var(--accent))]" />
             </div>
-            <h3 className="text-lg font-semibold text-[var(--text-primary)]" style={{ fontFamily: "'Syne', sans-serif" }}>
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">
               Import Complete
             </h3>
             <div className="flex justify-center gap-6 text-xs">

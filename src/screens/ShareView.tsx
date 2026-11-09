@@ -339,7 +339,7 @@ export default function ShareView() {
         </div>
 
         <div className="share-prepped">Prepared for {clientName}</div>
-        <h1 className="share-title">{entity.title}</h1>
+        <h1 className="font-display share-title">{entity.title}</h1>
         <div className="share-subtitle">
           {isContract ? 'Service agreement' : 'Proposal'} · {formatDate(token.created_at)}
         </div>

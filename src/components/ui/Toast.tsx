@@ -10,7 +10,7 @@ const icons = {
 };
 
 const colors = {
-  success: 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] border-[var(--accent)]/20',
+  success: 'bg-[var(--success-bg)] text-[var(--success-ink,var(--success))] border-[var(--success)]/20',
   error: 'bg-[var(--danger-bg)] text-[var(--danger)] border-[var(--danger)]/20',
   info: 'bg-[var(--info-bg)] text-[var(--info-ink,var(--info))] border-[var(--info)]/20',
   warning: 'bg-[var(--medium-conf-bg)] text-[var(--medium-conf-text)] border-[var(--medium-conf-text)]/20',
@@ -29,7 +29,7 @@ export default function ToastContainer() {
           aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
           onMouseEnter={() => pause(toast.id)}
           onMouseLeave={() => resume(toast.id)}
-          className={`pointer-events-auto flex flex-col gap-2 px-4 py-3 rounded-[8px] border shadow-lg text-sm max-w-sm animate-slide-in ${colors[toast.type]}`}
+          className={`pointer-events-auto flex flex-col gap-2 px-4 py-3 rounded-[14px] border shadow-lg text-sm max-w-sm animate-slide-in backdrop-blur-xl ${colors[toast.type]}`}
         >
           <div className="flex items-center gap-2">
             {(() => {

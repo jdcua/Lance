@@ -71,7 +71,7 @@ export default function MetricSnapshot({ projectId }: { projectId: string }) {
     } catch (e) { console.error('[MetricSnapshot] delete failed:', e); }
   };
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
 
   if (loading) {
     return (
@@ -80,7 +80,7 @@ export default function MetricSnapshot({ projectId }: { projectId: string }) {
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Metric Snapshots</h4>
         </div>
         <div className="space-y-1">
-          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
+          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
         </div>
       </div>
     );
@@ -96,7 +96,7 @@ export default function MetricSnapshot({ projectId }: { projectId: string }) {
       </div>
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <input type="text" placeholder="Metric name" value={form.metric} onChange={(e) => setForm({ ...form, metric: e.target.value })} className={inputClass} autoFocus />
           <div className="grid grid-cols-2 gap-2">
             <input type="number" placeholder="Value" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} className={inputClass} />
@@ -118,7 +118,7 @@ export default function MetricSnapshot({ projectId }: { projectId: string }) {
             const pct = item.target !== 0 ? (item.value / item.target) * 100 : 0;
             const onTarget = item.value >= item.target;
             return (
-              <div key={item.id} className="px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs space-y-1.5">
+              <div key={item.id} className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0 flex items-center gap-2">
                     <span className="font-medium text-[var(--text-primary)]">{item.metric}</span>

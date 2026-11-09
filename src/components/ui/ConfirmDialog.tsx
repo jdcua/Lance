@@ -48,7 +48,7 @@ export default function ConfirmDialog({
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center">
       <div
-        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/30 backdrop-blur-sm animate-fade-in"
         onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       />
       <div
@@ -56,7 +56,7 @@ export default function ConfirmDialog({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative bg-[var(--bg-card)] rounded-[12px] shadow-xl w-full max-w-sm mx-4 animate-fade-scale-in"
+        className="relative glass rounded-[20px] w-full max-w-sm mx-4 animate-fade-scale-in"
         onKeyDown={(e) => {
           // Escape and Tab MUST reach the document handlers (dismiss + the
           // shared focus trap); Cmd/Ctrl chords stay available to chrome.

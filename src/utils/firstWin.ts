@@ -8,6 +8,7 @@
  * - No countdown, no pressure copy here; the modal's own "Continue free"
  *   path is always equally visible. Trial clock logic untouched.
  */
+import { commands } from '../lib/commands';
 
 const KEY = 'lance:first-send-paywall';
 
@@ -17,7 +18,7 @@ export function maybeFirstSendMoment(getTier: () => string): boolean {
     const tier = getTier();
     localStorage.setItem(KEY, 'done');
     if (tier !== 'free' && tier !== 'expired') return false;
-    document.dispatchEvent(new CustomEvent('lance:open-upgrade'));
+    commands.dispatch('lance:open-upgrade');
     return true;
   } catch {
     return false;

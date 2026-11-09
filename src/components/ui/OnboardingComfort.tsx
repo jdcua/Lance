@@ -29,7 +29,7 @@ function Segmented<T extends string>({
             type="button"
             aria-pressed={value === o.value}
             onClick={() => onPick(o.value)}
-            className={`text-xs font-medium px-2.5 py-1 rounded-[8px] border transition-colors ${
+            className={`text-xs font-medium px-2.5 py-1 rounded-sm border transition-colors ${
               value === o.value
                 ? 'border-[var(--accent)] bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]'
                 : 'border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'

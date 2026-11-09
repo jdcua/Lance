@@ -50,6 +50,11 @@ import {
   type TrashEntry,
 } from '../utils/trash';
 import { sanitizeRates, normalizeRates, defaultCurrency } from '../lib/currency';
+import { startLoad, endLoad, setError } from './slices/base';
+import type { Toast, ToastAction, ToastType } from './slices/toasts';
+import { createMetaSlice } from './slices/meta';
+import { createToastsSlice } from './slices/toasts';
+import { createUpdaterSlice } from './slices/updater';
 
 // Public URL of the license worker. Mirrors the value baked into the desktop
 // binary via LANCE_LICENSE_WORKER_URL; needed here because browser mode has no
@@ -211,31 +216,6 @@ async function revokeTokensForEntity(
       return;
     }
   }
-}
-
-type ToastType = 'success' | 'error' | 'info' | 'warning' | 'unlock';
-
-type ToastAction = {
-  label: string;
-  onClick: () => void;
-};
-
-type Toast = {
-  id: string;
-  message: string;
-  type: ToastType;
-  duration?: number;
-  actions?: ToastAction[];
-};
-
-const toastTimers = new Map<
-  string,
-  { timeoutId: ReturnType<typeof setTimeout>; startedAt: number; duration: number }
->();
-
-function clearToastTimer(id: string) {
-  const timer = toastTimers.get(id);
-  if (timer) clearTimeout(timer.timeoutId);
 }
 
 type LoadingKey = string;
@@ -664,20 +644,6 @@ export interface UnifiedStore {
 export type AppStore = UnifiedStore;
 
 export const useStore = create<UnifiedStore>((set, get) => {
-  const startLoad = (key: LoadingKey) => {
-    const s = get();
-    // A (re)load clears its own stale failure: otherwise a recovered load
-    // leaves the error banner up forever. Loading and error keys share
-    // names by convention ('clients', 'timeEntries', …).
-    set({
-      loading: { ...s.loading, [key]: true },
-      errors: s.errors[key] ? { ...s.errors, [key]: null } : s.errors,
-    });
-  };
-  const endLoad = (key: LoadingKey) => set({ loading: { ...get().loading, [key]: false } });
-  const setError = (key: ErrorKey, err: string | null) =>
-    set({ errors: { ...get().errors, [key]: err } });
-
   /** Parse a TEXT-column string list defensively: one corrupt row degrades
    *  to [] instead of failing the whole table load. */
   function parseStringList(raw: unknown): string[] {
@@ -734,6 +700,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
     expenses: [],
     profile: null,
     profileLoaded: false,
+    isLicensed: false,
     communications: [],
     recurringInvoices: [],
     importHistory: [],
@@ -767,90 +734,10 @@ export const useStore = create<UnifiedStore>((set, get) => {
     shareTokens: [],
     achievements: [],
 
-    // ── Meta init ──
-    initialized: false,
-    loading: {},
-    errors: {},
-    isLicensed: false,
-    portalPort: null,
-    portalFailed: false,
-    archetypeAppliedAt: null,
-
-    // ── Toasts init ──
-    toasts: [],
-    addToast: (message, type = 'info', duration, actions) => {
-      const id = crypto.randomUUID();
-      const ms = duration ?? (actions ? 0 : type === 'unlock' ? 4000 : 3000);
-      // Deduplicate identical transient toasts (triple-click saves, retry
-      // loops): refresh the existing one's timer instead of stacking three
-      // copies. Interactive toasts (actions) always stand alone.
-      if (!actions && ms !== 0) {
-        const dupe = get().toasts.find(
-          (t) => t.message === message && t.type === type && !t.actions,
-        );
-        if (dupe) {
-          clearToastTimer(dupe.id);
-          toastTimers.delete(dupe.id);
-          const timeoutId = setTimeout(() => {
-            toastTimers.delete(dupe.id);
-            set((s) => ({ toasts: s.toasts.filter((t) => t.id !== dupe.id) }));
-          }, ms);
-          toastTimers.set(dupe.id, { timeoutId, startedAt: Date.now(), duration: ms });
-          return dupe.id;
-        }
-      }
-      set((s) => ({ toasts: [...s.toasts.slice(-2), { id, message, type, duration, actions }] }));
-      if (ms === 0) return id;
-      const timeoutId = setTimeout(() => {
-        toastTimers.delete(id);
-        set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
-      }, ms);
-      toastTimers.set(id, { timeoutId, startedAt: Date.now(), duration: ms });
-      return id;
-    },
-    removeToast: (id) => {
-      clearToastTimer(id);
-      toastTimers.delete(id);
-      set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
-    },
-    updateToast: (id, message) => {
-      set((s) => ({ toasts: s.toasts.map((t) => (t.id === id ? { ...t, message } : t)) }));
-    },
-    pauseToast: (id) => {
-      const timer = toastTimers.get(id);
-      if (!timer) return;
-      clearTimeout(timer.timeoutId);
-      const elapsed = Date.now() - timer.startedAt;
-      timer.duration = Math.max(0, timer.duration - elapsed);
-      timer.startedAt = 0;
-    },
-    resumeToast: (id) => {
-      const timer = toastTimers.get(id);
-      if (!timer) return;
-      const ms = timer.duration;
-      const startedAt = Date.now();
-      const timeoutId = setTimeout(() => {
-        toastTimers.delete(id);
-        set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
-      }, ms);
-      toastTimers.set(id, { timeoutId, startedAt, duration: ms });
-    },
-
-    // ── Updater init ──
-    updateAvailable: false,
-    updateData: null,
-    isDownloading: false,
-    downloadProgressMB: null,
-    setUpdateAvailable: (data) => set({ updateAvailable: true, updateData: data }),
-    setDownloading: (val) => set({ isDownloading: val }),
-    setDownloadProgress: (mb) => set({ downloadProgressMB: mb }),
-    dismissUpdate: () =>
-      set({
-        updateAvailable: false,
-        updateData: null,
-        isDownloading: false,
-        downloadProgressMB: null,
-      }),
+    // ── Slice composition (meta, toasts, updater) ──
+    ...createMetaSlice(set, get),
+    ...createToastsSlice(set, get),
+    ...createUpdaterSlice(set),
 
     // ── Init ──
     initialize: async () => {
@@ -892,14 +779,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Clients ──
     loadClients: async () => {
-      startLoad('clients');
+      startLoad(set, get, 'clients');
       try {
         set({ clients: await invoke<Client[]>('get_clients') });
       } catch (e) {
         console.error('[store] loadClients failed:', e);
-        setError('clients', String(e));
+        setError(set, get, 'clients', String(e));
       } finally {
-        endLoad('clients');
+        endLoad(set, get, 'clients');
       }
     },
     createClient: async (data) => {
@@ -973,14 +860,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Projects ──
     loadProjects: async () => {
-      startLoad('projects');
+      startLoad(set, get, 'projects');
       try {
         set({ projects: await invoke<Project[]>('get_projects') });
       } catch (e) {
         console.error('[store] loadProjects failed:', e);
-        setError('projects', String(e));
+        setError(set, get, 'projects', String(e));
       } finally {
-        endLoad('projects');
+        endLoad(set, get, 'projects');
       }
     },
     createProject: async (data) => {
@@ -1060,14 +947,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Milestones ──
     loadMilestones: async () => {
-      startLoad('milestones');
+      startLoad(set, get, 'milestones');
       try {
         set({ milestones: await invoke<Milestone[]>('get_milestones') });
       } catch (e) {
         console.error('[store] loadMilestones failed:', e);
-        setError('milestones', String(e));
+        setError(set, get, 'milestones', String(e));
       } finally {
-        endLoad('milestones');
+        endLoad(set, get, 'milestones');
       }
     },
     createMilestone: async (data) => {
@@ -1091,14 +978,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Proposals ──
     loadProposals: async () => {
-      startLoad('proposals');
+      startLoad(set, get, 'proposals');
       try {
         set({ proposals: await invoke<Proposal[]>('get_proposals') });
       } catch (e) {
         console.error('[store] loadProposals failed:', e);
-        setError('proposals', String(e));
+        setError(set, get, 'proposals', String(e));
       } finally {
-        endLoad('proposals');
+        endLoad(set, get, 'proposals');
       }
     },
     createProposal: async (data) => {
@@ -1149,14 +1036,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Contracts ──
     loadContracts: async () => {
-      startLoad('contracts');
+      startLoad(set, get, 'contracts');
       try {
         set({ contracts: await invoke<Contract[]>('get_contracts') });
       } catch (e) {
         console.error('[store] loadContracts failed:', e);
-        setError('contracts', String(e));
+        setError(set, get, 'contracts', String(e));
       } finally {
-        endLoad('contracts');
+        endLoad(set, get, 'contracts');
       }
     },
     createContract: async (data) => {
@@ -1181,14 +1068,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Time Entries ──
     loadTimeEntries: async () => {
-      startLoad('timeEntries');
+      startLoad(set, get, 'timeEntries');
       try {
         set({ timeEntries: await invoke<TimeEntry[]>('get_time_entries') });
       } catch (e) {
         console.error('[store] loadTimeEntries failed:', e);
-        setError('timeEntries', String(e));
+        setError(set, get, 'timeEntries', String(e));
       } finally {
-        endLoad('timeEntries');
+        endLoad(set, get, 'timeEntries');
       }
     },
     createTimeEntry: async (data) => {
@@ -1226,15 +1113,15 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Invoices ──
     loadInvoices: async () => {
-      startLoad('invoices');
+      startLoad(set, get, 'invoices');
       try {
         const raw = await invoke<Invoice[]>('get_invoices');
         set({ invoices: raw.map(parseLineItems) });
       } catch (e) {
         console.error('[store] loadInvoices failed:', e);
-        setError('invoices', String(e));
+        setError(set, get, 'invoices', String(e));
       } finally {
-        endLoad('invoices');
+        endLoad(set, get, 'invoices');
       }
     },
     createInvoice: async (data) => {
@@ -1311,14 +1198,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Payments ──
     loadPayments: async () => {
-      startLoad('payments');
+      startLoad(set, get, 'payments');
       try {
         set({ payments: await invoke<InvoicePayment[]>('get_all_invoice_payments') });
       } catch (e) {
         console.error('[store] loadPayments failed:', e);
-        setError('payments', String(e));
+        setError(set, get, 'payments', String(e));
       } finally {
-        endLoad('payments');
+        endLoad(set, get, 'payments');
       }
     },
     createPayment: async (data) => {
@@ -1333,14 +1220,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Expenses ──
     loadExpenses: async () => {
-      startLoad('expenses');
+      startLoad(set, get, 'expenses');
       try {
         set({ expenses: await invoke<Expense[]>('get_expenses') });
       } catch (e) {
         console.error('[store] loadExpenses failed:', e);
-        setError('expenses', String(e));
+        setError(set, get, 'expenses', String(e));
       } finally {
-        endLoad('expenses');
+        endLoad(set, get, 'expenses');
       }
     },
     createExpense: async (data) => {
@@ -1378,7 +1265,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Profile ──
     loadProfile: async () => {
-      startLoad('profile');
+      startLoad(set, get, 'profile');
       try {
         const profile = await invoke<UserProfile | null>('get_user_profile');
         // Tauri stores rates as a TEXT column (JSON string); browser mode
@@ -1420,7 +1307,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
         set({ profileLoaded: true, profile: null });
         return null;
       } finally {
-        endLoad('profile');
+        endLoad(set, get, 'profile');
       }
     },
     saveProfile: async (data) => {
@@ -1873,14 +1760,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Communications ──
     loadCommunications: async () => {
-      startLoad('communications');
+      startLoad(set, get, 'communications');
       try {
         set({ communications: await invoke<Communication[]>('get_communications') });
       } catch (e) {
         console.error('[store] loadCommunications failed:', e);
-        setError('communications', String(e));
+        setError(set, get, 'communications', String(e));
       } finally {
-        endLoad('communications');
+        endLoad(set, get, 'communications');
       }
     },
     createCommunication: async (data) => {
@@ -1901,15 +1788,15 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Recurring Invoices ──
     loadRecurringInvoices: async () => {
-      startLoad('recurringInvoices');
+      startLoad(set, get, 'recurringInvoices');
       try {
         const raw = await invoke<RecurringInvoice[]>('get_recurring_invoices');
         set({ recurringInvoices: raw.map(parseLineItems) });
       } catch (e) {
         console.error('[store] loadRecurringInvoices failed:', e);
-        setError('recurringInvoices', String(e));
+        setError(set, get, 'recurringInvoices', String(e));
       } finally {
-        endLoad('recurringInvoices');
+        endLoad(set, get, 'recurringInvoices');
       }
     },
     createRecurringInvoice: async (data) => {
@@ -1931,14 +1818,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Import ──
     loadImportHistory: async () => {
-      startLoad('importHistory');
+      startLoad(set, get, 'importHistory');
       try {
         set({ importHistory: await invoke<ImportLog[]>('get_import_log') });
       } catch (e) {
         console.error('[store] loadImportHistory failed:', e);
-        setError('importHistory', String(e));
+        setError(set, get, 'importHistory', String(e));
       } finally {
-        endLoad('importHistory');
+        endLoad(set, get, 'importHistory');
       }
     },
     saveImportFile: async (file) => {
@@ -1955,13 +1842,13 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Attachments ──
     loadAllAttachments: async () => {
-      startLoad('allAttachments');
+      startLoad(set, get, 'allAttachments');
       try {
         set({ allAttachments: await invoke<Attachment[]>('get_all_attachments') });
       } catch (e) {
         console.error('[store] loadAllAttachments failed:', e);
       } finally {
-        endLoad('allAttachments');
+        endLoad(set, get, 'allAttachments');
       }
     },
     createAttachment: async (data) => {
@@ -2025,14 +1912,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Metrics ──
     loadMetricDefs: async () => {
-      startLoad('metricDefs');
+      startLoad(set, get, 'metricDefs');
       try {
         set({ metricDefs: await invoke<MetricDefinition[]>('get_all_metric_definitions') });
       } catch (e) {
         console.error('[store] loadMetricDefs failed:', e);
-        setError('metricDefs', String(e));
+        setError(set, get, 'metricDefs', String(e));
       } finally {
-        endLoad('metricDefs');
+        endLoad(set, get, 'metricDefs');
       }
     },
     createMetricDef: async (data) => {
@@ -2061,7 +1948,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ metricDefs: get().metricDefs.filter((d) => d.id !== id) });
     },
     loadMetricValues: async (definitionId, limit) => {
-      startLoad('metricValues');
+      startLoad(set, get, 'metricValues');
       try {
         const values = await invoke<MetricValue[]>('get_metric_values', {
           definitionId: definitionId ?? null,
@@ -2070,9 +1957,9 @@ export const useStore = create<UnifiedStore>((set, get) => {
         set({ metricValues: values });
       } catch (e) {
         console.error('[store] loadMetricValues failed:', e);
-        setError('metricValues', String(e));
+        setError(set, get, 'metricValues', String(e));
       } finally {
-        endLoad('metricValues');
+        endLoad(set, get, 'metricValues');
       }
     },
     createMetricValue: async (data) => {
@@ -2289,7 +2176,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Export Templates ──
     loadExportTemplates: async () => {
-      startLoad('exportTemplates');
+      startLoad(set, get, 'exportTemplates');
       try {
         const { getDb } = await import('../db');
         const db = await getDb();
@@ -2304,9 +2191,9 @@ export const useStore = create<UnifiedStore>((set, get) => {
         });
       } catch (e) {
         console.error('[store] loadExportTemplates failed:', e);
-        setError('exportTemplates', String(e));
+        setError(set, get, 'exportTemplates', String(e));
       } finally {
-        endLoad('exportTemplates');
+        endLoad(set, get, 'exportTemplates');
       }
     },
     createExportTemplate: async (data) => {
@@ -2357,7 +2244,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Contract Templates ──
     loadContractTemplates: async () => {
-      startLoad('contractTemplates');
+      startLoad(set, get, 'contractTemplates');
       try {
         const { getDb } = await import('../db');
         const db = await getDb();
@@ -2372,9 +2259,9 @@ export const useStore = create<UnifiedStore>((set, get) => {
         });
       } catch (e) {
         console.error('[store] loadContractTemplates failed:', e);
-        setError('contractTemplates', String(e));
+        setError(set, get, 'contractTemplates', String(e));
       } finally {
-        endLoad('contractTemplates');
+        endLoad(set, get, 'contractTemplates');
       }
     },
     createContractTemplate: async (data) => {
@@ -2399,7 +2286,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Project Templates ──
     loadProjectTemplates: async () => {
-      startLoad('projectTemplates');
+      startLoad(set, get, 'projectTemplates');
       try {
         const { getDb } = await import('../db');
         const db = await getDb();
@@ -2414,9 +2301,9 @@ export const useStore = create<UnifiedStore>((set, get) => {
         });
       } catch (e) {
         console.error('[store] loadProjectTemplates failed:', e);
-        setError('projectTemplates', String(e));
+        setError(set, get, 'projectTemplates', String(e));
       } finally {
-        endLoad('projectTemplates');
+        endLoad(set, get, 'projectTemplates');
       }
     },
     loadTemplateMilestones: async (templateId) => {
@@ -2504,14 +2391,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Archetype: Render Logs ──
     loadRenderLogs: async () => {
-      startLoad('renderLogs');
+      startLoad(set, get, 'renderLogs');
       try {
         set({ renderLogs: await invoke<ArchetypeRenderLog[]>('get_all_render_logs') });
       } catch (e) {
         console.error('[store] loadRenderLogs failed:', e);
-        setError('renderLogs', String(e));
+        setError(set, get, 'renderLogs', String(e));
       } finally {
-        endLoad('renderLogs');
+        endLoad(set, get, 'renderLogs');
       }
     },
     createRenderLog: async (data) => {
@@ -2549,7 +2436,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Archetype: Sessions ──
     loadSessions: async (clientId, projectId) => {
-      startLoad('sessions');
+      startLoad(set, get, 'sessions');
       try {
         set({
           sessions: await invoke<ArchetypeSession[]>('get_sessions', {
@@ -2559,9 +2446,9 @@ export const useStore = create<UnifiedStore>((set, get) => {
         });
       } catch (e) {
         console.error('[store] loadSessions failed:', e);
-        setError('sessions', String(e));
+        setError(set, get, 'sessions', String(e));
       } finally {
-        endLoad('sessions');
+        endLoad(set, get, 'sessions');
       }
     },
     createSession: async (data) => {
@@ -2576,14 +2463,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Archetype: Shoots ──
     loadShoots: async () => {
-      startLoad('shoots');
+      startLoad(set, get, 'shoots');
       try {
         set({ shoots: await invoke<ArchetypeShoot[]>('get_all_shoots') });
       } catch (e) {
         console.error('[store] loadShoots failed:', e);
-        setError('shoots', String(e));
+        setError(set, get, 'shoots', String(e));
       } finally {
-        endLoad('shoots');
+        endLoad(set, get, 'shoots');
       }
     },
     createShoot: async (data) => {
@@ -2598,14 +2485,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Archetype: Revisions ──
     loadRevisions: async () => {
-      startLoad('revisions');
+      startLoad(set, get, 'revisions');
       try {
         set({ revisions: await invoke<ArchetypeRevision[]>('get_all_revisions') });
       } catch (e) {
         console.error('[store] loadRevisions failed:', e);
-        setError('revisions', String(e));
+        setError(set, get, 'revisions', String(e));
       } finally {
-        endLoad('revisions');
+        endLoad(set, get, 'revisions');
       }
     },
     createRevision: async (data) => {
@@ -2620,14 +2507,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Archetype: Builds ──
     loadBuilds: async () => {
-      startLoad('builds');
+      startLoad(set, get, 'builds');
       try {
         set({ builds: await invoke<ArchetypeBuild[]>('get_all_builds') });
       } catch (e) {
         console.error('[store] loadBuilds failed:', e);
-        setError('builds', String(e));
+        setError(set, get, 'builds', String(e));
       } finally {
-        endLoad('builds');
+        endLoad(set, get, 'builds');
       }
     },
     createBuild: async (data) => {
@@ -2642,14 +2529,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Archetype: Keywords ──
     loadKeywords: async () => {
-      startLoad('keywords');
+      startLoad(set, get, 'keywords');
       try {
         set({ keywords: await invoke<ArchetypeKeyword[]>('get_all_keywords') });
       } catch (e) {
         console.error('[store] loadKeywords failed:', e);
-        setError('keywords', String(e));
+        setError(set, get, 'keywords', String(e));
       } finally {
-        endLoad('keywords');
+        endLoad(set, get, 'keywords');
       }
     },
     createKeyword: async (data) => {
@@ -2682,14 +2569,14 @@ export const useStore = create<UnifiedStore>((set, get) => {
 
     // ── Archetype: Datasets ──
     loadDatasets: async () => {
-      startLoad('datasets');
+      startLoad(set, get, 'datasets');
       try {
         set({ datasets: await invoke<ArchetypeDataset[]>('get_all_datasets') });
       } catch (e) {
         console.error('[store] loadDatasets failed:', e);
-        setError('datasets', String(e));
+        setError(set, get, 'datasets', String(e));
       } finally {
-        endLoad('datasets');
+        endLoad(set, get, 'datasets');
       }
     },
     createDataset: async (data) => {

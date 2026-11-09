@@ -10,6 +10,7 @@ import {
 } from '../utils/format';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useVisibleList } from '../components/ui/useVisibleList';
+import { commands } from '../lib/commands';
 import BankImportModal from '../components/features/BankImportModal';
 import { useToasts } from '../store/toastStore';
 import type { ToastType } from '../store/toastStore';
@@ -140,9 +141,9 @@ export default function Finance() {
 
   // Global ⌘N dispatch (see App shortcuts).
   useEffect(() => {
-    const handler = () => openNew();
-    document.addEventListener('lance:add-expense', handler);
-    return () => document.removeEventListener('lance:add-expense', handler);
+    const onAddExpense = () => openNew();
+    commands.on('lance:add-expense', onAddExpense);
+    return () => commands.off('lance:add-expense', onAddExpense);
   }, []);
 
   const openEdit = (exp: Expense) => {
@@ -483,6 +484,7 @@ export default function Finance() {
 
   return (
     <div className="p-6">
+      <h1 className="font-display text-lg font-semibold text-[var(--text-primary)] mb-2">Finance</h1>
       <TabBar />
       <LoadError
         error={financeError}
@@ -520,13 +522,13 @@ export default function Finance() {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Category
             </label>
             <select aria-label="Category"
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)]"
             >
               {categories.map((c) => (
                 <option key={c} value={c}>
@@ -536,7 +538,7 @@ export default function Finance() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            <label className="form-label">
               Description *
             </label>
             <input
@@ -544,13 +546,13 @@ export default function Finance() {
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               placeholder="What was this expense for?"
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
               autoFocus
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              <label className="form-label">
                 Amount *
               </label>
               <input
@@ -562,18 +564,18 @@ export default function Finance() {
                   setForm({ ...form, amount: Number(v) < 0 ? '0' : v });
                 }}
                 placeholder="0.00"
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+              <label className="form-label">
                 Date
               </label>
               <input
                 type="date"
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)]"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)]"
               />
             </div>
           </div>
@@ -600,13 +602,13 @@ export default function Finance() {
             </div>
             {form.recurring && (
               <div>
-                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+                <label className="form-label">
                   Frequency
                 </label>
                 <select aria-label="Frequency"
                   value={form.frequency}
                   onChange={(e) => setForm({ ...form, frequency: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                  className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                 >
                   <option value="weekly">Weekly</option>
                   <option value="biweekly">Biweekly</option>

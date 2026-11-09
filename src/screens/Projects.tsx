@@ -13,6 +13,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import ClientSelect from '../components/ui/ClientSelect';
 import { useToasts } from '../store/toastStore';
 import { generateInvoiceNumber } from '../utils/invoiceNumber';
+import { commands } from '../lib/commands';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 import { formatCurrency, relativeDate, DAY_MS } from '../utils/format';
 import { Plus, Pencil, Trash2, CheckCircle2, Circle, Calendar, DollarSign, ChevronRight, FolderKanban, Search, Copy } from 'lucide-react';
@@ -66,9 +67,9 @@ export default function Projects() {
   // External triggers: first-run checklist + Cmd/Ctrl+N shortcut (App.tsx).
   // (The shortcut was previously dispatched here but nothing listened.)
   useEffect(() => {
-    const handler = () => openNewProject();
-    document.addEventListener('lance:add-project', handler);
-    return () => document.removeEventListener('lance:add-project', handler);
+    const onAddProject = () => openNewProject();
+    commands.on('lance:add-project', onAddProject);
+    return () => commands.off('lance:add-project', onAddProject);
   });
 
   const openEditProject = (project: Project) => {
@@ -396,12 +397,12 @@ export default function Projects() {
       <LoadError error={projectsError} onRetry={() => loadProjects()} />
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-[var(--text-primary)]">Projects</h2>
+          <h1 className="font-display text-lg font-semibold text-[var(--text-primary)]">Projects</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-0.5">
             {projects.filter((p) => p.status === 'active').length} active, {projects.length} total
           </p>
         </div>
-        <Button onClick={openNewProject} size="sm" disabled={clients.length === 0}>
+        <Button onClick={openNewProject} size="sm" disabled={clients.length === 0} aria-label="New project">
           <Plus size={14} />
           New Project
         </Button>
@@ -415,7 +416,7 @@ export default function Projects() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search projects..."
-            className="w-full pl-8 pr-3 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]"
+            className="w-full pl-8 pr-3 py-1.5 text-xs border border-[var(--border-color)] rounded-xs placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]"
           />
         </div>
         <div className="flex items-center gap-1">
@@ -454,9 +455,9 @@ export default function Projects() {
           }
           action={
             clients.length === 0 ? (
-              <Button size="sm" disabled={true}>New Project</Button>
+              <Button size="sm" disabled={true} aria-label="Create your first project">New Project</Button>
             ) : (
-              <Button onClick={openNewProject} size="sm" variant="secondary">New Project</Button>
+              <Button onClick={openNewProject} size="sm" variant="secondary" aria-label="New project">New Project</Button>
             )
           }
         />
@@ -503,21 +504,21 @@ export default function Projects() {
                     <button
                       onClick={() => openMilestones(project.id)}
                       aria-label="Expand milestones"
-                      className={`p-1.5 rounded-[8px] transition-colors ${selectedProject === project.id ? 'text-[var(--accent-ink,var(--accent))] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`}
+                      className={`p-1.5 rounded-sm transition-colors ${selectedProject === project.id ? 'text-[var(--accent-ink,var(--accent))] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`}
                     >
                       <ChevronRight size={14} className={`transition-transform ${selectedProject === project.id ? 'rotate-90' : ''}`} />
                     </button>
                     <button
                       onClick={() => openEditProject(project)}
                       aria-label="Edit project"
-                      className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+                      className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
                     >
                       <Pencil size={14} />
                     </button>
                     <button
                       onClick={() => setConfirmDelete({ id: project.id, title: project.title })}
                       aria-label="Delete project"
-                      className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
+                      className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -558,11 +559,11 @@ export default function Projects() {
                           )}
                           {invoicePrompt?.milestone.id === m.id && (
                             <div className="flex items-center gap-1 ml-1">
-                              <button onClick={handleInvoicePromptYes} className="text-[10px] px-1.5 py-0.5 rounded-[6px] bg-[var(--accent)] text-[var(--accent-on)] font-medium">Yes</button>
-                              <button onClick={handleInvoicePromptNo} className="text-[10px] px-1.5 py-0.5 rounded-[6px] bg-[var(--bg-secondary)] text-[var(--text-secondary)] font-medium">Skip</button>
+                              <button onClick={handleInvoicePromptYes} className="text-[10px] px-1.5 py-0.5 rounded-xs bg-[var(--accent)] text-[var(--accent-on)] font-medium">Yes</button>
+                              <button onClick={handleInvoicePromptNo} className="text-[10px] px-1.5 py-0.5 rounded-xs bg-[var(--bg-secondary)] text-[var(--text-secondary)] font-medium">Skip</button>
                             </div>
                           )}
-                          <button onClick={() => handleDeleteMilestone(m.id)} aria-label={milestoneDeleteConfirm === m.id ? 'Confirm delete milestone' : 'Delete milestone'} title={milestoneDeleteConfirm === m.id ? 'Click again to confirm' : 'Delete milestone'} className={milestoneDeleteConfirm === m.id ? 'text-[var(--danger)] font-semibold text-[10px] px-1.5 py-0.5 rounded-[6px] bg-[var(--danger-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--danger)]'}>
+                          <button onClick={() => handleDeleteMilestone(m.id)} aria-label={milestoneDeleteConfirm === m.id ? 'Confirm delete milestone' : 'Delete milestone'} title={milestoneDeleteConfirm === m.id ? 'Click again to confirm' : 'Delete milestone'} className={milestoneDeleteConfirm === m.id ? 'text-[var(--danger)] font-semibold text-[10px] px-1.5 py-0.5 rounded-xs bg-[var(--danger-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--danger)]'}>
                             {milestoneDeleteConfirm === m.id ? 'Sure?' : <Trash2 size={12} />}
                           </button>
                         </div>
@@ -585,11 +586,11 @@ export default function Projects() {
         <div className="space-y-4">
           {!editingProject && projectTemplates.length > 0 && (
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Start from template</label>
+              <label className="form-label">Start from template</label>
               <select aria-label="Start from template"
                 value={selectedTemplateId}
                 onChange={(e) => handleTemplateSelect(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               >
                 <option value="">No template · start fresh</option>
                 {projectTemplates.map((tpl) => (
@@ -599,7 +600,7 @@ export default function Projects() {
             </div>
           )}
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Client *</label>
+            <label className="form-label">Client *</label>
             <ClientSelect
               clients={clients}
               value={pform.client_id}
@@ -608,23 +609,23 @@ export default function Projects() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Title *</label>
+            <label className="form-label">Title *</label>
             <input
               type="text"
               value={pform.title}
               onChange={(e) => setPForm({ ...pform, title: e.target.value })}
               placeholder="Project title"
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               autoFocus
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Status</label>
+              <label className="form-label">Status</label>
               <select aria-label="Status"
                 value={pform.status}
                 onChange={(e) => setPForm({ ...pform, status: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               >
                 <option value="active">Active</option>
                 <option value="paused">Paused</option>
@@ -633,44 +634,44 @@ export default function Projects() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Budget</label>
+              <label className="form-label">Budget</label>
               <input
                 type="number"
                 value={pform.budget}
                 onChange={(e) => setPForm({ ...pform, budget: e.target.value })}
                 placeholder="0.00"
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Start Date</label>
+              <label className="form-label">Start Date</label>
               <input
                 type="date"
                 value={pform.start_date}
                 onChange={(e) => setPForm({ ...pform, start_date: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">End Date</label>
+              <label className="form-label">End Date</label>
               <input
                 type="date"
                 value={pform.end_date}
                 onChange={(e) => setPForm({ ...pform, end_date: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Notes</label>
+            <label className="form-label">Notes</label>
             <textarea
               value={pform.notes}
               onChange={(e) => setPForm({ ...pform, notes: e.target.value })}
               placeholder="Project notes..."
               rows={2}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 resize-none"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 resize-none"
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
@@ -700,23 +701,23 @@ export default function Projects() {
       <Modal open={showMilestoneModal} onClose={() => setShowMilestoneModal(false)} title="Add Milestone" size="sm">
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Title *</label>
+            <label className="form-label">Title *</label>
             <input
               type="text"
               value={mform.title}
               onChange={(e) => setMForm({ ...mform, title: e.target.value })}
               placeholder="Milestone name"
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               autoFocus
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Due Date</label>
+            <label className="form-label">Due Date</label>
             <input
               type="date"
               value={mform.due_date}
               onChange={(e) => setMForm({ ...mform, due_date: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
             />
           </div>
           <label className="flex items-center gap-2 cursor-pointer">
@@ -741,25 +742,25 @@ export default function Projects() {
             Save this project's milestones as a reusable template for future projects.
           </p>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Template name *</label>
+            <label className="form-label">Template name *</label>
             <input
               type="text"
               value={templateName}
               onChange={(e) => setTemplateName(e.target.value)}
               placeholder="e.g. Web Design Project"
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               autoFocus
               onKeyDown={(e) => { if (e.key === 'Enter') handleSaveAsTemplate(); }}
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Description (optional)</label>
+            <label className="form-label">Description (optional)</label>
             <textarea
               value={templateDescription}
               onChange={(e) => setTemplateDescription(e.target.value)}
               placeholder="Brief description of this template..."
               rows={2}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 resize-none"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 resize-none"
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">

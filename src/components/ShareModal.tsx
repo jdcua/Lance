@@ -159,7 +159,7 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
             </p>
 
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">
+              <label className="form-label">
                 Link expiry
               </label>
               <div className="flex gap-2">
@@ -167,7 +167,7 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
                   <button
                     key={opt.value}
                     onClick={() => setExpiry(opt.value)}
-                    className={`px-3 py-1.5 text-xs rounded-[6px] border transition-colors ${
+                    className={`px-3 py-1.5 text-xs rounded-xs border transition-colors ${
                       expiry === opt.value
                         ? 'border-[var(--accent)] bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] font-medium'
                         : 'border-[var(--border-color)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'
@@ -199,7 +199,7 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
           <>
             {token.client_response && (
               <div
-                className={`px-3 py-2 rounded-[8px] text-xs font-medium ${
+                className={`px-3 py-2 rounded-sm text-xs font-medium ${
                   token.client_response === 'accepted'
                     ? 'bg-[var(--success-bg)] text-[var(--success-text)]'
                     : 'bg-[var(--danger-bg)] text-[var(--danger-text)]'
@@ -214,7 +214,7 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
             )}
 
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">
+              <label className="form-label">
                 Share link
               </label>
               <div className="flex items-center gap-2">
@@ -222,7 +222,7 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
                   type="text"
                   readOnly
                   value={url || ''}
-                  className="flex-1 px-3 py-2 text-xs border border-[var(--border-color)] rounded-[8px] bg-[var(--bg-secondary)] text-[var(--text-primary)] select-all"
+                  className="flex-1 px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-secondary)] text-[var(--text-primary)] select-all"
                 />
                 <Button onClick={handleCopyLink} size="sm" variant="secondary">
                   <Copy size={14} />

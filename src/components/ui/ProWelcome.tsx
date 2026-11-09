@@ -29,9 +29,9 @@ export default function ProWelcome({ open, onClose }: { open: boolean; onClose: 
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={onClose} />
       <div
-        className="relative bg-[var(--bg-card)] rounded-[16px] shadow-2xl w-full max-w-lg mx-4 animate-fade-scale-in overflow-hidden"
+        className="relative glass rounded-[24px] w-full max-w-lg mx-4 animate-fade-scale-in overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-label="Welcome to Lance Pro"

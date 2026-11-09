@@ -76,7 +76,7 @@ export default function BrandVault() {
     } catch (e) { console.error('[BrandVault] delete failed:', e); }
   };
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
 
   if (loading) {
     return (
@@ -85,10 +85,10 @@ export default function BrandVault() {
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Brand Vault</h4>
         </div>
         <div className="flex gap-1.5">
-          {SUBCATEGORIES.map((cat) => <div key={cat} className="h-6 w-20 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
+          {SUBCATEGORIES.map((cat) => <div key={cat} className="h-6 w-20 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
         </div>
         <div className="grid grid-cols-3 gap-2">
-          {[1, 2, 3, 4, 5, 6].map((i) => <div key={i} className="h-20 bg-[var(--bg-secondary)] rounded-[6px] animate-pulse" />)}
+          {[1, 2, 3, 4, 5, 6].map((i) => <div key={i} className="h-20 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
         </div>
       </div>
     );
@@ -112,7 +112,7 @@ export default function BrandVault() {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`inline-flex items-center gap-1 px-2 py-1 rounded-[6px] text-[11px] font-medium transition-colors ${
+              className={`inline-flex items-center gap-1 px-2 py-1 rounded-xs text-[11px] font-medium transition-colors ${
                 activeCategory === cat
                   ? 'bg-[var(--accent)] text-[var(--accent-on)]'
                   : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--border-color)]'
@@ -127,7 +127,7 @@ export default function BrandVault() {
 
       {/* Upload form */}
       {showUpload && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <div className="flex items-center gap-2">
             <input
               type="file"
@@ -150,7 +150,7 @@ export default function BrandVault() {
           {filtered.map((asset) => {
             const isImage = asset.mime_type?.startsWith('image/');
             return (
-              <div key={asset.id} className="group relative bg-[var(--bg-secondary)] rounded-[6px] overflow-hidden">
+              <div key={asset.id} className="group relative bg-[var(--bg-secondary)] rounded-xs overflow-hidden">
                 {isImage ? (
                   <div className="h-16 bg-[var(--bg-card)] flex items-center justify-center">
                     <Image size={18} className="text-[var(--text-tertiary)]" />
@@ -166,7 +166,7 @@ export default function BrandVault() {
                 </div>
                 <button aria-label="Delete brand vault"
                   onClick={() => handleDelete(asset.id)}
-                  className="absolute top-1 right-1 p-0.5 rounded-[4px] bg-[var(--bg-card)]/80 text-[var(--text-tertiary)] hover:text-[#A32D2D] opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-1 right-1 p-0.5 rounded-[4px] glass/80 text-[var(--text-tertiary)] hover:text-[#A32D2D] opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <Trash2 size={10} />
                 </button>

@@ -4,8 +4,6 @@ import { Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { queryLocalAI } from '../../ai';
 import { useStore } from '../../store';
 
-// TODO v1.1: Set AI_ENABLED = true when queryLocalAI() is implemented
-// The AIBar shows contextual AI insights per screen. Currently a stub.
 const AI_ENABLED = false;
 
 const screenPrompts: Record<string, string> = {

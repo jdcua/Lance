@@ -114,7 +114,7 @@ export default function CullingTracker({ projectId }: { projectId: string }) {
   const editingRatio = totalShoot > 0 ? totalEditing / totalShoot : 0;
 
   const inputClass =
-    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) return <p className="text-xs text-[var(--text-tertiary)] py-2">Loading...</p>;
 
@@ -130,7 +130,7 @@ export default function CullingTracker({ projectId }: { projectId: string }) {
       </div>
 
       {(totalShoot > 0 || totalCulling > 0 || totalEditing > 0) && (
-        <div className="flex items-center gap-4 px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs">
+        <div className="flex items-center gap-4 px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
           <span className="text-[var(--text-tertiary)]">
             Total culling:{' '}
             <span className="text-[var(--text-primary)] font-medium">{totalCulling}h</span>
@@ -145,7 +145,7 @@ export default function CullingTracker({ projectId }: { projectId: string }) {
       )}
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-[8px] space-y-2">
+        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <select
             aria-label="Shoot"
             value={form.shoot_id}
@@ -216,7 +216,7 @@ export default function CullingTracker({ projectId }: { projectId: string }) {
           {sessions.map((s) => (
             <div
               key={s.id}
-              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-[6px] text-xs"
+              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
             >
               <div className="flex-1 min-w-0">
                 <span className="font-medium text-[var(--text-primary)]">

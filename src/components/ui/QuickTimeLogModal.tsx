@@ -90,12 +90,12 @@ export default function QuickTimeLogModal({ open, onClose }: QuickTimeLogModalPr
     <Modal open={open} onClose={onClose} title="Quick Log Time" size="sm">
       <div className="space-y-4">
         <div>
-          <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Project</label>
+          <label className="form-label">Project</label>
           <select aria-label="Projectid"
             ref={projectSelectRef}
             value={projectId}
             onChange={(e) => handleProjectChange(e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-card)]"
+            className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-card)]"
           >
             <option value="">Select project...</option>
             {activeProjects.map((p) => (
@@ -104,24 +104,24 @@ export default function QuickTimeLogModal({ open, onClose }: QuickTimeLogModalPr
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Duration (minutes)</label>
+          <label className="form-label">Duration (minutes)</label>
           <input
             type="number"
             value={durationMinutes}
             onChange={(e) => setDurationMinutes(e.target.value)}
             placeholder="e.g. 30"
-            className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-card)]"
+            className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-card)]"
             onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Description (optional)</label>
+          <label className="form-label">Description (optional)</label>
           <input
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="What did you work on?"
-            className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-card)]"
+            className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-card)]"
             onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
           />
         </div>

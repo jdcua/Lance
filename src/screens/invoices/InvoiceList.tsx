@@ -64,7 +64,7 @@ export default function InvoiceList({ bag }: { bag: InvoicesBag }) {
           </Card>
         ) : (
           <>
-            <div className="space-y-2">
+            <div className="list-surface divide-y divide-[var(--border-color)]">
               {paged.visible.map((inv) => {
                 const isExpanded = expandedInv === inv.id;
                 const paidTotal = getPaidTotal(inv.id);
@@ -88,7 +88,7 @@ export default function InvoiceList({ bag }: { bag: InvoicesBag }) {
                 return (
                   <div key={inv.id}>
                     <div
-                      className={`flex items-center gap-3 px-4 py-3 bg-[var(--bg-card)] border rounded-[8px] ${isExpanded ? 'rounded-b-none border-b-0' : ''} ${inv.status === 'overdue' ? 'border-l-[3px] border-l-[var(--danger)] border-[var(--border-color)]' : 'border-[var(--border-color)]'}`}
+                      className={`list-row flex items-center gap-3 px-4 py-3 ${isExpanded ? 'bg-[var(--bg-secondary)]/45' : ''} ${inv.status === 'overdue' ? 'border-l-[3px] border-l-[var(--danger)]' : ''}`}
                     >
                       <button
                         onClick={toggleExpand}
@@ -314,13 +314,13 @@ export default function InvoiceList({ bag }: { bag: InvoicesBag }) {
                               setExportDropdown(exportDropdown === inv.id ? null : inv.id)
                             }
                             aria-label="Export invoice"
-                            className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]"
+                            className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-sm"
                             title="Export"
                           >
                             <Download size={13} />
                           </button>
                           {exportDropdown === inv.id && (
-                            <div className="absolute right-0 top-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px] shadow-lg py-1 z-10 w-28">
+                            <div className="absolute right-0 top-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-sm shadow-lg py-1 z-10 w-28">
                               <button
                                 onClick={() => handleExportPDF(inv)}
                                 className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
@@ -339,7 +339,7 @@ export default function InvoiceList({ bag }: { bag: InvoicesBag }) {
                         <button
                           onClick={() => handleDuplicate(inv)}
                           aria-label="Duplicate invoice"
-                          className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]"
+                          className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-sm"
                           title="Duplicate"
                         >
                           <Copy size={14} />
@@ -347,7 +347,7 @@ export default function InvoiceList({ bag }: { bag: InvoicesBag }) {
                         <button
                           onClick={() => openEdit(inv)}
                           aria-label="Edit invoice"
-                          className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[8px]"
+                          className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-sm"
                         >
                           <Pencil size={14} />
                         </button>
@@ -360,14 +360,14 @@ export default function InvoiceList({ bag }: { bag: InvoicesBag }) {
                             })
                           }
                           aria-label="Delete invoice"
-                          className="p-1 text-[var(--text-tertiary)] hover:text-[var(--danger)] rounded-[8px]"
+                          className="p-1 text-[var(--text-tertiary)] hover:text-[var(--danger)] rounded-sm"
                         >
                           <Trash2 size={14} />
                         </button>
                       </div>
                     </div>
                     {isExpanded && (
-                      <div className="border border-t-0 border-[var(--border-color)] rounded-b-[8px] bg-[var(--bg-secondary)]/30 px-4 py-3">
+                      <div className="border-t border-[var(--border-color)] bg-[var(--bg-secondary)]/30 px-4 py-3">
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
                             <DollarSign size={12} />
@@ -399,7 +399,7 @@ export default function InvoiceList({ bag }: { bag: InvoicesBag }) {
                             {invPayments.map((p) => (
                               <div
                                 key={p.id}
-                                className="flex items-center justify-between px-2 py-1.5 rounded-[6px] bg-[var(--bg-card)]"
+                                className="flex items-center justify-between px-2 py-1.5 rounded-xs bg-[var(--bg-card)]"
                               >
                                 <div className="flex items-center gap-3 text-[10px]">
                                   <span className="text-[var(--text-primary)] font-medium">

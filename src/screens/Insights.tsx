@@ -116,7 +116,7 @@ export default function Insights() {
   if (!hasMinimalData) {
     return (
       <div className="p-6">
-        <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-6">{archetype.insights.headline}</h2>
+        <h1 className="font-display text-lg font-semibold text-[var(--text-primary)] mb-6">{archetype.insights.headline}</h1>
         <Card className="text-center py-16 flex flex-col items-center">
           <Lightbulb size={40} className="text-[var(--text-tertiary)] mb-4" />
           <h3 className="text-[15px] font-medium text-[var(--text-secondary)] mb-1.5">Not enough data yet</h3>
@@ -279,7 +279,7 @@ export default function Insights() {
           ) : (
             <Card className="!p-0 overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full text-xs">
+                <table className="data-table w-full text-xs">
                   <thead>
                     <tr className="bg-[var(--bg-secondary)]">
                       <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-[var(--text-secondary)]">Client</th>

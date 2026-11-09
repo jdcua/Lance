@@ -79,7 +79,7 @@ export default function KanbanColumnComponent({
         ) : (
           <button
             onClick={() => setShowQuickAdd(true)}
-            className="w-full py-1.5 text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-[6px] transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100"
+            className="w-full py-1.5 text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-xs transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100"
           >
             <Plus size={11} /> Add Card
           </button>
@@ -98,7 +98,7 @@ function QuickAddForm({ columnId, onAdd, onClose }: { columnId: string; onAdd: (
         value={title}
         onChange={e => setTitle(e.target.value)}
         placeholder="Card title..."
-        className="w-full px-2 py-1.5 text-[11px] border border-[var(--border-color)] rounded-[6px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+        className="w-full px-2 py-1.5 text-[11px] border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
         autoFocus
         onKeyDown={e => {
           if (e.key === 'Enter' && title.trim()) {

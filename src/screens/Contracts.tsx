@@ -10,6 +10,7 @@ import Badge from '../components/ui/Badge';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import ClientSelect from '../components/ui/ClientSelect';
 import RichEditor from '../components/ui/RichEditor';
+import { commands } from '../lib/commands';
 import DocPreview from '../components/ui/DocPreview';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { ensureHtml } from '../utils/textToHtml';
@@ -130,9 +131,9 @@ export default function Contracts() {
 
   // Global ⌘N dispatch (see App shortcuts).
   useEffect(() => {
-    const handler = () => openNew();
-    document.addEventListener('lance:add-contract', handler);
-    return () => document.removeEventListener('lance:add-contract', handler);
+    const onAddContract = () => openNew();
+    commands.on('lance:add-contract', onAddContract);
+    return () => commands.off('lance:add-contract', onAddContract);
   }, []);
 
   const openNewFromTemplate = (template: ContractTemplate) => {
@@ -315,7 +316,7 @@ export default function Contracts() {
     <div className="p-6">
       <div className="h-6 w-24 bg-[var(--bg-secondary)] rounded skeleton-pulse mb-1.5" />
       <div className="h-4 w-32 bg-[var(--bg-secondary)] rounded skeleton-pulse mb-6" />
-      {[...Array(4)].map((_, i) => <div key={i} className="h-20 bg-[var(--bg-secondary)] rounded-[8px] skeleton-pulse mb-3" />)}
+      {[...Array(4)].map((_, i) => <div key={i} className="h-20 bg-[var(--bg-secondary)] rounded-sm skeleton-pulse mb-3" />)}
     </div>
   );
 
@@ -355,7 +356,7 @@ export default function Contracts() {
       <LoadError error={contractsError} onRetry={() => loadContracts()} />
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-lg font-semibold text-[var(--text-primary)]">Contracts</h2>
+          <h1 className="font-display text-lg font-semibold text-[var(--text-primary)]">Contracts</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-0.5">
             {contracts.filter((c) => c.status === 'active').length} active, {contracts.length} total
           </p>
@@ -386,7 +387,7 @@ export default function Contracts() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search contracts..."
-                className="w-full pl-9 pr-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-card)]"
+                className="w-full pl-9 pr-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-card)]"
               />
             </div>
           )}
@@ -438,7 +439,7 @@ export default function Contracts() {
                         <button
                           onClick={() => setShareModal({ entityType: 'contract', entityId: c.id })}
                           aria-label="Share contract"
-                          className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] transition-colors"
+                          className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] transition-colors"
                           title="Share"
                         >
                           <Share2 size={14} />
@@ -448,13 +449,13 @@ export default function Contracts() {
                         <button
                           onClick={() => setExportDropdown(exportDropdown === c.id ? null : c.id)}
                           aria-label="Export contract"
-                          className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+                          className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
                           title="Export"
                         >
                           <Download size={14} />
                         </button>
                         {exportDropdown === c.id && (
-                          <div className="absolute right-0 top-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-[8px] shadow-lg py-1 z-10 w-28">
+                          <div className="absolute right-0 top-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-sm shadow-lg py-1 z-10 w-28">
                             <button onClick={() => handleExportPDF(c)} className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors">PDF</button>
                             <button onClick={() => handleExportDOCX(c)} className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors">DOCX</button>
                           </div>
@@ -487,14 +488,14 @@ export default function Contracts() {
                       <button
                         onClick={() => setExpanded(expanded === c.id ? null : c.id)}
                         aria-label="View contract body"
-                        className={`p-1.5 rounded-[8px] transition-colors ${expanded === c.id ? 'text-[var(--accent-ink,var(--accent))] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`}
+                        className={`p-1.5 rounded-sm transition-colors ${expanded === c.id ? 'text-[var(--accent-ink,var(--accent))] bg-[var(--accent-bg)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}`}
                       >
                         <Eye size={14} />
                       </button>
                       <button
                         onClick={() => openEdit(c)}
                         aria-label="Edit contract"
-                        className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+                        className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
                       >
                         <Pencil size={14} />
                       </button>
@@ -502,7 +503,7 @@ export default function Contracts() {
                         <button
                           onClick={() => handleSaveAsTemplate(c)}
                           aria-label="Save as template"
-                          className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] transition-colors"
+                          className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] transition-colors"
                           title="Save as template"
                         >
                           <Copy size={14} />
@@ -511,7 +512,7 @@ export default function Contracts() {
                       <button
                         onClick={() => setConfirmDelete({ id: c.id, title: c.title })}
                         aria-label="Delete contract"
-                        className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
+                        className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -588,7 +589,7 @@ export default function Contracts() {
                       {!isPrebuilt && (
                         <button aria-label="Delete contracts"
                           onClick={() => setConfirmTemplate({ id: t.id, name: t.name })}
-                          className="p-1.5 rounded-[8px] text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
+                          className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -606,7 +607,7 @@ export default function Contracts() {
         <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
           <div className="space-y-4 min-w-0">
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Client *</label>
+            <label className="form-label">Client *</label>
             <ClientSelect
               clients={clients}
               value={form.client_id}
@@ -615,18 +616,18 @@ export default function Contracts() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Title *</label>
+            <label className="form-label">Title *</label>
             <input
               type="text"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="Contract title"
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
               autoFocus
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Contract Body</label>
+            <label className="form-label">Contract Body</label>
             <RichEditor
               content={form.body}
               onChange={(html) => setForm({ ...form, body: html })}
@@ -663,7 +664,7 @@ export default function Contracts() {
                 <button
                   key={t.id}
                   onClick={() => openNewFromTemplate(t)}
-                  className="w-full text-left p-3 rounded-[8px] border border-[var(--border-color)] hover:border-[var(--accent)] hover:bg-[var(--accent-bg)]/30 transition-colors"
+                  className="w-full text-left p-3 rounded-sm border border-[var(--border-color)] hover:border-[var(--accent)] hover:bg-[var(--accent-bg)]/30 transition-colors"
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm font-medium text-[var(--text-primary)]">{t.name}</span>
