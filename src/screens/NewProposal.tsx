@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { DEFAULT_CURRENCY } from '../lib/constants';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import Button from '../components/ui/Button';
@@ -68,7 +69,7 @@ export default function NewProposal() {
         timeline: form.timeline,
         rate: form.rate ? parseFloat(form.rate) : 0,
         rateType: form.rate_type === 'hourly' ? 'hourly' : 'flat',
-        currency: profile?.currency || 'CAD',
+        currency: profile?.currency || DEFAULT_CURRENCY,
         freelancerName: profile?.name || 'Freelancer',
         writingVoice: profile?.writing_style || profile?.writing_voice || 'professional',
         tagline: profile?.tagline,
@@ -144,7 +145,7 @@ export default function NewProposal() {
 
   const activeWarnings = warnings.filter((w) => !dismissedWarnings.has(w.pattern));
 
-  const currencySymbol = getCurrencySymbol(profile?.currency || 'CAD');
+  const currencySymbol = getCurrencySymbol(profile?.currency || DEFAULT_CURRENCY);
 
   if (loading) return <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>
 

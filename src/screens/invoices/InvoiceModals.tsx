@@ -8,7 +8,8 @@ import { formatCurrency } from '../../utils/format';
 import { getCurrencySymbol } from '../../lib/currency';
 import type { RecurringInvoice as RecurringInvoiceType } from '../../types';
 import { MAX_LENGTHS } from '../../utils/sanitize';
-import { formatMinutes, currencies, type InvoicesBag } from './shared';
+import { formatMinutes, type InvoicesBag } from './shared';
+import { CURRENCIES } from '../../lib/constants';
 
 /**
  * All invoice modals: invoice editor, payment recorder, reminder composer,
@@ -116,7 +117,7 @@ export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
                     ? `${getCurrencySymbol(profile.currency)} (default)`
                     : 'Default'}
                 </option>
-                {currencies.map((c) => (
+                {CURRENCIES.map((c) => (
                   <option key={c} value={c}>
                     {getCurrencySymbol(c)} {c}
                   </option>

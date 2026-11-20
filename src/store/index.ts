@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { DEFAULT_CURRENCY } from '../lib/constants';
 import type {
   Client,
   Project,
@@ -1477,7 +1478,6 @@ export const useStore = create<UnifiedStore>((set, get) => {
       const updated = { ...profile, trial_started_at: new Date().toISOString() };
       await invoke('upsert_user_profile', { payload: updated });
       set({ profile: updated });
-      console.log('[license] Trial started by user:', updated.trial_started_at);
       return 'started';
     },
 
@@ -1507,7 +1507,6 @@ export const useStore = create<UnifiedStore>((set, get) => {
           } catch {
             /* private mode */
           }
-          console.log('[license] Trial amnesty granted:', now);
           return;
         }
       }
@@ -1517,7 +1516,6 @@ export const useStore = create<UnifiedStore>((set, get) => {
         const updated = { ...profile, trial_started_at: now };
         await invoke('upsert_user_profile', { payload: updated });
         set({ profile: updated });
-        console.log('[license] Trial started:', now);
       }
 
       // Re-validate on a schedule, not once ever. `license_validated_at` was
@@ -1569,7 +1567,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
           if (!profile) return;
           const updated = {
             ...profile,
-            currency: profile.currency || 'CAD',
+            currency: profile.currency || DEFAULT_CURRENCY,
             license_tier: result.tier,
             license_expires_at: result.expires_at,
             license_validated_at: new Date().toISOString(),
@@ -1577,7 +1575,6 @@ export const useStore = create<UnifiedStore>((set, get) => {
           };
           await invoke('upsert_user_profile', { payload: updated });
           set({ profile: updated, isLicensed: true });
-          console.log('[license] Online validation OK:', result.tier);
         } else if (result.tier) {
           // The worker says this key is no longer good (revoked after a refund
           // or a chargeback arrives as tier 'expired'). Do NOT drop the tier
@@ -1600,7 +1597,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
           const stillPro = result.tier !== 'free' && result.tier !== 'expired';
           const updated = {
             ...profile,
-            currency: profile.currency || 'CAD',
+            currency: profile.currency || DEFAULT_CURRENCY,
             license_tier: stillPro ? result.tier : profile.license_tier,
             license_expires_at: result.expires_at ?? profile.license_expires_at,
             license_validated_at: new Date().toISOString(),

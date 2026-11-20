@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { DEFAULT_CURRENCY } from '../lib/constants';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
 import { CheckCircle, Users, FolderKanban, Clock, FileText, Receipt, Bell, Search, Trophy, BarChart3, Columns3, Banknote, FileEdit } from 'lucide-react';
@@ -58,7 +59,7 @@ export default function Onboarding({ visible = true, onClose = () => {} }: Onboa
   const [form, setForm] = useState({
     name: '',
     email: '',
-    currency: 'CAD',
+    currency: DEFAULT_CURRENCY as string,
     hourly_rate: '',
     payment_terms: '14',
     writing_style: 'professional',
@@ -80,7 +81,7 @@ export default function Onboarding({ visible = true, onClose = () => {} }: Onboa
     setForm({
       name: profile.name || '',
       email: profile.email || '',
-      currency: profile.currency || 'CAD',
+      currency: profile.currency || DEFAULT_CURRENCY,
       hourly_rate: profile.hourly_rate?.toString() || '',
       payment_terms: (profile.payment_terms ?? 14).toString(),
       writing_style: profile.writing_style || 'professional',

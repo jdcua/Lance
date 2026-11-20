@@ -12,7 +12,7 @@ import type { DunningTone } from '../../utils/followUpTemplates';
 
 /** Shared bits for the Invoices split (wave3/4). statusBadge + formatMinutes moved verbatim. */
 
-export const currencies = ['CAD', 'USD', 'EUR', 'GBP', 'AUD'];
+
 
 /** Shared bits for the Invoices split (wave3/4). statusBadge + formatMinutes moved verbatim. */
 

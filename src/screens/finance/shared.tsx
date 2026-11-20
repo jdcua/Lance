@@ -1,4 +1,5 @@
 import { formatCurrency } from '../../utils/format';
+import { DEFAULT_CURRENCY } from '../../lib/constants';
 import type {
   CashFlowItem,
   RevenueForecastItem,
@@ -13,7 +14,7 @@ import type { Expense } from '../../types';
 export function MoneyLines({
   byCurrency,
   size = 'md',
-  fallbackCur = 'CAD',
+  fallbackCur = DEFAULT_CURRENCY,
 }: {
   byCurrency: Record<string, number>;
   size?: 'md' | 'sm';

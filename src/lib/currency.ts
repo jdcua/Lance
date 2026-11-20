@@ -1,7 +1,7 @@
 import type { Invoice, Client, UserProfile } from '../types';
 import { formatCurrency as formatCurrencyBase } from '../utils/format';
 
-export const CURRENCIES = ['CAD', 'USD', 'EUR', 'GBP', 'AUD'] as const;
+import { CURRENCIES, DEFAULT_CURRENCY } from './constants';
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
   CAD: 'CA$',
@@ -25,11 +25,11 @@ export function defaultCurrency(): CurrencyCode {
     if (/^en-AU/i.test(lang)) return 'AUD';
     if (/^en-US/i.test(lang)) return 'USD';
     if (/^(de|fr|es|it|nl|pt|el|fi|ga)(-|$)/i.test(lang)) return 'EUR';
-    if (/^en-CA/i.test(lang)) return 'CAD';
+    if (/^en-CA/i.test(lang)) return DEFAULT_CURRENCY as CurrencyCode;
   } catch {
     /* private mode or no navigator */
   }
-  return 'CAD';
+  return DEFAULT_CURRENCY as CurrencyCode;
 }
 
 export function getInvoiceCurrency(

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef, type ChangeEvent } from 'react';
+import { DEFAULT_CURRENCY } from '../lib/constants';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { isTauri as isTauriApp } from '../utils/tauri';
@@ -109,7 +110,7 @@ export default function Settings() {
   const [form, setForm] = useState<UserProfile>({
     name: '',
     email: '',
-    currency: 'CAD',
+    currency: DEFAULT_CURRENCY,
     hourly_rate: undefined,
     tax_rate: undefined,
     payment_terms: 14,
@@ -184,7 +185,7 @@ export default function Settings() {
       setForm({
         name: profile.name || '',
         email: profile.email || '',
-        currency: profile.currency || 'CAD',
+        currency: profile.currency || DEFAULT_CURRENCY,
         hourly_rate: profile.hourly_rate,
         tax_rate: profile.tax_rate,
         payment_terms: profile.payment_terms ?? 14,

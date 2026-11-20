@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
+import { DEFAULT_CURRENCY } from '../lib/constants';
 import { useStore } from '../store';
 import type { Contract, ContractTemplate, ShareToken } from '../types';
 import Button from '../components/ui/Button';
@@ -163,7 +164,7 @@ export default function Contracts() {
       const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
       let currencySymbol = '$';
       try {
-        const part = new Intl.NumberFormat('en-CA', { style: 'currency', currency: profile?.currency || 'CAD' }).formatToParts(0).find((p) => p.type === 'currency');
+        const part = new Intl.NumberFormat('en-CA', { style: 'currency', currency: profile?.currency || DEFAULT_CURRENCY }).formatToParts(0).find((p) => p.type === 'currency');
         if (part?.value) currencySymbol = part.value;
       } catch { /* fall back to $ */ }
       const filledBody = (form.body || '')

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { DEFAULT_CURRENCY } from '../lib/constants';
 import { useSearchParams } from 'react-router-dom';
 import { useStore } from '../store';
 import type { Client, Communication, MetricDefinition } from '../types';
@@ -20,7 +21,8 @@ import ClientImportModal from '../components/ui/ClientImportModal';
 import LoadError from '../components/ui/LoadError';
 import { useVisibleList, MoreRows } from '../components/ui/useVisibleList';
 import { formatCurrency, relativeDate, todayLocalISO } from '../utils/format';
-import { getCurrencySymbol, CURRENCIES } from '../lib/currency';
+import { getCurrencySymbol } from '../lib/currency';
+import { CURRENCIES } from '../lib/constants';
 import { checkAndNotify } from '../achievements/notify';
 import { sanitizeInput, sanitizePhone, MAX_LENGTHS } from '../utils/sanitize';
 
@@ -1346,7 +1348,7 @@ export default function Clients() {
               onChange={(e) => setForm({ ...form, preferred_currency: e.target.value })}
               className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
             >
-              <option value="">Use profile default ({profile?.currency || 'CAD'})</option>
+              <option value="">Use profile default ({profile?.currency || DEFAULT_CURRENCY})</option>
               {[...CURRENCIES].map((c) => (
                 <option key={c} value={c}>{getCurrencySymbol(c)} {c}</option>
               ))}

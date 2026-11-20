@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
+import { DEFAULT_CURRENCY } from '../lib/constants';
 import { useStore } from '../store';
 import type { Invoice, LineItem, RecurringInvoice as RecurringInvoiceType } from '../types';
 import Button from '../components/ui/Button';
@@ -718,7 +719,7 @@ export default function Invoices() {
   const getClient = (clientId: string) => clients.find((c) => c.id === clientId);
   const getClientName = (clientId: string) => getClient(clientId)?.name || 'Unknown';
 
-  const getInvoiceCurrency = (inv: Invoice) => inv.currency || profile?.currency || 'CAD';
+  const getInvoiceCurrency = (inv: Invoice) => inv.currency || profile?.currency || DEFAULT_CURRENCY;
 
   const fmtInv = (amount: number, inv: Invoice) => {
     const cur = getInvoiceCurrency(inv);
@@ -728,7 +729,7 @@ export default function Invoices() {
   const fmtInvDisplay = (inv: Invoice) => {
     const cur = getInvoiceCurrency(inv);
     const formatted = formatCurrency(inv.total, cur);
-    if (cur !== (profile?.currency || 'CAD')) {
+    if (cur !== (profile?.currency || DEFAULT_CURRENCY)) {
       return `${formatted} ${cur}`;
     }
     return formatted;
@@ -930,7 +931,7 @@ export default function Invoices() {
     .filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue')
     .reduce((s, i) => s + i.total, 0);
   const totalPaid = invoices.filter((i) => i.status === 'paid').reduce((s, i) => s + i.total, 0);
-  const invCurrency = (i: { currency?: string }) => i.currency || profile?.currency || 'CAD';
+  const invCurrency = (i: { currency?: string }) => i.currency || profile?.currency || DEFAULT_CURRENCY;
   const sumByCurrency = (list: { currency?: string; total: number }[]) => {
     const by: Record<string, number> = {};
     list.forEach((i) => {

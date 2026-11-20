@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from 'react';
+import { DEFAULT_CURRENCY } from '../lib/constants';
 import { useStore } from '../store';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
@@ -54,7 +55,7 @@ export default function Insights() {
 
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const profitMargin = totalPaid > 0 ? Math.round(((totalPaid - totalExpenses) / totalPaid) * 100) : 0;
-  const invCur = (i: { currency?: string }) => i.currency || profile?.currency || 'CAD';
+  const invCur = (i: { currency?: string }) => i.currency || profile?.currency || DEFAULT_CURRENCY;
   const mixedInvoiceCurrencies = new Set(invoices.filter((i) => i.status !== 'draft').map(invCur)).size > 1;
   const moneyByCurrency = (list: { currency?: string; total: number }[]) => {
     const by: Record<string, number> = {};
@@ -77,7 +78,7 @@ export default function Insights() {
     }
     clientRevenue[inv.client_id].total += inv.total;
     clientRevenue[inv.client_id].count += 1;
-    clientRevenue[inv.client_id].currencies.add(inv.currency || profile?.currency || 'CAD');
+    clientRevenue[inv.client_id].currencies.add(inv.currency || profile?.currency || DEFAULT_CURRENCY);
   });
   const topClients = Object.values(clientRevenue).sort((a, b) => b.total - a.total).slice(0, 5);
 

@@ -149,18 +149,4 @@ export function yearSummaryCsv(pack: YearSummary): string {
 export const taxPackCsv = yearSummaryCsv;
 
 /** Browser and webview safe file download. */
-export function downloadTextFile(
-  filename: string,
-  text: string,
-  mime = 'text/csv;charset=utf-8',
-): void {
-  const blob = new Blob([text], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
+export { downloadTextFile } from './taxPack';

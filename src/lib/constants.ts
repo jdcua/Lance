@@ -100,6 +100,7 @@ export const PAYMENT_TERMS = [0, 7, 14, 30] as const;
 
 // ── Currency Codes and Symbols ──
 export const CURRENCY_CODES = ['CAD', 'USD', 'EUR', 'GBP', 'AUD'] as const;
+export const CURRENCIES = CURRENCY_CODES;
 
 export type CurrencyCode = (typeof CURRENCY_CODES)[number];
 
@@ -161,7 +162,7 @@ export const TIMING = {
 export const DEFAULT_PAYMENT_TERMS = 14;
 
 // ── Default Currency ──
-export const DEFAULT_CURRENCY: CurrencyCode = 'CAD';
+export const DEFAULT_CURRENCY = 'CAD';
 
 // ── Default Follow-Up Settings ──
 export const DEFAULT_FOLLOW_UP_SETTINGS = {

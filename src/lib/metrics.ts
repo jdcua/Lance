@@ -1,4 +1,5 @@
 import Database from '@tauri-apps/plugin-sql';
+import { DEFAULT_CURRENCY } from './constants';
 import { DAY_MS, todayLocalISO } from '../utils/format';
 
 interface CountRow { c: number }
@@ -20,7 +21,7 @@ export async function activeProjectsCount(db: Database, _profileId: number): Pro
 
 export async function totalOutstanding(db: Database, profileId: number): Promise<string | number> {
   const prof = await db.select<ProfileRow[]>("SELECT currency FROM user_profile WHERE id = $1", [profileId]);
-  const currency = first(prof)?.currency || 'CAD';
+  const currency = first(prof)?.currency || DEFAULT_CURRENCY;
   const rows = await db.select<SumRow[]>("SELECT COALESCE(SUM(total), 0) as s FROM invoices WHERE status IN ('sent', 'partial', 'overdue')");
   const val = first(rows)?.s ?? 0;
   return formatCurrency(val, currency);
@@ -33,7 +34,7 @@ export async function unpaidInvoicesCount(db: Database, _profileId: number): Pro
 
 export async function totalPaidRevenue(db: Database, profileId: number): Promise<string | number> {
   const prof = await db.select<ProfileRow[]>("SELECT currency FROM user_profile WHERE id = $1", [profileId]);
-  const currency = first(prof)?.currency || 'CAD';
+  const currency = first(prof)?.currency || DEFAULT_CURRENCY;
   const rows = await db.select<SumRow[]>("SELECT COALESCE(SUM(total), 0) as s FROM invoices WHERE status = 'paid'");
   const val = first(rows)?.s ?? 0;
   return formatCurrency(val, currency);
@@ -112,7 +113,7 @@ export async function effectiveHourlyRate(db: Database, profileId: number): Prom
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   const profRows = await db.select<ProfileRow[]>("SELECT currency FROM user_profile WHERE id = $1", [profileId]);
-  const currency = first(profRows)?.currency || 'CAD';
+  const currency = first(profRows)?.currency || DEFAULT_CURRENCY;
 
   const revRows = await db.select<SumRow[]>(
     "SELECT COALESCE(SUM(total), 0) as s FROM invoices WHERE status = 'paid' AND paid_at >= $1",
@@ -212,7 +213,7 @@ export async function proposalsWinRate(db: Database, _profileId: number): Promis
 
 export async function revenuePerProjectAvg(db: Database, profileId: number): Promise<string | number> {
   const profRows = await db.select<ProfileRow[]>("SELECT currency FROM user_profile WHERE id = $1", [profileId]);
-  const currency = first(profRows)?.currency || 'CAD';
+  const currency = first(profRows)?.currency || DEFAULT_CURRENCY;
   const rows = await db.select<AvgRow[]>("SELECT AVG(total) as a FROM invoices WHERE status = 'paid'");
   const avg = first(rows)?.a ?? 0;
   return formatCurrency(avg, currency);
@@ -225,7 +226,7 @@ export async function overdueCount(db: Database, _profileId: number): Promise<st
 
 export async function expensesTotal(db: Database, profileId: number): Promise<string | number> {
   const profRows = await db.select<ProfileRow[]>("SELECT currency FROM user_profile WHERE id = $1", [profileId]);
-  const currency = first(profRows)?.currency || 'CAD';
+  const currency = first(profRows)?.currency || DEFAULT_CURRENCY;
   const rows = await db.select<SumRow[]>("SELECT COALESCE(SUM(amount), 0) as s FROM expenses");
   return formatCurrency(first(rows)?.s ?? 0, currency);
 }

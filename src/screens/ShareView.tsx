@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { DEFAULT_CURRENCY } from '../lib/constants';
 import { useParams } from 'react-router-dom';
 import { useStore } from '../store';
 import { tauriInvoke } from '../utils/tauri';
@@ -280,7 +281,7 @@ export default function ShareView() {
   const isContract = token.entity_type === 'contract';
   const freelancerName = profile?.name?.trim() || 'Freelancer';
   const clientName = client?.name?.trim() || 'Client';
-  const currency = profile?.currency || 'CAD';
+  const currency = profile?.currency || DEFAULT_CURRENCY;
   const bodyHtml = sanitizeShareHtml(entity.body || '');
 
   const handleRespond = async (response: 'accepted' | 'declined') => {

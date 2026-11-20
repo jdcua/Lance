@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { DEFAULT_CURRENCY } from '../../lib/constants';
 import type { Invoice, InvoicePayment } from '../../types';
 import { parseDateString, DAY_MS, todayLocalISO } from '../../utils/format';
 import { sanitizeInput, MAX_LENGTHS } from '../../utils/sanitize';
@@ -81,7 +82,7 @@ function AgingReport({
   addPayment,
   updateInvoice,
   addToast,
-  curFallback = 'CAD',
+  curFallback = DEFAULT_CURRENCY,
 }: {
   invoices: Invoice[];
   payments: Record<string, InvoicePayment[]>;

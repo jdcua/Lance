@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { DEFAULT_CURRENCY } from '../../lib/constants';
 import { useStore } from '../../store';
 import { getFeatureFlags } from '../../lib/constants';
 import { buildYearSummary, yearSummaryCsv, yearSummaryYears, downloadTextFile } from '../../utils/yearSummary';
@@ -29,13 +30,13 @@ export default function YearSummary() {
   );
 
   const maxQ = Math.max(1, ...pack.quarters.map((q) => Math.max(q.revenue, q.expenses)));
-  const mixedCurrencies = new Set(invoices.filter((i) => i.status !== 'draft').map((i) => i.currency || currency || 'CAD')).size > 1;
+  const mixedCurrencies = new Set(invoices.filter((i) => i.status !== 'draft').map((i) => i.currency || currency || DEFAULT_CURRENCY)).size > 1;
   // Converted year revenue, computed with the same paid-in-year rule as the
   // pack (status paid, paid_at fallback created_at) so the ≈ line agrees
   // with the headline. Shown only when rates cover every currency present.
   const convertedRevenue = useMemo(() => {
     if (!mixedCurrencies) return null;
-    const profCur = currency || 'CAD';
+    const profCur = currency || DEFAULT_CURRENCY;
     const rates = profile?.exchange_rates || {};
     const byCur: Record<string, number> = {};
     for (const inv of invoices) {
@@ -96,7 +97,7 @@ export default function YearSummary() {
           </p>
           {convertedRevenue != null && (
             <p className="text-[11px] text-[var(--text-secondary)] tnum" title="Converted at your manual exchange rates">
-              ≈ {formatCurrency(Math.round(convertedRevenue), currency || 'CAD')}
+              ≈ {formatCurrency(Math.round(convertedRevenue), currency || DEFAULT_CURRENCY)}
             </p>
           )}
         </div>

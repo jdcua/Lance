@@ -1,8 +1,10 @@
 import { useStore, licenseWorkerUnconfigured } from '../../store';
+import { DEFAULT_CURRENCY } from '../../lib/constants';
 import { useToasts } from '../../store/toastStore';
 import { trialDaysRemaining } from '../../lib/trial';
 import { getCurrencySymbol } from '../../lib/currency';
 import { PRO_PRICES } from '../../lib/pricing';
+import { CURRENCIES } from '../../lib/constants';
 import { getTrialValue } from '../../utils/trialValue';
 import { formatCurrency } from '../../utils/format';
 import { openCheckout } from '../../utils/tauri';
@@ -14,7 +16,6 @@ import {
   SectionHead,
   labelClass,
   inputClass,
-  currencies,
   writingStyles,
   labelForStyle,
   type SettingsBag,
@@ -175,7 +176,7 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
               onChange={(e) => autoSave({ currency: e.target.value }, 'Your profile')}
               className={inputClass}
             >
-              {currencies.map((c) => (
+              {CURRENCIES.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>
@@ -196,7 +197,7 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
             <label className={labelClass}>Default hourly rate</label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-secondary)]">
-                {getCurrencySymbol(form.currency || profile?.currency || 'CAD')}
+                {getCurrencySymbol(form.currency || profile?.currency || DEFAULT_CURRENCY)}
               </span>
               <input
                 type="number"

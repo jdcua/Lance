@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { DEFAULT_CURRENCY } from '../lib/constants';
 import { useStore } from '../store';
 import type { Expense, Invoice, InvoicePayment, Milestone } from '../types';
 import Button from '../components/ui/Button';
@@ -226,8 +227,8 @@ export default function Finance() {
     monthlyExpenses[month] = (monthlyExpenses[month] || 0) + e.amount;
   });
 
-  const invCurOf = (i: { currency?: string }) => i.currency || currency || 'CAD';
-  const profCur = currency || 'CAD';
+  const invCurOf = (i: { currency?: string }) => i.currency || currency || DEFAULT_CURRENCY;
+  const profCur = currency || DEFAULT_CURRENCY;
   // Currency filter scopes every invoice-derived number below. Expenses
   // carry no currency of their own and always stay in the profile currency.
   const finvoices =
@@ -336,7 +337,7 @@ export default function Finance() {
   finvoices
     .filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue')
     .forEach((i) => {
-      const cur = i.currency || currency || 'CAD';
+      const cur = i.currency || currency || DEFAULT_CURRENCY;
       outstandingByCurrency[cur] = (outstandingByCurrency[cur] || 0) + i.total;
     });
 
@@ -356,14 +357,14 @@ export default function Finance() {
     });
   const atRiskSlowPayers = new Set(atRiskRows.map((i) => i.client_id)).size;
   const atRiskProfTotal = atRiskRows
-    .filter((i) => (i.currency || currency || 'CAD') === profCur)
+    .filter((i) => (i.currency || currency || DEFAULT_CURRENCY) === profCur)
     .reduce((s, i) => s + i.total, 0);
 
   const revenueByCurrency: Record<string, number> = {};
   finvoices
     .filter((i) => i.status === 'paid')
     .forEach((i) => {
-      const cur = i.currency || currency || 'CAD';
+      const cur = i.currency || currency || DEFAULT_CURRENCY;
       revenueByCurrency[cur] = (revenueByCurrency[cur] || 0) + i.total;
     });
 

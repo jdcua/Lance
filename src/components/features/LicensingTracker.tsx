@@ -3,6 +3,7 @@
  * Tracks asset licenses with revenue totals, grouped by license type.
  */
 import { useState, useEffect, useCallback } from 'react';
+import { DEFAULT_CURRENCY } from '../../lib/constants';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 import { Plus, Trash2, DollarSign } from 'lucide-react';
@@ -36,7 +37,7 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
     licensee: '',
     term: '',
     fee: '',
-    currency: 'CAD',
+    currency: DEFAULT_CURRENCY as string,
   });
   const [saving, setSaving] = useState(false);
 
@@ -116,7 +117,7 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
         licensee: '',
         term: '',
         fee: '',
-        currency: 'CAD',
+        currency: DEFAULT_CURRENCY,
       });
       setShowForm(false);
     } catch (e) {
@@ -172,7 +173,7 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
           <span className="font-semibold text-[var(--text-primary)]">
             {new Intl.NumberFormat('en-CA', {
               style: 'currency',
-              currency: licenses[0]?.currency || 'CAD',
+              currency: licenses[0]?.currency || DEFAULT_CURRENCY,
             }).format(totalRevenue)}
           </span>
         </div>
