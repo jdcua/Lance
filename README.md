@@ -33,3 +33,9 @@ Useful commands: `npx tsc --noEmit`, `npm run lint`, `npm test`, `npm run build`
 ## License
 
 MIT — see [LICENSE.md](LICENSE.md).
+
+## Contributing
+
+Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md) and
+[docs/ROADMAP.md](docs/ROADMAP.md); agent instructions live in
+[AGENTS.md](AGENTS.md).

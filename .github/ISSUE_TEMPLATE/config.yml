@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a question or discuss an idea
+    url: https://github.com/jdcua/Lance/discussions
+    about: Use Discussions for open-ended questions and design ideas.
+  - name: Report a security issue privately
+    url: https://github.com/jdcua/Lance/security/advisories/new
+    about: Do not disclose vulnerabilities in a public issue.
