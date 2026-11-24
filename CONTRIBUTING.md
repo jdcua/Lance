@@ -40,10 +40,10 @@ npm run tauri dev
 5. Run the full check suite before pushing:
 
 ```bash
-npm run verify      # typecheck + lint + tests + build
+npm run verify      # typecheck + lint + tests + build + OSS audit
 ```
 
-CI runs the same checks plus `cargo check --lib`, `cargo test --lib`, npm and
+`npm run audit:oss` rejects stray secrets, personal paths and junk files. CI runs the same checks plus `cargo check --lib`, `cargo test --lib`, npm and
 Cargo audits, and an xlsx integrity check. All must pass.
 
 ## Open a pull request

@@ -105,10 +105,10 @@ and `prefers-reduced-transparency` always win.
 
 ```
 npm run doctor         # check local toolchain
-npm run verify         # typecheck + lint + test + build
+npm run verify         # typecheck + lint + test + build + OSS audit
 ```
 
-`npm run verify` runs `typecheck`, `lint`, `test` and `build`; all must pass.
+`npm run verify` runs `typecheck`, `lint`, `test`, `build` and `audit:oss`; all must pass.
 See `CONTRIBUTING.md` for the PR workflow and `docs/ROADMAP.md` for places
 where outside contributions are welcome.
 
