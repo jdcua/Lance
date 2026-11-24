@@ -1,23 +1,13 @@
 #!/bin/sh
-# Lance pre-commit: secret scan (always) + Laya deterministic gate (when landing/ staged).
-# Fast, stdlib-only, no model. Install: git config core.hooksPath .githooks
+# Lance pre-commit: secret scan on staged content.
+# Stdlib-only, fast. Install: git config core.hooksPath .githooks
 set -e
 
-STAGED="$(git diff --cached --name-only)"
-
-# 1. Secret scan on staged content
+# Block staged secrets/tokens/keys before they can enter history.
 if git diff --cached | grep -E -i "^\+" | grep -E -i "(sk-[A-Za-z0-9]{8,}|api[_-]?key\s*[:=]\s*['\"][^'\"]{8,}|-----BEGIN [A-Z ]*PRIVATE KEY|password\s*[:=]\s*['\"][^'\"]{4,}|ghp_[A-Za-z0-9]{8,}|xox[bpas]-[A-Za-z0-9-]{8,})" >/dev/null; then
   echo "pre-commit BLOCKED: staged diff looks like it contains a secret/token/key."
   echo "Remove it, use env vars or a secret manager, then commit again."
   exit 1
 fi
 
-# 2. Laya gate when the landing page is touched
-if echo "$STAGED" | grep -q "^landing/"; then
-  python3 scripts/laya-gate.py landing || {
-    echo "pre-commit BLOCKED: laya-gate found FAILs above. Fix or run with --no-verify (and say why)."
-    exit 1
-  }
-fi
-
-echo "pre-commit ok (secrets clean, laya-gate passed)"
+echo "pre-commit ok (secrets clean)"

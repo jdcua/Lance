@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "build:trial": "node scripts/build-trial.mjs",
     "preview": "vite preview",
     "tauri": "tauri",
     "build:win": "tauri build --target x86_64-pc-windows-msvc",
@@ -20,11 +19,6 @@
     "test:axe": "node scripts/axe-gate.mjs",
     "format": "prettier --write src/",
     "format:check": "prettier --check src/",
-    "promo:build": "node scripts/promo/build.mjs",
-    "promo:shots": "node scripts/promo/shots.mjs",
-    "promo:exp-eval": "node scripts/promo/exp-eval.mjs",
-    "promo:calendar": "node scripts/promo/calendar.mjs",
-    "gen-license": "node scripts/generate-license.cjs",
     "scripts:sign-update": "echo 'Use: npx tauri signer generate -k ~/.tauri/updater.key -p ~/.tauri/updater.pub --json > scripts/updater-endpoint-template.json'",
     "version:bump": "node scripts/bump-version.cjs"
   },
