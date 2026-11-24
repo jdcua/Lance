@@ -1,95 +1,75 @@
-# Dependencies
+# Dependencies and package managers
 node_modules/
-dist/
-landing/try/
-src-tauri/target/
+.npm/
+.pnpm-store/
+.yarn/
 
-# Environment
+# Build output
+dist/
+build/
+out/
+src-tauri/target/
+dist-artifacts/
+*.AppImage
+*.AppImage.sig
+*.deb
+*.dmg
+*.msi
+*-setup.exe
+
+# Environment and secrets (keep the example, never commit a filled-in env)
 .env
 .env.*
-.env.local
-.env.production
-
-# Keys
+!.env.example
 *.key
 *.key.pub
-
-# Editor
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Sensitive
-scripts/generate-license.cjs
+*.p12
+*.pfx
+*.cer
 src-tauri/signing/*
 !src-tauri/signing/.gitkeep
 !src-tauri/signing/README.md
 
-# Lint/formatter cache
-.eslintcache
+# Lock files are intentionally committed for reproducible builds.
 
-# QA & testing artifacts
-.playwright-mcp/
-.qa-bugs.json
-.qa-progress.json
-qa.sh
-qa-shots/
-test-results/
-playwright-report/
-
-# Build plan docs (never committed to GitHub)
-docs/MONETIZATION_ONE_SHOT.md
-docs/BUILD_STATUS.md
-
-# License worker local state. The worker SOURCE is tracked (worker.js and
-# wrangler.jsonc) so fulfillment logic has git history and CI deploys it.
-# Only the wrangler cache and any local secret files stay out.
-license-worker/.wrangler/
-license-worker/.dev.vars
-license-worker/.env
-
-# Repo hygiene strays
-src/store/index.ts.bak
-lint.json
-lint.txt
-
-# Screenshots & snapshots
-*.png
-!landing/og-image.png
-!landing/favicon.png
-!assets/build/*.png
-*.jpg
-*.jpeg
-*.webp
-*.gif
-*.mp4
-*-snapshot.md
-lance-*.md
-lance-after-fix-snapshot.md
-lance-contracts-snapshot.md
-lance-initial-snapshot.md
-lance-snapshot-2.md
-launch-video/
-
-# Lance.key
-lance.key
-
-# Local databases (user data lives outside the repo; never commit these)
+# Local databases and user data
 *.db
 *.db-shm
 *.db-wal
 *.sqlite
 *.sqlite3
 
-# Artifacts
-*.AppImage
-promo-video/out/
-promo-video/*.log
-dist-artifacts/
+# Caches, logs and coverage
+*.log
+.eslintcache
+.cache/
+.parcel-cache/
+.turbo/
+coverage/
+.nyc_output/
 vite.config.ts.timestamp-*.mjs
-.qa/swarm2/
+
+# Test and QA artifacts
+test-results/
+playwright-report/
+.playwright-mcp/
+qa-shots/
+.qa/
+.laya/
+screenshots/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Scratch files
+*.bak
+lint.json
+lint.txt
+*-snapshot.md
+lance-*-snapshot.md

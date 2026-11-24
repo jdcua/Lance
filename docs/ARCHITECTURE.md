@@ -6,7 +6,7 @@
 |-------|------------|
 | Desktop shell | Tauri 2 (Rust) |
 | Frontend framework | React 18 + TypeScript |
-| Build tool | Vite 5 |
+| Build tool | Vite 8 |
 | State management | Zustand |
 | Database | SQLite (via `rusqlite`, bundled) |
 | Rich text editor | TipTap (ProseMirror) |
@@ -18,7 +18,6 @@
 | Icons | Lucide React |
 | Client portal server | Axum 0.7 (local-only HTTP) |
 | Auto-updater | Tauri updater plugin |
-| License validation | HMAC-SHA256 in Rust |
 
 ## Directory structure
 
@@ -29,7 +28,7 @@ lance/
 │   ├── main.tsx                 # React mount point
 │   ├── router.tsx               # Route definitions (17 routes, lazy-loaded)
 │   ├── index.css                # Global Tailwind styles
-│   ├── archetypes/              # 42 profession archetype configs + registry
+│   ├── archetypes/ (not present; configs live in src/components/features/registry.ts)
 │   ├── components/
 │   │   ├── ui/                  # Shared UI components (21 components)
 │   │   ├── layout/              # Sidebar, Topbar, AIBar
@@ -40,14 +39,12 @@ lance/
 │   ├── types/                   # TypeScript domain types
 │   ├── db/                      # Frontend database layer
 │   ├── utils/                   # Utilities (engines, backup, seed data, formatting)
-│   ├── lib/                     # Libraries (auth, currency, forecast, heatmap)
+│   ├── lib/                     # Libraries (commands, currency, forecast, constants)
 │   ├── hooks/                   # React hooks (auto-updater)
 │   ├── themes/                  # Theme system (7 themes + profession mapping)
 │   ├── achievements/            # Achievement definitions + checker
 │   ├── export/                  # PDF/DOCX export templates
 │   ├── import/                  # File import & parsing (CSV, DOCX, images)
-│   ├── ai/                      # Local AI features (disabled in v1)
-│   └── license/                 # License key validation (frontend side)
 ├── src-tauri/                   # Backend (Rust + Tauri)
 │   ├── src/
 │   │   ├── main.rs              # Entry point
@@ -70,7 +67,6 @@ lance/
 │   │       ├── sharing.rs       # Share tokens, portal activity
 │   │       ├── mailto.rs        # System mailto: link handler
 │   │       ├── archetypes.rs    # Archetype-specific data (renders, sessions, shoots, etc.)
-│   │       └── license.rs       # License key validation (HMAC-SHA256)
 │   ├── Cargo.toml
 │   └── tauri.conf.json
 ├── scripts/                     # Build & release scripts
@@ -113,7 +109,7 @@ The archetype system is **config-driven**. No archetype-specific logic is hardco
 
 The `ArchetypePicker` screen during onboarding selects an archetype. The `getArchetype(id)` function returns the config object. Components query the archetype config for their rendering decisions. For example, `Sidebar.tsx` reads `archetype.sidebar` to determine item order and visibility.
 
-**File count**: 42 profession files + `default.ts` + `custom.ts` + `registry.ts` + `types.ts` = 47 files.
+**Archetype registry**: `src/components/features/registry.ts` plus one config per profession.
 
 ## Database schema
 
@@ -215,7 +211,6 @@ The client portal allows freelancers to share proposals and contracts with clien
 See `docs/SECURITY.md` for the full threat model and mitigations.
 
 Key design decisions:
-- License validation runs in compiled Rust (not extractable from JS bundle)
 - All database queries use parameterized statements (no SQL injection)
 - Asset file operations use canonical path validation (no path traversal)
 - CSV imports strip formula injection characters (=, +, -, @)
@@ -237,21 +232,16 @@ Key design decisions:
 | `/finance` | Finance | Expense tracking and forecasting |
 | `/insights` | Insights | Archetype-specific insights panels |
 | `/follow-ups` | FollowUps | Pending/sent/dismissed follow-ups |
-| `/settings` | Settings | User preferences, license, backups |
+| `/settings` | Settings | User preferences and backups |
 | `/achievements` | Achievements | Achievement gallery |
 | `/assets` | Assets | File and attachment management |
 | `/search` | Search | Global search across all entities |
 
 All routes are lazy-loaded via `React.lazy` with a loading skeleton fallback.
 
-## V2 roadmap
+## Future work
 
-Foundations laid in v1:
-- `auth.ts` stub module: all identity queries route through `auth.getUserId()`
-- `user_id INTEGER DEFAULT 1` column added to all tables
-- `app_events` audit trail table created
-- Sensitive fields annotated with `-- SECURITY: encrypt with user key in v2`
-- CSP includes `connect-src` for external APIs
+The schema keeps a `user_id` column and an `app_events` audit table for optional multi-user sync. Lance itself remains local-first and account-free.
 
 Planned for v2:
 - Supabase Auth (JWT, magic link, OAuth)

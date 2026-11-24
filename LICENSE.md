@@ -1,13 +1,21 @@
-# Lance License
+MIT License
 
-Copyright © 2026 Lance. All rights reserved.
+Copyright (c) 2026 Juan Diego Cua and Lance contributors
 
-Lance is proprietary software. You may use it freely under the following terms:
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-1. You may not redistribute, resell, or sublicense Lance.
-2. You may not reverse engineer, decompile, or disassemble Lance.
-3. You may not remove or alter any copyright notices.
-4. Commercial use within your own freelance business is explicitly permitted.
-5. You may use Lance on multiple devices you personally own.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-A paid license removes the launch screen. It does not change these terms.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

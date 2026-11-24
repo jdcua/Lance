@@ -513,6 +513,8 @@ async function runMigrations(database: Database): Promise<void> {
   await database.execute('PRAGMA foreign_keys=ON');
 
   // ─── Alter columns for backward compatibility ───
+  // Legacy license_* and trial_started_at columns are retained so existing
+  // SQLite databases keep opening. The app no longer reads or writes them.
   const newColumns = [
     'ALTER TABLE user_profile ADD COLUMN tax_rate REAL DEFAULT 0',
     'ALTER TABLE user_profile ADD COLUMN payment_terms INTEGER DEFAULT 14',

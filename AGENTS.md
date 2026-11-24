@@ -98,7 +98,6 @@ and `prefers-reduced-transparency` always win.
 - Remove tests that repeat the implementation or can't fail.
 - Fix failing tests — never skip or ignore.
 - After any change: `npm run build`, `npm run lint`, `npm run test` must all pass.
-- The single pre-existing `licenseGrace` failure is unrelated — do not "fix" it by weakening assertions.
 
 ---
 
@@ -108,10 +107,10 @@ and `prefers-reduced-transparency` always win.
 npm run tsc --noEmit   # typecheck
 npm run build          # vite build
 npm run lint           # eslint
-npm run test           # vitest (310 tests, 68 files)
+npm run test           # vitest
 ```
 
-All must pass. One pre-existing test failure (`licenseGrace`) is expected and unrelated.
+All must pass.
 
 ---
 

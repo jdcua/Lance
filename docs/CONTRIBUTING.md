@@ -18,7 +18,7 @@ feat: add archetype-specific dashboard widgets
 fix: correct invoice aging calculation for partial payments
 chore: update tauri dependencies to v2.1
 security: sanitize CSV import against formula injection
-breaking: migrate auth tokens to v2 format
+breaking: change the SQLite schema in a non-compatible way
 ```
 
 ## Branch protection
@@ -49,7 +49,7 @@ All three must pass before merging. See `.github/workflows/ci.yml`.
 
 ## Release process
 
-See `docs/RELEASE.md` for the full release workflow. Summary:
+Releases are cut by tagging a commit; the Release workflow builds signed installers. Summary:
 
 ```
 node scripts/bump-version.cjs 1.2.0

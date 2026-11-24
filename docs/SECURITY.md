@@ -6,7 +6,6 @@
 
 - Malicious import files (JSON backup, CSV)
 - Local network attacks against the client portal server
-- License key bypass attempts
 - Path traversal via asset filenames
 - XSS in rendered HTML content (proposals, contracts)
 - Formula injection in CSV imports
@@ -23,7 +22,6 @@
 
 | Vulnerability                                          | Severity | Fix                                                                                                                                                        |
 | ------------------------------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| License key validation in JS (extractable from bundle) | High     | Moved to Rust Tauri command via HMAC-SHA256; hash constant only in compiled binary                                                                         |
 | Portal server lacks custom header check                | Medium   | Added `X-Lance-Client: portal` header requirement on POST endpoints                                                                                        |
 | Portal HTML renders unsanitized user content           | High     | Added ammonia HTML sanitizer; allowlist: p, strong, em, h1, h2, ul, ol, li, blockquote, hr, br; strip script, style, iframe, object, embed, form, input, a |
 | Portal page lacks security headers                     | Medium   | Added X-Frame-Options: DENY, CSP, X-Content-Type-Options: nosniff, Referrer-Policy: no-referrer                                                            |
@@ -50,21 +48,12 @@
 
 ## v2 Foundations Set in v1
 
-- `auth.ts` stub module: all identity queries route through `auth.getUserId()`
 - `user_id INTEGER DEFAULT 1` column added to all tables
 - `app_events` audit trail table created
 - Sensitive fields annotated with `-- SECURITY: encrypt with user key in v2`
-- Tauri CSP `connect-src` lists only the payment and update origins, no model
-  provider, because v2 AI is on-device by design (see
-  `SECURITY_DESIGN_NOTES.md` §5)
-
-## Current mapping
-
-This is the v1 desktop threat model. For the current OWASP Top 10:2025 /
-API Top 10:2023 / LLM Top 10:2025 mapping, the attack-surface inventory, and
-the open-findings register, see `SECURITY_DESIGN_NOTES.md`.
+- Tauri CSP `connect-src` allows only the app origin and the public GitHub API for release notes.
 
 ## Responsible Disclosure
 
-Security issues: [SUPPORT EMAIL]
+Security issues: open an issue at https://github.com/jdcua/Lance/issues
 We aim to respond within 48 hours.

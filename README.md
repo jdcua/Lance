@@ -1,75 +1,35 @@
-# Lance: Freelancer OS
+# Lance
 
-Lance is a desktop app that runs your entire freelance business: clients, projects, proposals, contracts, time tracking, invoices, expenses, and financial insights, all in one place. Everything lives on your machine. No cloud, no subscription, no vendor lock-in. Built for freelancers who want to own their data and their tools.
+Lance is an offline-first desktop app that runs your entire freelance business on your own machine.
 
-Built by [Lance freelancers](https://lance.cuajuandiego.workers.dev).
+## What it does
 
-## Why Lance, in plain words
+- Manage clients, projects, milestones, time entries, expenses, and recurring invoices in one local SQLite database.
+- Write proposals and contracts from templates, export them as PDF or DOCX, and track when clients open them.
+- Send reminders for overdue invoices and quiet proposals, with optional late fees you review before anything goes out.
+- See forecasts, effective hourly rates, client win rates, retainer burn-down, and year-end tax summaries.
+- Give clients a read-only share link to their projects and invoices, served by a local-only HTTP server. No account required.
 
-- **Win work, then get paid for all of it.** Proposals, contracts, invoices, and reminders live in one flow, so nothing slips and late payers get chased automatically.
-- **Know your numbers cold.** Forecasts, effective hourly rate, win rates, and retainer burn-down tell you what to do next, not just what happened.
-- **Set up in a minute, guided the whole way.** Pick your craft, answer one question, and an interactive tour walks you through your first client, project, and invoice.
-- **Your business stays yours.** Offline-first, no account, no cloud. Export everything anytime. Client payments go straight to you; Lance never takes a cut.
+## How it works
 
-## What's inside
+The desktop shell is Tauri 2 with a Rust backend; the UI is React 18 and TypeScript built with Vite. All business data lives in SQLite on the user's machine, accessed through Tauri commands and a single Zustand store. Profession "archetypes" are configuration, not code, and customize sidebar shortcuts, dashboard metrics, and trackers. There is no account, server, or telemetry: the app reaches the network only to check for signed updates and fetch public release notes.
 
-**Pick your archetype.** Lance knows that a photographer, a developer, and a consultant run their businesses differently. Choose from 41 profession profiles and Lance customizes your sidebar, dashboard metrics, and insight panels to match how you work. You can switch anytime. Your data stays the same.
+## Quick start
 
-**Clients.** A full CRM with contact details, communication history, custom metrics, and file attachments. Add headline KPIs per client (like MRR or follower count) and track them over time.
+```bash
+git clone https://github.com/jdcua/Lance.git && cd Lance && npm install && npm run tauri dev
+```
 
-**Projects.** Create projects from templates with built-in milestones. Assign clients, set budgets, track status. Each archetype adds its own project tracking: render logs for 3D artists, shoot logs for photographers, revision rounds for designers, build versions for developers.
+## Requirements
 
-**Proposals.** Write and send proposals directly from Lance. Pick a template, fill in scope and pricing, and export as a polished PDF. Lance tracks sent status and can draft follow-up messages when a client goes quiet.
+- Node.js 22+ and npm
+- Rust stable via [rustup](https://rustup.rs)
+- Tauri 2 system dependencies for your platform ([setup guide](https://v2.tauri.app/start/prerequisites/))
+  - Linux: `libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf`
+- No accounts, API keys, or environment variables are required
 
-**Contracts.** Generate contracts from templates with variable placeholders. Send them alongside proposals or standalone. Track signing status.
-
-**Time tracking.** Start a timer from anywhere with a keyboard shortcut. Log time manually or let the timer run. Mark hours as billable and tie them to projects. Lance shows you what's unbilled so nothing slips through.
-
-**Invoices.** Create one-off or recurring invoices. Recurring invoices auto-generate on schedule so you don't have to remember. Track payments, partial payments, and overdue status. Export as PDF.
-
-**Expenses.** Log business expenses with categories and receipts. See profit trends and year-end summaries.
-
-**Finance dashboard.** Income, expenses, profit, outstanding invoices, unbilled hours, all in one view. Filter by date range and see where your money is going.
-
-**Follow-ups.** Lance watches your sent proposals and overdue invoices and drafts friendly reminder emails when they need attention. You review and send. Nothing goes out automatically. Full template customization with variables.
-
-**Achievements.** A lightweight gamification system that tracks milestones like your first client, first invoice, hitting project counts, and export milestones. Unlock themes and accent colors as you go.
-
-**Client portal.** Give clients a read-only view of their projects, invoices, and communications. Self-contained, no account system needed.
-
-**AI proposals (coming v2).** Optional local AI that drafts proposal sections in your writing voice. Runs on your machine. Nothing leaves your computer. v1 has zero AI.
-
-**Import & export.** Drag and drop spreadsheets, documents, and images to import data. Full backup and restore as JSON. Auto-backup on a schedule you set. Export anything as PDF or DOCX.
-
-**Themes.** 7 color themes (Default, Studio, Terminal, Craft, Motion, Lens, Scale) with 8 accent colors. Light and dark mode. Compact layout option for dense screens.
-
-**Privacy.** No telemetry. No analytics. No crash reporting. No sign-up required. Lance is a desktop app. Your SQLite database stays on your machine. The app only reaches the network to check for updates, validate a Pro license key you enter, and open Paddle when you click buy — none of which carry your business data. Client payments go straight to you: add your bank or payment instructions once and they print on every invoice. Lance never processes payments and never takes a cut.
-
-## Download
-
-[Download the latest release](https://github.com/jdcua/lance/releases)
-
-- **macOS**: Apple Silicon and Intel (DMG)
-- **Windows**: 10 and 11 (MSI and NSIS installer)
-- **Linux**: AppImage and .deb
+Useful commands: `npx tsc --noEmit`, `npm run lint`, `npm test`, `npm run build`, and `npm run tauri build`. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for more.
 
 ## License
 
-Lance core is **free forever**. No time limit, no client caps, no subscription, no cloud. Your data stays on your machine.
-
-**Lance Pro** ($99/yr recommended, or $14/mo) unlocks archetype depth:
-- Archetype-specific proposals, contracts, invoices
-- Scope-creep protection (revision caps)
-- Advanced insights panels
-
-**Lance Lifetime** ($249 one-time): everything in Pro, forever, no subscription.
-
-[Buy Pro / Lifetime](https://lance.cuajuandiego.workers.dev/#pricing) — checkout opens in the app after download.
-
-## Built with
-
-Tauri · React · TypeScript · SQLite · Rust
-
-## From Lance
-
-Built by independent freelancers making decentralized software tools that run on your machine, not someone else's server.
+MIT — see [LICENSE.md](LICENSE.md).

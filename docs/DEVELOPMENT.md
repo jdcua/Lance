@@ -9,7 +9,7 @@
 ## Setup
 
 ```bash
-git clone https://github.com/jdcua/lance
+git clone https://github.com/jdcua/Lance.git
 cd lance
 npm install
 npm run tauri dev
@@ -34,25 +34,22 @@ npm run tauri dev
 ```
 lance/
 ├── src/                    # React + TypeScript frontend
-│   ├── archetypes/         # 42 profession archetype configs
-│   ├── components/         # React components (ui/, layout/, features/, insights/)
+│   ├── components/         # UI, layout, and 180+ archetype trackers
 │   ├── screens/            # Route-level page components
 │   ├── store/              # Zustand state management
 │   ├── types/              # TypeScript type definitions
 │   ├── db/                 # Frontend database layer (migrations, queries)
 │   ├── utils/              # Utilities (recurring engine, backup, seed data, etc.)
-│   ├── lib/                # Libraries (auth, currency, forecast, heatmap, constants)
+│   ├── lib/                # Libraries (commands, currency, forecast, constants)
 │   ├── hooks/              # React hooks (auto-updater)
 │   ├── themes/             # Theme system (7 themes)
 │   ├── achievements/       # Gamification system
 │   ├── export/             # PDF and DOCX export
-│   ├── import/             # File import and parsing
-│   ├── ai/                 # Local AI features
-│   └── license/            # License key validation
+│   └── import/             # File import and parsing
 ├── src-tauri/              # Rust backend (Tauri 2)
 │   ├── src/
 │   │   ├── main.rs         # Entry point
-│   │   ├── lib.rs          # App bootstrap, plugin registration, 73 commands
+│   │   ├── lib.rs          # App bootstrap and command registration
 │   │   ├── db.rs           # SQLite schema and migrations
 │   │   ├── server.rs       # Axum client portal server
 │   │   ├── error.rs        # Error types
@@ -65,10 +62,6 @@ lance/
 ├── CHANGELOG.md
 └── README.md
 ```
-
-## Releasing
-
-See `docs/RELEASE.md` for the full release process.
 
 ## Architecture
 
