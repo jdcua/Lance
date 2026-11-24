@@ -15,7 +15,6 @@ import { generateProposalBody, checkScopeWarnings, type ScopeWarning } from '../
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify } from '../achievements/notify';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
-import { maybeFirstSendMoment } from '../utils/firstWin';
 
 
 export default function NewProposal() {
@@ -125,9 +124,6 @@ export default function NewProposal() {
       });
       navigate('/proposals');
       checkAndNotify(useStore.getState(), addToast);
-      if (status === 'sent') {
-        maybeFirstSendMoment(() => useStore.getState().getActiveTier());
-      }
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to save proposal', 'error');
     } finally {

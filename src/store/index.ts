@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { DEFAULT_CURRENCY } from '../lib/constants';
 import type {
   Client,
   Project,
@@ -38,158 +37,20 @@ import type {
   PortalActivity,
 } from '../types';
 import type { Achievement } from '../achievements/index';
-import { validateLicenseKey, validateLicenseKeyFormat } from '../license';
 import { sanitizeInput, truncate, MAX_LENGTHS } from '../utils/sanitize';
-import { DAY_MS } from '../utils/format';
-import type { LicenseTier } from '../lib/constants';
 import type { Update } from '@tauri-apps/plugin-updater';
-import { TRIAL } from '../lib/constants';
 import {
   pushTrashEntry,
   trashLabel,
   restoreTrashEntry as restoreTrashRow,
   type TrashEntry,
 } from '../utils/trash';
-import { sanitizeRates, normalizeRates, defaultCurrency } from '../lib/currency';
+import { sanitizeRates, normalizeRates } from '../lib/currency';
 import { startLoad, endLoad, setError } from './slices/base';
 import type { Toast, ToastAction, ToastType } from './slices/toasts';
 import { createMetaSlice } from './slices/meta';
 import { createToastsSlice } from './slices/toasts';
 import { createUpdaterSlice } from './slices/updater';
-
-// Public URL of the license worker. Mirrors the value baked into the desktop
-// binary via LANCE_LICENSE_WORKER_URL; needed here because browser mode has no
-// Rust to make the request. Set VITE_LICENSE_WORKER_URL at build time.
-//
-// Deploys were missing this for the public /try/ build, so browser mode fell
-// back to the placeholder below, every online activation 404'd, and
-// activateLicense quietly assumed 'pro'. The same miss also left every buy
-// button in the browser build reporting "Checkout is not configured".
-const licenseWorkerUrl = (): string =>
-  (import.meta as unknown as { env?: Record<string, string | undefined> }).env
-    ?.VITE_LICENSE_WORKER_URL || '';
-
-/**
- * True when a build could not reach the real license worker. Surfaced in
- * Settings so a misconfigured build is visible instead of silently degrading.
- */
-export function licenseWorkerUnconfigured(): boolean {
-  return !licenseWorkerUrl();
-}
-
-
-
-const licenseCache = new Map<string, boolean>();
-
-// Re-validate a key every 7 days. Long enough that we are not pinging on every
-// launch, short enough that a refund or a chargeback actually downgrades the
-// install instead of waiting for a reinstall.
-const LICENSE_REVALIDATE_MS = 7 * 24 * 60 * 60 * 1000;
-
-// Cool-down after the worker stops accepting a key (refund, chargeback, or an
-// explicit revoke). The customer keeps full Pro for this long instead of
-// losing access the moment a payment reverses, then drops to free. Chosen to
-// match the revalidation interval: a downgrade is therefore observed within
-// about two weeks of the reversal, never instantly.
-const LICENSE_GRACE_DAYS = 7;
-
-/** True when the key has never been validated, or the last check is stale. */
-function licenseValidationIsStale(validatedAt?: string | null): boolean {
-  if (!validatedAt) return true;
-  const at = new Date(validatedAt).getTime();
-  if (Number.isNaN(at)) return true;
-  return Date.now() - at > LICENSE_REVALIDATE_MS;
-}
-
-async function cachedValidateLicense(key: string): Promise<boolean> {
-  if (!validateLicenseKeyFormat(key)) return false;
-  if (licenseCache.has(key)) return licenseCache.get(key)!;
-  const valid = await validateLicenseKey(key);
-  licenseCache.set(key, valid);
-  return valid;
-}
-
-/**
- * Synchronous Tauri check, for the two call sites that need it before an
- * await. The dynamic import in utils/tauri cannot answer "am I in Tauri?"
- * without already being inside an async function.
- */
-/**
- * True when a license's billed period has elapsed.
- *
- * license_expires_at is the end of the paid period for a subscription and null
- * for lifetime. An unparseable or absent value means "no expiry", so a lifetime
- * key and any key issued before this field existed both keep working. Without
- * this, a monthly customer was never downgraded: the worker returned
- * expires_at: null and this field was written but never read.
- */
-function licensePeriodEnded(expiresAt?: string | null): boolean {
-  if (!expiresAt) return false;
-  const at = new Date(expiresAt).getTime();
-  if (Number.isNaN(at)) return false;
-  return Date.now() > at;
-}
-
-/**
- * True when a profile carries an unexpired paid tier.
- *
- * isLicensed (themes, the Licensed badge) and getActiveTier (feature gates) must
- * agree. getActiveTier learned about license_expires_at while these two call
- * sites only checked license_tier, so a lapsed monthly period kept the badge
- * and every theme unlocked while feature gates correctly reported free.
- */
-function paidTierActive(profile: {
-  license_key?: string | null;
-  license_tier?: string | null;
-  license_expires_at?: string | null;
-} | null): boolean {
-  if (!profile?.license_key) return false;
-  const tier = profile.license_tier;
-  if (tier !== 'pro' && tier !== 'lifetime') return false;
-  return !licensePeriodEnded(profile.license_expires_at);
-}
-
-function isTauriRuntime(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    typeof (window as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ === 'object'
-  );
-}
-
-/**
- * Ask the worker whether a key is real, and for which tier. This is the ONLY
- * authority available in browser mode: there is no Rust offline check there,
- * so after validateLicenseKey stopped returning a truthy {} from the shim's
- * catch-all, activation in a browser had no working path at all.
- *
- * The worker is authoritative anyway. It knows the tier and whether the key was
- * revoked, which the offline HMAC cannot tell you.
- */
-async function validateLicenseOnline(
-  key: string,
-): Promise<{ valid: boolean; tier?: string; expires_at?: string | null; message?: string } | null> {
-  try {
-    const { isTauri } = await import('../utils/tauri');
-    if (isTauri()) {
-      return await invoke<{
-        valid: boolean;
-        tier: string;
-        expires_at: string | null;
-        message: string;
-      }>('validate_license_online', { key });
-    }
-    const res = await fetch(`${licenseWorkerUrl()}/validate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key }),
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (err) {
-    console.warn('[license] Online validation failed.', err);
-    return null;
-  }
-}
 
 const invoke = async <T>(cmd: string, args?: Record<string, unknown>): Promise<T> => {
   const { tauriInvoke } = await import('../utils/tauri');
@@ -266,7 +127,6 @@ export interface UnifiedStore {
   initialized: boolean;
   loading: Record<LoadingKey, boolean>;
   errors: Record<ErrorKey, string | null>;
-  isLicensed: boolean;
   portalPort: number | null;
   portalFailed: boolean;
   archetypeAppliedAt: number | null;
@@ -364,8 +224,6 @@ export interface UnifiedStore {
   // ── Profile ──
   loadProfile: () => Promise<UserProfile | null>;
   saveProfile: (data: UserProfile) => Promise<void>;
-  activateLicense: (key: string) => Promise<boolean>;
-  removeLicense: () => Promise<void>;
   setPortalPort: (port: number) => void;
   setPortalFailed: () => void;
   setArchetypeAppliedAt: (ts: number) => void;
@@ -627,19 +485,6 @@ export interface UnifiedStore {
     profit: number;
   };
 
-  // ── License / Trial / Grace ──
-  initLicenseFlow: () => Promise<void>;
-  pingLicenseServer: () => Promise<void>;
-  startTrial: () => Promise<'started' | 'already' | 'expired' | 'licensed' | 'no-profile'>;
-  isTier: (tier: string) => boolean;
-  getActiveTier: () => LicenseTier;
-  getFeatureFlags: () => Promise<Record<string, boolean>>;
-  // ── Test mode (dev + trial builds only; see demo/testMode.ts) ──
-  testMode: { active: boolean; tier: LicenseTier | null };
-  enableTestMode: (tier: LicenseTier) => Promise<void>;
-  setTestTier: (tier: LicenseTier) => void;
-  setTestTrialClock: (daysAgo: number | null) => Promise<void>;
-  disableTestMode: () => Promise<void>;
 }
 
 export type AppStore = UnifiedStore;
@@ -701,7 +546,6 @@ export const useStore = create<UnifiedStore>((set, get) => {
     expenses: [],
     profile: null,
     profileLoaded: false,
-    isLicensed: false,
     communications: [],
     recurringInvoices: [],
     importHistory: [],
@@ -1274,34 +1118,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
         if (profile && profile.exchange_rates !== undefined) {
           profile.exchange_rates = normalizeRates(profile.exchange_rates);
         }
-        // isLicensed drives theme unlocks and the "Licensed" badge, so it must
-        // reflect a real verdict. In a browser the offline check does not exist,
-        // so the stored license_tier (written by activateLicense from the worker)
-        // is the signal, subject to the same period check getActiveTier applies.
-        // Without that, an elapsed monthly period still showed "Pro licensed"
-        // with every theme unlocked, because only getActiveTier knew about
-        // license_expires_at.
-        let licensed = paidTierActive(profile);
-        if (licensed && isTauriRuntime() && profile?.license_key) {
-          licensed = await cachedValidateLicense(profile.license_key);
-        }
-        set({ profile, profileLoaded: true, isLicensed: licensed });
-        // Rehydrate test mode across reloads: the flag outlives the page,
-        // and loadProfile is the real boot entry point. Guarded by the
-        // build-time constant, not a runtime check, an unguarded rehydrate
-        // here meant one localStorage write granted permanent Pro in a
-        // production desktop build.
-        if (__TEST_MODE__) {
-          try {
-            const { loadTestMode } = await import('../demo/testMode');
-            const persisted = loadTestMode();
-            if (persisted.active && persisted.tier) {
-              set({ testMode: persisted, isLicensed: true });
-            }
-          } catch {
-            /* test mode stays off */
-          }
-        }
+        set({ profile, profileLoaded: true });
         return profile;
       } catch (e) {
         console.error('[store] loadProfile failed:', e);
@@ -1382,375 +1199,9 @@ export const useStore = create<UnifiedStore>((set, get) => {
         }
       }
       await invoke('upsert_user_profile', { payload: sanitized });
-      const licensed = paidTierActive(sanitized);
-      set({ profile: sanitized, isLicensed: licensed });
+      set({ profile: sanitized });
       if (ratesNote) get().addToast(ratesNote, 'info', 6000);
     },
-    activateLicense: async (key) => {
-      // Shape first. validateLicenseKey returns tauriInvoke('validate_license'),
-      // and browser mode has no handler for it, so it fell to the shim's
-      // catch-all returning {}. {} is truthy, so every string passed and
-      // pasting "hello" granted Pro. Confirmed live: a mangled key showed
-      // "Licensed".
-      if (!validateLicenseKeyFormat(key)) return false;
-
-      // A fresh install can reach the license dialog before onboarding has
-      // written a profile. Requiring one here made every activation on that
-      // path report "Invalid license key" even for a valid key.
-      let profile = get().profile;
-      if (!profile) {
-        await get().saveProfile({ currency: defaultCurrency() } as UserProfile);
-        profile = get().profile;
-      }
-      if (!profile) return false;
-
-      const { isTauri } = await import('../utils/tauri');
-
-      // Desktop: the offline HMAC proves the key was minted by us and works
-      // with no network. Then confirm with the worker for the tier.
-      if (isTauri()) {
-        if (!(await cachedValidateLicense(key))) return false;
-      }
-
-      // The worker is authoritative for tier and revocation, which the offline
-      // check cannot know. It is also the ONLY source of truth in a browser.
-      const online = await validateLicenseOnline(key);
-
-      let tier: LicenseTier = 'pro';
-      if (online?.valid) {
-        tier = (online.tier || 'pro') as LicenseTier;
-      } else if (online) {
-        // The worker answered and said no: revoked, refunded, or never issued.
-        if (!isTauri()) return false;
-        // Desktop keeps the offline-valid key during its cool-down rather than
-        // refusing activation outright; pingLicenseServer applies the window.
-        console.warn('[license] Worker rejected an offline-valid key:', online.message);
-      } else {
-        // Worker unreachable. Desktop falls back to the offline verdict.
-        // A browser has nothing to fall back on, so refuse rather than grant
-        // Pro to an unverified key.
-        if (!isTauri()) return false;
-        console.warn('[license] Worker unreachable during activation; using offline check.');
-      }
-
-      const now = new Date().toISOString();
-      // This object is sent over the Tauri IPC boundary to the Rust
-      // UpsertProfilePayload (which has deny_unknown_fields). UI-only flags
-      // like isLicensed must stay out of it or the whole activation fails.
-      const updated = {
-        ...profile,
-        license_key: key,
-        licensed_at: now,
-        license_tier: tier,
-        license_expires_at: online?.valid ? (online.expires_at ?? undefined) : profile.license_expires_at,
-        license_validated_at: now,
-      };
-      await invoke('upsert_user_profile', { payload: updated });
-      set({ profile: updated, isLicensed: true });
-      return true;
-    },
-    removeLicense: async () => {
-      const profile = get().profile;
-      if (!profile) return;
-      const updated = {
-        ...profile,
-        license_key: undefined,
-        licensed_at: undefined,
-        license_tier: undefined,
-        license_expires_at: undefined,
-        license_validated_at: undefined,
-        license_grace_until: undefined,
-      };
-      await invoke('upsert_user_profile', { payload: updated });
-      set({ profile: updated, isLicensed: false });
-    },
-    startTrial: async () => {
-      // Explicit "Try Pro free" action behind every trial CTA. Starts the
-      // clock only if it never started (never resets, that would mint
-      // infinite trials). Returns the resulting state so callers can show
-      // the right next step instead of leaving the plan visibly unchanged.
-      const profile = get().profile;
-      if (!profile) return 'no-profile';
-      if (profile.license_key) return 'licensed';
-      if (profile.trial_started_at) {
-        return get().getActiveTier() === 'trial' ? 'already' : 'expired';
-      }
-      const updated = { ...profile, trial_started_at: new Date().toISOString() };
-      await invoke('upsert_user_profile', { payload: updated });
-      set({ profile: updated });
-      return 'started';
-    },
-
-    // ── License tier / trial / grace ───
-    initLicenseFlow: async () => {
-      const profile = get().profile;
-      if (!profile) return;
-      const now = new Date().toISOString();
-
-      // One-time relaunch amnesty: every keyless profile gets a fresh full
-      // 37-day trial, including early profiles whose clocks started before
-      // the trial tier actually resolved. Licensed profiles are untouched.
-      // Runs once per machine (flagged in localStorage).
-      if (!profile.license_key && !profile.license_tier) {
-        let amnesty = false;
-        try {
-          amnesty = localStorage.getItem('lance:trial-reset-v1') !== 'done';
-        } catch {
-          /* private mode: fall through to normal start */
-        }
-        if (amnesty) {
-          const updated = { ...profile, trial_started_at: now };
-          await invoke('upsert_user_profile', { payload: updated });
-          set({ profile: updated });
-          try {
-            localStorage.setItem('lance:trial-reset-v1', 'done');
-          } catch {
-            /* private mode */
-          }
-          return;
-        }
-      }
-
-      // Start trial if never started
-      if (!profile.trial_started_at) {
-        const updated = { ...profile, trial_started_at: now };
-        await invoke('upsert_user_profile', { payload: updated });
-        set({ profile: updated });
-      }
-
-      // Re-validate on a schedule, not once ever. `license_validated_at` was
-      // written on first success and never re-checked, so a refunded or
-      // chargeback'd key kept `isLicensed: true` indefinitely, the worker's
-      // `revoked` flag never reached an activated install.
-      if (profile.license_key && licenseValidationIsStale(profile.license_validated_at)) {
-        await get().pingLicenseServer();
-      }
-    },
-
-    pingLicenseServer: async () => {
-      const profile = get().profile;
-      if (!profile?.license_key) return;
-
-      const { isTauri } = await import('../utils/tauri');
-
-      try {
-        // In Tauri, call the Rust command to ping the license server.
-        // In browser mode we call the worker directly, otherwise a trial user
-        // redeeming a key could never be validated online at all, since Rust
-        // is not there to do it.
-        //
-        // Browser mode with no baked-in worker URL fetches '/validate', which
-        // resolves to the current origin and returns the app's own HTML, so
-        // r.json() throws. That lands in the catch below, which logs and leaves
-        // the tier alone. The placeholder URL that used to be here made this a
-        // silent 404 against a non-existent host instead; the real fix is
-        // wiring VITE_LICENSE_WORKER_URL into the browser build.
-        const result = isTauri()
-          ? await invoke<{
-              valid: boolean;
-              tier: string;
-              expires_at?: string;
-              message: string;
-            }>('validate_license_online', { key: profile.license_key })
-          : await fetch(`${licenseWorkerUrl()}/validate`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ key: profile.license_key }),
-            }).then((r) => {
-              if (!r.ok) throw new Error(`license worker returned ${r.status}`);
-              return r.json();
-            });
-
-
-        if (result.valid) {
-          const profile = get().profile;
-          if (!profile) return;
-          const updated = {
-            ...profile,
-            currency: profile.currency || DEFAULT_CURRENCY,
-            license_tier: result.tier,
-            license_expires_at: result.expires_at,
-            license_validated_at: new Date().toISOString(),
-            license_grace_until: undefined,
-          };
-          await invoke('upsert_user_profile', { payload: updated });
-          set({ profile: updated, isLicensed: true });
-        } else if (result.tier) {
-          // The worker says this key is no longer good (revoked after a refund
-          // or a chargeback arrives as tier 'expired'). Do NOT drop the tier
-          // immediately: keep Pro running and start the cool-down window.
-          //
-          // The previous behaviour wrote the bad tier straight to the profile
-          // and set isLicensed false, so a refund locked someone out of work
-          // they had already paid for with no warning. The grace timestamp was
-          // recorded here but nothing read it on the happy path, so the "2-day
-          // grace" the comment described never actually applied.
-          //
-          // getActiveTier() also reads license_expires_at, so a lapsed monthly
-          // period expires on its own even between pings. The cool-down applies
-          // here too, deliberately: a renewal webhook or a dunning retry can
-          // land a few days late, and losing Pro immediately would punish
-          // someone who already paid. Net effect is roughly 7 days past the
-          // period end.
-          const profile = get().profile;
-          if (!profile) return;
-          const stillPro = result.tier !== 'free' && result.tier !== 'expired';
-          const updated = {
-            ...profile,
-            currency: profile.currency || DEFAULT_CURRENCY,
-            license_tier: stillPro ? result.tier : profile.license_tier,
-            license_expires_at: result.expires_at ?? profile.license_expires_at,
-            license_validated_at: new Date().toISOString(),
-            license_grace_until: new Date(
-              Date.now() + LICENSE_GRACE_DAYS * DAY_MS,
-            ).toISOString(),
-          };
-          await invoke('upsert_user_profile', { payload: updated });
-          set({ profile: updated, isLicensed: true });
-          console.warn(
-            `[license] Key reported ${result.tier} (${result.message}). ` +
-              `Keeping Pro for ${LICENSE_GRACE_DAYS} days.`,
-          );
-        }
-      } catch (e) {
-        // Worker unreachable. This is NOT evidence the key is bad, so the
-        // cool-down clock must NOT be advanced here: an offline customer would
-        // otherwise lose Pro purely because they lost wifi. Only the network
-        // path can end the grace, and only after it has genuinely elapsed.
-        console.warn('[license] Online ping failed, using cached/offline:', e);
-      }
-
-      // Cool-down expiry. Runs on every ping, success or failure, because the
-      // grace can lapse while the worker is unreachable and the downgrade must
-      // still happen. Persisted so the tier survives a restart.
-      const current = get().profile;
-      if (current?.license_tier && current.license_grace_until) {
-        const graceUntil = new Date(current.license_grace_until).getTime();
-        if (!isNaN(graceUntil) && Date.now() > graceUntil) {
-          const updated = {
-            ...current,
-            license_tier: 'free' as LicenseTier,
-            license_grace_until: undefined,
-          };
-          await invoke('upsert_user_profile', { payload: updated });
-          set({ profile: updated, isLicensed: false });
-          console.warn('[license] Cool-down ended, downgraded to free');
-        }
-      }
-    },
-
-    isTier: (tier: string) => {
-      if (__TEST_MODE__) {
-        const testMode = get().testMode;
-        if (testMode.active && testMode.tier) return testMode.tier === tier;
-      }
-      const profile = get().profile;
-      return profile?.license_tier === tier;
-    },
-
-    getActiveTier: (): LicenseTier => {
-      if (__TEST_MODE__) {
-        const testMode = get().testMode;
-        if (testMode.active && testMode.tier) return testMode.tier;
-      }
-      const profile = get().profile;
-      if (!profile) return 'free';
-      // Server-validated or downgraded tiers win, but paid tiers require
-      // the key to still be present. Otherwise removing a key would leave
-      // a stale 'pro' tier granting free Pro forever.
-      if (profile.license_tier) {
-        const serverTier = profile.license_tier as LicenseTier;
-        // A paid tier held during its cool-down keeps working, key or not:
-        // the key is still on disk because we never clear it, but a user who
-        // removed the key during the window should not silently keep Pro
-        // forever, so the key is still required.
-        if (serverTier === 'pro' || serverTier === 'lifetime') {
-          if (!profile.license_key) {
-            /* key gone, fall through */
-          } else if (licensePeriodEnded(profile.license_expires_at)) {
-            // The billed period has elapsed. Read here rather than trusting the
-            // server tier alone: the app is offline much of the time, and this
-            // field was previously stored and NEVER read, so a monthly
-            // subscriber kept Pro indefinitely. Lifetime records carry no expiry
-            // (null), so they are unaffected.
-            return 'expired';
-          } else {
-            return serverTier;
-          }
-        } else {
-          return serverTier;
-        }
-      }
-      // Deliberately NOT `else if (profile.license_key) return 'lifetime'`.
-      // With no server-recorded tier, inferring 'lifetime' from the mere
-      // presence of a key meant every offline-validated key, including a
-      // monthly subscriber's, and including one the server has never seen ,
-      // displayed as Lifetime. No tier is known here, so the honest answer is
-      // to fall through to the trial clock and resolve 'free'.
-      // Keyless trial derived from the trial clock: full Pro through the
-      // grace window (day 37), expired after. Without this, trial users
-      // silently resolved to 'free' and the trial never existed.
-      if (profile.trial_started_at) {
-        const started = new Date(profile.trial_started_at).getTime();
-        if (!isNaN(started)) {
-          const ageDays = Math.floor((Date.now() - started) / DAY_MS);
-          if (ageDays <= TRIAL.HARD_DAY) return 'trial';
-          return 'expired';
-        }
-      }
-      return 'free';
-    },
-
-    getFeatureFlags: async () => {
-      const { getFeatureFlags } = await import('../lib/constants');
-      return getFeatureFlags(get().getActiveTier());
-    },
-
-    // ── Test mode (dev + trial builds only; entry UI lives in Settings) ──
-    testMode: { active: false, tier: null },
-
-    enableTestMode: async (tier) => {
-      // Hard no-op in production desktop builds. Guarding the render site was
-      // not enough: these are store actions, callable from the console or from
-      // any injected script, so every one of them needs the gate.
-      if (!__TEST_MODE__) return;
-      const { loadTestMode, activateTestMode, snapshotProfile } = await import('../demo/testMode');
-      const persisted = loadTestMode();
-      if (persisted.active && persisted.tier) {
-        set({ testMode: persisted, isLicensed: true });
-        return;
-      }
-      snapshotProfile();
-      set({ testMode: activateTestMode(tier), isLicensed: true });
-    },
-
-    setTestTier: (tier) => {
-      if (!__TEST_MODE__) return;
-      if (!get().testMode.active) return;
-      import('../demo/testMode').then(({ activateTestMode }) => {
-        set({ testMode: activateTestMode(tier), isLicensed: true });
-      });
-    },
-
-    setTestTrialClock: async (daysAgo) => {
-      if (!__TEST_MODE__) return;
-      const profile = get().profile;
-      if (!profile) return;
-      const trial_started_at =
-        daysAgo === null ? undefined : new Date(Date.now() - daysAgo * DAY_MS).toISOString();
-      const updated = { ...profile, trial_started_at };
-      await invoke('upsert_user_profile', { payload: updated });
-      set({ profile: updated });
-    },
-
-    disableTestMode: async () => {
-      if (!__TEST_MODE__) return;
-      const { deactivateTestMode, restoreProfileSnapshot } = await import('../demo/testMode');
-      set({ testMode: deactivateTestMode() });
-      restoreProfileSnapshot();
-      await get().loadProfile();
-    },
-
     setPortalPort: (port) => set({ portalPort: port, portalFailed: false }),
     setPortalFailed: () => set({ portalFailed: true }),
     setArchetypeAppliedAt: (ts) => set({ archetypeAppliedAt: ts }),
@@ -1857,7 +1308,7 @@ export const useStore = create<UnifiedStore>((set, get) => {
       const doomed = get().allAttachments.find((a) => a.id === id);
       await invoke('delete_attachment', { id });
       set({ allAttachments: get().allAttachments.filter((a) => a.id !== id) });
-      // Drop trial bytes too (no-op for desktop paths and unknown ids).
+      // Drop browser-mode bytes too (no-op for desktop paths and unknown ids).
       if (doomed && doomed.file_path.startsWith('idb:')) {
         const { deleteAssetFile } = await import('../demo/assetStore');
         await deleteAssetFile(doomed.file_path.slice(4));

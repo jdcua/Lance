@@ -1,5 +1,5 @@
 /**
- * Trial asset bytes: IndexedDB with an in-memory fallback.
+ * Browser-mode asset bytes: IndexedDB with an in-memory fallback.
  *
  * Attachment ROWS live in localStorage (like everything else); file BYTES
  * live here, keyed by attachment id. file_path values starting with `idb:`
@@ -12,7 +12,7 @@
 import { useEffect, useState } from 'react';
 
 export const IDB_PREFIX = 'idb:';
-const DB_NAME = 'lance-trial-assets';
+const DB_NAME = 'lance-assets';
 const STORE_NAME = 'files';
 
 const memoryFallback = new Map<string, Blob>();
@@ -135,7 +135,7 @@ export async function deleteAssetFile(id: string): Promise<void> {
   }
 }
 
-/** Remove everything (trial reset calls this). */
+/** Remove every browser-mode asset (used by reset). */
 export async function clearAssetFiles(): Promise<void> {
   memoryFallback.clear();
   for (const url of objectUrlCache.values()) URL.revokeObjectURL(url);
@@ -165,7 +165,7 @@ export async function clearAssetFiles(): Promise<void> {
  *
  * The privacy panel reports these separately from localStorage, because
  * attachment bytes live here and counting only localStorage understates what
- * the trial is keeping, which is how the panel came to claim "0 B across 0
+ * the browser is keeping, which is how an audit could claim "0 B across 0
  * keys" while a client's PDF was still on disk.
  */
 export async function countAssetFiles(): Promise<number> {

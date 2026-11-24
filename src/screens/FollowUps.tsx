@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import { generateFollowUpDraft, generateSubjectLine, TEMPLATE_LABELS, openMailTo, resolveDunningTone, type DunningTone } from '../utils/followUpTemplates';
 import { computeLateFee, lateFeeParagraph } from '../utils/lateFees';
-import { getFeatureFlags } from '../lib/constants';
 import { commands } from '../lib/commands';
 import { formatCurrency, relativeDate, parseDateString, DAY_MS } from '../utils/format';
 
@@ -28,7 +27,7 @@ export default function FollowUps() {
     followUpLogs, loadAllFollowUpLogs,
     updateFollowUpStatus,
     followUpSettings,
-    profile,    getActiveTier,
+    profile,
   } = useStore();
   const addToast = useToasts((s) => s.add);
   const followUpsError = useStore((s) => s.errors.invoices || s.errors.proposals || s.errors.clients);
@@ -41,12 +40,11 @@ export default function FollowUps() {
     [getActiveFollowUps, pendingFollowUps, invoices, proposals],
   );
 
-  // Smart dunning (Pro): escalation drafts speak in the freelancer's voice.
-  // Free tiers always render the default templates.
-  const dunningTone: DunningTone | undefined = useMemo(() => {
-    if (getFeatureFlags(getActiveTier()).smartDunning !== true) return undefined;
-    return resolveDunningTone(profile?.profession, followUpSettings.tone);
-  }, [getActiveTier, profile?.profession, followUpSettings.tone]);
+  // Smart dunning: escalation drafts speak in the freelancer's voice.
+  const dunningTone: DunningTone | undefined = useMemo(
+    () => resolveDunningTone(profile?.profession, followUpSettings.tone),
+    [profile?.profession, followUpSettings.tone],
+  );
 
   const [tab, setTab] = useState<Tab>('pending');
   const [filter, setFilter] = useState<Filter>('all');
@@ -126,7 +124,7 @@ export default function FollowUps() {
         projectName: proposalTitle,
         freelancerName: profile?.name || 'Freelancer',
       }, followUpSettings.templates, dunningTone);
-      // Late-fee footnote on invoice drafts (Pro, when enabled and accrued).
+      // Late-fee footnote on invoice drafts (when enabled and accrued).
       let draft = draftBase;
       if (dunningTone !== undefined && followUpSettings.lateFeeEnabled === true && log.entity_type === 'invoice') {
         const iv = getInvoice(log.entity_id);

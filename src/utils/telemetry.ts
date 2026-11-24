@@ -14,8 +14,6 @@ export type TelemetryEventName =
   | 'onboarding_step'
   | 'onboarding_done'
   | 'checklist_step_done'
-  | 'upgrade_modal_open'
-  | 'pro_feature_used'
   | 'validation_error'
   | 'empty_state_seen';
 

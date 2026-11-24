@@ -12,9 +12,8 @@ import { useToasts } from '../store/toastStore';
 import { save } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeFile } from '@tauri-apps/plugin-fs';
 import { open } from '@tauri-apps/plugin-dialog';
-import { Check, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { applyTheme, getTheme } from '../themes/themes';
-import { commands } from '../lib/commands';
 import type { ThemeId } from '../themes';
 import { getUnlockedThemes, getUnlockedAchievementKeys } from '../achievements/checker';
 import { clearSampleData } from '../utils/seedData';
@@ -45,9 +44,6 @@ export default function Settings() {
     profile,
     loadProfile,
     saveProfile,
-    isLicensed,
-    activateLicense,
-    removeLicense,
     followUpSettings,
     loadFollowUpSettings,
     getAssetsDir,
@@ -57,14 +53,7 @@ export default function Settings() {
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState('');
   const [loading, setLoading] = useState(true);
-  const [showLicenseModal, setShowLicenseModal] = useState(false);
-  const [licenseKey, setLicenseKey] = useState('');
-  const [licenseError, setLicenseError] = useState('');
-  const [licenseActivating, setLicenseActivating] = useState(false);
-  const [licenseSuccess, setLicenseSuccess] = useState(false);
-  const [showRemoveLicenseConfirm, setShowRemoveLicenseConfirm] = useState(false);
   const [showClearSampleConfirm, setShowClearSampleConfirm] = useState(false);
-  const licenseInputRef = useRef<HTMLInputElement>(null);
   const [isSeeded, setIsSeeded] = useState(localStorage.getItem('lance:seeded') === 'true');
   const [showAssetWarning, setShowAssetWarning] = useState(false);
   const [showImportSummary, setShowImportSummary] = useState(false);
@@ -141,10 +130,8 @@ export default function Settings() {
     navigate(-1);
   }, [navigate]);
   // Close settings with Escape (if no inner modal is open). Also bail when ANY
-  // app-level overlay (upgrade modal, splash, walkthrough, changelog, import…)
-  // is open: Escape should dismiss the topmost modal, never navigate away
-  // underneath it (previously Escape closed the upgrade modal AND left
-  // Settings in a single keypress).
+  // app-level overlay is open: Escape should dismiss the topmost modal, never
+  // navigate away underneath it.
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || innerModalOpenRef.current) return;
@@ -158,20 +145,8 @@ export default function Settings() {
 
   useEffect(() => {
     innerModalOpenRef.current =
-      showResetModal ||
-      showLicenseModal ||
-      showAssetWarning ||
-      showSchemaWarnModal ||
-      showImportSummary ||
-      showRemoveLicenseConfirm;
-  }, [
-    showResetModal,
-    showLicenseModal,
-    showAssetWarning,
-    showSchemaWarnModal,
-    showImportSummary,
-    showRemoveLicenseConfirm,
-  ]);
+      showResetModal || showAssetWarning || showSchemaWarnModal || showImportSummary;
+  }, [showResetModal, showAssetWarning, showSchemaWarnModal, showImportSummary]);
 
   useEffect(() => {
     loadProfile()
@@ -195,8 +170,6 @@ export default function Settings() {
         always_include: profile.always_include || '',
         payment_instructions: profile.payment_instructions || '',
         theme: profile.theme || 'light',
-        license_key: profile.license_key,
-        licensed_at: profile.licensed_at,
         ai_enabled: profile.ai_enabled ?? false,
         proposal_expiry_days: profile.proposal_expiry_days,
       });
@@ -206,20 +179,14 @@ export default function Settings() {
   useEffect(() => {
     const stored = (localStorage.getItem('lance:theme') || 'default') as ThemeId;
     setActiveTheme(stored);
-    if (isLicensed) {
-      setUnlockedThemes(
-        new Set(['default', 'studio', 'terminal', 'craft', 'motion', 'lens', 'scale']),
-      );
-    } else {
-      Promise.all([getUnlockedThemes(), getUnlockedAchievementKeys()]).then(
-        ([unlocked, achievementKeys]) => {
-          const set = new Set(['default', ...unlocked]);
-          setUnlockedThemes(set);
-          setUnlockedAchievements(new Set(achievementKeys));
-        },
-      );
-    }
-  }, [isLicensed, profile?.profession]);
+    Promise.all([getUnlockedThemes(), getUnlockedAchievementKeys()]).then(
+      ([unlocked, achievementKeys]) => {
+        const set = new Set(['default', ...unlocked]);
+        setUnlockedThemes(set);
+        setUnlockedAchievements(new Set(achievementKeys));
+      },
+    );
+  }, [profile?.profession]);
 
   // Load density and accent from localStorage
   useEffect(() => {
@@ -558,7 +525,7 @@ export default function Settings() {
 
       const mode = importReplaceMode ? 'replace' : 'additive';
       // Blob materializer: exported file bytes land back in real storage.
-      // Desktop writes into the assets folder; browser/trial restores into
+      // Desktop writes into the assets folder; browser restores into
       // IndexedDB. Rows always import, only bytes depend on this.
       const materialize = async (id: string, bytes: Uint8Array, mime: string, filename: string) => {
         if (isTauriApp()) {
@@ -679,54 +646,6 @@ export default function Settings() {
     }
   };
 
-  const handleActivateLicense = async () => {
-    const key = licenseKey.trim().toUpperCase();
-    if (!key) {
-      setLicenseError('Enter a license key.');
-      licenseInputRef.current?.focus();
-      return;
-    }
-    setLicenseActivating(true);
-    setLicenseError('');
-    try {
-      const success = await activateLicense(key);
-      if (success) {
-        setLicenseSuccess(true);
-        addToast('Lance is now licensed. All themes unlocked.', 'unlock');
-         try {
-           localStorage.setItem('lance:pro-onboarding-pending', 'true');
-         } catch {
-           /* private mode */
-         }
-         commands.dispatch('lance:pro-activated');
-        setUnlockedThemes(
-          new Set(['default', 'studio', 'terminal', 'craft', 'motion', 'lens', 'scale']),
-        );
-      } else {
-        setLicenseError('Invalid license key. Check your key and try again.');
-        licenseInputRef.current?.focus();
-      }
-    } catch (err) {
-      addToast(err?.toString?.() || 'Failed to activate license', 'error');
-      setLicenseError('An error occurred. Please try again.');
-    } finally {
-      setLicenseActivating(false);
-    }
-  };
-
-  const handleRemoveLicense = async () => {
-    setShowRemoveLicenseConfirm(false);
-    try {
-      await removeLicense();
-      addToast('License removed.', 'info');
-      getUnlockedThemes().then((unlocked) => {
-        setUnlockedThemes(new Set(['default', ...unlocked]));
-      });
-    } catch (err) {
-      addToast(err?.toString?.() || 'Failed to remove license', 'error');
-    }
-  };
-
   // Section prop bag: Settings-local state + shell handlers only. Store data
   // is read by sections directly. Same values the inline JSX saw before.
   const bag: SettingsBag = {
@@ -735,10 +654,6 @@ export default function Settings() {
     autoSave,
     saved,
     setSaved,
-    setLicenseKey,
-    setLicenseError,
-    setShowLicenseModal,
-    setShowRemoveLicenseConfirm,
     setShowResetModal,
     setShowClearSampleConfirm,
     isSeeded,
@@ -895,101 +810,6 @@ export default function Settings() {
               }
             >
               Delete everything
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* License modal */}
-      <Modal
-        open={showLicenseModal}
-        onClose={() => {
-          if (!licenseActivating) {
-            setShowLicenseModal(false);
-            setLicenseKey('');
-            setLicenseError('');
-            setLicenseSuccess(false);
-          }
-        }}
-        title="Enter your license key"
-        size="sm"
-      >
-        <div className="space-y-4">
-          <div>
-            <div className="relative">
-              <input
-                ref={licenseInputRef}
-                type="text"
-                value={licenseKey}
-                onChange={(e) => {
-                  // Strip formatting, then drop the LANCE prefix before
-                  // regrouping. The old code kept 'LANCE' AND re-sliced from
-                  // index 5 of a value that still contained it, so pasting a
-                  // real key produced LANCE-ANCE-NCMW-5XKT-HFWR: the prefix
-                  // duplicated and the key was silently mangled.
-                  const cleaned = e.target.value
-                    .replace(/[^A-Za-z0-9]/g, '')
-                    .toUpperCase();
-                  const raw = cleaned.startsWith('LANCE') ? cleaned.slice(5) : cleaned;
-                  let formatted = 'LANCE';
-                  if (raw.length > 0) formatted += '-' + raw.slice(0, 4);
-                  if (raw.length > 4) formatted += '-' + raw.slice(4, 8);
-                  if (raw.length > 8) formatted += '-' + raw.slice(8, 12);
-                  if (raw.length > 12) formatted += '-' + raw.slice(12, 16);
-                  setLicenseKey(formatted);
-                  setLicenseError('');
-                  setLicenseSuccess(false);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !licenseActivating) handleActivateLicense();
-                }}
-                placeholder="LANCE-XXXX-XXXX-XXXX-XXXX"
-                maxLength={25}
-                disabled={licenseActivating || licenseSuccess}
-                className={`w-full px-3 py-2 text-sm rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 bg-[var(--bg-card)] font-mono tracking-wider ${
-                  licenseError
-                    ? 'border border-[var(--danger)] focus:border-[var(--danger)] focus:ring-[var(--danger)]/20'
-                    : licenseSuccess
-                      ? 'border border-green-500 focus:border-green-500 focus:ring-green-500/20'
-                      : 'border border-[var(--border-color)] focus:border-[var(--accent)] focus:ring-[var(--accent)]/20'
-                }`}
-                autoFocus
-              />
-              {licenseActivating && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-[var(--accent)] border-t-transparent" />
-                </div>
-              )}
-              {licenseSuccess && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <Check size={16} className="text-green-500 animate-bounce" />
-                </div>
-              )}
-            </div>
-            {licenseError && <p className="text-xs text-[var(--danger)] mt-2">{licenseError}</p>}
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setShowLicenseModal(false);
-                setLicenseKey('');
-                setLicenseError('');
-                setLicenseSuccess(false);
-              }}
-              size="sm"
-              disabled={licenseActivating}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleActivateLicense}
-              loading={licenseActivating}
-              disabled={!licenseKey.trim() || licenseActivating || licenseSuccess}
-              size="sm"
-            >
-              {licenseSuccess ? 'Activated' : 'Activate'}
             </Button>
           </div>
         </div>
@@ -1185,15 +1005,6 @@ export default function Settings() {
         </div>
       </Modal>
 
-      <ConfirmDialog
-        open={showRemoveLicenseConfirm}
-        onClose={() => setShowRemoveLicenseConfirm(false)}
-        onConfirm={handleRemoveLicense}
-        title="Remove License"
-        message="Remove license key? The splash screen will return and theme locks will be re-applied. Your data is not affected."
-        confirmLabel="Remove license"
-        variant="danger"
-      />
       <ConfirmDialog
         open={showClearSampleConfirm}
         onClose={() => setShowClearSampleConfirm(false)}

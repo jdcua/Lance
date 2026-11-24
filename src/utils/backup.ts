@@ -266,7 +266,7 @@ export async function fetchBackupTables(): Promise<Record<string, unknown[]>> {
 
 /**
  * Portable file bytes. Attachment ROWS travel in their table; BYTES travel
- * here so a backup carries actual files across machines and into the trial.
+ * here so a backup carries actual files across machines.
  * Caps keep JSON backups sane; bigger files import as metadata with the row
  * intact (the file itself stays behind). Older app versions ignore this
  * section (no TABLE_INSERT_MAP entry), so the format stays compatible.
@@ -323,7 +323,7 @@ export function sanitizeBlobName(name: string): string {
 
 /**
  * Collect portable bytes for attachments whose contents are reachable:
- * trial idb: paths (IndexedDB) and desktop disk files. Returns blobs plus
+ * browser idb: paths (IndexedDB) and desktop disk files. Returns blobs plus
  * the count skipped by caps or unreachable paths.
  */
 export async function fetchAttachmentBlobs(): Promise<{
@@ -570,11 +570,7 @@ export const TABLE_INSERT_MAP: Record<string, { table: string; columns: string[]
       'always_include',
       'writing_style',
       'theme',
-      // license_key / licensed_at are deliberately ABSENT. A backup is a file
-      // people email to themselves, upload to a drive, and hand to a colleague
-      //, exporting the key meant sharing the backup shared the licence, while
-      // the fulfilment email tells people the key "unlocks Pro on all your
-      // devices". A restore keeps whatever licence is already on the machine.
+      // Legacy license fields are deliberately excluded from backups.
       'ai_enabled',
       'profession',
       'custom_archetype_config',

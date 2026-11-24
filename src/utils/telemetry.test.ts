@@ -23,7 +23,7 @@ describe('local-first telemetry', () => {
 
   it('scrubs anything resembling identity or money', () => {
     recordTelemetry('validation_error', { field: 'email', value: 'a@b.com' });
-    recordTelemetry('pro_feature_used', { feature: 'forecast', name: 'Jo' });
+    recordTelemetry('empty_state_seen', { feature: 'forecast', name: 'Jo' });
     recordTelemetry('checklist_step_done', { step: 1, amount: 999 });
     for (const e of getTelemetryEvents()) {
       const flat = JSON.stringify(e);

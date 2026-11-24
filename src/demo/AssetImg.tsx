@@ -6,7 +6,7 @@ interface AssetImgProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'>
 }
 
 /**
- * Image that understands trial storage: idb: paths resolve from IndexedDB
+ * Image that understands browser storage: idb: paths resolve from IndexedDB
  * into blob URLs; anything else (desktop asset:// URLs) passes through.
  * Renders nothing until an idb: path resolves so callers keep showing
  * their icon/error fallbacks instead of a broken-image glyph.

@@ -1,7 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import { Menu, Search, Timer } from 'lucide-react';
 import { getShortcutModifierLabel } from '../../utils/shortcuts';
-import SyncChip from '../ui/SyncChip';
 import { commands } from '../../lib/commands';
 import { setMobileNavOpen, useMobileNavOpen } from '../../lib/mobileNav';
 
@@ -65,8 +64,6 @@ export default function Topbar() {
         </kbd>
       </button>
       </div>
-
-      <SyncChip />
 
       <button
         onClick={() => commands.dispatch('lance:toggle-timer')}

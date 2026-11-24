@@ -3,7 +3,6 @@ import { DEFAULT_CURRENCY } from '../lib/constants';
 import { useParams } from 'react-router-dom';
 import { useStore } from '../store';
 import { tauriInvoke } from '../utils/tauri';
-import { hasTrialPath } from '../demo/isDemo';
 import { formatCurrency, formatDate } from '../utils/format';
 import type { Client, Contract, Proposal, ShareToken, UserProfile } from '../types';
 
@@ -448,12 +447,7 @@ export default function ShareView() {
           </div>
         )}
 
-        <div className="share-foot">
-          Powered by Lance ·{' '}
-          {hasTrialPath()
-            ? 'Trial demo: this client view runs in your browser only'
-            : 'This link only works while Lance is open'}
-        </div>
+        <div className="share-foot">Powered by Lance · This link only works while Lance is open</div>
       </div>
     </div>
   );

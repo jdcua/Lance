@@ -110,7 +110,7 @@ export default function FunnelTracker({ projectId }: { projectId: string }) {
       {showForm && (
         <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           <input type="text" placeholder="Funnel name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputClass} autoFocus />
-          <input type="text" placeholder="Stage (e.g. Landing → Trial → Purchase)" value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value })} className={inputClass} />
+          <input type="text" placeholder="Stage (e.g. Landing → Demo → Purchase)" value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value })} className={inputClass} />
           <div className="grid grid-cols-3 gap-2">
             <input type="number" placeholder="Entries" value={form.entries} onChange={(e) => setForm({ ...form, entries: e.target.value })} className={inputClass} />
             <input type="number" placeholder="Conversions" value={form.conversions} onChange={(e) => setForm({ ...form, conversions: e.target.value })} className={inputClass} />

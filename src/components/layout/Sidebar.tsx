@@ -55,7 +55,6 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../store';
 import { usePrefs } from '../../lib/prefs';
-import { trialDaysRemaining } from '../../lib/trial';
 import { commands } from '../../lib/commands';
 import { getShortcutModifierLabel } from '../../utils/shortcuts';
 import { setMobileNavOpen, useMobileNavOpen } from '../../lib/mobileNav';
@@ -147,8 +146,7 @@ export default function Sidebar() {
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
-  const { isLicensed, proposals, projects, invoices, allAttachments, pendingFollowUps, profile, clients, contracts, timeEntries, expenses, getActiveTier } = useStore((s) => ({
-    isLicensed: s.isLicensed,
+  const { proposals, projects, invoices, allAttachments, pendingFollowUps, profile, clients, contracts, timeEntries, expenses } = useStore((s) => ({
     proposals: s.proposals,
     projects: s.projects,
     invoices: s.invoices,
@@ -159,9 +157,7 @@ export default function Sidebar() {
     contracts: s.contracts,
     timeEntries: s.timeEntries,
     expenses: s.expenses,
-    getActiveTier: s.getActiveTier,
   }));
-  const isTrial = getActiveTier() === 'trial';
   const prefs = usePrefs();
   const showBadges = prefs.badges;
   const badgeMap = { unpaidInvoices: 0, draftProposals: 0, activeProjects: 0, totalAssets: 0 };
@@ -487,13 +483,6 @@ export default function Sidebar() {
               <span className="flex-1 min-w-0">
                 <span className="block text-[13px] font-semibold text-[var(--sb-text-active)] truncate">
                   {profile?.name?.trim() || 'Freelancer'}
-                </span>
-                <span className={`flex items-center gap-1 text-[10.5px] font-medium ${isLicensed || (isTrial && trialDaysRemaining(profile?.trial_started_at) > 0) ? 'sb-accent-text' : 'text-[var(--sb-label)]'}`}>
-                  {isLicensed
-                    ? 'Pro licensed'
-                    : isTrial
-                      ? `Trial · ${trialDaysRemaining(profile?.trial_started_at)}d left`
-                      : getActiveTier() === 'expired' ? 'Trial ended' : 'Free plan'}
                 </span>
               </span>
               <Settings size={13} className="text-[var(--sb-label)] flex-shrink-0" />

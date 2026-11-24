@@ -1,25 +1,20 @@
 import { useMemo, useState } from 'react';
 import { DEFAULT_CURRENCY } from '../../lib/constants';
 import { useStore } from '../../store';
-import { getFeatureFlags } from '../../lib/constants';
 import { buildYearSummary, yearSummaryCsv, yearSummaryYears, downloadTextFile } from '../../utils/yearSummary';
 import { formatCurrency } from '../../utils/format';
 import { convertByCurrency } from '../../lib/currency';
-import { commands } from '../../lib/commands';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import ProgressBar from '../ui/ProgressBar';
-import { Download, Lock, ReceiptText } from 'lucide-react';
+import { Download, ReceiptText } from 'lucide-react';
 
 /**
- * Year summary: year overview anyone can read, summary CSV for Pro.
- * Summary is trust-building free value; the CSV that saves an afternoon
- * of record-keeping is the upgrade.
+ * Year summary: year overview and summary CSV.
  * For your own records only — not financial, tax, or legal advice.
  */
 export default function YearSummary() {
-  const { invoices, expenses, clients, profile, getActiveTier } = useStore();
-  const unlocked = getFeatureFlags(getActiveTier()).advancedInsights === true;
+  const { invoices, expenses, clients, profile } = useStore();
   const currency = profile?.currency;
 
   const years = useMemo(() => yearSummaryYears(invoices, expenses), [invoices, expenses]);
@@ -52,10 +47,6 @@ export default function YearSummary() {
   }, [invoices, mixedCurrencies, currency, profile?.exchange_rates, pack.year]);
 
   const handleDownload = () => {
-    if (!unlocked) {
-      commands.dispatch('lance:open-upgrade', 'year summary CSV');
-      return;
-    }
     downloadTextFile(`lance-year-summary-${pack.year}.csv`, yearSummaryCsv(pack));
   };
 
@@ -65,11 +56,6 @@ export default function YearSummary() {
         <div className="flex items-center gap-2">
           <ReceiptText size={16} className="text-[var(--text-tertiary)]" />
           <h2 className="text-sm font-semibold text-[var(--text-primary)]">Year Summary</h2>
-          {!unlocked && (
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">
-              CSV: PRO
-            </span>
-          )}
         </div>
         <select
           value={pack.year}
@@ -146,8 +132,8 @@ export default function YearSummary() {
       )}
 
       <Button size="sm" className="w-full" onClick={handleDownload}>
-        {unlocked ? <Download size={13} /> : <Lock size={13} />}
-        {unlocked ? 'Download summary CSV' : 'Unlock summary CSV with Pro'}
+        <Download size={13} />
+        Download summary CSV
       </Button>
       <p className="text-[11px] text-[var(--text-tertiary)] mt-2 leading-relaxed">
         Revenue, quarters, per-client totals, and expenses by category in one file for your records.

@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
-import { getFeatureFlags } from '../../lib/constants';
-import { commands } from '../../lib/commands';
 import { getDb } from '../../db';
 import {
   computeBurn,
@@ -11,28 +9,23 @@ import {
   type RetainerRow,
 } from '../../utils/retainerBurn';
 import { generateInvoiceNumber } from '../../utils/invoiceNumber';
-import { recordTrialValue } from '../../utils/trialValue';
-import { recordTelemetry } from '../../utils/telemetry';
 import { formatCurrency } from '../../utils/format';
 import { useToasts } from '../../store/toastStore';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import ProgressBar from '../ui/ProgressBar';
-import { Flame, Lock, FilePlus2 } from 'lucide-react';
+import { Flame, FilePlus2 } from 'lucide-react';
 
 /**
  * Retainer burn-down overview (all active retainers, this month).
- * Burn bars are your own data and always visible. Drafting a top-up
- * invoice for overage is scope-creep protection: a Pro feature.
+ * Burn bars show your own data; overage can be drafted as a top-up invoice.
  */
 export default function RetainerBurnDown() {
-  const { timeEntries, loadTimeEntries, clients, invoices, addInvoice, profile, getActiveTier } = useStore();
+  const { timeEntries, loadTimeEntries, clients, invoices, addInvoice, profile } = useStore();
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
   const [retainers, setRetainers] = useState<RetainerRow[]>([]);
   const [orderingId, setOrderingId] = useState<string | null>(null);
-
-  const unlocked = getFeatureFlags(getActiveTier()).scopeCreepProtection === true;
 
   useEffect(() => {
     loadTimeEntries();
@@ -78,10 +71,6 @@ export default function RetainerBurnDown() {
   if (retainers.length === 0) return null;
 
   const handleTopUp = async (clientId: string, clientName: string, overByHours: number, rate: number) => {
-    if (!unlocked) {
-      commands.dispatch('lance:open-upgrade', 'retainer top-up invoices');
-      return;
-    }
     const amount = Math.round(overByHours * rate * 100) / 100;
     if (!(amount > 0)) return;
     setOrderingId(clientId);
@@ -108,8 +97,6 @@ export default function RetainerBurnDown() {
         rate_type: 'flat',
       });
       addToast(`Top-up draft for ${clientName} created`, 'success');
-      recordTrialValue('topup', amount);
-      recordTelemetry('pro_feature_used', { feature: 'topup' });
       navigate('/invoices');
     } catch {
       addToast('Could not create the top-up invoice', 'error');
@@ -162,12 +149,10 @@ export default function RetainerBurnDown() {
                   disabled={orderingId === retainer.client_id}
                   onClick={() => handleTopUp(retainer.client_id, clientName, burn.overByHours, rate)}
                 >
-                  {unlocked ? <FilePlus2 size={12} /> : <Lock size={12} />}
+                  <FilePlus2 size={12} />
                   {orderingId === retainer.client_id
                     ? 'Creating...'
-                    : unlocked
-                      ? `Draft top-up invoice (${formatCurrency(Math.round(burn.overByHours * rate * 100) / 100, profile?.currency)})`
-                      : 'Unlock top-up invoices with Pro'}
+                    : `Draft top-up invoice (${formatCurrency(Math.round(burn.overByHours * rate * 100) / 100, profile?.currency)})`}
                 </Button>
               )}
             </div>

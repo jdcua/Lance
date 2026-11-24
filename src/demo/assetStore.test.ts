@@ -12,7 +12,7 @@ function png(): Blob {
   return new Blob([new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])], { type: 'image/png' });
 }
 
-describe('trial asset store', () => {
+describe('browser asset store', () => {
   it('round-trips bytes under an idb: path', async () => {
     const path = await putAssetFile('a1', png());
     expect(path).toBe(`${IDB_PREFIX}a1`);

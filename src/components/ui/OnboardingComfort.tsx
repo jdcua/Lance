@@ -3,7 +3,7 @@ import { usePrefs, setPref, type MotionPref, type ContrastPref, type TextScalePr
 /**
  * Onboarding Step 1: Comfort. Access needs first so every later step
  * already adapts. Every option also lives in Settings; Auto follows the
- * OS (prefers-reduced-motion / prefers-contrast) on both app and trial.
+ * OS (prefers-reduced-motion / prefers-contrast) in every build.
  */
 function Segmented<T extends string>({
   label,
@@ -80,7 +80,7 @@ export default function OnboardingComfort() {
         <h3 className="text-lg font-semibold text-[var(--text-primary)]">Make yourself comfortable</h3>
         <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
           Set how Lance looks and moves. Auto follows your device settings, on this machine and in
-          the browser trial. Change anytime in Settings.
+          the browser build. Change anytime in Settings.
         </p>
         <p className="text-[11px] text-[var(--text-tertiary)]" aria-live="polite">
           Your device right now: {os.motion} · {os.contrast}

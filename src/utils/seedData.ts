@@ -616,7 +616,7 @@ async function runSeed(): Promise<void> {
     localStorage.setItem('lance:seeded-toast-shown', 'true');
     // Default the timer to the sample business's flagship project — but only
     // when the user has no remembered choice. The global toggle asks rather
-    // than guesses with several active projects, and the trial seeds three,
+    // than guesses with several active projects, and the sample seeds three,
     // so without this every first timer press in the demo would error.
     try {
       if (!localStorage.getItem('lance:last-timer-config')) {

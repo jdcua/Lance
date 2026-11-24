@@ -1,9 +1,8 @@
 /**
  * Lance · Freelancer OS
- * Built by Lance
  *
- * Privacy: Lance collects no telemetry. See PRIVACY.md.
- * License: Proprietary. See LICENSE.md.
+ * Privacy: all business data stays on your machine.
+ * License: MIT. See LICENSE.md.
  */
 
 import { useEffect, useState, useCallback, useRef } from 'react';
@@ -35,13 +34,11 @@ import QuickTimeLogModal from './components/ui/QuickTimeLogModal';
 import OnboardingComfort from './components/ui/OnboardingComfort';
 import Onboarding from './screens/Onboarding';
 import Walkthrough from './components/ui/Walkthrough';
-import ProWelcome from './components/ui/ProWelcome';import SpotlightTour from './components/ui/SpotlightTour';
-import SplashScreen from './components/ui/SplashScreen';
+import SpotlightTour from './components/ui/SpotlightTour';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import ImportModal from './components/ui/ImportModal';
 import DropZoneOverlay from './components/ui/DropZoneOverlay';
 import UpdaterModal from './components/ui/UpdaterModal';
-import UpgradeModal from './components/ui/UpgradeModal';
 import ShortcutsModal from './components/ui/ShortcutsModal';
 import OrbitField from './components/motion/OrbitField';
 import { commands } from './lib/commands';
@@ -64,29 +61,21 @@ import { getShortcutModifierLabel } from './utils/shortcuts';
 import type { UserProfile } from './types';
 import { checkAchievements } from './achievements/checker';
 import { ACHIEVEMENTS } from './achievements';
-import { seedSampleData } from './utils/seedData';
 import { parseDateString, DAY_MS } from './utils/format';
 import { defaultCurrency } from './lib/currency';
 import { recordTelemetry } from './utils/telemetry';
 import { usePortalPolling } from './lib/engines/usePortalPolling';
 import { getRuntimeVersion } from './lib/version';
-import { isTrial } from './demo/isDemo';
-import TrialBanner from './demo/TrialBanner';
-import TestModeBanner from './demo/TestModeBanner';
-
-// Max upsell-splash views per app version for unlicensed users.
-export const SPLASH_MAX_VIEWS = 3;
 
 /**
  * Run `fn` at the next idle opportunity, but never later than `ms`.
  *
  * Startup work deferred to requestIdleCallback alone can be starved for a long
  * time on a busy machine or a heavy page load — the browser only grants idle
- * time when it has some to spare. The trial's sample business is seeded that
- * way, so a first-time visitor could sit looking at an empty app for as long
- * as the machine stayed busy. Racing a timer keeps the deferral (it still does
- * not compete with first paint) without making correctness depend on the
- * browser ever going idle.
+ * time when it has some to spare. Startup loads deferred that way can stall
+ * for as long as the machine stays busy. Racing a timer keeps the deferral
+ * (it still does not compete with first paint) without making correctness
+ * depend on the browser ever going idle.
  */
 export function idleOrTimeout(fn: () => void, ms = 400): () => void {
   let ran = false;
@@ -113,8 +102,6 @@ export default function App() {
     profile,
     profileLoaded,
     loadProfile,
-    isLicensed,
-    initLicenseFlow,
     recurringInvoices,
     loadRecurringInvoices,
     updateRecurringInvoice,
@@ -135,58 +122,6 @@ export default function App() {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showQuickLogModal, setShowQuickLogModal] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
-  // Upsell frequency cap: free users see the splash at most SPLASH_MAX_VIEWS
-  // times per app version, then silence until the next release. Counted in
-  // SplashScreen on mount; loaded here once the runtime version resolves.
-  // Launch-only: captured at mount so finishing onboarding mid-session
-  // doesn't trigger a splash the moment onboarding closes.
-  // First-launch grace: brand-new users meet the app before the upsell.
-  // The splash appears from the second launch on, still capped per version.
-  // NOTE: the initializer must stay a pure read — StrictMode double-invokes
-  // it in dev, so writing localStorage here flips the result on the second
-  // pass. The marker write lives in the passive effect below (idempotent).
-  const [splashAtMount] = useState(() => {
-    try {
-      // Either completion marker counts — legacy runs wrote step=complete
-      // without onboarding-completed, and those users are still first-launch.
-      const done =
-        localStorage.getItem('lance:onboarding-completed') === 'true' ||
-        localStorage.getItem('lance:onboarding-step') === 'complete';
-      return done && localStorage.getItem('lance:has-launched') === 'true';
-    } catch {
-      return true;
-    }
-  });
-  useEffect(() => {
-    // Only mark returning sessions: a mount with onboarding still open is
-    // somebody's first session, and marking it would burn the first-launch
-    // grace before they ever see the app.
-    try {
-      if (
-        localStorage.getItem('lance:onboarding-completed') === 'true' ||
-        localStorage.getItem('lance:onboarding-step') === 'complete'
-      ) {
-        localStorage.setItem('lance:has-launched', 'true');
-      }
-    } catch {
-      /* private mode */
-    }
-  }, []);
-  const [splashViews, setSplashViews] = useState<number | null>(null);
-  // Anti-ambush: if the user starts interacting before the async version
-  // check resolves, never pop the splash over their work. A modal that
-  // appears seconds after load, mid-click, is worse than no upsell.
-  const [userInteracted, setUserInteracted] = useState(false);
-  useEffect(() => {
-    const mark = () => setUserInteracted(true);
-    window.addEventListener('pointerdown', mark, { once: true });
-    window.addEventListener('keydown', mark, { once: true });
-    return () => {
-      window.removeEventListener('pointerdown', mark);
-      window.removeEventListener('keydown', mark);
-    };
-  }, []);
   // Guard against double-processing recurring invoices when invoices.length
   // changes mid-generation and re-triggers the idle-callback effect.
   const autoGenProcessedRef = useRef<Set<string>>(new Set());
@@ -194,45 +129,6 @@ export default function App() {
   const [showChangelog, setShowChangelog] = useState(false);
   const [showWalkthrough, setShowWalkthrough] = useState(false);
   const [showSpotlight, setShowSpotlight] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [upgradeTrigger, setUpgradeTrigger] = useState<string | null>(null);
-  const [showProWelcome, setShowProWelcome] = useState(false);
-  const openUpgradeModal = (triggerFeature?: string) => {
-    setUpgradeTrigger(triggerFeature || null);
-    setShowUpgradeModal(true);
-  };
-
-  // Allow any screen to request the upgrade modal via the command registry.
-  useEffect(() => {
-    const onOpenUpgrade = (detail: string | undefined) => {
-      openUpgradeModal(detail || undefined);
-    };
-    commands.on('lance:open-upgrade', onOpenUpgrade);
-    return () => commands.off('lance:open-upgrade', onOpenUpgrade);
-  }, []);
-
-  // Premium onboarding: show once after a license is activated.
-  useEffect(() => {
-    const show = () => {
-      try {
-        if (localStorage.getItem('lance:pro-onboarding-completed') === 'true') return;
-        setShowProWelcome(true);
-      } catch {
-        /* private mode */
-      }
-    };
-    commands.on('lance:pro-activated', show);
-    // Also react to a pending flag set during activation (survives reload).
-    try {
-      if (localStorage.getItem('lance:pro-onboarding-pending') === 'true') {
-        localStorage.removeItem('lance:pro-onboarding-pending');
-        show();
-      }
-    } catch {
-      /* private mode */
-    }
-    return () => commands.off('lance:pro-activated', show);
-  }, []);
   // Time entries are logged through the global quick-log modal (the Time
   // screen has no new-entry trigger of its own). This wires the checklist
   // and the Cmd/Ctrl+N shortcut, which previously dispatched to nothing.
@@ -263,12 +159,6 @@ export default function App() {
   useEffect(() => {
     recordTelemetry('app_launch');
   }, []);
-
-  useEffect(() => {
-    if (!appVersion) return;
-    const seen = parseInt(localStorage.getItem(`lance:splash-views:${appVersion}`) || '0', 10) || 0;
-    setSplashViews(seen);
-  }, [appVersion]);
 
   // Changelog check on mount. Depends on appVersion: getRuntimeVersion()
   // resolves after mount, so an empty-deps effect bails on the initial ''
@@ -348,16 +238,6 @@ export default function App() {
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
-
-  // Start the trial clock / license flow once the profile lands. Without
-  // this, trial_started_at is never set and the trial never counts down.
-  const licenseFlowRan = useRef(false);
-  useEffect(() => {
-    if (profileLoaded && profile && !licenseFlowRan.current) {
-      licenseFlowRan.current = true;
-      initLicenseFlow().catch((e) => console.error('[license] flow failed', e));
-    }
-  }, [profileLoaded, profile, initLicenseFlow]);
 
   useEffect(() => {
     const explicitTheme = profile?.theme;
@@ -494,17 +374,15 @@ export default function App() {
     applyTheme(theme);
   }, []);
 
-  // Licensed users: preload all theme fonts on mount
+  // Preload all theme fonts on mount so switching themes is instant.
   useEffect(() => {
-    if (isLicensed) {
-      THEMES.forEach((t) => {
-        // applyTheme triggers font loading internally
-        const current = getTheme(localStorage.getItem('lance:theme') || 'default');
-        applyTheme(t);
-        applyTheme(current);
-      });
-    }
-  }, [isLicensed]);
+    THEMES.forEach((t) => {
+      // applyTheme triggers font loading internally
+      const current = getTheme(localStorage.getItem('lance:theme') || 'default');
+      applyTheme(t);
+      applyTheme(current);
+    });
+  }, []);
 
   useEffect(() => {
     const completed = localStorage.getItem('lance:onboarding-completed');
@@ -518,16 +396,6 @@ export default function App() {
     // Do NOT auto-complete just because profile.name exists · the user must go through all steps
     setShowOnboarding(true);
   }, [profileLoaded]);
-
-  // First-run owns the session: once onboarding activates, the upsell splash
-  // stays dismissed until next launch. Otherwise the splash ambushes the user
-  // right after setup/tour (e.g. covering the New Client modal the tour CTA
-  // just opened). Returning users still see the splash on each launch.
-  useEffect(() => {
-    if (showOnboarding) {
-      setShowSplash(false);
-    }
-  }, [showOnboarding]);
 
   // Show walkthrough after onboarding completes
   useEffect(() => {
@@ -545,40 +413,6 @@ export default function App() {
     if (!profileLoaded || hasRanAutoGen) return;
     const cancel = idleOrTimeout(() => {
       setHasRanAutoGen(true);
-      // Trial always opens with a full sample business so every screen
-      // has something real to click. Unlimited tries: Reset restores this.
-      // Seeding is async and screens mount (and load) before it finishes,
-      // so refresh the store once it lands — otherwise the first screen a
-      // visitor opens can stay empty until they navigate away and back.
-      if (isTrial()) {
-        seedSampleData()
-          .then(() => {
-            const s = useStore.getState();
-            return Promise.allSettled([
-              s.loadClients(),
-              s.loadProjects(),
-              s.loadMilestones(),
-              s.loadProposals(),
-              s.loadContracts(),
-              s.loadTimeEntries(),
-              s.loadInvoices(),
-              s.loadExpenses(),
-              s.loadRecurringInvoices(),
-            ]);
-          })
-          .then(() => import('./demo/importToolDraft').then((m) => m.importToolDraft()))
-          .then((imported) => {
-            if (imported) {
-              addToast(
-                'Imported your invoice-generator draft as a client + draft invoice',
-                'success',
-              );
-              const s = useStore.getState();
-              return Promise.allSettled([s.loadClients(), s.loadInvoices()]);
-            }
-          })
-          .catch(() => {});
-      }
       loadRecurringInvoices();
       loadInvoices();
       loadClients();
@@ -1172,9 +1006,7 @@ export default function App() {
         </a>
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          {__TEST_MODE__ ? <TestModeBanner /> : null}
           <Topbar />
-          {isTrial() ? <TrialBanner /> : null}
           <AIBar />
           <main
             tabIndex={0}
@@ -1193,27 +1025,9 @@ export default function App() {
           </div>
         </div>
 
-        {/* Splash screen · shown on launch when unlicensed. Suppressed while
-          onboarding or the tour is active so modals never stack (tour is
-          z-60, splash is z-100 and would bury it). Capped at SPLASH_MAX_VIEWS
-          views per version so free users aren't nagged every launch.
-          Never in trial mode: the trial banner already owns the download
-          CTA, and nagging pre-download visitors is backwards. */}
-        {showSplash &&
-          splashAtMount &&
-          !userInteracted &&
-          !isLicensed &&
-          !isTrial() &&
-          !showOnboarding &&
-          !showWalkthrough &&
-          splashViews !== null &&
-          splashViews < SPLASH_MAX_VIEWS && <SplashScreen onDismiss={() => setShowSplash(false)} />}
-
-        {/* Changelog modal · hidden while onboarding is active to avoid z-index overlap.
-          Also sequenced after the splash: splash (z-100) would otherwise bury
-          this modal (z-50) and trap the buttons underneath it. */}
+        {/* Changelog modal · hidden while onboarding is active to avoid z-index overlap. */}
         <Modal
-          open={showChangelog && !showOnboarding && (!showSplash || isLicensed)}
+          open={showChangelog && !showOnboarding}
           onClose={dismissChangelog}
           title={"What's new in Lance " + (changelog[0]?.version || appVersion)}
           size="md"
@@ -1275,18 +1089,6 @@ export default function App() {
           }}
         />
 
-        <ProWelcome
-          open={showProWelcome}
-          onClose={() => {
-            setShowProWelcome(false);
-            try {
-              localStorage.setItem('lance:pro-onboarding-completed', 'true');
-              localStorage.removeItem('lance:pro-onboarding-pending');
-            } catch {
-              /* private mode */
-            }
-          }}
-        />
         <SpotlightTour
           open={showSpotlight}
           onClose={() => {
@@ -1302,12 +1104,6 @@ export default function App() {
             setImportFiles(undefined);
           }}
           initialFiles={importFiles}
-        />
-
-        <UpgradeModal
-          isOpen={showUpgradeModal}
-          onClose={() => setShowUpgradeModal(false)}
-          triggerFeature={upgradeTrigger || undefined}
         />
 
         <DropZoneOverlay visible={isDragOver} />

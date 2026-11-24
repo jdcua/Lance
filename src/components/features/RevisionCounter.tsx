@@ -1,32 +1,24 @@
 /**
  * Revision Counter · compact panel showing revision count vs limit.
  * Uses store for revisions and proposals; auto-increments round_number on add.
- * Pro (scopeCreepProtection): rounds past the limit convert into a draft
- * change-order invoice with one click. Free tiers see the counter plus a
- * locked teaser for change orders.
+ * Rounds past the limit convert into a draft change-order invoice with one click.
  */
-import { useState, useEffect, useMemo } from 'react';
-import { commands } from '../../lib/commands';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
-import { getFeatureFlags } from '../../lib/constants';
 import { generateInvoiceNumber } from '../../utils/invoiceNumber';
-import { recordTrialValue } from '../../utils/trialValue';
-import { recordTelemetry } from '../../utils/telemetry';
 import { useToasts } from '../../store/toastStore';
 import Button from '../ui/Button';
-import { Plus, RotateCcw, Lock, FilePlus2 } from 'lucide-react';
+import { Plus, RotateCcw, FilePlus2 } from 'lucide-react';
 
 
 export default function RevisionCounter({ projectId }: { projectId: string }) {
-  const { revisions, loadRevisions, addRevision, profile, projects, invoices, addInvoice, getActiveTier } = useStore();
+  const { revisions, loadRevisions, addRevision, profile, projects, invoices, addInvoice } = useStore();
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [ordering, setOrdering] = useState(false);
   const [orderAmount, setOrderAmount] = useState('');
-
-  const unlocked = getFeatureFlags(getActiveTier()).scopeCreepProtection === true;
 
   useEffect(() => { loadRevisions(); }, [projectId, loadRevisions]);
 
@@ -71,8 +63,6 @@ export default function RevisionCounter({ projectId }: { projectId: string }) {
         rate_type: 'flat',
       });
       addToast('Change order draft created', 'success');
-      recordTrialValue('change-order', amount);
-      recordTelemetry('pro_feature_used', { feature: 'change-order' });
       navigate('/invoices');
     } catch {
       addToast('Could not create the change order', 'error');
@@ -115,39 +105,26 @@ export default function RevisionCounter({ projectId }: { projectId: string }) {
           <p className="text-xs text-[var(--warning-text)] leading-relaxed">
             {overBy} round{overBy === 1 ? '' : 's'} past your {revisionLimit}-round limit. Bill it instead of absorbing it.
           </p>
-          {unlocked ? (
-            <div className="flex gap-2">
-              <input
-                type="number"
-                min="0"
-                value={orderAmount}
-                onChange={(e) => setOrderAmount(e.target.value)}
-                placeholder={defaultAmount || 'Amount'}
-                aria-label="Change order amount"
-                className="w-24 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-              />
-              <Button
-                size="sm"
-                className="flex-1"
-                disabled={ordering || !(parseFloat(orderAmount || defaultAmount || '0') > 0) || !project}
-                onClick={handleChangeOrder}
-              >
-                <FilePlus2 size={12} />
-                {ordering ? 'Creating...' : 'Generate change order'}
-              </Button>
-            </div>
-          ) : (
+          <div className="flex gap-2">
+            <input
+              type="number"
+              min="0"
+              value={orderAmount}
+              onChange={(e) => setOrderAmount(e.target.value)}
+              placeholder={defaultAmount || 'Amount'}
+              aria-label="Change order amount"
+              className="w-24 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+            />
             <Button
               size="sm"
-              className="w-full"
-              onClick={() =>
-                commands.dispatch('lance:open-upgrade', 'scope-creep change orders')
-              }
+              className="flex-1"
+              disabled={ordering || !(parseFloat(orderAmount || defaultAmount || '0') > 0) || !project}
+              onClick={handleChangeOrder}
             >
-              <Lock size={12} />
-              Unlock change orders with Pro
+              <FilePlus2 size={12} />
+              {ordering ? 'Creating...' : 'Generate change order'}
             </Button>
-          )}
+          </div>
         </div>
       )}
 

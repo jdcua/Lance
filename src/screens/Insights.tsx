@@ -255,7 +255,7 @@ export default function Insights() {
       </div>
 
       {/* Pro depth: forecast, effective rate, per-client win rates.
-          Free tiers see locked teasers with real headline numbers. */}
+          All insights are available in every build with real headline numbers. */}
       <ProInsights />
 
       {/* Client Performance */}

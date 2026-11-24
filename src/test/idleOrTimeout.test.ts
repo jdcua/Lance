@@ -1,7 +1,7 @@
 /**
  * idleOrTimeout: startup work must not depend on the browser ever going idle.
  *
- * The trial seeds its sample business from a deferred startup task. On a busy
+ * Startup loads are deferred until idle. On a busy
  * machine requestIdleCallback can be starved, which left a first-time visitor
  * looking at an empty app. These lock the "runs eventually, runs once" contract
  * and the cleanup path.

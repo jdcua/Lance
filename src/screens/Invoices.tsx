@@ -27,9 +27,6 @@ import {
   type DunningTone,
 } from '../utils/followUpTemplates';
 import { computeLateFee, lateFeeParagraph } from '../utils/lateFees';
-import { recordTrialValue } from '../utils/trialValue';
-import { recordTelemetry } from '../utils/telemetry';
-import { getFeatureFlags } from '../lib/constants';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
 
 import InvoiceList from './invoices/InvoiceList';
@@ -64,7 +61,6 @@ export default function Invoices() {
     loadPendingFollowUps,
     updateFollowUpStatus,
     followUpSettings,
-    getActiveTier,
     payments,
     loadPayments,
     addPayment,
@@ -144,12 +140,12 @@ export default function Invoices() {
   });
 
 
-  // Smart dunning (Pro): overdue drafts speak in the freelancer's voice and
-  // can carry an accrued late fee. Free tiers render default templates.
-  const dunningTone: DunningTone | undefined = useMemo(() => {
-    if (getFeatureFlags(getActiveTier()).smartDunning !== true) return undefined;
-    return resolveDunningTone(profile?.profession, followUpSettings.tone);
-  }, [getActiveTier, profile?.profession, followUpSettings.tone]);
+  // Smart dunning: overdue drafts speak in the freelancer's voice and
+  // can carry an accrued late fee.
+  const dunningTone: DunningTone | undefined = useMemo(
+    () => resolveDunningTone(profile?.profession, followUpSettings.tone),
+    [profile?.profession, followUpSettings.tone],
+  );
   const lateFeeOn = dunningTone !== undefined && followUpSettings.lateFeeEnabled === true;
   const lateFeePercent = followUpSettings.lateFeePercent ?? 1.5;
 
@@ -188,8 +184,6 @@ export default function Invoices() {
         `Late fee of ${formatCurrency(fee.fee, inv.currency || profile?.currency)} added`,
         'success',
       );
-      recordTrialValue('late-fee', fee.fee);
-      recordTelemetry('pro_feature_used', { feature: 'late-fee' });
     } catch {
       addToast('Could not add the late fee', 'error');
     }
