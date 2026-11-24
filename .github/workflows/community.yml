@@ -1,0 +1,74 @@
+name: Community
+
+# No checkout, no third-party actions: these jobs only call the GitHub API.
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened, synchronize]
+
+jobs:
+  welcome:
+    name: Welcome first-time contributors
+    runs-on: ubuntu-latest
+    steps:
+      - name: Welcome on first issue
+        if: github.event_name == 'issues'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE: ${{ github.event.issue.number }}
+          ACTOR: ${{ github.event.issue.user.login }}
+        run: |
+          association=$(gh api "repos/$GITHUB_REPOSITORY/issues/$ISSUE" --jq .author_association)
+          case "$association" in
+            FIRST_TIMER|FIRST_TIME_CONTRIBUTOR|NONE)
+              gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" --body "Thanks @$ACTOR for the first issue. Please include reproduction steps and your Lance version. Never paste client data. See CONTRIBUTING.md for how to submit a fix."
+              ;;
+          esac
+
+      - name: Welcome on first pull request
+        if: github.event_name == 'pull_request_target'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          ACTOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          association=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR" --jq .author_association)
+          case "$association" in
+            FIRST_TIMER|FIRST_TIME_CONTRIBUTOR|NONE)
+              gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "Thanks @$ACTOR for your first pull request. A maintainer will review it shortly. Make sure \`npm run verify\` passes locally and that the PR description explains what changed and why."
+              ;;
+          esac
+
+  label:
+    name: Label pull requests by changed paths
+    if: github.event_name == 'pull_request_target' && github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Add path-based labels
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          git fetch origin main --quiet
+          head=$(git rev-parse HEAD)
+          changed=$(git diff --name-only "origin/main...$head" || true)
+          labels=""
+          printf '%s\n' "$changed" | grep -qE '(^|/)docs/|^[A-Z]+\.md$' && labels="$labels documentation" || true
+          printf '%s\n' "$changed" | grep -qE '\.(test|spec)\.[jt]sx?$' && labels="$labels tests" || true
+          printf '%s\n' "$changed" | grep -q '^src-tauri/' && labels="$labels backend" || true
+          printf '%s\n' "$changed" | grep -qE '^src/(components|screens|themes)/' && labels="$labels frontend" || true
+          printf '%s\n' "$changed" | grep -q '^\.github/workflows/' && labels="$labels ci" || true
+          if [ -n "$labels" ]; then
+            gh pr edit "$PR" --repo "$GITHUB_REPOSITORY" --add-label $labels
+          fi
