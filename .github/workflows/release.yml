@@ -86,24 +86,6 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ env.TAURI_SIGNING_PRIVATE_KEY_CLEAN }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          LANCE_LICENSE_SECRET: ${{ secrets.LANCE_LICENSE_SECRET }}
-          # License worker URL for online validation (GitHub Secret LANCE_LICENSE_WORKER_URL).
-          # This one is consumed by Rust at compile time. Without it the shipped
-          # binary falls back to the placeholder in license.rs and only offline
-          # HMAC applies, so tier, revocation, and the cool-down never work.
-          LANCE_LICENSE_WORKER_URL: ${{ secrets.LANCE_LICENSE_WORKER_URL }}
-          # The same URL, read by the TS layer (src/store/index.ts). activateLicense
-          # and pingLicenseServer run there too: in the desktop app the Rust command
-          # does the request, but the JS side still needs the URL for the browser-mode
-          # path and for licenseWorkerUnconfigured() to report a bad build. Missing
-          # here meant the JS side held an empty URL in every shipped release.
-          VITE_LICENSE_WORKER_URL: ${{ secrets.LANCE_LICENSE_WORKER_URL }}
-          # Paddle price IDs are baked in at build time (Vite). Without these,
-          # every checkout button in the shipped app reports "not configured".
-          VITE_PADDLE_MONTHLY_PRICE_ID: ${{ secrets.PADDLE_MONTHLY_PRICE_ID }}
-          VITE_PADDLE_YEARLY_PRICE_ID: ${{ secrets.PADDLE_YEARLY_PRICE_ID }}
-          VITE_PADDLE_ONETIME_PRICE_ID: ${{ secrets.PADDLE_ONETIME_PRICE_ID }}
-          VITE_PADDLE_CHECKOUT_URL: ${{ secrets.PADDLE_CHECKOUT_URL }}
 
       - name: Collect artifacts
         shell: bash
