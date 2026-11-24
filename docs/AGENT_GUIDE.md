@@ -31,7 +31,7 @@ read → plan → branch → change → npm run verify → PR → self-review �
 
 ```bash
 npm run doctor                       # environment check
-npm run verify                       # typecheck + lint + test + build
+npm run verify                       # typecheck + lint + test + build + OSS audit
 gh issue list --repo jdcua/Lance     # find work
 gh pr create --repo jdcua/Lance      # open a PR (or use your GitHub MCP tool)
 ```

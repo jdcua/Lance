@@ -24,7 +24,8 @@ npm run tauri dev
 | `npm run version:bump 1.2.0` | Bump version across all 3 files |
 | `npm run doctor` | Check Node, Rust and installed dependencies |
 | `npm run typecheck` | Typecheck without building |
-| `npm run verify` | Run typecheck, lint, tests and build |
+| `npm run verify` | Run typecheck, lint, tests, build and the OSS audit |
+| `npm run audit:oss` | Check tracked files for secrets, personal paths and junk |
 | `npm run lint` | Lint frontend code |
 | `npm run format` | Format frontend code with Prettier |
 | `npm run format:check` | Check formatting without writing |
