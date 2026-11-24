@@ -55,7 +55,7 @@ lance/
 │   │   ├── db.rs           # SQLite schema and migrations
 │   │   ├── server.rs       # Axum client portal server
 │   │   ├── error.rs        # Error types
-│   │   └── commands/       # 15 command modules (CRUD operations)
+│   │   └── commands/       # 16 command modules (CRUD operations)
 │   └── Cargo.toml
 ├── scripts/                # Build and release scripts
 ├── docs/                   # Documentation

@@ -26,16 +26,15 @@ lance/
 ├── src/                         # Frontend (React + TypeScript)
 │   ├── App.tsx                  # Root component, background engines, changelog
 │   ├── main.tsx                 # React mount point
-│   ├── router.tsx               # Route definitions (17 routes, lazy-loaded)
+│   ├── router.tsx               # 18 app routes + a public share route, lazy-loaded
 │   ├── index.css                # Global Tailwind styles
-│   ├── archetypes/ (not present; configs live in src/components/features/registry.ts)
 │   ├── components/
-│   │   ├── ui/                  # Shared UI components (21 components)
+│   │   ├── ui/                  # Shared UI components (39 components)
 │   │   ├── layout/              # Sidebar, Topbar, AIBar
 │   │   ├── features/            # Archetype-specific feature panels
 │   │   └── ShareModal.tsx       # Client portal sharing UI
-│   ├── screens/                 # Route-level page components (17 screens)
-│   ├── store/                   # Zustand state (index.ts: 25+ slices, toastStore.ts)
+│   ├── screens/                 # Route-level page components (19 screens + section folders)
+│   ├── store/                   # Single Zustand store (index.ts) with base/meta/toasts/updater slices
 │   ├── types/                   # TypeScript domain types
 │   ├── db/                      # Frontend database layer
 │   ├── utils/                   # Utilities (engines, backup, seed data, formatting)
@@ -48,11 +47,11 @@ lance/
 ├── src-tauri/                   # Backend (Rust + Tauri)
 │   ├── src/
 │   │   ├── main.rs              # Entry point
-│   │   ├── lib.rs               # App bootstrap, plugin init, 73 command handlers
+│   │   ├── lib.rs               # App bootstrap, plugin init, ~137 command handlers
 │   │   ├── db.rs                # SQLite connection + full schema migration
 │   │   ├── server.rs            # Axum client portal HTTP server
 │   │   ├── error.rs             # LanceError enum
-│   │   └── commands/            # 15 command modules
+│   │   └── commands/            # 16 command modules
 │   │       ├── clients.rs       # Client CRUD
 │   │       ├── projects.rs      # Project + milestone CRUD
 │   │       ├── proposals.rs     # Proposal CRUD + expiry
@@ -71,8 +70,7 @@ lance/
 │   └── tauri.conf.json
 ├── scripts/                     # Build & release scripts
 ├── docs/                        # Documentation
-├── .github/workflows/           # CI/CD (ci.yml, release.yml, deps.yml)
-└── landing/                     # Landing page
+└── .github/workflows/           # CI/CD, community and release automation
 ```
 
 ## Data flow
@@ -221,7 +219,6 @@ Key design decisions:
 | Path | Screen | Description |
 |------|--------|-------------|
 | `/` | Dashboard | Main dashboard with metrics and quick actions |
-| `/archetype` | ArchetypePicker | Profession/archetype selection |
 | `/proposals` | Proposals | Proposal list and management |
 | `/proposals/new` | NewProposal | Proposal editor |
 | `/contracts` | Contracts | Contract list and management |
@@ -230,14 +227,16 @@ Key design decisions:
 | `/invoices` | Invoices | Invoice list, creation, payments |
 | `/clients` | Clients | Client CRM |
 | `/finance` | Finance | Expense tracking and forecasting |
+| `/pipeline` | Pipeline | Kanban boards and cards |
 | `/insights` | Insights | Archetype-specific insights panels |
 | `/follow-ups` | FollowUps | Pending/sent/dismissed follow-ups |
 | `/settings` | Settings | User preferences and backups |
 | `/achievements` | Achievements | Achievement gallery |
 | `/assets` | Assets | File and attachment management |
 | `/search` | Search | Global search across all entities |
+| `/onboarding` | Onboarding | First-run setup |
 
-All routes are lazy-loaded via `React.lazy` with a loading skeleton fallback.
+All app routes are lazy-loaded via `React.lazy` with a loading skeleton fallback. `/share/:token` renders the client portal without the app shell.
 
 ## Future work
 

@@ -1,5 +1,5 @@
 /**
- * Free-tool bridge: the invoice generator (landing/tools) autosaves drafts
+ * Browser draft bridge: an invoice-generator tool autosaves drafts
  * to localStorage under `lance-inv-tool`, so a first browser visit can adopt
  * the draft as a real client + draft invoice.
  * Runs once (marker flag), best-effort, no network.

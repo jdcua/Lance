@@ -17,17 +17,12 @@ interface GitHubRelease {
 }
 
 /**
- * User-facing sanitizer for release notes.
- * GitHub bodies and git logs are written for developers; the "What's new"
- * modal is for freelancers. Drop internal lines (license-key formats,
- * console noise, handler fixes, plumbing) and strip markdown artifacts.
- * When nothing survives, fall back to one plain line so the modal never
- * shows an empty version or leaks internals.
+ * User-facing sanitizer for release notes. Drops developer-only lines
+ * (console noise, handler fixes, plumbing) and markdown artifacts. When
+ * nothing survives, fall back to one plain line so the modal never shows
+ * an empty version.
  */
 const INTERNAL_PATTERNS = [
-  /licen[cs]e key/i,
-  /LANCE-[A-Z0-9-]{8,}/,
-  /HMAC/i,
   /singleton/i,
   /console/i,
   /\b404\b/,
