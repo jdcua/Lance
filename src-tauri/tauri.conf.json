@@ -2,7 +2,7 @@
   "$schema": "gen/schemas/desktop-schema.json",
   "productName": "Lance",
   "version": "0.9.9-5",
-  "identifier": "co.MONDAY.lance",
+  "identifier": "io.github.jdcua.lance",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",

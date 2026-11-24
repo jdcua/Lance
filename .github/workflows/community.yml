@@ -1,6 +1,7 @@
 name: Community
 
-# No checkout, no third-party actions: these jobs only call the GitHub API.
+# Comment jobs do not check out code. The label job checks out the PR ref but
+# never executes it. No third-party actions are used.
 permissions:
   contents: read
   issues: write
