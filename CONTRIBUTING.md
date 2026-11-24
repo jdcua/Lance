@@ -77,6 +77,8 @@ Cargo audits, and an xlsx integrity check. All must pass.
 
 - `AGENTS.md` is the canonical rulebook; `.github/copilot-instructions.md`
   and `CLAUDE.md` point to it. Do not duplicate its rules in new files.
+- [docs/AGENT_GUIDE.md](docs/AGENT_GUIDE.md) describes the PR loop, how to
+  add workflows safely, and what to include in the final report.
 - Start with `npm run doctor`, then `npm run verify` after every change.
 - Prefer one small PR per task. Never change core business logic to satisfy a
   failing test, never skip tests, and never commit secrets or personal paths.
