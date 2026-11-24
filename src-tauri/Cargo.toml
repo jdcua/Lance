@@ -5,6 +5,8 @@
 name = "Lance"
 version = "0.9.9-5"
 edition = "2021"
+license = "MIT"
+repository = "https://github.com/jdcua/Lance"
 
 [dependencies]
 tauri = { version = "2", features = [] }
