@@ -1,0 +1,75 @@
+# Dependencies and package managers
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+
+# Build output
+dist/
+build/
+out/
+src-tauri/target/
+dist-artifacts/
+*.AppImage
+*.AppImage.sig
+*.deb
+*.dmg
+*.msi
+*-setup.exe
+
+# Environment and secrets (keep the example, never commit a filled-in env)
+.env
+.env.*
+!.env.example
+*.key
+*.key.pub
+*.p12
+*.pfx
+*.cer
+src-tauri/signing/*
+!src-tauri/signing/.gitkeep
+!src-tauri/signing/README.md
+
+# Lock files are intentionally committed for reproducible builds.
+
+# Local databases and user data
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Caches, logs and coverage
+*.log
+.eslintcache
+.cache/
+.parcel-cache/
+.turbo/
+coverage/
+.nyc_output/
+vite.config.ts.timestamp-*.mjs
+
+# Test and QA artifacts
+test-results/
+playwright-report/
+.playwright-mcp/
+qa-shots/
+.qa/
+.laya/
+screenshots/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Scratch files
+*.bak
+lint.json
+lint.txt
+*-snapshot.md
+lance-*-snapshot.md

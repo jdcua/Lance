@@ -1,0 +1,11 @@
+{
+  "RUSTSEC-2023-0071": {
+    "crate": "rsa",
+    "reason": "Not compiled into the binary. Present in Cargo.lock only through sqlx-mysql, which is disabled because tauri-plugin-sql is declared with features = [\"sqlite\"], `cargo tree -i rsa -e normal --target all` reports no reverse dependencies. Lance performs no RSA or PKCS#1 signature verification anywhere; update signatures are minisign (Ed25519) via tauri-plugin-updater. RustCrypto has published no patched version for this advisory, so there is nothing to upgrade to. Re-verify with that cargo tree probe when tauri-plugin-sql is next bumped."
+  },
+  "RUSTSEC-2024-0363": {
+    "crate": "sqlx",
+    "fixBlockedBy": "tauri-plugin-sql 2.x (pins sqlx 0.8.0; fix needs >= 0.8.1)",
+    "reason": "Not applicable to Lance's stack. GHSA-xmrp-424f-vfpx covers the Postgres and MySQL binary wire protocol types, where truncated or overflowing casts are reinterpreted as wire-format values. Lance is SQLite-only: tauri-plugin-sql is declared with features = [\"sqlite\"] and the frontend plugin config preloads sqlite:lance.db, so no Postgres or MySQL code path is compiled in. A fix does exist at sqlx 0.8.1 and cannot be taken because tauri-plugin-sql pins sqlx 0.8.0, so this is recorded with fixBlockedBy rather than silently ignored. Revisit when tauri-plugin-sql publishes a release allowing sqlx >= 0.8.1; at that point delete this entry and bump."
+  }
+}

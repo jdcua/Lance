@@ -1,0 +1,77 @@
+import type { Invoice } from '../types';
+
+export function generateInvoiceNumber(existingInvoices: Invoice[]): string {
+  if (!existingInvoices || existingInvoices.length === 0) {
+    return 'INV-001';
+  }
+  const max = existingInvoices.reduce((acc, inv) => {
+    const n = parseInt((inv.invoice_number || '').replace(/^inv-/i, '')) || 0;
+    return Math.max(acc, n);
+  }, 0);
+  return `INV-${String(max + 1).padStart(3, '0')}`;
+}
+
+/**
+ * Sanitizes a user-entered invoice number.
+ * Strips CR/LF and control characters (prevents email header injection when the
+ * number is interpolated into follow-up subjects/bodies), HTML-special characters,
+ * and everything outside a conservative safe set. Used at input time, at save time,
+ * and defensively at export/email time.
+ */
+export function sanitizeInvoiceNumber(value: string): string {
+  if (!value) return '';
+  return (
+    value
+      // Remove control chars (CR/LF/TAB/NUL etc.) and HTML-special chars first
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\u0000-\u001f\u007f<>"'`&=]/g, '')
+      // Keep only safe filename/email characters
+      .replace(/[^A-Za-z0-9#./\-_:]/g, '')
+      // Collapse dot runs: `..` segments are path traversal (`../../etc`),
+      // and no legitimate number needs consecutive dots (`INV-2026/07`,
+      // `INV.2.5` keep their single dots and slashes).
+      .replace(/\.{2,}/g, '.')
+      .slice(0, 40)
+      .trim()
+  );
+}
+
+// Reserved device names on Windows: naming a file CON, PRN, AUX, NUL, COM1-9 or
+// LPT1-9 makes the save fail or land somewhere unexpected even with no path
+// separators at all.
+const WINDOWS_RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
+
+/**
+ * Sanitizes any user-supplied string for use as part of an export FILENAME.
+ *
+ * This is a different job from sanitizeInvoiceNumber, which permits `.` and `/`
+ * because invoice numbers legitimately look like `INV-2026/07`. A filename
+ * segment must not: a client named `../../.ssh/authorized_keys` otherwise
+ * produced `Lance_Invoice_INV-001_../../.ssh/authorized_keys.pdf`, which
+ * resolves outside the chosen directory. It also stripped nothing from NUL
+ * bytes or capped no length, so `ACME<NUL>.png` passed through and a
+ * 300-character client name threw ENAMETOOLONG.
+ *
+ * Applied to every user-controlled filename component, client name, contract
+ * title, invoice number, not just the invoice number.
+ */
+export function sanitizeFilenamePart(
+  value: string | null | undefined,
+  fallback = 'untitled',
+): string {
+  if (!value) return fallback;
+  const cleaned = value
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    // Path separators and the characters Windows forbids in filenames.
+    .replace(/[/\\:*?"<>|]/g, ' ')
+    .replace(/\s+/g, '_')
+    // A leading dot hides the file and defeats the fallback below.
+    .replace(/^\.+/, '')
+    // Trailing dots and spaces are silently dropped by Windows.
+    .replace(/[. ]+$/, '')
+    .slice(0, 60)
+    .trim();
+  if (!cleaned) return fallback;
+  return WINDOWS_RESERVED.test(cleaned) ? `_${cleaned}` : cleaned;
+}

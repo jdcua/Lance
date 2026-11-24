@@ -1,0 +1,167 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
+
+# Default to read-only. Only the publish job needs write, and it says so.
+permissions:
+  contents: read
+
+jobs:
+  build:
+    # The build job runs npm ci, the whole Vite + Tauri toolchain, and an
+    # upload-artifact step, all while the updater signing key is in scope. It has
+    # no reason to hold a write token: with one, a compromised dependency or an
+    # unpinned action could push to main and trigger a release signed with a key
+    # of its own choosing.
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            artifact: linux
+          - os: macos-latest
+            artifact: macos
+          - os: windows-latest
+            artifact: windows
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+
+      # The updater manifest advertises one macOS artifact for both
+      # darwin-aarch64 and darwin-x86_64, so the mac build must be a true
+      # universal binary — a bare `tauri build` on macos-latest (arm64) ships
+      # ARM-only code to Intel users. Install the universal target first.
+      - name: Add macOS universal target
+        if: runner.os == 'macOS'
+        run: rustup target add universal-apple-darwin
+
+      - name: Install Linux deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - run: npm ci
+
+      # GitHub masks secrets in logs by exact-substring replacement of the
+      # REGISTERED value. The key below is a TRANSFORM of the registered secret
+      # (whitespace stripped), so it matched no mask and was printable by any
+      # later step, including Tauri's signing diagnostics on failure.
+      # ::add-mask:: registers the derived string so it is masked from here on.
+      - name: Sanitize signing key
+        shell: bash
+        env:
+          RAW_SIGNING_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          KEY=$(printf '%s' "$RAW_SIGNING_KEY" | tr -d ' \t\r')
+          if [ -z "$KEY" ]; then
+            echo "::error::TAURI_SIGNING_PRIVATE_KEY is empty or unset; refusing to build unsigned."
+            exit 1
+          fi
+          echo "::add-mask::$KEY"
+          {
+            echo "TAURI_SIGNING_PRIVATE_KEY_CLEAN<<EOF"
+            echo "$KEY"
+            echo "EOF"
+          } >> "$GITHUB_ENV"
+          unset KEY RAW_SIGNING_KEY
+
+      - name: Build Tauri
+        run: ${{ runner.os == 'macOS' && 'npm run build:mac' || 'npm run tauri build' }}
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ env.TAURI_SIGNING_PRIVATE_KEY_CLEAN }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          mkdir -p dist-artifacts
+          BUNDLE="src-tauri/target/release/bundle"
+          if [ -d "$BUNDLE" ]; then
+            find "$BUNDLE" -type f \( \
+              -name '*.AppImage' -o -name '*.AppImage.sig' \
+              -o -name '*.deb' -o -name '*.deb.sig' \
+              -o -name '*.dmg' \
+              -o -name '*.app.tar.gz' -o -name '*.app.tar.gz.sig' \
+              -o -name '*.msi' -o -name '*.msi.sig' \
+              -o -name '*-setup.exe' -o -name '*-setup.exe.sig' \
+            \) -exec cp {} dist-artifacts/ \;
+            ls -la dist-artifacts/
+          fi
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist-artifacts/
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    # The only job that creates the Release. It runs no build steps and holds no
+    # signing key, so contents:write is the whole of what it needs.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: artifacts
+
+      - name: Generate latest.json
+        run: node scripts/generate-latest-json.cjs
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF: ${{ github.ref }}
+
+      - name: Get tag message
+        id: tagmsg
+        env:
+          # Passed through env, never interpolated into the script body. A tag
+          # name may legally contain ", ; ` $ ( ) | &, so `${{ github.ref_name }}`
+          # inside double quotes was a shell-injection vector in a job holding
+          # `contents: write`.
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          MESSAGE=$(git tag -l --format='%(contents)' "$REF_NAME" | head -c 10000)
+          if [ -z "$MESSAGE" ]; then
+            MESSAGE="See changelog for details"
+          fi
+          echo "body<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$MESSAGE" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Lance ${{ github.ref_name }}
+          body: ${{ steps.tagmsg.outputs.body }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: |
+            artifacts/**/*
+            latest.json

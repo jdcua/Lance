@@ -1,0 +1,45 @@
+[package]
+# Capital L on purpose: the debug binary name is what macOS shows in the
+# Dock for unbundled `tauri dev` runs ("lance" looked like a typo next to
+# properly capitalized apps). Release bundles already use productName.
+name = "Lance"
+version = "0.9.9-5"
+edition = "2021"
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-sql = { version = "2", features = ["sqlite"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-updater = { version = "2", features = ["rustls-tls"] }
+tauri-plugin-process = "2"
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.31", features = ["bundled"] }
+uuid = { version = "1", features = ["v4"] }
+axum = { version = "0.7", features = ["json"] }
+tokio = { version = "1", features = ["full"] }
+rand = "0.8"
+tower = { version = "0.4", features = ["util"] }
+tower-http = { version = "0.5", features = ["timeout", "limit"] }
+ammonia = "3"
+sha2 = "0.10"
+hmac = "0.12"
+chrono = { version = "0.4", features = ["serde"] }
+tauri-plugin-opener = "2"
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[lib]
+name = "lance_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

@@ -1,0 +1,101 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+
+jobs:
+  check:
+    name: Check for outdated dependencies
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+
+      - name: Install Linux deps (needed for cargo outdated to resolve Cargo.toml)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - run: npm ci
+
+      - name: Check npm outdated
+        id: npm-outdated
+        run: |
+          OUTPUT=$(npm outdated --json 2>/dev/null || true)
+          if [ -z "$OUTPUT" ] || [ "$OUTPUT" = "{}" ]; then
+            NPM_BODY="All npm packages are up to date."
+          else
+            PACKAGES=$(echo "$OUTPUT" | node -e "
+              const d = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
+              const lines = Object.entries(d).map(([name, info]) =>
+                '- **' + name + '**: ' + info.current + ' → ' + info.latest + (info.wanted !== info.latest ? ' (wanted: ' + info.wanted + ')' : '')
+              );
+              console.log(lines.join('\\n'));
+            ")
+            NPM_BODY="$(echo -e "$PACKAGES")"
+          fi
+          echo "body<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$NPM_BODY" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Install cargo-outdated
+        run: cargo install cargo-outdated --locked
+
+      - name: Check cargo outdated
+        id: cargo-outdated
+        working-directory: src-tauri
+        run: |
+          OUTPUT=$(cargo outdated --format json 2>/dev/null || true)
+          if [ -z "$OUTPUT" ] || [ "$OUTPUT" = "[]" ]; then
+            CARGO_BODY="All Cargo dependencies are up to date."
+          else
+            CRATES=$(echo "$OUTPUT" | node -e "
+              const d = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
+              const lines = d.map((c) => {
+                const latest = c.latest || '—';
+                return '- **' + c.name + '**: ' + (c.project || '—') + ' → ' + latest;
+              });
+              console.log(lines.join('\\n'));
+            ")
+            CARGO_BODY="$(echo -e "$CRATES")"
+          fi
+          echo "body<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$CARGO_BODY" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Create issue
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const date = new Date().toISOString().split('T')[0];
+            const npmBody = `${{ steps.npm-outdated.outputs.body }}`;
+            const cargoBody = `${{ steps.cargo-outdated.outputs.body }}`;
+
+            const body = `## NPM Packages\n${npmBody}\n\n## Cargo Crates\n${cargoBody}\n\n> Manual review recommended before updating. Breaking changes may exist.`;
+
+            const { data: existing } = await github.rest.search.issuesAndPullRequests({
+              q: `Weekly dependency update — ${date} repo:${context.repo.owner}/${context.repo.repo} type:issue`,
+            });
+
+            if (existing.total_count > 0) {
+              console.log(`Issue for ${date} already exists. Skipping.`);
+              return;
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Weekly dependency update — ${date}`,
+              body,
+              labels: ['dependencies'],
+            });

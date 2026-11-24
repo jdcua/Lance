@@ -1,0 +1,38 @@
+name: Scheduled Release
+
+# Ships v1.0.0 on October 1st (GitHub Actions quota resets).
+# Cron runs in UTC. Can also be triggered manually at any time from the
+# Actions tab (workflow_dispatch) if the date needs to move.
+# To change the version, edit RELEASE_TAG below.
+# PAUSED by user 2026-09-12: schedule removed so v1.0.0 never fires
+# automatically. Re-add the cron block below to resume, or trigger
+# manually from the Actions tab (workflow_dispatch still active).
+# To cancel permanently, delete this file.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  tag-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Create and push release tag if missing
+        env:
+          RELEASE_TAG: v1.0.0
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git rev-parse "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Tag $RELEASE_TAG already exists. Nothing to do."
+          else
+            git tag -a "$RELEASE_TAG" -m "Lance $RELEASE_TAG" main
+            git push origin "$RELEASE_TAG"
+            echo "Pushed $RELEASE_TAG. The Release workflow takes it from here."
+          fi

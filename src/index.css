@@ -1,0 +1,714 @@
+@import './fonts.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background-color: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-body, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--neutral-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--neutral-border) transparent;
+}
+
+/* ── Micro-animations ── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* App-level motion kill-switch (Personalize → Motion → Off). Mirrors the
+   OS query above for users whose OS doesn't request reduced motion.
+   Toggled from main.tsx; MotionConfig handles the JS animation library. */
+.motion-off *, .motion-off *::before, .motion-off *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* ── Device auto-detect: OS-level access needs (both app + trial) ── */
+/* High contrast OS request: boost text to near-max contrast, strengthen borders/focus. */
+@media (prefers-contrast: more) {
+  :root {
+    --text-secondary: var(--text-primary);
+  }
+  .contrast-auto-boost {
+    --text-tertiary: var(--text-secondary);
+  }
+}
+/* Reduced transparency OS request: drop blurs/overlays that smear text. */
+@media (prefers-reduced-transparency: reduce) {
+  *, *::before, *::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+/* Forced colors (Windows High Contrast): let the OS own colors, keep semantics. */
+@media (forced-colors: active) {
+  button, a, [role="button"], input, select, textarea {
+    forced-color-adjust: auto;
+  }
+}
+
+/* ── Pref-driven layers (Settings + onboarding; local-only) ── */
+/* High contrast pref: 7:1-ish body text, visible borders, thick focus. */
+.contrast-high {
+  --text-secondary: var(--text-primary);
+  --text-tertiary: var(--text-secondary);
+}
+.contrast-high * {
+  text-shadow: none !important;
+}
+/* Text scaling pref: root-relative growth for the whole app. */
+.textscale-112 { font-size: 112.5%; }
+.textscale-125 { font-size: 125%; }
+.textscale-112 *, .textscale-125 * {
+  line-height: 1.6;
+}
+/* Stronger visible focus for keyboard users, every interactive element. */
+a:focus-visible, button:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible, [role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Print: invoices and records print as documents, not app chrome ── */
+@media print {
+  aside,
+  button,
+  input,
+  select,
+  textarea,
+  kbd,
+  [role="dialog"],
+  [role="listbox"],
+  .no-print {
+    display: none !important;
+  }
+  #main-content {
+    overflow: visible !important;
+    height: auto !important;
+  }
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  /* Light ink on paper regardless of theme: dark surfaces flood ink.
+     !important is required — applyTheme writes vars inline, which beats
+     plain stylesheet rules (same cascade lesson as the .dark fix). */
+  :root {
+    --bg-primary: #ffffff !important;
+    --bg-secondary: #f4f4f4 !important;
+    --bg-card: #ffffff !important;
+    --border-color: #dddddd !important;
+    --text-primary: #111111 !important;
+    --text-secondary: #444444 !important;
+    --text-tertiary: #666666 !important;
+  }
+}
+
+@keyframes slide-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.animate-slide-in {
+  animation: slide-in var(--dur-enter) var(--ease-out);
+}
+
+@keyframes fade-scale-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-scale-in {
+  animation: fade-scale-in var(--dur-enter) var(--ease-out) forwards;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in var(--dur-enter) var(--ease-out);
+}
+
+@keyframes insight-bar-in {
+  from { width: 0 !important; }
+}
+
+.insight-bar-animate {
+  animation: insight-bar-in 0.6s ease-out forwards;
+}
+
+/* Staggered insight bar delays */
+.insight-bar-0 { animation-delay: 0ms; }
+.insight-bar-1 { animation-delay: 100ms; }
+.insight-bar-2 { animation-delay: 200ms; }
+.insight-bar-3 { animation-delay: 300ms; }
+.insight-bar-4 { animation-delay: 400ms; }
+
+/* ── Interactive base transition ── */
+button, a, input, textarea, select {
+  transition: all 150ms ease;
+}
+
+/* ── Form controls follow the active theme (prevents default white inputs) ── */
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), textarea, select) {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"])::placeholder, textarea::placeholder) {
+  color: var(--text-tertiary);
+}
+
+/* Form rhythm: one label style, quiet helper text, unmistakable errors. */
+.form-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text-secondary);
+}
+
+.form-hint {
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-tertiary);
+}
+
+.form-error {
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--danger);
+}
+
+/* Soft ring on pointer focus; keyboard focus keeps the stronger outline. */
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), textarea, select):focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+:where(input, textarea, select):disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+:where(input, textarea, select)[aria-invalid="true"] {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 14%, transparent);
+}
+
+/* ── Skeleton loading shimmer ── */
+@keyframes skeleton-shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+.skeleton-pulse {
+  position: relative;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--text-tertiary) 14%, transparent) !important;
+}
+
+.skeleton-pulse::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--text-primary) 7%, transparent),
+    transparent
+  );
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-pulse::after {
+    animation: none;
+  }
+}
+
+/* Drawn-in charts: scale from baseline once, transform only (compositor
+   cheap). Applied to runway/money-flow bars; like entrances, silenced by
+   reduced-motion and .motion-off above. */
+@keyframes chart-draw-y {
+  from { transform: scaleY(0); opacity: 0.4; }
+  to { transform: scaleY(1); opacity: 1; }
+}
+
+@keyframes chart-draw-x {
+  from { transform: scaleX(0); opacity: 0.4; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+
+.chart-draw {
+  animation: chart-draw-y var(--dur-chart) var(--ease-out) both;
+}
+
+.chart-draw-x {
+  animation: chart-draw-x var(--dur-chart) var(--ease-out) both;
+}
+
+/* Timer breathe: slow tactile pulse, running timers only. Ambient-motion so
+   calm intensity + reduced-motion/.motion-off silence it. */
+@keyframes timer-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+.timer-breathe {
+  animation: timer-breathe 4s ease-in-out infinite;
+}
+
+/* Onboarding/landing orbit: slow tool rings around the mark. Transform
+   rotation only; ambient-motion silences it under calm + reduced-motion. */
+@keyframes orbit-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-orbit-slow {
+  animation: orbit-spin 36s linear infinite;
+}
+
+.animate-orbit-slower {
+  animation: orbit-spin 60s linear infinite;
+}
+
+/* ── Dark mode ── */
+html.dark body,
+html.dark #root {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: var(--text-tertiary);
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+html.dark * {
+  scrollbar-color: var(--text-tertiary) transparent;
+}
+
+/* ── Import animations ── */
+
+@keyframes drop-zone-pulse {
+  0% { border-color: var(--accent); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.15); }
+  50% { border-color: var(--accent); box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+  100% { border-color: var(--accent); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+.drop-zone-active {
+  animation: drop-zone-pulse 1.5s ease-in-out infinite;
+  border-color: var(--accent) !important;
+  background: var(--accent-bg) !important;
+}
+
+@keyframes drop-zone-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.drop-zone-overlay-animate {
+  animation: drop-zone-overlay-in 0.2s ease-out;
+}
+
+@keyframes drop-zone-content-pop {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.drop-zone-content-animate {
+  animation: drop-zone-content-pop 0.3s ease-out;
+}
+
+@keyframes drop-zone-ring-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.drop-zone-ring-spin {
+  animation: drop-zone-ring-spin 8s linear infinite;
+}
+
+@keyframes drop-zone-icon-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.drop-zone-icon-pulse {
+  animation: drop-zone-icon-pulse 2s ease-in-out infinite;
+}
+
+/* ── Linear-grade design tokens ──
+   Canonical values live in src/design/tokens.ts; this block mirrors them.
+   Do not introduce competing literals — use var(--radius-*) etc. */
+:root {
+  --ring: rgba(30,201,138,.35);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+  --radius-card: var(--radius-xl);
+  --radius-control: var(--radius-sm);
+  --space-card-x: 24px;
+  --space-card-y: 20px;
+  --space-metric: 20px;
+  --space-modal-x: 24px;
+  --space-modal-y: 16px;
+  --text-display: 26px;
+  --text-title: 16px;
+  --dur-tap: 120ms;
+  --dur-ui: 150ms;
+  --dur-enter: 200ms;
+  --dur-hero: 450ms;
+  --dur-chart: 600ms;
+  --ease-out: cubic-bezier(.22,1,.36,1);
+  --shadow-pop: 0 8px 28px rgba(0,0,0,.14), 0 2px 6px rgba(0,0,0,.08);
+  --shadow-button: 0 1px 2px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.22);
+  --shadow-button-flat: 0 1px 2px rgba(0,0,0,0.05);
+  /* Signature dark rail — fixed across themes, the app's anchor */
+  --sb-bg: #141417;
+  --sb-bg-hover: rgba(255,255,255,.055);
+  --sb-bg-active: rgba(255,255,255,.085);
+  --sb-text: #9d9da8;
+  --sb-text-active: #f4f4f6;
+  --sb-border: rgba(255,255,255,.07);
+  --sb-label: #8e8e99;
+}
+
+/* Intensity control (prefs.intensity, default balanced; see
+   src/design/tokens.ts). Calm disables ambient motion and caps hero moments
+   at the daily-motion ceiling; expressive is honored on landing/onboarding
+   surfaces only — the app never reads it as permission for orbit/spin. */
+[data-intensity='calm'] .ambient-motion {
+  animation: none !important;
+}
+[data-intensity='calm'] .animate-rise,
+[data-intensity='calm'] .animate-fade-scale-in {
+  animation-duration: var(--dur-ui) !important;
+}
+
+/* Rail-safe accent text: the sidebar rail is fixed-dark across themes, so
+   the readable-on-light accent-ink fails here. Mix the theme accent toward
+   white — hue identity kept, ≥4.5:1 on --sb-bg for every theme (5.6–11.4). */
+.sb-accent-text { color: color-mix(in srgb, var(--accent) 60%, white); }
+
+/* Theme-proof primary button: white text fails on raw accent in every theme
+   (brightest accent is 2.5:1), and no single text color works on all seven
+   solid accents. Darken the readable ink toward black instead — hue kept,
+   white text passes everywhere (6.2–14.6). */
+.btn-accent {
+  background-color: color-mix(in srgb, var(--accent-ink) 55%, black);
+  color: #fff;
+}
+.btn-accent:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--accent-ink) 42%, black);
+}
+
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* Theme display face (Playfair Display by default, editorial on page titles). */
+.font-display {
+  font-family: var(--font-display, 'Playfair Display', serif);
+  letter-spacing: -0.01em;
+}
+
+::selection { background: var(--accent-bg); }
+
+button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ── Entrance motion (stagger via --d) ── */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-rise {
+  animation: rise-in .45s cubic-bezier(.22,1,.36,1) both;
+  animation-delay: var(--d, 0ms);
+}
+
+/* ── Density system ── */
+:root {
+  --row-height: 1;
+  --item-padding: 1;
+  --card-padding: 1;
+  --accent: #FFAD00;
+  --accent-ink: #8A5A00;
+  --accent-hover: #E89B00;
+  --accent-bg: rgba(255,173,0,0.14);
+  --accent-active: #C98A00;
+  /* Success (semantic, stays green across themes) */
+  --success: #1EC98A;
+  --success-ink: #0B6B4A;
+  --success-bg: rgba(30,201,138,0.12);
+  /* Foreground for text sitting ON a solid --accent fill. White fails WCAG AA
+     against a light accent (2.15:1 on Default), so each theme declares the
+     legible side; this is the Default value and the fallback for any theme
+     that predates the token. */
+  --accent-on: #181716;
+  --info: #3B82F6;
+  --info-border: #3B82F6;
+  --warning-text: #854F0B;
+  --danger-hover: #8B2525;
+  --neutral-border: #D4D4D2;
+  --medium-conf-bg: #FDF3E7;
+  --medium-conf-text: #B86E1C;
+  --metric-blue: #3B82F6;
+  --metric-purple: #8B5CF6;
+}
+
+.density-compact {
+  --row-height: 0.8;
+  --item-padding: 0.75;
+  --card-padding: 0.8;
+}
+
+.density-compact table tr {
+  height: calc(var(--row-height) * 100%);
+}
+
+/* ── Accent color system ── */
+.accent-sage    { --accent: #1EC98A; --accent-hover: #18B47C; --accent-bg: rgba(30,201,138,0.1); }
+.accent-gold    { --accent: #FFAD00; --accent-hover: #E89B00; --accent-bg: rgba(255,173,0,0.14); }
+.accent-amber   { --accent: #F59E0B; --accent-hover: #D97706; --accent-bg: rgba(245,158,11,0.1); }
+.accent-rose    { --accent: #E11D48; --accent-hover: #BE123C; --accent-bg: rgba(225,29,72,0.1); }
+.accent-sky     { --accent: #0EA5E9; --accent-hover: #0284C7; --accent-bg: rgba(14,165,233,0.1); }
+.accent-violet  { --accent: #8B5CF6; --accent-hover: #7C3AED; --accent-bg: rgba(139,92,246,0.1); }
+.accent-teal    { --accent: #14B8A6; --accent-hover: #0D9488; --accent-bg: rgba(20,184,166,0.1); }
+.accent-orange  { --accent: #F97316; --accent-hover: #EA580C; --accent-bg: rgba(249,115,22,0.1); }
+.accent-slate   { --accent: #64748B; --accent-hover: #475569; --accent-bg: rgba(100,116,139,0.1); }
+
+
+/* ── Glassy Dashboard V5 / Admin Dashboard V2 glass tokens ── */
+:root {
+  /* Frosted panel: a diagonal white gradient + blur, tuned light and airy
+     like macOS Sonoma glass rather than a flat translucent grey. */
+  --glass-fill-1: rgba(255, 255, 255, 0.74);
+  --glass-fill-2: rgba(255, 255, 255, 0.44);
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-bg-strong: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(255, 255, 255, 0.72);
+  --glass-border-subtle: rgba(255, 255, 255, 0.45);
+  --glass-blur: 30px;
+  --glass-shadow: 0 24px 60px rgba(15, 23, 42, 0.12), 0 2px 8px rgba(15, 23, 42, 0.05);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+  /* Content surfaces stay near-solid so dense tables, forms and numbers
+     remain calm and legible. Chrome and overlays use .glass instead. */
+  --surface-fill-1: rgba(255, 255, 255, 0.94);
+  --surface-fill-2: rgba(255, 255, 255, 0.82);
+  --surface-border: rgba(15, 23, 42, 0.08);
+  --surface-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.05);
+  --surface-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+  /* Light frosted sidebar palette (overrides the legacy dark rail in light). */
+  --sb-bg: rgba(255, 255, 255, 0.55);
+  --sb-bg-hover: rgba(15, 23, 42, 0.055);
+  --sb-bg-active: rgba(15, 23, 42, 0.09);
+  --sb-text: #475569;
+  --sb-text-active: #0f172a;
+  --sb-border: rgba(15, 23, 42, 0.08);
+  --sb-label: #94a3b8;
+}
+
+.dark, html.dark {
+  --glass-fill-1: rgba(255, 255, 255, 0.13);
+  --glass-fill-2: rgba(255, 255, 255, 0.045);
+  --glass-bg: rgba(15, 23, 42, 0.42);
+  --glass-bg-strong: rgba(15, 23, 42, 0.9);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --glass-border-subtle: rgba(255, 255, 255, 0.1);
+  --glass-blur: 32px;
+  --glass-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+
+  --surface-fill-1: rgba(24, 30, 44, 0.96);
+  --surface-fill-2: rgba(17, 24, 39, 0.88);
+  --success: #3FCB92;
+  --success-ink: #5BE3AE;
+  --success-bg: rgba(63,203,146,0.14);
+  --surface-border: rgba(255, 255, 255, 0.1);
+  --surface-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.28);
+  --surface-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  --sb-bg: rgba(20, 20, 23, 0.72);
+  --sb-bg-hover: rgba(255, 255, 255, 0.055);
+  --sb-bg-active: rgba(255, 255, 255, 0.085);
+  --sb-text: #9d9da8;
+  --sb-text-active: #f4f4f6;
+  --sb-border: rgba(255, 255, 255, 0.07);
+  --sb-label: #8e8e99;
+}
+
+.glass {
+  background: linear-gradient(135deg, var(--glass-fill-1), var(--glass-fill-2));
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
+}
+
+.surface {
+  background: linear-gradient(160deg, var(--surface-fill-1), var(--surface-fill-2));
+  border: 1px solid var(--surface-border);
+  box-shadow: var(--surface-shadow), var(--surface-highlight);
+}
+
+/* Dense list/table container. Rows stay flat inside one near-solid surface
+   so long lists read as a single object instead of stacked cards. */
+.list-surface {
+  background: linear-gradient(160deg, var(--surface-fill-1), var(--surface-fill-2));
+  border: 1px solid var(--surface-border);
+  border-radius: 20px;
+  box-shadow: var(--surface-shadow), var(--surface-highlight);
+  overflow: hidden;
+}
+
+.list-row {
+  transition: background-color 140ms ease;
+}
+
+.list-row:hover {
+  background-color: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+/* Data tables: tabular numerals and one consistent hover row. Layout and
+   column widths stay in the screens so dense tables keep their own rhythm. */
+.data-table {
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table tbody tr {
+  transition: background-color 140ms ease;
+}
+
+.data-table tbody tr:hover {
+  background-color: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .list-row,
+  .data-table tbody tr {
+    transition: none;
+  }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .glass {
+    background: var(--glass-bg-strong);
+  }
+}
+
+/* Respect the OS reduce-transparency setting: frosted chrome becomes solid
+   so text over busy backgrounds stays legible. */
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: var(--glass-bg-strong);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .glass-dark,
+  .dark .glass-dark,
+  html.dark .glass-dark {
+    background: var(--surface-fill-1);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+.glass-dark {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.42));
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.dark .glass-dark, html.dark .glass-dark {
+  background: rgba(20, 20, 23, 0.72);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Variant B background mesh: airy pastel depth, like an Apple wallpaper.
+   Blurred colour fields sit behind the frosted panels so transparency reads. */
+body {
+  background:
+    radial-gradient(60rem 48rem at 8% 0%, rgba(125, 211, 252, 0.55), transparent 62%),
+    radial-gradient(52rem 44rem at 92% 8%, rgba(196, 181, 253, 0.45), transparent 62%),
+    radial-gradient(46rem 40rem at 52% 104%, rgba(251, 207, 232, 0.38), transparent 66%),
+    linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 46%, #faf5ff 100%);
+  background-attachment: fixed;
+}
+html.dark body {
+  background:
+    radial-gradient(60rem 48rem at 8% 0%, rgba(14, 165, 233, 0.22), transparent 62%),
+    radial-gradient(52rem 44rem at 92% 8%, rgba(99, 102, 241, 0.2), transparent 62%),
+    radial-gradient(46rem 40rem at 52% 104%, rgba(168, 85, 247, 0.14), transparent 66%),
+    linear-gradient(135deg, #020617 0%, #0b1120 46%, #111827 100%);
+  background-attachment: fixed;
+}
+html.dark #root {
+  background: transparent;
+}
+
+/* reduced transparency fallback already disables backdrop-filter */
+
+@media (prefers-reduced-motion: reduce) {
+  .glass, .glass-dark { transition: none !important; }
+}

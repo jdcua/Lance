@@ -1,0 +1,66 @@
+{
+  "$schema": "gen/schemas/desktop-schema.json",
+  "productName": "Lance",
+  "version": "0.9.9-5",
+  "identifier": "co.MONDAY.lance",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Lance",
+        "width": 1100,
+        "height": 680,
+        "resizable": true,
+        "fullscreen": false,
+        "minWidth": 900,
+        "minHeight": 600,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' asset: data:; connect-src 'self' https://api.github.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "msi", "dmg", "app", "appimage", "deb"],
+    "createUpdaterArtifacts": true,
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "shortDescription": "Freelancer OS",
+    "longDescription": "Win work. Run projects. Get paid. Run your business.",
+    "copyright": "Copyright © 2026 Lance. All rights reserved.",
+    "category": "Productivity",
+    "macOS": {
+      "dmg": {
+        "background": "../assets/build/dmg-background.png",
+        "windowSize": { "width": 660, "height": 400 },
+        "appPosition": { "x": 180, "y": 170 },
+        "applicationFolderPosition": { "x": 480, "y": 170 }
+      }
+    },
+    "externalBin": [],
+    "resources": []
+  },
+  "plugins": {
+    "sql": {
+      "preload": ["sqlite:lance.db"]
+    },
+    "shell": {
+      "open": true
+    },
+    "updater": {
+      "active": true,
+      "endpoints": ["https://github.com/jdcua/Lance/releases/latest/download/latest.json"],
+      "pubkey": "RWRkkMrXVIwH23R40/oXd+451bODmo5q8CJ8t7mhL4e2gXbd8U8HfAko",
+      "dialog": false,
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  }
+}
