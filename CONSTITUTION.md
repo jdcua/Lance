@@ -14,7 +14,7 @@ A freelancer OS. 41 archetypes. One unified brain underneath.
 - Background engines (recurring, backup, follow-up, expiry, updater) 
   stay. Clean them up, don't rewrite from scratch
 - Existing UI components are the base. Improve them, don't throw them away
-- 150 feature components get refactored into the unified store, not rewritten
+- Feature trackers share the unified store through `RecordTracker`, not copies
 
 ## Build order
 1. Lock the unified store shape first. Nothing else starts
@@ -30,4 +30,4 @@ A freelancer OS. 41 archetypes. One unified brain underneath.
 - No untested screen gets committed
 
 ## When done
-Remotion renders marketing videos. Ship.
+Every screen is documented, tested and reachable from the unified store. Ship.

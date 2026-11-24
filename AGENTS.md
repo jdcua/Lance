@@ -82,7 +82,7 @@ and `prefers-reduced-transparency` always win.
 
 ---
 
-## 5. Feature components (the 187 trackers)
+## 5. Feature components (the trackers)
 
 - New trackers use `src/components/ui/RecordTracker.tsx` — one generic component configured per entity.
 - Do not hand-roll list/create/delete UI for a new entity.
@@ -114,7 +114,7 @@ where outside contributions are welcome.
 
 ---
 
-## 8. Files created in this cleanup
+## 8. Key shared modules
 
 | File | Purpose |
 |---|---|

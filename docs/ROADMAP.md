@@ -31,7 +31,7 @@ item, open an issue, and say you are working on it.
 
 ## Explicitly out of scope
 
-- Accounts, cloud sync, telemetry or analytics. Lance is local-first.
+- Accounts, cloud sync, or network telemetry/analytics. Lance is local-first; the on-device activity log has no network calls.
 - Payments, subscriptions, license keys or paywalls. Every feature is free in
   every build; adding gating back is not a contribution we will accept.
 - New UI frameworks, state libraries, or hand-rolled feature trackers that
