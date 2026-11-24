@@ -12,8 +12,6 @@ import { formatDate } from '../utils/format';
 import { relativeDate, parseDateString, DAY_MS } from '../utils/format';
 import { getProposalViews } from '../utils/portalActivity';
 import { scoreProposalHeat, compareHeat, type ProposalHeat } from '../utils/proposalHeat';
-import { getFeatureFlags } from '../lib/constants';
-import { commands } from '../lib/commands';
 import { htmlToPlainText } from '../utils/htmlToText';
 import { useToasts } from '../store/toastStore';
 import { checkAndNotify, tryUnlock } from '../achievements/notify';
@@ -23,7 +21,6 @@ import { useVisibleList, MoreRows } from '../components/ui/useVisibleList';
 import { generateFollowUpDraft, generateSubjectLine, openMailTo } from '../utils/followUpTemplates';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
-import { maybeFirstSendMoment } from '../utils/firstWin';
 
 const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'dark'> = {
   draft: 'warning',
@@ -62,7 +59,7 @@ type SortKey = 'title' | 'client' | 'status' | 'date' | 'heat';
 type StatusFilter = 'all' | 'draft' | 'sent' | 'accepted' | 'declined' | 'expired';
 
 export default function Proposals() {
-  const { proposals, loadProposals, clients, loadClients, updateProposal, removeProposal, profile, loadProfile, addProposal, addContract, contracts, loadContracts, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, logFollowUp, followUpSettings, portalActivity, loadPortalActivity, getActiveTier } = useStore();
+  const { proposals, loadProposals, clients, loadClients, updateProposal, removeProposal, profile, loadProfile, addProposal, addContract, contracts, loadContracts, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, logFollowUp, followUpSettings, portalActivity, loadPortalActivity } = useStore();
   const addToast = useToasts((s) => s.add);
   const proposalsError = useStore((s) => s.errors.proposals);
   const navigate = useNavigate();
@@ -139,7 +136,6 @@ export default function Proposals() {
       // Sending completes via the share link: open it so the proposal
       // actually reaches the client instead of only flipping status.
       setShareModal({ entityType: 'proposal', entityId: p.id });
-      maybeFirstSendMoment(() => useStore.getState().getActiveTier());
     } catch (err) {
       addToast(err?.toString?.() || 'Failed to send', 'error');
     }
@@ -290,10 +286,9 @@ export default function Proposals() {
     return (p.title || '').toLowerCase().includes(s) || (getClientName(p.client_id) || '').toLowerCase().includes(s);
   });
 
-  // Buy-intent ranking (Pro): hot means opened in the last 72 hours,
-  // cooling means sent 3+ weeks ago and never opened. Free tiers keep the
-  // raw open counts; interpretation is the Pro layer.
-  const heatOn = getFeatureFlags(getActiveTier()).advancedInsights === true;
+  // Buy-intent ranking: hot means opened in the last 72 hours, cooling means
+  // sent 3+ weeks ago and never opened. Always available.
+  const heatOn = true;
   const heatOf = (id: string, status: string, sentAt?: string, createdAt?: string): ProposalHeat => {
     const views = getProposalViews(portalActivity, id);
     return scoreProposalHeat({
@@ -319,7 +314,7 @@ export default function Proposals() {
 
   const pagedProposals = useVisibleList(sorted, `${search}|${sortKey}|${sortDir}|${statusFilter}`);
 
-  // Rescue queue (Pro): sent proposals gone cold (3+ weeks, never opened)
+  // Rescue queue: sent proposals gone cold (3+ weeks, never opened)
   // are money left on the table. One click queues a follow-up nudge.
   const rescueList = proposals
     .filter((p) => heatOf(p.id, p.status, p.sent_at, p.created_at) === 'cooling')
@@ -342,10 +337,6 @@ export default function Proposals() {
   };
 
   const toggleSort = (key: SortKey) => {
-    if (key === 'heat' && !heatOn) {
-      commands.dispatch('lance:open-upgrade', 'hot proposal ranking');
-      return;
-    }
     if (sortKey === key) { setSortDir(d => d === 'asc' ? 'desc' : 'asc'); }
     else { setSortKey(key); setSortDir('asc'); }
   };
@@ -378,20 +369,7 @@ export default function Proposals() {
       </div>
 
       {/* Rescue queue: cold proposals worth reviving */}
-      {!heatOn && rescueList.length > 0 && (
-        <button
-          onClick={() => commands.dispatch('lance:open-upgrade', 'proposal rescue queue')}
-          className="w-full mb-4 px-4 py-3 rounded-[10px] border border-[var(--accent)]/30 bg-[var(--accent-bg)] text-left hover:border-[var(--accent)]/60 transition-colors"
-        >
-          <p className="text-xs font-semibold text-[var(--text-primary)]">
-            {rescueList.length} sent {rescueList.length === 1 ? 'proposal has' : 'proposals have'} gone cold
-          </p>
-          <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-            Pro flags stale deals and queues the nudge for you. Unlock to recover them.
-          </p>
-        </button>
-      )}
-      {heatOn && rescueList.length > 0 && (
+      {rescueList.length > 0 && (
         <div className="mb-4 px-4 py-3 rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-secondary)]/50">
           <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-2">
             Needs a nudge · {rescueList.length} going cold
@@ -454,14 +432,11 @@ export default function Proposals() {
           ))}
           <button
             onClick={() => toggleSort('heat')}
-            title={heatOn ? 'Sort by buy-intent' : 'Hot-first ranking is a Pro feature'}
+            title="Sort by buy-intent"
             className={`text-[10px] px-2 py-0.5 rounded-[4px] transition-colors capitalize flex items-center gap-0.5 ${sortKey === 'heat' ? 'bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))] font-medium' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}
           >
             <Flame size={10} />
             heat
-            {!heatOn && (
-              <span className="text-[8px] font-semibold px-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">PRO</span>
-            )}
           </button>
         </div>
       </div>

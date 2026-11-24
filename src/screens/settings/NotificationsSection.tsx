@@ -1,21 +1,17 @@
-import type { ChangeEvent } from 'react';
 import { useStore } from '../../store';
 import { setPref, usePrefs, type MotionPref, type ContrastPref, type TextScalePref } from '../../lib/prefs';
-import { getFeatureFlags } from '../../lib/constants';
-import { commands } from '../../lib/commands';
 import Card from '../../components/ui/Card';
 import PrefToggle from '../../components/ui/PrefToggle';
 import { SectionHead, type SettingsBag } from './shared';
 
 /**
  * Notifications settings: AI features, Personalize, follow-up reminders.
- * Pure relocation. Pro gating (late fees) untouched.
+ * Pure relocation.
  */
 export default function NotificationsSection({ bag }: { bag: SettingsBag }) {
   const { form, autoSave, saved, setSaved } = bag;
   const prefs = usePrefs();
   const saveFollowUpSettings = useStore((s) => s.saveFollowUpSettings);
-  const getActiveTier = useStore((s) => s.getActiveTier);
   const markSaved = () => setSaved((prev) => new Set([...prev, 'Personalize']));
 
   return (
@@ -262,74 +258,50 @@ export default function NotificationsSection({ bag }: { bag: SettingsBag }) {
             </div>
           </div>
 
-          {/* Late fees (Pro): accrue per 30 days overdue, shown in drafts */}
+          {/* Late fees: accrue per 30 days overdue, shown in drafts */}
           <div className="pt-3 border-t border-[var(--border-color)]">
-            <div className="flex items-center gap-2 mb-1">
-              <p className="text-sm font-medium text-[var(--text-primary)]">Late fees</p>
-              {getFeatureFlags(getActiveTier()).smartDunning !== true && (
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">
-                  PRO
-                </span>
-              )}
-            </div>
+            <p className="text-sm font-medium text-[var(--text-primary)] mb-1">Late fees</p>
             <p className="text-xs text-[var(--text-tertiary)] mb-3">
               Charge a monthly percent on overdue balances. Accrued fees appear in
               reminder drafts and can be added to the invoice with one click.
             </p>
-            {(() => {
-              const pro = getFeatureFlags(getActiveTier()).smartDunning === true;
-              const guard =
-                (fn: (e: ChangeEvent<HTMLInputElement>) => void) =>
-                (e: ChangeEvent<HTMLInputElement>) => {
-                  if (!pro) {
-                    commands.dispatch('lance:open-upgrade', 'late fees');
-                    return;
-                  }
-                  fn(e);
-                };
-              return (
-                <div className="flex items-center gap-4">
-                  <label
-                    className={`flex items-center gap-2 text-xs text-[var(--text-secondary)] ${!pro ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={bag.fuLateFeeEnabled}
-                      disabled={!pro}
-                      onChange={guard((e) => {
-                        const on = (e.target as HTMLInputElement).checked;
-                        bag.setFuLateFeeEnabled(on);
-                        saveFollowUpSettings({ lateFeeEnabled: on });
-                      })}
-                      className="w-4 h-4 rounded border-[var(--border-color)] text-[var(--accent-ink,var(--accent))] focus:ring-[var(--accent)]"
-                    />
-                    Enable late fees
-                  </label>
-                  <label
-                    className={`flex items-center gap-2 text-xs text-[var(--text-secondary)] ${!pro || !bag.fuLateFeeEnabled ? 'opacity-60' : ''}`}
-                  >
-                    Percent per month
-                    <input
-                      type="number"
-                      min={0.1}
-                      max={10}
-                      step={0.1}
-                      value={bag.fuLateFeePercent}
-                      disabled={!pro || !bag.fuLateFeeEnabled}
-                      onChange={guard((e) => {
-                        const v = Math.max(
-                          0.1,
-                          Math.min(10, parseFloat(e.target.value) || 1.5),
-                        );
-                        bag.setFuLateFeePercent(v);
-                        saveFollowUpSettings({ lateFeePercent: v });
-                      })}
-                      className="w-20 px-2 py-1.5 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-                    />
-                  </label>
-                </div>
-              );
-            })()}
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={bag.fuLateFeeEnabled}
+                  onChange={(e) => {
+                    const on = e.target.checked;
+                    bag.setFuLateFeeEnabled(on);
+                    saveFollowUpSettings({ lateFeeEnabled: on });
+                  }}
+                  className="w-4 h-4 rounded border-[var(--border-color)] text-[var(--accent-ink,var(--accent))] focus:ring-[var(--accent)]"
+                />
+                Enable late fees
+              </label>
+              <label
+                className={`flex items-center gap-2 text-xs text-[var(--text-secondary)] ${!bag.fuLateFeeEnabled ? 'opacity-60' : ''}`}
+              >
+                Percent per month
+                <input
+                  type="number"
+                  min={0.1}
+                  max={10}
+                  step={0.1}
+                  value={bag.fuLateFeePercent}
+                  disabled={!bag.fuLateFeeEnabled}
+                  onChange={(e) => {
+                    const v = Math.max(
+                      0.1,
+                      Math.min(10, parseFloat(e.target.value) || 1.5),
+                    );
+                    bag.setFuLateFeePercent(v);
+                    saveFollowUpSettings({ lateFeePercent: v });
+                  }}
+                  className="w-20 px-2 py-1.5 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                />
+              </label>
+            </div>
             <p className="text-[10px] text-[var(--text-tertiary)] mt-2">
               Only charge what your contract allows and your local law permits.
             </p>

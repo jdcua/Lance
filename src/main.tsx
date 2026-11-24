@@ -44,32 +44,8 @@ if (!('cancelIdleCallback' in window)) {
 // Served over plain http (LAN IPs, some WebViews) it is missing and all
 // 170+ id generations throw. Backfill once so every call site keeps working.
 import { safeRandomUUID } from './utils/uuid';
-import { isTrial, hasTrialPath } from './demo/isDemo';
 if (typeof crypto !== 'undefined' && typeof crypto.randomUUID !== 'function') {
   (crypto as unknown as { randomUUID: () => string }).randomUUID = safeRandomUUID;
-}
-
-// Trial: no third-party requests, ever. External fonts stay unloaded so the
-// trial works offline and leaks nothing. System fonts take over cleanly.
-if (isTrial() && typeof document !== 'undefined') {
-  for (const link of Array.from(document.querySelectorAll('link[href*="fonts.bunny.net"]'))) {
-    link.remove();
-  }
-}
-
-// Trial: handwritten service worker caches the app shell for offline use.
-// Same-origin only. No analytics, no push, no background sync.
-//
-// Gated on hasTrialPath, not isTrial: the worker only exists at /try/, and
-// registering anywhere else made the browser fetch a path that answers with
-// the SPA fallback (text/html) — "The script has an unsupported MIME type".
-// Dev with ?trial=1 is the exact case that logged it on every load.
-if (hasTrialPath() && 'serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/try/trial-sw.js', { scope: '/try/' }).catch(() => {
-      /* offline shell is an enhancement, never a hard requirement */
-    });
-  });
 }
 
 function Root() {
@@ -79,7 +55,7 @@ function Root() {
   // everything to the OS-level media query already in index.css.
   // Device auto-detect: contrast follows OS prefers-contrast unless the user
   // overrode it; text scale + motion-off come straight from prefs. Runs in
-  // both the desktop app and the trial (same code, same classes).
+  // both the desktop app and the browser build (same code, same classes).
   useEffect(() => {
     document.documentElement.classList.toggle('motion-off', prefs.motion === 'off');
     document.documentElement.classList.toggle('textscale-112', prefs.textScale === '112');

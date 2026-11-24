@@ -9,8 +9,6 @@
  * action lists.
  */
 type CommandDetail = {
-  'lance:open-upgrade': string | undefined;
-  'lance:pro-activated': undefined;
   'lance:add-time': undefined;
   'lance:open-import': undefined;
   'lance:toggle-timer': undefined;

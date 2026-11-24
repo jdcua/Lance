@@ -1,22 +1,17 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../../store';
-import { getFeatureFlags } from '../../lib/constants';
-import { commands } from '../../lib/commands';
 import { buildTaxPack, taxPackCsv, taxPackYears, downloadTextFile } from '../../utils/taxPack';
 import { formatCurrency } from '../../utils/format';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import ProgressBar from '../ui/ProgressBar';
-import { Download, Lock, ReceiptText } from 'lucide-react';
+import { Download, ReceiptText } from 'lucide-react';
 
 /**
- * Tax pack: year summary anyone can read, accountant-ready CSV for Pro.
- * Summary is trust-building free value; the CSV that saves an afternoon
- * with the accountant is the upgrade.
+ * Tax pack: year summary and accountant-ready CSV.
  */
 export default function TaxPack() {
-  const { invoices, expenses, clients, profile, getActiveTier } = useStore();
-  const unlocked = getFeatureFlags(getActiveTier()).advancedInsights === true;
+  const { invoices, expenses, clients, profile } = useStore();
   const currency = profile?.currency;
 
   const years = useMemo(() => taxPackYears(invoices, expenses), [invoices, expenses]);
@@ -29,10 +24,6 @@ export default function TaxPack() {
   const maxQ = Math.max(1, ...pack.quarters.map((q) => Math.max(q.revenue, q.expenses)));
 
   const handleDownload = () => {
-    if (!unlocked) {
-      commands.dispatch('lance:open-upgrade', 'tax pack CSV');
-      return;
-    }
     downloadTextFile(`lance-tax-pack-${pack.year}.csv`, taxPackCsv(pack));
   };
 
@@ -42,11 +33,6 @@ export default function TaxPack() {
         <div className="flex items-center gap-2">
           <ReceiptText size={16} className="text-[var(--text-tertiary)]" />
           <h3 className="text-sm font-semibold text-[var(--text-primary)]">Tax Pack</h3>
-          {!unlocked && (
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">
-              CSV: PRO
-            </span>
-          )}
         </div>
         <select
           value={pack.year}
@@ -117,8 +103,8 @@ export default function TaxPack() {
       )}
 
       <Button size="sm" className="w-full" onClick={handleDownload}>
-        {unlocked ? <Download size={13} /> : <Lock size={13} />}
-        {unlocked ? 'Download accountant CSV' : 'Unlock accountant CSV with Pro'}
+        <Download size={13} />
+        Download accountant CSV
       </Button>
       <p className="text-[11px] text-[var(--text-tertiary)] mt-2 leading-relaxed">
         Revenue, quarters, per-client totals, and expenses by category in one file your accountant can open.

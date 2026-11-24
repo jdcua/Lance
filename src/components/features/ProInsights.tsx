@@ -1,56 +1,15 @@
 import { useEffect, useMemo } from 'react';
-import { Lock, TrendingUp, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { TrendingUp, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useStore } from '../../store';
-import { getFeatureFlags } from '../../lib/constants';
 import Card from '../ui/Card';
-import Button from '../ui/Button';
 import ProgressBar from '../ui/ProgressBar';
 import { formatCurrency } from '../../utils/format';
-import { commands } from '../../lib/commands';
-import { getTrialValue, computeProRoi } from '../../utils/trialValue';
 import {
   computeForecast,
   computeEffectiveRate,
   computeClientWinRates,
   isProposalResolved,
 } from '../../utils/proInsightsMath';
-
-// ── Locked teaser shell ──────────────────────────────────────────────────
-
-function LockedPanel({
-  title,
-  headline,
-  blurb,
-  feature,
-}: {
-  title: string;
-  headline: string;
-  blurb: string;
-  feature: string;
-}) {
-  return (
-    <Card>
-      <div className="flex items-center gap-2 mb-3">
-        <Lock size={14} className="text-[var(--text-tertiary)]" />
-        <h3 className="text-sm font-semibold text-[var(--text-primary)]">{title}</h3>
-        <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">
-          PRO
-        </span>
-      </div>
-      <p className="text-[26px] font-semibold text-[var(--text-primary)]">
-        {headline}
-      </p>
-      <p className="text-xs text-[var(--text-secondary)] mt-1 mb-4 leading-relaxed">{blurb}</p>
-      <Button
-        size="sm"
-        className="w-full"
-        onClick={() => commands.dispatch('lance:open-upgrade', feature)}
-      >
-        Unlock with Pro
-      </Button>
-    </Card>
-  );
-}
 
 // ── Section ──────────────────────────────────────────────────────────────
 
@@ -63,11 +22,8 @@ export default function ProInsights() {
     loadRecurringInvoices,
     clients,
     profile,
-    getActiveTier,
   } = useStore();
 
-  const flags = getFeatureFlags(getActiveTier());
-  const unlocked = flags.advancedInsights === true;
   const currency = profile?.currency;
 
   const winRateFraction = useMemo(() => {
@@ -96,53 +52,12 @@ export default function ProInsights() {
 
   const clientRates = useMemo(() => computeClientWinRates(proposals, clients), [proposals, clients]);
 
-  const bestRate = clientRates.length > 0 ? clientRates[0] : null;
   const totalLost = clientRates.reduce((s, c) => s + c.lostRevenue, 0);
-  const trialRoi = useMemo(() => computeProRoi(getTrialValue().total), []);
 
   useEffect(() => {
     loadRecurringInvoices().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  if (!unlocked) {
-    return (
-      <div className="mt-6">
-        <div className="flex items-center gap-2 mb-4">
-          <TrendingUp size={16} className="text-[var(--text-tertiary)]" />
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Projections and Signals</h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-          <LockedPanel
-            title="3-Month Forecast"
-            headline={formatCurrency(forecast.total, currency)}
-            blurb="Projected revenue from your run rate, active retainers, and open pipeline."
-            feature="3-month revenue forecast"
-          />
-          <LockedPanel
-            title="Effective Rate"
-            headline={
-              rate.effective !== null
-                ? `${formatCurrency(Math.round(rate.effective * 100) / 100, currency)}/h`
-                : 'No hours yet'
-            }
-            blurb="What you actually earn per hour after discounts and unbilled time."
-            feature="effective rate tracking"
-          />
-          <LockedPanel
-            title="Win Rate by Client"
-            headline={bestRate && bestRate.rate !== null ? `${bestRate.rate}%` : 'No data yet'}
-            blurb={
-              bestRate
-                ? `Best close rate: ${bestRate.name}. See every client plus lost revenue.`
-                : 'See which clients say yes, and what no costs you.'
-            }
-            feature="win rate by client"
-          />
-        </div>
-      </div>
-    );
-  }
 
   const maxMonth = Math.max(...forecast.months.map((m) => m.total), 1);
 
@@ -151,18 +66,7 @@ export default function ProInsights() {
       <div className="flex items-center gap-2 mb-4">
         <TrendingUp size={16} className="text-[var(--accent-ink,var(--accent))]" />
         <h3 className="text-sm font-semibold text-[var(--text-primary)]">Projections and Signals</h3>
-        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">
-          PRO
-        </span>
       </div>
-      {trialRoi.multiple !== null && trialRoi.multiple >= 1 && (
-        <div className="mb-4 px-4 py-3 rounded-[10px] bg-[var(--accent-bg)] border border-[var(--accent)]/30">
-          <p className="text-xs text-[var(--text-primary)] leading-relaxed">
-            <strong>Pro paid for itself {trialRoi.multiple}x over:</strong> {formatCurrency(trialRoi.earned, currency)} found
-            through change orders, late fees, and top-ups. That covers {trialRoi.monthsCovered} month{trialRoi.monthsCovered === 1 ? '' : 's'} of Pro.
-          </p>
-        </div>
-      )}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <Card>
           <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">3-Month Forecast</h3>

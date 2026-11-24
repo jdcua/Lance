@@ -23,7 +23,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' asset: data:; connect-src 'self' https://pay.paddle.io https://*.paddle.com https://lance-license.cuajuandiego.workers.dev; frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' asset: data:; connect-src 'self' https://api.github.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
     }
   },
   "bundle": {
@@ -55,7 +55,7 @@
     },
     "updater": {
       "active": true,
-      "endpoints": ["https://lance.cuajuandiego.workers.dev/api/updates/latest.json"],
+      "endpoints": ["https://github.com/jdcua/Lance/releases/latest/download/latest.json"],
       "pubkey": "RWRkkMrXVIwH23R40/oXd+451bODmo5q8CJ8t7mhL4e2gXbd8U8HfAko",
       "dialog": false,
       "windows": {

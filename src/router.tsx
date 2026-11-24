@@ -3,7 +3,6 @@ import { lazy, Suspense, type ComponentType, type ReactNode } from 'react';
 import App from './App';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import Skeleton, { type SkeletonVariant } from './components/ui/Skeleton';
-import { hasTrialPath } from './demo/isDemo';
 
 const Dashboard = lazyRetry(() => import('./screens/Dashboard'));
 const Proposals = lazyRetry(() => import('./screens/Proposals'));
@@ -69,11 +68,6 @@ function lazyRoute(element: ReactNode, skeleton: SkeletonVariant = 'list') {
   );
 }
 
-// Trial is served under /try/ (vite base + worker route): the router must
-// strip that prefix or every trial URL renders NotFound. Desktop and local
-// dev keep '/'. hasTrialPath (not isTrial) so ?trial=1 dev at / still works.
-const basename = typeof window !== 'undefined' && hasTrialPath() ? '/try' : '/';
-
 export const router = createBrowserRouter(
   [
     {
@@ -106,5 +100,4 @@ export const router = createBrowserRouter(
       element: lazyRoute(<ShareView />),
     },
   ],
-  { basename },
 );

@@ -607,7 +607,7 @@ const loadedFontSets = new Set<string>();
 function loadThemeFonts(themeId: Theme['id']): void {
   // Fonts are self-hosted now (src/fonts.css + public/fonts, OFL): every
   // family ships with the app, so there is nothing to lazy-load and no
-  // third-party request to make — including in the trial. Kept as a no-op
+  // third-party request to make. Kept as a no-op
   // guard so callers (applyTheme) stay untouched.
   loadedFontSets.add(themeId);
 }

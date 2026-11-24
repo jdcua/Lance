@@ -1,7 +1,6 @@
 /**
- * Portal polling engine: when a client opens a shared proposal, Pro and trial
- * users get pinged with one-click actions (open it, draft a follow-up).
- * Free tiers still see passive open badges on the Proposals screen.
+ * Portal polling engine: when a client opens a shared proposal, the user is
+ * pinged with one-click actions (open it, draft a follow-up).
  * Polls on the same 30s cadence as the dashboard feed.
  */
 import { useEffect } from 'react';
@@ -9,7 +8,6 @@ import { useStore } from '../../store';
 import { useToasts } from '../../store/toastStore';
 import { useNavigate } from 'react-router-dom';
 import { detectNewOpens, snapshotOpens } from '../../utils/portalActivity';
-import { getFeatureFlags } from '../../lib/constants';
 
 export function usePortalPolling() {
   const addToast = useToasts((s) => s.add);
@@ -26,7 +24,6 @@ export function usePortalPolling() {
         const fresh = detectNewOpens(useStore.getState().portalActivity, seenRef.current);
         seenRef.current = snapshotOpens(useStore.getState().portalActivity);
         if (fresh.length === 0) return;
-        if (getFeatureFlags(store.getActiveTier()).advancedInsights !== true) return;
         const proposals = useStore.getState().proposals;
         for (const item of fresh) {
           const proposal = proposals.find((p) => p.id === item.proposalId);

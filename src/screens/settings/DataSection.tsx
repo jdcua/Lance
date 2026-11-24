@@ -2,8 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../../store';
 import { useToasts } from '../../store/toastStore';
 import { isTauri as isTauriApp } from '../../utils/tauri';
-import { getFeatureFlags } from '../../lib/constants';
-import { commands } from '../../lib/commands';
 import {
   TEMPLATE_LABELS,
   DEFAULT_SUBJECT_TEMPLATES,
@@ -661,7 +659,6 @@ function ProjectTemplatesSection() {
 export default function DataSection({ bag }: { bag: SettingsBag }) {
   const { saved } = bag;
   const profile = useStore((s) => s.profile);
-  const getActiveTier = useStore((s) => s.getActiveTier);
   const getAssetsDir = useStore((s) => s.getAssetsDir);
   const getImportsDir = useStore((s) => s.getImportsDir);
   const followUpSettings = useStore((s) => s.followUpSettings);
@@ -962,45 +959,29 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
       <Card className="mb-6">
         <SectionHead title="Follow-up templates" isSaved={saved.has('Follow-ups')} />
         <div className="space-y-4">
-          {/* Dunning voice (Pro): escalation drafts in your voice */}
+          {/* Dunning voice: escalation drafts in your voice */}
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <p className="text-sm font-medium text-[var(--text-primary)]">
-                Dunning voice
-              </p>
-              {getFeatureFlags(getActiveTier()).smartDunning !== true && (
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent-ink,var(--accent))]">
-                  PRO
-                </span>
-              )}
-            </div>
+            <p className="text-sm font-medium text-[var(--text-primary)] mb-1">
+              Dunning voice
+            </p>
             <p className="text-xs text-[var(--text-tertiary)] mb-3">
               Overdue reminders rewritten to sound like you. Auto follows your archetype
               unless you pick one.
             </p>
             <div className="flex gap-2" role="radiogroup" aria-label="Dunning voice">
               {(['auto', 'warm', 'direct', 'formal'] as const).map((tone) => {
-                const pro = getFeatureFlags(getActiveTier()).smartDunning === true;
                 const selected = (followUpSettings.tone || 'auto') === tone;
                 return (
                   <button
                     key={tone}
                     role="radio"
                     aria-checked={selected}
-                    disabled={!pro}
-                    title={!pro ? 'Custom dunning voices are a Pro feature' : undefined}
-                    onClick={() => {
-                      if (!pro) {
-                        commands.dispatch('lance:open-upgrade', 'smart dunning voices');
-                        return;
-                      }
-                      saveFollowUpSettings({ tone });
-                    }}
+                    onClick={() => saveFollowUpSettings({ tone })}
                     className={`flex-1 px-3 py-2 text-xs font-medium rounded-sm border transition-colors capitalize ${
                       selected
                         ? 'bg-[var(--accent-bg)] border-[var(--accent)] text-[var(--text-primary)]'
                         : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40'
-                    } ${!pro ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    }`}
                   >
                     {tone === 'auto'
                       ? `Auto (${resolveDunningTone(profile?.profession)})`

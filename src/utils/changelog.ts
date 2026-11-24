@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getRuntimeVersion } from '../lib/version';
 import { todayLocalISO } from './format';
-import { isTrial } from '../demo/isDemo';
 
 export interface ChangelogEntry {
   version: string;
@@ -69,9 +68,6 @@ export function sanitizeChangelogItems(items: string[]): string[] {
  * plain and user-facing.
  */
 export async function loadChangelog(): Promise<ChangelogEntry[]> {
-  // Trial builds never touch the network: prove it by not fetching at all.
-  if (isTrial()) return trialChangelog();
-
   const cacheKey = 'lance:changelog-cache';
   const cacheExpiryKey = 'lance:changelog-cache-expiry';
   const CACHE_TTL_MS = 1000 * 60 * 60; // 1 hour
@@ -89,12 +85,9 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
 
   let entries: ChangelogEntry[] = [];
 
-  // 2. Release notes: our worker proxy first, then local git tags (dev).
-  // There is deliberately no direct-GitHub fallback: the repo is private,
-  // so an unauthenticated api.github.com call can never succeed — it only
-  // produces a console 404 on every load. Fully offline clients skip the
-  // network entirely with zero console noise.
-  const releaseEndpoints = ['https://lance.cuajuandiego.workers.dev/api/release'];
+  // 2. Release notes from the public repository, then local git tags (dev).
+  // Offline clients skip the network entirely with zero console noise.
+  const releaseEndpoints = ['https://api.github.com/repos/jdcua/Lance/releases?per_page=5'];
   if (typeof navigator === 'undefined' || navigator.onLine !== false) {
     for (const url of releaseEndpoints) {
       try {
@@ -150,7 +143,7 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
         version: '0.9.3',
         date: todayLocalISO(),
         items: [
-          'Pro licenses and a smoother upgrade flow',
+          'Theme refinements and a smoother settings flow',
           'New profession profiles with tailored dashboards',
           'Auto-backup keeps working quietly in the background',
           'Faster, quieter update checks',
@@ -188,22 +181,6 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
   }
 
   return entries;
-}
-
-/** Offline trial notes: no fetch, same shape as the fallback above. */
-function trialChangelog(): ChangelogEntry[] {
-  const today = todayLocalISO();
-  const version = typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : '0.0.0';
-  return [
-    {
-      version,
-      date: today,
-      items: [
-        'Trial runs fully offline in this browser',
-        'Export your trial file to keep everything on desktop',
-      ],
-    },
-  ];
 }
 
 async function ensureRuntimeVersion(entries: ChangelogEntry[]): Promise<ChangelogEntry[]> {

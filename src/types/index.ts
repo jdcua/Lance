@@ -138,6 +138,8 @@ export type UserProfile = {
   always_include?: string;
   writing_style?: string;
   theme?: string;
+  /* Legacy profile columns kept only so existing SQLite databases round-trip
+     unchanged. No app code reads or writes these fields anymore. */
   license_key?: string;
   licensed_at?: string;
   ai_enabled?: boolean;

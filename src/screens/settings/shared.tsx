@@ -47,7 +47,7 @@ export function labelForStyle(s: string): string {
 
 /**
  * Settings-local state + shell handlers passed to section components.
- * Store data (profile, licensing, prefs, follow-up settings) is read by
+ * Store data (profile, prefs, follow-up settings) is read by
  * sections directly via useStore/useToasts/usePrefs — the bag carries only
  * what useState owns in the shell. Nothing here changes behavior.
  */
@@ -57,10 +57,6 @@ export interface SettingsBag {
   autoSave: (updates: Partial<UserProfile>, section: string) => void;
   saved: Set<string>;
   setSaved: React.Dispatch<React.SetStateAction<Set<string>>>;
-  setLicenseKey: (v: string) => void;
-  setLicenseError: (v: string) => void;
-  setShowLicenseModal: (v: boolean) => void;
-  setShowRemoveLicenseConfirm: (v: boolean) => void;
   setShowResetModal: (v: boolean) => void;
   setShowClearSampleConfirm: (v: boolean) => void;
   isSeeded: boolean;

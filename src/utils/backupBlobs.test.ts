@@ -18,7 +18,7 @@ describe('portable attachment blobs', () => {
     localStorage.clear();
   });
 
-  it('exports trial bytes as base64 blobs', async () => {
+  it('exports browser asset bytes as base64 blobs', async () => {
     const db = await getDb();
     await db.execute(
       `INSERT INTO attachments (id, filename, mime_type, file_path) VALUES (?, ?, ?, ?)`,

@@ -1,6 +1,5 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useUpdaterStore } from '../store/updaterStore';
-import { isTrial } from '../demo/isDemo';
 
 const LATER_KEY = 'lance_update_deferred_until';
 const SEEN_KEY = 'lance:updater-highwater';
@@ -89,7 +88,6 @@ export function useAutoUpdater() {
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
 
   const doCheck = useCallback(async () => {
-    if (isTrial()) return;
     try {
       const deferredUntil = localStorage.getItem(LATER_KEY);
       if (deferredUntil && Date.now() < parseInt(deferredUntil, 10)) return;

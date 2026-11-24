@@ -1,17 +1,8 @@
-import { useStore, licenseWorkerUnconfigured } from '../../store';
-import { DEFAULT_CURRENCY } from '../../lib/constants';
+import { useStore } from '../../store';
+import { DEFAULT_CURRENCY, CURRENCIES } from '../../lib/constants';
 import { useToasts } from '../../store/toastStore';
-import { trialDaysRemaining } from '../../lib/trial';
 import { getCurrencySymbol } from '../../lib/currency';
-import { PRO_PRICES } from '../../lib/pricing';
-import { CURRENCIES } from '../../lib/constants';
-import { getTrialValue } from '../../utils/trialValue';
-import { formatCurrency } from '../../utils/format';
-import { openCheckout } from '../../utils/tauri';
 import Card from '../../components/ui/Card';
-import Button from '../../components/ui/Button';
-import { commands } from '../../lib/commands';
-import { Sparkles } from 'lucide-react';
 import {
   SectionHead,
   labelClass,
@@ -22,16 +13,11 @@ import {
 } from './shared';
 
 /**
- * General settings: License (moved byte-for-byte — same copy, same handlers,
- * same tier logic), profile, rates, proposal voice/defaults, profession.
- * Pure relocation from Settings.tsx; all behavior lives where it did.
+ * General settings: profile, rates, proposal voice/defaults, profession.
  */
 export default function GeneralSection({ bag }: { bag: SettingsBag }) {
   const { form, setForm, autoSave, saved } = bag;
-  const isLicensed = useStore((s) => s.isLicensed);
   const profile = useStore((s) => s.profile);
-  const getActiveTier = useStore((s) => s.getActiveTier);
-  const saveProfile = useStore((s) => s.saveProfile);
   const addToast = useToasts((s) => s.add);
 
   return (
@@ -40,98 +26,6 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
       <div className="text-xs text-[var(--text-secondary)] font-semibold mb-4">
         Profile
       </div>
-
-      {/* License */}
-      <Card className="mb-6">
-        <SectionHead title="License" isSaved={saved.has('License')} />
-        {isLicensed ? (
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles size={14} className="text-[var(--accent-ink,var(--accent))]" />
-              <span className="text-sm font-medium text-[var(--accent-ink,var(--accent))]">
-                Licensed
-              </span>
-              <span className="text-[10px] text-[var(--accent-ink,var(--accent))] bg-[var(--accent-bg)] px-1.5 py-0.5 rounded-full">
-                Licensed
-              </span>
-            </div>
-            <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-2">
-              All themes unlocked. Thank you for supporting Lance.
-            </p>
-            {form.licensed_at && (
-              <p className="text-xs text-[var(--text-tertiary)] mb-1">
-                Licensed since {new Date(form.licensed_at).toLocaleDateString()}.
-              </p>
-            )}
-            <p className="text-xs text-[var(--text-tertiary)] mb-4">
-              Studio, Terminal, Craft, Motion, Lens, and Scale themes are unlocked.
-            </p>
-            <button
-              onClick={() => bag.setShowRemoveLicenseConfirm(true)}
-              className="text-xs text-[var(--text-tertiary)] hover:text-[var(--danger)] underline transition-colors"
-            >
-              Remove license
-            </button>
-          </div>
-        ) : (
-          <div>
-            {getActiveTier() === 'trial' && (
-              <p className="text-sm text-[var(--text-primary)] mb-2">
-                Pro trial:{' '}
-                <strong className="text-[var(--accent-ink,var(--accent))]">
-                  {trialDaysRemaining(profile?.trial_started_at)} days left
-                </strong>
-                . Everything is unlocked. Keep it with a license before it ends.
-                {getTrialValue().total > 0 && (
-                  <span className="block text-xs text-[var(--text-secondary)] mt-1">
-                    It has already earned you {formatCurrency(getTrialValue().total)}.
-                  </span>
-                )}
-              </p>
-            )}
-            {getActiveTier() === 'expired' && (
-              <p className="text-sm text-[var(--text-primary)] mb-2">
-                Your Pro trial ended. Your data is intact and Core stays free forever.
-                Resubscribe anytime to unlock Pro depth again.
-              </p>
-            )}
-            <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-4">
-              Lance is free to use. A license removes the launch screen and unlocks all
-              themes immediately.
-            </p>
-            {licenseWorkerUnconfigured() && (
-              <p className="text-xs text-[var(--danger)] mb-3">
-                This build has no license server configured, so a key cannot be
-                checked online. Offline validation still works.
-              </p>
-            )}
-            <div className="flex items-center gap-3">
-              <Button
-                variant="primary"
-                onClick={() => {
-                  bag.setLicenseKey('');
-                  bag.setLicenseError('');
-                  bag.setShowLicenseModal(true);
-                }}
-                size="sm"
-              >
-                Enter license key
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  openCheckout('yearly').then((ok) => {
-                    if (!ok) addToast('Checkout is not configured in this build', 'info');
-                  });
-                }}
-                size="sm"
-              >
-                Get Pro (${PRO_PRICES.yearly}/yr)
-              </Button>
-            </div>
-          </div>
-        )}
-      </Card>
 
       {/* Your profile */}
       <Card className="mb-6">

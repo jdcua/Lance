@@ -4,7 +4,6 @@ import Button from './ui/Button';
 import { useToasts } from '../store/toastStore';
 import { useStore } from '../store';
 import { tauriInvoke, isTauri } from '../utils/tauri';
-import { hasTrialPath } from '../demo/isDemo';
 import { Copy, Link, Trash2, Eye, Clock } from 'lucide-react';
 import type { ShareToken } from '../types';
 
@@ -24,23 +23,10 @@ const EXPIRY_OPTIONS = [
 function shareUrlFor(token: ShareToken, port: number): string {
   // In browser dev mode there is no separate share server, so share links
   // point at the running Lance app itself (avoids a dead 1421 port).
-  // In the trial the app lives under /try, so the link must too —
-  // otherwise it 404s on the landing site instead of opening the portal.
   if (!isTauri()) {
-    const base = hasTrialPath() ? '/try' : '';
-    return `${window.location.origin}${base}/share/${token.token}`;
+    return `${window.location.origin}/share/${token.token}`;
   }
   return `http://localhost:${port}/share/${token.token}`;
-}
-
-/** Trial links open the client view in THIS browser only (tokens live in
- *  localStorage — there is no server to hand them to another device).
- *  Real cross-device sharing needs the desktop app's portal server. */
-function shareFooterNote(): string {
-  if (hasTrialPath()) {
-    return 'Trial demo link: opens the client view in this browser only. Real client sharing (any device) needs the desktop app.';
-  }
-  return 'This link only works while Lance is open. Your client can view it on any device with a browser.';
 }
 
 export default function ShareModal({ open, onClose, entityType, entityId }: ShareModalProps) {
@@ -262,7 +248,8 @@ export default function ShareModal({ open, onClose, entityType, entityId }: Shar
         )}
 
         <p className="text-[10px] text-[var(--text-tertiary)] text-center pt-2 border-t border-[var(--border-color)]">
-          {shareFooterNote()}
+          This link only works while Lance is open. Your client can view it on any device with a
+          browser.
         </p>
       </div>
     </Modal>
