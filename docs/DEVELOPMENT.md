@@ -22,7 +22,9 @@ npm run tauri dev
 | `npm run tauri dev` | Start dev server with hot reload |
 | `npm run tauri build` | Production build (no signing) |
 | `npm run version:bump 1.2.0` | Bump version across all 3 files |
-| `npx tsc --noEmit` | Typecheck without building |
+| `npm run doctor` | Check Node, Rust and installed dependencies |
+| `npm run typecheck` | Typecheck without building |
+| `npm run verify` | Run typecheck, lint, tests and build |
 | `npm run lint` | Lint frontend code |
 | `npm run format` | Format frontend code with Prettier |
 | `npm run format:check` | Check formatting without writing |

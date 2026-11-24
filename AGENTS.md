@@ -104,13 +104,13 @@ and `prefers-reduced-transparency` always win.
 ## 7. Before every commit
 
 ```
-npm run tsc --noEmit   # typecheck
-npm run build          # vite build
-npm run lint           # eslint
-npm run test           # vitest
+npm run doctor         # check local toolchain
+npm run verify         # typecheck + lint + test + build
 ```
 
-All must pass.
+`npm run verify` runs `typecheck`, `lint`, `test` and `build`; all must pass.
+See `CONTRIBUTING.md` for the PR workflow and `docs/ROADMAP.md` for places
+where outside contributions are welcome.
 
 ---
 
