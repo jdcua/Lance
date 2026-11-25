@@ -25,6 +25,7 @@
     "test:watch": "vitest",
     "verify": "npm run typecheck && npm run lint && npm run test && npm run build && npm run audit:oss",
     "audit:oss": "node scripts/audit-oss.mjs",
+    "check:boundaries": "node scripts/check-boundaries.mjs",
     "complexity": "node scripts/complexity.mjs",
     "doctor": "node scripts/doctor.mjs",
     "test:axe": "node scripts/axe-gate.mjs",

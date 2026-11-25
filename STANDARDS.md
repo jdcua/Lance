@@ -58,6 +58,7 @@ more than four parameters or must return two values, redesign the flow instead.
      `screens/` or `components/`.
   4. Only `src/store/index.ts` may call zustand `create()`.
   5. `src/db/index.ts` must not import itself.
+- `npm run check:boundaries` reports violations; `--strict` fails once clean.
 - Keep the single Zustand store and the command registry; do not introduce a
   second state system or raw `lance:` events.
 
