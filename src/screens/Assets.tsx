@@ -144,7 +144,9 @@ export default function Assets() {
   // the SQL aggregate: when the two disagree (stale/unavailable stats) the
   // header claimed "0 files" next to a non-empty library.
   const libraryStats = useMemo(() => {
-    const rows = allAttachments.filter((a) => a.entity_type === 'library' && a.entity_id === 'root');
+    const rows = allAttachments.filter(
+      (a) => a.entity_type === 'library' && a.entity_id === 'root',
+    );
     return {
       total: rows.length,
       totalSize: rows.reduce((s, a) => s + (a.size_bytes || 0), 0),
@@ -358,248 +360,62 @@ export default function Assets() {
   );
 
   const renderAssetList = (assets: Attachment[]) => (
-    <div className="border border-[var(--border-color)] rounded-[12px] overflow-x-auto"><div className="min-w-[560px]">
-      <div className="grid grid-cols-[1fr_100px_120px_80px] items-center px-4 py-2 bg-[var(--bg-secondary)] border-b border-[var(--border-color)]">
-        <span className="text-[10px] font-semibold text-[var(--text-secondary)]">
-          Name
-        </span>
-        <span className="text-[10px] font-semibold text-[var(--text-secondary)] text-right">
-          Size
-        </span>
-        <span className="text-[10px] font-semibold text-[var(--text-secondary)] text-right">
-          Modified
-        </span>
-        <span />
-      </div>
-      {assets.map((asset) => {
-        const Icon = getFileIcon(asset.mime_type);
-        return (
-          <div
-            key={asset.id}
-            onClick={() => setPreviewAsset(asset)}
-            className={`grid grid-cols-[1fr_100px_120px_80px] items-center px-4 py-2.5 hover:bg-[var(--bg-secondary)]/50 cursor-pointer border-b border-[var(--border-color)] last:border-b-0 transition-colors group ${highlightedId === asset.id ? 'bg-[var(--accent-bg)] ring-1 ring-inset ring-[var(--accent)]/40' : ''}`}
-          >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <Icon size={16} className="text-[var(--text-tertiary)] flex-shrink-0" />
-              <span className="text-xs text-[var(--text-primary)] truncate">{asset.filename}</span>
+    <div className="border border-[var(--border-color)] rounded-[12px] overflow-x-auto">
+      <div className="min-w-[560px]">
+        <div className="grid grid-cols-[1fr_100px_120px_80px] items-center px-4 py-2 bg-[var(--bg-secondary)] border-b border-[var(--border-color)]">
+          <span className="text-[10px] font-semibold text-[var(--text-secondary)]">Name</span>
+          <span className="text-[10px] font-semibold text-[var(--text-secondary)] text-right">
+            Size
+          </span>
+          <span className="text-[10px] font-semibold text-[var(--text-secondary)] text-right">
+            Modified
+          </span>
+          <span />
+        </div>
+        {assets.map((asset) => {
+          const Icon = getFileIcon(asset.mime_type);
+          return (
+            <div
+              key={asset.id}
+              onClick={() => setPreviewAsset(asset)}
+              className={`grid grid-cols-[1fr_100px_120px_80px] items-center px-4 py-2.5 hover:bg-[var(--bg-secondary)]/50 cursor-pointer border-b border-[var(--border-color)] last:border-b-0 transition-colors group ${highlightedId === asset.id ? 'bg-[var(--accent-bg)] ring-1 ring-inset ring-[var(--accent)]/40' : ''}`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Icon size={16} className="text-[var(--text-tertiary)] flex-shrink-0" />
+                <span className="text-xs text-[var(--text-primary)] truncate">
+                  {asset.filename}
+                </span>
+              </div>
+              <span className="text-[10px] text-[var(--text-tertiary)] text-right">
+                {formatSize(asset.size_bytes)}
+              </span>
+              <span className="text-[10px] text-[var(--text-tertiary)] text-right">
+                {relativeDate(asset.created_at)}
+              </span>
+              <div className="flex justify-end">
+                <button
+                  aria-label="Delete assets"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteConfirm(asset);
+                  }}
+                  className="p-1 rounded-xs text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] opacity-0 group-hover:opacity-100 transition-colors"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
             </div>
-            <span className="text-[10px] text-[var(--text-tertiary)] text-right">
-              {formatSize(asset.size_bytes)}
-            </span>
-            <span className="text-[10px] text-[var(--text-tertiary)] text-right">
-              {relativeDate(asset.created_at)}
-            </span>
-            <div className="flex justify-end">
-              <button aria-label="Delete assets"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDeleteConfirm(asset);
-                }}
-                className="p-1 rounded-xs text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] opacity-0 group-hover:opacity-100 transition-colors"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
-          </div>
-        );
-      })}
+          );
+        })}
       </div>
     </div>
   );
 
   const showScopeSelector = searchResults === null;
 
-  return (
-    <div className="p-6 space-y-5" onClick={() => setContextMenu(null)}>
-      {(() => (
-      <>
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1
-            className="text-lg font-semibold text-[var(--text-primary)]"
-           
-          >
-            Assets
-          </h1>
-          <p className="text-xs text-[var(--text-tertiary)] mt-0.5 flex items-center gap-1">
-            <Package size={12} />
-            {libraryStats.total} files &middot; {formatSize(libraryStats.totalSize)}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex bg-[var(--bg-secondary)] rounded-sm p-0.5">
-            <button
-              onClick={() => setViewMode('grid')}
-              aria-label="Grid view"
-              aria-pressed={viewMode === 'grid'}
-              className={`p-1.5 rounded-xs transition-colors ${viewMode === 'grid' ? 'bg-[var(--bg-card)] shadow-sm text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}
-            >
-              <Grid3X3 size={14} />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              aria-label="List view"
-              aria-pressed={viewMode === 'list'}
-              className={`p-1.5 rounded-xs transition-colors ${viewMode === 'list' ? 'bg-[var(--bg-card)] shadow-sm text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}
-            >
-              <List size={14} />
-            </button>
-          </div>
-          <Button size="sm" onClick={() => fileInputRef.current?.click()}>
-            <Upload size={14} /> Upload
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            className="hidden"
-            onChange={(e) => {
-              if (e.target.files && e.target.files.length > 0) {
-                handleUpload(e.target.files);
-                e.target.value = '';
-              }
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Unclassified banner */}
-      {showScopeSelector && scope.type === 'library' && unclassifiedAssets.length > 0 && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-[10px] bg-[var(--medium-conf-bg)] border border-[var(--medium-conf-text)]/20">
-          <AlertTriangle size={16} className="text-[var(--medium-conf-text)] flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-[var(--medium-conf-text)]">
-              {unclassifiedAssets.length} file{unclassifiedAssets.length !== 1 ? 's' : ''} from
-              import need review
-            </p>
-            <p className="text-[10px] text-[var(--medium-conf-text)]/70">
-              These files couldn't be automatically classified. Review and attach them to the right
-              place.
-            </p>
-          </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              const first = unclassifiedAssets[0];
-              if (first) setPreviewAsset(first);
-            }}
-          >
-            Review <ChevronRight size={12} />
-          </Button>
-        </div>
-      )}
-
-      {/* Search */}
-      <div className="relative">
-        <Search
-          size={14}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]"
-        />
-        <input
-          type="text"
-          placeholder="Search assets by name or tag..."
-          value={searchQuery}
-          onChange={(e) => handleSearch(e.target.value)}
-          className="w-full pl-9 pr-10 py-2 text-sm border border-[var(--border-color)] rounded-[10px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
-        />
-        {searchQuery && (
-          <button aria-label="Close"
-            onClick={() => {
-              setSearchQuery('');
-              setSearchResults(null);
-            }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
-          >
-            <X size={14} />
-          </button>
-        )}
-      </div>
-
-      {/* Scope selector */}
-      {showScopeSelector && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          {[
-            { label: 'Library', icon: FolderOpen, scope: { type: 'library' as const, id: 'root' } },
-            ...clients.map((c) => ({
-              label: c.name,
-              icon: FolderOpen,
-              scope: { type: 'client' as const, id: c.id },
-            })),
-            ...projects.map((p) => ({
-              label: p.title,
-              icon: FolderOpen,
-              scope: { type: 'project' as const, id: p.id },
-            })),
-          ].map((item) => {
-            const isActive = scope.type === item.scope.type && scope.id === item.scope.id;
-            const count = allAttachments.filter(
-              (a) => a.entity_type === item.scope.type && a.entity_id === item.scope.id,
-            ).length;
-            return (
-              <button
-                key={`${item.scope.type}:${item.scope.id}`}
-                onClick={() => setScope(item.scope)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs transition-colors flex-shrink-0 ${
-                  isActive
-                    ? 'bg-[var(--accent)]/10 text-[var(--text-primary)] border border-[var(--accent)]/30'
-                    : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-transparent'
-                }`}
-              >
-                <item.icon size={12} />
-                <span className="max-w-[120px] truncate">{item.label}</span>
-                {count > 0 && (
-                  <span
-                    className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full ${
-                      isActive
-                        ? 'bg-[var(--accent)] text-[var(--accent-on)]'
-                        : 'bg-[var(--border-color)] text-[var(--text-tertiary)]'
-                    }`}
-                  >
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Drop zone */}
-      <div
-        className={`border-2 border-dashed rounded-[12px] p-8 text-center transition-colors ${
-          dragOver
-            ? 'drop-zone-active border-[var(--accent)] bg-[var(--accent-bg)]'
-            : 'border-[var(--border-color)] hover:border-[var(--accent)]/30'
-        }`}
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragOver(true);
-        }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDragOver(false);
-          if (e.dataTransfer.files) handleUpload(e.dataTransfer.files);
-        }}
-      >
-        <Upload size={28} className="mx-auto mb-2 text-[var(--text-tertiary)]" />
-        <p className="text-xs text-[var(--text-secondary)]">
-          Drop files here to add to{' '}
-          <strong className="text-[var(--text-primary)]">{scopeLabel}</strong>
-        </p>
-        <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
-          Any file type supported · stored locally in your assets folder (see Settings for location)
-        </p>
-      </div>
-      </>
-      ))()}
-
-      {(() => (
-      <>
-      {/* Content */}
-      {scopeAssets.length === 0 && searchResults === null ? (
+  const renderContent = () => {
+    if (scopeAssets.length === 0 && searchResults === null) {
+      return (
         <div className="text-center py-16">
           <Package size={40} className="mx-auto mb-3 text-[var(--text-tertiary)] opacity-40" />
           <p className="text-sm font-medium text-[var(--text-primary)]">No assets yet</p>
@@ -608,24 +424,34 @@ export default function Assets() {
           </p>
           <label className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-sm bg-[var(--accent)] text-[var(--accent-on)] hover:opacity-90 cursor-pointer">
             Upload your first file
-            <input type="file" multiple className="hidden" onChange={(e) => { if (e.target.files) handleUpload(e.target.files); e.target.value = ''; }} />
+            <input
+              type="file"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files) handleUpload(e.target.files);
+                e.target.value = '';
+              }}
+            />
           </label>
         </div>
-      ) : searchResults !== null && searchResults.length === 0 ? (
+      );
+    }
+    if (searchResults !== null && searchResults.length === 0) {
+      return (
         <div className="text-center py-16">
           <Search size={40} className="mx-auto mb-3 text-[var(--text-tertiary)] opacity-40" />
           <p className="text-sm text-[var(--text-secondary)]">No assets match your search</p>
           <p className="text-xs text-[var(--text-tertiary)] mt-1">Try a different name or tag.</p>
         </div>
-      ) : searchResults !== null ? (
-        viewMode === 'grid' ? (
-          renderAssetGrid(scopeAssets)
-        ) : (
-          renderAssetList(scopeAssets)
-        )
-      ) : scope.type === 'library' && scope.id === 'root' ? (
+      );
+    }
+    if (searchResults !== null) {
+      return viewMode === 'grid' ? renderAssetGrid(scopeAssets) : renderAssetList(scopeAssets);
+    }
+    if (scope.type === 'library' && scope.id === 'root') {
+      return (
         <>
-          {/* Recently added */}
           {recentAssets.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-3">
@@ -638,7 +464,6 @@ export default function Assets() {
             </div>
           )}
 
-          {/* All assets */}
           {scopeAssets.length > recentAssets.length && (
             <div>
               <div className="flex items-center gap-2 mb-3 mt-5">
@@ -651,335 +476,527 @@ export default function Assets() {
             </div>
           )}
         </>
-      ) : viewMode === 'grid' ? (
-        renderAssetGrid(scopeAssets)
-      ) : (
-        renderAssetList(scopeAssets)
-      )}
-      </>
+      );
+    }
+    return viewMode === 'grid' ? renderAssetGrid(scopeAssets) : renderAssetList(scopeAssets);
+  };
+
+  return (
+    <div className="p-6 space-y-5" onClick={() => setContextMenu(null)}>
+      {(() => (
+        <>
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-lg font-semibold text-[var(--text-primary)]">Assets</h1>
+              <p className="text-xs text-[var(--text-tertiary)] mt-0.5 flex items-center gap-1">
+                <Package size={12} />
+                {libraryStats.total} files &middot; {formatSize(libraryStats.totalSize)}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex bg-[var(--bg-secondary)] rounded-sm p-0.5">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  aria-label="Grid view"
+                  aria-pressed={viewMode === 'grid'}
+                  className={`p-1.5 rounded-xs transition-colors ${viewMode === 'grid' ? 'bg-[var(--bg-card)] shadow-sm text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}
+                >
+                  <Grid3X3 size={14} />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  aria-label="List view"
+                  aria-pressed={viewMode === 'list'}
+                  className={`p-1.5 rounded-xs transition-colors ${viewMode === 'list' ? 'bg-[var(--bg-card)] shadow-sm text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}
+                >
+                  <List size={14} />
+                </button>
+              </div>
+              <Button size="sm" onClick={() => fileInputRef.current?.click()}>
+                <Upload size={14} /> Upload
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files.length > 0) {
+                    handleUpload(e.target.files);
+                    e.target.value = '';
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Unclassified banner */}
+          {showScopeSelector && scope.type === 'library' && unclassifiedAssets.length > 0 && (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-[10px] bg-[var(--medium-conf-bg)] border border-[var(--medium-conf-text)]/20">
+              <AlertTriangle size={16} className="text-[var(--medium-conf-text)] flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-[var(--medium-conf-text)]">
+                  {unclassifiedAssets.length} file{unclassifiedAssets.length !== 1 ? 's' : ''} from
+                  import need review
+                </p>
+                <p className="text-[10px] text-[var(--medium-conf-text)]/70">
+                  These files couldn't be automatically classified. Review and attach them to the
+                  right place.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  const first = unclassifiedAssets[0];
+                  if (first) setPreviewAsset(first);
+                }}
+              >
+                Review <ChevronRight size={12} />
+              </Button>
+            </div>
+          )}
+
+          {/* Search */}
+          <div className="relative">
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]"
+            />
+            <input
+              type="text"
+              placeholder="Search assets by name or tag..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="w-full pl-9 pr-10 py-2 text-sm border border-[var(--border-color)] rounded-[10px] bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+            />
+            {searchQuery && (
+              <button
+                aria-label="Close"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSearchResults(null);
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Scope selector */}
+          {showScopeSelector && (
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              {[
+                {
+                  label: 'Library',
+                  icon: FolderOpen,
+                  scope: { type: 'library' as const, id: 'root' },
+                },
+                ...clients.map((c) => ({
+                  label: c.name,
+                  icon: FolderOpen,
+                  scope: { type: 'client' as const, id: c.id },
+                })),
+                ...projects.map((p) => ({
+                  label: p.title,
+                  icon: FolderOpen,
+                  scope: { type: 'project' as const, id: p.id },
+                })),
+              ].map((item) => {
+                const isActive = scope.type === item.scope.type && scope.id === item.scope.id;
+                const count = allAttachments.filter(
+                  (a) => a.entity_type === item.scope.type && a.entity_id === item.scope.id,
+                ).length;
+                return (
+                  <button
+                    key={`${item.scope.type}:${item.scope.id}`}
+                    onClick={() => setScope(item.scope)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs transition-colors flex-shrink-0 ${
+                      isActive
+                        ? 'bg-[var(--accent)]/10 text-[var(--text-primary)] border border-[var(--accent)]/30'
+                        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-transparent'
+                    }`}
+                  >
+                    <item.icon size={12} />
+                    <span className="max-w-[120px] truncate">{item.label}</span>
+                    {count > 0 && (
+                      <span
+                        className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full ${
+                          isActive
+                            ? 'bg-[var(--accent)] text-[var(--accent-on)]'
+                            : 'bg-[var(--border-color)] text-[var(--text-tertiary)]'
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Drop zone */}
+          <div
+            className={`border-2 border-dashed rounded-[12px] p-8 text-center transition-colors ${
+              dragOver
+                ? 'drop-zone-active border-[var(--accent)] bg-[var(--accent-bg)]'
+                : 'border-[var(--border-color)] hover:border-[var(--accent)]/30'
+            }`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              if (e.dataTransfer.files) handleUpload(e.dataTransfer.files);
+            }}
+          >
+            <Upload size={28} className="mx-auto mb-2 text-[var(--text-tertiary)]" />
+            <p className="text-xs text-[var(--text-secondary)]">
+              Drop files here to add to{' '}
+              <strong className="text-[var(--text-primary)]">{scopeLabel}</strong>
+            </p>
+            <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
+              Any file type supported · stored locally in your assets folder (see Settings for
+              location)
+            </p>
+          </div>
+        </>
       ))()}
 
+      {renderContent()}
+
       {(() => (
-      <>
-      {/* Preview Modal */}
-      <Modal
-        open={!!previewAsset}
-        onClose={() => {
-          setPreviewAsset(null);
-          setPreviewImgFailed(false);
-        }}
-        title={previewAsset?.filename || ''}
-        size="lg"
-      >
-        {previewAsset && (
-          <div className="space-y-4">
-            {/* Preview content */}
-            <div className="bg-[var(--bg-secondary)] rounded-sm flex items-center justify-center min-h-[200px] max-h-[400px] overflow-hidden">
-              {isImage(previewAsset.mime_type) && !previewImgFailed ? (
-                <AssetImg
-                  filePath={previewAsset.file_path}
-                  alt={previewAsset.filename}
-                  className="max-w-full max-h-[400px] object-contain"
-                  onError={() => setPreviewImgFailed(true)}
-                />
-              ) : isImage(previewAsset.mime_type) ? (
-                <div className="text-center py-8">
-                  <Image size={48} className="mx-auto mb-3 text-[var(--text-tertiary)]" />
-                  <p className="text-sm text-[var(--text-secondary)]">Preview unavailable</p>
-                  <p className="text-xs text-[var(--text-tertiary)] mt-1">
-                    Image previews need the desktop app's asset server
-                  </p>
+        <>
+          {/* Preview Modal */}
+          <Modal
+            open={!!previewAsset}
+            onClose={() => {
+              setPreviewAsset(null);
+              setPreviewImgFailed(false);
+            }}
+            title={previewAsset?.filename || ''}
+            size="lg"
+          >
+            {previewAsset && (
+              <div className="space-y-4">
+                {/* Preview content */}
+                <div className="bg-[var(--bg-secondary)] rounded-sm flex items-center justify-center min-h-[200px] max-h-[400px] overflow-hidden">
+                  {isImage(previewAsset.mime_type) && !previewImgFailed ? (
+                    <AssetImg
+                      filePath={previewAsset.file_path}
+                      alt={previewAsset.filename}
+                      className="max-w-full max-h-[400px] object-contain"
+                      onError={() => setPreviewImgFailed(true)}
+                    />
+                  ) : isImage(previewAsset.mime_type) ? (
+                    <div className="text-center py-8">
+                      <Image size={48} className="mx-auto mb-3 text-[var(--text-tertiary)]" />
+                      <p className="text-sm text-[var(--text-secondary)]">Preview unavailable</p>
+                      <p className="text-xs text-[var(--text-tertiary)] mt-1">
+                        Image previews need the desktop app's asset server
+                      </p>
+                    </div>
+                  ) : isPDF(previewAsset.mime_type) ? (
+                    <div className="text-center py-8">
+                      <FileText size={48} className="mx-auto mb-3 text-[var(--text-tertiary)]" />
+                      <p className="text-sm text-[var(--text-secondary)]">PDF Preview</p>
+                      <p className="text-xs text-[var(--text-tertiary)] mt-1">
+                        Open in system viewer for full content
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      {(() => {
+                        const Icon = getFileIcon(previewAsset.mime_type);
+                        return (
+                          <Icon size={48} className="mx-auto mb-3 text-[var(--text-tertiary)]" />
+                        );
+                      })()}
+                      <p className="text-xs text-[var(--text-tertiary)]">No preview available</p>
+                    </div>
+                  )}
                 </div>
-              ) : isPDF(previewAsset.mime_type) ? (
-                <div className="text-center py-8">
-                  <FileText size={48} className="mx-auto mb-3 text-[var(--text-tertiary)]" />
-                  <p className="text-sm text-[var(--text-secondary)]">PDF Preview</p>
-                  <p className="text-xs text-[var(--text-tertiary)] mt-1">
-                    Open in system viewer for full content
-                  </p>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  {(() => {
-                    const Icon = getFileIcon(previewAsset.mime_type);
-                    return <Icon size={48} className="mx-auto mb-3 text-[var(--text-tertiary)]" />;
-                  })()}
-                  <p className="text-xs text-[var(--text-tertiary)]">No preview available</p>
-                </div>
-              )}
-            </div>
 
-            {/* Metadata */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-[var(--bg-secondary)] rounded-sm px-3 py-2">
-                <span className="text-[10px] text-[var(--text-tertiary)] block">Size</span>
-                <span className="text-xs text-[var(--text-primary)]">
-                  {formatSize(previewAsset.size_bytes)}
-                </span>
-              </div>
-              <div className="bg-[var(--bg-secondary)] rounded-sm px-3 py-2">
-                <span className="text-[10px] text-[var(--text-tertiary)] block">Type</span>
-                <span className="text-xs text-[var(--text-primary)]">{previewAsset.mime_type}</span>
-              </div>
-              <div className="bg-[var(--bg-secondary)] rounded-sm px-3 py-2">
-                <span className="text-[10px] text-[var(--text-tertiary)] block">Added</span>
-                <span className="text-xs text-[var(--text-primary)]">
-                  {relativeDate(previewAsset.created_at)}
-                </span>
-              </div>
-              <div className="bg-[var(--bg-secondary)] rounded-sm px-3 py-2">
-                <span className="text-[10px] text-[var(--text-tertiary)] block">Location</span>
-                <span className="text-xs text-[var(--text-primary)] capitalize">
-                  {previewAsset.entity_type}
-                </span>
-              </div>
-            </div>
+                {/* Metadata */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-[var(--bg-secondary)] rounded-sm px-3 py-2">
+                    <span className="text-[10px] text-[var(--text-tertiary)] block">Size</span>
+                    <span className="text-xs text-[var(--text-primary)]">
+                      {formatSize(previewAsset.size_bytes)}
+                    </span>
+                  </div>
+                  <div className="bg-[var(--bg-secondary)] rounded-sm px-3 py-2">
+                    <span className="text-[10px] text-[var(--text-tertiary)] block">Type</span>
+                    <span className="text-xs text-[var(--text-primary)]">
+                      {previewAsset.mime_type}
+                    </span>
+                  </div>
+                  <div className="bg-[var(--bg-secondary)] rounded-sm px-3 py-2">
+                    <span className="text-[10px] text-[var(--text-tertiary)] block">Added</span>
+                    <span className="text-xs text-[var(--text-primary)]">
+                      {relativeDate(previewAsset.created_at)}
+                    </span>
+                  </div>
+                  <div className="bg-[var(--bg-secondary)] rounded-sm px-3 py-2">
+                    <span className="text-[10px] text-[var(--text-tertiary)] block">Location</span>
+                    <span className="text-xs text-[var(--text-primary)] capitalize">
+                      {previewAsset.entity_type}
+                    </span>
+                  </div>
+                </div>
 
-            {/* Tags */}
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Tag size={12} className="text-[var(--text-tertiary)]" />
-                <span className="text-[10px] font-semibold text-[var(--text-secondary)]">
-                  Tags
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {parseTags(previewAsset.tags).map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded-full bg-[var(--bg-secondary)] text-[var(--text-primary)]"
-                  >
-                    {tag}
-                    <button aria-label="Close"
-                      onClick={() => handleRemoveTag(previewAsset, tag)}
-                      className="hover:text-[var(--danger)]"
+                {/* Tags */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Tag size={12} className="text-[var(--text-tertiary)]" />
+                    <span className="text-[10px] font-semibold text-[var(--text-secondary)]">
+                      Tags
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {parseTags(previewAsset.tags).map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded-full bg-[var(--bg-secondary)] text-[var(--text-primary)]"
+                      >
+                        {tag}
+                        <button
+                          aria-label="Close"
+                          onClick={() => handleRemoveTag(previewAsset, tag)}
+                          className="hover:text-[var(--danger)]"
+                        >
+                          <X size={10} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Add tag..."
+                      value={tagEditor?.id === previewAsset.id ? tagInput : ''}
+                      onChange={(e) => {
+                        setTagEditor(previewAsset);
+                        setTagInput(e.target.value);
+                      }}
+                      onFocus={() => setTagEditor(previewAsset)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleAddTag(previewAsset, tagInput);
+                          setTagInput('');
+                        }
+                      }}
+                      className="flex-1 px-2.5 py-1 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+                    />
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        handleAddTag(previewAsset, tagInput);
+                        setTagInput('');
+                      }}
                     >
-                      <X size={10} />
-                    </button>
-                  </span>
-                ))}
+                      Add
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-wrap gap-2 pt-2 border-t border-[var(--border-color)]">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      setPreviewAsset(null);
+                      setRenameTarget(previewAsset);
+                      setRenameValue(previewAsset.filename);
+                    }}
+                  >
+                    <Pencil size={12} /> Rename
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      setPreviewAsset(null);
+                      setAttachTarget(previewAsset);
+                    }}
+                  >
+                    <Link2 size={12} /> Attach to...
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    onClick={() => {
+                      setPreviewAsset(null);
+                      setDeleteConfirm(previewAsset);
+                    }}
+                  >
+                    <Trash2 size={12} /> Delete
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Add tag..."
-                  value={tagEditor?.id === previewAsset.id ? tagInput : ''}
-                  onChange={(e) => {
-                    setTagEditor(previewAsset);
-                    setTagInput(e.target.value);
-                  }}
-                  onFocus={() => setTagEditor(previewAsset)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleAddTag(previewAsset, tagInput);
-                      setTagInput('');
-                    }
-                  }}
-                  className="flex-1 px-2.5 py-1 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
-                />
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => {
-                    handleAddTag(previewAsset, tagInput);
-                    setTagInput('');
-                  }}
-                >
-                  Add
+            )}
+          </Modal>
+
+          {/* Rename Modal */}
+          <Modal
+            open={!!renameTarget}
+            onClose={() => setRenameTarget(null)}
+            title="Rename Asset"
+            size="sm"
+          >
+            <div className="space-y-3">
+              <input
+                type="text"
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleRename();
+                }}
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                autoFocus
+              />
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" size="sm" onClick={() => setRenameTarget(null)}>
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleRename} disabled={!renameValue.trim()}>
+                  Rename
                 </Button>
               </div>
             </div>
+          </Modal>
 
-            {/* Actions */}
-            <div className="flex flex-wrap gap-2 pt-2 border-t border-[var(--border-color)]">
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => {
-                  setPreviewAsset(null);
-                  setRenameTarget(previewAsset);
-                  setRenameValue(previewAsset.filename);
-                }}
-              >
-                <Pencil size={12} /> Rename
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => {
-                  setPreviewAsset(null);
-                  setAttachTarget(previewAsset);
-                }}
-              >
-                <Link2 size={12} /> Attach to...
-              </Button>
-              <Button
-                size="sm"
-                variant="danger"
-                onClick={() => {
-                  setPreviewAsset(null);
-                  setDeleteConfirm(previewAsset);
-                }}
-              >
-                <Trash2 size={12} /> Delete
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
-
-      {/* Rename Modal */}
-      <Modal
-        open={!!renameTarget}
-        onClose={() => setRenameTarget(null)}
-        title="Rename Asset"
-        size="sm"
-      >
-        <div className="space-y-3">
-          <input
-            type="text"
-            value={renameValue}
-            onChange={(e) => setRenameValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleRename();
-            }}
-            className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-            autoFocus
-          />
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setRenameTarget(null)}>
-              Cancel
-            </Button>
-            <Button size="sm" onClick={handleRename} disabled={!renameValue.trim()}>
-              Rename
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Attach To Modal */}
-      <Modal
-        open={!!attachTarget}
-        onClose={() => setAttachTarget(null)}
-        title="Attach Asset"
-        size="sm"
-      >
-        <div className="space-y-2 max-h-[300px] overflow-y-auto">
-          <button
-            onClick={() => handleAttachTo('library', 'root')}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-sm hover:bg-[var(--bg-secondary)] text-left transition-colors"
+          {/* Attach To Modal */}
+          <Modal
+            open={!!attachTarget}
+            onClose={() => setAttachTarget(null)}
+            title="Attach Asset"
+            size="sm"
           >
-            <FolderOpen size={16} className="text-[var(--accent-ink,var(--accent))]" />
-            <div>
-              <p className="text-xs font-medium text-[var(--text-primary)]">Asset Library</p>
-              <p className="text-[10px] text-[var(--text-tertiary)]">Root library</p>
-            </div>
-          </button>
-          <div className="border-t border-[var(--border-color)] pt-2">
-            <p className="text-[10px] font-semibold text-[var(--text-tertiary)] px-1 mb-2">
-              Clients
-            </p>
-            {clients.map((c) => (
+            <div className="space-y-2 max-h-[300px] overflow-y-auto">
               <button
-                key={c.id}
-                onClick={() => handleAttachTo('client', c.id)}
+                onClick={() => handleAttachTo('library', 'root')}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-sm hover:bg-[var(--bg-secondary)] text-left transition-colors"
               >
-                <FolderOpen size={16} className="text-[var(--text-tertiary)]" />
+                <FolderOpen size={16} className="text-[var(--accent-ink,var(--accent))]" />
                 <div>
-                  <p className="text-xs text-[var(--text-primary)]">{c.name}</p>
-                  {c.company && (
-                    <p className="text-[10px] text-[var(--text-tertiary)]">{c.company}</p>
-                  )}
+                  <p className="text-xs font-medium text-[var(--text-primary)]">Asset Library</p>
+                  <p className="text-[10px] text-[var(--text-tertiary)]">Root library</p>
                 </div>
               </button>
-            ))}
-          </div>
-          <div className="border-t border-[var(--border-color)] pt-2">
-            <p className="text-[10px] font-semibold text-[var(--text-tertiary)] px-1 mb-2">
-              Projects
-            </p>
-            {projects.map((p) => {
-              const client = clients.find((c) => c.id === p.client_id);
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => handleAttachTo('project', p.id)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-sm hover:bg-[var(--bg-secondary)] text-left transition-colors"
-                >
-                  <FolderOpen size={16} className="text-[var(--text-tertiary)]" />
-                  <div>
-                    <p className="text-xs text-[var(--text-primary)]">{p.title}</p>
-                    {client && (
-                      <p className="text-[10px] text-[var(--text-tertiary)]">{client.name}</p>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </Modal>
+              <div className="border-t border-[var(--border-color)] pt-2">
+                <p className="text-[10px] font-semibold text-[var(--text-tertiary)] px-1 mb-2">
+                  Clients
+                </p>
+                {clients.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => handleAttachTo('client', c.id)}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-sm hover:bg-[var(--bg-secondary)] text-left transition-colors"
+                  >
+                    <FolderOpen size={16} className="text-[var(--text-tertiary)]" />
+                    <div>
+                      <p className="text-xs text-[var(--text-primary)]">{c.name}</p>
+                      {c.company && (
+                        <p className="text-[10px] text-[var(--text-tertiary)]">{c.company}</p>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <div className="border-t border-[var(--border-color)] pt-2">
+                <p className="text-[10px] font-semibold text-[var(--text-tertiary)] px-1 mb-2">
+                  Projects
+                </p>
+                {projects.map((p) => {
+                  const client = clients.find((c) => c.id === p.client_id);
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => handleAttachTo('project', p.id)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-sm hover:bg-[var(--bg-secondary)] text-left transition-colors"
+                    >
+                      <FolderOpen size={16} className="text-[var(--text-tertiary)]" />
+                      <div>
+                        <p className="text-xs text-[var(--text-primary)]">{p.title}</p>
+                        {client && (
+                          <p className="text-[10px] text-[var(--text-tertiary)]">{client.name}</p>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </Modal>
 
-      {/* Delete Confirm */}
-      <ConfirmDialog
-        open={!!deleteConfirm}
-        onClose={() => setDeleteConfirm(null)}
-        onConfirm={handleDelete}
-        title="Delete Asset"
-        message={`Delete "${deleteConfirm?.filename}"? This removes the file from disk and cannot be undone.`}
-        confirmLabel="Delete"
-        variant="danger"
-      />
+          {/* Delete Confirm */}
+          <ConfirmDialog
+            open={!!deleteConfirm}
+            onClose={() => setDeleteConfirm(null)}
+            onConfirm={handleDelete}
+            title="Delete Asset"
+            message={`Delete "${deleteConfirm?.filename}"? This removes the file from disk and cannot be undone.`}
+            confirmLabel="Delete"
+            variant="danger"
+          />
 
-      {/* Context menu */}
-      {contextMenu && (
-        <div
-          className="fixed z-[60] glass rounded-[10px] py-1 min-w-[160px] animate-fade-scale-in"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            onClick={() => {
-              setPreviewAsset(contextMenu.asset);
-              setContextMenu(null);
-            }}
-            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors text-left"
-          >
-            <ExternalLink size={12} /> Preview
-          </button>
-          <button
-            onClick={() => {
-              setRenameTarget(contextMenu.asset);
-              setRenameValue(contextMenu.asset.filename);
-              setContextMenu(null);
-            }}
-            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors text-left"
-          >
-            <Pencil size={12} /> Rename
-          </button>
-          <button
-            onClick={() => {
-              setAttachTarget(contextMenu.asset);
-              setContextMenu(null);
-            }}
-            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors text-left"
-          >
-            <Link2 size={12} /> Attach to...
-          </button>
-          <div className="border-t border-[var(--border-color)] my-1" />
-          <button
-            onClick={() => {
-              setDeleteConfirm(contextMenu.asset);
-              setContextMenu(null);
-            }}
-            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors text-left"
-          >
-            <Trash2 size={12} /> Delete
-          </button>
-        </div>
-      )}
-      </>
+          {/* Context menu */}
+          {contextMenu && (
+            <div
+              className="fixed z-[60] glass rounded-[10px] py-1 min-w-[160px] animate-fade-scale-in"
+              style={{ left: contextMenu.x, top: contextMenu.y }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => {
+                  setPreviewAsset(contextMenu.asset);
+                  setContextMenu(null);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors text-left"
+              >
+                <ExternalLink size={12} /> Preview
+              </button>
+              <button
+                onClick={() => {
+                  setRenameTarget(contextMenu.asset);
+                  setRenameValue(contextMenu.asset.filename);
+                  setContextMenu(null);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors text-left"
+              >
+                <Pencil size={12} /> Rename
+              </button>
+              <button
+                onClick={() => {
+                  setAttachTarget(contextMenu.asset);
+                  setContextMenu(null);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors text-left"
+              >
+                <Link2 size={12} /> Attach to...
+              </button>
+              <div className="border-t border-[var(--border-color)] my-1" />
+              <button
+                onClick={() => {
+                  setDeleteConfirm(contextMenu.asset);
+                  setContextMenu(null);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors text-left"
+              >
+                <Trash2 size={12} /> Delete
+              </button>
+            </div>
+          )}
+        </>
       ))()}
 
       <ArchetypeFeatureTabs

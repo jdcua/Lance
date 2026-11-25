@@ -68,10 +68,7 @@ export function idleOrTimeout(fn: () => void, ms = 400): () => void {
   const timer = setTimeout(once, ms);
   // main.tsx polyfills this on first browser paint, but a jsdom render (or a
   // browser without the API) never defines it, so fall back to the timer.
-  const idle =
-    typeof requestIdleCallback === 'function'
-      ? requestIdleCallback(once)
-      : null;
+  const idle = typeof requestIdleCallback === 'function' ? requestIdleCallback(once) : null;
   return () => {
     clearTimeout(timer);
     if (idle !== null) cancelIdleCallback(idle);
@@ -123,6 +120,37 @@ async function checkProposalFollowUps(
   }
 }
 
+async function processInvoiceFollowUp(
+  inv: AppStore['invoices'][number],
+  state: AppStore,
+  settings: FollowUpSettings,
+  now: Date,
+  fns: FollowUpFns,
+): Promise<void> {
+  if (inv.status !== 'sent' && inv.status !== 'overdue') return;
+  if (!inv.due_date) return;
+  const client = state.clients.find((c) => c.id === inv.client_id);
+  if (!client?.email) {
+    console.warn(`Skipping invoice follow-up for "${inv.invoice_number}" · client has no email`);
+    return;
+  }
+  const dueDate = parseDateString(inv.due_date);
+  const daysElapsed = Math.floor((now.getTime() - dueDate.getTime()) / DAY_MS);
+  if (inv.status === 'sent' && daysElapsed >= 1) {
+    try {
+      await state.updateInvoice({ ...inv, status: 'overdue' });
+    } catch {
+      /* non-critical; follow-up still queues below */
+    }
+  }
+  if (daysElapsed < settings.invoice_delay_days) return;
+  const stage = fns.getStage('invoice', daysElapsed);
+  if (followUpStageHandled(state, 'invoice', inv.id, stage)) return;
+  const templateKey = fns.getTemplateKey('invoice', daysElapsed, settings.invoice_delay_days);
+  if (!templateKey) return;
+  await state.logFollowUp({ entity_type: 'invoice', entity_id: inv.id, stage });
+}
+
 async function checkInvoiceFollowUps(
   state: AppStore,
   settings: FollowUpSettings,
@@ -130,28 +158,7 @@ async function checkInvoiceFollowUps(
   fns: FollowUpFns,
 ): Promise<void> {
   for (const inv of state.invoices) {
-    if (inv.status !== 'sent' && inv.status !== 'overdue') continue;
-    if (!inv.due_date) continue;
-    const client = state.clients.find((c) => c.id === inv.client_id);
-    if (!client?.email) {
-      console.warn(`Skipping invoice follow-up for "${inv.invoice_number}" · client has no email`);
-      continue;
-    }
-    const dueDate = parseDateString(inv.due_date);
-    const daysElapsed = Math.floor((now.getTime() - dueDate.getTime()) / DAY_MS);
-    if (inv.status === 'sent' && daysElapsed >= 1) {
-      try {
-        await state.updateInvoice({ ...inv, status: 'overdue' });
-      } catch {
-        /* non-critical; follow-up still queues below */
-      }
-    }
-    if (daysElapsed < settings.invoice_delay_days) continue;
-    const stage = fns.getStage('invoice', daysElapsed);
-    if (followUpStageHandled(state, 'invoice', inv.id, stage)) continue;
-    const templateKey = fns.getTemplateKey('invoice', daysElapsed, settings.invoice_delay_days);
-    if (!templateKey) continue;
-    await state.logFollowUp({ entity_type: 'invoice', entity_id: inv.id, stage });
+    await processInvoiceFollowUp(inv, state, settings, now, fns);
   }
 }
 
@@ -1040,8 +1047,6 @@ export default function App() {
     return () => document.removeEventListener('keydown', handler);
   }, [navigate, location, isEditing, toggleTimer]);
 
-
-
   // Listen for lance:edit-client from FollowUps (client missing email)
   useEffect(() => {
     const onEditClient = () => {
@@ -1077,7 +1082,11 @@ export default function App() {
           >
             <Outlet key={location.pathname} />
           </main>
-          <div role="contentinfo" aria-label="Status" className="h-[28px] flex items-center justify-between px-4 glass border-t-0 text-[10px] text-[var(--text-tertiary)] flex-shrink-0 print:hidden">
+          <div
+            role="contentinfo"
+            aria-label="Status"
+            className="h-[28px] flex items-center justify-between px-4 glass border-t-0 text-[10px] text-[var(--text-tertiary)] flex-shrink-0 print:hidden"
+          >
             <span className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
               Lance · your business, on your machine
@@ -1181,4 +1190,3 @@ export default function App() {
     </ErrorBoundary>
   );
 }
-

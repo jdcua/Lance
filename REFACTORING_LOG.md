@@ -82,3 +82,10 @@ Each entry records what changed, why, and which standard it satisfies.
   **Why:** continue burning down the warn-first backlog. **Standard:** cognitive
   complexity <=15 by extracting named helpers, no behavior change.
 - Cognitive warnings dropped from 15 to 8; lint warnings from 69 to 62.
+
+## 2026-11-25 — Complexity gates promoted
+
+- Final extraction pass removed the last cognitive warnings in `Assets.tsx`,
+  `App.tsx`, `RateBenchmarking.tsx`, `tauri.ts`, `seedData.ts` and `db/index.ts`.
+- `sonarjs/cognitive-complexity` promoted from warning to **error** at 15, as
+  agreed in Phase 0. `npm run complexity` now reports no offenders at all.

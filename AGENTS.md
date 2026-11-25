@@ -95,8 +95,8 @@ and `prefers-reduced-transparency` always win.
 ## 6. Complexity and testing
 
 - Cyclomatic complexity must be **<= 15 per function** (ESLint error); new code
-  targets <= 10. Cognitive complexity is a warning at 15 (TS) and a Clippy
-  error at 20 (Rust). Run `npm run complexity` for the cyclomatic and cognitive backlog.
+  targets <= 10. Cognitive complexity must be <=15 (TS, ESLint error) and <=20
+  (Rust, Clippy error). Run `npm run complexity` to verify no offenders.
 - Extract pure helpers or small components rather than adding branches. Never
   change behavior to satisfy a metric. Files stay under ~400 lines; functions
   under ~60; parameters <= 4.

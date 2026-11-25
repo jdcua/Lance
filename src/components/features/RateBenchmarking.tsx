@@ -4,6 +4,7 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../../store';
+import type { Invoice, TimeEntry } from '../../types';
 import { getDb } from '../../db';
 import { TrendingUp, TrendingDown, Minus, DollarSign } from 'lucide-react';
 
@@ -23,6 +24,79 @@ function computeTrend(pairs: WordInvoicePair[]): Trend {
   if (last > first) return 'up';
   if (last < first) return 'down';
   return 'flat';
+}
+
+function buildWordMap(
+  wordRows: Record<string, unknown>[],
+): Map<string, { word_count: number; project_id: string; client_id: string }> {
+  const wordMap = new Map<string, { word_count: number; project_id: string; client_id: string }>();
+  for (const r of wordRows) {
+    const teId = r.time_entry_id as string;
+    wordMap.set(teId, {
+      word_count: r.word_count as number,
+      project_id: r.project_id as string,
+      client_id: r.client_id as string,
+    });
+  }
+  return wordMap;
+}
+
+function pairForInvoice(
+  inv: Invoice,
+  timeEntries: TimeEntry[],
+  wordMap: Map<string, { word_count: number; project_id: string; client_id: string }>,
+): WordInvoicePair | null {
+  if (inv.status === 'draft') return null;
+  if (inv.total <= 0) return null;
+  const date = inv.paid_at || inv.created_at;
+  if (!date) return null;
+  const relevantEntries = timeEntries.filter(
+    (te) =>
+      (te.project_id && inv.project_id && te.project_id === inv.project_id) ||
+      te.client_id === inv.client_id,
+  );
+  let totalWords = 0;
+  for (const te of relevantEntries) {
+    const w = wordMap.get(te.id);
+    if (w) totalWords += w.word_count;
+  }
+  if (totalWords <= 0) return null;
+  return {
+    word_count: totalWords,
+    invoice_amount: inv.total,
+    invoice_date: date,
+    per_word_rate: inv.total / totalWords,
+  };
+}
+
+function buildPairs(
+  invoices: Invoice[],
+  timeEntries: TimeEntry[],
+  wordMap: Map<string, { word_count: number; project_id: string; client_id: string }>,
+): WordInvoicePair[] {
+  const pairs: WordInvoicePair[] = [];
+  for (const inv of invoices) {
+    const pair = pairForInvoice(inv, timeEntries, wordMap);
+    if (pair) pairs.push(pair);
+  }
+  return pairs;
+}
+
+function computeAggregateStats(pairs: WordInvoicePair[]) {
+  const latest = pairs[pairs.length - 1].per_word_rate;
+  const rates = pairs.map((p) => p.per_word_rate);
+  const highest = Math.max(...rates);
+  const lowest = Math.min(...rates);
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+  const recentPairs = pairs.filter(
+    (p) => new Date(p.invoice_date).getTime() >= threeMonthsAgo.getTime(),
+  );
+  const threeMonthAvg =
+    recentPairs.length > 0
+      ? recentPairs.reduce((s, p) => s + p.per_word_rate, 0) / recentPairs.length
+      : null;
+  return { latest, threeMonthAvg, highest, lowest, trend: computeTrend(pairs) };
 }
 
 export default function RateBenchmarking() {
@@ -48,73 +122,27 @@ export default function RateBenchmarking() {
     try {
       const db = await getDb();
 
-      const wordRows = await db.select<(Record<string, unknown>)[]>(
+      const wordRows = await db.select<Record<string, unknown>[]>(
         `SELECT tew.time_entry_id, tew.word_count, te.project_id, te.client_id
          FROM time_entry_words tew
-         JOIN time_entries te ON te.id = tew.time_entry_id`
+         JOIN time_entries te ON te.id = tew.time_entry_id`,
       );
 
-      const wordMap = new Map<string, { word_count: number; project_id: string; client_id: string }>();
-      for (const r of wordRows) {
-        const teId = r.time_entry_id as string;
-        wordMap.set(teId, {
-          word_count: r.word_count as number,
-          project_id: r.project_id as string,
-          client_id: r.client_id as string,
-        });
-      }
-
-      const pairs: WordInvoicePair[] = [];
-
-      for (const inv of invoices) {
-        if (inv.status === 'draft') continue;
-        if (inv.total <= 0) continue;
-
-        const date = inv.paid_at || inv.created_at;
-        if (!date) continue;
-
-        const relevantEntries = timeEntries.filter(
-          (te) =>
-            (te.project_id && inv.project_id && te.project_id === inv.project_id) ||
-            (te.client_id === inv.client_id)
-        );
-
-        let totalWords = 0;
-        for (const te of relevantEntries) {
-          const w = wordMap.get(te.id);
-          if (w) totalWords += w.word_count;
-        }
-
-        if (totalWords > 0) {
-          const rate = inv.total / totalWords;
-          pairs.push({
-            word_count: totalWords,
-            invoice_amount: inv.total,
-            invoice_date: date,
-            per_word_rate: rate,
-          });
-        }
-      }
+      const wordMap = buildWordMap(wordRows);
+      const pairs = buildPairs(invoices, timeEntries, wordMap);
 
       pairs.sort((a, b) => new Date(a.invoice_date).getTime() - new Date(b.invoice_date).getTime());
 
       if (pairs.length > 0) {
-        const latest = pairs[pairs.length - 1].per_word_rate;
-        const rates = pairs.map((p) => p.per_word_rate);
-        const highest = Math.max(...rates);
-        const lowest = Math.min(...rates);
-
-        const threeMonthsAgo = new Date();
-        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-        const recentPairs = pairs.filter(
-          (p) => new Date(p.invoice_date).getTime() >= threeMonthsAgo.getTime()
-        );
-        const threeMonthAvg =
-          recentPairs.length > 0
-            ? recentPairs.reduce((s, p) => s + p.per_word_rate, 0) / recentPairs.length
-            : null;
-
-        setStats({ latest, threeMonthAvg, highest, lowest, allPairs: pairs, trend: computeTrend(pairs) });
+        const agg = computeAggregateStats(pairs);
+        setStats({
+          latest: agg.latest,
+          threeMonthAvg: agg.threeMonthAvg,
+          highest: agg.highest,
+          lowest: agg.lowest,
+          allPairs: pairs,
+          trend: agg.trend,
+        });
       }
     } catch (e) {
       console.error('[RateBenchmarking] computeRates failed:', e);
@@ -137,10 +165,8 @@ export default function RateBenchmarking() {
   };
 
   const trendIcon = (trend: string) => {
-    if (trend === 'up')
-      return <TrendingUp size={12} className="text-[#16A34A]" />;
-    if (trend === 'down')
-      return <TrendingDown size={12} className="text-[#DC2626]" />;
+    if (trend === 'up') return <TrendingUp size={12} className="text-[#16A34A]" />;
+    if (trend === 'down') return <TrendingDown size={12} className="text-[#DC2626]" />;
     return <Minus size={12} className="text-[var(--text-tertiary)]" />;
   };
 
@@ -154,9 +180,7 @@ export default function RateBenchmarking() {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Rate Benchmarking
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Rate Benchmarking</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -170,9 +194,7 @@ export default function RateBenchmarking() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-          Per-Word Rate
-        </h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Per-Word Rate</h4>
       </div>
 
       {stats.latest == null ? (
@@ -204,9 +226,7 @@ export default function RateBenchmarking() {
 
           <div className="grid grid-cols-3 gap-2">
             <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs">
-              <div className="text-[10px] text-[var(--text-tertiary)]">
-                3-Month Avg
-              </div>
+              <div className="text-[10px] text-[var(--text-tertiary)]">3-Month Avg</div>
               <div className="text-sm font-semibold text-[var(--text-primary)] tabular-nums mt-0.5">
                 {stats.threeMonthAvg != null ? formatRate(stats.threeMonthAvg) : '--'}
               </div>
@@ -243,7 +263,8 @@ export default function RateBenchmarking() {
                     })}
                   </span>
                   <span className="text-[var(--text-tertiary)] tabular-nums">
-                    {pair.word_count.toLocaleString()} words · ${pair.invoice_amount.toLocaleString()}
+                    {pair.word_count.toLocaleString()} words · $
+                    {pair.invoice_amount.toLocaleString()}
                   </span>
                   <span className="text-[var(--text-primary)] font-medium tabular-nums">
                     {formatRate(pair.per_word_rate)}/word

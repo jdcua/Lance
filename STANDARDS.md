@@ -10,7 +10,7 @@ change during a refactor unless explicitly approved.
 | Metric | Standard | Enforcement |
 |---|---|---|
 | Cyclomatic complexity | ≤15 per function; **new code target ≤10** | ESLint `complexity: ['error', 15]`; `npm run complexity 10` |
-| Cognitive complexity (TS) | ≤15; warn-first backlog | `sonarjs/cognitive-complexity: ['warn', 15]` |
+| Cognitive complexity (TS) | ≤15 (ESLint error) | `sonarjs/cognitive-complexity: ['error', 15]` |
 | Cognitive complexity (Rust) | ≤20 | Clippy, `-D clippy::cognitive_complexity` in CI |
 | Function length | 40 lines target, 60 warning | review + Phase 3 lint budget |
 | File length | 400 soft / 800 hard (TS); 300–500 (Rust) | review + Phase 3 lint budget |
@@ -94,8 +94,8 @@ more than four parameters or must return two values, redesign the flow instead.
 - No wholesale directory restructure; domain folders are for new code.
 - No DI framework, no interface for a single implementation, no class
   hierarchies for SOLID's sake.
-- Function length and cognitive complexity stay warnings until the backlog is
-  cleared; cyclomatic ≤15 is the only hard complexity error.
+- Complexity is enforced: cyclomatic ≤15 and cognitive ≤15 (TS) / ≤20 (Rust)
+  are errors. Function/file length stay warnings.
 - No SonarCloud, CodeScene or other SaaS analysis: the repo stays
   low-dependency and self-contained.
 - No hard gates on Maintainability Index, Halstead, global duplication or

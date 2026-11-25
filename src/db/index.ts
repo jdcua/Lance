@@ -262,30 +262,37 @@ class MockDatabase {
   private parseAnd(clause: string, params: unknown[]): Array<{ col: string; op: string; value: unknown }> {
     const parts = this.splitTopLevel(clause, 'AND');
     const out: Array<{ col: string; op: string; value: unknown }> = [];
-    let pi = 0;
+    const pi = { value: 0 };
     for (const part of parts) {
       const t = part.trim();
       if (!t) continue;
-      const m = t.match(/^([A-Za-z_][A-Za-z0-9_.]*)\s*(=|!=|<>|>=|<=|>|<|LIKE|NOT\s+LIKE|IS\s+NOT\s+NULL|IS\s+NULL|IN|NOT\s+IN)\s*(.+)?$/i);
-      if (!m) continue;
-      const col = m[1].split('.').pop()!.toLowerCase();
+      const pred = this.parsePredicate(t, params, pi);
+      if (pred) out.push(pred);
+    }
+    return out;
+  }
+
+  private parsePredicate(
+    t: string,
+    params: unknown[],
+    pi: { value: number },
+  ): { col: string; op: string; value: unknown } | null {
+    const m = t.match(/^([A-Za-z_][A-Za-z0-9_.]*)\s*(=|!=|<>|>=|<=|>|<|LIKE|NOT\s+LIKE|IS\s+NOT\s+NULL|IS\s+NULL|IN|NOT\s+IN)\s*(.+)?$/i);
+    if (!m) return null;
+    const col = m[1].split('.').pop()!.toLowerCase();
       const op = m[2].replace(/\s+/g, ' ').toUpperCase();
       const rhs = m[3] ? m[3].trim() : '';
       if (op === 'IS NULL' || op === 'IS NOT NULL') {
-        out.push({ col, op, value: null });
-        continue;
+        return { col, op, value: null };
       }
       // IN (a, b, c) · may contain params or literals. rhs is either `IN (...)` or `(...)` (NOT IN).
       const inM = rhs.match(/^(?:NOT\s+)?IN\s*\((.+)\)$/i) || (op === 'IN' || op === 'NOT IN' ? rhs.match(/^\((.+)\)$/) : null);
       if (inM) {
         const items = this.splitTopLevel(inM[1], ',').map((x) => x.trim());
-        const vals = items.map((it) => this.literalValue(it, params, () => pi++));
-        out.push({ col, op: op === 'NOT IN' ? 'NOT IN' : 'IN', value: vals });
-        continue;
+        const vals = items.map((it) => this.literalValue(it, params, () => pi.value++));
+        return { col, op: op === 'NOT IN' ? 'NOT IN' : 'IN', value: vals };
       }
-      out.push({ col, op, value: this.literalValue(rhs, params, () => pi++) });
-    }
-    return out;
+      return { col, op, value: this.literalValue(rhs, params, () => pi.value++) };
   }
 
   private literalValue(tok: string, params: unknown[], nextParam: () => number): unknown {
