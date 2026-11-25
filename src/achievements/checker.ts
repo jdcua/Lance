@@ -4,12 +4,21 @@ import { getDb } from '../db';
 import type { AppStore } from '../store';
 
 function isTauriAvailable(): boolean {
-  return typeof window !== 'undefined' && typeof (window as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ === 'object';
+  return (
+    typeof window !== 'undefined' &&
+    typeof (window as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ === 'object'
+  );
 }
 
 export type StoreState = Pick<
   AppStore,
-  'proposals' | 'invoices' | 'timeEntries' | 'clients' | 'contracts' | 'recurringInvoices' | 'projects'
+  | 'proposals'
+  | 'invoices'
+  | 'timeEntries'
+  | 'clients'
+  | 'contracts'
+  | 'recurringInvoices'
+  | 'projects'
 >;
 
 const ACHIEVEMENTS_KEY = 'lance:achievements';
@@ -40,9 +49,7 @@ async function getUnlockedKeys(): Promise<Set<string>> {
   if (isTauriAvailable()) {
     try {
       const db = await getDb();
-      const rows = await db.select<Array<{ key: string }>>(
-        'SELECT key FROM achievements'
-      );
+      const rows = await db.select<Array<{ key: string }>>('SELECT key FROM achievements');
       // Merge DB state into localStorage for browser-mode compatibility
       const merged = lsGetUnlocked();
       for (const r of rows) merged.add(r.key);
@@ -64,11 +71,34 @@ async function saveAchievement(key: AchievementKey): Promise<void> {
       const db = await getDb();
       await db.execute(
         'INSERT OR IGNORE INTO achievements (id, key, unlocked_at) VALUES (?, ?, ?)',
-        [crypto.randomUUID(), key, new Date().toISOString()]
+        [crypto.randomUUID(), key, new Date().toISOString()],
       );
     } catch {
       /* db write failed, already saved to localStorage */
     }
+  }
+}
+
+const THEME_UNLOCK_MAP: Record<string, string> = {
+  first_proposal_sent: 'motion_theme',
+  ten_hours_logged: 'lens_theme',
+  first_invoice_paid: 'scale_theme',
+};
+
+async function maybeUnlockTheme(
+  checkKey: string,
+  unlocked: Set<string>,
+  newlyUnlocked: AchievementKey[],
+): Promise<void> {
+  const themeKey = THEME_UNLOCK_MAP[checkKey];
+  if (!themeKey) return;
+  if (unlocked.has(themeKey) || inflight.has(themeKey)) return;
+  inflight.add(themeKey);
+  try {
+    await saveAchievement(themeKey as AchievementKey);
+    newlyUnlocked.push(themeKey as AchievementKey);
+  } finally {
+    inflight.delete(themeKey);
   }
 }
 
@@ -87,9 +117,7 @@ export async function checkAchievements(store: StoreState): Promise<AchievementK
     },
     {
       key: 'ten_hours_logged',
-      condition:
-        store.timeEntries.reduce((sum, t) => sum + (t.duration_minutes || 0), 0) >=
-        600,
+      condition: store.timeEntries.reduce((sum, t) => sum + (t.duration_minutes || 0), 0) >= 600,
     },
     {
       key: 'five_clients',
@@ -109,9 +137,7 @@ export async function checkAchievements(store: StoreState): Promise<AchievementK
     },
     {
       key: 'twenty_five_hours',
-      condition:
-        store.timeEntries.reduce((sum, t) => sum + (t.duration_minutes || 0), 0) >=
-        1500,
+      condition: store.timeEntries.reduce((sum, t) => sum + (t.duration_minutes || 0), 0) >= 1500,
     },
     {
       key: 'ten_invoices',
@@ -139,33 +165,7 @@ export async function checkAchievements(store: StoreState): Promise<AchievementK
         await saveAchievement(check.key);
         newlyUnlocked.push(check.key);
 
-        if (check.key === 'first_proposal_sent' && !unlocked.has('motion_theme') && !inflight.has('motion_theme')) {
-          inflight.add('motion_theme');
-          try {
-            await saveAchievement('motion_theme');
-            newlyUnlocked.push('motion_theme');
-          } finally {
-            inflight.delete('motion_theme');
-          }
-        }
-        if (check.key === 'ten_hours_logged' && !unlocked.has('lens_theme') && !inflight.has('lens_theme')) {
-          inflight.add('lens_theme');
-          try {
-            await saveAchievement('lens_theme');
-            newlyUnlocked.push('lens_theme');
-          } finally {
-            inflight.delete('lens_theme');
-          }
-        }
-        if (check.key === 'first_invoice_paid' && !unlocked.has('scale_theme') && !inflight.has('scale_theme')) {
-          inflight.add('scale_theme');
-          try {
-            await saveAchievement('scale_theme');
-            newlyUnlocked.push('scale_theme');
-          } finally {
-            inflight.delete('scale_theme');
-          }
-        }
+        await maybeUnlockTheme(check.key, unlocked, newlyUnlocked);
       } finally {
         inflight.delete(check.key);
       }
@@ -196,7 +196,7 @@ export async function getUnlockedAchievementKeys(): Promise<string[]> {
 
 export async function getUnlockedThemes(): Promise<string[]> {
   const unlocked = await getUnlockedKeys();
-  return ACHIEVEMENTS.filter(
-    (a) => a.unlocksTheme && unlocked.has(a.key)
-  ).map((a) => a.unlocksTheme!);
+  return ACHIEVEMENTS.filter((a) => a.unlocksTheme && unlocked.has(a.key)).map(
+    (a) => a.unlocksTheme!,
+  );
 }

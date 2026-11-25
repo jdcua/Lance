@@ -11,7 +11,10 @@ function fold(s: string): string {
   // Strip diacritics so "café" matches "cafe" and "Müller" matches "muller".
   // Freelancer client lists are full of accented names; exact-codepoint
   // matching would silently miss them.
-  return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return (s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
 }
 
 function levenshtein(a: string, b: string): number {
@@ -29,6 +32,19 @@ function levenshtein(a: string, b: string): number {
   return prev[b.length];
 }
 
+function typoTokenScore(words: string[], token: string): number {
+  if (token.length < 4) return 0;
+  let best = 0;
+  for (const w of words) {
+    if (!w || Math.abs(w.length - token.length) > 2) continue;
+    const sim = 1 - levenshtein(w, token) / Math.max(w.length, token.length);
+    if (sim > best) best = sim;
+  }
+  // Below a true substring hit so exact text always outranks guesses.
+  if (best >= 0.75) return 0.3 + best * 0.2;
+  return 0;
+}
+
 function tokenScore(field: string, token: string): number {
   if (!token || !field) return 0;
   if (field === token) return 1;
@@ -37,17 +53,7 @@ function tokenScore(field: string, token: string): number {
   if (words.includes(token)) return 0.85;
   if (words.some((w) => w.startsWith(token))) return 0.7;
   if (field.includes(token)) return 0.5;
-  if (token.length >= 4) {
-    let best = 0;
-    for (const w of words) {
-      if (!w || Math.abs(w.length - token.length) > 2) continue;
-      const sim = 1 - levenshtein(w, token) / Math.max(w.length, token.length);
-      if (sim > best) best = sim;
-    }
-    // Below a true substring hit so exact text always outranks guesses.
-    if (best >= 0.75) return 0.3 + best * 0.2;
-  }
-  return 0;
+  return typoTokenScore(words, token);
 }
 
 /** Mean token score across fields; 0 when any token misses everywhere. */

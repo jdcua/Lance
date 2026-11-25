@@ -1,5 +1,3 @@
-
-
 /**
  * Tour coach voice engine.
  *
@@ -14,13 +12,7 @@
  * through the family map below and never quotes it at the user.
  */
 
-export type VoiceFamily =
-  | 'tempo'
-  | 'relationship'
-  | 'craft'
-  | 'proof'
-  | 'pressure'
-  | 'neutral';
+export type VoiceFamily = 'tempo' | 'relationship' | 'craft' | 'proof' | 'pressure' | 'neutral';
 
 export type VoiceTempo = 'terse' | 'warm' | 'steady';
 
@@ -167,22 +159,31 @@ export interface ResolvedVoice {
  * Resolve the coach voice for a user. A matching drive answer blends or
  * overrides the base family; stale answers (different archetype) are ignored.
  */
+function blendedFamilies(axis: DriveAxis, base: VoiceFamily): VoiceFamily[] {
+  if ([axis.lowFamily, axis.highFamily].includes(base)) {
+    return [base, axis.lowFamily === base ? axis.highFamily : axis.lowFamily];
+  }
+  return [axis.lowFamily, axis.highFamily];
+}
+
+function resolveWithAxis(axis: DriveAxis, drive: DriveSetting, base: VoiceFamily): ResolvedVoice {
+  if (drive.value === 0) {
+    return { families: blendedFamilies(axis, base), tempo: 'steady' };
+  }
+  const family = drive.value === -1 ? axis.lowFamily : axis.highFamily;
+  return { families: [family], tempo: FAMILY_TEMPO[family] };
+}
+
 export function resolveVoice(profession: string, drive: DriveSetting | null = null): ResolvedVoice {
   const base: VoiceFamily = ARCHETYPE_VOICE[profession] || 'neutral';
-  if (drive && drive.archetype === profession) {
-    const axis = DRIVE_AXES[drive.axis];
-    if (axis) {
-      if (drive.value === 0) {
-        const families = [axis.lowFamily, axis.highFamily].includes(base)
-          ? [base, axis.lowFamily === base ? axis.highFamily : axis.lowFamily]
-          : [axis.lowFamily, axis.highFamily];
-        return { families, tempo: 'steady' };
-      }
-      const family = drive.value === -1 ? axis.lowFamily : axis.highFamily;
-      return { families: [family], tempo: FAMILY_TEMPO[family] };
-    }
+  if (!drive || drive.archetype !== profession) {
+    return { families: [base], tempo: FAMILY_TEMPO[base] };
   }
-  return { families: [base], tempo: FAMILY_TEMPO[base] };
+  const axis = DRIVE_AXES[drive.axis];
+  if (!axis) {
+    return { families: [base], tempo: FAMILY_TEMPO[base] };
+  }
+  return resolveWithAxis(axis, drive, base);
 }
 
 export interface TourStop {
@@ -207,18 +208,37 @@ export interface TourPlan {
 }
 
 /** Build the personalized tour plan: greeting, curriculum, route, voice. */
-const TOUR_PLANS: Record<string, { greeting: string; subgreeting: string; actions: { label: string; action: string }[]; stops: { id: string; label: string; path: string }[] }> = {
+const TOUR_PLANS: Record<
+  string,
+  {
+    greeting: string;
+    subgreeting: string;
+    actions: { label: string; action: string }[];
+    stops: { id: string; label: string; path: string }[];
+  }
+> = {
   developer: {
     greeting: "What's shipping today?",
     subgreeting: 'Your build, your pace.',
     actions: [{ label: 'Log Time', action: 'add-time' }],
-    stops: [{ id: 'time', label: 'Time', path: '/time' }, { id: 'projects', label: 'Projects', path: '/projects' }, { id: 'finance', label: 'Finance', path: '/finance' }],
+    stops: [
+      { id: 'time', label: 'Time', path: '/time' },
+      { id: 'projects', label: 'Projects', path: '/projects' },
+      { id: 'finance', label: 'Finance', path: '/finance' },
+    ],
   },
   consultant: {
     greeting: 'Who are you serving today?',
     subgreeting: 'Your clients, your craft.',
-    actions: [{ label: 'Log Session', action: 'add-time' }, { label: 'New Client', action: 'add-client' }],
-    stops: [{ id: 'clients', label: 'Clients', path: '/clients' }, { id: 'finance', label: 'Finance', path: '/finance' }, { id: 'invoices', label: 'Invoices', path: '/invoices' }],
+    actions: [
+      { label: 'Log Session', action: 'add-time' },
+      { label: 'New Client', action: 'add-client' },
+    ],
+    stops: [
+      { id: 'clients', label: 'Clients', path: '/clients' },
+      { id: 'finance', label: 'Finance', path: '/finance' },
+      { id: 'invoices', label: 'Invoices', path: '/invoices' },
+    ],
   },
 };
 

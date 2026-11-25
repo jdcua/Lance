@@ -15,7 +15,7 @@ async function parsePDFText(file: File): Promise<string> {
   // Set up the worker
   pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
     'pdfjs-dist/build/pdf.worker.mjs',
-    import.meta.url
+    import.meta.url,
   ).toString();
 
   const arrayBuffer = await file.arrayBuffer();
@@ -67,10 +67,7 @@ function extractAmounts(text: string): number[] {
 /**
  * Extract structured fields from document text using pattern matching.
  */
-function extractFields(text: string): Record<string, string> {
-  const fields: Record<string, string> = {};
-
-  // Extract dates (various formats)
+function applyDateFields(text: string, fields: Record<string, string>): void {
   const datePatterns = [
     /(?:date|dated|issued|due)[:\s]*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/gi,
     /(?:date|dated|issued|due)[:\s]*(\w+ \d{1,2},?\s*\d{4})/gi,
@@ -82,6 +79,29 @@ function extractFields(text: string): Record<string, string> {
       if (!fields.date) fields.date = match[1].trim();
     }
   }
+}
+
+function applyClientNameField(text: string, fields: Record<string, string>): void {
+  const clientPatterns = [
+    /(?:bill\s*to|billed\s*to|client|customer|prepared\s*for|attention)[:\s]*([^\n]{3,60})/i,
+    /(?:to|for)[:\s]*\n?\s*([A-Z][^\n]{3,60})/,
+  ];
+  for (const pattern of clientPatterns) {
+    const match = pattern.exec(text);
+    if (match) {
+      const name = match[1].trim().replace(/[:-]/g, '').trim();
+      if (name.length >= 2 && name.length <= 80) {
+        fields.client_name = name;
+        break;
+      }
+    }
+  }
+}
+
+function extractFields(text: string): Record<string, string> {
+  const fields: Record<string, string> = {};
+
+  applyDateFields(text, fields);
 
   // Extract due date specifically
   const dueDateMatch = /(?:due\s*date|payment\s*due)[:\s]*([^\n,;]+)/i.exec(text);
@@ -97,21 +117,7 @@ function extractFields(text: string): Record<string, string> {
   const emailMatch = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i.exec(text);
   if (emailMatch) fields.email = emailMatch[1];
 
-  // Extract client/company name from common patterns
-  const clientPatterns = [
-    /(?:bill\s*to|billed\s*to|client|customer|prepared\s*for|attention)[:\s]*([^\n]{3,60})/i,
-    /(?:to|for)[:\s]*\n?\s*([A-Z][^\n]{3,60})/,
-  ];
-  for (const pattern of clientPatterns) {
-    const match = pattern.exec(text);
-    if (match) {
-      const name = match[1].trim().replace(/[:-]/g, '').trim();
-      if (name.length >= 2 && name.length <= 80) {
-        fields.client_name = name;
-        break;
-      }
-    }
-  }
+  applyClientNameField(text, fields);
 
   // Extract invoice number
   const invoiceNumMatch = /(?:invoice\s*(?:#|no\.?|number)[:\s]*)([A-Za-z0-9-]+)/i.exec(text);
@@ -127,11 +133,15 @@ function extractFields(text: string): Record<string, string> {
 /**
  * Extract line items from document text.
  */
-function extractLineItems(text: string): Array<{ description: string; quantity: number; unit_price: number; total: number }> {
-  const items: Array<{ description: string; quantity: number; unit_price: number; total: number }> = [];
+function extractLineItems(
+  text: string,
+): Array<{ description: string; quantity: number; unit_price: number; total: number }> {
+  const items: Array<{ description: string; quantity: number; unit_price: number; total: number }> =
+    [];
 
   // Pattern: description followed by numbers (qty, price, total)
-  const lineItemPattern = /([A-Za-z][^\n$]{5,80}?)\s+(\d+\.?\d*)\s+\$?([\d,]+\.?\d*)\s+\$?([\d,]+\.?\d*)/g;
+  const lineItemPattern =
+    /([A-Za-z][^\n$]{5,80}?)\s+(\d+\.?\d*)\s+\$?([\d,]+\.?\d*)\s+\$?([\d,]+\.?\d*)/g;
   let match;
   while ((match = lineItemPattern.exec(text)) !== null) {
     const qty = parseFloat(match[2]);
@@ -173,7 +183,8 @@ export async function parseDocument(file: File): Promise<ImportDetection> {
           detectedEntity: 'unknown',
           confidence: 0,
           preview: {
-            summary: 'Legacy .doc format · could not extract text. Try saving as .docx and re-importing.',
+            summary:
+              'Legacy .doc format · could not extract text. Try saving as .docx and re-importing.',
           },
         };
       }
@@ -197,9 +208,10 @@ export async function parseDocument(file: File): Promise<ImportDetection> {
       detectedEntity: 'unknown',
       confidence: 0,
       preview: {
-        summary: ext === 'pdf'
-          ? 'This PDF appears to be a scanned image. Lance can\u2019t read its contents \u2014 it will be imported as an attachment in Assets instead.'
-          : 'Could not extract any meaningful text from this document.',
+        summary:
+          ext === 'pdf'
+            ? 'This PDF appears to be a scanned image. Lance can\u2019t read its contents \u2014 it will be imported as an attachment in Assets instead.'
+            : 'Could not extract any meaningful text from this document.',
         rawText: '',
       },
     };
@@ -214,9 +226,10 @@ export async function parseDocument(file: File): Promise<ImportDetection> {
 
   const truncatedText = rawText.length > 2000 ? rawText.substring(0, 2000) + '...' : rawText;
 
-  const summary = confidence >= 0.15
-    ? `Detected: ${entityTypeLabel(detectedEntity)} · ${Object.keys(extractedFields).length} fields extracted`
-    : `Could not confidently classify this document. You can assign it manually or import as an attachment.`;
+  const summary =
+    confidence >= 0.15
+      ? `Detected: ${entityTypeLabel(detectedEntity)} · ${Object.keys(extractedFields).length} fields extracted`
+      : `Could not confidently classify this document. You can assign it manually or import as an attachment.`;
 
   return {
     file,

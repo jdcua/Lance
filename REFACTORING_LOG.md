@@ -74,3 +74,11 @@ Each entry records what changed, why, and which standard it satisfies.
   cognitive backlog. **Standard:** cognitive complexity <=15; extract named
   helpers, never change behavior to satisfy the metric.
 - Cognitive warnings dropped from 19 to 15; lint warnings from 73 to 69.
+
+## 2026-11-25 — Cognitive complexity pass on lib/import utilities
+
+- Extracted pure helpers in `forecast.ts`, `heatmap.ts`, `voice.ts`,
+  `classifier.ts`, `document.ts`, `searchRank.ts` and `checker.ts`.
+  **Why:** continue burning down the warn-first backlog. **Standard:** cognitive
+  complexity <=15 by extracting named helpers, no behavior change.
+- Cognitive warnings dropped from 15 to 8; lint warnings from 69 to 62.
