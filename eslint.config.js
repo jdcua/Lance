@@ -28,8 +28,7 @@ export default [
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       // Cyclomatic complexity must stay <= 15 per function.
       complexity: ['error', 15],
-      // Warn while we work through the existing backlog; promote later.
-      'sonarjs/cognitive-complexity': ['warn', 15],
+      'sonarjs/cognitive-complexity': ['error', 15],
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
     },

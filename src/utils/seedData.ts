@@ -697,40 +697,42 @@ async function cleanupDraftFollowUps(db: SeedDb, deleted: DeletedSeeds): Promise
   }
 }
 
+function isDeletedSeedEntity(entityId: string | undefined, deleted: DeletedSeeds): boolean {
+  const id = entityId || '';
+  return deleted.proposals.has(id) || deleted.invoices.has(id);
+}
+
+function prunePendingFollowUps(deleted: DeletedSeeds): void {
+  const key = 'lance:store:pending_follow_ups';
+  const raw = localStorage.getItem(key);
+  if (!raw) return;
+  const list = JSON.parse(raw) as Array<{ entity_id?: string }>;
+  if (!Array.isArray(list)) return;
+  const next = list.filter((l) => !isDeletedSeedEntity(l.entity_id, deleted));
+  localStorage.setItem(key, JSON.stringify(next));
+}
+
+function pruneFollowUpLogs(deleted: DeletedSeeds): void {
+  const rawLogs = localStorage.getItem('lance:store:follow_up_logs');
+  if (!rawLogs) return;
+  try {
+    const obj = JSON.parse(rawLogs) as Record<string, unknown>;
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return;
+    for (const k of Object.keys(obj)) {
+      const id = k.split(':').slice(1).join(':');
+      if (deleted.proposals.has(id) || deleted.invoices.has(id)) delete obj[k];
+    }
+    localStorage.setItem('lance:store:follow_up_logs', JSON.stringify(obj));
+  } catch {
+    /* leave logs untouched on parse failure */
+  }
+}
+
 /** Prune client-side follow-up caches referencing deleted seed rows. */
 function pruneFollowUpLists(deleted: DeletedSeeds): void {
   try {
-    for (const key of ['lance:store:pending_follow_ups']) {
-      const raw = localStorage.getItem(key);
-      if (!raw) continue;
-      const list = JSON.parse(raw) as Array<{ entity_id?: string }>;
-      if (!Array.isArray(list)) continue;
-      localStorage.setItem(
-        key,
-        JSON.stringify(
-          list.filter(
-            (l) =>
-              !deleted.proposals.has(l.entity_id || '') && !deleted.invoices.has(l.entity_id || ''),
-          ),
-        ),
-      );
-    }
-    // Browser-mode follow_up_logs is an object keyed `type:id`.
-    const rawLogs = localStorage.getItem('lance:store:follow_up_logs');
-    if (rawLogs) {
-      try {
-        const obj = JSON.parse(rawLogs) as Record<string, unknown>;
-        if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
-          for (const k of Object.keys(obj)) {
-            const id = k.split(':').slice(1).join(':');
-            if (deleted.proposals.has(id) || deleted.invoices.has(id)) delete obj[k];
-          }
-          localStorage.setItem('lance:store:follow_up_logs', JSON.stringify(obj));
-        }
-      } catch {
-        /* leave logs untouched on parse failure */
-      }
-    }
+    prunePendingFollowUps(deleted);
+    pruneFollowUpLogs(deleted);
   } catch {
     /* Tauri keeps these in SQLite; the DELETE above covered it */
   }

@@ -267,6 +267,33 @@ function handleDirectoryCommands<T>(
   return undefined;
 }
 
+function updateFollowUpLogEntry(
+  all: Record<string, StoreRow[]>,
+  payload: Record<string, unknown>,
+): boolean {
+  let updated = false;
+  for (const key of Object.keys(all || {})) {
+    const list: StoreRow[] = all[key];
+    if (!Array.isArray(list)) continue;
+    const idx = list.findIndex((l: StoreRow) => l && l.id === payload.id);
+    if (idx === -1) continue;
+    list[idx] = {
+      ...list[idx],
+      status: payload.status ?? list[idx].status,
+      action: payload.action ?? list[idx].action,
+      actioned_at: payload.actioned_at ?? new Date().toISOString(),
+    };
+    updated = true;
+  }
+  return updated;
+}
+
+function removePendingFollowUp(id: unknown): void {
+  const pending = lsGet<StoreRow>('pending_follow_ups');
+  const nextPending = pending.filter((l: StoreRow) => !l || l.id !== id);
+  lsSet('pending_follow_ups', nextPending);
+}
+
 function handleUpdateFollowUpStatus<T>(
   cmd: string,
   args: Record<string, unknown> | undefined,
@@ -278,27 +305,11 @@ function handleUpdateFollowUpStatus<T>(
       // follow_up_logs is stored as an object keyed by `entityType:entityId`,
       // each value being an array of logs (lsGet returns the raw parsed value).
       const all = lsGetRecord('follow_up_logs');
-      let updated = false;
-      for (const key of Object.keys(all || {})) {
-        const list: StoreRow[] = all[key];
-        if (!Array.isArray(list)) continue;
-        const idx = list.findIndex((l: StoreRow) => l && l.id === payload.id);
-        if (idx !== -1) {
-          list[idx] = {
-            ...list[idx],
-            status: payload.status ?? list[idx].status,
-            action: payload.action ?? list[idx].action,
-            actioned_at: payload.actioned_at ?? new Date().toISOString(),
-          };
-          updated = true;
-        }
-      }
-      if (updated) lsSet('follow_up_logs', all as unknown as StoreRow[]);
-      // Also remove from the pending list so it doesn't reappear on reload
+      const updated = updateFollowUpLogEntry(all, payload);
       if (updated) {
-        const pending = lsGet<StoreRow>('pending_follow_ups');
-        const nextPending = pending.filter((l: StoreRow) => !l || l.id !== payload.id);
-        lsSet('pending_follow_ups', nextPending);
+        lsSet('follow_up_logs', all as unknown as StoreRow[]);
+        // Also remove from the pending list so it doesn't reappear on reload
+        removePendingFollowUp(payload.id);
       }
     }
     return {} as unknown as T;
@@ -808,6 +819,33 @@ function removeRowsWithClientId(id: string): void {
   }
 }
 
+function localStorageStoreKeys(): string[] {
+  return Object.keys(localStorage)
+    .filter((k) => k.startsWith(LS_PREFIX))
+    .map((k) => k.slice(LS_PREFIX.length));
+}
+
+function removeProjectScopedRows(projectIds: Set<unknown>, skip: string[]): void {
+  for (const key of localStorageStoreKeys()) {
+    if (skip.includes(key)) continue;
+    let rows: StoreRow[] = [];
+    try {
+      rows = JSON.parse(localStorage.getItem(LS_PREFIX + key) || '[]');
+    } catch {
+      continue;
+    }
+    if (!Array.isArray(rows)) continue;
+    const hasProjectId = rows.some(
+      (r: StoreRow) => r && typeof r === 'object' && 'project_id' in r,
+    );
+    if (!hasProjectId) continue;
+    lsSet(
+      key,
+      rows.filter((r: StoreRow) => r?.project_id && !projectIds.has(r.project_id)),
+    );
+  }
+}
+
 function cascadeClientDelete(id: string): void {
   cascadeClientMetrics(id);
   removeRowsWithClientId(id);
@@ -820,27 +858,7 @@ function cascadeClientDelete(id: string): void {
       'projects',
       lsGet<StoreRow>('projects').filter((p: StoreRow) => p.client_id !== id),
     );
-    const projectScopedKeys = Object.keys(localStorage)
-      .filter((k) => k.startsWith(LS_PREFIX))
-      .map((k) => k.slice(LS_PREFIX.length));
-    for (const key of projectScopedKeys) {
-      if (key === 'projects' || key === 'clients') continue;
-      let rows: StoreRow[] = [];
-      try {
-        rows = JSON.parse(localStorage.getItem(LS_PREFIX + key) || '[]');
-      } catch {
-        continue;
-      }
-      if (!Array.isArray(rows)) continue;
-      const hasProjectId = rows.some(
-        (r: StoreRow) => r && typeof r === 'object' && 'project_id' in r,
-      );
-      if (!hasProjectId) continue;
-      lsSet(
-        key,
-        rows.filter((r: StoreRow) => r?.project_id && !projectIds.has(r.project_id)),
-      );
-    }
+    removeProjectScopedRows(projectIds, ['projects', 'clients']);
   }
 
   // Invoices belonging to this client: remove their payments too.
@@ -885,45 +903,46 @@ function cascadeProjectDelete(id: string): void {
   }
 }
 
+function runDeleteCascades(cmd: string, id: string): void {
+  // Cascade: deleting a client must remove every client-scoped child
+  // record (communications, metrics, recurring invoices, projects,
+  // proposals, contracts, time entries, invoices + payments, follow-up
+  // logs, attachments) so no orphaned rows reference a nonexistent
+  // client. This mirrors the foreign-key integrity of the real SQLite
+  // backend.
+  if (cmd === 'delete_client') cascadeClientDelete(id);
+  // Cascade: deleting an invoice must remove its payment records.
+  if (cmd === 'delete_invoice') cascadeInvoiceDelete(id);
+  // Cascade: deleting a project must remove its project-scoped child
+  // records (milestones, sprint tasks, stack, bugs, archetype tables,
+  // etc.) so no orphaned rows reference a nonexistent project. This
+  // mirrors the foreign-key integrity of the real SQLite backend.
+  if (cmd === 'delete_project') cascadeProjectDelete(id);
+}
+
 function handleDeleteCommands<T>(
   cmd: string,
   args: Record<string, unknown> | undefined,
   verb: string,
 ): T | undefined {
-  if (verb === 'delete') {
-    const entity = cmdEntity(cmd);
-    if (entity) {
-      const key = ENTITIES[entity]?.listKey || listKeyFor(entity);
-      const id = args?.id as string;
-      if (id) {
-        const items = lsGet<StoreRow>(key);
-        lsSet(
-          key,
-          items.filter((i: StoreRow) => i.id !== id),
-        );
-        // Cascade: deleting a client must remove every client-scoped child
-        // record (communications, metrics, recurring invoices, projects,
-        // proposals, contracts, time entries, invoices + payments, follow-up
-        // logs, attachments) so no orphaned rows reference a nonexistent
-        // client. This mirrors the foreign-key integrity of the real SQLite
-        // backend.
-        if (cmd === 'delete_client') cascadeClientDelete(id);
-        // Cascade: deleting an invoice must remove its payment records.
-        if (cmd === 'delete_invoice') cascadeInvoiceDelete(id);
-        // Cascade: deleting a project must remove its project-scoped child
-        // records (milestones, sprint tasks, stack, bugs, archetype tables,
-        // etc.) so no orphaned rows reference a nonexistent project. This
-        // mirrors the foreign-key integrity of the real SQLite backend.
-        if (cmd === 'delete_project') cascadeProjectDelete(id);
-      }
-    }
-    return {} as unknown as T;
+  if (verb !== 'delete') {
+    // ── log_follow_up (must run BEFORE the generic 'log' handler, which maps
+    //    'follow_up' → 'follow_ups' and would drop status/drafted_at, making
+    //    follow-ups invisible and the pending guard useless → duplicates) ──
+    return undefined;
   }
-
-  // ── log_follow_up (must run BEFORE the generic 'log' handler, which maps
-  //    'follow_up' → 'follow_ups' and would drop status/drafted_at, making
-  //    follow-ups invisible and the pending guard useless → duplicates) ──
-  return undefined;
+  const entity = cmdEntity(cmd);
+  if (!entity) return {} as unknown as T;
+  const key = ENTITIES[entity]?.listKey || listKeyFor(entity);
+  const id = args?.id as string;
+  if (!id) return {} as unknown as T;
+  const items = lsGet<StoreRow>(key);
+  lsSet(
+    key,
+    items.filter((i: StoreRow) => i.id !== id),
+  );
+  runDeleteCascades(cmd, id);
+  return {} as unknown as T;
 }
 
 function handleLogFollowUp<T>(
