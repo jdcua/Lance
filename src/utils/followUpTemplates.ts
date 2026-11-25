@@ -231,7 +231,11 @@ function getDefaultTemplate(key: string): string {
   return DEFAULT_TEMPLATES[key] || '';
 }
 
-function getTemplate(key: string, customTemplates?: Record<string, string>, tone?: DunningTone): string {
+function getTemplate(
+  key: string,
+  customTemplates?: Record<string, string>,
+  tone?: DunningTone,
+): string {
   if (customTemplates && customTemplates[key]) return customTemplates[key];
   if (tone && TONE_TEMPLATES[tone][key]) return TONE_TEMPLATES[tone][key]!.body;
   return getDefaultTemplate(key);
@@ -240,24 +244,31 @@ function getTemplate(key: string, customTemplates?: Record<string, string>, tone
 /**
  * Get the template key for a given entity type and days elapsed.
  */
+function proposalTemplateKey(adjustedDays: number): string | null {
+  if (adjustedDays < 0) return null;
+  if (adjustedDays < 4) return 'proposal_day3';
+  if (adjustedDays < 10) return 'proposal_day7';
+  return 'proposal_day14';
+}
+
+function invoiceTemplateKey(daysElapsed: number): string | null {
+  if (daysElapsed < 1) return null;
+  if (daysElapsed < 4) return 'invoice_day1';
+  if (daysElapsed < 10) return 'invoice_day7';
+  if (daysElapsed < 30) return 'invoice_day14';
+  return 'invoice_day30';
+}
+
 export function getTemplateKey(
   entityType: 'proposal' | 'invoice',
   daysElapsed: number,
-  delayDays: number
+  delayDays: number,
 ): string | null {
   if (entityType === 'proposal') {
-    const adjustedDays = daysElapsed - delayDays;
-    if (adjustedDays >= 0 && adjustedDays < 4) return 'proposal_day3';
-    if (adjustedDays >= 4 && adjustedDays < 10) return 'proposal_day7';
-    if (adjustedDays >= 10) return 'proposal_day14';
-    return null;
+    return proposalTemplateKey(daysElapsed - delayDays);
   }
   if (entityType === 'invoice') {
-    if (daysElapsed >= 1 && daysElapsed < 4) return 'invoice_day1';
-    if (daysElapsed >= 4 && daysElapsed < 10) return 'invoice_day7';
-    if (daysElapsed >= 10 && daysElapsed < 30) return 'invoice_day14';
-    if (daysElapsed >= 30) return 'invoice_day30';
-    return null;
+    return invoiceTemplateKey(daysElapsed);
   }
   return null;
 }
@@ -321,7 +332,11 @@ export function generateFollowUpDraft(
   return substituteVars(getTemplate(templateKey, customTemplates, tone), data);
 }
 
-function getSubjectTemplate(key: string, customSubjectTemplates?: Record<string, string>, tone?: DunningTone): string {
+function getSubjectTemplate(
+  key: string,
+  customSubjectTemplates?: Record<string, string>,
+  tone?: DunningTone,
+): string {
   if (customSubjectTemplates && customSubjectTemplates[key]) return customSubjectTemplates[key];
   if (tone && TONE_TEMPLATES[tone][key]) return TONE_TEMPLATES[tone][key]!.subject;
   return DEFAULT_SUBJECT_TEMPLATES[key] || '';
@@ -346,7 +361,10 @@ export async function openMailTo(email: string, subject: string, body: string): 
   const encodedSubject = encodeURIComponent(subject);
   const encodedBody = encodeURIComponent(truncated);
   const mailtoUrl = `mailto:${encodeURIComponent(email)}?subject=${encodedSubject}&body=${encodedBody}`;
-  if (typeof window !== 'undefined' && !(window as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__) {
+  if (
+    typeof window !== 'undefined' &&
+    !(window as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__
+  ) {
     // Browser mode: hand off to the default mail client directly
     window.location.href = mailtoUrl;
     return;

@@ -19,23 +19,30 @@ const INITIAL_DELAY = 3000;
  * That is a rollback to a build with a known vulnerability, and without a
  * high-water mark the client has no memory to notice it.
  */
+export function parseVersionPart(p: string): number | null {
+  return /^\d+$/.test(p) ? parseInt(p, 10) : null;
+}
+
+function comparePreReleasePart(x: number | null | undefined, y: number | null | undefined): number {
+  if (x === undefined) return -1; // fewer fields sorts first
+  if (y === undefined) return 1;
+  if (x === null || y === null) {
+    // At least one non-numeric: fall back to string order for that pair.
+    const sx = String(x ?? '');
+    const sy = String(y ?? '');
+    if (sx !== sy) return sx < sy ? -1 : 1;
+    return 0;
+  }
+  if (x !== y) return x < y ? -1 : 1;
+  return 0;
+}
+
 function comparePreRelease(a: string, b: string): number {
-  const parts = (s: string) => s.split('.').map((p) => (/^\d+$/.test(p) ? parseInt(p, 10) : null));
-  const ap = parts(a);
-  const bp = parts(b);
+  const ap = a.split('.').map(parseVersionPart);
+  const bp = b.split('.').map(parseVersionPart);
   for (let i = 0; i < Math.max(ap.length, bp.length); i++) {
-    const x = ap[i];
-    const y = bp[i];
-    if (x === undefined) return -1; // fewer fields sorts first
-    if (y === undefined) return 1;
-    if (x === null || y === null) {
-      // At least one non-numeric: fall back to string order for that pair.
-      const sx = String(x ?? '');
-      const sy = String(y ?? '');
-      if (sx !== sy) return sx < sy ? -1 : 1;
-      continue;
-    }
-    if (x !== y) return x < y ? -1 : 1;
+    const result = comparePreReleasePart(ap[i], bp[i]);
+    if (result !== 0) return result;
   }
   return 0;
 }
