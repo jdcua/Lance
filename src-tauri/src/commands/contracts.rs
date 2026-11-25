@@ -125,11 +125,7 @@ pub fn update_contract(
 ) -> Result<(), String> {
     let state = app.state::<DbState>();
     let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
-    let signed_at = if payload.status == "active" {
-        Some(Utc::now().to_rfc3339())
-    } else {
-        None
-    };
+    let signed_at = if payload.status == "active" { Some(Utc::now().to_rfc3339()) } else { None };
     conn.execute(
         "UPDATE contracts SET client_id = ?1, project_id = ?2, proposal_id = ?3, title = ?4, status = ?5, body = ?6, signed_at = COALESCE(?7, signed_at) WHERE id = ?8",
         rusqlite::params![payload.client_id, payload.project_id, payload.proposal_id, payload.title, payload.status, payload.body, signed_at, payload.id],

@@ -157,10 +157,7 @@ pub fn create_expense(
 }
 
 #[tauri::command]
-pub fn update_expense(
-    app: tauri::AppHandle,
-    payload: UpdateExpensePayload,
-) -> Result<(), String> {
+pub fn update_expense(app: tauri::AppHandle, payload: UpdateExpensePayload) -> Result<(), String> {
     let state = app.state::<DbState>();
     let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let recurring = payload.recurring.unwrap_or(false) as i32;
@@ -240,11 +237,7 @@ pub fn upsert_user_profile(
     });
 
     let existing: bool = conn
-        .query_row(
-            "SELECT COUNT(*) FROM user_profile WHERE id = 1",
-            [],
-            |row| row.get::<_, i64>(0),
-        )
+        .query_row("SELECT COUNT(*) FROM user_profile WHERE id = 1", [], |row| row.get::<_, i64>(0))
         .unwrap_or(0)
         > 0;
 

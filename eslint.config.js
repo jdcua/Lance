@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import ts from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
+import sonarjs from 'eslint-plugin-sonarjs';
 
 export default [
   // Global ignores
@@ -19,6 +20,7 @@ export default [
     plugins: {
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
+      sonarjs,
     },
     rules: {
       'react-hooks/rules-of-hooks': 'error',
@@ -26,6 +28,8 @@ export default [
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       // Cyclomatic complexity must stay <= 15 per function.
       complexity: ['error', 15],
+      // Warn while we work through the existing backlog; promote later.
+      'sonarjs/cognitive-complexity': ['warn', 15],
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
     },

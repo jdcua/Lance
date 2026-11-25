@@ -97,10 +97,8 @@ pub struct EntityCount {
 }
 
 fn ensure_dir(app: &tauri::AppHandle, sub: &str) -> Result<PathBuf, String> {
-    let app_dir = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
+    let app_dir =
+        app.path().app_data_dir().map_err(|e| format!("Failed to get app data dir: {}", e))?;
     let dir = app_dir.join(sub);
     fs::create_dir_all(&dir).map_err(|e| format!("Failed to create dir: {}", e))?;
     Ok(dir)
@@ -347,11 +345,7 @@ pub fn delete_attachment(app: tauri::AppHandle, id: String) -> Result<(), String
     let state = app.state::<DbState>();
     let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let path: Option<String> = conn
-        .query_row(
-            "SELECT file_path FROM attachments WHERE id = ?",
-            [&id],
-            |row| row.get(0),
-        )
+        .query_row("SELECT file_path FROM attachments WHERE id = ?", [&id], |row| row.get(0))
         .ok();
     if let Some(ref p) = path {
         let _ = fs::remove_file(p);
@@ -368,7 +362,8 @@ pub fn rename_attachment(
 ) -> Result<Attachment, String> {
     let state = app.state::<DbState>();
     let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
-    let safe_name = payload.new_filename.replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], "_");
+    let safe_name =
+        payload.new_filename.replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], "_");
     conn.execute(
         "UPDATE attachments SET filename = ?1 WHERE id = ?2",
         rusqlite::params![safe_name, payload.id],
@@ -471,24 +466,17 @@ pub fn update_attachment_meta(
 pub fn get_asset_stats(app: tauri::AppHandle) -> Result<AssetStats, String> {
     let state = app.state::<DbState>();
     let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
-    let total_files: i64 = conn
-        .query_row("SELECT COUNT(*) FROM attachments", [], |row| row.get(0))
-        .unwrap_or(0);
+    let total_files: i64 =
+        conn.query_row("SELECT COUNT(*) FROM attachments", [], |row| row.get(0)).unwrap_or(0);
     let total_size_bytes: i64 = conn
-        .query_row("SELECT COALESCE(SUM(size_bytes), 0) FROM attachments", [], |row| {
-            row.get(0)
-        })
+        .query_row("SELECT COALESCE(SUM(size_bytes), 0) FROM attachments", [], |row| row.get(0))
         .unwrap_or(0);
     let mut stmt = conn
         .prepare("SELECT entity_type, entity_id, COUNT(*) as cnt FROM attachments GROUP BY entity_type, entity_id ORDER BY cnt DESC LIMIT 50")
         .map_err(|_| "Database operation failed".to_string())?;
     let by_entity: Vec<EntityCount> = stmt
         .query_map([], |row| {
-            Ok(EntityCount {
-                entity_type: row.get(0)?,
-                entity_id: row.get(1)?,
-                count: row.get(2)?,
-            })
+            Ok(EntityCount { entity_type: row.get(0)?, entity_id: row.get(1)?, count: row.get(2)? })
         })
         .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())
@@ -546,10 +534,7 @@ mod tests {
             "   ",
             "with\0nul",
         ] {
-            assert!(
-                safe_component(evil).is_err(),
-                "should have rejected {evil:?}"
-            );
+            assert!(safe_component(evil).is_err(), "should have rejected {evil:?}");
         }
     }
 
@@ -563,10 +548,7 @@ mod tests {
             "file with spaces.docx",
             "..leading-dots.csv",
         ] {
-            assert!(
-                safe_component(good).is_ok(),
-                "should have accepted {good:?}"
-            );
+            assert!(safe_component(good).is_ok(), "should have accepted {good:?}");
         }
     }
 
@@ -575,20 +557,12 @@ mod tests {
         use std::path::{Path, PathBuf};
         let dir = PathBuf::from("/tmp/lance/imports");
         // Whatever safe_component lets through must not resolve outside dir.
-        for candidate in [
-            "plain.csv",
-            "..leading.csv",
-            "....//x.csv",
-            "%2e%2e/x",
-            "a/../../b.csv",
-            "....csv",
-        ] {
+        for candidate in
+            ["plain.csv", "..leading.csv", "....//x.csv", "%2e%2e/x", "a/../../b.csv", "....csv"]
+        {
             if let Ok(name) = safe_component(candidate) {
                 let joined = dir.join(name);
-                assert!(
-                    joined.starts_with(dir.as_path()),
-                    "{candidate:?} escaped: {joined:?}"
-                );
+                assert!(joined.starts_with(dir.as_path()), "{candidate:?} escaped: {joined:?}");
                 // And a single component, so nothing above can re-enter.
                 assert_eq!(
                     Path::new(name).components().count(),
