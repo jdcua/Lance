@@ -30,7 +30,7 @@ No business behavior changed. Documentation that contradicted the code
 - `npm run complexity` — 0 functions above cyclomatic 15; 0 cognitive
   warnings (warn-first backlog).
 - `npm run check:boundaries` — 0 warnings (enforced in verify).
-- Rust: `cargo test --lib` (13 tests), `cargo fmt --check`, and the Clippy
+- Rust: `cargo test --lib` (22 tests), `cargo fmt --check`, and the Clippy
   quality gate pass.
 - Branch protection requires six CI checks; main is protected against force
   pushes and deletions.

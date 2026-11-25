@@ -1036,3 +1036,36 @@ mod portal_tests {
         assert!(!handler.contains("onclick"), "event handler stripped: {handler}");
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::sanitize_html;
+
+    #[test]
+    fn sanitize_html_removes_script_tags() {
+        let out = sanitize_html("<p>hello</p><script>alert(1)</script>");
+        assert!(out.contains("hello"));
+        assert!(!out.contains("script"));
+        assert!(!out.contains("alert"));
+    }
+
+    #[test]
+    fn sanitize_html_keeps_safe_markup() {
+        let out = sanitize_html("<p><strong>bold</strong> and <em>italic</em></p>");
+        assert!(out.contains("<strong>bold</strong>"));
+        assert!(out.contains("<em>italic</em>"));
+    }
+
+    #[test]
+    fn sanitize_html_strips_dangerous_href() {
+        let out = sanitize_html(r#"<a href="javascript:alert(1)">click</a>"#);
+        assert!(!out.contains("href="), "dangerous href should be stripped: {out}");
+        assert!(out.contains("click"));
+    }
+
+    #[test]
+    fn sanitize_html_strips_event_handlers() {
+        let out = sanitize_html(r#"<a href="https://example.com" onclick="alert(1)">x</a>"#);
+        assert!(!out.contains("onclick"), "handler should be stripped: {out}");
+    }
+}

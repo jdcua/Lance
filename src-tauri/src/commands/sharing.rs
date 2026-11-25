@@ -446,3 +446,34 @@ fn lookup_entity_id(conn: &Connection, token: &str, want_type: &str) -> Option<i
     )
     .ok()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generate_token_has_expected_length_and_charset() {
+        let token = generate_token();
+        assert_eq!(token.len(), 64, "32 bytes -> 64 hex chars");
+        assert!(
+            token.chars().all(|c| c.is_ascii_hexdigit() && !c.is_uppercase()),
+            "token must be lowercase hex: {token}"
+        );
+    }
+
+    #[test]
+    fn generate_token_is_unique() {
+        let a = generate_token();
+        let b = generate_token();
+        assert_ne!(a, b, "two tokens should not collide");
+    }
+
+    #[test]
+    fn chrono_now_is_rfc3339() {
+        let now = chrono_now();
+        assert!(
+            chrono::DateTime::parse_from_rfc3339(&now).is_ok(),
+            "not RFC3339: {now}"
+        );
+    }
+}

@@ -625,4 +625,23 @@ mod tests {
             .unwrap();
         assert_eq!(order, vec![ids[2].clone(), ids[1].clone(), ids[0].clone()]);
     }
+
+    #[test]
+    fn test_uuid_v4_format_and_uniqueness() {
+        let a = uuid_v4();
+        let b = uuid_v4();
+        assert_eq!(a.len(), 36);
+        assert_eq!(a.chars().filter(|&c| c == '-').count(), 4);
+        assert!(uuid::Uuid::parse_str(&a).is_ok(), "invalid uuid: {a}");
+        assert_ne!(a, b, "uuids should differ");
+    }
+
+    #[test]
+    fn test_now_iso_is_rfc3339() {
+        let ts = now_iso();
+        assert!(
+            chrono::DateTime::parse_from_rfc3339(&ts).is_ok(),
+            "not RFC3339: {ts}"
+        );
+    }
 }

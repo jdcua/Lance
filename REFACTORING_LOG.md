@@ -125,3 +125,9 @@ Each entry records what changed, why, and which standard it satisfies.
   `src/db/schema.ts` (db/index.ts 1744 → 1640 lines). **Why:** reduce file
   size without moving logic. **Standard:** one reason to change per module;
   single `create()` remains in `store/index.ts`.
+
+## 2026-11-25 — Rust command tests
+
+- Added 9 unit tests for pure helpers in `sharing.rs`, `kanban.rs` and
+  `server.rs`. **Why:** cover command-adjacent behavior without AppHandle/DB.
+  **Standard:** behavior tests; no new dependencies. Rust tests 13 → 22.
