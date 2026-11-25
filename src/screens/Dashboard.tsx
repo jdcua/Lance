@@ -14,7 +14,7 @@ import Fade from '../components/motion/Fade';
 import { StaggerGroup, StaggerItem } from '../components/motion/Stagger';
 import AnimatedNumber from '../components/motion/AnimatedNumber';
 import { usePrefs } from '../lib/prefs';
-import { commands } from '../lib/commands';
+import { commands, type CommandName } from '../lib/commands';
 import { relativeDate, formatCurrency, DAY_MS } from '../utils/format';
 import { useToasts } from '../store/toastStore';
 import { Play, Receipt, FileText, Users, FolderKanban, Clock, Plus, ArrowRight, CheckCircle2, Circle, Bell, Send, X, Link, Banknote, Clock3, Target } from 'lucide-react';
@@ -334,7 +334,7 @@ export default function Dashboard() {
     recordTelemetry('checklist_step_done', { step: index });
     if (to) navigate(to);
     if (event) {
-      setTimeout(() => commands.dispatch(event as any), 350);
+      commands.dispatchAfterMount(event as CommandName);
     }
   };
 
@@ -427,10 +427,10 @@ export default function Dashboard() {
             onClick={() => {
               if (clients.length === 0) {
                 navigate('/clients');
-                setTimeout(() => commands.dispatch('lance:add-client'), 350);
+                commands.dispatchAfterMount('lance:add-client');
               } else {
                 navigate('/invoices');
-                setTimeout(() => commands.dispatch('lance:add-invoice'), 350);
+                commands.dispatchAfterMount('lance:add-invoice');
               }
             }}
           >
@@ -656,7 +656,7 @@ function DashboardWidgets({ recentInvoices, recentTime, profile, projects, navig
           <div className="text-center py-8">
             <Receipt size={32} className="text-[var(--text-tertiary)] mx-auto mb-2" />
             <p className="text-xs text-[var(--text-secondary)]">No invoices yet.</p>
-            <Button onClick={() => { navigate('/invoices'); setTimeout(() => commands.dispatch('lance:add-invoice'), 350); }} size="sm" variant="secondary" className="mt-3">
+            <Button onClick={() => { navigate('/invoices'); commands.dispatchAfterMount('lance:add-invoice'); }} size="sm" variant="secondary" className="mt-3">
               <Plus size={12} /> New Invoice
             </Button>
           </div>

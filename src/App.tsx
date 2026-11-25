@@ -6,22 +6,6 @@
  */
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import {
-  Lock,
-  CheckCircle,
-  Users,
-  FolderKanban,
-  Clock,
-  FileText,
-  Receipt,
-  Bell,
-  Search,
-  Trophy,
-  BarChart3,
-  Columns3,
-  Banknote,
-  FileEdit,
-} from 'lucide-react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import type { NavigateFunction } from 'react-router-dom';
 import Sidebar from './components/layout/Sidebar';
@@ -32,7 +16,6 @@ import Button from './components/ui/Button';
 import ToastContainer from './components/ui/Toast';
 import CommandPalette from './components/ui/CommandPalette';
 import QuickTimeLogModal from './components/ui/QuickTimeLogModal';
-import OnboardingComfort from './components/ui/OnboardingComfort';
 import Onboarding from './screens/Onboarding';
 import Walkthrough from './components/ui/Walkthrough';
 import SpotlightTour from './components/ui/SpotlightTour';
@@ -41,8 +24,8 @@ import ImportModal from './components/ui/ImportModal';
 import DropZoneOverlay from './components/ui/DropZoneOverlay';
 import UpdaterModal from './components/ui/UpdaterModal';
 import ShortcutsModal from './components/ui/ShortcutsModal';
-import OrbitField from './components/motion/OrbitField';
 import { commands } from './lib/commands';
+import type { FollowUpSettings, TimeEntry } from './types';
 import { useStore, type AppStore } from './store';
 import { useToasts } from './store/toastStore';
 import { useAutoUpdater } from './hooks/useAutoUpdater';
@@ -56,14 +39,10 @@ import {
 } from './utils/recurringEngine';
 import { generateInvoiceNumber } from './utils/invoiceNumber';
 import { useChangelog } from './utils/changelog';
-import { usePrefs } from './lib/prefs';
 import { applyTheme, getTheme, THEMES } from './themes/themes';
-import { getShortcutModifierLabel } from './utils/shortcuts';
-import type { FollowUpSettings, TimeEntry, UserProfile } from './types';
 import { checkAchievements } from './achievements/checker';
 import { ACHIEVEMENTS } from './achievements';
 import { parseDateString, DAY_MS } from './utils/format';
-import { defaultCurrency } from './lib/currency';
 import { recordTelemetry } from './utils/telemetry';
 import { usePortalPolling } from './lib/engines/usePortalPolling';
 import { getRuntimeVersion } from './lib/version';
@@ -401,7 +380,6 @@ export default function App() {
 
   const [appVersion, setAppVersion] = useState<string>('');
   const { changelog } = useChangelog();
-  const prefs = usePrefs();
 
   useEffect(() => {
     getRuntimeVersion().then(setAppVersion);

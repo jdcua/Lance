@@ -1731,7 +1731,6 @@ export function getCurrentSchemaVersion(): number {
 }
 
 export async function getSchemaVersionFromDb(): Promise<number> {
-  const { getDb } = await import('./index');
   const db = await getDb();
   const rows = await db.select<{ version: number }[]>('SELECT version FROM schema_version LIMIT 1');
   return rows && rows.length > 0 ? rows[0].version : getCurrentSchemaVersion();
