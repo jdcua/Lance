@@ -27,7 +27,7 @@ No business behavior changed. Documentation that contradicted the code
 
 - `npm run verify` — typecheck, lint (0 errors), 244 tests, Vite build,
   OSS audit — passes.
-- `npm run complexity` — 0 functions above cyclomatic 15; 15 cognitive
+- `npm run complexity` — 0 functions above cyclomatic 15; 8 cognitive
   warnings (warn-first backlog).
 - `npm run check:boundaries` — 16 warnings (warn-first backlog).
 - Rust: `cargo test --lib` (13 tests), `cargo fmt --check`, and the Clippy
@@ -41,7 +41,7 @@ No business behavior changed. Documentation that contradicted the code
 |---|---|---|
 | 177 hand-rolled trackers instead of `RecordTracker` | `src/components/features/` | migrate one domain per PR; mandatory for new entity screens |
 | Large screen/store/db files | `Clients.tsx`, `store/index.ts`, `db/index.ts`, `App.tsx` | extract helpers/components/group actions; one transformation per PR |
-| 15 cognitive-complexity warnings | `npm run complexity` | refactor, then promote ESLint rule to error |
+| 8 cognitive-complexity warnings | `npm run complexity` | refactor, then promote ESLint rule to error |
 | 16 boundary warnings | `npm run check:boundaries` | move direct Tauri imports behind store/tauri helpers; fix component→screen import; promote with `--strict` |
 | ~22 untested screens, ~125 untested Tauri commands | `src/screens/`, `src-tauri/src/commands/` | characterization tests before touching each area |
 | Cloudflare Workers Builds check still posts failures | external GitHub App | disable in the Cloudflare dashboard; not a required check |

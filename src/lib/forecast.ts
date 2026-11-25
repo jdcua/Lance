@@ -1,6 +1,19 @@
 import type { RecurringInvoice, Invoice, Expense, Project, Milestone } from '../types';
 
-const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTH_NAMES = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
 
 export interface ForecastMonth {
   label: string;
@@ -68,11 +81,16 @@ export function monthDiff(a: string, b: string): number {
 
 function frequencyMonths(freq: string): number {
   switch (freq) {
-    case 'weekly': return 1 / 4;
-    case 'biweekly': return 0.5;
-    case 'monthly': return 1;
-    case 'quarterly': return 3;
-    default: return 1;
+    case 'weekly':
+      return 1 / 4;
+    case 'biweekly':
+      return 0.5;
+    case 'monthly':
+      return 1;
+    case 'quarterly':
+      return 3;
+    default:
+      return 1;
   }
 }
 
@@ -109,6 +127,43 @@ function computeRecurringInvoicesByMonth(
   return result;
 }
 
+function addMilestoneBudgetToMonths(
+  invoiceMilestones: Milestone[],
+  budget: number,
+  forecastMonths: ForecastMonth[],
+  result: Record<string, number>,
+): void {
+  const sharePerMilestone = budget / invoiceMilestones.length;
+  for (const ms of invoiceMilestones) {
+    const msMonth = ms.due_date!.substring(0, 7);
+    for (const fm of forecastMonths) {
+      if (fm.key === msMonth) {
+        result[fm.key] = (result[fm.key] || 0) + sharePerMilestone;
+      }
+    }
+  }
+}
+
+function addDateRangeBudgetToMonths(
+  project: Project,
+  forecastMonths: ForecastMonth[],
+  result: Record<string, number>,
+  budget: number,
+): void {
+  const startKey = project.start_date
+    ? project.start_date.substring(0, 7)
+    : thisMonthKeyFromMonths(forecastMonths);
+  const endKey = project.end_date!.substring(0, 7);
+  const totalMonths = monthDiff(endKey, startKey) + 1;
+  if (totalMonths <= 0) return;
+  const perMonth = budget / totalMonths;
+  for (const fm of forecastMonths) {
+    if (fm.key >= startKey && fm.key <= endKey) {
+      result[fm.key] = (result[fm.key] || 0) + perMonth;
+    }
+  }
+}
+
 /** Spread one active project's budget across its milestone/forecast months. */
 function addProjectBudgetToMonths(
   project: Project,
@@ -117,34 +172,14 @@ function addProjectBudgetToMonths(
   result: Record<string, number>,
 ): void {
   const budget = project.budget || 0;
-  const invoiceMilestones = milestones.filter(
-    (m) => m.invoice_on_completion && m.due_date,
-  );
+  const invoiceMilestones = milestones.filter((m) => m.invoice_on_completion && m.due_date);
 
   if (invoiceMilestones.length > 0) {
-    const sharePerMilestone = budget / invoiceMilestones.length;
-    for (const ms of invoiceMilestones) {
-      const msMonth = ms.due_date!.substring(0, 7);
-      for (const fm of forecastMonths) {
-        if (fm.key === msMonth) {
-          result[fm.key] = (result[fm.key] || 0) + sharePerMilestone;
-        }
-      }
-    }
-  } else if (project.end_date) {
-    const startKey = project.start_date
-      ? project.start_date.substring(0, 7)
-      : thisMonthKeyFromMonths(forecastMonths);
-    const endKey = project.end_date.substring(0, 7);
-    const totalMonths = monthDiff(endKey, startKey) + 1;
-    if (totalMonths > 0) {
-      const perMonth = budget / totalMonths;
-      for (const fm of forecastMonths) {
-        if (fm.key >= startKey && fm.key <= endKey) {
-          result[fm.key] = (result[fm.key] || 0) + perMonth;
-        }
-      }
-    }
+    addMilestoneBudgetToMonths(invoiceMilestones, budget, forecastMonths, result);
+    return;
+  }
+  if (project.end_date) {
+    addDateRangeBudgetToMonths(project, forecastMonths, result, budget);
   }
 }
 
@@ -192,25 +227,19 @@ function computeSentInvoicesByMonth(
   return result;
 }
 
-export function computeAvgMonthlyPaid(
-  monthlyPaid: Record<string, number>,
-): number {
+export function computeAvgMonthlyPaid(monthlyPaid: Record<string, number>): number {
   const months = Object.keys(monthlyPaid).sort().reverse().slice(0, 3);
   if (months.length === 0) return 0;
   return months.reduce((sum, m) => sum + monthlyPaid[m], 0) / months.length;
 }
 
-export function computeAvgMonthlyExpenses(
-  monthlyExpenses: Record<string, number>,
-): number {
+export function computeAvgMonthlyExpenses(monthlyExpenses: Record<string, number>): number {
   const months = Object.keys(monthlyExpenses).sort().reverse().slice(0, 3);
   if (months.length === 0) return 0;
   return months.reduce((sum, m) => sum + monthlyExpenses[m], 0) / months.length;
 }
 
-export function computeAvgClientRevenue(
-  invoices: Invoice[],
-): number {
+export function computeAvgClientRevenue(invoices: Invoice[]): number {
   const paid = invoices.filter((i) => i.status === 'paid');
   if (paid.length === 0) return 0;
   const uniqueClients = new Set(paid.map((i) => i.client_id));
@@ -315,7 +344,8 @@ export function applyScenario(
   avgClientRevenue: number,
   params: ScenarioParams,
 ): { revenue: RevenueForecastItem[]; expenses: ExpenseForecastItem[] } {
-  const modeMultiplier = params.mode === 'optimistic' ? 1.2 : params.mode === 'conservative' ? 0.8 : 1.0;
+  const modeMultiplier =
+    params.mode === 'optimistic' ? 1.2 : params.mode === 'conservative' ? 0.8 : 1.0;
   const rateMultiplier = (1 + params.rateIncrease / 100) * modeMultiplier;
   const expenseMultiplier = 1 + params.expenseGrowth / 100;
 
@@ -329,7 +359,9 @@ export function applyScenario(
         baseline: Math.round(item.baseline * rateMultiplier),
       };
     }
-    const extraClients = Math.round(params.newClientsPerMonth * avgClientRevenue * rateMultiplier * i);
+    const extraClients = Math.round(
+      params.newClientsPerMonth * avgClientRevenue * rateMultiplier * i,
+    );
     return {
       ...item,
       confirmed: Math.round(item.confirmed * rateMultiplier) + extraClients,
@@ -378,7 +410,8 @@ export function computeForecastMetrics(
     (sum, item) => sum + item.confirmed + item.probable + item.projected,
     0,
   );
-  const revenueCertainty = totalProjected > 0 ? Math.round((totalConfirmed / totalProjected) * 100) : 0;
+  const revenueCertainty =
+    totalProjected > 0 ? Math.round((totalConfirmed / totalProjected) * 100) : 0;
 
   let monthsOfRunway: number | null = null;
   if (currentBalance !== undefined && currentBalance > 0) {

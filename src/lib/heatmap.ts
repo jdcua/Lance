@@ -1,8 +1,29 @@
 import type { TimeEntry } from '../types';
 import { DAY_MS } from '../utils/format';
 
-const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const DAY_NAMES_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const MONTHS_SHORT = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+const DAY_NAMES_FULL = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
 const DAY_NAMES_SHORT = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 export interface HeatmapCell {
@@ -82,32 +103,38 @@ function getFirstSunday(year: number): Date {
   return d;
 }
 
-export function computeHeatmapGrid(
-  timeEntries: TimeEntry[],
-  year: number,
-  projectId?: string,
-): HeatmapCell[][] {
-  const filtered = projectId
-    ? timeEntries.filter((t) => t.project_id === projectId)
-    : timeEntries;
-
-  const minutesByDay: Record<string, { minutes: number; billableMinutes: number; entries: TimeEntry[] }> = {};
+function buildMinutesByDay(
+  filtered: TimeEntry[],
+): Record<string, { minutes: number; billableMinutes: number; entries: TimeEntry[] }> {
+  const minutesByDay: Record<
+    string,
+    { minutes: number; billableMinutes: number; entries: TimeEntry[] }
+  > = {};
   for (const t of filtered) {
     const key = getDateKey(new Date(t.start_time));
     if (!minutesByDay[key]) minutesByDay[key] = { minutes: 0, billableMinutes: 0, entries: [] };
-    minutesByDay[key].minutes += (t.duration_minutes || 0);
-    if (t.billable) minutesByDay[key].billableMinutes += (t.duration_minutes || 0);
+    minutesByDay[key].minutes += t.duration_minutes || 0;
+    if (t.billable) minutesByDay[key].billableMinutes += t.duration_minutes || 0;
     minutesByDay[key].entries.push(t);
   }
+  return minutesByDay;
+}
 
+function computeHeatmapWeekCount(year: number): { startDate: Date; numWeeks: number } {
   const startDate = getFirstSunday(year);
   const now = new Date();
   const endDate = new Date(year, 11, 31);
   const lastDate = endDate > now ? now : endDate;
-
   const totalDays = Math.ceil((lastDate.getTime() - startDate.getTime()) / DAY_MS) + 1;
   const numWeeks = Math.ceil(totalDays / 7);
+  return { startDate, numWeeks };
+}
 
+function buildHeatmapWeeks(
+  startDate: Date,
+  numWeeks: number,
+  minutesByDay: Record<string, { minutes: number; billableMinutes: number; entries: TimeEntry[] }>,
+): HeatmapCell[][] {
   const grid: HeatmapCell[][] = [];
   for (let w = 0; w < numWeeks; w++) {
     const week: HeatmapCell[] = [];
@@ -125,8 +152,18 @@ export function computeHeatmapGrid(
     }
     grid.push(week);
   }
-
   return grid;
+}
+
+export function computeHeatmapGrid(
+  timeEntries: TimeEntry[],
+  year: number,
+  projectId?: string,
+): HeatmapCell[][] {
+  const filtered = projectId ? timeEntries.filter((t) => t.project_id === projectId) : timeEntries;
+  const minutesByDay = buildMinutesByDay(filtered);
+  const { startDate, numWeeks } = computeHeatmapWeekCount(year);
+  return buildHeatmapWeeks(startDate, numWeeks, minutesByDay);
 }
 
 /** Consecutive days with logged minutes, walking back from today. */
@@ -168,15 +205,12 @@ function computeLongestStreak(yearDates: string[]): number {
   return longest;
 }
 
-export function computeStreakStats(
-  timeEntries: TimeEntry[],
-  year: number,
-): StreakStats {
+export function computeStreakStats(timeEntries: TimeEntry[], year: number): StreakStats {
   const minutesByDay: Record<string, { minutes: number; entries: number }> = {};
   for (const t of timeEntries) {
     const key = getDateKey(new Date(t.start_time));
     if (!minutesByDay[key]) minutesByDay[key] = { minutes: 0, entries: 0 };
-    minutesByDay[key].minutes += (t.duration_minutes || 0);
+    minutesByDay[key].minutes += t.duration_minutes || 0;
     minutesByDay[key].entries += 1;
   }
 
@@ -243,21 +277,19 @@ export function computeStreakStats(
   };
 }
 
-export function computeDayOfWeekBreakdown(
-  timeEntries: TimeEntry[],
-  projectId?: string,
-): DOWBar[] {
-  const filtered = projectId
-    ? timeEntries.filter((t) => t.project_id === projectId)
-    : timeEntries;
+export function computeDayOfWeekBreakdown(timeEntries: TimeEntry[], projectId?: string): DOWBar[] {
+  const filtered = projectId ? timeEntries.filter((t) => t.project_id === projectId) : timeEntries;
 
-  const byDay: { minutes: number; count: number }[] = Array.from({ length: 7 }, () => ({ minutes: 0, count: 0 }));
+  const byDay: { minutes: number; count: number }[] = Array.from({ length: 7 }, () => ({
+    minutes: 0,
+    count: 0,
+  }));
   const seenDays = new Set<string>();
 
   for (const t of filtered) {
     const d = new Date(t.start_time);
     const day = d.getDay();
-    byDay[day].minutes += (t.duration_minutes || 0);
+    byDay[day].minutes += t.duration_minutes || 0;
     byDay[day].count += 1;
     seenDays.add(getDateKey(new Date(t.start_time)));
   }
@@ -281,9 +313,7 @@ export function computeHourOfDayHeatmap(
   timeEntries: TimeEntry[],
   projectId?: string,
 ): HourCell[][] {
-  const filtered = projectId
-    ? timeEntries.filter((t) => t.project_id === projectId)
-    : timeEntries;
+  const filtered = projectId ? timeEntries.filter((t) => t.project_id === projectId) : timeEntries;
 
   const grid: number[][] = Array.from({ length: 7 }, () => new Array(24).fill(0));
 
@@ -313,9 +343,7 @@ export function getMaxHourCount(hourGrid: HourCell[][]): number {
   return max;
 }
 
-export function computeMonthLabels(
-  grid: HeatmapCell[][],
-): MonthLabel[] {
+export function computeMonthLabels(grid: HeatmapCell[][]): MonthLabel[] {
   const labels: MonthLabel[] = [];
   let lastMonth = -1;
 
