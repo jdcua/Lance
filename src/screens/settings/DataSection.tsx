@@ -742,8 +742,8 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
                 onClick={async () => {
                   try {
                     const assetsDir = await getAssetsDir();
-                    const { open: shellOpen } = await import('@tauri-apps/plugin-shell');
-                    await shellOpen(assetsDir);
+                    const { openPath } = await import('../../utils/tauri');
+                    await openPath(assetsDir);
                   } catch {
                     addToast('Failed to open assets folder', 'error');
                   }
@@ -769,8 +769,8 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
                 onClick={async () => {
                   try {
                     const importsDir = await getImportsDir();
-                    const { open: shellOpen } = await import('@tauri-apps/plugin-shell');
-                    await shellOpen(importsDir);
+                    const { openPath } = await import('../../utils/tauri');
+                    await openPath(importsDir);
                   } catch {
                     addToast('Failed to open imports folder', 'error');
                   }
@@ -919,9 +919,9 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
                       size="sm"
                       onClick={async () => {
                         try {
-                          const { open: openDialog } =
-                            await import('@tauri-apps/plugin-dialog');
-                          const selected = await openDialog({
+                          const { openFileDialog } =
+                            await import('../../utils/tauri');
+                          const selected = await openFileDialog({
                             directory: true,
                             title: 'Choose backup folder',
                           });

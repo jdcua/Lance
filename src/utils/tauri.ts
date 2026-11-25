@@ -1215,3 +1215,53 @@ function handleBrowserMode<T>(cmd: string, args?: Record<string, unknown>): T {
   console.debug(`[tauri] handleBrowserMode: unhandled command "${cmd}"`);
   return {} as unknown as T;
 }
+
+// ── Tauri plugin boundary ────────────────────────────────────────────
+// UI and screens must not import @tauri-apps/* directly. These wrappers keep
+// the plugins behind one stable seam and make browser-mode fallbacks possible.
+
+export type { DownloadEvent } from '@tauri-apps/plugin-updater';
+export type { default as Database } from '@tauri-apps/plugin-sql';
+
+type FileFilter = { name: string; extensions: string[] };
+type DialogOptions = {
+  defaultPath?: string;
+  filters?: FileFilter[];
+  directory?: boolean;
+  title?: string;
+};
+
+export async function saveFileDialog(options: DialogOptions = {}): Promise<string | null> {
+  const { save } = await import('@tauri-apps/plugin-dialog');
+  return (await save(options as never)) as string | null;
+}
+
+export async function openFileDialog(options: DialogOptions = {}): Promise<string | null> {
+  const { open } = await import('@tauri-apps/plugin-dialog');
+  return (await open(options as never)) as string | null;
+}
+
+export async function readTextFile(path: string): Promise<string> {
+  const { readTextFile } = await import('@tauri-apps/plugin-fs');
+  return readTextFile(path);
+}
+
+export async function writeFileBytes(path: string, data: Uint8Array): Promise<void> {
+  const { writeFile } = await import('@tauri-apps/plugin-fs');
+  return writeFile(path, data);
+}
+
+export async function joinPath(...parts: string[]): Promise<string> {
+  const { join } = await import('@tauri-apps/api/path');
+  return join(...parts);
+}
+
+export async function openPath(path: string): Promise<void> {
+  const { open } = await import('@tauri-apps/plugin-shell');
+  return open(path);
+}
+
+export async function relaunchApp(): Promise<void> {
+  const { relaunch } = await import('@tauri-apps/plugin-process');
+  return relaunch();
+}

@@ -2,7 +2,13 @@ import { useEffect, useState, useCallback, useRef, type ChangeEvent } from 'reac
 import { DEFAULT_CURRENCY } from '../lib/constants';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
-import { isTauri as isTauriApp } from '../utils/tauri';
+import {
+  isTauri as isTauriApp,
+  saveFileDialog,
+  openFileDialog,
+  readTextFile,
+  writeFileBytes,
+} from '../utils/tauri';
 import { todayLocalISO } from '../utils/format';
 import type { UserProfile } from '../types';
 import Button from '../components/ui/Button';
@@ -10,9 +16,6 @@ import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useToasts } from '../store/toastStore';
 import type { ToastType } from '../store/toastStore';
-import { save } from '@tauri-apps/plugin-dialog';
-import { readTextFile, writeFile } from '@tauri-apps/plugin-fs';
-import { open } from '@tauri-apps/plugin-dialog';
 import { AlertTriangle } from 'lucide-react';
 import { applyTheme, getTheme } from '../themes/themes';
 import type { ThemeId } from '../themes';
@@ -408,9 +411,9 @@ export default function Settings() {
       const json = JSON.stringify(envelope, null, 2);
       const filename = `Lance_Backup_${todayLocalISO()}.json`;
       if (isTauriApp()) {
-        const filePath = await save({ defaultPath: filename });
+        const filePath = await saveFileDialog({ defaultPath: filename });
         if (!filePath) return;
-        await writeFile(filePath, new TextEncoder().encode(json));
+        await writeFileBytes(filePath, new TextEncoder().encode(json));
       } else {
         const { downloadTextFile } = await import('../utils/yearSummary');
         downloadTextFile(filename, json, 'application/json;charset=utf-8');
@@ -435,7 +438,7 @@ export default function Settings() {
       return;
     }
     try {
-      const filePath = await open({
+      const filePath = await openFileDialog({
         filters: [{ name: 'JSON', extensions: ['json'] }],
       });
       if (!filePath) return;
@@ -554,11 +557,10 @@ export default function Settings() {
       // IndexedDB. Rows always import, only bytes depend on this.
       const materialize = async (id: string, bytes: Uint8Array, mime: string, filename: string) => {
         if (isTauriApp()) {
-          const { writeFile } = await import('@tauri-apps/plugin-fs');
-          const { join } = await import('@tauri-apps/api/path');
+          const { joinPath, writeFileBytes } = await import('../utils/tauri');
           const dir = await getAssetsDir();
-          const target = await join(dir, `${id}-${sanitizeBlobName(filename)}`);
-          await writeFile(target, bytes);
+          const target = await joinPath(dir, `${id}-${sanitizeBlobName(filename)}`);
+          await writeFileBytes(target, bytes);
           return target;
         }
         const { putAssetFile } = await import('../demo/assetStore');

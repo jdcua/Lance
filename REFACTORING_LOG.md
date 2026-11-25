@@ -89,3 +89,16 @@ Each entry records what changed, why, and which standard it satisfies.
   `App.tsx`, `RateBenchmarking.tsx`, `tauri.ts`, `seedData.ts` and `db/index.ts`.
 - `sonarjs/cognitive-complexity` promoted from warning to **error** at 15, as
   agreed in Phase 0. `npm run complexity` now reports no offenders at all.
+
+## 2026-11-25 — Boundary debt cleared
+
+- Added typed plugin wrappers (`saveFileDialog`, `openFileDialog`,
+  `readTextFile`, `writeFileBytes`, `joinPath`, `openPath`, `relaunchApp`,
+  `Database`/`DownloadEvent` type re-exports) in `src/utils/tauri.ts`.
+- Rewired `ClientImportModal`, `UpdaterModal`, `Contracts`, `Dashboard`,
+  `Settings` and `DataSection` to use that seam; no direct `@tauri-apps/*`
+  imports remain in UI/screens.
+- Scoped duplicate-basename detection to same-folder duplicates (cross-folder
+  `index.ts`/`shared.tsx` are intentional).
+- `npm run check:boundaries -- --strict` now runs inside `npm run verify`.
+  Boundary warnings: 16 → 0.

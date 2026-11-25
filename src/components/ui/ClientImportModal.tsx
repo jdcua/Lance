@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../store';
 import { useToasts } from '../../store/toastStore';
+import { saveFileDialog, writeFileBytes } from '../../utils/tauri';
 import type { Client } from '../../types';
 
 import { autoMapColumns, mapRowToClient, SOURCE_PRESETS, CLIENT_FIELDS, type CsvRow } from '../../utils/clientImport';
@@ -180,9 +181,7 @@ export default function ClientImportModal({
 
   const handleDownloadSample = async () => {
     try {
-      const { save } = await import('@tauri-apps/plugin-dialog');
-      const { writeFile } = await import('@tauri-apps/plugin-fs');
-      const filePath = await save({ defaultPath: 'lance_client_import_sample.csv' });
+      const filePath = await saveFileDialog({ defaultPath: 'lance_client_import_sample.csv' });
       if (!filePath) return;
       const encoder = new TextEncoder();
       const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
@@ -190,7 +189,7 @@ export default function ClientImportModal({
       const combined = new Uint8Array(bom.length + content.length);
       combined.set(bom);
       combined.set(content);
-      await writeFile(filePath, combined);
+      await writeFileBytes(filePath, combined);
       addToast('Sample CSV saved', 'success');
     } catch {
       addToast('Failed to save sample CSV', 'error');

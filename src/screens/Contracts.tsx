@@ -158,8 +158,8 @@ export default function Contracts() {
   useEffect(() => {
     const loadShareTokens = async () => {
       try {
-        const { invoke } = await import('@tauri-apps/api/core');
-        const tokens = await invoke<ShareToken[]>('get_all_share_tokens');
+        const { tauriInvoke } = await import('../utils/tauri');
+        const tokens = await tauriInvoke<ShareToken[]>('get_all_share_tokens');
         const ids = new Set(tokens.filter(t => t.entity_type === 'contract').map(t => t.entity_id));
         setShareTokenIds(ids);
       } catch { /* ignore */ }

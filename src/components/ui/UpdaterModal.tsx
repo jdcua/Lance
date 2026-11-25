@@ -1,8 +1,7 @@
 import { useUpdaterStore } from '../../store/updaterStore';
 import Modal from './Modal';
 import Button from './Button';
-import { relaunch } from '@tauri-apps/plugin-process';
-import type { DownloadEvent } from '@tauri-apps/plugin-updater';
+import { relaunchApp, type DownloadEvent } from '../../utils/tauri';
 import { Download, Sparkles } from 'lucide-react';
 import { getDb } from '../../db';
 
@@ -14,7 +13,6 @@ const LATER_KEY = 'lance_update_deferred_until';
 // Tauri shell and can't be QA'd from a browser harness, so the trigger stays
 // unwired rather than shipping an untestable auto-nudge. Browser safety is
 // verified instead: null-guarded render, type-only updater import, and the
-// `relaunch` import below is never called outside the download handler.
 
 async function logAppEvent(eventType: string, payload?: Record<string, unknown>): Promise<void> {
   try {
@@ -49,7 +47,7 @@ export default function UpdaterModal() {
         to_version: updateData.version,
         timestamp: new Date().toISOString(),
       });
-      await relaunch();
+      await relaunchApp();
     } catch {
       setDownloading(false);
     }
