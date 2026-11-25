@@ -60,12 +60,50 @@ import { getShortcutModifierLabel } from '../../utils/shortcuts';
 import { setMobileNavOpen, useMobileNavOpen } from '../../lib/mobileNav';
 
 const ICON_MAP: Record<string, LucideIcon> = {
-  FileText, PenLine, FolderKanban, Clock, Receipt, Users, BarChart3, Lightbulb,
-  Settings, Trophy, LayoutDashboard, Upload, Package, Camera, Monitor,
-  Clapperboard, Code2, Palette, Brain, Film, Paintbrush, Box, Gamepad2,
-  Layers, Target, MessageCircle, FileEdit, Music, FileAudio, Building2,
-  ClipboardList, Languages, Search, BarChart4, Settings2, Briefcase,
-  CheckSquare, Calendar, Calculator, Pen, Sparkles, Bell, ChevronDown, ChevronUp,
+  FileText,
+  PenLine,
+  FolderKanban,
+  Clock,
+  Receipt,
+  Users,
+  BarChart3,
+  Lightbulb,
+  Settings,
+  Trophy,
+  LayoutDashboard,
+  Upload,
+  Package,
+  Camera,
+  Monitor,
+  Clapperboard,
+  Code2,
+  Palette,
+  Brain,
+  Film,
+  Paintbrush,
+  Box,
+  Gamepad2,
+  Layers,
+  Target,
+  MessageCircle,
+  FileEdit,
+  Music,
+  FileAudio,
+  Building2,
+  ClipboardList,
+  Languages,
+  Search,
+  BarChart4,
+  Settings2,
+  Briefcase,
+  CheckSquare,
+  Calendar,
+  Calculator,
+  Pen,
+  Sparkles,
+  Bell,
+  ChevronDown,
+  ChevronUp,
 };
 
 // localStorage keys for progressive disclosure.
@@ -84,10 +122,20 @@ function loadVisited(): Set<string> {
 
 type NavItem = { id: string; label: string; path: string; icon: LucideIcon };
 type NavGroup = { label: string; items: NavItem[] };
-type BadgeCounts = { unpaidInvoices: number; draftProposals: number; activeProjects: number; totalAssets: number };
+type BadgeCounts = {
+  unpaidInvoices: number;
+  draftProposals: number;
+  activeProjects: number;
+  totalAssets: number;
+};
 type BadgeKey = keyof BadgeCounts;
 
-function isSidebarExpanded(mobileOpen: boolean, isMobile: boolean, collapsed: boolean, hovered: boolean): boolean {
+function isSidebarExpanded(
+  mobileOpen: boolean,
+  isMobile: boolean,
+  collapsed: boolean,
+  hovered: boolean,
+): boolean {
   return (mobileOpen && isMobile) || ((!collapsed || hovered) && !isMobile);
 }
 
@@ -99,8 +147,18 @@ function badgeKeyFor(path: string): BadgeKey | null {
   return null;
 }
 
-function hiddenMoreCount(showImport: boolean, showPipeline: boolean, showFollowUps: boolean, showAchievements: boolean): number {
-  return (showImport ? 0 : 1) + (showPipeline ? 0 : 1) + (showFollowUps ? 0 : 1) + (showAchievements ? 0 : 1);
+function hiddenMoreCount(
+  showImport: boolean,
+  showPipeline: boolean,
+  showFollowUps: boolean,
+  showAchievements: boolean,
+): number {
+  return (
+    (showImport ? 0 : 1) +
+    (showPipeline ? 0 : 1) +
+    (showFollowUps ? 0 : 1) +
+    (showAchievements ? 0 : 1)
+  );
 }
 
 function sidebarAsideClass(isMobile: boolean, isExpanded: boolean, mobileOpen: boolean): string {
@@ -116,7 +174,7 @@ function asideAria(isMobile: boolean, mobileOpen: boolean) {
   return {
     ariaHidden: hidden ? true : undefined,
     ariaModal: modal ? true : undefined,
-    role: modal ? 'dialog' as const : undefined,
+    role: modal ? ('dialog' as const) : undefined,
     inert: hidden ? { inert: '' } : {},
   };
 }
@@ -167,16 +225,27 @@ function NavBadge({
 }) {
   return (
     <>
-      {showBadges && isExpanded && (item as any).badge === 'new' && (
-        <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] sb-accent-text">New</span>
+      {showBadges && isExpanded && (item as { badge?: string }).badge === 'new' && (
+        <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] sb-accent-text">
+          New
+        </span>
       )}
-      {showBadges && isExpanded && (item as any).badge === 'alert' && badgeMap.unpaidInvoices > 0 && (
-        <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--danger-bg)] text-[var(--danger)]">{badgeMap.unpaidInvoices}</span>
-      )}
+      {showBadges &&
+        isExpanded &&
+        (item as { badge?: string }).badge === 'alert' &&
+        badgeMap.unpaidInvoices > 0 && (
+          <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--danger-bg)] text-[var(--danger)]">
+            {badgeMap.unpaidInvoices}
+          </span>
+        )}
       {showBadges && isExpanded && badgeKey && badgeMap[badgeKey] > 0 && (
-        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
-          badgeKey === 'unpaidInvoices' ? 'bg-[var(--danger-bg)] text-[var(--danger)]' : 'bg-[var(--accent-bg)] sb-accent-text'
-        }`}>
+        <span
+          className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+            badgeKey === 'unpaidInvoices'
+              ? 'bg-[var(--danger-bg)] text-[var(--danger)]'
+              : 'bg-[var(--accent-bg)] sb-accent-text'
+          }`}
+        >
           {badgeMap[badgeKey]}
         </span>
       )}
@@ -203,19 +272,31 @@ function SidebarHeader({
     <div className="flex items-center gap-2 px-3 h-[60px] border-b border-[var(--sb-border)]">
       {isExpanded && (
         <>
-          <button onClick={onNavigateHome} className="flex-shrink-0 p-1 hover:bg-[var(--sb-bg-hover)] rounded-sm transition-colors" title="Dashboard" aria-label="Dashboard">
+          <button
+            onClick={onNavigateHome}
+            className="flex-shrink-0 p-1 hover:bg-[var(--sb-bg-hover)] rounded-sm transition-colors"
+            title="Dashboard"
+            aria-label="Dashboard"
+          >
             <BrandLogo size={22} className="text-[var(--accent)]" />
           </button>
-          <span className="font-semibold text-[15px] text-[var(--sb-text-active)] flex-1 tracking-tight">Lance</span>
+          <span className="font-semibold text-[15px] text-[var(--sb-text-active)] flex-1 tracking-tight">
+            Lance
+          </span>
         </>
       )}
       {!isExpanded && (
-        <button onClick={onNavigateHome} className="mx-auto p-1 hover:bg-[var(--sb-bg-hover)] rounded-sm transition-colors" title="Dashboard" aria-label="Dashboard">
+        <button
+          onClick={onNavigateHome}
+          className="mx-auto p-1 hover:bg-[var(--sb-bg-hover)] rounded-sm transition-colors"
+          title="Dashboard"
+          aria-label="Dashboard"
+        >
           <BrandLogo size={22} className="text-[var(--accent)]" />
         </button>
       )}
-      {isExpanded && (
-        isMobile ? (
+      {isExpanded &&
+        (isMobile ? (
           <button
             ref={closeButtonRef}
             onClick={onCloseMobile}
@@ -232,13 +313,21 @@ function SidebarHeader({
             title="Collapse sidebar"
             aria-label="Collapse sidebar"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
               <line x1="9" y1="3" x2="9" y2="21" />
             </svg>
           </button>
-        )
-      )}
+        ))}
     </div>
   );
 }
@@ -263,7 +352,10 @@ function NavGroups({
       {groups.map((group) => (
         <div key={group.label} className="mb-4">
           {isExpanded && (
-            <p className="px-3 mb-1.5 text-[10px] font-semibold text-[var(--sb-label)]" style={{ fontFamily: "'Inter', sans-serif" }}>
+            <p
+              className="px-3 mb-1.5 text-[10px] font-semibold text-[var(--sb-label)]"
+              style={{ fontFamily: "'Inter', sans-serif" }}
+            >
               {group.label}
             </p>
           )}
@@ -271,7 +363,8 @@ function NavGroups({
             const Icon = item.icon;
             const key = badgeKeyFor(item.path);
             return (
-              <SideLink focusable={!isMobile || mobileOpen}
+              <SideLink
+                focusable={!isMobile || mobileOpen}
                 key={item.path}
                 to={item.path}
                 tour={`nav-${item.id}`}
@@ -279,7 +372,15 @@ function NavGroups({
                 icon={Icon}
                 label={item.label}
                 expanded={isExpanded}
-                badge={<NavBadge item={item} badgeKey={key} showBadges={showBadges} isExpanded={isExpanded} badgeMap={badgeMap} />}
+                badge={
+                  <NavBadge
+                    item={item}
+                    badgeKey={key}
+                    showBadges={showBadges}
+                    isExpanded={isExpanded}
+                    badgeMap={badgeMap}
+                  />
+                }
               />
             );
           })}
@@ -315,11 +416,14 @@ function MoreSection({
   return (
     <div className="mb-4">
       {isExpanded && (
-        <p className="px-3 mb-1.5 text-[10px] font-semibold text-[var(--sb-label)]" style={{ fontFamily: "'Inter', sans-serif" }}>
+        <p
+          className="px-3 mb-1.5 text-[10px] font-semibold text-[var(--sb-label)]"
+          style={{ fontFamily: "'Inter', sans-serif" }}
+        >
           More
         </p>
       )}
-      {showImport &&
+      {showImport && (
         <button
           onClick={onOpenImport}
           className={`w-full flex items-center gap-2.5 px-3 h-[36px] text-[13.5px] font-medium transition-colors duration-150 text-[var(--sb-text)] hover:text-[var(--sb-text-active)] hover:bg-[var(--sb-bg-hover)] rounded-[10px] ${!isExpanded ? 'justify-center px-0' : ''}`}
@@ -329,14 +433,33 @@ function MoreSection({
           <Upload size={16} />
           {isExpanded && 'Import'}
         </button>
-      }
-      <SideLink focusable={!isMobile || mobileOpen} to="/search" title="Search" icon={Search} label="Search" expanded={isExpanded} />
-      {showPipeline &&
-        <SideLink focusable={!isMobile || mobileOpen} to="/pipeline" title="Pipeline" icon={Columns3} label="Pipeline" expanded={isExpanded} />
-      }
-      {showFollowUps &&
-        <SideLink focusable={!isMobile || mobileOpen}
-          to="/follow-ups" title="Follow-ups" icon={Bell} label="Follow-ups" expanded={isExpanded}
+      )}
+      <SideLink
+        focusable={!isMobile || mobileOpen}
+        to="/search"
+        title="Search"
+        icon={Search}
+        label="Search"
+        expanded={isExpanded}
+      />
+      {showPipeline && (
+        <SideLink
+          focusable={!isMobile || mobileOpen}
+          to="/pipeline"
+          title="Pipeline"
+          icon={Columns3}
+          label="Pipeline"
+          expanded={isExpanded}
+        />
+      )}
+      {showFollowUps && (
+        <SideLink
+          focusable={!isMobile || mobileOpen}
+          to="/follow-ups"
+          title="Follow-ups"
+          icon={Bell}
+          label="Follow-ups"
+          expanded={isExpanded}
           badge={
             showBadges && isExpanded && pendingFollowUpsCount > 0 ? (
               <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] sb-accent-text">
@@ -345,10 +468,17 @@ function MoreSection({
             ) : undefined
           }
         />
-      }
-      {showAchievements &&
-        <SideLink focusable={!isMobile || mobileOpen} to="/achievements" title="Achievements" icon={Trophy} label="Achievements" expanded={isExpanded} />
-      }
+      )}
+      {showAchievements && (
+        <SideLink
+          focusable={!isMobile || mobileOpen}
+          to="/achievements"
+          title="Achievements"
+          icon={Trophy}
+          label="Achievements"
+          expanded={isExpanded}
+        />
+      )}
     </div>
   );
 }
@@ -372,12 +502,29 @@ function SidebarFooter({
 }) {
   return (
     <div className="border-t border-[var(--sb-border)] px-2 pt-2 pb-3">
-      <SideLink focusable={!isMobile || mobileOpen} to="/settings" title="Settings" icon={Settings} label="Settings" expanded={isExpanded} />
+      <SideLink
+        focusable={!isMobile || mobileOpen}
+        to="/settings"
+        title="Settings"
+        icon={Settings}
+        label="Settings"
+        expanded={isExpanded}
+      />
       {isExpanded && (
         <div className="mt-1">
-          <button onClick={onNavigateSettings} className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-[10px] hover:bg-[var(--sb-bg-hover)] transition-colors text-left" title="Profile & settings">
+          <button
+            onClick={onNavigateSettings}
+            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-[10px] hover:bg-[var(--sb-bg-hover)] transition-colors text-left"
+            title="Profile & settings"
+          >
             <span className="w-8 h-8 rounded-full bg-[var(--accent)] text-[var(--accent-on)] text-[11px] font-semibold grid place-items-center flex-shrink-0">
-              {(profile?.name?.trim()?.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase() || 'L')}
+              {profile?.name
+                ?.trim()
+                ?.split(/\s+/)
+                .map((w) => w[0])
+                .join('')
+                .slice(0, 2)
+                .toUpperCase() || 'L'}
             </span>
             <span className="flex-1 min-w-0">
               <span className="block text-[13px] font-semibold text-[var(--sb-text-active)] truncate">
@@ -387,7 +534,8 @@ function SidebarFooter({
             <Settings size={13} className="text-[var(--sb-label)] flex-shrink-0" />
           </button>
           <p className="text-[10px] text-[var(--sb-text)] leading-relaxed px-2.5 pt-2 pb-2">
-            <span className="font-medium">{modifierLabel}1</span>-8 navigate &middot; <span className="font-medium">{modifierLabel}N</span> new
+            <span className="font-medium">{modifierLabel}1</span>-8 navigate &middot;{' '}
+            <span className="font-medium">{modifierLabel}N</span> new
           </p>
         </div>
       )}
@@ -399,7 +547,16 @@ function SidebarFooter({
           aria-label="Expand sidebar"
           tabIndex={isMobile && !mobileOpen ? -1 : 0}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
             <line x1="15" y1="3" x2="15" y2="21" />
           </svg>
@@ -412,9 +569,13 @@ function SidebarFooter({
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('lance:sidebar-collapsed') === 'true');
+  const [collapsed, setCollapsed] = useState(
+    () => localStorage.getItem('lance:sidebar-collapsed') === 'true',
+  );
   const [hovered, setHovered] = useState(false);
-  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth < 1024,
+  );
   const mobileOpen = useMobileNavOpen();
   const setMobileOpen = setMobileNavOpen;
   // Progressive disclosure: new users see essentials; the sidebar grows with
@@ -473,7 +634,18 @@ export default function Sidebar() {
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
-  const { proposals, projects, invoices, allAttachments, pendingFollowUps, profile, clients, contracts, timeEntries, expenses } = useStore((s) => ({
+  const {
+    proposals,
+    projects,
+    invoices,
+    allAttachments,
+    pendingFollowUps,
+    profile,
+    clients,
+    contracts,
+    timeEntries,
+    expenses,
+  } = useStore((s) => ({
     proposals: s.proposals,
     projects: s.projects,
     invoices: s.invoices,
@@ -499,7 +671,9 @@ export default function Sidebar() {
       next.add(path);
       try {
         localStorage.setItem(SIDEBAR_VISITED_KEY, JSON.stringify([...next]));
-      } catch { /* private mode etc.: disclosure just won't persist */ }
+      } catch {
+        /* private mode etc.: disclosure just won't persist */
+      }
       return next;
     });
   }, [location.pathname]);
@@ -548,19 +722,34 @@ export default function Sidebar() {
     const ESSENTIAL_COUNT = 4;
     const visibleItems = showAll
       ? defaultItems
-      : defaultItems.filter((item, i) => i < ESSENTIAL_COUNT || hasData[item.id] || visited.has(item.path));
+      : defaultItems.filter(
+          (item, i) => i < ESSENTIAL_COUNT || hasData[item.id] || visited.has(item.path),
+        );
     const hiddenCount = defaultItems.length - visibleItems.length;
     const visiblePaths = new Set(visibleItems.map((i) => i.path));
     const groups: { label: string; items: typeof defaultItems }[] = [];
     const groupLabels = ['Work', 'Manage', 'Analyze'];
     const splitSize = Math.max(1, Math.ceil(defaultItems.length / 3));
     for (let i = 0; i < defaultItems.length; i += splitSize) {
-      const groupItems = defaultItems.slice(i, i + splitSize).filter((item) => visiblePaths.has(item.path));
+      const groupItems = defaultItems
+        .slice(i, i + splitSize)
+        .filter((item) => visiblePaths.has(item.path));
       if (groupItems.length === 0) continue;
       groups.push({ label: groupLabels[Math.floor(i / splitSize)] || 'MORE', items: groupItems });
     }
     return { items: visibleItems, groups, hiddenCount };
-  }, [showAll, visited, clients.length, projects.length, invoices.length, expenses.length, contracts.length, proposals.length, allAttachments.length, timeEntries.length]);
+  }, [
+    showAll,
+    visited,
+    clients.length,
+    projects.length,
+    invoices.length,
+    expenses.length,
+    contracts.length,
+    proposals.length,
+    allAttachments.length,
+    timeEntries.length,
+  ]);
 
   // MORE-group progressive disclosure. Search is wayfinding and always
   // shows; the rest reveal on use or via "show all".
@@ -573,7 +762,9 @@ export default function Sidebar() {
   const showAchievements = showAll || visited.has('/achievements');
   const showArchetype = showAll || visited.has('/archetype');
   // archetype sidebar entry removed
-  const hiddenTotal = sidebarItems.hiddenCount + hiddenMoreCount(showImport, showPipeline, showFollowUps, showAchievements);
+  const hiddenTotal =
+    sidebarItems.hiddenCount +
+    hiddenMoreCount(showImport, showPipeline, showFollowUps, showAchievements);
   const asideClassName = sidebarAsideClass(isMobile, isExpanded, mobileOpen);
   const aria = asideAria(isMobile, mobileOpen);
 
@@ -586,78 +777,84 @@ export default function Sidebar() {
           aria-hidden="true"
         />
       )}
-    <aside
-      ref={drawerRef}
-      id="mobile-navigation"
-      aria-label="Primary navigation"
-      className={asideClassName}
-      aria-hidden={aria.ariaHidden}
-      aria-modal={aria.ariaModal}
-      role={aria.role}
-      {...aria.inert}
-      onMouseEnter={() => collapsed && setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <SidebarHeader
-        isExpanded={isExpanded}
-        isMobile={isMobile}
-        onNavigateHome={() => navigate('/')}
-        onToggleCollapsed={toggleCollapsed}
-        onCloseMobile={() => setMobileOpen(false)}
-        closeButtonRef={closeButtonRef}
-      />
-
-      <nav className="flex-1 overflow-y-auto py-2 px-2">
-        <SideLink focusable={!isMobile || mobileOpen}
-          to="/"
-          end
-          tour="nav-dashboard"
-          title="Dashboard"
-          icon={LayoutDashboard}
-          label="Dashboard"
-          expanded={isExpanded}
-          className="mb-1"
+      <aside
+        ref={drawerRef}
+        id="mobile-navigation"
+        aria-label="Primary navigation"
+        className={asideClassName}
+        aria-hidden={aria.ariaHidden}
+        aria-modal={aria.ariaModal}
+        role={aria.role}
+        {...aria.inert}
+        onMouseEnter={() => collapsed && setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <SidebarHeader
+          isExpanded={isExpanded}
+          isMobile={isMobile}
+          onNavigateHome={() => navigate('/')}
+          onToggleCollapsed={toggleCollapsed}
+          onCloseMobile={() => setMobileOpen(false)}
+          closeButtonRef={closeButtonRef}
         />
 
-        <NavGroups
-          groups={sidebarItems.groups as NavGroup[]}
+        <nav className="flex-1 overflow-y-auto py-2 px-2">
+          <SideLink
+            focusable={!isMobile || mobileOpen}
+            to="/"
+            end
+            tour="nav-dashboard"
+            title="Dashboard"
+            icon={LayoutDashboard}
+            label="Dashboard"
+            expanded={isExpanded}
+            className="mb-1"
+          />
+
+          <NavGroups
+            groups={sidebarItems.groups as NavGroup[]}
+            isExpanded={isExpanded}
+            isMobile={isMobile}
+            mobileOpen={mobileOpen}
+            showBadges={showBadges}
+            badgeMap={badgeMap}
+          />
+
+          {/* Always-available items (progressively disclosed) */}
+          <MoreSection
+            isExpanded={isExpanded}
+            isMobile={isMobile}
+            mobileOpen={mobileOpen}
+            showImport={showImport}
+            showPipeline={showPipeline}
+            showFollowUps={showFollowUps}
+            showAchievements={showAchievements}
+            showBadges={showBadges}
+            pendingFollowUpsCount={pendingFollowUps.length}
+            onOpenImport={() => commands.dispatch('lance:open-import')}
+          />
+
+          {/* Progressive disclosure toggle */}
+          {showDisclosure(showAll, hiddenTotal) ? (
+            <DisclosureToggle
+              showAll={showAll}
+              hiddenTotal={hiddenTotal}
+              isExpanded={isExpanded}
+              onToggle={toggleShowAll}
+            />
+          ) : null}
+        </nav>
+
+        <SidebarFooter
           isExpanded={isExpanded}
           isMobile={isMobile}
           mobileOpen={mobileOpen}
-          showBadges={showBadges}
-          badgeMap={badgeMap}
+          onNavigateSettings={() => navigate('/settings')}
+          onToggleCollapsed={toggleCollapsed}
+          profile={profile}
+          modifierLabel={getShortcutModifierLabel()}
         />
-
-        {/* Always-available items (progressively disclosed) */}
-        <MoreSection
-          isExpanded={isExpanded}
-          isMobile={isMobile}
-          mobileOpen={mobileOpen}
-          showImport={showImport}
-          showPipeline={showPipeline}
-          showFollowUps={showFollowUps}
-          showAchievements={showAchievements}
-          showBadges={showBadges}
-          pendingFollowUpsCount={pendingFollowUps.length}
-          onOpenImport={() => commands.dispatch('lance:open-import')}
-        />
-
-        {/* Progressive disclosure toggle */}
-        {showDisclosure(showAll, hiddenTotal) ? (
-          <DisclosureToggle showAll={showAll} hiddenTotal={hiddenTotal} isExpanded={isExpanded} onToggle={toggleShowAll} />
-        ) : null}
-      </nav>
-
-      <SidebarFooter
-        isExpanded={isExpanded}
-        isMobile={isMobile}
-        mobileOpen={mobileOpen}
-        onNavigateSettings={() => navigate('/settings')}
-        onToggleCollapsed={toggleCollapsed}
-        profile={profile}
-        modifierLabel={getShortcutModifierLabel()}
-      />
-    </aside>
+      </aside>
     </>
   );
 }

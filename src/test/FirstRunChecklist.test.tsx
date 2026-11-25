@@ -76,37 +76,56 @@ describe('first-run checklist', () => {
 
   it('step click opens the real create form via command', async () => {
     const seen: string[] = [];
-    const handler = (detail: unknown) => seen.push('lance:add-client');
-    commands.on('lance:add-client', handler as any);
+    const handler = (_detail: unknown) => seen.push('lance:add-client');
+    commands.on('lance:add-client', handler);
     renderDashboard();
     fireEvent.click(await screen.findByText('Add your first client'));
     await waitFor(() => expect(seen).toContain('lance:add-client'), { timeout: 2000 });
-    commands.off('lance:add-client', handler as any);
+    commands.off('lance:add-client', handler);
   });
 
   it('dismiss persists and hides the card', async () => {
     renderDashboard();
     fireEvent.click(await screen.findByLabelText('Dismiss setup checklist'));
     expect(localStorage.getItem('lance:checklist-dismissed')).toBe('true');
-    await waitFor(() =>
-      expect(screen.queryByText("Let's get you set up")).toBeNull(),
-    );
+    await waitFor(() => expect(screen.queryByText("Let's get you set up")).toBeNull());
   });
 
   it('hides itself once everything is done', async () => {
     const client: Client = { id: 'c1', name: 'C', created_at: '2026-01-01' };
-    const project: Project = { id: 'p1', client_id: 'c1', title: 'P', status: 'active', created_at: '2026-01-01' };
+    const project: Project = {
+      id: 'p1',
+      client_id: 'c1',
+      title: 'P',
+      status: 'active',
+      created_at: '2026-01-01',
+    };
     const invoice: Invoice = {
-      id: 'i1', client_id: 'c1', invoice_number: 'INV-1', status: 'paid',
-      line_items: [], subtotal: 10, total: 10, created_at: '2026-01-01',
+      id: 'i1',
+      client_id: 'c1',
+      invoice_number: 'INV-1',
+      status: 'paid',
+      line_items: [],
+      subtotal: 10,
+      total: 10,
+      created_at: '2026-01-01',
     };
     const proposal: Proposal = {
-      id: 'pr1', client_id: 'c1', title: 'P', status: 'accepted',
-      rate_type: 'flat', created_at: '2026-01-01',
+      id: 'pr1',
+      client_id: 'c1',
+      title: 'P',
+      status: 'accepted',
+      rate_type: 'flat',
+      created_at: '2026-01-01',
     };
     const entry: TimeEntry = {
-      id: 't1', project_id: 'p1', client_id: 'c1', start_time: '2026-01-01',
-      duration_minutes: 60, billable: true, invoiced: false,
+      id: 't1',
+      project_id: 'p1',
+      client_id: 'c1',
+      start_time: '2026-01-01',
+      duration_minutes: 60,
+      billable: true,
+      invoiced: false,
     };
     useStore.setState({
       clients: [client],
@@ -116,8 +135,6 @@ describe('first-run checklist', () => {
       timeEntries: [entry],
     });
     renderDashboard();
-    await waitFor(() =>
-      expect(screen.queryByText("Let's get you set up")).toBeNull(),
-    );
+    await waitFor(() => expect(screen.queryByText("Let's get you set up")).toBeNull());
   });
 });

@@ -19,7 +19,7 @@ export default function BuildLog({ projectId }: { projectId: string }) {
       icon={Box}
       list={builds}
       load={loadBuilds}
-      create={(data) => addBuild(data as any)}
+      create={(data) => addBuild(data as Parameters<typeof addBuild>[0])}
       remove={(id) => removeBuild(id, projectId)}
       fields={[
         { key: 'version', label: 'Version', type: 'text', placeholder: 'e.g. v1.2.0' },

@@ -73,8 +73,11 @@ export default function RecordTracker<T extends Record<string, unknown>>({
   remove,
   fields,
   columns,
-  rowValue = (row, key) => String((row as any)[key] ?? ''),
-  idOf = (row) => String((row as any).id ?? (row as any)[Object.keys(row)[0]]),
+  rowValue = (row, key) => String((row as Record<string, unknown>)[key] ?? ''),
+  idOf = (row) =>
+    String(
+      (row as Record<string, unknown>).id ?? (row as Record<string, unknown>)[Object.keys(row)[0]],
+    ),
   emptyMessage = `No ${entity}s logged yet.`,
   filterBy,
 }: RecordTrackerProps<T>) {
@@ -106,7 +109,8 @@ export default function RecordTracker<T extends Record<string, unknown>>({
       const data: Partial<T> = {};
       for (const f of fields) {
         const v = form[f.key];
-        (data as Record<string, unknown>)[f.key as string] = f.type === 'number' ? (v ? Number(v) : undefined) : v || undefined;
+        (data as Record<string, unknown>)[f.key as string] =
+          f.type === 'number' ? (v ? Number(v) : undefined) : v || undefined;
       }
       await create(data);
       setForm({});
@@ -193,7 +197,10 @@ export default function RecordTracker<T extends Record<string, unknown>>({
           {visible.map((row) => {
             const id = idOf(row);
             return (
-              <div key={id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
+              <div
+                key={id}
+                className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
+              >
                 <div className="flex items-center gap-2 min-w-0 flex-1">
                   {columns.map((col) => (
                     <span key={col.key} className="truncate">
@@ -207,7 +214,10 @@ export default function RecordTracker<T extends Record<string, unknown>>({
                       onClick={() => {
                         const col = columns[0];
                         const current = rowValue(row, col.key);
-                        const next = window.prompt(`Edit ${col.label}:`, current == null ? '' : String(current));
+                        const next = window.prompt(
+                          `Edit ${col.label}:`,
+                          current == null ? '' : String(current),
+                        );
                         if (next !== null) handleUpdate(id, col.key, next);
                       }}
                       className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] text-xs"
