@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sanitizeShareHtml } from './ShareView';
+import { sanitizeShareHtml } from '../utils/shareHtml';
 
 describe('sanitizeShareHtml links', () => {
   it('keeps https links with rel=noopener', () => {

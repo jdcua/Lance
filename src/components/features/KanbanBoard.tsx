@@ -70,7 +70,7 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
       return;
     }
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { tauriInvoke: invoke } = await import('../../utils/tauri');
       let boardData = await invoke<KanbanBoard | null>('get_kanban_board', { projectId });
       if (!boardData) {
         boardData = await invoke<KanbanBoard>('create_kanban_board', { projectId });
@@ -121,7 +121,7 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
       setCards(prev => ({ ...prev, [fromColumnId]: reordered }));
 
       try {
-        const { invoke } = await import('@tauri-apps/api/core');
+        const { tauriInvoke: invoke } = await import('../../utils/tauri');
         await invoke('reorder_kanban_cards', {
           payload: { column_id: fromColumnId, card_ids: reordered.map(c => c.id) },
         });
@@ -138,7 +138,7 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
       }));
 
       try {
-        const { invoke } = await import('@tauri-apps/api/core');
+        const { tauriInvoke: invoke } = await import('../../utils/tauri');
         await invoke('move_kanban_card', {
           payload: { card_id: card.id, from_column_id: fromColumnId, to_column_id: toColumnId },
         });
@@ -150,7 +150,7 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
 
   const handleAddCard = useCallback(async (columnId: string) => {
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { tauriInvoke: invoke } = await import('../../utils/tauri');
       const db = await getDb();
       const result = await db.select<{ title: string }[]>('SELECT title FROM projects WHERE id = ?', [projectId]);
       const defaultTitle = result[0]?.title ? `Task for ${result[0].title}` : 'New task';
@@ -165,7 +165,7 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
 
   const handleCardSave = useCallback(async (card: KanbanCard, updates: Partial<KanbanCard>) => {
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { tauriInvoke: invoke } = await import('../../utils/tauri');
       await invoke('update_kanban_card', { payload: { id: card.id, ...updates } });
       const colCards = cards[card.column_id] || [];
       setCards(prev => ({
@@ -179,7 +179,7 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
 
   const handleDeleteCard = useCallback(async (cardId: string) => {
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { tauriInvoke: invoke } = await import('../../utils/tauri');
       await invoke('delete_kanban_card', { id: cardId });
       setCards(prev => {
         const updated = { ...prev };
@@ -197,7 +197,7 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
   const handleAddColumn = useCallback(async () => {
     if (!newColumnName.trim() || !board) return;
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { tauriInvoke: invoke } = await import('../../utils/tauri');
       const color = COLUMN_COLORS[columns.length % COLUMN_COLORS.length];
       const col = await invoke<KanbanColumn>('create_kanban_column', {
         payload: { board_id: board.id, name: newColumnName.trim(), color },
@@ -214,7 +214,7 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
   const handleUpdateColumn = useCallback(async () => {
     if (!editingColumn) return;
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { tauriInvoke: invoke } = await import('../../utils/tauri');
       await invoke('update_kanban_column', {
         payload: {
           id: editingColumn.id,
@@ -245,7 +245,7 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
     reordered.forEach((c, i) => { c.sort_order = i; });
     setColumns(reordered);
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { tauriInvoke: invoke } = await import('../../utils/tauri');
       await invoke('reorder_kanban_columns', {
         payload: { board_id: board.id, column_ids: reordered.map(c => c.id) },
       });
@@ -256,7 +256,7 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
 
   const handleDeleteColumn = useCallback(async (columnId: string) => {
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { tauriInvoke: invoke } = await import('../../utils/tauri');
       await invoke('delete_kanban_column', { id: columnId });
       setColumns(prev => prev.filter(c => c.id !== columnId));
       setCards(prev => {
