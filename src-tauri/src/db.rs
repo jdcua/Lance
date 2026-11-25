@@ -512,32 +512,13 @@ CREATE TABLE IF NOT EXISTS user_profile (
     let _ = conn.execute("ALTER TABLE expenses ADD COLUMN frequency TEXT DEFAULT 'monthly'", []);
     let _ = conn.execute("ALTER TABLE proposals ADD COLUMN expires_at TEXT", []);
     let _ = conn.execute("ALTER TABLE invoices ADD COLUMN currency TEXT DEFAULT NULL", []);
-    let _ =
-        conn.execute("ALTER TABLE clients ADD COLUMN preferred_currency TEXT DEFAULT NULL", []);
-    let _ = conn.execute(
-        "ALTER TABLE user_profile ADD COLUMN proposal_expiry_days INTEGER",
-        [],
-    );
-    let _ = conn.execute(
-        "ALTER TABLE user_profile ADD COLUMN license_tier TEXT",
-        [],
-    );
-    let _ = conn.execute(
-        "ALTER TABLE user_profile ADD COLUMN license_expires_at TEXT",
-        [],
-    );
-    let _ = conn.execute(
-        "ALTER TABLE user_profile ADD COLUMN license_validated_at TEXT",
-        [],
-    );
-    let _ = conn.execute(
-        "ALTER TABLE user_profile ADD COLUMN license_grace_until TEXT",
-        [],
-    );
-    let _ = conn.execute(
-        "ALTER TABLE user_profile ADD COLUMN trial_started_at TEXT",
-        [],
-    );
+    let _ = conn.execute("ALTER TABLE clients ADD COLUMN preferred_currency TEXT DEFAULT NULL", []);
+    let _ = conn.execute("ALTER TABLE user_profile ADD COLUMN proposal_expiry_days INTEGER", []);
+    let _ = conn.execute("ALTER TABLE user_profile ADD COLUMN license_tier TEXT", []);
+    let _ = conn.execute("ALTER TABLE user_profile ADD COLUMN license_expires_at TEXT", []);
+    let _ = conn.execute("ALTER TABLE user_profile ADD COLUMN license_validated_at TEXT", []);
+    let _ = conn.execute("ALTER TABLE user_profile ADD COLUMN license_grace_until TEXT", []);
+    let _ = conn.execute("ALTER TABLE user_profile ADD COLUMN trial_started_at TEXT", []);
     let _ = conn.execute(
         "ALTER TABLE time_entries ADD COLUMN created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP",
         [],

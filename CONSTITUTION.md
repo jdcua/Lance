@@ -4,7 +4,7 @@
 Tauri 2 + React 18 + TypeScript + SQLite + Zustand + Tailwind
 
 ## What this is
-A freelancer OS. 41 archetypes. One unified brain underneath.
+A freelancer OS. Six profession presets. One unified brain underneath.
 
 ## The law
 - The existing 37-table schema is the foundation. Extend it, don't replace it
@@ -20,7 +20,7 @@ A freelancer OS. 41 archetypes. One unified brain underneath.
 1. Lock the unified store shape first. Nothing else starts
 2. Wire all 37 tables through it
 3. Refactor screens one by one against the store
-4. Archetype system stays config-driven. Improve the configs, not the pattern
+4. Profession trackers are registry-driven; new ones use RecordTracker
 5. Playwright test per screen before moving to the next
 
 ## What not to do

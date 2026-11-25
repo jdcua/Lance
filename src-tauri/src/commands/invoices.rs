@@ -228,10 +228,7 @@ pub fn create_invoice(
 }
 
 #[tauri::command]
-pub fn update_invoice(
-    app: tauri::AppHandle,
-    payload: UpdateInvoicePayload,
-) -> Result<(), String> {
+pub fn update_invoice(app: tauri::AppHandle, payload: UpdateInvoicePayload) -> Result<(), String> {
     let state = app.state::<DbState>();
     let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let line_items_str = payload.line_items.to_string();
@@ -324,9 +321,7 @@ pub fn create_invoice_payment(
     // them left a recorded payment against a still-unpaid invoice. The client
     // recomputes status itself, but the database is the source of truth for
     // exports, reports, and the portal.
-    let tx = conn
-        .unchecked_transaction()
-        .map_err(|_| "Database operation failed".to_string())?;
+    let tx = conn.unchecked_transaction().map_err(|_| "Database operation failed".to_string())?;
 
     tx.execute(
         "INSERT INTO invoice_payments (id, invoice_id, amount, payment_date, payment_method, reference, notes, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
@@ -345,11 +340,9 @@ pub fn create_invoice_payment(
         )
         .unwrap_or(0.0);
     let invoice_total: f64 = tx
-        .query_row(
-            "SELECT total FROM invoices WHERE id = ?",
-            [&payload.invoice_id],
-            |row| row.get(0),
-        )
+        .query_row("SELECT total FROM invoices WHERE id = ?", [&payload.invoice_id], |row| {
+            row.get(0)
+        })
         .unwrap_or(0.0);
     let new_status = if cents(total_paid) >= cents(invoice_total) {
         "paid"
@@ -410,8 +403,7 @@ pub fn get_recurring_invoices(app: tauri::AppHandle) -> Result<Vec<RecurringInvo
                 project_id: row.get(2)?,
                 title: row.get(3)?,
                 frequency: row.get(4)?,
-                line_items: serde_json::from_str(&line_items_str)
-                    .unwrap_or(serde_json::json!([])),
+                line_items: serde_json::from_str(&line_items_str).unwrap_or(serde_json::json!([])),
                 subtotal: row.get(6)?,
                 tax_rate: row.get(7)?,
                 total: row.get(8)?,

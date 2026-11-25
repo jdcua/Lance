@@ -1,4 +1,6 @@
-# Clippy lint configuration for Lance
-allow-unwrap-used = false
-allow-expect-used = false
-cognitive-complexity-threshold = 30
+# Clippy lint configuration for Lance.
+# Cognitive complexity is stricter than Clippy's default 25; the other
+# thresholds keep existing code honest while we work through the backlog.
+cognitive-complexity-threshold = 20
+too-many-arguments-threshold = 7
+type-complexity-threshold = 250

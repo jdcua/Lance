@@ -12,7 +12,7 @@ Lance is an offline-first desktop app that runs your entire freelance business o
 
 ## How it works
 
-The desktop shell is Tauri 2 with a Rust backend; the UI is React 18 and TypeScript built with Vite. All business data lives in SQLite on the user's machine, accessed through Tauri commands and a single Zustand store. Profession "archetypes" are configuration, not code, and customize sidebar shortcuts, dashboard metrics, and trackers. There is no account and no server: a small activity log stays on the device and never makes a network call. The app reaches the network only to check for signed updates and fetch public release notes.
+The desktop shell is Tauri 2 with a Rust backend; the UI is React 18 and TypeScript built with Vite. All business data lives in SQLite on the user's machine, accessed through Tauri commands and a single Zustand store. Profession presets are chosen during onboarding; their trackers are registered in a single registry and rendered by one generic component. There is no account and no server: a small activity log stays on the device and never makes a network call. The app reaches the network only to check for signed updates and fetch public release notes.
 
 ## Quick start
 

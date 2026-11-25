@@ -1,7 +1,8 @@
 # Lance — Agent Rules & Standards
 
-These rules keep Lance from re-tangling after the unslop + untangle passes.
-Read before making changes. When in doubt, ask.
+These rules keep Lance from re-tangling. Read before making changes.
+Rationale and thresholds: `STANDARDS.md`. Research: `RESEARCH_REPORT.md`.
+Audit and backlog: `AUDIT_REPORT.md`. When in doubt, ask.
 
 ---
 
@@ -93,10 +94,24 @@ and `prefers-reduced-transparency` always win.
 
 ## 6. Complexity and testing
 
-- Cyclomatic complexity must be **<= 15 per function** (ESLint error).
-  Extract pure helpers or small components instead of adding more branches to an existing
-  function. Never change behavior to satisfy the metric. Run
-  `npm run complexity` to see the current backlog.
+- Cyclomatic complexity must be **<= 15 per function** (ESLint error); new code
+  targets <= 10. Cognitive complexity is a warning at 15 (TS) and a Clippy
+  error at 20 (Rust). Run `npm run complexity` for the cyclomatic and cognitive backlog.
+- Extract pure helpers or small components rather than adding branches. Never
+  change behavior to satisfy a metric. Files stay under ~400 lines; functions
+  under ~60; parameters <= 4.
+
+### Boundary rules (lintable)
+
+- UI and screens must not import `@tauri-apps/*` directly — use store actions
+  or `src/utils/tauri.ts`.
+- `src/components/**` must not import `src/screens/**`.
+- `src/lib/**` (except `engines/`) must not import `store/`, `db/`, `screens/`
+  or `components/`.
+- Only `src/store/index.ts` may call zustand `create()`; `src/db/index.ts`
+  must not import itself.
+- New features go in `src/features/<domain>/` with colocated tests; do not
+  bulk-move existing files.
 
 ### Testing
 
@@ -116,6 +131,8 @@ npm run verify         # typecheck + lint + test + build + OSS audit
 ```
 
 `npm run verify` runs `typecheck`, `lint`, `test`, `build` and `audit:oss`; all must pass.
+When Rust is touched also run `cargo test --lib`, `cargo fmt --check` and the
+Clippy quality gate. A characterization test comes before legacy refactors.
 See `CONTRIBUTING.md` for the PR workflow and `docs/ROADMAP.md` for places
 where outside contributions are welcome.
 

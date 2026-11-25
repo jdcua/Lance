@@ -20,9 +20,14 @@ const reports = JSON.parse(result.stdout);
 const offenders = [];
 for (const file of reports) {
   for (const message of file.messages) {
-    if (message.ruleId !== 'complexity') continue;
-    const match = message.message.match(/complexity of (\d+)/);
+    if (message.ruleId !== 'complexity' && message.ruleId !== 'sonarjs/cognitive-complexity') {
+      continue;
+    }
+    const match =
+      message.message.match(/complexity of (\d+)/) ||
+      message.message.match(/Complexity from (\d+)/);
     offenders.push({
+      kind: message.ruleId === 'complexity' ? 'cyclomatic' : 'cognitive',
       file: file.filePath.replace(process.cwd() + '/', ''),
       line: message.line,
       score: match ? Number(match[1]) : 0,
@@ -35,5 +40,7 @@ if (offenders.length === 0) {
   console.log(`No functions above complexity ${threshold}.`);
 } else {
   console.log(`${offenders.length} functions above complexity ${threshold}:`);
-  for (const o of offenders) console.log(`  ${String(o.score).padStart(3)}  ${o.file}:${o.line}`);
+  for (const o of offenders) {
+    console.log(`  ${String(o.score).padStart(3)}  ${o.kind.padEnd(10)} ${o.file}:${o.line}`);
+  }
 }

@@ -399,12 +399,9 @@ pub fn respond_share_token(
 
     // Truncate by character, not byte index: `&s[..200]` panics mid-character
     // and release builds set panic = "abort".
-    let clean_name = client_name
-        .as_deref()
-        .map(|s| s.trim().chars().take(200).collect::<String>());
-    let clean_sig = client_signature
-        .as_deref()
-        .map(|s| s.trim().chars().take(200).collect::<String>());
+    let clean_name = client_name.as_deref().map(|s| s.trim().chars().take(200).collect::<String>());
+    let clean_sig =
+        client_signature.as_deref().map(|s| s.trim().chars().take(200).collect::<String>());
 
     let now = chrono_now();
     conn.execute(

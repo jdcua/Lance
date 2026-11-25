@@ -43,7 +43,10 @@ pub struct KanbanCard {
 // ─── Board ───
 
 #[tauri::command]
-pub fn get_kanban_board(state: State<DbState>, project_id: String) -> Result<Option<KanbanBoard>, String> {
+pub fn get_kanban_board(
+    state: State<DbState>,
+    project_id: String,
+) -> Result<Option<KanbanBoard>, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     let mut stmt = conn
         .prepare("SELECT id, project_id, name, created_at FROM kanban_boards WHERE project_id = ?1")
@@ -62,7 +65,10 @@ pub fn get_kanban_board(state: State<DbState>, project_id: String) -> Result<Opt
 }
 
 #[tauri::command]
-pub fn create_kanban_board(state: State<DbState>, project_id: String) -> Result<KanbanBoard, String> {
+pub fn create_kanban_board(
+    state: State<DbState>,
+    project_id: String,
+) -> Result<KanbanBoard, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     let id = uuid_v4();
     let now = now_iso();
@@ -87,18 +93,16 @@ pub fn create_kanban_board(state: State<DbState>, project_id: String) -> Result<
         .map_err(|e| e.to_string())?;
     }
 
-    Ok(KanbanBoard {
-        id,
-        project_id,
-        name: "Main Board".to_string(),
-        created_at: now,
-    })
+    Ok(KanbanBoard { id, project_id, name: "Main Board".to_string(), created_at: now })
 }
 
 // ─── Columns ───
 
 #[tauri::command]
-pub fn get_kanban_columns(state: State<DbState>, board_id: String) -> Result<Vec<KanbanColumn>, String> {
+pub fn get_kanban_columns(
+    state: State<DbState>,
+    board_id: String,
+) -> Result<Vec<KanbanColumn>, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     let mut stmt = conn
         .prepare("SELECT id, board_id, name, color, sort_order, wip_limit, created_at FROM kanban_columns WHERE board_id = ?1 ORDER BY sort_order ASC")
@@ -129,7 +133,10 @@ pub struct CreateColumnPayload {
 }
 
 #[tauri::command]
-pub fn create_kanban_column(state: State<DbState>, payload: CreateColumnPayload) -> Result<KanbanColumn, String> {
+pub fn create_kanban_column(
+    state: State<DbState>,
+    payload: CreateColumnPayload,
+) -> Result<KanbanColumn, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     let id = uuid_v4();
     let now = now_iso();
@@ -165,19 +172,31 @@ pub struct UpdateColumnPayload {
 }
 
 #[tauri::command]
-pub fn update_kanban_column(state: State<DbState>, payload: UpdateColumnPayload) -> Result<(), String> {
+pub fn update_kanban_column(
+    state: State<DbState>,
+    payload: UpdateColumnPayload,
+) -> Result<(), String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     if let Some(name) = &payload.name {
-        conn.execute("UPDATE kanban_columns SET name = ?1 WHERE id = ?2", params![name, payload.id])
-            .map_err(|e| e.to_string())?;
+        conn.execute(
+            "UPDATE kanban_columns SET name = ?1 WHERE id = ?2",
+            params![name, payload.id],
+        )
+        .map_err(|e| e.to_string())?;
     }
     if let Some(ref color) = payload.color {
-        conn.execute("UPDATE kanban_columns SET color = ?1 WHERE id = ?2", params![color, payload.id])
-            .map_err(|e| e.to_string())?;
+        conn.execute(
+            "UPDATE kanban_columns SET color = ?1 WHERE id = ?2",
+            params![color, payload.id],
+        )
+        .map_err(|e| e.to_string())?;
     }
     if let Some(wip) = payload.wip_limit {
-        conn.execute("UPDATE kanban_columns SET wip_limit = ?1 WHERE id = ?2", params![wip, payload.id])
-            .map_err(|e| e.to_string())?;
+        conn.execute(
+            "UPDATE kanban_columns SET wip_limit = ?1 WHERE id = ?2",
+            params![wip, payload.id],
+        )
+        .map_err(|e| e.to_string())?;
     }
     Ok(())
 }
@@ -199,7 +218,10 @@ pub struct ReorderColumnsPayload {
 }
 
 #[tauri::command]
-pub fn reorder_kanban_columns(state: State<DbState>, payload: ReorderColumnsPayload) -> Result<(), String> {
+pub fn reorder_kanban_columns(
+    state: State<DbState>,
+    payload: ReorderColumnsPayload,
+) -> Result<(), String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     for (i, col_id) in payload.column_ids.iter().enumerate() {
         conn.execute(
@@ -214,7 +236,10 @@ pub fn reorder_kanban_columns(state: State<DbState>, payload: ReorderColumnsPayl
 // ─── Cards ───
 
 #[tauri::command]
-pub fn get_kanban_cards(state: State<DbState>, column_id: String) -> Result<Vec<KanbanCard>, String> {
+pub fn get_kanban_cards(
+    state: State<DbState>,
+    column_id: String,
+) -> Result<Vec<KanbanCard>, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     let mut stmt = conn
         .prepare("SELECT id, column_id, project_id, title, description, priority, hours_estimated, hours_actual, due_date, labels, assignee, sort_order, created_at FROM kanban_cards WHERE column_id = ?1 ORDER BY sort_order ASC, created_at ASC")
@@ -257,7 +282,10 @@ pub struct CreateCardPayload {
 }
 
 #[tauri::command]
-pub fn create_kanban_card(state: State<DbState>, payload: CreateCardPayload) -> Result<KanbanCard, String> {
+pub fn create_kanban_card(
+    state: State<DbState>,
+    payload: CreateCardPayload,
+) -> Result<KanbanCard, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     let id = uuid_v4();
     let now = now_iso();
@@ -309,36 +337,57 @@ pub struct UpdateCardPayload {
 pub fn update_kanban_card(state: State<DbState>, payload: UpdateCardPayload) -> Result<(), String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     if let Some(title) = &payload.title {
-        conn.execute("UPDATE kanban_cards SET title = ?1 WHERE id = ?2", params![title, payload.id])
-            .map_err(|e| e.to_string())?;
+        conn.execute(
+            "UPDATE kanban_cards SET title = ?1 WHERE id = ?2",
+            params![title, payload.id],
+        )
+        .map_err(|e| e.to_string())?;
     }
     if let Some(ref desc) = payload.description {
-        conn.execute("UPDATE kanban_cards SET description = ?1 WHERE id = ?2", params![desc, payload.id])
-            .map_err(|e| e.to_string())?;
+        conn.execute(
+            "UPDATE kanban_cards SET description = ?1 WHERE id = ?2",
+            params![desc, payload.id],
+        )
+        .map_err(|e| e.to_string())?;
     }
     if let Some(ref pri) = payload.priority {
-        conn.execute("UPDATE kanban_cards SET priority = ?1 WHERE id = ?2", params![pri, payload.id])
-            .map_err(|e| e.to_string())?;
+        conn.execute(
+            "UPDATE kanban_cards SET priority = ?1 WHERE id = ?2",
+            params![pri, payload.id],
+        )
+        .map_err(|e| e.to_string())?;
     }
     if let Some(est) = payload.hours_estimated {
-        conn.execute("UPDATE kanban_cards SET hours_estimated = ?1 WHERE id = ?2", params![est, payload.id])
-            .map_err(|e| e.to_string())?;
+        conn.execute(
+            "UPDATE kanban_cards SET hours_estimated = ?1 WHERE id = ?2",
+            params![est, payload.id],
+        )
+        .map_err(|e| e.to_string())?;
     }
     if let Some(act) = payload.hours_actual {
-        conn.execute("UPDATE kanban_cards SET hours_actual = ?1 WHERE id = ?2", params![act, payload.id])
-            .map_err(|e| e.to_string())?;
+        conn.execute(
+            "UPDATE kanban_cards SET hours_actual = ?1 WHERE id = ?2",
+            params![act, payload.id],
+        )
+        .map_err(|e| e.to_string())?;
     }
     if let Some(ref dd) = payload.due_date {
-        conn.execute("UPDATE kanban_cards SET due_date = ?1 WHERE id = ?2", params![dd, payload.id])
-            .map_err(|e| e.to_string())?;
+        conn.execute(
+            "UPDATE kanban_cards SET due_date = ?1 WHERE id = ?2",
+            params![dd, payload.id],
+        )
+        .map_err(|e| e.to_string())?;
     }
     if let Some(ref lbl) = payload.labels {
         conn.execute("UPDATE kanban_cards SET labels = ?1 WHERE id = ?2", params![lbl, payload.id])
             .map_err(|e| e.to_string())?;
     }
     if let Some(ref assign) = payload.assignee {
-        conn.execute("UPDATE kanban_cards SET assignee = ?1 WHERE id = ?2", params![assign, payload.id])
-            .map_err(|e| e.to_string())?;
+        conn.execute(
+            "UPDATE kanban_cards SET assignee = ?1 WHERE id = ?2",
+            params![assign, payload.id],
+        )
+        .map_err(|e| e.to_string())?;
     }
     Ok(())
 }
@@ -398,7 +447,10 @@ pub struct ReorderCardsPayload {
 }
 
 #[tauri::command]
-pub fn reorder_kanban_cards(state: State<DbState>, payload: ReorderCardsPayload) -> Result<(), String> {
+pub fn reorder_kanban_cards(
+    state: State<DbState>,
+    payload: ReorderCardsPayload,
+) -> Result<(), String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     for (i, card_id) in payload.card_ids.iter().enumerate() {
         conn.execute(
@@ -464,7 +516,11 @@ mod tests {
         .unwrap();
 
         let count: i64 = conn
-            .query_row("SELECT COUNT(*) FROM kanban_boards WHERE project_id = ?1", params![project_id], |row| row.get(0))
+            .query_row(
+                "SELECT COUNT(*) FROM kanban_boards WHERE project_id = ?1",
+                params![project_id],
+                |row| row.get(0),
+            )
             .unwrap();
         assert_eq!(count, 1);
 
@@ -484,7 +540,11 @@ mod tests {
         }
 
         let col_count: i64 = conn
-            .query_row("SELECT COUNT(*) FROM kanban_columns WHERE board_id = ?1", params![board_id], |row| row.get(0))
+            .query_row(
+                "SELECT COUNT(*) FROM kanban_columns WHERE board_id = ?1",
+                params![board_id],
+                |row| row.get(0),
+            )
             .unwrap();
         assert_eq!(col_count, 4);
     }
@@ -510,12 +570,26 @@ mod tests {
         )
         .unwrap();
 
-        let title: String = conn.query_row("SELECT title FROM kanban_cards WHERE id = ?1", params![card_id], |row| row.get(0)).unwrap();
+        let title: String = conn
+            .query_row("SELECT title FROM kanban_cards WHERE id = ?1", params![card_id], |row| {
+                row.get(0)
+            })
+            .unwrap();
         assert_eq!(title, "Test Card");
 
-        conn.execute("UPDATE kanban_cards SET column_id = ?1, sort_order = 0 WHERE id = ?2", params![col2_id, card_id]).unwrap();
+        conn.execute(
+            "UPDATE kanban_cards SET column_id = ?1, sort_order = 0 WHERE id = ?2",
+            params![col2_id, card_id],
+        )
+        .unwrap();
 
-        let col: String = conn.query_row("SELECT column_id FROM kanban_cards WHERE id = ?1", params![card_id], |row| row.get(0)).unwrap();
+        let col: String = conn
+            .query_row(
+                "SELECT column_id FROM kanban_cards WHERE id = ?1",
+                params![card_id],
+                |row| row.get(0),
+            )
+            .unwrap();
         assert_eq!(col, col2_id);
     }
 
@@ -535,7 +609,11 @@ mod tests {
         }).collect();
 
         for (i, col_id) in ids.iter().rev().enumerate() {
-            conn.execute("UPDATE kanban_columns SET sort_order = ?1 WHERE id = ?2", params![i as i64, col_id]).unwrap();
+            conn.execute(
+                "UPDATE kanban_columns SET sort_order = ?1 WHERE id = ?2",
+                params![i as i64, col_id],
+            )
+            .unwrap();
         }
 
         let order: Vec<String> = conn

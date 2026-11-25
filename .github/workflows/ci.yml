@@ -81,6 +81,14 @@ jobs:
       - run: cargo check --lib
         working-directory: src-tauri
 
+      - name: Rust format check
+        run: cargo fmt --check
+        working-directory: src-tauri
+
+      - name: Clippy quality lints
+        run: cargo clippy --lib -- -D clippy::cognitive_complexity -D clippy::too_many_arguments -D clippy::type_complexity
+        working-directory: src-tauri
+
   rust-test:
     timeout-minutes: 15
     name: Rust Tests

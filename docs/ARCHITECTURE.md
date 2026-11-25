@@ -92,22 +92,16 @@ User Action → React Component → Zustand store → Tauri invoke
 
 Background engines (recurring invoices, follow-ups, expiry, updater) bypass the user action step and run on timers in `App.tsx`.
 
-## Archetype system
+## Profession presets and trackers
 
-The archetype system is **config-driven**. No archetype-specific logic is hardcoded into app components. Each archetype is a TypeScript file exporting an `ArchetypeConfig` object that defines:
+Profession presets are offered in `src/screens/Onboarding.tsx` (`PROFESSIONS`);
+the selected profession is stored on the user profile. There is no runtime
+`ArchetypeConfig` object, `ArchetypePicker` screen or `getArchetype(id)` helper.
 
-- **Metadata**: emoji, tagline, description, psychographic profile
-- **Dashboard**: ordered list of metric cards displayed on the dashboard
-- **Sidebar**: ordered list of navigation items (can reorder/hide compared to default)
-- **Insight panels**: which insight widgets to show
-- **Archetype features**: profession-specific panels (render log, shoot log, build log, etc.)
-- **Proposal types**: suggested proposal templates for this profession
-- **Theme**: preferred theme and accent color
-- **Keyboard shortcuts**: Cmd+1-8 dynamically remap based on sidebar order
-
-The `ArchetypePicker` screen during onboarding selects an archetype. The `getArchetype(id)` function returns the config object. Components query the archetype config for their rendering decisions. For example, `Sidebar.tsx` reads `archetype.sidebar` to determine item order and visibility.
-
-**Archetype registry**: `src/components/features/registry.ts` plus one config per profession.
+Profession-specific trackers are registered in
+`src/components/features/registry.ts` and backed by `archetype_*` tables in
+both the Rust schema and the browser database mock. New trackers must use
+`src/components/ui/RecordTracker.tsx` rather than a hand-rolled CRUD panel.
 
 ## Database schema
 
