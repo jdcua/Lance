@@ -26,6 +26,7 @@ npm run tauri dev
 | `npm run typecheck` | Typecheck without building |
 | `npm run verify` | Run typecheck, lint, tests, build and the OSS audit |
 | `npm run audit:oss` | Check tracked files for secrets, personal paths and junk |
+| `npm run check:boundaries` | Report architecture boundary violations (warn-only) |
 | `npm run complexity` | List cyclomatic and cognitive complexity offenders |
 | `npm run lint` | Lint frontend code |
 | `npm run format` | Format frontend code with Prettier |

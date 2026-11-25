@@ -24,7 +24,7 @@ read → plan → branch → change → npm run verify → PR → self-review �
   test, and never change business logic to make a test green. Keep new
   functions at complexity <= 15 (the `complexity` ESLint rule is an error);
   extract helpers rather than growing a branch tree. `npm run complexity`
-  lists any offenders.
+  lists any offenders. `npm run check:boundaries` reports layer violations.
 - Use the PR template. State what changed, why, what you deleted, and what you
   deliberately left untouched.
 - After opening the PR, re-read the diff as a reviewer. Check for secrets,
