@@ -26,6 +26,7 @@ concurrency:
 
 jobs:
   npm-audit:
+    timeout-minutes: 10
     name: npm audit (shipped dependencies)
     runs-on: ubuntu-22.04
     permissions:
@@ -69,6 +70,7 @@ jobs:
           '
 
   cargo-audit:
+    timeout-minutes: 20
     name: cargo audit (lockfile-accurate)
     runs-on: ubuntu-22.04
     permissions:
@@ -78,12 +80,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Linux deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-
       - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+
+      # cargo tree --locked and cargo audit do not compile Tauri's native
+      # dependencies, so the webkit/appindicator apt set is unnecessary here.
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: src-tauri -> target
+          shared-key: security
+          cache-targets: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       # Without --locked, cargo silently re-resolves the graph whenever the
       # lockfile's own version drifts from Cargo.toml, so the lockfile you audit
@@ -119,6 +125,7 @@ jobs:
             "${GITHUB_STEP_SUMMARY}"
 
   xlsx-pin:
+    timeout-minutes: 10
     name: xlsx tarball is hash-pinned
     runs-on: ubuntu-22.04
     permissions:
