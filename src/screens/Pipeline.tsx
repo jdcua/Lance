@@ -237,7 +237,7 @@ export default function Pipeline() {
           p ? `New invoice opened — bill ${p.title} with real amounts.` : 'New invoice opened — fill in real amounts.',
           'info',
         );
-        setTimeout(() => commands.dispatch('lance:add-invoice'), 350);
+        commands.dispatchAfterMount('lance:add-invoice');
       },
       'invoice->paid': () => {
         const inv = invoices.find((x) => x.id === card.id);

@@ -22,11 +22,21 @@ type CommandDetail = {
   'lance:prefs-changed': undefined;
 };
 
-type CommandName = keyof CommandDetail;
+export type CommandName = keyof CommandDetail;
 type CommandHandler<K extends CommandName> = (detail: CommandDetail[K]) => void;
 
 export class CommandRegistry {
   private handlers = new Map<CommandName, Set<CommandHandler<any>>>();
+  private pending = new Map<CommandName, CommandDetail[CommandName]>();
+
+  /** Dispatch now if a handler is mounted, otherwise run it when one mounts. */
+  dispatchAfterMount<K extends CommandName>(name: K, detail?: CommandDetail[K]): void {
+    if (this.handlers.get(name)?.size) {
+      this.dispatch(name, detail);
+      return;
+    }
+    this.pending.set(name, detail as CommandDetail[CommandName]);
+  }
 
   on<K extends CommandName>(name: K, handler: CommandHandler<K>): void {
     let set = this.handlers.get(name);
@@ -35,6 +45,13 @@ export class CommandRegistry {
       this.handlers.set(name, set);
     }
     set.add(handler as CommandHandler<any>);
+    // A queued intent (e.g. "open add-client" from a deep link) is delivered
+    // when its owning screen mounts, replacing setTimeout wait-and-hope.
+    if (this.pending.has(name)) {
+      const detail = this.pending.get(name);
+      this.pending.delete(name);
+      this.dispatch(name, detail as CommandDetail[K]);
+    }
   }
 
   off<K extends CommandName>(name: K, handler: CommandHandler<K>): void {
