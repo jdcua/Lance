@@ -1,5 +1,5 @@
 import Database from '@tauri-apps/plugin-sql';
-
+import { newColumns, user_id_columns, archetypeIndexes } from './schema';
 let db: Database | null = null;
 
 /**
@@ -56,7 +56,9 @@ function mockTableRows(table: string): Record<string, unknown>[] {
     // that query through raw SQL working, instead of each one throwing on its
     // first `.project_id` read and logging an error per screen.
     return val.filter((r) => r !== null && typeof r === 'object') as Record<string, unknown>[];
-  } catch { return []; }
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -106,7 +108,9 @@ function mockWriteTable(table: string, rows: Record<string, unknown>[]): void {
     }
     const storeKey = STORE_ALIAS[table] ?? table;
     localStorage.setItem(MOCK_PREFIX + storeKey, JSON.stringify(rows));
-  } catch { /* quota exceeded or private mode */ }
+  } catch {
+    /* quota exceeded or private mode */
+  }
 }
 
 /** Normalize $1/$2 style params into a positional array in placeholder order. */
@@ -122,7 +126,9 @@ function normalizeParams(sql: string, params?: unknown[]): unknown[] {
     const n = parseInt(m[1], 10);
     if (!map.has(n)) map.set(n, params[idx++] ?? null);
   }
-  return Array.from({ length: Math.max(0, ...map.keys()) + 1 }, (_, i) => map.get(i) ?? null).slice(1);
+  return Array.from({ length: Math.max(0, ...map.keys()) + 1 }, (_, i) => map.get(i) ?? null).slice(
+    1,
+  );
 }
 
 type Row = Record<string, unknown>;
@@ -130,25 +136,40 @@ type ExecResult = { rowsAffected: number; lastInsertId: number };
 
 /** Aggregate implementations shared by SELECT projection. `col` is null for COUNT(*). */
 const AGGREGATE_FNS = new Map<string, (col: string | null, rows: Row[]) => unknown>([
-  ['COUNT', (col, rows) => col ? rows.filter((r) => r[col] !== null && r[col] !== undefined).length : rows.length],
+  [
+    'COUNT',
+    (col, rows) =>
+      col ? rows.filter((r) => r[col] !== null && r[col] !== undefined).length : rows.length,
+  ],
   ['SUM', (col, rows) => rows.reduce((s, r) => s + (col && r[col] ? Number(r[col]) || 0 : 0), 0)],
-  ['AVG', (col, rows) => {
-    const vals = col ? rows.map((r) => Number(r[col]) || 0).filter((v) => !isNaN(v)) : [];
-    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
-  }],
-  ['MIN', (col, rows) => {
-    const vals = col ? rows.map((r) => r[col]).filter((v) => v !== null && v !== undefined) : [];
-    return vals.length ? Math.min(...vals.map((v) => Number(v))) : null;
-  }],
-  ['MAX', (col, rows) => {
-    const vals = col ? rows.map((r) => r[col]).filter((v) => v !== null && v !== undefined) : [];
-    return vals.length ? Math.max(...vals.map((v) => Number(v))) : null;
-  }],
+  [
+    'AVG',
+    (col, rows) => {
+      const vals = col ? rows.map((r) => Number(r[col]) || 0).filter((v) => !isNaN(v)) : [];
+      return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+    },
+  ],
+  [
+    'MIN',
+    (col, rows) => {
+      const vals = col ? rows.map((r) => r[col]).filter((v) => v !== null && v !== undefined) : [];
+      return vals.length ? Math.min(...vals.map((v) => Number(v))) : null;
+    },
+  ],
+  [
+    'MAX',
+    (col, rows) => {
+      const vals = col ? rows.map((r) => r[col]).filter((v) => v !== null && v !== undefined) : [];
+      return vals.length ? Math.max(...vals.map((v) => Number(v))) : null;
+    },
+  ],
 ]);
 
 class MockDatabase {
   private table(sql: string): string | null {
-    const m = sql.match(/\b(?:FROM|INTO|UPDATE)\s+([A-Za-z_][A-Za-z0-9_]*)/i) || sql.match(/\bDELETE\s+FROM\s+([A-Za-z_][A-Za-z0-9_]*)/i);
+    const m =
+      sql.match(/\b(?:FROM|INTO|UPDATE)\s+([A-Za-z_][A-Za-z0-9_]*)/i) ||
+      sql.match(/\bDELETE\s+FROM\s+([A-Za-z_][A-Za-z0-9_]*)/i);
     return m ? m[1] : null;
   }
 
@@ -162,7 +183,10 @@ class MockDatabase {
 
   /** Escape a LIKE pattern into a case-insensitive whole-string RegExp. */
   private likePattern(val: unknown): RegExp {
-    const pattern = String(val).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*').replace(/_/g, '.');
+    const pattern = String(val)
+      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/%/g, '.*')
+      .replace(/_/g, '.');
     return new RegExp('^' + pattern + '$', 'i');
   }
 
@@ -177,7 +201,8 @@ class MockDatabase {
       if (!isNaN(na) && !isNaN(nb)) return na - nb;
       return String(a ?? '').localeCompare(String(b ?? ''));
     };
-    const inValues = (): boolean => Array.isArray(val) && val.some((v) => this.matchesValue(colVal, v));
+    const inValues = (): boolean =>
+      Array.isArray(val) && val.some((v) => this.matchesValue(colVal, v));
     const comparators = new Map<string, () => boolean>([
       ['=', () => this.matchesValue(colVal, val)],
       ['!=', () => !this.matchesValue(colVal, val)],
@@ -201,10 +226,15 @@ class MockDatabase {
    * <>, >, <, >=, <=, LIKE, NOT LIKE, IS [NOT] NULL, IN (...), AND, OR.
    * Placeholders are ? and $N; string literals '...' and numbers are supported.
    */
-  private parseWhere(sql: string, params: unknown[]): Array<{ col: string; op: string; value: unknown }> {
+  private parseWhere(
+    sql: string,
+    params: unknown[],
+  ): Array<{ col: string; op: string; value: unknown }> {
     let clause: string;
     if (/\bWHERE\s+/i.test(sql)) {
-      const whereMatch = sql.match(/\bWHERE\s+(.+?)(?:\s+GROUP\s+BY\s+|\s+ORDER\s+BY\s+|\s+LIMIT\s+|$)/i);
+      const whereMatch = sql.match(
+        /\bWHERE\s+(.+?)(?:\s+GROUP\s+BY\s+|\s+ORDER\s+BY\s+|\s+LIMIT\s+|$)/i,
+      );
       clause = whereMatch ? whereMatch[1] : '';
     } else {
       clause = sql;
@@ -214,30 +244,40 @@ class MockDatabase {
     // must be a full predicate chain).
     const ors = this.splitTopLevel(clause, 'OR');
     if (ors.length > 1) {
-      return [{
-        col: '',
-        op: '__OR__',
-        value: ors.map((side) => this.parseAnd(side, params)),
-      }];
+      return [
+        {
+          col: '',
+          op: '__OR__',
+          value: ors.map((side) => this.parseAnd(side, params)),
+        },
+      ];
     }
     return this.parseAnd(clause, params);
   }
 
   private splitTopLevel(s: string, token: string): string[] {
     const parts: string[] = [];
-    let depth = 0; let cur = '';
+    let depth = 0;
+    let cur = '';
     const up = token.toUpperCase();
     let i = 0;
     while (i < s.length) {
       const ch = s[i];
       if (ch === '(') depth++;
       else if (ch === ')') depth--;
-      if (depth === 0 && s.slice(i, i + up.length).toUpperCase() === up &&
-          (i === 0 || !/[A-Za-z0-9_]/.test(s[i-1])) && (i + up.length >= s.length || !/[A-Za-z0-9_]/.test(s[i+up.length]))) {
-        parts.push(cur); cur = '';
-        i += up.length; continue;
+      if (
+        depth === 0 &&
+        s.slice(i, i + up.length).toUpperCase() === up &&
+        (i === 0 || !/[A-Za-z0-9_]/.test(s[i - 1])) &&
+        (i + up.length >= s.length || !/[A-Za-z0-9_]/.test(s[i + up.length]))
+      ) {
+        parts.push(cur);
+        cur = '';
+        i += up.length;
+        continue;
       }
-      cur += ch; i++;
+      cur += ch;
+      i++;
     }
     if (cur.trim()) parts.push(cur);
     return parts;
@@ -246,20 +286,29 @@ class MockDatabase {
   /** Split a VALUES list on top-level commas (no word-boundary checks). */
   private splitTopLevelComma(s: string): string[] {
     const parts: string[] = [];
-    let depth = 0; let cur = ''; let inStr = false;
+    let depth = 0;
+    let cur = '';
+    let inStr = false;
     for (let i = 0; i < s.length; i++) {
       const ch = s[i];
       if (ch === "'") inStr = !inStr;
       else if (!inStr && ch === '(') depth++;
       else if (!inStr && ch === ')') depth--;
-      if (!inStr && depth === 0 && ch === ',') { parts.push(cur); cur = ''; continue; }
+      if (!inStr && depth === 0 && ch === ',') {
+        parts.push(cur);
+        cur = '';
+        continue;
+      }
       cur += ch;
     }
     if (cur.trim()) parts.push(cur);
     return parts;
   }
 
-  private parseAnd(clause: string, params: unknown[]): Array<{ col: string; op: string; value: unknown }> {
+  private parseAnd(
+    clause: string,
+    params: unknown[],
+  ): Array<{ col: string; op: string; value: unknown }> {
     const parts = this.splitTopLevel(clause, 'AND');
     const out: Array<{ col: string; op: string; value: unknown }> = [];
     const pi = { value: 0 };
@@ -277,22 +326,26 @@ class MockDatabase {
     params: unknown[],
     pi: { value: number },
   ): { col: string; op: string; value: unknown } | null {
-    const m = t.match(/^([A-Za-z_][A-Za-z0-9_.]*)\s*(=|!=|<>|>=|<=|>|<|LIKE|NOT\s+LIKE|IS\s+NOT\s+NULL|IS\s+NULL|IN|NOT\s+IN)\s*(.+)?$/i);
+    const m = t.match(
+      /^([A-Za-z_][A-Za-z0-9_.]*)\s*(=|!=|<>|>=|<=|>|<|LIKE|NOT\s+LIKE|IS\s+NOT\s+NULL|IS\s+NULL|IN|NOT\s+IN)\s*(.+)?$/i,
+    );
     if (!m) return null;
     const col = m[1].split('.').pop()!.toLowerCase();
-      const op = m[2].replace(/\s+/g, ' ').toUpperCase();
-      const rhs = m[3] ? m[3].trim() : '';
-      if (op === 'IS NULL' || op === 'IS NOT NULL') {
-        return { col, op, value: null };
-      }
-      // IN (a, b, c) · may contain params or literals. rhs is either `IN (...)` or `(...)` (NOT IN).
-      const inM = rhs.match(/^(?:NOT\s+)?IN\s*\((.+)\)$/i) || (op === 'IN' || op === 'NOT IN' ? rhs.match(/^\((.+)\)$/) : null);
-      if (inM) {
-        const items = this.splitTopLevel(inM[1], ',').map((x) => x.trim());
-        const vals = items.map((it) => this.literalValue(it, params, () => pi.value++));
-        return { col, op: op === 'NOT IN' ? 'NOT IN' : 'IN', value: vals };
-      }
-      return { col, op, value: this.literalValue(rhs, params, () => pi.value++) };
+    const op = m[2].replace(/\s+/g, ' ').toUpperCase();
+    const rhs = m[3] ? m[3].trim() : '';
+    if (op === 'IS NULL' || op === 'IS NOT NULL') {
+      return { col, op, value: null };
+    }
+    // IN (a, b, c) · may contain params or literals. rhs is either `IN (...)` or `(...)` (NOT IN).
+    const inM =
+      rhs.match(/^(?:NOT\s+)?IN\s*\((.+)\)$/i) ||
+      (op === 'IN' || op === 'NOT IN' ? rhs.match(/^\((.+)\)$/) : null);
+    if (inM) {
+      const items = this.splitTopLevel(inM[1], ',').map((x) => x.trim());
+      const vals = items.map((it) => this.literalValue(it, params, () => pi.value++));
+      return { col, op: op === 'NOT IN' ? 'NOT IN' : 'IN', value: vals };
+    }
+    return { col, op, value: this.literalValue(rhs, params, () => pi.value++) };
   }
 
   private literalValue(tok: string, params: unknown[], nextParam: () => number): unknown {
@@ -307,10 +360,16 @@ class MockDatabase {
   }
 
   /** Evaluate parsed predicates against a row. */
-  private matches(row: Record<string, unknown>, conds: Array<{ col: string; op: string; value: unknown }>, singleton = false): boolean {
+  private matches(
+    row: Record<string, unknown>,
+    conds: Array<{ col: string; op: string; value: unknown }>,
+    singleton = false,
+  ): boolean {
     return conds.every((cond) => {
       if (cond.op === '__OR__') {
-        return (cond.value as Array<Array<{ col: string; op: string; value: unknown }>>).some((side) => this.matches(row, side, singleton));
+        return (cond.value as Array<Array<{ col: string; op: string; value: unknown }>>).some(
+          (side) => this.matches(row, side, singleton),
+        );
       }
       if (singleton && !(cond.col in row)) return true;
       const colVal = row[cond.col];
@@ -325,7 +384,12 @@ class MockDatabase {
     return m[1].split(',').map((part) => {
       const t = part.trim();
       const desc = /\bDESC\b/i.test(t);
-      const col = t.replace(/\s+(ASC|DESC)\s*$/i, '').trim().split('.').pop()!.toLowerCase();
+      const col = t
+        .replace(/\s+(ASC|DESC)\s*$/i, '')
+        .trim()
+        .split('.')
+        .pop()!
+        .toLowerCase();
       return [col, desc ? 'desc' : 'asc'] as [string, 'asc' | 'desc'];
     });
   }
@@ -354,7 +418,8 @@ class MockDatabase {
           const av = a[col];
           const bv = b[col];
           let cmp = 0;
-          const na = Number(av); const nb = Number(bv);
+          const na = Number(av);
+          const nb = Number(bv);
           if (!isNaN(na) && !isNaN(nb)) cmp = na - nb;
           else cmp = String(av ?? '').localeCompare(String(bv ?? ''));
           if (cmp !== 0) return dir === 'asc' ? cmp : -cmp;
@@ -399,7 +464,9 @@ class MockDatabase {
       const alias = (aliasM ? aliasM[2] : expr).toLowerCase();
       // Match COUNT(*), COUNT(col), SUM(col), AVG(col), MIN(col), MAX(col),
       // optionally wrapped in COALESCE(<agg>, default).
-      const m = expr.match(/^(?:COALESCE\s*\(\s*)?(COUNT|SUM|AVG|MIN|MAX)\s*\((\*|[A-Za-z_][A-Za-z0-9_.]*)\)(?:\s*,\s*[^)]*)?\)?$/i);
+      const m = expr.match(
+        /^(?:COALESCE\s*\(\s*)?(COUNT|SUM|AVG|MIN|MAX)\s*\((\*|[A-Za-z_][A-Za-z0-9_.]*)\)(?:\s*,\s*[^)]*)?\)?$/i,
+      );
       if (!m) continue;
       anyAgg = true;
       const arg = m[2];
@@ -503,7 +570,9 @@ class MockDatabase {
     }
 
     // INSERT INTO table (cols) VALUES (?, ?, ...) [ON CONFLICT(id) DO UPDATE ...]
-    const ins = sql.match(/^INSERT\s+INTO\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]+)\)\s*VALUES\s*\((.+?)\)(?:\s+ON\s+CONFLICT\s*\(([^)]*)\)\s+DO\s+UPDATE\s+SET\s+(.+))?\s*$/i);
+    const ins = sql.match(
+      /^INSERT\s+INTO\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]+)\)\s*VALUES\s*\((.+?)\)(?:\s+ON\s+CONFLICT\s*\(([^)]*)\)\s+DO\s+UPDATE\s+SET\s+(.+))?\s*$/i,
+    );
     if (ins) return this.executeInsert(ins, p);
 
     // UPDATE table SET col = ?, ... WHERE ...
@@ -525,7 +594,10 @@ export async function getDb(): Promise<Database> {
   if (db) return db;
 
   // In browser mode, return a localStorage-backed mock so callers don't crash.
-  if (typeof window === 'undefined' || !(window as unknown as Record<string, unknown>).__TAURI_INTERNALS__) {
+  if (
+    typeof window === 'undefined' ||
+    !(window as unknown as Record<string, unknown>).__TAURI_INTERNALS__
+  ) {
     return new MockDatabase() as unknown as Database;
   }
 
@@ -541,65 +613,21 @@ async function runMigrations(database: Database): Promise<void> {
   // ─── Alter columns for backward compatibility ───
   // Legacy license_* and trial_started_at columns are retained so existing
   // SQLite databases keep opening. The app no longer reads or writes them.
-  const newColumns = [
-    'ALTER TABLE user_profile ADD COLUMN tax_rate REAL DEFAULT 0',
-    'ALTER TABLE user_profile ADD COLUMN payment_terms INTEGER DEFAULT 14',
-    'ALTER TABLE user_profile ADD COLUMN tagline TEXT',
-    'ALTER TABLE user_profile ADD COLUMN always_include TEXT',
-    'ALTER TABLE user_profile ADD COLUMN writing_style TEXT DEFAULT \'professional\'',
-    'ALTER TABLE user_profile ADD COLUMN theme TEXT DEFAULT \'light\'',
-    'ALTER TABLE user_profile ADD COLUMN license_key TEXT',
-    'ALTER TABLE user_profile ADD COLUMN licensed_at TEXT',
-    'ALTER TABLE user_profile ADD COLUMN profession TEXT',
-    'ALTER TABLE user_profile ADD COLUMN custom_archetype_config TEXT',
-    'ALTER TABLE user_profile ADD COLUMN density TEXT DEFAULT \'comfortable\'',
-    'ALTER TABLE user_profile ADD COLUMN accent_color TEXT',
-    'ALTER TABLE user_profile ADD COLUMN ai_enabled INTEGER DEFAULT 0',
-    'ALTER TABLE expenses ADD COLUMN recurring INTEGER NOT NULL DEFAULT 0',
-    'ALTER TABLE expenses ADD COLUMN frequency TEXT DEFAULT \'monthly\'',
-    'ALTER TABLE clients ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0',
-    'ALTER TABLE projects ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0',
-    'ALTER TABLE proposals ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0',
-    'ALTER TABLE contracts ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0',
-    'ALTER TABLE time_entries ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0',
-    'ALTER TABLE invoices ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0',
-    'ALTER TABLE recurring_invoices ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0',
-    'ALTER TABLE expenses ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0',
-    'ALTER TABLE project_templates ADD COLUMN is_default INTEGER NOT NULL DEFAULT 0',
-    'ALTER TABLE proposals ADD COLUMN expires_at TEXT',
-    'ALTER TABLE invoices ADD COLUMN currency TEXT DEFAULT NULL',
-    'ALTER TABLE clients ADD COLUMN preferred_currency TEXT DEFAULT NULL',
-    'ALTER TABLE user_profile ADD COLUMN proposal_expiry_days INTEGER',
-    'ALTER TABLE user_profile ADD COLUMN income_target REAL',
-    'ALTER TABLE user_profile ADD COLUMN license_tier TEXT',
-    'ALTER TABLE user_profile ADD COLUMN license_expires_at TEXT',
-    'ALTER TABLE user_profile ADD COLUMN license_validated_at TEXT',
-    'ALTER TABLE user_profile ADD COLUMN license_grace_until TEXT',
-    'ALTER TABLE user_profile ADD COLUMN trial_started_at TEXT',
-    'ALTER TABLE user_profile ADD COLUMN payment_instructions TEXT',
-    'ALTER TABLE recurring_invoices ADD COLUMN last_catch_up_warning TEXT',
-    'ALTER TABLE projects ADD COLUMN color TEXT',
-    'ALTER TABLE user_profile ADD COLUMN profession TEXT',
-    'ALTER TABLE user_profile ADD COLUMN custom_archetype_config TEXT',
-    'ALTER TABLE user_profile ADD COLUMN exchange_rates TEXT',
-  ];
   for (const sql of newColumns) {
-    try { await database.execute(sql); } catch { /* column already exists */ }
+    try {
+      await database.execute(sql);
+    } catch {
+      /* column already exists */
+    }
   }
 
   // v2 user_id columns for row-level security
-  const user_id_columns = [
-    'ALTER TABLE clients ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1',
-    'ALTER TABLE projects ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1',
-    'ALTER TABLE milestones ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1',
-    'ALTER TABLE proposals ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1',
-    'ALTER TABLE contracts ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1',
-    'ALTER TABLE time_entries ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1',
-    'ALTER TABLE invoices ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1',
-    'ALTER TABLE expenses ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1',
-  ];
   for (const sql of user_id_columns) {
-    try { await database.execute(sql); } catch { /* column already exists */ }
+    try {
+      await database.execute(sql);
+    } catch {
+      /* column already exists */
+    }
   }
 
   // ─── Frontend-only archetype tables (not in Rust backend) ───
@@ -1570,150 +1598,12 @@ async function runMigrations(database: Database): Promise<void> {
   `);
 
   // ─── Frontend-only indexes ───
-  const archetypeIndexes = [
-    'CREATE INDEX IF NOT EXISTS idx_kanban_boards_project ON kanban_boards(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_kanban_columns_board ON kanban_columns(board_id)',
-    'CREATE INDEX IF NOT EXISTS idx_kanban_columns_order ON kanban_columns(sort_order)',
-    'CREATE INDEX IF NOT EXISTS idx_kanban_cards_column ON kanban_cards(column_id)',
-    'CREATE INDEX IF NOT EXISTS idx_kanban_cards_project ON kanban_cards(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_kanban_cards_order ON kanban_cards(sort_order)',
-    'CREATE INDEX IF NOT EXISTS idx_project_phases_project ON project_phases(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_deliverables_project ON deliverables(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_sprint_tasks_project ON sprint_tasks(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_sprint_tasks_status ON sprint_tasks(status)',
-    'CREATE INDEX IF NOT EXISTS idx_project_stack_project ON project_stack(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_bugs_project ON bugs(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_bugs_status ON bugs(status)',
-    'CREATE INDEX IF NOT EXISTS idx_mood_board_project ON mood_board_items(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_client_feedback_client ON client_feedback(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_culling_sessions_project ON culling_sessions(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_project_deliveries_project ON project_deliveries(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_equipment_usage_project ON equipment_usage(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_storage_log_project ON storage_log(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_publications_project ON publications(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_style_guides_client ON client_style_guides(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_retainers_client ON retainers(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_action_items_client ON action_items(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_outcomes_project ON outcomes(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_shots_project ON shots(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_cuts_project ON cuts(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_deliverable_specs_project ON deliverable_specs(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_commissions_client ON commissions(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_style_tags_project ON project_style_tags(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_asset_licenses_asset ON asset_licenses(asset_id)',
-    'CREATE INDEX IF NOT EXISTS idx_project_complexity_project ON project_complexity(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_format_deliverables_project ON format_deliverables(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_game_features_project ON game_features(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_project_platforms_project ON project_platforms(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_qa_sessions_project ON qa_sessions(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_build_deliveries_project ON build_deliveries(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_research_activities_project ON research_activities(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_prototypes_project ON prototypes(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_usability_tests_project ON usability_tests(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_handoff_items_project ON handoff_items(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_component_counts_project ON component_counts(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_campaigns_project ON campaigns(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_report_cadence_client ON client_report_cadence(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_project_channels_project ON project_channels(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_content_posts_client ON content_posts(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_client_platforms_client ON client_platforms(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_stems_project ON stems(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_sync_licenses_project ON sync_licenses(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_credits_project ON credits(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_arch_phases_project ON arch_phases(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_arch_consultants_project ON arch_consultants(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_submissions_project ON submissions(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_revision_sets_project ON revision_sets(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_site_visits_project ON site_visits(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_va_tasks_client ON va_tasks(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_sops_client ON sops(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_language_pairs_project ON project_language_pairs(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_project_quality_project ON project_quality(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_glossary_terms_client ON glossary_terms(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_seo_deliverables_client ON seo_deliverables(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_client_reports_client ON client_reports(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_analysis_deliverables_project ON analysis_deliverables(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_analysis_complexity_project ON project_analysis_complexity(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_incidents_project ON incidents(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_automations_project ON automations(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_infrastructure_project ON infrastructure(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_slas_project ON slas(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_experiments_project ON experiments(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_models_project ON models(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_compute_costs_project ON compute_costs(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_dataset_versions_project ON dataset_versions(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_students_client ON students(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_curriculum_items_project ON curriculum_items(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_progress_reports_project ON progress_reports(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_cancellations_client ON cancellations(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_intake_forms_client ON intake_forms(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_progress_notes_client ON progress_notes(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_programs_client ON programs(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_assessments_client ON assessments(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_client_progress_client ON client_progress(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_ledger_entries_project ON ledger_entries(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_reconciliations_project ON reconciliations(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_client_financials_client ON client_financials(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_smart_contracts_project ON smart_contracts(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_audit_findings_project ON audit_findings(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_gas_tracker_project ON gas_tracker(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_chain_logs_project ON chain_logs(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_cases_client ON cases(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_filing_deadlines_client ON filing_deadlines(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_document_versions_client ON document_versions(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_conflict_checks_client ON conflict_checks(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_campaign_budgets_project ON campaign_budgets(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_creative_rotations_project ON creative_rotations(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_spend_pacing_project ON spend_pacing(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_performance_snapshots_project ON performance_snapshots(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_journey_maps_project ON journey_maps(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_feedback_aggregations_client ON feedback_aggregations(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_service_blueprints_project ON service_blueprints(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_impact_measurements_project ON impact_measurements(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_vendors_project ON vendors(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_run_of_show_project ON run_of_show(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_guests_project ON guests(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_budget_vs_actual_project ON budget_vs_actual(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_funnels_project ON funnels(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_metric_snapshots_project ON metric_snapshots(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_hypotheses_project ON hypotheses(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_vulnerability_log_project ON vulnerability_log(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_vulnerability_log_status ON vulnerability_log(status)',
-    'CREATE INDEX IF NOT EXISTS idx_remediation_tracker_project ON remediation_tracker(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_compliance_frameworks_project ON compliance_frameworks(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_boms_project ON boms(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_fabrication_tracker_project ON fabrication_tracker(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_component_inventory_project ON component_inventory(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_collections_project ON collections(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_sourcing_logs_project ON sourcing_logs(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_fittings_project ON fittings(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_lookbooks_client ON lookbooks(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_listings_project ON listings(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_listings_status ON listings(status)',
-    'CREATE INDEX IF NOT EXISTS idx_showings_project ON showings(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_comparables_project ON comparables(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_candidates_client ON candidates(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_candidates_status ON candidates(status)',
-    'CREATE INDEX IF NOT EXISTS idx_placements_client ON placements(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_client_searches_client ON client_searches(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_roadmap_items_project ON roadmap_items(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_product_specs_project ON product_specs(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_stakeholder_logs_project ON stakeholder_logs(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_ctas_project ON ctas(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_ab_variants_project ON ab_variants(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_content_types_client ON content_types(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_brand_voices_client ON brand_voices(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_meal_plans_client ON meal_plans(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_biomarkers_client ON biomarkers(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_dietary_assessments_client ON dietary_assessments(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_food_diaries_client ON food_diaries(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_auditions_client ON auditions(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_bookings_client ON bookings(client_id)',
-    'CREATE INDEX IF NOT EXISTS idx_session_recordings_project ON session_recordings(project_id)',
-    'CREATE INDEX IF NOT EXISTS idx_equipment_inventory_client ON equipment_inventory(client_id)',
-  ];
   for (const sql of archetypeIndexes) {
-    try { await database.execute(sql); } catch { /* already exists */ }
+    try {
+      await database.execute(sql);
+    } catch {
+      /* already exists */
+    }
   }
 
   try {
@@ -1725,11 +1615,17 @@ async function runMigrations(database: Database): Promise<void> {
       last_backup_at TEXT,
       last_backup_error TEXT
     )`);
-  } catch { /* table may already exist from backend */ }
+  } catch {
+    /* table may already exist from backend */
+  }
 
-  const row = await database.select<{ cnt: number }[]>('SELECT COUNT(*) as cnt FROM schema_version');
+  const row = await database.select<{ cnt: number }[]>(
+    'SELECT COUNT(*) as cnt FROM schema_version',
+  );
   if (!row || row.length === 0 || row[0].cnt === 0) {
-    await database.execute('INSERT INTO schema_version (version) VALUES (?)', [getCurrentSchemaVersion()]);
+    await database.execute('INSERT INTO schema_version (version) VALUES (?)', [
+      getCurrentSchemaVersion(),
+    ]);
   }
 }
 

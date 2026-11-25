@@ -40,7 +40,7 @@ No business behavior changed. Documentation that contradicted the code
 | Debt | Where | Plan |
 |---|---|---|
 | 177 hand-rolled trackers instead of `RecordTracker` | `src/components/features/` | migrate one domain per PR; mandatory for new entity screens |
-| Large screen/store/db files | `Clients.tsx`, `store/index.ts`, `db/index.ts`, `App.tsx` | extract helpers/components/group actions; one transformation per PR |
+| Large screen/store/db files | `Clients.tsx`, `store/index.ts`, `db/index.ts`, `App.tsx` | partially split; continue extracting helpers/components; one transformation per PR |
 | 0 cognitive-complexity warnings | `npm run complexity` | rule now promoted to ESLint error at 15 |
 | 0 boundary warnings | `npm run check:boundaries` | enforced in `npm run verify`; keep UI behind the tauri seam |
 | ~22 untested screens, ~125 untested Tauri commands | `src/screens/`, `src-tauri/src/commands/` | characterization tests before touching each area; parsers/exports/polling now covered |
