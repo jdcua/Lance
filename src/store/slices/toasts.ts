@@ -33,7 +33,10 @@ export type ToastsSlice = {
 };
 
 type GetToasts = () => { toasts: Toast[] };
-type SetToasts = (partial: Partial<ToastsSlice> | ((s: ToastsSlice) => Partial<ToastsSlice>), replace?: boolean) => void;
+type SetToasts = (
+  partial: Partial<ToastsSlice> | ((s: ToastsSlice) => Partial<ToastsSlice>),
+  replace?: boolean,
+) => void;
 
 const toastTimers = new Map<
   string,
@@ -69,7 +72,9 @@ export function createToastsSlice(set: SetToasts, get: GetToasts): ToastsSlice {
           return dupe.id;
         }
       }
-      set((s: ToastsSlice) => ({ toasts: [...s.toasts.slice(-2), { id, message, type: type as any, duration, actions }] }));
+      set((s: ToastsSlice) => ({
+        toasts: [...s.toasts.slice(-2), { id, message, type, duration, actions }],
+      }));
       if (ms === 0) return id;
       const timeoutId = setTimeout(() => {
         toastTimers.delete(id);
@@ -84,7 +89,9 @@ export function createToastsSlice(set: SetToasts, get: GetToasts): ToastsSlice {
       set((s: ToastsSlice) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
     },
     updateToast: (id, message) => {
-      set((s: ToastsSlice) => ({ toasts: s.toasts.map((t: Toast) => (t.id === id ? { ...t, message } : t)) }));
+      set((s: ToastsSlice) => ({
+        toasts: s.toasts.map((t: Toast) => (t.id === id ? { ...t, message } : t)),
+      }));
     },
     pauseToast: (id) => {
       const timer = toastTimers.get(id);

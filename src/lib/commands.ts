@@ -26,7 +26,7 @@ export type CommandName = keyof CommandDetail;
 type CommandHandler<K extends CommandName> = (detail: CommandDetail[K]) => void;
 
 export class CommandRegistry {
-  private handlers = new Map<CommandName, Set<CommandHandler<any>>>();
+  private handlers = new Map<CommandName, Set<CommandHandler<CommandName>>>();
   private pending = new Map<CommandName, CommandDetail[CommandName]>();
 
   /** Dispatch now if a handler is mounted, otherwise run it when one mounts. */
@@ -44,7 +44,7 @@ export class CommandRegistry {
       set = new Set();
       this.handlers.set(name, set);
     }
-    set.add(handler as CommandHandler<any>);
+    set.add(handler as CommandHandler<CommandName>);
     // A queued intent (e.g. "open add-client" from a deep link) is delivered
     // when its owning screen mounts, replacing setTimeout wait-and-hope.
     if (this.pending.has(name)) {
@@ -55,7 +55,7 @@ export class CommandRegistry {
   }
 
   off<K extends CommandName>(name: K, handler: CommandHandler<K>): void {
-    this.handlers.get(name)?.delete(handler as CommandHandler<any>);
+    this.handlers.get(name)?.delete(handler as CommandHandler<CommandName>);
   }
 
   dispatch<K extends CommandName>(name: K, detail?: CommandDetail[K]): void {

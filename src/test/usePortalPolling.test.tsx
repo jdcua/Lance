@@ -12,7 +12,13 @@ vi.mock('../utils/tauri', () => ({
       portalCalls += 1;
       const views = portalCalls === 1 ? 2 : 3;
       return Promise.resolve([
-        { entity_type: 'proposal', entity_id: 'p1', token: 't', activity: `viewed ${views} times`, timestamp: '2026-01-01T00:00:00Z' },
+        {
+          entity_type: 'proposal',
+          entity_id: 'p1',
+          token: 't',
+          activity: `viewed ${views} times`,
+          timestamp: '2026-01-01T00:00:00Z',
+        },
       ]);
     }
     return Promise.resolve([]);
@@ -38,7 +44,16 @@ describe('usePortalPolling', () => {
     localStorage.clear();
     useStore.setState({
       portalActivity: [],
-      proposals: [{ id: 'p1', client_id: 'c1', title: 'Test Proposal', status: 'sent', created_at: '2026-01-01' } as any],
+      proposals: [
+        {
+          id: 'p1',
+          client_id: 'c1',
+          title: 'Test Proposal',
+          status: 'sent',
+          created_at: '2026-01-01',
+          rate_type: 'flat',
+        },
+      ],
       toasts: [],
     });
   });

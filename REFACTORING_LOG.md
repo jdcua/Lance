@@ -110,3 +110,10 @@ Each entry records what changed, why, and which standard it satisfies.
   **Why:** pin previously untested behavior before further refactoring.
   **Standard:** behavior tests, no DOM internals; no new dependencies.
 - Test suite: 246 → 263 tests, 59 → 63 files.
+
+## 2026-11-25 — Type-safety cleanup
+
+- Replaced all 24 explicit `any` usages with concrete types, `unknown` +
+  narrowing or typed helpers across 12 files. **Why:** type safety is the
+  cheapest invariant for agents. **Standard:** no `any` without reason.
+- Lint warnings: 57 → 32 (0 errors). Tests still 263 passing.

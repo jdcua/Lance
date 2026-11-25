@@ -14,7 +14,10 @@ export type UpdaterSlice = {
   dismissUpdate: () => void;
 };
 
-type SetUpdater = (partial: any, replace?: boolean) => void;
+type SetUpdater = (
+  partial: Partial<UpdaterSlice> | ((state: UpdaterSlice) => Partial<UpdaterSlice>),
+  replace?: boolean,
+) => void;
 
 export function createUpdaterSlice(set: SetUpdater): UpdaterSlice {
   return {

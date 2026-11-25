@@ -6,6 +6,7 @@ import { useStore } from '../../store';
 import { getTourPlan, loadDrive } from '../../tour/voice';
 import { buildSteps } from '../../tour/copy';
 import { commands } from '../../lib/commands';
+import type { CommandName } from '../../lib/commands';
 
 interface SpotlightTourProps {
   open: boolean;
@@ -75,7 +76,7 @@ export default function SpotlightTour({ open, onClose }: SpotlightTourProps) {
     }
     const target = step.action.action;
     if (target.startsWith('/')) navigate(target);
-    else commands.dispatch(`lance:${target}` as any);
+    else commands.dispatch(`lance:${target}` as CommandName);
     next();
   }, [step, navigate, next]);
 
