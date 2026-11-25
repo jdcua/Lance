@@ -66,3 +66,11 @@ Each entry records what changed, why, and which standard it satisfies.
   internals directly. **Standard:** typed seam via the browser shim.
 - `npm run check:boundaries` warnings dropped from 27 to 16. **Why:** warn-first
   backlog is visible and shrinking.
+
+## 2026-11-25 — Cognitive complexity pass on utilities
+
+- Extracted pure helpers in `clientImport.ts`, `paymentBehavior.ts`,
+  `useAutoUpdater.ts` and `followUpTemplates.ts`. **Why:** cut the warn-first
+  cognitive backlog. **Standard:** cognitive complexity <=15; extract named
+  helpers, never change behavior to satisfy the metric.
+- Cognitive warnings dropped from 19 to 15; lint warnings from 73 to 69.

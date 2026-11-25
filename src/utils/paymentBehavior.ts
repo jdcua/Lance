@@ -35,6 +35,34 @@ function lastPaidAt(inv: Invoice, payments: InvoicePayment[]): string | null {
   return dates.length > 0 ? dates[dates.length - 1] : null;
 }
 
+function paidDaysLate(inv: Invoice, payments: InvoicePayment[]): number | null {
+  if (inv.status !== 'paid') return null;
+  if (!inv.due_date) return null;
+  const paidAt = lastPaidAt(inv, payments);
+  if (!paidAt) return null;
+  const due = new Date(inv.due_date).getTime();
+  const paid = new Date(paidAt).getTime();
+  if (isNaN(due) || isNaN(paid)) return null;
+  return Math.ceil((paid - due) / DAY_MS);
+}
+
+function isOpenOverdue(inv: Invoice, now: number): boolean {
+  if (inv.status !== 'overdue') return false;
+  if (!inv.due_date) return true;
+  return new Date(inv.due_date).getTime() < now;
+}
+
+function countOpenOverdue(mine: Invoice[], now: number): number {
+  return mine.filter((i) => isOpenOverdue(i, now)).length;
+}
+
+function classifyPaymentRisk(worst: number, avg: number): PaymentRisk {
+  if (worst > 60 || avg > 30) return 'risky';
+  if (avg > 7) return 'slow';
+  if (avg > 0) return 'typical';
+  return 'prompt';
+}
+
 export function clientPaymentBehavior(
   clientId: string,
   invoices: Invoice[],
@@ -45,22 +73,12 @@ export function clientPaymentBehavior(
   const lates: number[] = [];
   let worst = 0;
   for (const inv of mine) {
-    if (inv.status !== 'paid') continue;
-    if (!inv.due_date) continue;
-    const paidAt = lastPaidAt(inv, payments);
-    if (!paidAt) continue;
-    const due = new Date(inv.due_date).getTime();
-    const paid = new Date(paidAt).getTime();
-    if (isNaN(due) || isNaN(paid)) continue;
-    const days = Math.ceil((paid - due) / DAY_MS);
+    const days = paidDaysLate(inv, payments);
+    if (days === null) continue;
     lates.push(days);
     if (days > worst) worst = days;
   }
-  const openOverdue = mine.filter((i) => {
-    if (i.status !== 'overdue') return false;
-    if (!i.due_date) return true;
-    return new Date(i.due_date).getTime() < now;
-  }).length;
+  const openOverdue = countOpenOverdue(mine, now);
 
   if (lates.length === 0) {
     return {
@@ -74,8 +92,7 @@ export function clientPaymentBehavior(
   }
   const avg = lates.reduce((s, d) => s + d, 0) / lates.length;
   const onTime = lates.filter((d) => d <= 0).length / lates.length;
-  const risk: PaymentRisk =
-    worst > 60 || avg > 30 ? 'risky' : avg > 7 ? 'slow' : avg > 0 ? 'typical' : 'prompt';
+  const risk = classifyPaymentRisk(worst, avg);
   return {
     paidCount: lates.length,
     avgDaysLate: Math.round(avg * 10) / 10,

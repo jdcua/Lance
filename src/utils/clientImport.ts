@@ -14,18 +14,45 @@ export interface CsvRow {
 }
 
 export const CLIENT_FIELDS: Record<string, string[]> = {
-  name: ['name', 'client', 'client_name', 'customer', 'customer_name', 'contact', 'full_name', 'contact_name', 'client_full_name'],
+  name: [
+    'name',
+    'client',
+    'client_name',
+    'customer',
+    'customer_name',
+    'contact',
+    'full_name',
+    'contact_name',
+    'client_full_name',
+  ],
   email: ['email', 'email_address', 'e_mail', 'mail'],
   phone: ['phone', 'phone_number', 'telephone', 'tel', 'mobile', 'cell', 'home_phone'],
-  company: ['company', 'organization', 'organization_name', 'org', 'business', 'company_name', 'firm'],
+  company: [
+    'company',
+    'organization',
+    'organization_name',
+    'org',
+    'business',
+    'company_name',
+    'firm',
+  ],
   notes: ['notes', 'note', 'comments', 'comment', 'description', 'remarks'],
 };
 
 // First/last name parts (Bonsai, HoneyBook, FreshBooks export these split).
 // Multiple headers may map to 'name'; parts join with a space at build time.
 export const NAME_PART_ALIASES = [
-  'first_name', 'firstname', 'fname', 'given_name', 'first',
-  'last_name', 'lastname', 'lname', 'surname', 'family_name', 'last',
+  'first_name',
+  'firstname',
+  'fname',
+  'given_name',
+  'first',
+  'last_name',
+  'lastname',
+  'lname',
+  'surname',
+  'family_name',
+  'last',
 ];
 
 /**
@@ -34,39 +61,40 @@ export const NAME_PART_ALIASES = [
  * still falls back to fuzzy matching plus manual remap, so unusual
  * exports keep working.
  */
-export const SOURCE_PRESETS: Record<string, { label: string; aliases: Record<string, string[]> }> = {
-  generic: { label: 'Generic CSV', aliases: {} },
-  bonsai: {
-    label: 'Bonsai',
-    aliases: {
-      company: ['company_name'],
-      notes: ['address', 'city', 'country'],
+export const SOURCE_PRESETS: Record<string, { label: string; aliases: Record<string, string[]> }> =
+  {
+    generic: { label: 'Generic CSV', aliases: {} },
+    bonsai: {
+      label: 'Bonsai',
+      aliases: {
+        company: ['company_name'],
+        notes: ['address', 'city', 'country'],
+      },
     },
-  },
-  honeybook: {
-    label: 'HoneyBook',
-    aliases: {
-      company: ['company_name'],
-      phone: ['phone_number', 'mobile_phone'],
+    honeybook: {
+      label: 'HoneyBook',
+      aliases: {
+        company: ['company_name'],
+        phone: ['phone_number', 'mobile_phone'],
+      },
     },
-  },
-  freshbooks: {
-    label: 'FreshBooks',
-    aliases: {
-      company: ['organization', 'organization_name'],
-      phone: ['home_phone', 'mobile'],
-      notes: ['address', 'notes_internal'],
+    freshbooks: {
+      label: 'FreshBooks',
+      aliases: {
+        company: ['organization', 'organization_name'],
+        phone: ['home_phone', 'mobile'],
+        notes: ['address', 'notes_internal'],
+      },
     },
-  },
-  wave: {
-    label: 'Wave',
-    aliases: {
-      name: ['customer_name', 'customer'],
-      email: ['email_address'],
-      company: ['business_name'],
+    wave: {
+      label: 'Wave',
+      aliases: {
+        name: ['customer_name', 'customer'],
+        email: ['email_address'],
+        company: ['business_name'],
+      },
     },
-  },
-};
+  };
 
 export function normalizeHeader(h: string): string {
   return h
@@ -91,7 +119,7 @@ function levenshteinSimilarity(a: string, b: string): number {
       matrix[i][j] = Math.min(
         matrix[i - 1][j] + 1,
         matrix[i][j - 1] + 1,
-        matrix[i - 1][j - 1] + cost
+        matrix[i - 1][j - 1] + cost,
       );
     }
   }
@@ -103,32 +131,41 @@ function levenshteinSimilarity(a: string, b: string): number {
  * exact match wins, then substring, then fuzzy similarity.
  * Split first/last names always land on 'name' (joined at build time).
  */
+function aliasScore(norm: string, alias: string): number {
+  if (norm === alias) return 1;
+  if (norm.includes(alias) || alias.includes(norm)) return 0.7;
+  const similarity = levenshteinSimilarity(norm, alias);
+  if (similarity > 0.6) return similarity * 0.5;
+  return 0;
+}
+
+function bestFieldForHeader(norm: string, sourceAliases: Record<string, string[]>): string {
+  let bestField = '';
+  let bestScore = 0;
+  for (const [field, aliases] of Object.entries(CLIENT_FIELDS)) {
+    const allAliases = [...aliases, ...(sourceAliases[field] || [])];
+    for (const alias of allAliases) {
+      const score = aliasScore(norm, alias);
+      if (score > bestScore) {
+        bestScore = score;
+        bestField = field;
+      }
+    }
+  }
+  return bestScore >= 0.4 ? bestField : '';
+}
+
 export function autoMapColumns(headers: string[], sourceId = 'generic'): Record<string, string> {
   const mapping: Record<string, string> = {};
   const sourceAliases = SOURCE_PRESETS[sourceId]?.aliases || {};
   for (const header of headers) {
     const norm = normalizeHeader(header);
-    let bestField = '';
-    let bestScore = 0;
     if (NAME_PART_ALIASES.includes(norm)) {
       mapping[header] = 'name';
       continue;
     }
-    for (const [field, aliases] of Object.entries(CLIENT_FIELDS)) {
-      const allAliases = [...aliases, ...(sourceAliases[field] || [])];
-      for (const alias of allAliases) {
-        let score = 0;
-        if (norm === alias) score = 1;
-        else if (norm.includes(alias) || alias.includes(norm)) score = 0.7;
-        else if (levenshteinSimilarity(norm, alias) > 0.6)
-          score = levenshteinSimilarity(norm, alias) * 0.5;
-        if (score > bestScore) {
-          bestScore = score;
-          bestField = field;
-        }
-      }
-    }
-    if (bestScore >= 0.4) {
+    const bestField = bestFieldForHeader(norm, sourceAliases);
+    if (bestField) {
       mapping[header] = bestField;
     }
   }
