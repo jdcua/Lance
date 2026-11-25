@@ -91,7 +91,14 @@ and `prefers-reduced-transparency` always win.
 
 ---
 
-## 6. Testing
+## 6. Complexity and testing
+
+- Target cyclomatic complexity **<= 15 per function**. The ESLint rule warns
+  today; it becomes an error once the backlog is cleared. Extract pure
+  helpers or small components instead of adding more branches to an existing
+  function. Never change behavior to satisfy the metric.
+
+### Testing
 
 - Tests depend on **behavior**, not DOM internals. Do not spy on `document.dispatchEvent`.
 - Spy on `commands.dispatch` for command-registry interactions.
