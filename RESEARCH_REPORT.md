@@ -27,7 +27,7 @@ listed at the end.
    commands and non-obvious invariants first, and move hard rules into
    ESLint/CI/clippy/hooks. Nested instruction files should be path-scoped.
 5. **Fast verification beats comprehensive analysis.** `npm run verify` stays
-   seconds-to-minutes; heavy tools (jscpd, knip, Sonar, coverage) belong in CI
+   seconds-to-minutes; heavy tools (jscpd, knip, coverage) belong in CI
    with baseline ratchets, not in the local loop.
 6. **Target architecture: domain-oriented vertical slices on top of stable
    seams** (single Zustand store, typed command registry, Rust command modules
@@ -130,7 +130,7 @@ incoherent set of files.
 |---|---|---|
 | Cyclomatic | warn 10, error 15; 20 for dispatchers | ESLint `complexity` |
 | Cognitive | 15 TS / 20 Rust | `eslint-plugin-sonarjs`, Clippy |
-| MI | file-level alert <20 | Sonar / MI script |
+| MI | file-level alert <20 | local script |
 | Halstead | no gate | — |
 | Nesting | ≤3 (JSX ≤2) | `max-depth` |
 | Params | ≤4 | `max-params` |
@@ -315,7 +315,7 @@ docs/ARCHITECTURE.md          accurate architecture map
 | Dead code | knip with `--max-issues` budget | unused files/exports/deps | CI warn → error |
 | Architecture lint | ast-grep (`sgconfig.yml`) | ban raw `invoke`, `transition-all`, UI violations | fast CI |
 | Rust | clippy lints (`cognitive_complexity`, `too_many_lines`, `too_many_arguments`), `cargo fmt --check`, cargo-machete | Rust quality | CI warn → error |
-| Optional SaaS | SonarQube Cloud OSS, CodeScene OSS | PR decoration, hotspot/CodeHealth | pilot, not gate |
+| SaaS (out of scope) | SonarCloud, CodeScene | PR decoration, hotspot/CodeHealth | not adopted; keep repo low-dependency |
 
 ## 4.2 Gates vs warnings
 
@@ -323,7 +323,7 @@ docs/ARCHITECTURE.md          accurate architecture map
   npm/cargo audit, xlsx integrity, complexity ≤15, audit:oss.
 - **Baseline ratchet:** new duplication, new cycles, knip issue budget — fail
   only on regressions, not on legacy debt.
-- **Warn-only / scheduled:** coverage %, MI, Sonar/CodeScene, type-aware ESLint
+- **Warn-only / scheduled:** coverage %, MI, type-aware ESLint (no SaaS analysis)
   (~30× slower), code-maat coupling, cargo coverage.
 - Avoid global duplication % and global coverage % gates; they reward gaming.
 
@@ -332,7 +332,7 @@ docs/ARCHITECTURE.md          accurate architecture map
 - Oxlint/Biome migration until TypeScript/toolchain compatibility allows.
 - Type-aware ESLint in the local loop (CI-only if adopted).
 - cargo-deny full license/ban policy after cargo-machete baseline.
-- SonarCloud/CodeScene hard gates until a baseline exists.
+- SonarCloud/CodeScene entirely — out of scope; no SaaS dependency.
 
 ---
 
@@ -402,8 +402,8 @@ docs/ARCHITECTURE.md          accurate architecture map
   into CLAUDE.md/Copilot files.
 - **No hard quality gates on MI, Halstead, global duplication or global
   coverage.** Use trends, baselines and hotspots.
-- **No heavy SaaS analysis in the local loop.** Sonar/CodeScene are optional
-  PR-decoration pilots, not required infrastructure.
+- **No SaaS analysis at all.** SonarCloud/CodeScene are out of scope so the
+  repository stays low-dependency and self-contained.
 - **Preserve behavior even when it looks odd.** Characterization tests pin
   current behavior; "fixing" discovered bugs is a separate, explicitly
   approved change.
@@ -424,13 +424,13 @@ docs/ARCHITECTURE.md          accurate architecture map
 3. **Rust Clippy: `-D warnings`** on the selected quality lints
    (`cognitive_complexity`, `too_many_lines`, `too_many_arguments`,
    `type_complexity`) alongside `cargo fmt --check`.
-4. **SonarCloud and CodeScene are in scope.** They are SaaS services (free for
-   public OSS): SonarCloud reports bugs, smells, vulnerabilities, duplication
-   and coverage with quality gates on new code and PR decoration; CodeScene
-   reports CodeHealth, churn×complexity hotspots and change coupling to
-   prioritize work. Configuration and CI hooks will be prepared; enabling them
-   requires a GitHub app install/token owned by the repository owner. Until
-   connected they are warn-only and never block CI.
+4. **SonarCloud and CodeScene are out of scope.** The repository intentionally
+   stays low-dependency: no SaaS analysis, no extra GitHub apps, no new tokens.
+   SonarCloud (hosted bugs/smells/duplication/coverage with PR decoration) and
+   CodeScene (CodeHealth, churn×complexity hotspots, change coupling) are
+   useful but add external services and configuration; revisit only if a
+   concrete need appears. Their capabilities are documented here for context
+   and are not part of the tooling stack we will adopt.
 
 ---
 
