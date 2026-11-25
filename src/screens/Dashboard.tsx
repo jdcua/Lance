@@ -20,7 +20,7 @@ import { useToasts } from '../store/toastStore';
 import { Play, Receipt, FileText, Users, FolderKanban, Clock, Plus, ArrowRight, CheckCircle2, Circle, Bell, Send, X, Link, Banknote, Clock3, Target } from 'lucide-react';
 import { generateFollowUpDraft } from '../utils/followUpTemplates';
 import { getDb } from '../db';
-import type Database from '@tauri-apps/plugin-sql';
+import type { Database } from '../utils/tauri';
 import * as queries from '../lib/metrics';
 import { getFeatureComponent } from '../components/features/registry';
 

@@ -27,7 +27,10 @@ function report(file, rule, detail) {
 
 const basenames = new Map();
 for (const file of files) {
-  const name = path.basename(file);
+  // Duplicate basenames in different folders (index.ts in every domain
+  // folder, shared.tsx per section) are intentional. Only same-folder
+  // duplicates are ambiguous for an agent resolving an import path.
+  const name = `${path.dirname(file)}/${path.basename(file)}`;
   basenames.set(name, [...(basenames.get(name) || []), file]);
 
   const imp = importsOf(file);
@@ -61,7 +64,7 @@ for (const file of files) {
 }
 
 for (const [name, paths] of basenames) {
-  if (paths.length > 1 && (name === 'index.ts' || name === 'shared.tsx')) {
+  if (paths.length > 1) {
     violations.push(`duplicate-basename: ${name} (${paths.length} files)`);
   }
 }
