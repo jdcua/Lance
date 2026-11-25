@@ -1,4 +1,4 @@
-import { sanitizeShareHtml } from '../../screens/ShareView';
+import { sanitizeShareHtml } from '../../utils/shareHtml';
 
 export interface DocLine {
   description: string;

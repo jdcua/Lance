@@ -54,3 +54,15 @@ Each entry records what changed, why, and which standard it satisfies.
 - Cognitive complexity promotion from warning to error: after the 19-warning
   backlog is cleared.
 - SonarCloud/CodeScene: out of scope, keep the repository self-contained.
+
+## 2026-11-25 — Boundary cleanup (branch `refactor/boundaries`)
+
+- Moved `sanitizeShareHtml` and its helper constants out of
+  `src/screens/ShareView.tsx` into `src/utils/shareHtml.ts`, updating the
+  component, `DocPreview` and the sanitizer tests. **Why:** remove a
+  component → screen import. **Standard:** stable → volatile direction.
+- Replaced direct `@tauri-apps/api/core` imports in `KanbanBoard` with
+  `tauriInvoke` from `src/utils/tauri.ts`. **Why:** UI should not import Tauri
+  internals directly. **Standard:** typed seam via the browser shim.
+- `npm run check:boundaries` warnings dropped from 27 to 16. **Why:** warn-first
+  backlog is visible and shrinking.
