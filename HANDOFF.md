@@ -43,7 +43,7 @@ No business behavior changed. Documentation that contradicted the code
 | Large screen/store/db files | `Clients.tsx`, `store/index.ts`, `db/index.ts`, `App.tsx` | extract helpers/components/group actions; one transformation per PR |
 | 0 cognitive-complexity warnings | `npm run complexity` | rule now promoted to ESLint error at 15 |
 | 0 boundary warnings | `npm run check:boundaries` | enforced in `npm run verify`; keep UI behind the tauri seam |
-| ~22 untested screens, ~125 untested Tauri commands | `src/screens/`, `src-tauri/src/commands/` | characterization tests before touching each area |
+| ~22 untested screens, ~125 untested Tauri commands | `src/screens/`, `src-tauri/src/commands/` | characterization tests before touching each area; parsers/exports/polling now covered |
 | Cloudflare Workers Builds check still posts failures | external GitHub App | disable in the Cloudflare dashboard; not a required check |
 
 ## How to extend the system

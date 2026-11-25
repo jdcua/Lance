@@ -48,7 +48,7 @@ async function parseDOCXText(file: File): Promise<string> {
 }
 
 /** Collect all positive monetary amounts found in document text. */
-function extractAmounts(text: string): number[] {
+export function extractAmounts(text: string): number[] {
   const amountPatterns = [
     /(?:total|amount\s*due|grand\s*total|balance\s*due)[:\s]*\$?([\d,]+\.?\d*)/gi,
     /\$\s*([\d,]+\.\d{2})/g,
@@ -98,7 +98,7 @@ function applyClientNameField(text: string, fields: Record<string, string>): voi
   }
 }
 
-function extractFields(text: string): Record<string, string> {
+export function extractFields(text: string): Record<string, string> {
   const fields: Record<string, string> = {};
 
   applyDateFields(text, fields);
