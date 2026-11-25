@@ -61,6 +61,16 @@ export function mapToLineItems(
 /**
  * Map spreadsheet rows to project creation payloads.
  */
+function normalizeProjectStatus(
+  raw: string | undefined,
+): 'active' | 'completed' | 'paused' | 'cancelled' {
+  const statusRaw = (raw || 'active').toLowerCase().trim();
+  if (statusRaw.includes('complete') || statusRaw.includes('done') || statusRaw.includes('finish')) return 'completed';
+  if (statusRaw.includes('pause') || statusRaw.includes('hold')) return 'paused';
+  if (statusRaw.includes('cancel')) return 'cancelled';
+  return 'active';
+}
+
 export function mapToProjects(
   rows: Record<string, string>[],
   columnMapping: Record<string, string>
@@ -76,11 +86,7 @@ export function mapToProjects(
   const reverseMap = buildReverseMap(columnMapping);
   return rows
     .map(row => {
-      const statusRaw = (getField(row, reverseMap, 'status') || 'active').toLowerCase().trim();
-      let status: 'active' | 'completed' | 'paused' | 'cancelled' = 'active';
-      if (statusRaw.includes('complete') || statusRaw.includes('done') || statusRaw.includes('finish')) status = 'completed';
-      else if (statusRaw.includes('pause') || statusRaw.includes('hold')) status = 'paused';
-      else if (statusRaw.includes('cancel')) status = 'cancelled';
+      const status = normalizeProjectStatus(getField(row, reverseMap, 'status'));
 
       const budgetStr = getField(row, reverseMap, 'budget');
       const budget = budgetStr ? parseFloat(budgetStr.replace(/[$,]/g, '')) : undefined;

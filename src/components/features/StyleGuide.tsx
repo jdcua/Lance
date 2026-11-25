@@ -20,6 +20,31 @@ type StyleGuide = {
 
 const STYLE_REF_OPTIONS = ['AP', 'Chicago', 'House', 'Other'];
 
+type StyleGuideForm = {
+  tone: string;
+  formatting_rules: string;
+  banned_words: string;
+  style_guide_ref: string;
+  notes: string;
+};
+
+const GUIDE_KEYS: (keyof StyleGuideForm)[] = ['tone', 'formatting_rules', 'banned_words', 'style_guide_ref', 'notes'];
+
+const toNull = (v: string) => v || null;
+const toOptional = (v: string) => v || undefined;
+
+function guideValues(form: StyleGuideForm, bannedWordsStr: string) {
+  return GUIDE_KEYS.map((key) => toNull(key === 'banned_words' ? bannedWordsStr : form[key]));
+}
+
+function guideFromForm(form: StyleGuideForm, bannedWordsStr: string) {
+  const result: Partial<StyleGuideForm> = {};
+  for (const key of GUIDE_KEYS) {
+    result[key] = toOptional(key === 'banned_words' ? bannedWordsStr : form[key]);
+  }
+  return result;
+}
+
 export default function StyleGuide({ clientId }: { clientId: string }) {
   const [guide, setGuide] = useState<StyleGuide | null>(null);
   const [loading, setLoading] = useState(true);
@@ -106,49 +131,21 @@ export default function StyleGuide({ clientId }: { clientId: string }) {
     try {
       const db = await getDb();
       const bannedWordsStr = bannedWordsList.join(', ');
+      const values = guideValues(form, bannedWordsStr);
+      const optional = guideFromForm(form, bannedWordsStr);
       if (guide) {
         await db.execute(
           'UPDATE client_style_guides SET tone = ?, formatting_rules = ?, banned_words = ?, style_guide_ref = ?, notes = ? WHERE id = ?',
-          [
-            form.tone || null,
-            form.formatting_rules || null,
-            bannedWordsStr || null,
-            form.style_guide_ref || null,
-            form.notes || null,
-            guide.id,
-          ]
+          [...values, guide.id]
         );
-        setGuide({
-          ...guide,
-          tone: form.tone || undefined,
-          formatting_rules: form.formatting_rules || undefined,
-          banned_words: bannedWordsStr || undefined,
-          style_guide_ref: form.style_guide_ref || undefined,
-          notes: form.notes || undefined,
-        });
+        setGuide({ ...guide, ...optional });
       } else {
         const id = crypto.randomUUID();
         await db.execute(
           'INSERT INTO client_style_guides (id, client_id, tone, formatting_rules, banned_words, style_guide_ref, notes) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [
-            id,
-            clientId,
-            form.tone || null,
-            form.formatting_rules || null,
-            bannedWordsStr || null,
-            form.style_guide_ref || null,
-            form.notes || null,
-          ]
+          [id, clientId, ...values]
         );
-        setGuide({
-          id,
-          client_id: clientId,
-          tone: form.tone || undefined,
-          formatting_rules: form.formatting_rules || undefined,
-          banned_words: bannedWordsStr || undefined,
-          style_guide_ref: form.style_guide_ref || undefined,
-          notes: form.notes || undefined,
-        });
+        setGuide({ id, client_id: clientId, ...optional });
       }
     } catch (e) {
       console.error('[StyleGuide] handleSave failed:', e);

@@ -2,13 +2,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { DEFAULT_CURRENCY } from '../lib/constants';
 import { useSearchParams } from 'react-router-dom';
 import { useStore } from '../store';
-import type { Client, Communication, MetricDefinition } from '../types';
+import type {
+  Client, Communication, Contract, Invoice, InvoicePayment, MetricDefinition, MetricTemplate,
+  MetricValue, PortalActivity, Proposal,
+} from '../types';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import { getEmptyCopy } from '../components/ui/emptyCopy';
 import Timeline, { type TimelineItem } from '../components/ui/Timeline';
 import SharedView from '../components/motion/SharedView';
-import { clientPaymentBehavior, RISK_LABEL } from '../utils/paymentBehavior';
+import { clientPaymentBehavior, RISK_LABEL, type PaymentBehavior } from '../utils/paymentBehavior';
 import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
 import { commands } from '../lib/commands';
@@ -170,6 +173,680 @@ function detectCountry(): string {
   return 'US';
 }
 
+function paymentBehaviorTone(risk: PaymentBehavior['risk']): string {
+  return risk === 'prompt'
+    ? 'text-[var(--accent-ink,var(--accent))]'
+    : risk === 'typical'
+      ? 'text-[var(--text-secondary)]'
+      : risk === 'unknown'
+        ? 'text-[var(--text-tertiary)]'
+        : 'text-[var(--warning-text)]';
+}
+
+function paymentBehaviorLine(behavior: PaymentBehavior): string {
+  if (behavior.paidCount === 0 && behavior.openOverdue === 0) return 'No payment history yet.';
+  return [
+    behavior.avgDaysLate != null
+      ? `averages ${behavior.avgDaysLate} days late across ${behavior.paidCount}`
+      : null,
+    behavior.onTimePct != null ? `${behavior.onTimePct}% on time` : null,
+    behavior.openOverdue > 0 ? `${behavior.openOverdue} overdue now` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ') + '.';
+}
+
+function PaymentBehaviorLine({
+  clientId,
+  invoices,
+  payments,
+}: {
+  clientId: string | null;
+  invoices: Invoice[];
+  payments: InvoicePayment[];
+}) {
+  const behavior = clientId ? clientPaymentBehavior(clientId, invoices, payments) : null;
+  if (!behavior) return null;
+  return (
+    <div className="col-span-4 mt-1 pt-2 border-t border-[var(--border-color)] flex items-center gap-2">
+      <Clock size={13} className="text-[var(--text-tertiary)] flex-shrink-0" />
+      <span className={`text-xs font-medium ${paymentBehaviorTone(behavior.risk)}`}>
+        {RISK_LABEL[behavior.risk]}
+      </span>
+      <span className="text-xs text-[var(--text-tertiary)]">{paymentBehaviorLine(behavior)}</span>
+    </div>
+  );
+}
+
+function timelineFromEntities(
+  selectedId: string,
+  proposals: Proposal[],
+  contracts: Contract[],
+  invoices: Invoice[],
+  currency?: string,
+): TimelineItem[] {
+  const items: TimelineItem[] = [];
+  for (const p of proposals.filter((x) => x.client_id === selectedId)) {
+    items.push({
+      id: `proposal-${p.id}`, kind: 'proposal', date: p.sent_at || p.created_at,
+      title: p.title, sub: `Proposal · ${p.status}`, to: '/proposals',
+    });
+  }
+  for (const c of contracts.filter((x) => x.client_id === selectedId)) {
+    items.push({
+      id: `contract-${c.id}`, kind: 'contract', date: c.signed_at || c.created_at,
+      title: c.title, sub: `Contract · ${c.status}`, to: '/contracts',
+    });
+  }
+  for (const i of invoices.filter((x) => x.client_id === selectedId)) {
+    items.push({
+      id: `invoice-${i.id}`, kind: 'invoice', date: i.created_at,
+      title: `Invoice ${i.invoice_number}`, sub: `${formatCurrency(i.total, currency)} · ${i.status}`,
+      to: '/invoices',
+    });
+  }
+  return items;
+}
+
+function timelineFromPayments(
+  selectedId: string,
+  payments: InvoicePayment[],
+  invoices: Invoice[],
+  currency?: string,
+): TimelineItem[] {
+  const items: TimelineItem[] = [];
+  for (const pay of payments) {
+    const inv = invoices.find((x) => x.id === pay.invoice_id);
+    if (!inv || inv.client_id !== selectedId) continue;
+    items.push({
+      id: `payment-${pay.id}`, kind: 'payment', date: pay.payment_date,
+      title: `${formatCurrency(pay.amount, currency)} payment`,
+      sub: `${inv.invoice_number} · ${pay.payment_method}`, to: '/invoices',
+    });
+  }
+  return items;
+}
+
+function timelineFromCommunications(
+  selectedId: string,
+  communications: Communication[],
+): TimelineItem[] {
+  const items: TimelineItem[] = [];
+  for (const m of communications.filter((x) => x.client_id === selectedId)) {
+    items.push({
+      id: `message-${m.id}`, kind: 'message', date: m.date || m.created_at,
+      title: m.type.charAt(0).toUpperCase() + m.type.slice(1), detail: m.summary,
+    });
+  }
+  return items;
+}
+
+function timelineFromPortalActivity(
+  selectedId: string,
+  activity: PortalActivity[],
+  proposals: Proposal[],
+  contracts: Contract[],
+): TimelineItem[] {
+  const items: TimelineItem[] = [];
+  for (const a of activity) {
+    const entity =
+      a.entity_type === 'proposal'
+        ? proposals.find((x) => x.id === a.entity_id)
+        : a.entity_type === 'contract'
+          ? contracts.find((x) => x.id === a.entity_id)
+          : undefined;
+    if (!entity || entity.client_id !== selectedId) continue;
+    items.push({
+      id: `portal-${a.token}-${a.timestamp}`, kind: 'portal', date: a.timestamp,
+      title: a.activity, sub: entity.title,
+      to: a.entity_type === 'proposal' ? '/proposals' : '/contracts',
+    });
+  }
+  return items;
+}
+
+type ClientFormState = {
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  notes: string;
+  preferred_currency: string;
+};
+
+function ClientFormModal({
+  open, onClose, editing, form, setForm, formErrors, setFormErrors, dialCode, profileCurrency,
+  saving, onSave,
+}: {
+  open: boolean;
+  onClose: () => void;
+  editing: Client | null;
+  form: ClientFormState;
+  setForm: (value: ClientFormState | ((prev: ClientFormState) => ClientFormState)) => void;
+  formErrors: { email?: string; name?: string };
+  setFormErrors: (errors: { email?: string; name?: string }) => void;
+  dialCode: string;
+  profileCurrency: string;
+  saving: boolean;
+  onSave: () => void;
+}) {
+  return (
+    <Modal open={open} onClose={onClose} title={editing ? 'Edit Client' : 'New Client'} size="md">
+      <div className="space-y-4">
+        <div>
+          <label htmlFor="client-name" className="form-label">Name *</label>
+          <input
+            id="client-name"
+            type="text"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder="Client name"
+            maxLength={MAX_LENGTHS.name}
+            className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+            autoFocus
+          />
+          {formErrors.name && (
+            <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="client-email" className="form-label">Email</label>
+            <input
+              id="client-email"
+              type="email"
+              value={form.email}
+              onChange={(e) => { setForm({ ...form, email: e.target.value }); setFormErrors({}); }}
+              placeholder="email@example.com"
+              maxLength={MAX_LENGTHS.email}
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+            />
+            {formErrors.email && (
+              <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
+            )}
+          </div>
+          <div>
+            <label htmlFor="client-phone" className="form-label">Phone</label>
+            <div className="flex items-center gap-0">
+              <span className="px-3 py-2 text-sm border border-r-0 border-[var(--border-color)] rounded-l-[8px] text-[var(--text-tertiary)] bg-[var(--bg-secondary)] whitespace-nowrap">{dialCode}</span>
+              <input
+                id="client-phone"
+                type="text"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                placeholder="555-0000"
+                maxLength={MAX_LENGTHS.phone}
+                className="flex-1 px-3 py-2 text-sm border border-[var(--border-color)] rounded-r-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+              />
+            </div>
+          </div>
+        </div>
+        <div>
+          <label htmlFor="client-company" className="form-label">Company</label>
+          <input
+            id="client-company"
+            type="text"
+            value={form.company}
+            onChange={(e) => setForm({ ...form, company: e.target.value })}
+            placeholder="Company name"
+            maxLength={MAX_LENGTHS.company}
+            className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+          />
+        </div>
+        <div>
+          <label htmlFor="client-currency" className="form-label">Preferred currency</label>
+          <select id="client-currency"
+            value={form.preferred_currency}
+            onChange={(e) => setForm({ ...form, preferred_currency: e.target.value })}
+            className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
+          >
+            <option value="">Use profile default ({profileCurrency || DEFAULT_CURRENCY})</option>
+            {[...CURRENCIES].map((c) => (
+              <option key={c} value={c}>{getCurrencySymbol(c)} {c}</option>
+            ))}
+          </select>
+          <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Used when creating invoices for this client</p>
+        </div>
+        <div>
+          <label htmlFor="client-notes" className="form-label">Notes</label>
+          <textarea id="client-notes"
+            value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            placeholder="Any notes about this client..."
+            rows={3}
+            maxLength={MAX_LENGTHS.notes}
+            className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 resize-none"
+          />
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="secondary" onClick={onClose} size="sm">
+            Cancel
+          </Button>
+          <Button onClick={onSave} loading={saving} disabled={!form.name.trim()} size="sm">
+            {editing ? 'Save Changes' : 'Add Client'}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+type MetricValueFormState = { value: string; period: string; notes: string };
+
+function MetricDefinitionCard({
+  def, values, currency, selectedId, metricDeleteConfirm, setMetricDeleteConfirm,
+  showValueForm, setShowValueForm, valueForm, setValueForm, onLogValue, onEditMetric,
+  onRemoveDef, onRemoveValue,
+}: {
+  def: MetricDefinition;
+  values: MetricValue[];
+  currency?: string;
+  selectedId: string;
+  metricDeleteConfirm: string | null;
+  setMetricDeleteConfirm: (value: string | null) => void;
+  showValueForm: boolean;
+  setShowValueForm: (value: string | null) => void;
+  valueForm: MetricValueFormState;
+  setValueForm: (value: MetricValueFormState | ((prev: MetricValueFormState) => MetricValueFormState)) => void;
+  onLogValue: (definitionId: string) => void;
+  onEditMetric: (def: MetricDefinition) => void;
+  onRemoveDef: (id: string, clientId: string) => Promise<void>;
+  onRemoveValue: (id: string, defId: string) => Promise<void>;
+}) {
+  const numericValues = values.map((v) => parseFloat(v.value)).filter((v) => !isNaN(v));
+  const latestValue = formatMetricValue(def, numericValues, values, currency);
+  return (
+    <Card className="!p-4">
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-[var(--text-primary)]">{def.name}</span>
+          {def.unit_label && (
+            <span className="text-[10px] text-[var(--text-tertiary)]">{def.unit_label}</span>
+          )}
+          {def.is_headline && (
+            <Star size={12} className="text-[var(--accent-ink,var(--accent))]" />
+          )}
+          <Badge variant="default">{def.metric_type}</Badge>
+        </div>
+        <div className="flex items-center gap-1">
+          <button aria-label="Edit clients"
+            onClick={() => onEditMetric(def)}
+            className="p-1 rounded-xs text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+          >
+            <Pencil size={12} />
+          </button>
+          {metricDeleteConfirm === def.id ? (
+            <>
+              <button
+                onClick={async () => { await onRemoveDef(def.id, selectedId); setMetricDeleteConfirm(null); }}
+                aria-label="Confirm delete metric"
+                className="p-1 rounded-xs text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
+              >
+                <Check size={12} />
+              </button>
+              <button
+                onClick={() => setMetricDeleteConfirm(null)}
+                aria-label="Cancel delete metric"
+                className="p-1 rounded-xs text-[var(--text-tertiary)] hover:bg-[var(--bg-secondary)] transition-colors"
+              >
+                <X size={12} />
+              </button>
+            </>
+          ) : (
+            <button aria-label="Delete clients"
+              onClick={() => setMetricDeleteConfirm(def.id)}
+              className="p-1 rounded-xs text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
+            >
+              <Trash2 size={12} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Values */}
+      {values.length === 0 ? (
+        <p className="text-[10px] text-[var(--text-tertiary)]">No values logged yet.</p>
+      ) : (
+        <div className="flex items-center gap-3">
+          <Sparkline values={[...numericValues].reverse()} width={100} height={28} />
+          <div>
+            <span className="text-sm font-semibold text-[var(--text-primary)]">{latestValue}</span>
+            <p className="text-[10px] text-[var(--text-tertiary)]">{values.length} entries</p>
+          </div>
+        </div>
+      )}
+      {values.length > 0 && (
+        <details className="mt-2">
+          <summary className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] cursor-pointer select-none">
+            Value history
+          </summary>
+          <div className="mt-1.5 space-y-1">
+            {values.map((v) => (
+              <div key={v.id} className="flex items-center justify-between px-2 py-1 rounded-xs hover:bg-[var(--bg-secondary)] text-xs group/val">
+                <span className="text-[var(--text-secondary)] tabular-nums">
+                  {v.value}{def.unit_label ? ` ${def.unit_label}` : ''} · <span className="text-[var(--text-tertiary)]">{v.period || relativeDate(v.created_at)}</span>
+                </span>
+                {metricDeleteConfirm === `val:${v.id}` ? (
+                  <span className="flex items-center gap-1">
+                    <button
+                      onClick={async () => { await onRemoveValue(v.id, def.id); setMetricDeleteConfirm(null); }}
+                      aria-label={`Confirm delete value ${v.value}`}
+                      className="text-[var(--danger)] hover:text-[var(--danger-hover)]"
+                    >
+                      <Check size={12} />
+                    </button>
+                    <button
+                      onClick={() => setMetricDeleteConfirm(null)}
+                      aria-label="Cancel delete"
+                      className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => setMetricDeleteConfirm(`val:${v.id}`)}
+                    aria-label={`Delete value ${v.value}`}
+                    className="text-[var(--text-tertiary)] hover:text-[var(--danger)] opacity-0 group-hover/val:opacity-100 transition-opacity"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
+
+      {/* Log value form */}
+      {showValueForm ? (
+        <div className="flex items-end gap-2 mt-3 pt-3 border-t border-[var(--border-color)]">
+          <div className="flex-1">
+            <input
+              type={def.metric_type === 'text' ? 'text' : 'number'}
+              min={def.metric_type === 'text' ? undefined : 0}
+              value={valueForm.value}
+              onChange={(e) => { const v = e.target.value; if (def.metric_type !== 'text' && Number(v) < 0) return; setValueForm({ ...valueForm, value: v }); }}
+              placeholder={`Value${def.unit_label ? ` (${def.unit_label})` : ''}`}
+              className="w-full px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+              onKeyDown={(e) => { if (e.key === 'Enter') onLogValue(def.id); }}
+              autoFocus
+            />
+          </div>
+          <div>
+            <input
+              type="date"
+              value={valueForm.period}
+              onChange={(e) => setValueForm({ ...valueForm, period: e.target.value })}
+              className="w-full px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+            />
+          </div>
+          <Button size="sm" onClick={() => onLogValue(def.id)}>Log</Button>
+          <button
+            aria-label="Close"
+            onClick={() => setShowValueForm(null)} className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
+            <X size={14} />
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => {
+            setShowValueForm(def.id);
+            setValueForm({ value: '', period: todayLocalISO(), notes: '' });
+          }}
+          className="mt-2 text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline flex items-center gap-1"
+        >
+          <Plus size={10} /> Log value
+        </button>
+      )}
+    </Card>
+  );
+}
+
+function formatMetricValue(
+  def: MetricDefinition,
+  numericValues: number[],
+  values: MetricValue[],
+  currency?: string,
+): string {
+  if (def.metric_type === 'currency') {
+    return numericValues[0] != null ? formatCurrency(numericValues[0], currency) : '--';
+  }
+  if (def.metric_type === 'percentage') {
+    return `${numericValues[0]?.toFixed(1) || '--'}%`;
+  }
+  return values[0]?.value || '--';
+}
+
+type ClientTab = 'overview' | 'metrics' | 'timeline';
+
+function ClientDetailHeader({
+  client, activeTab, setActiveTab, onEdit, onDelete,
+}: {
+  client: Client;
+  activeTab: ClientTab;
+  setActiveTab: (tab: ClientTab) => void;
+  onEdit: (client: Client) => void;
+  onDelete: (dialog: { id: string; name: string }) => void;
+}) {
+  return (
+    <>
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <SharedView layoutId={`client-name-${client.id}`}>
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">{client.name}</h2>
+          </SharedView>
+          <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)] mt-1">
+            {client.email && (
+              <span className="flex items-center gap-1"><Mail size={12} />{client.email}</span>
+            )}
+            {client.phone && (
+              <span className="flex items-center gap-1"><Phone size={12} />{client.phone}</span>
+            )}
+            {client.company && (
+              <span className="flex items-center gap-1"><Building2 size={12} />{client.company}</span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => onEdit(client)}
+            aria-label="Edit client"
+            className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+            title="Edit client"
+          >
+            <Pencil size={14} />
+          </button>
+          <button
+            onClick={() => onDelete({ id: client.id, name: client.name })}
+            aria-label="Delete client"
+            className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
+            title="Delete client"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      </div>
+
+      {client.notes && (
+        <p className="text-xs text-[var(--text-tertiary)] mb-4">{client.notes}</p>
+      )}
+
+      {/* Tabs */}
+      <div className="flex items-center gap-1 mb-4 border-b border-[var(--border-color)]">
+        {(['overview', 'metrics', 'timeline'] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-3 py-2 text-xs font-medium transition-colors relative ${
+              activeTab === tab
+                ? 'text-[var(--accent-ink,var(--accent))]'
+                : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
+            }`}
+          >
+            {tab === 'overview' ? 'Overview' : tab === 'metrics' ? 'Metrics' : 'Timeline'}
+            {activeTab === tab && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--accent)] rounded-full" />
+            )}
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
+
+type ClientOverview = {
+  projectCount: number;
+  proposalCount: number;
+  lifetime: number;
+  outstanding: number;
+  lastComm?: Communication;
+};
+
+function ClientOverviewCard({
+  overview, currency, selectedId, invoices, payments,
+}: {
+  overview: ClientOverview;
+  currency?: string;
+  selectedId: string | null;
+  invoices: Invoice[];
+  payments: InvoicePayment[];
+}) {
+  return (
+    <Card className="mb-6">
+      <h3 className="text-xs font-semibold text-[var(--text-secondary)] mb-3">Overview</h3>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <FolderKanban size={13} className="text-[var(--text-tertiary)]" />
+            <span className="text-xs text-[var(--text-secondary)]">Projects</span>
+          </div>
+          <span className="text-sm font-semibold text-[var(--text-primary)]">{overview.projectCount}</span>
+        </div>
+        <div>
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <FileText size={13} className="text-[var(--text-tertiary)]" />
+            <span className="text-xs text-[var(--text-secondary)]">Proposals</span>
+          </div>
+          <span className="text-sm font-semibold text-[var(--text-primary)]">{overview.proposalCount}</span>
+        </div>
+        <div>
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <Receipt size={13} className="text-[var(--text-tertiary)]" />
+            <span className="text-xs text-[var(--text-secondary)]">Lifetime</span>
+          </div>
+          <span className="text-sm font-semibold text-[var(--text-primary)]">{formatCurrency(overview.lifetime, currency)}</span>
+        </div>
+        <div>
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <Clock size={13} className="text-[var(--text-tertiary)]" />
+            <span className="text-xs text-[var(--text-secondary)]">Last contact</span>
+          </div>
+          <span className="text-xs text-[var(--text-primary)]">
+            {overview.lastComm ? relativeDate(overview.lastComm.created_at || overview.lastComm.date) : 'No interactions'}
+          </span>
+        </div>
+        {overview.outstanding > 0 && (
+          <div className="col-span-4 mt-1 pt-2 border-t border-[var(--border-color)]">
+            <span className="text-xs text-[var(--warning-text)]">{formatCurrency(overview.outstanding, currency)} outstanding</span>
+          </div>
+        )}
+        <PaymentBehaviorLine clientId={selectedId} invoices={invoices} payments={payments} />
+      </div>
+    </Card>
+  );
+}
+
+function MetricTemplates({
+  showPrompt, setShowPrompt, setShowModal, templates, metricDefs, selectedId,
+  metricDeleteConfirm, setMetricDeleteConfirm, onApply, onRemove,
+}: {
+  showPrompt: boolean;
+  setShowPrompt: (value: boolean) => void;
+  setShowModal: (value: boolean) => void;
+  templates: MetricTemplate[];
+  metricDefs: MetricDefinition[];
+  selectedId: string;
+  metricDeleteConfirm: string | null;
+  setMetricDeleteConfirm: (value: string | null) => void;
+  onApply: (name: string) => void;
+  onRemove: (id: string) => Promise<void>;
+}) {
+  return (
+    <>
+      {showPrompt && (
+        <div className="px-4 py-3 rounded-[10px] bg-[var(--accent-bg)] border border-[var(--accent)]/20 flex items-center justify-between">
+          <p className="text-xs text-[var(--text-primary)]">Save this metric set as a template for future clients?</p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { setShowPrompt(false); setShowModal(true); }}
+              className="text-xs text-[var(--accent-ink,var(--accent))] font-medium hover:underline"
+            >
+              Save template
+            </button>
+            <button
+              aria-label="Close"
+              onClick={() => setShowPrompt(false)} className="p-0.5 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Templates */}
+      {templates.length > 0 && metricDefs.filter((d) => d.client_id === selectedId).length === 0 && (
+        <Card>
+          <h3 className="text-xs font-semibold text-[var(--text-secondary)] mb-3">
+            Apply a template
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {templates.map((tpl) => (
+              <span
+                key={tpl.id}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-[var(--border-color)] text-xs text-[var(--text-secondary)] hover:border-[var(--accent)]/30 hover:text-[var(--text-primary)] transition-colors bg-[var(--bg-secondary)]"
+              >
+                <button
+                  onClick={() => onApply(tpl.name)}
+                  className="flex items-center gap-1.5"
+                >
+                  <Copy size={12} />
+                  {tpl.name}
+                </button>
+                {metricDeleteConfirm === `tpl:${tpl.id}` ? (
+                  <>
+                    <button
+                      onClick={async () => { await onRemove(tpl.id); setMetricDeleteConfirm(null); }}
+                      aria-label={`Confirm delete template ${tpl.name}`}
+                      className="text-[var(--danger)] hover:text-[var(--danger-hover)]"
+                    >
+                      <Check size={12} />
+                    </button>
+                    <button
+                      onClick={() => setMetricDeleteConfirm(null)}
+                      aria-label="Cancel delete"
+                      className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                    >
+                      <X size={12} />
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setMetricDeleteConfirm(`tpl:${tpl.id}`)}
+                    aria-label={`Delete template ${tpl.name}`}
+                    className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
+        </Card>
+      )}
+    </>
+  );
+}
+
 export default function Clients() {
   const clientsError = useStore((s) => s.errors.clients);
   const {
@@ -263,56 +940,12 @@ export default function Clients() {
   /** Relationship timeline: real entities only, newest first in Timeline. */
   const clientTimeline: TimelineItem[] = useMemo(() => {
     if (!selectedId) return [];
-    const items: TimelineItem[] = [];
-    for (const p of proposals.filter((x) => x.client_id === selectedId)) {
-      items.push({
-        id: `proposal-${p.id}`, kind: 'proposal', date: p.sent_at || p.created_at,
-        title: p.title, sub: `Proposal · ${p.status}`, to: '/proposals',
-      });
-    }
-    for (const c of contracts.filter((x) => x.client_id === selectedId)) {
-      items.push({
-        id: `contract-${c.id}`, kind: 'contract', date: c.signed_at || c.created_at,
-        title: c.title, sub: `Contract · ${c.status}`, to: '/contracts',
-      });
-    }
-    for (const i of invoices.filter((x) => x.client_id === selectedId)) {
-      items.push({
-        id: `invoice-${i.id}`, kind: 'invoice', date: i.created_at,
-        title: `Invoice ${i.invoice_number}`, sub: `${formatCurrency(i.total, profile?.currency)} · ${i.status}`,
-        to: '/invoices',
-      });
-    }
-    for (const pay of payments) {
-      const inv = invoices.find((x) => x.id === pay.invoice_id);
-      if (!inv || inv.client_id !== selectedId) continue;
-      items.push({
-        id: `payment-${pay.id}`, kind: 'payment', date: pay.payment_date,
-        title: `${formatCurrency(pay.amount, profile?.currency)} payment`,
-        sub: `${inv.invoice_number} · ${pay.payment_method}`, to: '/invoices',
-      });
-    }
-    for (const m of communications.filter((x) => x.client_id === selectedId)) {
-      items.push({
-        id: `message-${m.id}`, kind: 'message', date: m.date || m.created_at,
-        title: m.type.charAt(0).toUpperCase() + m.type.slice(1), detail: m.summary,
-      });
-    }
-    for (const a of portalActivity) {
-      const entity =
-        a.entity_type === 'proposal'
-          ? proposals.find((x) => x.id === a.entity_id)
-          : a.entity_type === 'contract'
-            ? contracts.find((x) => x.id === a.entity_id)
-            : undefined;
-      if (!entity || entity.client_id !== selectedId) continue;
-      items.push({
-        id: `portal-${a.token}-${a.timestamp}`, kind: 'portal', date: a.timestamp,
-        title: a.activity, sub: entity.title,
-        to: a.entity_type === 'proposal' ? '/proposals' : '/contracts',
-      });
-    }
-    return items;
+    return [
+      ...timelineFromEntities(selectedId, proposals, contracts, invoices, profile?.currency),
+      ...timelineFromPayments(selectedId, payments, invoices, profile?.currency),
+      ...timelineFromCommunications(selectedId, communications),
+      ...timelineFromPortalActivity(selectedId, portalActivity, proposals, contracts),
+    ];
   }, [selectedId, proposals, contracts, invoices, payments, communications, portalActivity, profile?.currency]);
   const selectedCountry = useMemo(() => COUNTRY_OPTIONS.find((country) => country.code === phoneCountry) || COUNTRY_OPTIONS[0], [phoneCountry]);
 
@@ -664,157 +1297,24 @@ export default function Clients() {
           const overview = getOverview(selectedClient.id);
           return (
             <>
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <SharedView layoutId={`client-name-${selectedClient.id}`}>
-                    <h2 className="text-lg font-semibold text-[var(--text-primary)]">{selectedClient.name}</h2>
-                  </SharedView>
-                  <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)] mt-1">
-                    {selectedClient.email && (
-                      <span className="flex items-center gap-1">
-                        <Mail size={12} />
-                        {selectedClient.email}
-                      </span>
-                    )}
-                    {selectedClient.phone && (
-                      <span className="flex items-center gap-1">
-                        <Phone size={12} />
-                        {selectedClient.phone}
-                      </span>
-                    )}
-                    {selectedClient.company && (
-                      <span className="flex items-center gap-1">
-                        <Building2 size={12} />
-                        {selectedClient.company}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => openEdit(selectedClient)}
-                    aria-label="Edit client"
-                    className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
-                    title="Edit client"
-                  >
-                    <Pencil size={14} />
-                  </button>
-                  <button
-                    onClick={() => setConfirmDialog({ id: selectedClient.id, name: selectedClient.name })}
-                    aria-label="Delete client"
-                    className="p-1.5 rounded-sm text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
-                    title="Delete client"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </div>
-
-              {selectedClient.notes && (
-                <p className="text-xs text-[var(--text-tertiary)] mb-4">{selectedClient.notes}</p>
-              )}
-
-              {/* Tabs */}
-              <div className="flex items-center gap-1 mb-4 border-b border-[var(--border-color)]">
-                {(['overview', 'metrics', 'timeline'] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`px-3 py-2 text-xs font-medium transition-colors relative ${
-                      activeTab === tab
-                        ? 'text-[var(--accent-ink,var(--accent))]'
-                        : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
-                    }`}
-                   
-                  >
-                    {tab === 'overview' ? 'Overview' : tab === 'metrics' ? 'Metrics' : 'Timeline'}
-                    {activeTab === tab && (
-                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--accent)] rounded-full" />
-                    )}
-                  </button>
-                ))}
-              </div>
+              <ClientDetailHeader
+                client={selectedClient}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                onEdit={openEdit}
+                onDelete={setConfirmDialog}
+              />
 
               {/* Overview tab */}
               {activeTab === 'overview' && (
                 <>
-                  <Card className="mb-6">
-                    <h3 className="text-xs font-semibold text-[var(--text-secondary)] mb-3">Overview</h3>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div>
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <FolderKanban size={13} className="text-[var(--text-tertiary)]" />
-                          <span className="text-xs text-[var(--text-secondary)]">Projects</span>
-                        </div>
-                        <span className="text-sm font-semibold text-[var(--text-primary)]">{overview.projectCount}</span>
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <FileText size={13} className="text-[var(--text-tertiary)]" />
-                          <span className="text-xs text-[var(--text-secondary)]">Proposals</span>
-                        </div>
-                        <span className="text-sm font-semibold text-[var(--text-primary)]">{overview.proposalCount}</span>
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <Receipt size={13} className="text-[var(--text-tertiary)]" />
-                          <span className="text-xs text-[var(--text-secondary)]">Lifetime</span>
-                        </div>
-                        <span className="text-sm font-semibold text-[var(--text-primary)]">{formatCurrency(overview.lifetime, profile?.currency)}</span>
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <Clock size={13} className="text-[var(--text-tertiary)]" />
-                          <span className="text-xs text-[var(--text-secondary)]">Last contact</span>
-                        </div>
-                        <span className="text-xs text-[var(--text-primary)]">
-                          {overview.lastComm ? relativeDate(overview.lastComm.created_at || overview.lastComm.date) : 'No interactions'}
-                        </span>
-                      </div>
-                      {overview.outstanding > 0 && (
-                        <div className="col-span-4 mt-1 pt-2 border-t border-[var(--border-color)]">
-                          <span className="text-xs text-[var(--warning-text)]">{formatCurrency(overview.outstanding, profile?.currency)} outstanding</span>
-                        </div>
-                      )}
-                      {(() => {
-                        const behavior = selectedId
-                          ? clientPaymentBehavior(selectedId, invoices, payments)
-                          : null;
-                        if (!behavior) return null;
-                        const tone =
-                          behavior.risk === 'prompt'
-                            ? 'text-[var(--accent-ink,var(--accent))]'
-                            : behavior.risk === 'typical'
-                              ? 'text-[var(--text-secondary)]'
-                              : behavior.risk === 'unknown'
-                                ? 'text-[var(--text-tertiary)]'
-                                : 'text-[var(--warning-text)]';
-                        const line =
-                          behavior.paidCount === 0 && behavior.openOverdue === 0
-                            ? 'No payment history yet.'
-                            : [
-                                behavior.avgDaysLate != null
-                                  ? `averages ${behavior.avgDaysLate} days late across ${behavior.paidCount}`
-                                  : null,
-                                behavior.onTimePct != null ? `${behavior.onTimePct}% on time` : null,
-                                behavior.openOverdue > 0
-                                  ? `${behavior.openOverdue} overdue now`
-                                  : null,
-                              ]
-                                .filter(Boolean)
-                                .join(' · ') + '.';
-                        return (
-                          <div className="col-span-4 mt-1 pt-2 border-t border-[var(--border-color)] flex items-center gap-2">
-                            <Clock size={13} className="text-[var(--text-tertiary)] flex-shrink-0" />
-                            <span className={`text-xs font-medium ${tone}`}>
-                              {RISK_LABEL[behavior.risk]}
-                            </span>
-                            <span className="text-xs text-[var(--text-tertiary)]">{line}</span>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  </Card>
+                  <ClientOverviewCard
+                    overview={overview}
+                    currency={profile?.currency}
+                    selectedId={selectedId}
+                    invoices={invoices}
+                    payments={payments}
+                  />
 
                   <div>
                     <div className="flex items-center justify-between mb-3">
@@ -953,249 +1453,49 @@ export default function Clients() {
               {/* Metrics tab */}
               {activeTab === 'metrics' && selectedId && (
                 <div className="space-y-6">
-                  {/* Template prompt */}
-                  {showTemplatePrompt && (
-                    <div className="px-4 py-3 rounded-[10px] bg-[var(--accent-bg)] border border-[var(--accent)]/20 flex items-center justify-between">
-                      <p className="text-xs text-[var(--text-primary)]">Save this metric set as a template for future clients?</p>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => { setShowTemplatePrompt(false); setShowTemplateModal(true); }}
-                          className="text-xs text-[var(--accent-ink,var(--accent))] font-medium hover:underline"
-                        >
-                          Save template
-                        </button>
-                        <button
-                          aria-label="Close"
-                          onClick={() => setShowTemplatePrompt(false)} className="p-0.5 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
-                          <X size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Templates */}
-                  {metricTemplates.length > 0 && metricDefs.filter((d) => d.client_id === selectedId).length === 0 && (
-                    <Card>
-                      <h3 className="text-xs font-semibold text-[var(--text-secondary)] mb-3">
-                        Apply a template
-                      </h3>
-                      <div className="flex flex-wrap gap-2">
-                        {metricTemplates.map((tpl) => (
-                          <span
-                            key={tpl.id}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-[var(--border-color)] text-xs text-[var(--text-secondary)] hover:border-[var(--accent)]/30 hover:text-[var(--text-primary)] transition-colors bg-[var(--bg-secondary)]"
-                          >
-                                <button
-                                  onClick={() => handleApplyTemplate(tpl.name)}
-                                  className="flex items-center gap-1.5"
-                                >
-                                  <Copy size={12} />
-                                  {tpl.name}
-                                </button>
-                                {metricDeleteConfirm === `tpl:${tpl.id}` ? (
-                                  <>
-                                    <button
-                                      onClick={async () => { await removeMetricTemplate(tpl.id); setMetricDeleteConfirm(null); }}
-                                      aria-label={`Confirm delete template ${tpl.name}`}
-                                      className="text-[var(--danger)] hover:text-[var(--danger-hover)]"
-                                    >
-                                      <Check size={12} />
-                                    </button>
-                                    <button
-                                      onClick={() => setMetricDeleteConfirm(null)}
-                                      aria-label="Cancel delete"
-                                      className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
-                                    >
-                                      <X size={12} />
-                                    </button>
-                                  </>
-                                ) : (
-                                <button
-                                  onClick={() => setMetricDeleteConfirm(`tpl:${tpl.id}`)}
-                                  aria-label={`Delete template ${tpl.name}`}
-                                  className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"
-                                >
-                                  <X size={12} />
-                                </button>
-                                )}
-                          </span>
-                        ))}
-                      </div>
-                    </Card>
-                  )}
+                  <MetricTemplates
+                    showPrompt={showTemplatePrompt}
+                    setShowPrompt={setShowTemplatePrompt}
+                    setShowModal={setShowTemplateModal}
+                    templates={metricTemplates}
+                    metricDefs={metricDefs}
+                    selectedId={selectedId}
+                    metricDeleteConfirm={metricDeleteConfirm}
+                    setMetricDeleteConfirm={setMetricDeleteConfirm}
+                    onApply={handleApplyTemplate}
+                    onRemove={removeMetricTemplate}
+                  />
 
                   {/* Metric definitions + values */}
                   <div className="space-y-4">
-                    {metricDefs.filter((d) => d.client_id === selectedId).map((def) => {
-                      const values = metricValues.filter((v) => v.definition_id === def.id);
-                      const numericValues = values
-                        .map((v) => parseFloat(v.value))
-                        .filter((v) => !isNaN(v));
-
-                      return (
-                        <Card key={def.id} className="!p-4">
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-[var(--text-primary)]">
-                                {def.name}
-                              </span>
-                              {def.unit_label && (
-                                <span className="text-[10px] text-[var(--text-tertiary)]">{def.unit_label}</span>
-                              )}
-                              {def.is_headline && (
-                                <Star size={12} className="text-[var(--accent-ink,var(--accent))]" />
-                              )}
-                              <Badge variant="default">
-                                {def.metric_type}
-                              </Badge>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <button aria-label="Edit clients"
-                                onClick={() => {
-                                  setEditingMetric(def);
-                                  setMetricForm({
-                                    name: def.name,
-                                    metric_type: def.metric_type,
-                                    unit_label: def.unit_label || '',
-                                    is_headline: def.is_headline,
-                                  });
-                                  setShowMetricForm(true);
-                                }}
-                                className="p-1 rounded-xs text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
-                              >
-                                <Pencil size={12} />
-                              </button>
-                              {metricDeleteConfirm === def.id ? (
-                                <>
-                                  <button
-                                    onClick={async () => { await removeMetricDef(def.id, selectedId); setMetricDeleteConfirm(null); }}
-                                    aria-label="Confirm delete metric"
-                                    className="p-1 rounded-xs text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
-                                  >
-                                    <Check size={12} />
-                                  </button>
-                                  <button
-                                    onClick={() => setMetricDeleteConfirm(null)}
-                                    aria-label="Cancel delete metric"
-                                    className="p-1 rounded-xs text-[var(--text-tertiary)] hover:bg-[var(--bg-secondary)] transition-colors"
-                                  >
-                                    <X size={12} />
-                                  </button>
-                                </>
-                              ) : (
-                              <button aria-label="Delete clients"
-                                onClick={() => setMetricDeleteConfirm(def.id)}
-                                className="p-1 rounded-xs text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
-                              >
-                                <Trash2 size={12} />
-                              </button>
-                              )}
-                            </div>
-                          </div>
-
-                      {/* Values */}
-                      {values.length === 0 ? (
-                        <p className="text-[10px] text-[var(--text-tertiary)]">No values logged yet.</p>
-                      ) : (
-                            <div className="flex items-center gap-3">
-                              <Sparkline values={[...numericValues].reverse()} width={100} height={28} />
-                              <div>
-                                <span className="text-sm font-semibold text-[var(--text-primary)]">
-                                  {def.metric_type === 'currency' ? (numericValues[0] != null ? formatCurrency(numericValues[0], profile?.currency) : '--') :
-                                   def.metric_type === 'percentage' ? `${numericValues[0]?.toFixed(1) || '--'}%` :
-                                   values[0]?.value || '--'}
-                                </span>
-                                <p className="text-[10px] text-[var(--text-tertiary)]">{values.length} entries</p>
-                              </div>
-                            </div>
-                          )}
-                      {values.length > 0 && (
-                        <details className="mt-2">
-                          <summary className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] cursor-pointer select-none">
-                            Value history
-                          </summary>
-                          <div className="mt-1.5 space-y-1">
-                            {values.map((v) => (
-                              <div key={v.id} className="flex items-center justify-between px-2 py-1 rounded-xs hover:bg-[var(--bg-secondary)] text-xs group/val">
-                                <span className="text-[var(--text-secondary)] tabular-nums">
-                                  {v.value}{def.unit_label ? ` ${def.unit_label}` : ''} · <span className="text-[var(--text-tertiary)]">{v.period || relativeDate(v.created_at)}</span>
-                                </span>
-                                {metricDeleteConfirm === `val:${v.id}` ? (
-                                  <span className="flex items-center gap-1">
-                                    <button
-                                      onClick={async () => { await removeMetricValue(v.id, def.id); setMetricDeleteConfirm(null); }}
-                                      aria-label={`Confirm delete value ${v.value}`}
-                                      className="text-[var(--danger)] hover:text-[var(--danger-hover)]"
-                                    >
-                                      <Check size={12} />
-                                    </button>
-                                    <button
-                                      onClick={() => setMetricDeleteConfirm(null)}
-                                      aria-label="Cancel delete"
-                                      className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
-                                    >
-                                      <X size={12} />
-                                    </button>
-                                  </span>
-                                ) : (
-                                <button
-                                  onClick={() => setMetricDeleteConfirm(`val:${v.id}`)}
-                                  aria-label={`Delete value ${v.value}`}
-                                  className="text-[var(--text-tertiary)] hover:text-[var(--danger)] opacity-0 group-hover/val:opacity-100 transition-opacity"
-                                >
-                                  <X size={12} />
-                                </button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </details>
-                      )}
-
-                          {/* Log value form */}
-                          {showValueForm === def.id ? (
-                            <div className="flex items-end gap-2 mt-3 pt-3 border-t border-[var(--border-color)]">
-                              <div className="flex-1">
-                                <input
-                                  type={def.metric_type === 'text' ? 'text' : 'number'}
-                                  min={def.metric_type === 'text' ? undefined : 0}
-                                  value={valueForm.value}
-                                  onChange={(e) => { const v = e.target.value; if (def.metric_type !== 'text' && Number(v) < 0) return; setValueForm({ ...valueForm, value: v }); }}
-                                  placeholder={`Value${def.unit_label ? ` (${def.unit_label})` : ''}`}
-                                  className="w-full px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
-                                  onKeyDown={(e) => { if (e.key === 'Enter') handleLogValue(def.id); }}
-                                  autoFocus
-                                />
-                              </div>
-                              <div>
-                                <input
-                                  type="date"
-                                  value={valueForm.period}
-                                  onChange={(e) => setValueForm({ ...valueForm, period: e.target.value })}
-                                  className="w-full px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-                                />
-                              </div>
-                              <Button size="sm" onClick={() => handleLogValue(def.id)}>Log</Button>
-                              <button
-                                aria-label="Close"
-                                onClick={() => setShowValueForm(null)} className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
-                                <X size={14} />
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => {
-                                setShowValueForm(def.id);
-                                setValueForm({ value: '', period: todayLocalISO(), notes: '' });
-                              }}
-                              className="mt-2 text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline flex items-center gap-1"
-                            >
-                              <Plus size={10} /> Log value
-                            </button>
-                          )}
-                        </Card>
-                      );
-                    })}
+                    {metricDefs.filter((d) => d.client_id === selectedId).map((def) => (
+                      <MetricDefinitionCard
+                        key={def.id}
+                        def={def}
+                        values={metricValues.filter((v) => v.definition_id === def.id)}
+                        currency={profile?.currency}
+                        selectedId={selectedId}
+                        metricDeleteConfirm={metricDeleteConfirm}
+                        setMetricDeleteConfirm={setMetricDeleteConfirm}
+                        showValueForm={showValueForm === def.id}
+                        setShowValueForm={setShowValueForm}
+                        valueForm={valueForm}
+                        setValueForm={setValueForm}
+                        onLogValue={handleLogValue}
+                        onEditMetric={(metric) => {
+                          setEditingMetric(metric);
+                          setMetricForm({
+                            name: metric.name,
+                            metric_type: metric.metric_type,
+                            unit_label: metric.unit_label || '',
+                            is_headline: metric.is_headline,
+                          });
+                          setShowMetricForm(true);
+                        }}
+                        onRemoveDef={removeMetricDef}
+                        onRemoveValue={removeMetricValue}
+                      />
+                    ))}
 
                     {/* Add metric button */}
                     {!showMetricForm && (
@@ -1279,103 +1579,19 @@ export default function Clients() {
       </div>
 
       {/* Client add/edit modal */}
-      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Client' : 'New Client'} size="md">
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="client-name" className="form-label">Name *</label>
-            <input
-              id="client-name"
-              type="text"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="Client name"
-              maxLength={MAX_LENGTHS.name}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
-              autoFocus
-            />
-            {formErrors.name && (
-              <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
-            )}
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="client-email" className="form-label">Email</label>
-              <input
-                id="client-email"
-                type="email"
-                value={form.email}
-                onChange={(e) => { setForm({ ...form, email: e.target.value }); setFormErrors({}); }}
-                placeholder="email@example.com"
-                maxLength={MAX_LENGTHS.email}
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
-              />
-              {formErrors.email && (
-                <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
-              )}
-            </div>
-            <div>
-              <label htmlFor="client-phone" className="form-label">Phone</label>
-              <div className="flex items-center gap-0">
-                <span className="px-3 py-2 text-sm border border-r-0 border-[var(--border-color)] rounded-l-[8px] text-[var(--text-tertiary)] bg-[var(--bg-secondary)] whitespace-nowrap">{selectedCountry.dialCode}</span>
-                <input
-                  id="client-phone"
-                  type="text"
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  placeholder="555-0000"
-                  maxLength={MAX_LENGTHS.phone}
-                  className="flex-1 px-3 py-2 text-sm border border-[var(--border-color)] rounded-r-[8px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
-                />
-              </div>
-            </div>
-          </div>
-          <div>
-            <label htmlFor="client-company" className="form-label">Company</label>
-            <input
-              id="client-company"
-              type="text"
-              value={form.company}
-              onChange={(e) => setForm({ ...form, company: e.target.value })}
-              placeholder="Company name"
-              maxLength={MAX_LENGTHS.company}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
-            />
-          </div>
-          <div>
-            <label htmlFor="client-currency" className="form-label">Preferred currency</label>
-            <select id="client-currency"
-              value={form.preferred_currency}
-              onChange={(e) => setForm({ ...form, preferred_currency: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
-            >
-              <option value="">Use profile default ({profile?.currency || DEFAULT_CURRENCY})</option>
-              {[...CURRENCIES].map((c) => (
-                <option key={c} value={c}>{getCurrencySymbol(c)} {c}</option>
-              ))}
-            </select>
-            <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Used when creating invoices for this client</p>
-          </div>
-          <div>
-            <label htmlFor="client-notes" className="form-label">Notes</label>
-            <textarea id="client-notes"
-              value={form.notes}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              placeholder="Any notes about this client..."
-              rows={3}
-              maxLength={MAX_LENGTHS.notes}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 resize-none"
-            />
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="secondary" onClick={() => setShowModal(false)} size="sm">
-              Cancel
-            </Button>
-            <Button onClick={handleSaveClient} loading={saving} disabled={!form.name.trim()} size="sm">
-              {editing ? 'Save Changes' : 'Add Client'}
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      <ClientFormModal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        editing={editing}
+        form={form}
+        setForm={setForm}
+        formErrors={formErrors}
+        setFormErrors={setFormErrors}
+        dialCode={selectedCountry.dialCode}
+        profileCurrency={profile?.currency || ''}
+        saving={saving}
+        onSave={handleSaveClient}
+      />
 
       {/* Save Template Modal */}
       <Modal open={showTemplateModal} onClose={() => setShowTemplateModal(false)} title="Save Metric Template" size="sm">

@@ -228,8 +228,8 @@ export async function tauriInvoke<T>(cmd: string, args?: Record<string, unknown>
 
 function handleGetUserProfile<T>(
   cmd: string,
-  args: Record<string, unknown> | undefined,
-  verb: string,
+  _args: Record<string, unknown> | undefined,
+  _verb: string,
 ): T | undefined {
   // ── Profile (singleton) ──
   if (cmd === 'get_user_profile') {
@@ -241,7 +241,7 @@ function handleGetUserProfile<T>(
 function handleUpsertUserProfile<T>(
   cmd: string,
   args: Record<string, unknown> | undefined,
-  verb: string,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'upsert_user_profile') {
     if (args?.payload) {
@@ -256,8 +256,8 @@ function handleUpsertUserProfile<T>(
 
 function handleDirectoryCommands<T>(
   cmd: string,
-  args: Record<string, unknown> | undefined,
-  verb: string,
+  _args: Record<string, unknown> | undefined,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'get_imports_dir' || cmd === 'get_assets_dir') {
     return '' as unknown as T;
@@ -270,7 +270,7 @@ function handleDirectoryCommands<T>(
 function handleUpdateFollowUpStatus<T>(
   cmd: string,
   args: Record<string, unknown> | undefined,
-  verb: string,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'update_follow_up_status') {
     const payload = (args?.payload || {}) as Record<string, unknown>;
@@ -310,8 +310,8 @@ function handleUpdateFollowUpStatus<T>(
 
 function handleGetAllFollowUpLogs<T>(
   cmd: string,
-  args: Record<string, unknown> | undefined,
-  verb: string,
+  _args: Record<string, unknown> | undefined,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'get_all_follow_up_logs') {
     // lsGetRecord, not lsGet: follow_up_logs is keyed `type:id`, not a list.
@@ -333,8 +333,8 @@ function handleGetAllFollowUpLogs<T>(
 
 function handleGetAssetStats<T>(
   cmd: string,
-  args: Record<string, unknown> | undefined,
-  verb: string,
+  _args: Record<string, unknown> | undefined,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'get_asset_stats') {
     // Browser mode has no asset server, but the rows (with real sizes)
@@ -354,8 +354,8 @@ function handleGetAssetStats<T>(
 
 function handleGetShareServerPort<T>(
   cmd: string,
-  args: Record<string, unknown> | undefined,
-  verb: string,
+  _args: Record<string, unknown> | undefined,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'get_share_server_port') {
     // In the packaged Tauri app the share server listens on port 1421.
@@ -372,8 +372,8 @@ function handleGetShareServerPort<T>(
 
 function handleGetAllShareTokens<T>(
   cmd: string,
-  args: Record<string, unknown> | undefined,
-  verb: string,
+  _args: Record<string, unknown> | undefined,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'get_all_share_tokens') {
     return lsGet<StoreRow>('share_tokens') as unknown as T;
@@ -384,7 +384,7 @@ function handleGetAllShareTokens<T>(
 function handleGetShareTokenForEntity<T>(
   cmd: string,
   args: Record<string, unknown> | undefined,
-  verb: string,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'get_share_token_for_entity') {
     const { entityType, entityId } = (args || {}) as { entityType?: string; entityId?: string };
@@ -400,7 +400,7 @@ function handleGetShareTokenForEntity<T>(
 function handleCreateShareToken<T>(
   cmd: string,
   args: Record<string, unknown> | undefined,
-  verb: string,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'create_share_token') {
     const payload = (args?.payload || {}) as Record<string, unknown>;
@@ -425,7 +425,7 @@ function handleCreateShareToken<T>(
 function handleRevokeShareToken<T>(
   cmd: string,
   args: Record<string, unknown> | undefined,
-  verb: string,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'revoke_share_token') {
     const { token } = (args || {}) as { token?: string };
@@ -443,7 +443,7 @@ function handleRevokeShareToken<T>(
 function handleGetShareToken<T>(
   cmd: string,
   args: Record<string, unknown> | undefined,
-  verb: string,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'get_share_token') {
     const { token } = (args || {}) as { token?: string };
@@ -457,7 +457,7 @@ function handleGetShareToken<T>(
 function handleRecordShareView<T>(
   cmd: string,
   args: Record<string, unknown> | undefined,
-  verb: string,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'record_share_view') {
     const { token } = (args || {}) as { token?: string };
@@ -560,7 +560,7 @@ function handleRespondShareToken<T>(
 function handleGetSessions<T>(
   cmd: string,
   args: Record<string, unknown> | undefined,
-  verb: string,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'get_sessions') {
     const all = lsGet<StoreRow>('sessions');
@@ -581,8 +581,8 @@ function handleGetSessions<T>(
 
 function handleGetHeadlineMetrics<T>(
   cmd: string,
-  args: Record<string, unknown> | undefined,
-  verb: string,
+  _args: Record<string, unknown> | undefined,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'get_all_headline_metrics') {
     const defs = lsGet<StoreRow>('metric_definitions');
@@ -684,7 +684,7 @@ function handleCreateCommands<T>(
 function handleUpdateAttachmentMeta<T>(
   cmd: string,
   args: Record<string, unknown> | undefined,
-  verb: string,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'update_attachment_meta') {
     const payload = args?.payload as Record<string, unknown> | undefined;
@@ -707,7 +707,7 @@ function handleUpdateAttachmentMeta<T>(
 function handleUpdateKeyword<T>(
   cmd: string,
   args: Record<string, unknown> | undefined,
-  verb: string,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'update_keyword') {
     const { id, positionCurrent, targetPosition } = (args || {}) as {
@@ -929,7 +929,7 @@ function handleDeleteCommands<T>(
 function handleLogFollowUp<T>(
   cmd: string,
   args: Record<string, unknown> | undefined,
-  verb: string,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'log_follow_up') {
     const payload = (args?.payload || {}) as Record<string, unknown>;
@@ -993,7 +993,7 @@ function handleLogCommands<T>(
 function handleSaveMetricTemplate<T>(
   cmd: string,
   args: Record<string, unknown> | undefined,
-  verb: string,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'save_metric_template') {
     const payload = args?.payload as Record<string, unknown> | undefined;
@@ -1038,7 +1038,7 @@ function handleSaveCommands<T>(
 function handleRenameAttachment<T>(
   cmd: string,
   args: Record<string, unknown> | undefined,
-  verb: string,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'rename_attachment') {
     // Mirror the Rust command: new_filename is sanitized and written to the
@@ -1062,7 +1062,7 @@ function handleRenameAttachment<T>(
 function handleMoveAttachment<T>(
   cmd: string,
   args: Record<string, unknown> | undefined,
-  verb: string,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'move_attachment') {
     const payload = args?.payload as Record<string, unknown> | undefined;
@@ -1085,7 +1085,7 @@ function handleMoveAttachment<T>(
 function handleSearchAssets<T>(
   cmd: string,
   args: Record<string, unknown> | undefined,
-  verb: string,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'search_assets') {
     const query = ((args?.query as string) || '').toLowerCase();
@@ -1105,8 +1105,8 @@ function handleSearchAssets<T>(
 
 function handleExpireSentProposals<T>(
   cmd: string,
-  args: Record<string, unknown> | undefined,
-  verb: string,
+  _args: Record<string, unknown> | undefined,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'expire_sent_proposals') {
     // Mirror the Rust engine: sent proposals past expires_at become expired.
@@ -1141,8 +1141,8 @@ function handleExpireSentProposals<T>(
 
 function handleGetPortalActivity<T>(
   cmd: string,
-  args: Record<string, unknown> | undefined,
-  verb: string,
+  _args: Record<string, unknown> | undefined,
+  _verb: string,
 ): T | undefined {
   if (cmd === 'get_portal_activity') {
     return [] as unknown as T;

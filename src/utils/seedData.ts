@@ -633,12 +633,11 @@ async function runSeed(): Promise<void> {
   }
 }
 
-export async function clearSampleData(): Promise<void> {
-  // Deletes exactly the rows seeding created (tracked in lance:seeded-ids),
-  // children before parents so FK enforcement never trips. Anything the
-  // user added after seeding is untouched — the old `seeded = 1` flag was
-  // never set on any row, so that path deleted nothing while reporting
-  // success. Legacy seeds (no id tracking) must use Reset all data.
+type SeedDb = Awaited<ReturnType<typeof import('../db').getDb>>;
+type DeletedSeeds = { proposals: Set<string>; invoices: Set<string> };
+
+/** Read the ids seeding created, or throw when this is a legacy seed. */
+function readTrackedSeedIds(): Record<string, string[]> {
   let tracked: Record<string, string[]> | null = null;
   try {
     const raw = localStorage.getItem('lance:seeded-ids');
@@ -649,7 +648,12 @@ export async function clearSampleData(): Promise<void> {
   if (!tracked) {
     throw new Error('These sample rows predate selective clearing — use Reset all data instead.');
   }
-  const ORDER: Array<[table: string, ids: string[]]> = [
+  return tracked;
+}
+
+/** Children before parents so FK enforcement never trips. */
+function trackedDeletionOrder(tracked: Record<string, string[]>): Array<[string, string[]]> {
+  return [
     ['milestones', tracked.milestones || []],
     ['time_entries', tracked.time_entries || []],
     ['invoices', tracked.invoices || []],
@@ -660,10 +664,15 @@ export async function clearSampleData(): Promise<void> {
     ['projects', tracked.projects || []],
     ['clients', tracked.clients || []],
   ];
-  const { getDb } = await import('../db');
-  const db = await getDb();
-  const deleted = { proposals: new Set<string>(), invoices: new Set<string>() };
-  for (const [table, ids] of ORDER) {
+}
+
+/** Delete exactly the tracked rows and remember proposal/invoice ids. */
+async function deleteTrackedRows(
+  db: SeedDb,
+  order: Array<[string, string[]]>,
+  deleted: DeletedSeeds,
+): Promise<void> {
+  for (const [table, ids] of order) {
     for (const id of ids) {
       try {
         await db.execute(`DELETE FROM ${table} WHERE id = ?`, [id]);
@@ -675,7 +684,10 @@ export async function clearSampleData(): Promise<void> {
       for (const id of ids) deleted[table].add(id);
     }
   }
-  // Follow-ups drafted from seed rows (by the auto-engine) would orphan.
+}
+
+/** Follow-ups drafted from seed rows (by the auto-engine) would orphan. */
+async function cleanupDraftFollowUps(db: SeedDb, deleted: DeletedSeeds): Promise<void> {
   try {
     for (const id of [...deleted.proposals, ...deleted.invoices]) {
       await db.execute('DELETE FROM follow_up_log WHERE entity_id = ?', [id]).catch(() => {});
@@ -683,6 +695,10 @@ export async function clearSampleData(): Promise<void> {
   } catch {
     /* best-effort */
   }
+}
+
+/** Prune client-side follow-up caches referencing deleted seed rows. */
+function pruneFollowUpLists(deleted: DeletedSeeds): void {
   try {
     for (const key of ['lance:store:pending_follow_ups']) {
       const raw = localStorage.getItem(key);
@@ -718,7 +734,10 @@ export async function clearSampleData(): Promise<void> {
   } catch {
     /* Tauri keeps these in SQLite; the DELETE above covered it */
   }
-  await restorePreSeedAchievements();
+}
+
+/** Forget the selective-seed bookkeeping, keeping the user's other data. */
+function clearSeedFlags(): void {
   try {
     localStorage.removeItem('lance:seeded-ids');
   } catch {
@@ -726,6 +745,24 @@ export async function clearSampleData(): Promise<void> {
   }
   localStorage.removeItem('lance:seeded');
   localStorage.removeItem('lance:seeded-toast-shown');
+}
+
+export async function clearSampleData(): Promise<void> {
+  // Deletes exactly the rows seeding created (tracked in lance:seeded-ids),
+  // children before parents so FK enforcement never trips. Anything the
+  // user added after seeding is untouched — the old `seeded = 1` flag was
+  // never set on any row, so that path deleted nothing while reporting
+  // success. Legacy seeds (no id tracking) must use Reset all data.
+  const tracked = readTrackedSeedIds();
+  const order = trackedDeletionOrder(tracked);
+  const { getDb } = await import('../db');
+  const db = await getDb();
+  const deleted: DeletedSeeds = { proposals: new Set<string>(), invoices: new Set<string>() };
+  await deleteTrackedRows(db, order, deleted);
+  await cleanupDraftFollowUps(db, deleted);
+  pruneFollowUpLists(deleted);
+  await restorePreSeedAchievements();
+  clearSeedFlags();
 }
 
 /**

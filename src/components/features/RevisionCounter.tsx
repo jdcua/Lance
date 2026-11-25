@@ -11,6 +11,60 @@ import { useToasts } from '../../store/toastStore';
 import Button from '../ui/Button';
 import { Plus, RotateCcw, FilePlus2 } from 'lucide-react';
 
+function revisionTheme(overLimit: boolean, atLimit: boolean) {
+  return {
+    countColor: overLimit ? 'text-[#E74C3C]' : atLimit ? 'text-[#E67E22]' : 'text-[#2ECC71]',
+    bgColor: overLimit ? 'bg-[#E74C3C]/10' : atLimit ? 'bg-[#E67E22]/10' : 'bg-[#2ECC71]/10',
+    label: overLimit ? 'Over limit' : atLimit ? 'At limit' : 'Under limit',
+  };
+}
+
+function isChangeOrderDisabled(orderAmount: string, defaultAmount: string, ordering: boolean, hasProject: boolean) {
+  return ordering || !(parseFloat(orderAmount || defaultAmount || '0') > 0) || !hasProject;
+}
+
+function ChangeOrderPanel({
+  overBy,
+  revisionLimit,
+  defaultAmount,
+  orderAmount,
+  setOrderAmount,
+  disabled,
+  ordering,
+  onGenerate,
+}: {
+  overBy: number;
+  revisionLimit: number;
+  defaultAmount: string;
+  orderAmount: string;
+  setOrderAmount: (value: string) => void;
+  disabled: boolean;
+  ordering: boolean;
+  onGenerate: () => void;
+}) {
+  return (
+    <div className="px-4 py-3 rounded-sm bg-[var(--warning-bg)] space-y-2.5">
+      <p className="text-xs text-[var(--warning-text)] leading-relaxed">
+        {overBy} round{overBy === 1 ? '' : 's'} past your {revisionLimit}-round limit. Bill it instead of absorbing it.
+      </p>
+      <div className="flex gap-2">
+        <input
+          type="number"
+          min="0"
+          value={orderAmount}
+          onChange={(e) => setOrderAmount(e.target.value)}
+          placeholder={defaultAmount || 'Amount'}
+          aria-label="Change order amount"
+          className="w-24 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+        />
+        <Button size="sm" className="flex-1" disabled={disabled} onClick={onGenerate}>
+          <FilePlus2 size={12} />
+          {ordering ? 'Creating...' : 'Generate change order'}
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export default function RevisionCounter({ projectId }: { projectId: string }) {
   const { revisions, loadRevisions, addRevision, profile, projects, invoices, addInvoice } = useStore();
@@ -70,8 +124,8 @@ export default function RevisionCounter({ projectId }: { projectId: string }) {
     setOrdering(false);
   };
 
-  const countColor = overLimit ? 'text-[#E74C3C]' : atLimit ? 'text-[#E67E22]' : 'text-[#2ECC71]';
-  const bgColor = overLimit ? 'bg-[#E74C3C]/10' : atLimit ? 'bg-[#E67E22]/10' : 'bg-[#2ECC71]/10';
+  const theme = revisionTheme(overLimit, atLimit);
+  const changeOrderDisabled = isChangeOrderDisabled(orderAmount, defaultAmount, ordering, !!project);
 
   const handleAddRound = async () => {
     setSaving(true);
@@ -90,42 +144,27 @@ export default function RevisionCounter({ projectId }: { projectId: string }) {
         </Button>
       </div>
 
-      <div className={`flex items-center justify-center gap-3 px-4 py-3 rounded-sm ${bgColor}`}>
-        <RotateCcw size={16} className={countColor} />
-        <span className={`text-lg font-semibold ${countColor}`}>
+      <div className={`flex items-center justify-center gap-3 px-4 py-3 rounded-sm ${theme.bgColor}`}>
+        <RotateCcw size={16} className={theme.countColor} />
+        <span className={`text-lg font-semibold ${theme.countColor}`}>
           {currentRound} / {revisionLimit}
         </span>
-        <span className={`text-xs ${countColor}`}>
-          {overLimit ? 'Over limit' : atLimit ? 'At limit' : 'Under limit'}
+        <span className={`text-xs ${theme.countColor}`}>
+          {theme.label}
         </span>
       </div>
 
       {overLimit && (
-        <div className="px-4 py-3 rounded-sm bg-[var(--warning-bg)] space-y-2.5">
-          <p className="text-xs text-[var(--warning-text)] leading-relaxed">
-            {overBy} round{overBy === 1 ? '' : 's'} past your {revisionLimit}-round limit. Bill it instead of absorbing it.
-          </p>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              min="0"
-              value={orderAmount}
-              onChange={(e) => setOrderAmount(e.target.value)}
-              placeholder={defaultAmount || 'Amount'}
-              aria-label="Change order amount"
-              className="w-24 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-            />
-            <Button
-              size="sm"
-              className="flex-1"
-              disabled={ordering || !(parseFloat(orderAmount || defaultAmount || '0') > 0) || !project}
-              onClick={handleChangeOrder}
-            >
-              <FilePlus2 size={12} />
-              {ordering ? 'Creating...' : 'Generate change order'}
-            </Button>
-          </div>
-        </div>
+        <ChangeOrderPanel
+          overBy={overBy}
+          revisionLimit={revisionLimit}
+          defaultAmount={defaultAmount}
+          orderAmount={orderAmount}
+          setOrderAmount={setOrderAmount}
+          disabled={changeOrderDisabled}
+          ordering={ordering}
+          onGenerate={handleChangeOrder}
+        />
       )}
 
       {list.length === 0 ? (

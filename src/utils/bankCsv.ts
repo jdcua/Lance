@@ -105,6 +105,26 @@ export interface ParsedBankRow extends BankRow {
   direction: 'out' | 'in';
 }
 
+/** Debit columns win, then credit, then a single signed amount column. */
+function resolveBankAmount(
+  row: Record<string, unknown>,
+  map: BankColumnMap,
+): number | null {
+  let amount: number | null = null;
+  if (map.debit) {
+    const debit = parseMoney(row[map.debit]);
+    if (debit !== null && debit !== 0) amount = -Math.abs(debit);
+  }
+  if (amount === null && map.credit) {
+    const credit = parseMoney(row[map.credit]);
+    if (credit !== null && credit !== 0) amount = Math.abs(credit);
+  }
+  if (amount === null && map.amount) {
+    amount = parseMoney(row[map.amount]);
+  }
+  return amount;
+}
+
 /** Resolve rows to signed amounts. Debit columns mean outflow. */
 export function parseBankRows(
   rows: Record<string, unknown>[],
@@ -119,18 +139,7 @@ export function parseBankRows(
       skipped += 1;
       continue;
     }
-    let amount: number | null = null;
-    if (map.debit) {
-      const debit = parseMoney(row[map.debit]);
-      if (debit !== null && debit !== 0) amount = -Math.abs(debit);
-    }
-    if (amount === null && map.credit) {
-      const credit = parseMoney(row[map.credit]);
-      if (credit !== null && credit !== 0) amount = Math.abs(credit);
-    }
-    if (amount === null && map.amount) {
-      amount = parseMoney(row[map.amount]);
-    }
+    const amount = resolveBankAmount(row, map);
     if (amount === null || amount === 0) {
       skipped += 1;
       continue;

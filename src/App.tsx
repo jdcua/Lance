@@ -23,6 +23,7 @@ import {
   FileEdit,
 } from 'lucide-react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import type { NavigateFunction } from 'react-router-dom';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
 import AIBar from './components/layout/AIBar';
@@ -42,7 +43,7 @@ import UpdaterModal from './components/ui/UpdaterModal';
 import ShortcutsModal from './components/ui/ShortcutsModal';
 import OrbitField from './components/motion/OrbitField';
 import { commands } from './lib/commands';
-import { useStore } from './store';
+import { useStore, type AppStore } from './store';
 import { useToasts } from './store/toastStore';
 import { useAutoUpdater } from './hooks/useAutoUpdater';
 import {
@@ -58,7 +59,7 @@ import { useChangelog } from './utils/changelog';
 import { usePrefs } from './lib/prefs';
 import { applyTheme, getTheme, THEMES } from './themes/themes';
 import { getShortcutModifierLabel } from './utils/shortcuts';
-import type { UserProfile } from './types';
+import type { FollowUpSettings, TimeEntry, UserProfile } from './types';
 import { checkAchievements } from './achievements/checker';
 import { ACHIEVEMENTS } from './achievements';
 import { parseDateString, DAY_MS } from './utils/format';
@@ -66,6 +67,7 @@ import { defaultCurrency } from './lib/currency';
 import { recordTelemetry } from './utils/telemetry';
 import { usePortalPolling } from './lib/engines/usePortalPolling';
 import { getRuntimeVersion } from './lib/version';
+import type { getStage, getTemplateKey } from './utils/followUpTemplates';
 
 /**
  * Run `fn` at the next idle opportunity, but never later than `ms`.
@@ -95,6 +97,257 @@ export function idleOrTimeout(fn: () => void, ms = 400): () => void {
     clearTimeout(timer);
     if (idle !== null) cancelIdleCallback(idle);
   };
+}
+
+type FollowUpFns = {
+  getStage: typeof getStage;
+  getTemplateKey: typeof getTemplateKey;
+};
+
+/** A stage is skipped when already pending or already actioned in history. */
+function followUpStageHandled(
+  state: AppStore,
+  entityType: 'proposal' | 'invoice',
+  entityId: string,
+  stage: number,
+): boolean {
+  const alreadyPending = state.pendingFollowUps.some(
+    (l) => l.entity_type === entityType && l.entity_id === entityId && l.stage === stage,
+  );
+  const alreadyLogged = (state.followUpLogs[`${entityType}:${entityId}`] || []).some(
+    (l) => l.stage === stage,
+  );
+  return alreadyPending || alreadyLogged;
+}
+
+async function checkProposalFollowUps(
+  state: AppStore,
+  settings: FollowUpSettings,
+  now: Date,
+  fns: FollowUpFns,
+): Promise<void> {
+  for (const p of state.proposals) {
+    if (p.status !== 'sent') continue;
+    const client = state.clients.find((c) => c.id === p.client_id);
+    if (!client?.email) {
+      console.warn(`Skipping proposal follow-up for "${p.title}" · client has no email`);
+      continue;
+    }
+    const sentDate = p.sent_at ? new Date(p.sent_at) : new Date(p.created_at);
+    const daysElapsed = Math.floor((now.getTime() - sentDate.getTime()) / DAY_MS);
+    if (daysElapsed < settings.proposal_delay_days) continue;
+    const stage = fns.getStage('proposal', daysElapsed - settings.proposal_delay_days);
+    if (followUpStageHandled(state, 'proposal', p.id, stage)) continue;
+    const templateKey = fns.getTemplateKey('proposal', daysElapsed, settings.proposal_delay_days);
+    if (!templateKey) continue;
+    await state.logFollowUp({ entity_type: 'proposal', entity_id: p.id, stage });
+  }
+}
+
+async function checkInvoiceFollowUps(
+  state: AppStore,
+  settings: FollowUpSettings,
+  now: Date,
+  fns: FollowUpFns,
+): Promise<void> {
+  for (const inv of state.invoices) {
+    if (inv.status !== 'sent' && inv.status !== 'overdue') continue;
+    if (!inv.due_date) continue;
+    const client = state.clients.find((c) => c.id === inv.client_id);
+    if (!client?.email) {
+      console.warn(`Skipping invoice follow-up for "${inv.invoice_number}" · client has no email`);
+      continue;
+    }
+    const dueDate = parseDateString(inv.due_date);
+    const daysElapsed = Math.floor((now.getTime() - dueDate.getTime()) / DAY_MS);
+    if (inv.status === 'sent' && daysElapsed >= 1) {
+      try {
+        await state.updateInvoice({ ...inv, status: 'overdue' });
+      } catch {
+        /* non-critical; follow-up still queues below */
+      }
+    }
+    if (daysElapsed < settings.invoice_delay_days) continue;
+    const stage = fns.getStage('invoice', daysElapsed);
+    if (followUpStageHandled(state, 'invoice', inv.id, stage)) continue;
+    const templateKey = fns.getTemplateKey('invoice', daysElapsed, settings.invoice_delay_days);
+    if (!templateKey) continue;
+    await state.logFollowUp({ entity_type: 'invoice', entity_id: inv.id, stage });
+  }
+}
+
+type TimerConfigResult =
+  | { kind: 'ok'; projectId: string; clientId: string }
+  | { kind: 'none' }
+  | { kind: 'ambiguous' };
+
+/** Remembered config, else an unambiguous active project, else why we can't start. */
+function resolveTimerConfig(state: AppStore): TimerConfigResult {
+  let projectId = '';
+  let clientId = '';
+  const lastConfig = localStorage.getItem('lance:last-timer-config');
+  if (lastConfig) {
+    try {
+      const cfg = JSON.parse(lastConfig);
+      projectId = cfg.projectId || '';
+      clientId = cfg.clientId || '';
+    } catch {
+      /* ignore */
+    }
+  }
+  const remembered = state.projects.find((p) => p.id === projectId && p.status === 'active');
+  if (!remembered) {
+    projectId = '';
+    clientId = '';
+  }
+  if (projectId && clientId) return { kind: 'ok', projectId, clientId };
+  const active = state.projects.filter((p) => p.status === 'active');
+  if (active.length === 1) {
+    return { kind: 'ok', projectId: active[0].id, clientId: active[0].client_id };
+  }
+  return active.length === 0 ? { kind: 'none' } : { kind: 'ambiguous' };
+}
+
+async function closeOpenTimeEntries(
+  state: AppStore,
+  openEntries: TimeEntry[],
+  activeEntry: TimeEntry,
+): Promise<void> {
+  const endTime = new Date().toISOString();
+  for (const entry of openEntries) {
+    const duration = Math.floor((Date.now() - new Date(entry.start_time).getTime()) / 60000);
+    if (entry.id === activeEntry.id && duration < 1) {
+      await state.removeTimeEntry(entry.id);
+    } else {
+      await state.updateTimeEntry({
+        ...entry,
+        end_time: endTime,
+        duration_minutes: Math.max(0, duration),
+      });
+    }
+  }
+}
+
+function timerStoppedToast(duration: number): { message: string; type: 'info' | 'success' } {
+  if (duration < 1) {
+    return { message: 'Timer stopped · under a minute, nothing logged', type: 'info' };
+  }
+  const h = Math.floor(duration / 60);
+  const m = duration % 60;
+  return { message: `Timer stopped · ${h > 0 ? `${h}h ` : ''}${m}m`, type: 'success' };
+}
+
+function persistTimerConfig(entry: TimeEntry): void {
+  try {
+    localStorage.setItem(
+      'lance:last-timer-config',
+      JSON.stringify({ projectId: entry.project_id, clientId: entry.client_id }),
+    );
+  } catch {
+    /* private mode */
+  }
+}
+
+type ShortcutDeps = {
+  navigate: NavigateFunction;
+  pathname: string;
+  isEditing: () => boolean;
+  toggleTimer: () => void;
+  setPalette: (value: boolean | ((prev: boolean) => boolean)) => void;
+  setQuickLog: (value: boolean) => void;
+  setShortcuts: (value: boolean | ((prev: boolean) => boolean)) => void;
+};
+
+function handlePaletteAndSettingsShortcut(e: KeyboardEvent, deps: ShortcutDeps): boolean {
+  if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+    e.preventDefault();
+    deps.setPalette((prev) => !prev);
+    return true;
+  }
+  if (e.key === ',' && (e.metaKey || e.ctrlKey)) {
+    e.preventDefault();
+    if (!deps.isEditing()) deps.navigate('/settings', { replace: true });
+    return true;
+  }
+  return false;
+}
+
+function handleModShiftShortcut(e: KeyboardEvent, deps: ShortcutDeps): boolean {
+  if (!(e.metaKey || e.ctrlKey) || !e.shiftKey) return false;
+  if (e.key === 'T' || e.key === 't') {
+    e.preventDefault();
+    deps.toggleTimer();
+    return true;
+  }
+  if (e.key === 'L' || e.key === 'l') {
+    e.preventDefault();
+    deps.setQuickLog(true);
+    return true;
+  }
+  return false;
+}
+
+type NewShortcutCommand =
+  | 'lance:add-client'
+  | 'lance:add-invoice'
+  | 'lance:add-project'
+  | 'lance:add-time'
+  | 'lance:add-contract'
+  | 'lance:add-expense';
+
+const NEW_SHORTCUT_COMMANDS: Array<[string, NewShortcutCommand]> = [
+  ['/clients', 'lance:add-client'],
+  ['/invoices', 'lance:add-invoice'],
+  ['/projects', 'lance:add-project'],
+  ['/time', 'lance:add-time'],
+  ['/contracts', 'lance:add-contract'],
+  ['/finance', 'lance:add-expense'],
+];
+
+function handleNewShortcut(e: KeyboardEvent, pathname: string, navigate: NavigateFunction): void {
+  if (pathname.startsWith('/proposals')) {
+    e.preventDefault();
+    navigate('/proposals/new');
+    return;
+  }
+  for (const [prefix, command] of NEW_SHORTCUT_COMMANDS) {
+    if (pathname.startsWith(prefix)) {
+      e.preventDefault();
+      commands.dispatch(command);
+      return;
+    }
+  }
+}
+
+function navigateToNumberedPath(e: KeyboardEvent, navigate: NavigateFunction): void {
+  if (e.shiftKey || e.key < '1' || e.key > '8') return;
+  e.preventDefault();
+  const paths = [
+    '/',
+    '/clients',
+    '/projects',
+    '/invoices',
+    '/contracts',
+    '/finance',
+    '/insights',
+    '/settings',
+  ];
+  const path = paths[parseInt(e.key) - 1];
+  if (path) navigate(path);
+}
+
+function handleNonEditingShortcut(e: KeyboardEvent, deps: ShortcutDeps): void {
+  if (!(e.metaKey || e.ctrlKey)) return;
+  if (e.key === '/' || e.key === '?') {
+    e.preventDefault();
+    deps.setShortcuts((prev) => !prev);
+    return;
+  }
+  if (e.key === 'n') {
+    handleNewShortcut(e, deps.pathname, deps.navigate);
+    return;
+  }
+  navigateToNumberedPath(e, deps.navigate);
 }
 
 export default function App() {
@@ -553,7 +806,7 @@ export default function App() {
 
     const checkFollowUps = async () => {
       try {
-        const { getTemplateKey, getStage } = await import('./utils/followUpTemplates');
+        const fns = await import('./utils/followUpTemplates');
         const state = useStore.getState();
         const settings = state.followUpSettings;
         if (!settings.enabled) return;
@@ -562,85 +815,14 @@ export default function App() {
         await state.loadInvoices();
         await state.loadClients();
         await state.loadPendingFollowUps();
-        await state.loadAllFollowUpLogs();
-        const currentPending = useStore.getState().pendingFollowUps;
-        // Full history (keyed entity_type:entity_id) so we never re-draft a stage
-        // that was already actioned (sent/dismissed) · the pending-only guard
+        // Full history (keyed entity_type:entity_id) so we never re-draft a
+        // stage already actioned (sent/dismissed); the pending-only guard
         // would re-create an identical draft every run after actioning.
-        const followUpHistory = useStore.getState().followUpLogs;
-
+        await state.loadAllFollowUpLogs();
+        const current = useStore.getState();
         const now = new Date();
-
-        // Check proposals
-        for (const p of useStore.getState().proposals) {
-          if (p.status !== 'sent') continue;
-
-          const client = useStore.getState().clients.find((c) => c.id === p.client_id);
-          if (!client?.email) {
-            console.warn(`Skipping proposal follow-up for "${p.title}" · client has no email`);
-            continue;
-          }
-
-          const sentDate = p.sent_at ? new Date(p.sent_at) : new Date(p.created_at);
-          const daysElapsed = Math.floor((now.getTime() - sentDate.getTime()) / DAY_MS);
-          if (daysElapsed < settings.proposal_delay_days) continue;
-
-          const stage = getStage('proposal', daysElapsed - settings.proposal_delay_days);
-          const alreadyPending = currentPending.some(
-            (l) => l.entity_type === 'proposal' && l.entity_id === p.id && l.stage === stage,
-          );
-          const alreadyLogged = (followUpHistory[`proposal:${p.id}`] || []).some(
-            (l) => l.stage === stage,
-          );
-          if (alreadyPending || alreadyLogged) continue;
-
-          const templateKey = getTemplateKey('proposal', daysElapsed, settings.proposal_delay_days);
-          if (!templateKey) continue;
-
-          await state.logFollowUp({ entity_type: 'proposal', entity_id: p.id, stage });
-        }
-
-        // Check invoices
-        for (const inv of useStore.getState().invoices) {
-          if (inv.status !== 'sent' && inv.status !== 'overdue') continue;
-          if (!inv.due_date) continue;
-
-          const client = useStore.getState().clients.find((c) => c.id === inv.client_id);
-          if (!client?.email) {
-            console.warn(
-              `Skipping invoice follow-up for "${inv.invoice_number}" · client has no email`,
-            );
-            continue;
-          }
-
-          const dueDate = parseDateString(inv.due_date);
-          const daysElapsed = Math.floor((now.getTime() - dueDate.getTime()) / DAY_MS);
-          // Auto-mark overdue: a sent invoice past its due date becomes
-          // overdue (one-time transition; everything downstream already
-          // treats both as unpaid).
-          if (inv.status === 'sent' && daysElapsed >= 1) {
-            try {
-              await state.updateInvoice({ ...inv, status: 'overdue' });
-            } catch {
-              /* non-critical; follow-up still queues below */
-            }
-          }
-          if (daysElapsed < settings.invoice_delay_days) continue;
-
-          const stage = getStage('invoice', daysElapsed);
-          const alreadyPending = currentPending.some(
-            (l) => l.entity_type === 'invoice' && l.entity_id === inv.id && l.stage === stage,
-          );
-          const alreadyLogged = (followUpHistory[`invoice:${inv.id}`] || []).some(
-            (l) => l.stage === stage,
-          );
-          if (alreadyPending || alreadyLogged) continue;
-
-          const templateKey = getTemplateKey('invoice', daysElapsed, settings.invoice_delay_days);
-          if (!templateKey) continue;
-
-          await state.logFollowUp({ entity_type: 'invoice', entity_id: inv.id, stage });
-        }
+        await checkProposalFollowUps(current, settings, now, fns);
+        await checkInvoiceFollowUps(current, settings, now, fns);
       } catch {
         /* follow-up check is non-critical */
       }
@@ -795,85 +977,36 @@ export default function App() {
       const activeEntry = openEntries[0];
 
       if (activeEntry) {
-        const endTime = new Date().toISOString();
         // Close EVERYTHING open, not just the first: legacy/imported data
         // (and pre-guard races) can hold several. The first keeps its real
         // duration; extras are stamped as-is so no time silently vanishes.
-        for (const entry of openEntries) {
-          const duration = Math.floor((Date.now() - new Date(entry.start_time).getTime()) / 60000);
-          if (entry.id === activeEntry.id && duration < 1) {
-            // Sub-minute timer toggle produces a phantom 0-minute entry. Discard it.
-            await state.removeTimeEntry(entry.id);
-          } else {
-            await state.updateTimeEntry({
-              ...entry,
-              end_time: endTime,
-              duration_minutes: Math.max(0, duration),
-            });
-          }
-        }
+        await closeOpenTimeEntries(state, openEntries, activeEntry);
         const duration = Math.floor(
           (Date.now() - new Date(activeEntry.start_time).getTime()) / 60000,
         );
-        if (duration < 1) {
-          addToast('Timer stopped · under a minute, nothing logged', 'info');
-        } else {
-          const h = Math.floor(duration / 60);
-          const m = duration % 60;
-          addToast(`Timer stopped · ${h > 0 ? `${h}h ` : ''}${m}m`, 'success');
-        }
+        const toast = timerStoppedToast(duration);
+        addToast(toast.message, toast.type);
       } else {
-        let projectId = '';
-        let clientId = '';
-        const lastConfig = localStorage.getItem('lance:last-timer-config');
-        if (lastConfig) {
-          try {
-            const cfg = JSON.parse(lastConfig);
-            projectId = cfg.projectId || '';
-            clientId = cfg.clientId || '';
-          } catch {
-            /* ignore */
-          }
+        // The remembered project may be deleted or archived since. With
+        // several active projects the toggle must not silently pick one —
+        // hours logged to the wrong project end up on the wrong invoice.
+        const config = resolveTimerConfig(state);
+        if (config.kind === 'none') {
+          addToast('No active project available to start timer', 'error');
+          return;
         }
-        // The remembered project may be deleted or archived since. Fall
-        // back to the first active project instead of orphaning the entry.
-        const remembered = state.projects.find((p) => p.id === projectId && p.status === 'active');
-        if (!remembered) {
-          projectId = '';
-          clientId = '';
-        }
-        if (!projectId || !clientId) {
-          // No valid memory: a single active project is unambiguous, but with
-          // several the toggle must not silently pick one — hours logged to
-          // the wrong project end up on the wrong invoice. Ask instead of
-          // guessing; Quick Log or any timer run remembers the choice.
-          const active = state.projects.filter((p) => p.status === 'active');
-          if (active.length === 1) {
-            projectId = active[0].id;
-            clientId = active[0].client_id;
-          } else if (active.length === 0) {
-            addToast('No active project available to start timer', 'error');
-            return;
-          } else {
-            addToast('Pick a project for the timer first — log time once via Quick Log', 'error');
-            return;
-          }
+        if (config.kind === 'ambiguous') {
+          addToast('Pick a project for the timer first — log time once via Quick Log', 'error');
+          return;
         }
         const entry = await state.addTimeEntry({
-          project_id: projectId,
-          client_id: clientId,
+          project_id: config.projectId,
+          client_id: config.clientId,
           start_time: new Date().toISOString(),
           billable: true,
         });
-        try {
-          localStorage.setItem(
-            'lance:last-timer-config',
-            JSON.stringify({ projectId: entry.project_id, clientId: entry.client_id }),
-          );
-        } catch {
-          /* private mode */
-        }
-        const project = state.projects.find((p) => p.id === projectId);
+        persistTimerConfig(entry);
+        const project = state.projects.find((p) => p.id === config.projectId);
         addToast(`Timer started · ${project?.title || 'Unknown'}`, 'success');
       }
     } catch (err) {
@@ -911,69 +1044,19 @@ export default function App() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setShowCommandPalette((prev) => !prev);
-        return;
-      }
-      if (e.key === ',' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        if (!isEditing()) navigate('/settings', { replace: true });
-        return;
-      }
-      const modShift = (e.metaKey || e.ctrlKey) && e.shiftKey;
-      if (modShift && (e.key === 'T' || e.key === 't')) {
-        e.preventDefault();
-        toggleTimer();
-        return;
-      }
-      if (modShift && (e.key === 'L' || e.key === 'l')) {
-        e.preventDefault();
-        setShowQuickLogModal(true);
-        return;
-      }
+      const deps: ShortcutDeps = {
+        navigate,
+        pathname: location.pathname,
+        isEditing,
+        toggleTimer,
+        setPalette: setShowCommandPalette,
+        setQuickLog: setShowQuickLogModal,
+        setShortcuts: setShowShortcuts,
+      };
+      if (handlePaletteAndSettingsShortcut(e, deps)) return;
+      if (handleModShiftShortcut(e, deps)) return;
       if (isEditing()) return;
-      const mod = e.metaKey || e.ctrlKey;
-      if (mod && (e.key === '/' || e.key === '?')) {
-        e.preventDefault();
-        setShowShortcuts((prev) => !prev);
-        return;
-      }
-      if (mod && e.key === 'n') {
-        const path = location.pathname;
-        // Only swallow the keystroke when it does something: otherwise
-        // Cmd+N keeps its native meaning (new window) instead of dying.
-        if (path.startsWith('/proposals')) {
-          e.preventDefault();
-          navigate('/proposals/new');
-        } else if (path.startsWith('/clients')) {
-          e.preventDefault();
-          commands.dispatch('lance:add-client');
-        } else if (path.startsWith('/invoices')) {
-          e.preventDefault();
-          commands.dispatch('lance:add-invoice');
-        } else if (path.startsWith('/projects')) {
-          e.preventDefault();
-          commands.dispatch('lance:add-project');
-        } else if (path.startsWith('/time')) {
-          e.preventDefault();
-          commands.dispatch('lance:add-time');
-        } else if (path.startsWith('/contracts')) {
-          e.preventDefault();
-          commands.dispatch('lance:add-contract');
-        } else if (path.startsWith('/finance')) {
-          e.preventDefault();
-          commands.dispatch('lance:add-expense');
-        }
-      }
-      if (mod && !e.shiftKey && e.key >= '1' && e.key <= '8') {
-        e.preventDefault();
-        const idx = parseInt(e.key) - 1;
-        const paths = ['/', '/clients', '/projects', '/invoices', '/contracts', '/finance', '/insights', '/settings'];
-        if (paths[idx]) {
-          navigate(paths[idx]);
-        }
-      }
+      handleNonEditingShortcut(e, deps);
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);

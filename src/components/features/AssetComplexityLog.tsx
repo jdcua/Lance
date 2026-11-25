@@ -19,6 +19,33 @@ type Complexity = {
 
 const RIG_OPTIONS = ['none', 'simple', 'medium', 'complex', 'hero'] as const;
 
+type ComplexityForm = {
+  poly_count: string;
+  texture_count: string;
+  rig_complexity: string;
+  software: string;
+  notes: string;
+};
+
+const textOrNull = (v: string) => v || null;
+const textOrOptional = (v: string) => v || undefined;
+const countOrNull = (v: string) => (v ? parseInt(v) : null);
+const countOrOptional = (v: string) => (v ? parseInt(v) : undefined);
+
+function saveValues(form: ComplexityForm) {
+  return [textOrNull(form.poly_count), countOrNull(form.texture_count), form.rig_complexity, textOrNull(form.software), textOrNull(form.notes)];
+}
+
+function complexityFromForm(form: ComplexityForm) {
+  return {
+    poly_count: textOrOptional(form.poly_count),
+    texture_count: countOrOptional(form.texture_count),
+    rig_complexity: form.rig_complexity,
+    software: textOrOptional(form.software),
+    notes: textOrOptional(form.notes),
+  };
+}
+
 export default function AssetComplexityLog({ projectId }: { projectId: string }) {
   const [record, setRecord] = useState<Complexity | null>(null);
   const [loading, setLoading] = useState(true);
@@ -73,49 +100,21 @@ export default function AssetComplexityLog({ projectId }: { projectId: string })
     setSaving(true);
     try {
       const db = await getDb();
+      const values = saveValues(form);
+      const optional = complexityFromForm(form);
       if (record) {
         await db.execute(
           'UPDATE project_complexity SET poly_count = ?, texture_count = ?, rig_complexity = ?, software = ?, notes = ? WHERE id = ?',
-          [
-            form.poly_count || null,
-            form.texture_count ? parseInt(form.texture_count) : null,
-            form.rig_complexity,
-            form.software || null,
-            form.notes || null,
-            record.id,
-          ],
+          [...values, record.id],
         );
-        setRecord({
-          ...record,
-          poly_count: form.poly_count || undefined,
-          texture_count: form.texture_count ? parseInt(form.texture_count) : undefined,
-          rig_complexity: form.rig_complexity,
-          software: form.software || undefined,
-          notes: form.notes || undefined,
-        });
+        setRecord({ ...record, ...optional });
       } else {
         const id = crypto.randomUUID();
         await db.execute(
           'INSERT INTO project_complexity (id, project_id, poly_count, texture_count, rig_complexity, software, notes) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [
-            id,
-            projectId,
-            form.poly_count || null,
-            form.texture_count ? parseInt(form.texture_count) : null,
-            form.rig_complexity,
-            form.software || null,
-            form.notes || null,
-          ],
+          [id, projectId, ...values],
         );
-        setRecord({
-          id,
-          project_id: projectId,
-          poly_count: form.poly_count || undefined,
-          texture_count: form.texture_count ? parseInt(form.texture_count) : undefined,
-          rig_complexity: form.rig_complexity,
-          software: form.software || undefined,
-          notes: form.notes || undefined,
-        });
+        setRecord({ id, project_id: projectId, ...optional });
       }
       setEditing(false);
     } catch (e) {

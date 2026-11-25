@@ -74,6 +74,24 @@ type AgingSortKey =
   | 'days_overdue'
   | 'status';
 
+/** Mark an invoice paid/partial once the new payment is included. */
+async function syncPaidStatus(
+  inv: Invoice,
+  paymentInvId: string,
+  payments: Record<string, InvoicePayment[]>,
+  amount: number,
+  paymentDate: string,
+  updateInvoice: (data: Invoice) => Promise<void>,
+): Promise<void> {
+  const existingPayments = payments[paymentInvId] || [];
+  const paidTotal = existingPayments.reduce((s, p) => s + p.amount, 0) + amount;
+  if (paidTotal >= inv.total) {
+    await updateInvoice({ ...inv, status: 'paid' as const, paid_at: paymentDate });
+  } else if (paidTotal > 0 && inv.status !== 'partial') {
+    await updateInvoice({ ...inv, status: 'partial' as const });
+  }
+}
+
 function AgingReport({
   invoices,
   payments,
@@ -247,17 +265,14 @@ function AgingReport({
           : undefined,
       });
       if (inv) {
-        const existingPayments = payments[paymentInvId] || [];
-        const paidTotal = existingPayments.reduce((s, p) => s + p.amount, 0) + amount;
-        if (paidTotal >= inv.total) {
-          await updateInvoice({
-            ...inv,
-            status: 'paid' as const,
-            paid_at: paymentForm.payment_date,
-          });
-        } else if (paidTotal > 0 && inv.status !== 'partial') {
-          await updateInvoice({ ...inv, status: 'partial' as const });
-        }
+        await syncPaidStatus(
+          inv,
+          paymentInvId,
+          payments,
+          amount,
+          paymentForm.payment_date,
+          updateInvoice,
+        );
       }
       setShowPaymentModal(false);
       addToast('Payment recorded', 'success');

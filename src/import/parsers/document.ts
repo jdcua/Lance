@@ -47,6 +47,23 @@ async function parseDOCXText(file: File): Promise<string> {
   return result.value;
 }
 
+/** Collect all positive monetary amounts found in document text. */
+function extractAmounts(text: string): number[] {
+  const amountPatterns = [
+    /(?:total|amount\s*due|grand\s*total|balance\s*due)[:\s]*\$?([\d,]+\.?\d*)/gi,
+    /\$\s*([\d,]+\.\d{2})/g,
+  ];
+  const amounts: number[] = [];
+  for (const pattern of amountPatterns) {
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      const val = parseFloat(match[1].replace(/,/g, ''));
+      if (!isNaN(val) && val > 0) amounts.push(val);
+    }
+  }
+  return amounts;
+}
+
 /**
  * Extract structured fields from document text using pattern matching.
  */
@@ -71,18 +88,7 @@ function extractFields(text: string): Record<string, string> {
   if (dueDateMatch) fields.due_date = dueDateMatch[1].trim();
 
   // Extract amounts
-  const amountPatterns = [
-    /(?:total|amount\s*due|grand\s*total|balance\s*due)[:\s]*\$?([\d,]+\.?\d*)/gi,
-    /\$\s*([\d,]+\.\d{2})/g,
-  ];
-  const amounts: number[] = [];
-  for (const pattern of amountPatterns) {
-    let match;
-    while ((match = pattern.exec(text)) !== null) {
-      const val = parseFloat(match[1].replace(/,/g, ''));
-      if (!isNaN(val) && val > 0) amounts.push(val);
-    }
-  }
+  const amounts = extractAmounts(text);
   if (amounts.length > 0) {
     fields.total = String(Math.max(...amounts));
   }

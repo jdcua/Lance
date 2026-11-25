@@ -55,6 +55,32 @@ function generateContractBody(
   ].join('\n');
 }
 
+// Follow-up draft/subject pair for an expanded proposal, computed once from
+// the same inputs the old inline IIFE used.
+function buildProposalFollowUpDraft(
+  p: Proposal,
+  client: { name?: string } | undefined,
+  profile: { name?: string } | null,
+  settings: { templates: Record<string, string>; subject_templates: Record<string, string> },
+) {
+  const sentDate = p.sent_at ? new Date(p.sent_at) : new Date(p.created_at);
+  const daysElapsed = Math.floor((Date.now() - sentDate.getTime()) / DAY_MS);
+  const templateKey =
+    daysElapsed >= 10 ? 'proposal_day14' : daysElapsed >= 4 ? 'proposal_day7' : 'proposal_day3';
+  const vars = {
+    clientName: client?.name || 'Unknown',
+    proposalTitle: p.title,
+    daysElapsed,
+    projectName: p.title,
+    freelancerName: profile?.name || 'Freelancer',
+  };
+  return {
+    daysElapsed,
+    draft: generateFollowUpDraft(templateKey, vars, settings.templates),
+    subject: generateSubjectLine(templateKey, vars, settings.subject_templates),
+  };
+}
+
 type SortKey = 'title' | 'client' | 'status' | 'date' | 'heat';
 type StatusFilter = 'all' | 'draft' | 'sent' | 'accepted' | 'declined' | 'expired';
 
@@ -460,6 +486,7 @@ export default function Proposals() {
           {pagedProposals.visible.map((p) => (
             <Card key={p.id}>
               <div className="flex items-start justify-between">
+                {(() => (
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h2 className="text-sm font-semibold text-[var(--text-primary)]">{p.title}</h2>
@@ -528,6 +555,8 @@ export default function Proposals() {
                     </p>
                   )}
                 </div>
+                ))()}
+                {(() => (
                 <div className="flex items-center gap-1 flex-shrink-0 ml-3">
                   {p.status === 'draft' && (
                     <button onClick={() => handleSend(p)} aria-label="Send proposal" className="p-1.5 rounded-sm text-[var(--accent-ink,var(--accent))] hover:bg-[var(--accent-bg)] transition-colors" title="Send">
@@ -570,6 +599,7 @@ export default function Proposals() {
                     <Trash2 size={14} />
                   </button>
                 </div>
+                ))()}
               </div>
               {expanded === p.id && (
                 <div className="mt-3 pt-3 border-t border-[var(--border-color)] space-y-3">
@@ -583,23 +613,12 @@ export default function Proposals() {
                     const fu = pendingFollowUps.find((f) => f.entity_type === 'proposal' && f.entity_id === p.id);
                     if (fu && p.status === 'sent') {
                       const client = getClient(p.client_id);
-                      const sentDate = p.sent_at ? new Date(p.sent_at) : new Date(p.created_at);
-                      const daysElapsed = Math.floor((Date.now() - sentDate.getTime()) / DAY_MS);
-                      const templateKey = daysElapsed >= 10 ? 'proposal_day14' : daysElapsed >= 4 ? 'proposal_day7' : 'proposal_day3';
-                      const draft = generateFollowUpDraft(templateKey, {
-                        clientName: client?.name || 'Unknown',
-                        proposalTitle: p.title,
-                        daysElapsed,
-                        projectName: p.title,
-                        freelancerName: profile?.name || 'Freelancer',
-                      }, followUpSettings.templates);
-                      const subject = generateSubjectLine(templateKey, {
-                        clientName: client?.name || 'Unknown',
-                        proposalTitle: p.title,
-                        daysElapsed,
-                        projectName: p.title,
-                        freelancerName: profile?.name || 'Freelancer',
-                      }, followUpSettings.subject_templates);
+                      const { daysElapsed, draft, subject } = buildProposalFollowUpDraft(
+                        p,
+                        client,
+                        profile,
+                        followUpSettings,
+                      );
                       const hasEmail = !!client?.email;
                       return (
                         <div className="px-3 py-2.5 rounded-sm bg-[var(--accent-bg)]/30 border border-[var(--accent)]/20">

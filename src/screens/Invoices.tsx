@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { DEFAULT_CURRENCY } from '../lib/constants';
-import { useStore } from '../store';
-import type { Invoice, LineItem, RecurringInvoice as RecurringInvoiceType } from '../types';
+import { useStore, type AppStore } from '../store';
+import type { Client, Invoice, LineItem, RecurringInvoice as RecurringInvoiceType } from '../types';
 import Button from '../components/ui/Button';
 import LoadError from '../components/ui/LoadError';
 import MetricCard from '../components/ui/MetricCard';
@@ -35,6 +35,182 @@ import InvoiceModals from './invoices/InvoiceModals';
 import type { InvoicesBag } from './invoices/shared';
 
 type InvSortKey = 'number' | 'client' | 'status' | 'total' | 'date';
+
+type InvoiceDraftForm = {
+  client_id: string;
+  project_id: string;
+  invoice_number: string;
+  due_date: string;
+  notes: string;
+  tax_rate: string;
+  status: Invoice['status'];
+  currency: string;
+  rate_type: 'flat' | 'hourly';
+};
+
+const HOURLY_RATE_TYPES = new Set([
+  'hourly', 'per-shoot', 'per-session', 'per-track', 'per-word', 'per-look',
+  'per-event', 'per-commission', 'per-plan', 'per-closing', 'per-campaign',
+  'per-placement', 'per-project', 'milestone', 'retainer', 'commission-based',
+]);
+
+function normalizeRateType(rateType: string): 'flat' | 'hourly' {
+  return HOURLY_RATE_TYPES.has(rateType) ? 'hourly' : 'flat';
+}
+
+function buildSanitizedLineItems(items: Omit<LineItem, 'id'>[]): LineItem[] {
+  return items.map((i) => ({
+    ...i,
+    id: crypto.randomUUID(),
+    description: i.description
+      ? sanitizeInput(i.description).slice(0, MAX_LENGTHS.description)
+      : '',
+  }));
+}
+
+function buildInvoiceData(
+  form: InvoiceDraftForm,
+  items: Omit<LineItem, 'id'>[],
+  subtotal: number,
+  taxRate: number,
+  total: number,
+  invoiceNumber: string,
+) {
+  return {
+    client_id: form.client_id,
+    invoice_number: invoiceNumber,
+    status: form.status,
+    line_items: buildSanitizedLineItems(items),
+    subtotal,
+    tax_rate: taxRate || undefined,
+    total,
+    due_date: form.due_date || undefined,
+    notes: form.notes ? sanitizeInput(form.notes).slice(0, MAX_LENGTHS.notes) : undefined,
+    currency: form.currency || undefined,
+    rate_type: normalizeRateType(form.rate_type),
+  };
+}
+
+// Money is compared in integer CENTS, never in floats. Totals are persisted as
+// raw f64, so comparing a rounded UI value against a raw stored float made the
+// displayed balance unpayable.
+function computeInvoiceStatus(inv: Invoice, paidTotal: number): Invoice['status'] {
+  const paidCents = Math.round(paidTotal * 100);
+  const totalCents = Math.round(inv.total * 100);
+  if (paidCents >= totalCents) return 'paid';
+  if (paidCents > 0) return 'partial';
+  // No payments remain. A previously paid/partial invoice must revert to a
+  // billable state instead of staying 'paid' with zero payments.
+  if (inv.status === 'draft') return 'draft';
+  if (inv.due_date && parseDateString(inv.due_date) < new Date()) return 'overdue';
+  return 'sent';
+}
+
+async function reconcileEditedInvoiceStatus(
+  editing: Invoice,
+  invoiceData: ReturnType<typeof buildInvoiceData>,
+  total: number,
+  updateInvoice: AppStore['updateInvoice'],
+): Promise<void> {
+  const paidTotal = useStore
+    .getState()
+    .payments.filter((p) => p.invoice_id === editing.id)
+    .reduce((s, p) => s + p.amount, 0);
+  if (paidTotal <= 0) return;
+  // Editing totals can strand status (e.g. total lowered below paid amount).
+  const corrected = computeInvoiceStatus({ ...editing, ...invoiceData, total }, paidTotal);
+  if (corrected === invoiceData.status) return;
+  const fix: Partial<Invoice> = { status: corrected };
+  if (corrected !== 'paid') fix.paid_at = undefined;
+  await updateInvoice({ ...editing, ...invoiceData, total, ...fix, status: corrected } as Invoice);
+}
+
+type ReminderTemplateKey = 'invoice_day1' | 'invoice_day7' | 'invoice_day14';
+
+function reminderTemplateKey(daysElapsed: number): ReminderTemplateKey {
+  return daysElapsed >= 10 ? 'invoice_day14' : daysElapsed >= 4 ? 'invoice_day7' : 'invoice_day1';
+}
+
+function reminderEntityContext(
+  inv: Invoice,
+  client: Client | undefined,
+  freelancerName: string,
+  daysElapsed: number,
+) {
+  return {
+    clientName: client?.name || 'Unknown',
+    invoiceNumber: inv.invoice_number,
+    amount: formatCurrency(inv.total),
+    dueDate: inv.due_date,
+    daysElapsed,
+    freelancerName,
+  };
+}
+
+async function syncInvoiceStatusAfterPayment(
+  inv: Invoice,
+  pendingFollowUps: AppStore['pendingFollowUps'],
+  updateInvoice: AppStore['updateInvoice'],
+  updateFollowUpStatus: AppStore['updateFollowUpStatus'],
+): Promise<void> {
+  // Read payments back AFTER the insert — addPayment already appended the row.
+  const updatedPayments = useStore
+    .getState()
+    .payments.filter((p) => p.invoice_id === inv.id);
+  const paidTotal = updatedPayments.reduce((s, p) => s + p.amount, 0);
+  const newStatus = computeInvoiceStatus(inv, paidTotal);
+  const isFullyPaid = newStatus === 'paid';
+  if (newStatus !== inv.status || isFullyPaid) {
+    const updateData: Partial<Invoice> = { status: newStatus };
+    if (isFullyPaid) updateData.paid_at = new Date().toISOString();
+    await updateInvoice({ ...inv, ...updateData, status: newStatus } as Invoice);
+  }
+  if (isFullyPaid) {
+    const fu = pendingFollowUps.find(
+      (f) => f.entity_type === 'invoice' && f.entity_id === inv.id,
+    );
+    if (fu) await updateFollowUpStatus(fu.id, 'paid', 'marked_paid').catch(() => {});
+  }
+}
+
+function SummaryMetrics({
+  invoices, moneyValue, totalOutstanding, totalPaid,
+}: {
+  invoices: Invoice[];
+  moneyValue: (list: { currency?: string; total: number }[], single: number) => string;
+  totalOutstanding: number;
+  totalPaid: number;
+}) {
+  const unpaid = invoices.filter(
+    (i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue',
+  );
+  const paid = invoices.filter((i) => i.status === 'paid');
+  const overdue = invoices.filter((i) => i.status === 'overdue');
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+      <MetricCard
+        label="Outstanding"
+        value={moneyValue(unpaid, totalOutstanding)}
+        subtext={`${unpaid.length} invoices`}
+        color="amber"
+      />
+      <MetricCard
+        label="Paid"
+        value={moneyValue(paid, totalPaid)}
+        subtext={`${paid.length} invoices`}
+        trend="up"
+        color="green"
+      />
+      <MetricCard
+        label="Overdue"
+        value={moneyValue(overdue, overdue.reduce((s, i) => s + i.total, 0))}
+        subtext="needs attention"
+        trend={overdue.length > 0 ? 'down' : 'neutral'}
+        color={overdue.length > 0 ? 'red' : 'gray'}
+      />
+    </div>
+  );
+}
 
 export default function Invoices() {
   const {
@@ -361,73 +537,11 @@ export default function Invoices() {
         addToast(`Invoice number ${invoice_number} already exists`, 'error');
         return;
       }
-      const lineItems: LineItem[] = items.map((i) => ({
-        ...i,
-        id: crypto.randomUUID(),
-        description: i.description
-          ? sanitizeInput(i.description).slice(0, MAX_LENGTHS.description)
-          : '',
-      }));
-      const hourlyRateTypes = new Set([
-        'hourly',
-        'per-shoot',
-        'per-session',
-        'per-track',
-        'per-word',
-        'per-look',
-        'per-event',
-        'per-commission',
-        'per-plan',
-        'per-closing',
-        'per-campaign',
-        'per-placement',
-        'per-project',
-        'milestone',
-        'retainer',
-        'commission-based',
-        'per-track',
-        'per-look',
-        'per-word',
-      ]);
-      const storedRateType: 'flat' | 'hourly' = hourlyRateTypes.has(form.rate_type)
-        ? 'hourly'
-        : 'flat';
-      const invoiceData = {
-        client_id: form.client_id,
-        invoice_number,
-        status: form.status,
-        line_items: lineItems,
-        subtotal,
-        tax_rate: taxRate || undefined,
-        total,
-        due_date: form.due_date || undefined,
-        notes: form.notes ? sanitizeInput(form.notes).slice(0, MAX_LENGTHS.notes) : undefined,
-        currency: form.currency || undefined,
-        rate_type: storedRateType,
-      };
+      const invoiceData = buildInvoiceData(form, items, subtotal, taxRate, total, invoice_number);
       if (editing) await updateInvoice({ ...editing, ...invoiceData });
       else await addInvoice(invoiceData);
-      // Editing totals can strand status (e.g. total lowered below paid
-      // amount). Recompute when payments exist; untouched otherwise.
       if (editing) {
-        const paidTotal = useStore
-          .getState()
-          .payments.filter((p) => p.invoice_id === editing.id)
-          .reduce((s, p) => s + p.amount, 0);
-        if (paidTotal > 0) {
-          const corrected = computeInvoiceStatus({ ...editing, ...invoiceData, total }, paidTotal);
-          if (corrected !== invoiceData.status) {
-            const fix: Partial<Invoice> = { status: corrected };
-            if (corrected !== 'paid') fix.paid_at = undefined;
-            await updateInvoice({
-              ...editing,
-              ...invoiceData,
-              total,
-              ...fix,
-              status: corrected,
-            } as Invoice);
-          }
-        }
+        await reconcileEditedInvoiceStatus(editing, invoiceData, total, updateInvoice);
       }
       const ids = Array.from(selectedTimeIds);
       const timeUpdates = ids
@@ -474,34 +588,15 @@ export default function Invoices() {
     const client = getClient(inv.client_id);
     const dueDate = inv.due_date ? parseDateString(inv.due_date) : null;
     const daysElapsed = dueDate ? Math.floor((Date.now() - dueDate.getTime()) / DAY_MS) : 0;
-    const templateKey =
-      daysElapsed >= 10 ? 'invoice_day14' : daysElapsed >= 4 ? 'invoice_day7' : 'invoice_day1';
+    const templateKey = reminderTemplateKey(daysElapsed);
+    const context = reminderEntityContext(inv, client, profile?.name || 'Freelancer', daysElapsed);
     const draft = withFeeNote(
-      generateFollowUpDraft(
-        templateKey,
-        {
-          clientName: client?.name || 'Unknown',
-          invoiceNumber: inv.invoice_number,
-          amount: formatCurrency(inv.total),
-          dueDate: inv.due_date,
-          daysElapsed,
-          freelancerName: profile?.name || 'Freelancer',
-        },
-        followUpSettings.templates,
-        dunningTone,
-      ),
+      generateFollowUpDraft(templateKey, context, followUpSettings.templates, dunningTone),
       inv,
     );
     const subject = generateSubjectLine(
       templateKey,
-      {
-        clientName: client?.name || 'Unknown',
-        invoiceNumber: inv.invoice_number,
-        amount: formatCurrency(inv.total),
-        dueDate: inv.due_date,
-        daysElapsed,
-        freelancerName: profile?.name || 'Freelancer',
-      },
+      context,
       followUpSettings.subject_templates,
       dunningTone,
     );
@@ -556,23 +651,6 @@ export default function Invoices() {
     return Math.max(0, inv.total - getPaidTotal(inv.id));
   };
 
-  // Money is compared in integer CENTS, never in floats. Totals are persisted as
-  // raw f64 (invoices.rs stores whatever JS summed), so `3 × 10.005 = 30.015`
-  // is stored while Intl renders "$30.02". Comparing 30.015 >= 30.02 in floats
-  // made the *displayed* balance unpayable: the guard rejected the exact amount
-  // the app had just shown the user.
-  const computeInvoiceStatus = (inv: Invoice, paidTotal: number): Invoice['status'] => {
-    const paidCents = Math.round(paidTotal * 100);
-    const totalCents = Math.round(inv.total * 100);
-    if (paidCents >= totalCents) return 'paid';
-    if (paidCents > 0) return 'partial';
-    // No payments remain. A previously paid/partial invoice must revert to a
-    // billable state instead of staying 'paid' with zero payments.
-    if (inv.status === 'draft') return 'draft';
-    if (inv.due_date && parseDateString(inv.due_date) < new Date()) return 'overdue';
-    return 'sent';
-  };
-
   const handleRecordPayment = async () => {
     if (!paymentInv || !paymentForm.amount) return;
     setPaymentSaving(true);
@@ -608,30 +686,12 @@ export default function Invoices() {
           ? sanitizeInput(paymentForm.notes).slice(0, MAX_LENGTHS.notes)
           : undefined,
       });
-      // Read the payments back AFTER the insert, and do NOT add `amount` again:
-      // addPayment already appended the new row. The extra `+ amount` made a
-      // $500 payment on a $1000 invoice report the invoice as fully paid while
-      // the balance still said $500, the freelancer thinks they are owed
-      // nothing.
-      const updatedPayments = useStore
-        .getState()
-        .payments.filter((p) => p.invoice_id === paymentInv.id);
-      const paidTotal = updatedPayments.reduce((s, p) => s + p.amount, 0);
-      const newStatus = computeInvoiceStatus(paymentInv, paidTotal);
-      const isFullyPaid = newStatus === 'paid';
-      if (newStatus !== paymentInv.status || isFullyPaid) {
-        const updateData: Partial<Invoice> = { status: newStatus };
-        if (isFullyPaid) updateData.paid_at = new Date().toISOString();
-        await updateInvoice({ ...paymentInv, ...updateData, status: newStatus } as Invoice);
-      }
-      if (isFullyPaid) {
-        const fu = pendingFollowUps.find(
-          (f) => f.entity_type === 'invoice' && f.entity_id === paymentInv.id,
-        );
-        if (fu) {
-          await updateFollowUpStatus(fu.id, 'paid', 'marked_paid').catch(() => {});
-        }
-      }
+      await syncInvoiceStatusAfterPayment(
+        paymentInv,
+        pendingFollowUps,
+        updateInvoice,
+        updateFollowUpStatus,
+      );
       setShowPaymentModal(false);
       checkAndNotify(useStore.getState(), addToast);
       addToast('Payment recorded', 'success');
@@ -1042,39 +1102,12 @@ export default function Invoices() {
     <div className="p-6">
       <h1 className="font-display text-lg font-semibold text-[var(--text-primary)] mb-2">Invoices</h1>
       <LoadError error={invoicesError} onRetry={() => loadInvoices()} />
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-        <MetricCard
-          label="Outstanding"
-          value={moneyValue(
-            invoices.filter(
-              (i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue',
-            ),
-            totalOutstanding,
-          )}
-          subtext={`${invoices.filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').length} invoices`}
-          color="amber"
-        />
-        <MetricCard
-          label="Paid"
-          value={moneyValue(
-            invoices.filter((i) => i.status === 'paid'),
-            totalPaid,
-          )}
-          subtext={`${invoices.filter((i) => i.status === 'paid').length} invoices`}
-          trend="up"
-          color="green"
-        />
-        <MetricCard
-          label="Overdue"
-          value={moneyValue(
-            invoices.filter((i) => i.status === 'overdue'),
-            invoices.filter((i) => i.status === 'overdue').reduce((s, i) => s + i.total, 0),
-          )}
-          subtext="needs attention"
-          trend={invoices.filter((i) => i.status === 'overdue').length > 0 ? 'down' : 'neutral'}
-          color={invoices.filter((i) => i.status === 'overdue').length > 0 ? 'red' : 'gray'}
-        />
-      </div>
+      <SummaryMetrics
+        invoices={invoices}
+        moneyValue={moneyValue}
+        totalOutstanding={totalOutstanding}
+        totalPaid={totalPaid}
+      />
 
       {/* Tab bar + search + sort */}
       <div className="flex flex-wrap items-center gap-3 mb-4">

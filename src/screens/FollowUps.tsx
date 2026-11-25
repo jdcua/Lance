@@ -1,7 +1,14 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useStore } from '../store';
 import { useToasts } from '../store/toastStore';
-import type { FollowUpLog } from '../types';
+import type {
+  FollowUpLog,
+  Client,
+  Proposal,
+  Invoice,
+  UserProfile,
+  FollowUpSettings,
+} from '../types';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
 import LoadError from '../components/ui/LoadError';
@@ -17,6 +24,131 @@ import { formatCurrency, relativeDate, parseDateString, DAY_MS } from '../utils/
 
 type Tab = 'pending' | 'sent' | 'dismissed' | 'all';
 type Filter = 'all' | 'proposal' | 'invoice';
+
+type FollowUpItem = {
+  log: FollowUpLog;
+  clientName: string;
+  clientEmail?: string;
+  entityLabel: string;
+  templateLabel: string;
+  templateKey: string;
+  draft: string;
+  daysElapsed: number;
+  proposalTitle?: string;
+  invoiceNumber?: string;
+  amount?: string;
+  dueDate?: string;
+};
+
+type FollowUpLookups = {
+  getClient: (id: string) => Client | undefined;
+  getInvoice: (id: string) => Invoice | undefined;
+  getProposal: (id: string) => Proposal | undefined;
+  profile: UserProfile | null;
+  settings: FollowUpSettings;
+  tone: DunningTone | undefined;
+};
+
+// The allFollowUps memo is split into four pure steps. Each step is small and
+// deterministic; together they reproduce the original row-for-row result.
+function followUpTemplateKey(entityType: string, stage: number): string {
+  if (entityType === 'proposal') {
+    if (stage === 1) return 'proposal_day3';
+    if (stage === 2) return 'proposal_day7';
+    return 'proposal_day14';
+  }
+  if (stage === 1) return 'invoice_day1';
+  if (stage === 2) return 'invoice_day7';
+  if (stage === 3) return 'invoice_day14';
+  return 'invoice_day30';
+}
+
+function resolveFollowUpFields(log: FollowUpLog, lookups: FollowUpLookups) {
+  const { getClient, getInvoice, getProposal } = lookups;
+  const isInvoice = log.entity_type === 'invoice';
+  const clientId = isInvoice
+    ? getInvoice(log.entity_id)?.client_id || ''
+    : getProposal(log.entity_id)?.client_id || '';
+  const client = getClient(clientId);
+  let proposalTitle: string | undefined;
+  let invoiceNumber: string | undefined;
+  let amount: string | undefined;
+  let dueDate: string | undefined;
+  let daysElapsed = 0;
+  if (log.entity_type === 'proposal') {
+    const p = getProposal(log.entity_id);
+    proposalTitle = p?.title;
+    const sentDate = p?.sent_at ? new Date(p.sent_at) : new Date();
+    daysElapsed = Math.floor((Date.now() - sentDate.getTime()) / DAY_MS);
+  } else {
+    const inv = getInvoice(log.entity_id);
+    invoiceNumber = inv?.invoice_number;
+    amount = inv ? formatCurrency(inv.total) : undefined;
+    dueDate = inv?.due_date;
+    if (inv?.due_date) {
+      daysElapsed = Math.floor((Date.now() - parseDateString(inv.due_date).getTime()) / DAY_MS);
+    }
+  }
+  return { client, proposalTitle, invoiceNumber, amount, dueDate, daysElapsed };
+}
+
+function withLateFeeNote(draftBase: string, log: FollowUpLog, lookups: FollowUpLookups): string {
+  const { getInvoice, profile, settings, tone } = lookups;
+  if (
+    tone === undefined ||
+    settings.lateFeeEnabled !== true ||
+    log.entity_type !== 'invoice'
+  ) {
+    return draftBase;
+  }
+  const iv = getInvoice(log.entity_id);
+  if (!iv) return draftBase;
+  const note = lateFeeParagraph(
+    computeLateFee(iv.total, iv.due_date, settings.lateFeePercent ?? 1.5),
+    iv.currency || profile?.currency,
+  );
+  return note ? `${draftBase}\n\n${note}` : draftBase;
+}
+
+function buildFollowUpResult(log: FollowUpLog, lookups: FollowUpLookups): FollowUpItem {
+  const { client, proposalTitle, invoiceNumber, amount, dueDate, daysElapsed } =
+    resolveFollowUpFields(log, lookups);
+  const { profile, settings, tone } = lookups;
+  const templateKey = followUpTemplateKey(log.entity_type, log.stage);
+  const draftBase = generateFollowUpDraft(
+    templateKey,
+    {
+      clientName: client?.name || 'Unknown',
+      proposalTitle,
+      invoiceNumber,
+      amount,
+      dueDate,
+      daysElapsed,
+      projectName: proposalTitle,
+      freelancerName: profile?.name || 'Freelancer',
+    },
+    settings.templates,
+    tone,
+  );
+  const draft = withLateFeeNote(draftBase, log, lookups);
+  return {
+    log,
+    clientName: client?.name || 'Unknown',
+    clientEmail: client?.email,
+    entityLabel:
+      log.entity_type === 'proposal'
+        ? proposalTitle || log.entity_id.slice(0, 8)
+        : invoiceNumber || log.entity_id.slice(0, 8),
+    templateLabel: TEMPLATE_LABELS[templateKey] || `Stage ${log.stage}`,
+    templateKey,
+    draft,
+    daysElapsed,
+    proposalTitle,
+    invoiceNumber,
+    amount,
+    dueDate,
+  };
+}
 
 export default function FollowUps() {
   const {
@@ -61,100 +193,24 @@ export default function FollowUps() {
   const getInvoice = useCallback((invId: string) => invoices.find((i) => i.id === invId), [invoices]);
 
   const allFollowUps = useMemo(() => {
-    const results: Array<{
-      log: FollowUpLog;
-      clientName: string;
-      clientEmail?: string;
-      entityLabel: string;
-      templateLabel: string;
-      templateKey: string;
-      draft: string;
-      daysElapsed: number;
-      proposalTitle?: string;
-      invoiceNumber?: string;
-      amount?: string;
-      dueDate?: string;
-    }> = [];
-
-    for (const log of [...activeFollowUps, ...Object.values(followUpLogs).flat().filter(
-      (l) => !activeFollowUps.some((p) => p.id === l.id)
-    )]) {
-      const client = getClient(
-        log.entity_type === 'invoice'
-          ? (getInvoice(log.entity_id)?.client_id || '')
-          : (getProposal(log.entity_id)?.client_id || '')
-      );
-
-      let templateKey = '';
-      let daysElapsed = 0;
-      let proposalTitle: string | undefined;
-      let invoiceNumber: string | undefined;
-      let amount: string | undefined;
-      let dueDate: string | undefined;
-
-      if (log.entity_type === 'proposal') {
-        const p = getProposal(log.entity_id);
-        proposalTitle = p?.title;
-        const sentDate = p?.sent_at ? new Date(p.sent_at) : new Date();
-        daysElapsed = Math.floor((Date.now() - sentDate.getTime()) / DAY_MS);
-        if (log.stage === 1) templateKey = 'proposal_day3';
-        else if (log.stage === 2) templateKey = 'proposal_day7';
-        else templateKey = 'proposal_day14';
-      } else {
-        const inv = getInvoice(log.entity_id);
-        invoiceNumber = inv?.invoice_number;
-        amount = inv ? formatCurrency(inv.total) : undefined;
-        dueDate = inv?.due_date;
-        if (inv?.due_date) {
-          daysElapsed = Math.floor((Date.now() - parseDateString(inv.due_date).getTime()) / DAY_MS);
-        }
-        if (log.stage === 1) templateKey = 'invoice_day1';
-        else if (log.stage === 2) templateKey = 'invoice_day7';
-        else if (log.stage === 3) templateKey = 'invoice_day14';
-        else templateKey = 'invoice_day30';
-      }
-
-      const draftBase = generateFollowUpDraft(templateKey, {
-        clientName: client?.name || 'Unknown',
-        proposalTitle,
-        invoiceNumber,
-        amount,
-        dueDate,
-        daysElapsed,
-        projectName: proposalTitle,
-        freelancerName: profile?.name || 'Freelancer',
-      }, followUpSettings.templates, dunningTone);
-      // Late-fee footnote on invoice drafts (when enabled and accrued).
-      let draft = draftBase;
-      if (dunningTone !== undefined && followUpSettings.lateFeeEnabled === true && log.entity_type === 'invoice') {
-        const iv = getInvoice(log.entity_id);
-        if (iv) {
-          const note = lateFeeParagraph(
-            computeLateFee(iv.total, iv.due_date, followUpSettings.lateFeePercent ?? 1.5),
-            iv.currency || profile?.currency,
-          );
-          if (note) draft = `${draftBase}\n\n${note}`;
-        }
-      }
-
-      results.push({
-        log,
-        clientName: client?.name || 'Unknown',
-        clientEmail: client?.email,
-        entityLabel: log.entity_type === 'proposal'
-          ? (proposalTitle || log.entity_id.slice(0, 8))
-          : (invoiceNumber || log.entity_id.slice(0, 8)),
-        templateLabel: TEMPLATE_LABELS[templateKey] || `Stage ${log.stage}`,
-        templateKey,
-        draft,
-        daysElapsed,
-        proposalTitle,
-        invoiceNumber,
-        amount,
-        dueDate,
-      });
+    const lookups: FollowUpLookups = {
+      getClient,
+      getInvoice,
+      getProposal,
+      profile,
+      settings: followUpSettings,
+      tone: dunningTone,
+    };
+    const results: FollowUpItem[] = [];
+    // Orphan history rows (entity deleted before the dismiss-on-delete guards
+    // existed) stay pending in the DB; the live set wins for the same id.
+    const logs = [
+      ...activeFollowUps,
+      ...Object.values(followUpLogs).flat().filter((l) => !activeFollowUps.some((p) => p.id === l.id)),
+    ];
+    for (const log of logs) {
+      results.push(buildFollowUpResult(log, lookups));
     }
-
     results.sort((a, b) => new Date(a.log.drafted_at).getTime() - new Date(b.log.drafted_at).getTime());
     return results;
   }, [activeFollowUps, followUpLogs, profile, followUpSettings, dunningTone, getClient, getInvoice, getProposal]);

@@ -36,7 +36,8 @@ npm run tauri dev
    Zustand store, command registry for app-wide actions, `RecordTracker` for
    new entity screens, glass chrome for UI chrome, near-solid surfaces for
    content, no gradients/glows/emoji icons. Keep new functions at cyclomatic
-   complexity <= 15; extract helpers rather than growing a branch tree.
+   complexity <= 15 (enforced by ESLint); extract helpers rather than growing
+   a branch tree.
 4. Add or update a test that describes the behavior, not the implementation.
 5. Run the full check suite before pushing:
 

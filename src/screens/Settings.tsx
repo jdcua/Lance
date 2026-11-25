@@ -9,6 +9,7 @@ import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useToasts } from '../store/toastStore';
+import type { ToastType } from '../store/toastStore';
 import { save } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeFile } from '@tauri-apps/plugin-fs';
 import { open } from '@tauri-apps/plugin-dialog';
@@ -26,7 +27,7 @@ import {
   logVersionEvent,
   sanitizeBlobName,
 } from '../utils/backup';
-import type { BackupEnvelope, ImportValidationResult } from '../utils/backup';
+import type { BackupEnvelope, ImportValidationResult, ImportResult } from '../utils/backup';
 import { getCurrentSchemaVersion } from '../db';
 import { formatTableCounts } from '../utils/backup';
 import { ACCENT_COLORS } from './settings/shared';
@@ -37,6 +38,30 @@ import NotificationsSection from './settings/NotificationsSection';
 import DataSection from './settings/DataSection';
 import DangerSection from './settings/DangerSection';
 import type { SettingsBag } from './settings/shared';
+
+// Final import toast is a pure summary of the result, kept out of the
+// confirmation handler so its many optional counters stay out of the flow.
+function importResultToast(result: ImportResult): { message: string; type: ToastType } {
+  if (result.imported === 0 && result.skipped === 0 && result.failed > 0) {
+    return { message: 'Import failed · no data was changed', type: 'error' };
+  }
+  const parts: string[] = [];
+  if (result.imported > 0)
+    parts.push(`Imported: ${result.imported} records across ${result.tablesWritten} tables`);
+  if (result.skipped > 0) parts.push(`Skipped: ${result.skipped} duplicates`);
+  if (result.blobsRestored > 0) parts.push(`Files restored: ${result.blobsRestored}`);
+  if (result.blobsSkipped > 0)
+    parts.push(
+      `${result.blobsSkipped} large file${result.blobsSkipped === 1 ? '' : 's'} kept as metadata only`,
+    );
+  if (result.failed > 0) {
+    parts.push(`Failed: ${result.failed} records`);
+    if (result.errors.length > 0) {
+      parts.push(`(${result.errors.slice(0, 3).join('; ')})`);
+    }
+  }
+  return { message: parts.join('\n'), type: result.failed > 0 ? 'error' : 'success' };
+}
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -540,27 +565,8 @@ export default function Settings() {
         return putAssetFile(id, new Blob([bytes as unknown as BlobPart], { type: mime }));
       };
       const result = await performImport(envelope, mode, materialize);
-
-      if (result.imported === 0 && result.skipped === 0 && result.failed > 0) {
-        addToast('Import failed · no data was changed', 'error');
-      } else {
-        const parts: string[] = [];
-        if (result.imported > 0)
-          parts.push(`Imported: ${result.imported} records across ${result.tablesWritten} tables`);
-        if (result.skipped > 0) parts.push(`Skipped: ${result.skipped} duplicates`);
-        if (result.blobsRestored > 0) parts.push(`Files restored: ${result.blobsRestored}`);
-        if (result.blobsSkipped > 0)
-          parts.push(
-            `${result.blobsSkipped} large file${result.blobsSkipped === 1 ? '' : 's'} kept as metadata only`,
-          );
-        if (result.failed > 0) {
-          parts.push(`Failed: ${result.failed} records`);
-          if (result.errors.length > 0) {
-            parts.push(`(${result.errors.slice(0, 3).join('; ')})`);
-          }
-        }
-        addToast(parts.join('\n'), result.failed > 0 ? 'error' : 'success', 6000);
-      }
+      const summary = importResultToast(result);
+      addToast(summary.message, summary.type, 6000);
 
       await loadProfile();
     } catch (err) {
@@ -918,6 +924,7 @@ export default function Settings() {
       </Modal>
 
       {/* Import summary modal */}
+      {(() => (
       <Modal
         open={showImportSummary}
         onClose={() => setShowImportSummary(false)}
@@ -1004,6 +1011,7 @@ export default function Settings() {
           </div>
         </div>
       </Modal>
+      ))()}
 
       <ConfirmDialog
         open={showClearSampleConfirm}

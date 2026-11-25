@@ -93,10 +93,11 @@ and `prefers-reduced-transparency` always win.
 
 ## 6. Complexity and testing
 
-- Target cyclomatic complexity **<= 15 per function**. The ESLint rule warns
-  today; it becomes an error once the backlog is cleared. Extract pure
+- Cyclomatic complexity must be **<= 15 per function** (ESLint error).
+  Extract pure
   helpers or small components instead of adding more branches to an existing
-  function. Never change behavior to satisfy the metric.
+  function. Never change behavior to satisfy the metric. Run
+  `npm run complexity` to see the current backlog.
 
 ### Testing
 

@@ -80,6 +80,87 @@ async function revokeTokensForEntity(
   }
 }
 
+// ── Profile save helpers ──
+// Kept pure so saveProfile stays a thin orchestrator: sanitize/clamp first,
+// then the one side effect (the upsert) plus its currency-change follow-ups.
+
+function clampHourlyRate(value: number | undefined): number | undefined {
+  return value != null && isFinite(value) ? Math.max(0, value) : value;
+}
+
+function clampTaxRate(value: number | undefined): number | undefined {
+  return value != null && isFinite(value) ? Math.min(100, Math.max(0, value)) : value;
+}
+
+function clampWholeNonNegative(value: number | undefined): number | undefined {
+  return value != null && isFinite(value) ? Math.max(0, Math.round(value)) : value;
+}
+
+function normalizeExpiryDays(value: number | undefined): number | undefined {
+  return value != null && isFinite(value) ? Math.max(0, Math.round(value)) : undefined;
+}
+
+/** Omitted rates inherit the saved profile; an explicit empty object clears. */
+function resolveIncomingRates(
+  data: UserProfile,
+  profile: UserProfile | null,
+): Record<string, number> {
+  return sanitizeRates(
+    data.exchange_rates !== undefined ? data.exchange_rates : profile?.exchange_rates || {},
+  );
+}
+
+/** Notice shown only when a base-currency change invalidates stored rates. */
+function clearedRatesNote(
+  prevCurrency: string | undefined,
+  currency: string | undefined,
+  rates: Record<string, number>,
+): string | null {
+  if (prevCurrency && currency && prevCurrency !== currency && Object.keys(rates).length > 0) {
+    return `Currency changed ${prevCurrency} → ${currency}: exchange rates were cleared. Re-enter them under Finance.`;
+  }
+  return null;
+}
+
+function buildSanitizedProfile(
+  data: UserProfile,
+  effectiveRates: Record<string, number>,
+): UserProfile {
+  return {
+    ...data,
+    name: truncate(sanitizeInput(data.name || ''), MAX_LENGTHS.name),
+    email: truncate(sanitizeInput(data.email || ''), MAX_LENGTHS.email),
+    writing_voice: sanitizeInput(data.writing_voice || ''),
+    tagline: truncate(sanitizeInput(data.tagline || ''), MAX_LENGTHS.tagline),
+    always_include: sanitizeInput(data.always_include || ''),
+    payment_instructions: truncate(
+      sanitizeInput(data.payment_instructions || ''),
+      MAX_LENGTHS.notes,
+    ),
+    hourly_rate: clampHourlyRate(data.hourly_rate),
+    tax_rate: clampTaxRate(data.tax_rate),
+    payment_terms: clampWholeNonNegative(data.payment_terms),
+    proposal_expiry_days: normalizeExpiryDays(data.proposal_expiry_days),
+    exchange_rates: effectiveRates,
+  };
+}
+
+/** Stamp the old base onto currency-less invoices before switching base. */
+async function stampLegacyInvoices(
+  get: () => UnifiedStore,
+  prevCurrency: string,
+): Promise<void> {
+  try {
+    await get().loadInvoices();
+    const bare = get().invoices.filter((i) => !i.currency);
+    for (const inv of bare) {
+      await get().updateInvoice({ ...inv, currency: prevCurrency });
+    }
+  } catch {
+    /* history keeps the fallback; rates notice still applies */
+  }
+}
+
 type LoadingKey = string;
 type ErrorKey = string;
 
@@ -1135,69 +1216,17 @@ export const useStore = create<UnifiedStore>((set, get) => {
       // exception: the base currency itself changed, which silently
       // invalidates stored rates ("per old base"), then they are cleared
       // with an explanatory toast instead of misconverting.
-      const prevCurrency = get().profile?.currency;
-      const incomingRates =
-        data.exchange_rates !== undefined
-          ? sanitizeRates(data.exchange_rates)
-          : sanitizeRates(get().profile?.exchange_rates || {});
-      let effectiveRates = incomingRates;
-      let ratesNote: string | null = null;
-      if (
-        prevCurrency &&
-        data.currency &&
-        prevCurrency !== data.currency &&
-        Object.keys(incomingRates).length > 0
-      ) {
-        effectiveRates = {};
-        ratesNote = `Currency changed ${prevCurrency} → ${data.currency}: exchange rates were cleared. Re-enter them under Finance.`;
-      }
-      const sanitized: UserProfile = {
-        ...data,
-        name: truncate(sanitizeInput(data.name || ''), MAX_LENGTHS.name),
-        email: truncate(sanitizeInput(data.email || ''), MAX_LENGTHS.email),
-        writing_voice: sanitizeInput(data.writing_voice || ''),
-        tagline: truncate(sanitizeInput(data.tagline || ''), MAX_LENGTHS.tagline),
-        always_include: sanitizeInput(data.always_include || ''),
-        payment_instructions: truncate(
-          sanitizeInput(data.payment_instructions || ''),
-          MAX_LENGTHS.notes,
-        ),
-        // Clamp numeric profile fields to sane ranges (no negatives, no infinity)
-        hourly_rate:
-          data.hourly_rate != null && isFinite(data.hourly_rate)
-            ? Math.max(0, data.hourly_rate)
-            : data.hourly_rate,
-        tax_rate:
-          data.tax_rate != null && isFinite(data.tax_rate)
-            ? Math.min(100, Math.max(0, data.tax_rate))
-            : data.tax_rate,
-        payment_terms:
-          data.payment_terms != null && isFinite(data.payment_terms)
-            ? Math.max(0, Math.round(data.payment_terms))
-            : data.payment_terms,
-        proposal_expiry_days:
-          data.proposal_expiry_days != null && isFinite(data.proposal_expiry_days)
-            ? Math.max(0, Math.round(data.proposal_expiry_days))
-            : undefined,
-        // Rates are manual multipliers (1 foreign unit = N profile units).
-        // Sanitize on the way in; the Tauri backend stores them as TEXT.
-        // Omitted input inherits (see above), never silently wiped.
-        exchange_rates: effectiveRates,
-      };
+      const profile = get().profile;
+      const prevCurrency = profile?.currency;
+      const incomingRates = resolveIncomingRates(data, profile);
+      const ratesNote = clearedRatesNote(prevCurrency, data.currency, incomingRates);
+      const effectiveRates = ratesNote ? {} : incomingRates;
+      const sanitized = buildSanitizedProfile(data, effectiveRates);
       // Currency-less invoices inherit the profile currency (invCurOf
       // fallback), so switching base would silently re-denominate history.
       // Stamp the old base onto them first; explicit rows are untouched.
-      if (prevCurrency && data.currency && prevCurrency !== data.currency) {
-        try {
-          await get().loadInvoices();
-          const bare = get().invoices.filter((i) => !i.currency);
-          for (const inv of bare) {
-            await get().updateInvoice({ ...inv, currency: prevCurrency });
-          }
-        } catch {
-          /* history keeps the fallback; rates notice still applies */
-        }
-      }
+      const currencyChanged = !!prevCurrency && !!data.currency && prevCurrency !== data.currency;
+      if (currencyChanged) await stampLegacyInvoices(get, prevCurrency!);
       await invoke('upsert_user_profile', { payload: sanitized });
       set({ profile: sanitized });
       if (ratesNote) get().addToast(ratesNote, 'info', 6000);

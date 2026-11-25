@@ -38,6 +38,99 @@ const SAMPLE_CSV_CONTENT =
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
+type ImportSummaryState = {
+  imported: number;
+  skipped: number;
+  merged: number;
+  failed: number;
+  failures: string[];
+};
+
+function mergeUpdates(row: CsvRow, existing: Client): Partial<Client> {
+  const updates: Partial<Client> = {};
+  if (row.email && !existing.email) updates.email = row.email;
+  if (row.phone && !existing.phone) updates.phone = row.phone;
+  if (row.company && !existing.company) updates.company = row.company;
+  if (row.notes && !existing.notes) updates.notes = row.notes;
+  return updates;
+}
+
+function clientFromRow(row: CsvRow) {
+  return {
+    name: row.name,
+    email: row.email || undefined,
+    phone: row.phone || undefined,
+    company: row.company || undefined,
+    notes: row.notes || undefined,
+  };
+}
+
+function StepDots({ step, importing }: { step: Step; importing: boolean }) {
+  return (
+    <div className="flex justify-center gap-2 mb-2">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <div
+          key={s}
+          className={`w-2 h-2 rounded-full transition-colors ${
+            s < step
+              ? 'bg-[var(--accent)]'
+              : s === step
+              ? 'bg-[var(--accent)] scale-125'
+              : 'bg-[var(--border-color)]'
+          } ${importing && s === 4 ? 'animate-pulse' : ''}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ClientImportComplete({ summary, onDone }: { summary: ImportSummaryState; onDone: () => void }) {
+  return (
+    <div className="space-y-4 text-center py-6">
+      <div className="w-14 h-14 rounded-full bg-[var(--accent-bg)] flex items-center justify-center mx-auto mb-3">
+        <Check size={28} className="text-[var(--accent-ink,var(--accent))]" />
+      </div>
+      <h3 className="text-lg font-semibold text-[var(--text-primary)]">Import Complete</h3>
+      <div className="flex justify-center gap-6 text-xs">
+        {summary.imported > 0 && (
+          <div className="text-center">
+            <span className="block text-lg font-semibold text-[var(--accent-ink,var(--accent))]">{summary.imported}</span>
+            <span className="text-[var(--text-tertiary)]">Imported</span>
+          </div>
+        )}
+        {summary.skipped > 0 && (
+          <div className="text-center">
+            <span className="block text-lg font-semibold text-[var(--text-tertiary)]">{summary.skipped}</span>
+            <span className="text-[var(--text-tertiary)]">Skipped</span>
+          </div>
+        )}
+        {summary.merged > 0 && (
+          <div className="text-center">
+            <span className="block text-lg font-semibold text-[var(--accent-bg)]">{summary.merged}</span>
+            <span className="text-[var(--text-tertiary)]">Merged</span>
+          </div>
+        )}
+        {summary.failed > 0 && (
+          <div className="text-center">
+            <span className="block text-lg font-semibold text-[var(--danger)]">{summary.failed}</span>
+            <span className="text-[var(--text-tertiary)]">Failed</span>
+          </div>
+        )}
+      </div>
+      {summary.failures.length > 0 && (
+        <div className="text-left mt-4">
+          <p className="text-[10px] font-semibold text-[var(--text-secondary)] mb-1">Failed rows</p>
+          <div className="bg-[var(--bg-secondary)] rounded-xs p-2 max-h-[120px] overflow-y-auto">
+            {summary.failures.map((f, i) => (
+              <p key={i} className="text-[10px] text-[var(--danger)]">{f}</p>
+            ))}
+          </div>
+        </div>
+      )}
+      <Button onClick={onDone} size="sm">Done</Button>
+    </div>
+  );
+}
 
 export default function ClientImportModal({
   open,
@@ -247,11 +340,7 @@ export default function ClientImportModal({
       try {
         if (item.action === 'merge' && item.matchedClient) {
           const existing = item.matchedClient;
-          const updates: Partial<Client> = {};
-          if (item.row.email && !existing.email) updates.email = item.row.email;
-          if (item.row.phone && !existing.phone) updates.phone = item.row.phone;
-          if (item.row.company && !existing.company) updates.company = item.row.company;
-          if (item.row.notes && !existing.notes) updates.notes = item.row.notes;
+          const updates = mergeUpdates(item.row, existing);
           if (Object.keys(updates).length > 0) {
             await updateClient({ ...existing, ...updates });
           }
@@ -265,13 +354,7 @@ export default function ClientImportModal({
           });
           merged++;
         } else {
-          const newClient = await addClient({
-            name: item.row.name,
-            email: item.row.email || undefined,
-            phone: item.row.phone || undefined,
-            company: item.row.company || undefined,
-            notes: item.row.notes || undefined,
-          });
+          const newClient = await addClient(clientFromRow(item.row));
           await addCommunication({
             id: crypto.randomUUID(),
             client_id: newClient.id,
@@ -306,27 +389,12 @@ export default function ClientImportModal({
     handleClose();
   };
 
-  const stepDots = [1, 2, 3, 4, 5];
-
   const previewRows = allRows.slice(0, 3);
 
   return (
     <Modal open={open} onClose={handleClose} title="Import Clients from CSV" size="lg">
       <div className="space-y-5">
-        <div className="flex justify-center gap-2 mb-2">
-          {stepDots.map((s) => (
-            <div
-              key={s}
-              className={`w-2 h-2 rounded-full transition-colors ${
-                s < step
-                  ? 'bg-[var(--accent)]'
-                  : s === step
-                  ? 'bg-[var(--accent)] scale-125'
-                  : 'bg-[var(--border-color)]'
-              } ${importing && s === 4 ? 'animate-pulse' : ''}`}
-            />
-          ))}
-        </div>
+        <StepDots step={step} importing={importing} />
 
         {/* Step 1 · Upload */}
         {step === 1 && (
@@ -667,68 +735,7 @@ export default function ClientImportModal({
         )}
 
         {/* Step 5 · Summary */}
-        {step === 5 && (
-          <div className="space-y-4 text-center py-6">
-            <div className="w-14 h-14 rounded-full bg-[var(--accent-bg)] flex items-center justify-center mx-auto mb-3">
-              <Check size={28} className="text-[var(--accent-ink,var(--accent))]" />
-            </div>
-            <h3
-              className="text-lg font-semibold text-[var(--text-primary)]"
-             
-            >
-              Import Complete
-            </h3>
-            <div className="flex justify-center gap-6 text-xs">
-              {summary.imported > 0 && (
-                <div className="text-center">
-                  <span className="block text-lg font-semibold text-[var(--accent-ink,var(--accent))]">
-                    {summary.imported}
-                  </span>
-                  <span className="text-[var(--text-tertiary)]">Imported</span>
-                </div>
-              )}
-              {summary.skipped > 0 && (
-                <div className="text-center">
-                  <span className="block text-lg font-semibold text-[var(--text-tertiary)]">
-                    {summary.skipped}
-                  </span>
-                  <span className="text-[var(--text-tertiary)]">Skipped</span>
-                </div>
-              )}
-              {summary.merged > 0 && (
-                <div className="text-center">
-                  <span className="block text-lg font-semibold text-[var(--accent-bg)]">
-                    {summary.merged}
-                  </span>
-                  <span className="text-[var(--text-tertiary)]">Merged</span>
-                </div>
-              )}
-              {summary.failed > 0 && (
-                <div className="text-center">
-                  <span className="block text-lg font-semibold text-[var(--danger)]">
-                    {summary.failed}
-                  </span>
-                  <span className="text-[var(--text-tertiary)]">Failed</span>
-                </div>
-              )}
-            </div>
-            {summary.failures.length > 0 && (
-              <div className="text-left mt-4">
-                <p className="text-[10px] font-semibold text-[var(--text-secondary)] mb-1">
-                  Failed rows
-                </p>
-                <div className="bg-[var(--bg-secondary)] rounded-xs p-2 max-h-[120px] overflow-y-auto">
-                  {summary.failures.map((f, i) => (
-                    <p key={i} className="text-[10px] text-[var(--danger)]">{f}</p>
-                  ))}
-                </div>
-              </div>
-            )}
-            <Button onClick={handleDone} size="sm">
-              Done
-            </Button>
-          </div>
-        )}
+        {step === 5 && <ClientImportComplete summary={summary} onDone={handleDone} />}
       </div>
     </Modal>
   );

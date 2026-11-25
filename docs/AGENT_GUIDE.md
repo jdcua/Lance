@@ -22,8 +22,9 @@ read → plan → branch → change → npm run verify → PR → self-review �
 - Keep unrelated cleanups out of the PR. Report them instead.
 - `npm run verify` must pass before you open the PR. Never skip or weaken a
   test, and never change business logic to make a test green. Keep new
-  functions at complexity <= 15 (the `complexity` ESLint rule); extract
-  helpers rather than growing a branch tree.
+  functions at complexity <= 15 (the `complexity` ESLint rule is an error);
+  extract helpers rather than growing a branch tree. `npm run complexity`
+  lists any offenders.
 - Use the PR template. State what changed, why, what you deleted, and what you
   deliberately left untouched.
 - After opening the PR, re-read the diff as a reviewer. Check for secrets,

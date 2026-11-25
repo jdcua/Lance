@@ -17,6 +17,124 @@ type Retainer = {
   active: boolean;
 };
 
+type RetainerFormState = {
+  monthly_hours: string;
+  rate: string;
+  renewal_date: string;
+  active: boolean;
+};
+
+function retainerStyle(percentUsed: number) {
+  const isOver = percentUsed > 100;
+  const isWarning = percentUsed >= 80 && percentUsed <= 100;
+  return {
+    barColor: isOver ? 'bg-[#DC2626]' : isWarning ? 'bg-[#D97706]' : 'bg-[#16A34A]',
+    textColor: isOver ? 'text-[#DC2626]' : isWarning ? 'text-[#D97706]' : 'text-[#16A34A]',
+    bgColor: isOver ? 'bg-[#DC2626]/10' : isWarning ? 'bg-[#D97706]/10' : 'bg-[#16A34A]/10',
+    message: isOver ? 'Over hours · consider billing overage' : isWarning ? 'Approaching limit' : 'Under budget',
+  };
+}
+
+const inputClass =
+  'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
+
+function RetainerForm({
+  form,
+  setForm,
+  saving,
+  onSave,
+  onCancel,
+}: {
+  form: RetainerFormState;
+  setForm: React.Dispatch<React.SetStateAction<RetainerFormState>>;
+  saving: boolean;
+  onSave: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="text-[10px] text-[var(--text-tertiary)] mb-0.5 block">Monthly Hours</label>
+          <input type="number" step="0.5" placeholder="e.g. 20" value={form.monthly_hours} onChange={(e) => setForm({ ...form, monthly_hours: e.target.value })} className={inputClass} min={0} autoFocus />
+        </div>
+        <div>
+          <label className="text-[10px] text-[var(--text-tertiary)] mb-0.5 block">Hourly Rate</label>
+          <input type="number" step="0.01" placeholder="e.g. 150" value={form.rate} onChange={(e) => setForm({ ...form, rate: e.target.value })} className={inputClass} min={0} />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="text-[10px] text-[var(--text-tertiary)] mb-0.5 block">Renewal Date</label>
+          <input type="date" value={form.renewal_date} onChange={(e) => setForm({ ...form, renewal_date: e.target.value })} className={inputClass} />
+        </div>
+        <div className="flex items-end pb-1">
+          <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)] cursor-pointer">
+            <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} className="accent-[var(--accent)]" />
+            Active
+          </label>
+        </div>
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button variant="secondary" size="sm" onClick={onCancel}>Cancel</Button>
+        <Button size="sm" onClick={onSave} loading={saving} disabled={!form.monthly_hours || !form.rate}>Save</Button>
+      </div>
+    </div>
+  );
+}
+
+function RetainerDisplay({
+  retainer,
+  hoursUsed,
+  monthlyHours,
+  percentUsed,
+  monthlyValue,
+}: {
+  retainer: Retainer;
+  hoursUsed: number;
+  monthlyHours: number;
+  percentUsed: number;
+  monthlyValue: number;
+}) {
+  const style = retainerStyle(percentUsed);
+  return (
+    <div className="space-y-2">
+      <div className={`px-3 py-3 rounded-sm ${style.bgColor}`}>
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-xs font-medium text-[var(--text-primary)]">
+            {hoursUsed.toFixed(1)} / {monthlyHours} hours
+          </span>
+          <span className={`text-xs font-semibold ${style.textColor}`}>
+            {percentUsed.toFixed(0)}%
+          </span>
+        </div>
+        <div className="w-full h-2 glass rounded-full overflow-hidden">
+          <div className={`h-full rounded-full transition-colors ${style.barColor}`} style={{ width: `${Math.min(percentUsed, 100)}%` }} />
+        </div>
+        <div className="text-[10px] mt-1 text-[var(--text-tertiary)]">{style.message}</div>
+      </div>
+
+      <div className="flex items-center gap-4 px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
+        <div className="flex items-center gap-1.5">
+          <DollarSign size={10} className="text-[var(--text-tertiary)]" />
+          <span className="text-[var(--text-primary)] font-medium">${monthlyValue.toLocaleString()} / month</span>
+        </div>
+        {retainer.renewal_date && (
+          <div className="flex items-center gap-1.5">
+            <Calendar size={10} className="text-[var(--text-tertiary)]" />
+            <span className="text-[var(--text-secondary)]">
+              Renews {new Date(retainer.renewal_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+          </div>
+        )}
+        <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${retainer.active ? 'bg-[#16A34A]/15 text-[#16A34A]' : 'bg-[var(--border-color)] text-[var(--text-tertiary)]'}`}>
+          {retainer.active ? 'Active' : 'Inactive'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function RetainerManager({ clientId }: { clientId: string }) {
   const { timeEntries, loadTimeEntries } = useStore();
   const [retainer, setRetainer] = useState<Retainer | null>(null);
@@ -139,29 +257,7 @@ export default function RetainerManager({ clientId }: { clientId: string }) {
   const hoursUsed = getHoursUsedThisMonth();
   const monthlyHours = retainer?.monthly_hours || 0;
   const percentUsed = monthlyHours > 0 ? (hoursUsed / monthlyHours) * 100 : 0;
-  const isOver = percentUsed > 100;
-  const isWarning = percentUsed >= 80 && percentUsed <= 100;
-
-  const barColor = isOver
-    ? 'bg-[#DC2626]'
-    : isWarning
-    ? 'bg-[#D97706]'
-    : 'bg-[#16A34A]';
-  const textColor = isOver
-    ? 'text-[#DC2626]'
-    : isWarning
-    ? 'text-[#D97706]'
-    : 'text-[#16A34A]';
-  const bgColor = isOver
-    ? 'bg-[#DC2626]/10'
-    : isWarning
-    ? 'bg-[#D97706]/10'
-    : 'bg-[#16A34A]/10';
-
   const monthlyValue = retainer ? retainer.monthly_hours * retainer.rate : 0;
-
-  const inputClass =
-    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
@@ -176,143 +272,30 @@ export default function RetainerManager({ clientId }: { clientId: string }) {
     );
   }
 
+  const headerActions = retainer ? (
+    <>
+      <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>Edit</Button>
+      <button aria-label="Delete retainer manager" onClick={handleDelete} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] p-1">
+        <Trash2 size={12} />
+      </button>
+    </>
+  ) : (
+    <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>Set Up Retainer</Button>
+  );
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-          Retainer
-        </h4>
-        <div className="flex items-center gap-1">
-          {retainer && (
-            <>
-              <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
-                Edit
-              </Button>
-              <button
-                aria-label="Delete retainer manager"
-                onClick={handleDelete} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] p-1">
-                <Trash2 size={12} />
-              </button>
-            </>
-          )}
-          {!retainer && (
-            <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
-              Set Up Retainer
-            </Button>
-          )}
-        </div>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Retainer</h4>
+        <div className="flex items-center gap-1">{headerActions}</div>
       </div>
 
       {showForm && (
-        <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="text-[10px] text-[var(--text-tertiary)] mb-0.5 block">Monthly Hours</label>
-              <input
-                type="number"
-                step="0.5"
-                placeholder="e.g. 20"
-                value={form.monthly_hours}
-                onChange={(e) => setForm({ ...form, monthly_hours: e.target.value })}
-                className={inputClass}
-                min={0}
-                autoFocus
-              />
-            </div>
-            <div>
-              <label className="text-[10px] text-[var(--text-tertiary)] mb-0.5 block">Hourly Rate</label>
-              <input
-                type="number"
-                step="0.01"
-                placeholder="e.g. 150"
-                value={form.rate}
-                onChange={(e) => setForm({ ...form, rate: e.target.value })}
-                className={inputClass}
-                min={0}
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="text-[10px] text-[var(--text-tertiary)] mb-0.5 block">Renewal Date</label>
-              <input
-                type="date"
-                value={form.renewal_date}
-                onChange={(e) => setForm({ ...form, renewal_date: e.target.value })}
-                className={inputClass}
-              />
-            </div>
-            <div className="flex items-end pb-1">
-              <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)] cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.active}
-                  onChange={(e) => setForm({ ...form, active: e.target.checked })}
-                  className="accent-[var(--accent)]"
-                />
-                Active
-              </label>
-            </div>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
-              Cancel
-            </Button>
-            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.monthly_hours || !form.rate}>
-              Save
-            </Button>
-          </div>
-        </div>
+        <RetainerForm form={form} setForm={setForm} saving={saving} onSave={handleSave} onCancel={() => setShowForm(false)} />
       )}
 
       {retainer ? (
-        <div className="space-y-2">
-          <div className={`px-3 py-3 rounded-sm ${bgColor}`}>
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-medium text-[var(--text-primary)]">
-                {hoursUsed.toFixed(1)} / {monthlyHours} hours
-              </span>
-              <span className={`text-xs font-semibold ${textColor}`}>
-                {percentUsed.toFixed(0)}%
-              </span>
-            </div>
-            <div className="w-full h-2 glass rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-colors ${barColor}`}
-                style={{ width: `${Math.min(percentUsed, 100)}%` }}
-              />
-            </div>
-            <div className="text-[10px] mt-1 text-[var(--text-tertiary)]">
-              {isOver
-                ? 'Over hours · consider billing overage'
-                : isWarning
-                ? 'Approaching limit'
-                : 'Under budget'}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
-            <div className="flex items-center gap-1.5">
-              <DollarSign size={10} className="text-[var(--text-tertiary)]" />
-              <span className="text-[var(--text-primary)] font-medium">
-                ${monthlyValue.toLocaleString()} / month
-              </span>
-            </div>
-            {retainer.renewal_date && (
-              <div className="flex items-center gap-1.5">
-                <Calendar size={10} className="text-[var(--text-tertiary)]" />
-                <span className="text-[var(--text-secondary)]">
-                  Renews {new Date(retainer.renewal_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </span>
-              </div>
-            )}
-            <span
-              className={`text-[10px] px-1.5 py-0.5 rounded-full ${retainer.active ? 'bg-[#16A34A]/15 text-[#16A34A]' : 'bg-[var(--border-color)] text-[var(--text-tertiary)]'}`}
-            >
-              {retainer.active ? 'Active' : 'Inactive'}
-            </span>
-          </div>
-        </div>
+        <RetainerDisplay retainer={retainer} hoursUsed={hoursUsed} monthlyHours={monthlyHours} percentUsed={percentUsed} monthlyValue={monthlyValue} />
       ) : (
         <p className="text-xs text-[var(--text-tertiary)] py-2">No retainer set up yet.</p>
       )}

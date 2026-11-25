@@ -383,6 +383,7 @@ export default function TimeScreen() {
       <LoadError error={timeError} onRetry={() => loadTimeEntries()} />
 
       {tab === 'timer' ? (
+        (() => (
         <>
           {activeTimer && (
             <Card className="mb-6 flex items-center">
@@ -577,12 +578,15 @@ export default function TimeScreen() {
             </>
           )}
         </>
+        ))()
       ) : tab === 'week' ? (
         /* ── Week tab · read-only Mon–Sun grid ── */
         <WeekView entries={timeEntries} />
       ) : (
         /* ── Heatmap tab ── */
         <>
+          {(() => (
+          <>
           {/* SECTION 2 · Streak Stats + SECTION 5 · Project Filter */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -662,7 +666,10 @@ export default function TimeScreen() {
               color={streakStats.mostActiveMonth ? 'blue' : 'gray'}
             />
           </div>
-
+          </>
+          ))()}
+          {(() => (
+          <>
           {/* SECTION 1 · Annual Heatmap */}
           <Card className="mb-6">
             <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-1">
@@ -809,7 +816,10 @@ export default function TimeScreen() {
               <span className="text-[9px] text-[var(--text-tertiary)]">More</span>
             </div>
           </Card>
-
+          </>
+          ))()}
+          {(() => (
+          <>
           {/* SECTION 3 · Day of Week Breakdown */}
           <Card className="mb-6">
             <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Day of Week</h2>
@@ -924,6 +934,8 @@ export default function TimeScreen() {
               <span className="text-[9px] text-[var(--text-tertiary)]">More</span>
             </div>
           </Card>
+          </>
+          ))()}
         </>
       )}
 

@@ -17,6 +17,23 @@ const FIELDS: { key: keyof Spec; label: string }[] = [
   { key: 'notes', label: 'Notes' },
 ];
 
+const SPEC_KEYS = FIELDS.map((f) => f.key);
+
+const toNull = (v: string) => v || null;
+const toOptional = (v: string) => v || undefined;
+
+function specValues(form: Record<string, string>) {
+  return SPEC_KEYS.map((key) => toNull(form[key]));
+}
+
+function specFromForm(form: Record<string, string>) {
+  const result: Partial<Spec> = {};
+  for (const key of SPEC_KEYS) {
+    result[key] = toOptional(form[key]);
+  }
+  return result;
+}
+
 export default function DeliverableSpecs({ projectId }: { projectId: string }) {
   const [spec, setSpec] = useState<Spec | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,38 +77,21 @@ export default function DeliverableSpecs({ projectId }: { projectId: string }) {
     setSaving(true);
     try {
       const db = await getDb();
+      const values = specValues(form);
+      const optional = specFromForm(form);
       if (spec) {
         await db.execute(
           'UPDATE deliverable_specs SET format = ?, resolution = ?, aspect_ratio = ?, audio_spec = ?, delivery_method = ?, notes = ? WHERE id = ?',
-          [form.format || null, form.resolution || null, form.aspect_ratio || null, form.audio_spec || null, form.delivery_method || null, form.notes || null, spec.id]
+          [...values, spec.id]
         );
-        const updated: Spec = {
-          ...spec,
-          format: form.format || undefined,
-          resolution: form.resolution || undefined,
-          aspect_ratio: form.aspect_ratio || undefined,
-          audio_spec: form.audio_spec || undefined,
-          delivery_method: form.delivery_method || undefined,
-          notes: form.notes || undefined,
-        };
-        setSpec(updated);
+        setSpec({ ...spec, ...optional });
       } else {
         const id = crypto.randomUUID();
         await db.execute(
           'INSERT INTO deliverable_specs (id, project_id, format, resolution, aspect_ratio, audio_spec, delivery_method, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          [id, projectId, form.format || null, form.resolution || null, form.aspect_ratio || null, form.audio_spec || null, form.delivery_method || null, form.notes || null]
+          [id, projectId, ...values]
         );
-        const created: Spec = {
-          id,
-          project_id: projectId,
-          format: form.format || undefined,
-          resolution: form.resolution || undefined,
-          aspect_ratio: form.aspect_ratio || undefined,
-          audio_spec: form.audio_spec || undefined,
-          delivery_method: form.delivery_method || undefined,
-          notes: form.notes || undefined,
-        };
-        setSpec(created);
+        setSpec({ id, project_id: projectId, ...optional });
       }
       setEditing(false);
     } catch (e) { console.error('[DeliverableSpecs] save failed:', e); }

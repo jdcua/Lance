@@ -129,6 +129,45 @@ export function computeHeatmapGrid(
   return grid;
 }
 
+/** Consecutive days with logged minutes, walking back from today. */
+function computeCurrentStreak(
+  minutesByDay: Record<string, { minutes: number; entries: number }>,
+): number {
+  const now = new Date();
+  const checkDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let streak = 0;
+  for (let i = 0; i < 365; i++) {
+    const key = getDateKey(checkDate);
+    if (minutesByDay[key] && minutesByDay[key].minutes > 0) streak++;
+    else break;
+    checkDate.setDate(checkDate.getDate() - 1);
+  }
+  return streak;
+}
+
+/** Longest run of consecutive logged days within the sorted year dates. */
+function computeLongestStreak(yearDates: string[]): number {
+  let longest = 0;
+  let streak = 0;
+  for (let i = 0; i < yearDates.length; i++) {
+    if (i === 0) {
+      streak = 1;
+    } else {
+      const prev = parseLocalDateKey(yearDates[i - 1]);
+      const curr = parseLocalDateKey(yearDates[i]);
+      const diff = (curr.getTime() - prev.getTime()) / DAY_MS;
+      if (diff <= 1.1) {
+        streak++;
+      } else {
+        if (streak > longest) longest = streak;
+        streak = 1;
+      }
+    }
+    if (streak > longest) longest = streak;
+  }
+  return longest;
+}
+
 export function computeStreakStats(
   timeEntries: TimeEntry[],
   year: number,
@@ -145,18 +184,7 @@ export function computeStreakStats(
     .filter((k) => minutesByDay[k].minutes > 0)
     .sort();
 
-  const now = new Date();
-  const checkDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  let cs = 0;
-  for (let i = 0; i < 365; i++) {
-    const key = getDateKey(checkDate);
-    if (minutesByDay[key] && minutesByDay[key].minutes > 0) {
-      cs++;
-    } else {
-      break;
-    }
-    checkDate.setDate(checkDate.getDate() - 1);
-  }
+  const currentStreak = computeCurrentStreak(minutesByDay);
 
   const yearStart = parseLocalDateKey(`${year}-01-01`);
   const yearEnd = parseLocalDateKey(`${year + 1}-01-01`);
@@ -165,24 +193,7 @@ export function computeStreakStats(
     return d >= yearStart && d < yearEnd;
   });
 
-  let longestStreak = 0;
-  let streak = 0;
-  for (let i = 0; i < yearDates.length; i++) {
-    if (i === 0) {
-      streak = 1;
-    } else {
-      const prev = parseLocalDateKey(yearDates[i - 1]);
-      const curr = parseLocalDateKey(yearDates[i]);
-      const diff = (curr.getTime() - prev.getTime()) / DAY_MS;
-      if (diff <= 1.1) {
-        streak++;
-      } else {
-        if (streak > longestStreak) longestStreak = streak;
-        streak = 1;
-      }
-    }
-    if (streak > longestStreak) longestStreak = streak;
-  }
+  const longestStreak = computeLongestStreak(yearDates);
 
   let hoursThisYear = 0;
   for (const key of yearDates) {
@@ -220,7 +231,7 @@ export function computeStreakStats(
   }
 
   return {
-    currentStreak: cs,
+    currentStreak,
     longestStreak,
     totalHoursThisYear: hoursThisYear,
     bestDayHours,
