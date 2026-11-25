@@ -67,13 +67,7 @@ describe('pro insights math', () => {
   });
 
   it('excludes hourly proposals from pipeline value but flags them', () => {
-    const f = computeForecast(
-      [],
-      [prop({ rate_type: 'hourly', rate: 150 })],
-      [],
-      1,
-      NOW,
-    );
+    const f = computeForecast([], [prop({ rate_type: 'hourly', rate: 150 })], [], 1, NOW);
     expect(f.pipelineValue).toBe(0);
     expect(f.flatOnly).toBe(true);
   });

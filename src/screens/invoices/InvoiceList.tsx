@@ -3,14 +3,27 @@ import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
 import { MoreRows } from '../../components/ui/useVisibleList';
-import { Bell, ChevronDown, ChevronRight, DollarSign, Download, Receipt, Pencil, Trash2, Mail, Copy, Check, AlertTriangle, X } from 'lucide-react';
+import {
+  Bell,
+  ChevronDown,
+  ChevronRight,
+  DollarSign,
+  Download,
+  Receipt,
+  Pencil,
+  Trash2,
+  Mail,
+  Copy,
+  Check,
+  AlertTriangle,
+  X,
+} from 'lucide-react';
 import {
   generateFollowUpDraft,
   generateSubjectLine,
   openMailTo,
 } from '../../utils/followUpTemplates';
 import { computeLateFee } from '../../utils/lateFees';
-import { getCurrencySymbol } from '../../lib/currency';
 import { parseDateString, DAY_MS, relativeDate, formatCurrency } from '../../utils/format';
 import { statusBadge, type InvoicesBag } from './shared';
 import type { Client, Invoice } from '../../types';
@@ -57,11 +70,7 @@ function buildFollowUpDraftAndSubject(
 ) {
   const { profile, followUpSettings, dunningTone, withFeeNote } = bag;
   const templateKey =
-    daysElapsed >= 10
-      ? 'invoice_day14'
-      : daysElapsed >= 4
-        ? 'invoice_day7'
-        : 'invoice_day1';
+    daysElapsed >= 10 ? 'invoice_day14' : daysElapsed >= 4 ? 'invoice_day7' : 'invoice_day1';
   const context = {
     clientName: client?.name || 'Unknown',
     invoiceNumber: inv.invoice_number,
@@ -86,9 +95,7 @@ function buildFollowUpDraftAndSubject(
 
 function FollowUpStrip({ inv, bag }: { inv: Invoice; bag: InvoicesBag }) {
   const { pendingFollowUps, getClient, updateFollowUpStatus, addToast, openPaymentModal } = bag;
-  const fu = pendingFollowUps.find(
-    (f) => f.entity_type === 'invoice' && f.entity_id === inv.id,
-  );
+  const fu = pendingFollowUps.find((f) => f.entity_type === 'invoice' && f.entity_id === inv.id);
   if (!fu || inv.status === 'paid') return null;
   const client = getClient(inv.client_id);
   const dueDate = inv.due_date ? parseDateString(inv.due_date) : null;
@@ -162,15 +169,25 @@ function FollowUpStrip({ inv, bag }: { inv: Invoice; bag: InvoicesBag }) {
 }
 
 function InvoiceActions({
-  inv, hasFollowUpStrip, bag,
+  inv,
+  hasFollowUpStrip,
+  bag,
 }: {
   inv: Invoice;
   hasFollowUpStrip: boolean;
   bag: InvoicesBag;
 }) {
   const {
-    dropdownRef, exportDropdown, setExportDropdown, handleMarkSent, openReminderModal,
-    openPaymentModal, handleExportPDF, handleExportDOCX, handleDuplicate, openEdit,
+    dropdownRef,
+    exportDropdown,
+    setExportDropdown,
+    handleMarkSent,
+    openReminderModal,
+    openPaymentModal,
+    handleExportPDF,
+    handleExportDOCX,
+    handleDuplicate,
+    openEdit,
     setConfirmDelete,
   } = bag;
   return (
@@ -183,9 +200,7 @@ function InvoiceActions({
           Mark Sent
         </button>
       )}
-      {(inv.status === 'sent' ||
-        inv.status === 'overdue' ||
-        inv.status === 'partial') && (
+      {(inv.status === 'sent' || inv.status === 'overdue' || inv.status === 'partial') && (
         <>
           <button
             onClick={() => openReminderModal(inv)}
@@ -245,9 +260,7 @@ function InvoiceActions({
         <Pencil size={14} />
       </button>
       <button
-        onClick={() =>
-          setConfirmDelete({ id: inv.id, label: inv.invoice_number, type: 'invoice' })
-        }
+        onClick={() => setConfirmDelete({ id: inv.id, label: inv.invoice_number, type: 'invoice' })}
         aria-label="Delete invoice"
         className="p-1 text-[var(--text-tertiary)] hover:text-[var(--danger)] rounded-sm"
       >
@@ -258,7 +271,10 @@ function InvoiceActions({
 }
 
 function ExpandedPayments({
-  inv, paidTotal, remaining, bag,
+  inv,
+  paidTotal,
+  remaining,
+  bag,
 }: {
   inv: Invoice;
   paidTotal: number;
@@ -301,7 +317,9 @@ function ExpandedPayments({
               className="flex items-center justify-between px-2 py-1.5 rounded-xs bg-[var(--bg-card)]"
             >
               <div className="flex items-center gap-3 text-[10px]">
-                <span className="text-[var(--text-primary)] font-medium">{fmtInv(p.amount, inv)}</span>
+                <span className="text-[var(--text-primary)] font-medium">
+                  {fmtInv(p.amount, inv)}
+                </span>
                 <span className="text-[var(--text-secondary)]">
                   {relativeDate(p.created_at || p.payment_date)}
                 </span>
@@ -327,129 +345,129 @@ function ExpandedPayments({
 
 export default function InvoiceList({ bag }: { bag: InvoicesBag }) {
   const {
-    invoices, filteredInvoices, clients, search, paged, loadPayments, pendingFollowUps,
-    fmtInv, fmtInvDisplay, getClientName, getPaidTotal, getRemainingBalance,
-    expandedInv, setExpandedInv, handleCreateFromEmptyState,
+    invoices,
+    filteredInvoices,
+    clients,
+    search,
+    paged,
+    loadPayments,
+    pendingFollowUps,
+    fmtInv,
+    fmtInvDisplay,
+    getClientName,
+    getPaidTotal,
+    getRemainingBalance,
+    expandedInv,
+    setExpandedInv,
+    handleCreateFromEmptyState,
   } = bag;
-  return (
-
-        invoices.length === 0 ? (
-          <EmptyState
-            screen="invoices"
-            icon={<Receipt size={40} className="text-[var(--text-tertiary)] mb-4" />}
-            hint={
-              clients.length === 0 ? (
-                <p className="text-xs text-[var(--warning-text)] mb-3">
-                  Add at least one client before creating an invoice.
-                </p>
-              ) : undefined
-            }
-            action={
-              clients.length === 0 ? (
-                <Button size="sm" disabled={true}>
-                  New Invoice
-                </Button>
-              ) : (
-                <Button onClick={handleCreateFromEmptyState} size="sm" variant="secondary">
-                  New Invoice
-                </Button>
-              )
-            }
-          />
-        ) : filteredInvoices.length === 0 && search ? (
-          <Card className="text-center py-12">
-            <p className="text-sm text-[var(--text-tertiary)]">No invoices match "{search}"</p>
-          </Card>
+  return invoices.length === 0 ? (
+    <EmptyState
+      screen="invoices"
+      icon={<Receipt size={40} className="text-[var(--text-tertiary)] mb-4" />}
+      hint={
+        clients.length === 0 ? (
+          <p className="text-xs text-[var(--warning-text)] mb-3">
+            Add at least one client before creating an invoice.
+          </p>
+        ) : undefined
+      }
+      action={
+        clients.length === 0 ? (
+          <Button size="sm" disabled={true}>
+            New Invoice
+          </Button>
         ) : (
-          <>
-            <div className="list-surface divide-y divide-[var(--border-color)]">
-              {paged.visible.map((inv) => {
-                const isExpanded = expandedInv === inv.id;
-                const paidTotal = getPaidTotal(inv.id);
-                const remaining = getRemainingBalance(inv);
-                // The follow-up strip below already carries its own Record
-                // Payment action, hide the duplicate in the action row.
-                const hasFollowUpStrip =
-                  inv.status !== 'paid' &&
-                  pendingFollowUps.some(
-                    (f) => f.entity_type === 'invoice' && f.entity_id === inv.id,
-                  );
-                const toggleExpand = () => {
-                  if (isExpanded) {
-                    setExpandedInv(null);
-                  } else {
-                    setExpandedInv(inv.id);
-                    loadPayments();
-                  }
-                };
-                return (
-                  <div key={inv.id}>
-                    <div
-                      className={`list-row flex items-center gap-3 px-4 py-3 ${isExpanded ? 'bg-[var(--bg-secondary)]/45' : ''} ${inv.status === 'overdue' ? 'border-l-[3px] border-l-[var(--danger)]' : ''}`}
-                    >
-                      <button
-                        onClick={toggleExpand}
-                        aria-label={
-                          isExpanded ? 'Collapse invoice details' : 'Expand invoice details'
-                        }
-                        title={isExpanded ? 'Collapse' : 'Expand'}
-                        className="p-0.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] flex-shrink-0"
-                      >
-                        {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                      </button>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-xs font-semibold text-[var(--text-primary)]">
-                            {inv.invoice_number}
-                          </span>
-                          <span className="text-xs text-[var(--text-secondary)]">
-                            {getClientName(inv.client_id)}
-                          </span>
-                          <Badge variant={statusBadge[inv.status]}>{inv.status}</Badge>
-                        </div>
-                        <div className="flex items-center gap-3 text-[10px] text-[var(--text-tertiary)]">
-                          <span>{fmtInvDisplay(inv)}</span>
-                          {inv.due_date && <span>Due: {relativeDate(inv.due_date)}</span>}
-                          {inv.paid_at && <span>Paid: {relativeDate(inv.paid_at)}</span>}
-                          {paidTotal > 0 && !inv.paid_at && (
-                            <span className="text-[var(--warning-text)]">
-                              Paid: {fmtInv(paidTotal, inv)}
-                            </span>
-                          )}
-                          {remaining > 0 && remaining < inv.total && (
-                            <span className="text-[var(--warning-text)]">
-                              Remaining: {fmtInv(remaining, inv)}
-                            </span>
-                          )}
-                          <span>
-                            {inv.line_items.length} item{inv.line_items.length !== 1 ? 's' : ''}
-                          </span>
-                          <LateFeeLine inv={inv} bag={bag} />
-                        </div>
-                        {/* Follow-up indicator */}
-                        <FollowUpStrip inv={inv} bag={bag} />
-                      </div>
-                      <InvoiceActions inv={inv} hasFollowUpStrip={hasFollowUpStrip} bag={bag} />
-                    </div>
-                    {isExpanded && (
-                      <ExpandedPayments
-                        inv={inv}
-                        paidTotal={paidTotal}
-                        remaining={remaining}
-                        bag={bag}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            <MoreRows
-              total={paged.total}
-              shown={paged.visible.length}
-              hasMore={paged.hasMore}
-              showMore={paged.showMore}
-            />
-          </>
+          <Button onClick={handleCreateFromEmptyState} size="sm" variant="secondary">
+            New Invoice
+          </Button>
         )
+      }
+    />
+  ) : filteredInvoices.length === 0 && search ? (
+    <Card className="text-center py-12">
+      <p className="text-sm text-[var(--text-tertiary)]">No invoices match "{search}"</p>
+    </Card>
+  ) : (
+    <>
+      <div className="list-surface divide-y divide-[var(--border-color)]">
+        {paged.visible.map((inv) => {
+          const isExpanded = expandedInv === inv.id;
+          const paidTotal = getPaidTotal(inv.id);
+          const remaining = getRemainingBalance(inv);
+          // The follow-up strip below already carries its own Record
+          // Payment action, hide the duplicate in the action row.
+          const hasFollowUpStrip =
+            inv.status !== 'paid' &&
+            pendingFollowUps.some((f) => f.entity_type === 'invoice' && f.entity_id === inv.id);
+          const toggleExpand = () => {
+            if (isExpanded) {
+              setExpandedInv(null);
+            } else {
+              setExpandedInv(inv.id);
+              loadPayments();
+            }
+          };
+          return (
+            <div key={inv.id}>
+              <div
+                className={`list-row flex items-center gap-3 px-4 py-3 ${isExpanded ? 'bg-[var(--bg-secondary)]/45' : ''} ${inv.status === 'overdue' ? 'border-l-[3px] border-l-[var(--danger)]' : ''}`}
+              >
+                <button
+                  onClick={toggleExpand}
+                  aria-label={isExpanded ? 'Collapse invoice details' : 'Expand invoice details'}
+                  title={isExpanded ? 'Collapse' : 'Expand'}
+                  className="p-0.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] flex-shrink-0"
+                >
+                  {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                </button>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-xs font-semibold text-[var(--text-primary)]">
+                      {inv.invoice_number}
+                    </span>
+                    <span className="text-xs text-[var(--text-secondary)]">
+                      {getClientName(inv.client_id)}
+                    </span>
+                    <Badge variant={statusBadge[inv.status]}>{inv.status}</Badge>
+                  </div>
+                  <div className="flex items-center gap-3 text-[10px] text-[var(--text-tertiary)]">
+                    <span>{fmtInvDisplay(inv)}</span>
+                    {inv.due_date && <span>Due: {relativeDate(inv.due_date)}</span>}
+                    {inv.paid_at && <span>Paid: {relativeDate(inv.paid_at)}</span>}
+                    {paidTotal > 0 && !inv.paid_at && (
+                      <span className="text-[var(--warning-text)]">
+                        Paid: {fmtInv(paidTotal, inv)}
+                      </span>
+                    )}
+                    {remaining > 0 && remaining < inv.total && (
+                      <span className="text-[var(--warning-text)]">
+                        Remaining: {fmtInv(remaining, inv)}
+                      </span>
+                    )}
+                    <span>
+                      {inv.line_items.length} item{inv.line_items.length !== 1 ? 's' : ''}
+                    </span>
+                    <LateFeeLine inv={inv} bag={bag} />
+                  </div>
+                  {/* Follow-up indicator */}
+                  <FollowUpStrip inv={inv} bag={bag} />
+                </div>
+                <InvoiceActions inv={inv} hasFollowUpStrip={hasFollowUpStrip} bag={bag} />
+              </div>
+              {isExpanded && (
+                <ExpandedPayments inv={inv} paidTotal={paidTotal} remaining={remaining} bag={bag} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <MoreRows
+        total={paged.total}
+        shown={paged.visible.length}
+        hasMore={paged.hasMore}
+        showMore={paged.showMore}
+      />
+    </>
   );
 }

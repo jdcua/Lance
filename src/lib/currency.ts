@@ -32,11 +32,7 @@ export function defaultCurrency(): CurrencyCode {
   return DEFAULT_CURRENCY as CurrencyCode;
 }
 
-export function getInvoiceCurrency(
-  invoice: Invoice,
-  client: Client,
-  profile: UserProfile,
-): string {
+export function getInvoiceCurrency(invoice: Invoice, client: Client, profile: UserProfile): string {
   return invoice.currency ?? client.preferred_currency ?? profile.currency;
 }
 

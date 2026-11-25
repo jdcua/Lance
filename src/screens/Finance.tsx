@@ -1,14 +1,11 @@
 import { useEffect, useState } from 'react';
 import { DEFAULT_CURRENCY } from '../lib/constants';
 import { useStore } from '../store';
-import type { Expense, Invoice, InvoicePayment, Milestone } from '../types';
+import type { Expense, InvoicePayment, Milestone } from '../types';
 import Button from '../components/ui/Button';
 import LoadError from '../components/ui/LoadError';
 import Modal from '../components/ui/Modal';
-import {
-  formatCurrency,
-  todayLocalISO,
-} from '../utils/format';
+import { formatCurrency, todayLocalISO } from '../utils/format';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useVisibleList } from '../components/ui/useVisibleList';
 import { commands } from '../lib/commands';
@@ -37,7 +34,6 @@ import AgingReport from './finance/AgingReport';
 import type { FinanceBag } from './finance/shared';
 
 const categories = ['Software', 'Equipment', 'Office', 'Travel', 'Marketing', 'Fees', 'Other'];
-
 
 export default function Finance() {
   const {
@@ -371,9 +367,7 @@ export default function Finance() {
   // Conversion + trailing averages, computed together in one pure derivation
   // so the shell stays a flat sequence of assignments.
   const { convRevenue, convOutstanding, convProfit, avgIncome, avgExpenses } = (() => {
-    const convRevenue = showConverted
-      ? convertByCurrency(revenueByCurrency, profCur, rates)
-      : null;
+    const convRevenue = showConverted ? convertByCurrency(revenueByCurrency, profCur, rates) : null;
     const convOutstanding = showConverted
       ? convertByCurrency(outstandingByCurrency, profCur, rates)
       : null;
@@ -420,19 +414,61 @@ export default function Finance() {
   // Section prop bag: shell-local state, handlers, and derived figures.
   // Sections are verbatim relocation; computations stay here.
   const bag: FinanceBag = {
-    fmt, profCur, currency, rates,
-    hasMixedCurrencies, showConverted, ratesCoverAll, foreignCurs, invoiceCurrencies,
-    curFilter, setCurFilter, expandedMonth, setExpandedMonth,
-    showRates, setShowRates, rateDrafts, setRateDrafts, savingRates, saveRate,
-    revenueByCurrency, outstandingByCurrency, atRiskSlowPayers, atRiskProfTotal,
-    totalPaidRevenue, totalExpenses, totalOutstanding, profit,
-    convRevenue, convOutstanding, convProfit,
-    monthlyPaidByCurrency, monthlyExpenses, monthlyPaid, allMonths,
-    expensesByCategory, pagedExpenses, expenses, foreignFiltered,
-    openNew, openEdit, setConfirmDelete, setShowBankImport,
-    forecastMetrics, revenueForecast, expenseForecast, cashFlow,
-    maxRevenue, maxExpense, avgIncome, avgExpenses, avgClientRevenue,
-    currentBalance, setCurrentBalance, scenario, setScenario,
+    fmt,
+    profCur,
+    currency,
+    rates,
+    hasMixedCurrencies,
+    showConverted,
+    ratesCoverAll,
+    foreignCurs,
+    invoiceCurrencies,
+    curFilter,
+    setCurFilter,
+    expandedMonth,
+    setExpandedMonth,
+    showRates,
+    setShowRates,
+    rateDrafts,
+    setRateDrafts,
+    savingRates,
+    saveRate,
+    revenueByCurrency,
+    outstandingByCurrency,
+    atRiskSlowPayers,
+    atRiskProfTotal,
+    totalPaidRevenue,
+    totalExpenses,
+    totalOutstanding,
+    profit,
+    convRevenue,
+    convOutstanding,
+    convProfit,
+    monthlyPaidByCurrency,
+    monthlyExpenses,
+    monthlyPaid,
+    allMonths,
+    expensesByCategory,
+    pagedExpenses,
+    expenses,
+    foreignFiltered,
+    openNew,
+    openEdit,
+    setConfirmDelete,
+    setShowBankImport,
+    forecastMetrics,
+    revenueForecast,
+    expenseForecast,
+    cashFlow,
+    maxRevenue,
+    maxExpense,
+    avgIncome,
+    avgExpenses,
+    avgClientRevenue,
+    currentBalance,
+    setCurrentBalance,
+    scenario,
+    setScenario,
   };
 
   if (loading)
@@ -522,10 +558,9 @@ export default function Finance() {
     >
       <div className="space-y-4">
         <div>
-          <label className="form-label">
-            Category
-          </label>
-          <select aria-label="Category"
+          <label className="form-label">Category</label>
+          <select
+            aria-label="Category"
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
             className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)]"
@@ -538,9 +573,7 @@ export default function Finance() {
           </select>
         </div>
         <div>
-          <label className="form-label">
-            Description *
-          </label>
+          <label className="form-label">Description *</label>
           <input
             type="text"
             value={form.description}
@@ -552,9 +585,7 @@ export default function Finance() {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="form-label">
-              Amount *
-            </label>
+            <label className="form-label">Amount *</label>
             <input
               type="number"
               min={0}
@@ -568,9 +599,7 @@ export default function Finance() {
             />
           </div>
           <div>
-            <label className="form-label">
-              Date
-            </label>
+            <label className="form-label">Date</label>
             <input
               type="date"
               value={form.date}
@@ -602,10 +631,9 @@ export default function Finance() {
           </div>
           {form.recurring && (
             <div>
-              <label className="form-label">
-                Frequency
-              </label>
-              <select aria-label="Frequency"
+              <label className="form-label">Frequency</label>
+              <select
+                aria-label="Frequency"
                 value={form.frequency}
                 onChange={(e) => setForm({ ...form, frequency: e.target.value })}
                 className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
@@ -637,7 +665,9 @@ export default function Finance() {
 
   return (
     <div className="p-6">
-      <h1 className="font-display text-lg font-semibold text-[var(--text-primary)] mb-2">Finance</h1>
+      <h1 className="font-display text-lg font-semibold text-[var(--text-primary)] mb-2">
+        Finance
+      </h1>
       <TabBar />
       <LoadError
         error={financeError}
@@ -664,4 +694,3 @@ export default function Finance() {
     </div>
   );
 }
-

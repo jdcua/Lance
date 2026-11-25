@@ -15,15 +15,30 @@ describe('weekly digest', () => {
 
   it('aggregates this week only', () => {
     const invoices = [
-      { id: 'a', status: 'paid', total: 500, paid_at: '2026-09-08T09:00:00', created_at: '2026-09-01' },
-      { id: 'b', status: 'paid', total: 999, paid_at: '2026-08-20T09:00:00', created_at: '2026-08-01' },
+      {
+        id: 'a',
+        status: 'paid',
+        total: 500,
+        paid_at: '2026-09-08T09:00:00',
+        created_at: '2026-09-01',
+      },
+      {
+        id: 'b',
+        status: 'paid',
+        total: 999,
+        paid_at: '2026-08-20T09:00:00',
+        created_at: '2026-08-01',
+      },
       { id: 'c', status: 'overdue', total: 100, created_at: '2026-09-01' },
     ] as Invoice[];
     const time = [
       { id: 't', duration_minutes: 120, start_time: '2026-09-07T10:00:00' },
       { id: 'u', duration_minutes: 600, start_time: '2026-08-01T10:00:00' },
     ] as TimeEntry[];
-    const proposals = [{ id: 'p', status: 'sent' }, { id: 'q', status: 'draft' }] as Proposal[];
+    const proposals = [
+      { id: 'p', status: 'sent' },
+      { id: 'q', status: 'draft' },
+    ] as Proposal[];
     const d = buildWeeklyDigest(invoices, time, proposals, NOW);
     expect(d.paidTotal).toBe(500);
     expect(d.paidCount).toBe(1);

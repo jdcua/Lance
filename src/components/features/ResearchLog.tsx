@@ -160,9 +160,7 @@ export default function ResearchLog({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Research
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Research</h4>
         </div>
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (

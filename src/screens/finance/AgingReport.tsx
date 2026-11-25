@@ -7,7 +7,14 @@ import type { ToastType } from '../../store/toastStore';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
-import { Check, AlertTriangle, ArrowUpDown, ChevronDown, ChevronUp, DollarSign } from 'lucide-react';
+import {
+  Check,
+  AlertTriangle,
+  ArrowUpDown,
+  ChevronDown,
+  ChevronUp,
+  DollarSign,
+} from 'lucide-react';
 
 import { MoneyLines } from './shared';
 
@@ -301,9 +308,7 @@ function AgingReport({
         {bucketOrder.map((bucket) => (
           <div key={bucket} style={{ borderTop: `3px solid ${bucketColor[bucket]}` }}>
             <Card className="text-center">
-              <p className="text-[10px] text-[var(--text-tertiary)] mb-1">
-                {bucketLabel[bucket]}
-              </p>
+              <p className="text-[10px] text-[var(--text-tertiary)] mb-1">{bucketLabel[bucket]}</p>
               <p className="text-sm font-semibold" style={{ color: bucketColor[bucket] }}>
                 {fmt(bucketTotals[bucket])}
               </p>
@@ -480,9 +485,7 @@ function AgingReport({
             ) : null;
           })()}
           <div>
-            <label className="form-label">
-              Payment Date
-            </label>
+            <label className="form-label">Payment Date</label>
             <input
               type="date"
               value={paymentForm.payment_date}
@@ -491,9 +494,7 @@ function AgingReport({
             />
           </div>
           <div>
-            <label className="form-label">
-              Amount Received
-            </label>
+            <label className="form-label">Amount Received</label>
             <input
               type="number"
               value={paymentForm.amount}
@@ -503,9 +504,7 @@ function AgingReport({
             />
           </div>
           <div>
-            <label className="form-label">
-              Payment Method
-            </label>
+            <label className="form-label">Payment Method</label>
             <select
               aria-label="Payment Method"
               value={paymentForm.payment_method}
@@ -531,9 +530,7 @@ function AgingReport({
             </select>
           </div>
           <div>
-            <label className="form-label">
-              Reference / Transaction ID
-            </label>
+            <label className="form-label">Reference / Transaction ID</label>
             <input
               type="text"
               value={paymentForm.reference}
@@ -543,9 +540,7 @@ function AgingReport({
             />
           </div>
           <div>
-            <label className="form-label">
-              Notes
-            </label>
+            <label className="form-label">Notes</label>
             <textarea
               value={paymentForm.notes}
               onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
@@ -584,6 +579,5 @@ function relativeDate(iso: string): string {
   if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
   return date.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' });
 }
-
 
 export default AgingReport;

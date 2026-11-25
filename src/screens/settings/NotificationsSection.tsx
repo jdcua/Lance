@@ -1,5 +1,11 @@
 import { useStore } from '../../store';
-import { setPref, usePrefs, type MotionPref, type ContrastPref, type TextScalePref } from '../../lib/prefs';
+import {
+  setPref,
+  usePrefs,
+  type MotionPref,
+  type ContrastPref,
+  type TextScalePref,
+} from '../../lib/prefs';
 import Card from '../../components/ui/Card';
 import PrefToggle from '../../components/ui/PrefToggle';
 import { SectionHead, type SettingsBag } from './shared';
@@ -17,16 +23,14 @@ export default function NotificationsSection({ bag }: { bag: SettingsBag }) {
   return (
     <>
       {/* Preferences section header */}
-      <div className="text-xs text-[var(--text-secondary)] font-semibold mb-4">
-        Notifications
-      </div>
+      <div className="text-xs text-[var(--text-secondary)] font-semibold mb-4">Notifications</div>
 
       {/* AI features */}
       <Card className="mb-6">
         <SectionHead title="AI features" isSaved={saved.has('AI features')} />
         <p className="text-sm text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-4">
-          AI-assisted writing, scope warnings, and pricing analysis run locally on your
-          machine. No data is sent anywhere.
+          AI-assisted writing, scope warnings, and pricing analysis run locally on your machine. No
+          data is sent anywhere.
         </p>
         <label className="flex items-center gap-3 cursor-pointer">
           <button
@@ -52,8 +56,7 @@ export default function NotificationsSection({ bag }: { bag: SettingsBag }) {
         <SectionHead title="Personalize" isSaved={saved.has('Personalize')} />
         <div className="space-y-3">
           <p className="text-xs text-[var(--text-tertiary)]">
-            Motion, glow, badges and nudges. Everything here is local and applies
-            instantly.
+            Motion, glow, badges and nudges. Everything here is local and applies instantly.
           </p>
           <div>
             <p className="text-sm text-[var(--text-primary)]">Motion</p>
@@ -187,9 +190,8 @@ export default function NotificationsSection({ bag }: { bag: SettingsBag }) {
         <SectionHead title="Follow-up reminders" isSaved={saved.has('Follow-ups')} />
         <div className="space-y-4">
           <p className="text-xs text-[var(--text-tertiary)]">
-            Lance monitors sent proposals and invoices and drafts friendly follow-up
-            messages when they need attention. You control everything · messages are never
-            sent automatically.
+            Lance monitors sent proposals and invoices and drafts friendly follow-up messages when
+            they need attention. You control everything · messages are never sent automatically.
           </p>
 
           {/* Toggle */}
@@ -217,9 +219,7 @@ export default function NotificationsSection({ bag }: { bag: SettingsBag }) {
           {/* Delays */}
           <div className="grid grid-cols-2 gap-4 pt-2 border-t border-[var(--border-color)]">
             <div>
-              <label className="form-label">
-                Proposal delay (days)
-              </label>
+              <label className="form-label">Proposal delay (days)</label>
               <input
                 type="number"
                 min={1}
@@ -237,9 +237,7 @@ export default function NotificationsSection({ bag }: { bag: SettingsBag }) {
               </p>
             </div>
             <div>
-              <label className="form-label">
-                Invoice overdue delay (days)
-              </label>
+              <label className="form-label">Invoice overdue delay (days)</label>
               <input
                 type="number"
                 min={0}
@@ -262,8 +260,8 @@ export default function NotificationsSection({ bag }: { bag: SettingsBag }) {
           <div className="pt-3 border-t border-[var(--border-color)]">
             <p className="text-sm font-medium text-[var(--text-primary)] mb-1">Late fees</p>
             <p className="text-xs text-[var(--text-tertiary)] mb-3">
-              Charge a monthly percent on overdue balances. Accrued fees appear in
-              reminder drafts and can be added to the invoice with one click.
+              Charge a monthly percent on overdue balances. Accrued fees appear in reminder drafts
+              and can be added to the invoice with one click.
             </p>
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)] cursor-pointer">
@@ -291,10 +289,7 @@ export default function NotificationsSection({ bag }: { bag: SettingsBag }) {
                   value={bag.fuLateFeePercent}
                   disabled={!bag.fuLateFeeEnabled}
                   onChange={(e) => {
-                    const v = Math.max(
-                      0.1,
-                      Math.min(10, parseFloat(e.target.value) || 1.5),
-                    );
+                    const v = Math.max(0.1, Math.min(10, parseFloat(e.target.value) || 1.5));
                     bag.setFuLateFeePercent(v);
                     saveFollowUpSettings({ lateFeePercent: v });
                   }}

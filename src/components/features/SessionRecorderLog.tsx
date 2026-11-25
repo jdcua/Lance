@@ -18,7 +18,13 @@ type SessionRecording = {
   created_at: string;
 };
 
-export default function SessionRecorderLog({ clientId, projectId }: { clientId?: string; projectId?: string }) {
+export default function SessionRecorderLog({
+  clientId,
+  projectId,
+}: {
+  clientId?: string;
+  projectId?: string;
+}) {
   const [recordings, setRecordings] = useState<SessionRecording[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -37,16 +43,16 @@ export default function SessionRecorderLog({ clientId, projectId }: { clientId?:
       if (projectId) {
         rows = await db.select<(SessionRecording & Record<string, unknown>)[]>(
           'SELECT id, client_id, project_id, title, duration_min, file_path, notes, created_at FROM session_recordings WHERE project_id = ? ORDER BY created_at DESC',
-          [projectId]
+          [projectId],
         );
       } else if (clientId) {
         rows = await db.select<(SessionRecording & Record<string, unknown>)[]>(
           'SELECT id, client_id, project_id, title, duration_min, file_path, notes, created_at FROM session_recordings WHERE client_id = ? ORDER BY created_at DESC',
-          [clientId]
+          [clientId],
         );
       } else {
         rows = await db.select<(SessionRecording & Record<string, unknown>)[]>(
-          'SELECT id, client_id, project_id, title, duration_min, file_path, notes, created_at FROM session_recordings ORDER BY created_at DESC'
+          'SELECT id, client_id, project_id, title, duration_min, file_path, notes, created_at FROM session_recordings ORDER BY created_at DESC',
         );
       }
       setRecordings(
@@ -59,7 +65,7 @@ export default function SessionRecorderLog({ clientId, projectId }: { clientId?:
           file_path: r.file_path as string | undefined,
           notes: r.notes as string | undefined,
           created_at: r.created_at as string,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[SessionRecorderLog] loadRecordings failed:', e);
@@ -89,7 +95,7 @@ export default function SessionRecorderLog({ clientId, projectId }: { clientId?:
           form.file_path || null,
           form.notes || null,
           now,
-        ]
+        ],
       );
       const recording: SessionRecording = {
         id,
@@ -183,8 +189,12 @@ export default function SessionRecorderLog({ clientId, projectId }: { clientId?:
             className={inputClass + ' resize-none'}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.title.trim()}>Save</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.title.trim()}>
+              Save
+            </Button>
           </div>
         </div>
       )}
@@ -194,25 +204,37 @@ export default function SessionRecorderLog({ clientId, projectId }: { clientId?:
       ) : (
         <div className="space-y-1">
           {recordings.map((r) => (
-            <div key={r.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
+            <div
+              key={r.id}
+              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
+            >
               <div className="flex-1 min-w-0 flex items-center gap-2">
                 <span className="font-medium text-[var(--text-primary)] truncate">{r.title}</span>
                 {r.duration_min != null && (
                   <span className="text-[10px] text-[var(--text-tertiary)]">
-                    <Clock size={10} className="inline mr-0.5" />{r.duration_min}m
+                    <Clock size={10} className="inline mr-0.5" />
+                    {r.duration_min}m
                   </span>
                 )}
                 {r.file_path && (
-                  <span className="text-[10px] text-[var(--text-tertiary)] truncate">{r.file_path}</span>
+                  <span className="text-[10px] text-[var(--text-tertiary)] truncate">
+                    {r.file_path}
+                  </span>
                 )}
-                {r.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">{r.notes}</span>}
+                {r.notes && (
+                  <span className="text-[10px] text-[var(--text-tertiary)] truncate">
+                    {r.notes}
+                  </span>
+                )}
                 <span className="text-[10px] text-[var(--text-tertiary)]">
                   {new Date(r.created_at).toLocaleDateString()}
                 </span>
               </div>
               <button
                 aria-label="Delete session recorder log"
-                onClick={() => handleDelete(r.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                onClick={() => handleDelete(r.id)}
+                className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2"
+              >
                 <Trash2 size={12} />
               </button>
             </div>

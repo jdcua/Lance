@@ -28,10 +28,7 @@ export default function DropZoneOverlay({ visible }: DropZoneOverlayProps) {
             </div>
           </div>
 
-          <h2
-            className="text-xl font-semibold text-[var(--text-primary)] mb-2"
-           
-          >
+          <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
             Drop files to import
           </h2>
           <p className="text-sm text-[var(--text-secondary)] max-w-xs mx-auto leading-relaxed">

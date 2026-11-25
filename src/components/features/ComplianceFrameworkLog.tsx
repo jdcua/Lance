@@ -154,9 +154,7 @@ export default function ComplianceFrameworkLog({ projectId }: { projectId: strin
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Compliance
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Compliance</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -276,7 +274,8 @@ export default function ComplianceFrameworkLog({ projectId }: { projectId: strin
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
-                  <select aria-label="Item.status"
+                  <select
+                    aria-label="Item.status"
                     value={item.status}
                     onChange={(e) => handleStatusChange(item.id, e.target.value)}
                     className="text-[10px] bg-transparent border-none text-[var(--text-tertiary)] cursor-pointer"

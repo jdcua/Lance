@@ -30,7 +30,10 @@ describe('year summary', () => {
       inv({ id: 'c', total: 9999, status: 'sent', created_at: '2026-05-01' }),
       inv({ id: 'd', total: 2000, paid_at: '2025-12-10' }),
     ];
-    const expenses = [exp({ amount: 100, date: '2026-01-15' }), exp({ amount: 50, date: '2025-06-01' })];
+    const expenses = [
+      exp({ amount: 100, date: '2026-01-15' }),
+      exp({ amount: 50, date: '2025-06-01' }),
+    ];
     const pack = buildYearSummary(invoices, expenses, clients, 2026);
     expect(pack.revenuePaid).toBe(1500);
     expect(pack.expenses).toBe(100);

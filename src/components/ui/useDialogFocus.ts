@@ -58,9 +58,7 @@ export function useDialogFocus(
       // element elsewhere — yanking it back would be rude.
       const active = document.activeElement;
       const movedElsewhere =
-        active instanceof HTMLElement &&
-        active !== document.body &&
-        !el.contains(active);
+        active instanceof HTMLElement && active !== document.body && !el.contains(active);
       if (opts?.returnFocus !== false && previouslyFocused && !movedElsewhere) {
         previouslyFocused.focus();
       }

@@ -36,13 +36,7 @@ function SectionJumps() {
  * follow the active archetype, so the legend is never stale. Pure surface —
  * no shortcut behavior lives here (see App.tsx keydown handler).
  */
-export default function ShortcutsModal({
-  open,
-  onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) {
+export default function ShortcutsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const mod = getShortcutModifierLabel();
   return (
     <Modal open={open} onClose={onClose} title="Keyboard Shortcuts" size="sm">
@@ -61,7 +55,9 @@ export default function ShortcutsModal({
                   <kbd className="text-[11px] font-mono text-[var(--accent-ink,var(--accent))] bg-[var(--accent-bg)] px-1.5 py-0.5 rounded-[4px]">
                     {mod} + {key}
                   </kbd>
-                  <span className="text-xs text-[var(--text-secondary)] text-right ml-4">{desc}</span>
+                  <span className="text-xs text-[var(--text-secondary)] text-right ml-4">
+                    {desc}
+                  </span>
                 </div>
               ))}
             </div>

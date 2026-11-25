@@ -19,7 +19,13 @@ vi.mock('@dnd-kit/core', () => ({
   DndContext: ({ children }: { children: React.ReactNode }) => children,
   DragOverlay: ({ children }: { children: React.ReactNode }) => children,
   useDroppable: () => ({ setNodeRef: vi.fn(), isOver: false }),
-  useDraggable: () => ({ setNodeRef: vi.fn(), attributes: {}, listeners: {}, transform: null, isDragging: false }),
+  useDraggable: () => ({
+    setNodeRef: vi.fn(),
+    attributes: {},
+    listeners: {},
+    transform: null,
+    isDragging: false,
+  }),
   closestCorners: vi.fn(),
   PointerSensor: vi.fn(),
   useSensor: vi.fn(),
@@ -28,7 +34,14 @@ vi.mock('@dnd-kit/core', () => ({
 vi.mock('@dnd-kit/sortable', () => ({
   SortableContext: ({ children }: { children: React.ReactNode }) => children,
   verticalListSortingStrategy: vi.fn(),
-  useSortable: () => ({ setNodeRef: vi.fn(), attributes: {}, listeners: {}, transform: null, transition: null, isDragging: false }),
+  useSortable: () => ({
+    setNodeRef: vi.fn(),
+    attributes: {},
+    listeners: {},
+    transform: null,
+    transition: null,
+    isDragging: false,
+  }),
 }));
 vi.mock('@dnd-kit/utilities', () => ({
   CSS: { Transform: { toString: () => '' } },

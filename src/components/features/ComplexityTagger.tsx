@@ -43,7 +43,7 @@ export default function ComplexityTagger({ projectId }: { projectId: string }) {
       const db = await getDb();
       const rows = await db.select<(ComplexityRecord & Record<string, unknown>)[]>(
         'SELECT id, project_id, complexity_tier, notes FROM project_analysis_complexity WHERE project_id = ? LIMIT 1',
-        [projectId]
+        [projectId],
       );
       if (rows.length > 0) {
         const r = rows[0];
@@ -57,39 +57,51 @@ export default function ComplexityTagger({ projectId }: { projectId: string }) {
         setSelectedTier(item.complexity_tier);
         setNotes(item.notes || '');
       }
-    } catch (e) { console.error('[ComplexityTagger] loadRecord failed:', e); }
+    } catch (e) {
+      console.error('[ComplexityTagger] loadRecord failed:', e);
+    }
     setLoading(false);
   }, [projectId]);
 
-  useEffect(() => { loadRecord(); }, [projectId, loadRecord]);
+  useEffect(() => {
+    loadRecord();
+  }, [projectId, loadRecord]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
       const db = await getDb();
       if (record) {
-        await db.execute('UPDATE project_analysis_complexity SET complexity_tier = ?, notes = ? WHERE id = ?', [selectedTier, notes, record.id]);
+        await db.execute(
+          'UPDATE project_analysis_complexity SET complexity_tier = ?, notes = ? WHERE id = ?',
+          [selectedTier, notes, record.id],
+        );
         setRecord({ ...record, complexity_tier: selectedTier, notes });
       } else {
         const id = crypto.randomUUID();
         await db.execute(
           'INSERT INTO project_analysis_complexity (id, project_id, complexity_tier, notes) VALUES (?, ?, ?, ?)',
-          [id, projectId, selectedTier, notes]
+          [id, projectId, selectedTier, notes],
         );
         setRecord({ id, project_id: projectId, complexity_tier: selectedTier, notes });
       }
       setLastSaved(new Date().toLocaleTimeString());
-    } catch (e) { console.error('[ComplexityTagger] save failed:', e); }
+    } catch (e) {
+      console.error('[ComplexityTagger] save failed:', e);
+    }
     setSaving(false);
   };
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass =
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Analysis Complexity</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
+            Analysis Complexity
+          </h4>
         </div>
         <div className="h-32 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
       </div>
@@ -133,7 +145,10 @@ export default function ComplexityTagger({ projectId }: { projectId: string }) {
                 onChange={() => setSelectedTier(tier.value)}
                 className="accent-[var(--accent)]"
               />
-              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: tierColors[tier.value] || '#888' }} />
+              <span
+                className="w-2 h-2 rounded-full flex-shrink-0"
+                style={{ backgroundColor: tierColors[tier.value] || '#888' }}
+              />
               <span className="font-medium text-[var(--text-primary)]">{tier.label}</span>
               <span className="text-[var(--text-tertiary)]">{tier.desc}</span>
             </label>

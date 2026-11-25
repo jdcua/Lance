@@ -4,7 +4,11 @@ import type { AchievementKey } from './index';
 
 export async function checkAndNotify(
   store: StoreState,
-  addToast: (message: string, type?: 'success' | 'error' | 'info' | 'unlock', duration?: number) => void
+  addToast: (
+    message: string,
+    type?: 'success' | 'error' | 'info' | 'unlock',
+    duration?: number,
+  ) => void,
 ): Promise<void> {
   try {
     const newAchievements = await checkAchievements(store);
@@ -21,7 +25,11 @@ export async function checkAndNotify(
 
 export async function tryUnlock(
   key: AchievementKey,
-  addToast: (message: string, type?: 'success' | 'error' | 'info' | 'unlock', duration?: number) => void
+  addToast: (
+    message: string,
+    type?: 'success' | 'error' | 'info' | 'unlock',
+    duration?: number,
+  ) => void,
 ): Promise<void> {
   try {
     const ach = ACHIEVEMENTS.find((a) => a.key === key);

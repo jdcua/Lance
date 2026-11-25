@@ -1,4 +1,10 @@
-import { usePrefs, setPref, type MotionPref, type ContrastPref, type TextScalePref } from '../../lib/prefs';
+import {
+  usePrefs,
+  setPref,
+  type MotionPref,
+  type ContrastPref,
+  type TextScalePref,
+} from '../../lib/prefs';
 
 /**
  * Onboarding Step 1: Comfort. Access needs first so every later step
@@ -43,7 +49,12 @@ function Segmented<T extends string>({
   );
 }
 
-function detectOS(): { motion: string; contrast: string; contrastPref: string; motionPref: string } {
+function detectOS(): {
+  motion: string;
+  contrast: string;
+  contrastPref: string;
+  motionPref: string;
+} {
   try {
     const mq = (q: string) =>
       typeof window !== 'undefined' && typeof window.matchMedia === 'function'
@@ -56,7 +67,12 @@ function detectOS(): { motion: string; contrast: string; contrastPref: string; m
       contrastPref: mq('(prefers-contrast: more)') ? 'more' : 'no-preference',
     };
   } catch {
-    return { motion: 'unknown', motionPref: 'unknown', contrast: 'unknown', contrastPref: 'unknown' };
+    return {
+      motion: 'unknown',
+      motionPref: 'unknown',
+      contrast: 'unknown',
+      contrastPref: 'unknown',
+    };
   }
 }
 
@@ -77,7 +93,9 @@ export default function OnboardingComfort() {
   return (
     <div className="space-y-4">
       <div className="text-center space-y-2">
-        <h3 className="text-lg font-semibold text-[var(--text-primary)]">Make yourself comfortable</h3>
+        <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+          Make yourself comfortable
+        </h3>
         <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
           Set how Lance looks and moves. Auto follows your device settings, on this machine and in
           the browser build. Change anytime in Settings.

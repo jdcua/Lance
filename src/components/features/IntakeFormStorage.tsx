@@ -26,7 +26,7 @@ export default function IntakeFormStorage({ clientId }: { clientId: string }) {
       const db = await getDb();
       const rows = await db.select<(IntakeForm & Record<string, unknown>)[]>(
         'SELECT id, client_id, form_data, created_at FROM intake_forms WHERE client_id = ? ORDER BY created_at DESC LIMIT 1',
-        [clientId]
+        [clientId],
       );
       if (rows.length > 0) {
         const r = rows[0];
@@ -39,30 +39,39 @@ export default function IntakeFormStorage({ clientId }: { clientId: string }) {
         setIntake(item);
         setFormData(item.form_data || '');
       }
-    } catch (e) { console.error('[IntakeFormStorage] loadIntake failed:', e); }
+    } catch (e) {
+      console.error('[IntakeFormStorage] loadIntake failed:', e);
+    }
     setLoading(false);
   }, [clientId]);
 
-  useEffect(() => { loadIntake(); }, [clientId, loadIntake]);
+  useEffect(() => {
+    loadIntake();
+  }, [clientId, loadIntake]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
       const db = await getDb();
       if (intake) {
-        await db.execute('UPDATE intake_forms SET form_data = ? WHERE id = ?', [formData, intake.id]);
+        await db.execute('UPDATE intake_forms SET form_data = ? WHERE id = ?', [
+          formData,
+          intake.id,
+        ]);
         setIntake({ ...intake, form_data: formData });
       } else {
         const id = crypto.randomUUID();
         const now = new Date().toISOString();
         await db.execute(
           'INSERT INTO intake_forms (id, client_id, form_data, created_at) VALUES (?, ?, ?, ?)',
-          [id, clientId, formData, now]
+          [id, clientId, formData, now],
         );
         setIntake({ id, client_id: clientId, form_data: formData, created_at: now });
       }
       setLastSaved(new Date().toLocaleTimeString());
-    } catch (e) { console.error('[IntakeFormStorage] save failed:', e); }
+    } catch (e) {
+      console.error('[IntakeFormStorage] save failed:', e);
+    }
     setSaving(false);
   };
 
@@ -71,7 +80,8 @@ export default function IntakeFormStorage({ clientId }: { clientId: string }) {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass =
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (

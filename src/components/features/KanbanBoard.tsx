@@ -19,11 +19,22 @@ import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import type { KanbanBoard, KanbanColumn, KanbanCard } from '../../types';
 
-const COLUMN_COLORS = ['#6B7280', '#3B82F6', '#F59E0B', '#10B981', '#8B5CF6', '#EC4899', '#6366F1', '#14B8A6'];
+const COLUMN_COLORS = [
+  '#6B7280',
+  '#3B82F6',
+  '#F59E0B',
+  '#10B981',
+  '#8B5CF6',
+  '#EC4899',
+  '#6366F1',
+  '#14B8A6',
+];
 
 type DropTarget = { toColumnId: string; overCard: KanbanCard | null };
 
-function resolveDropTarget(overData: { type?: string; column?: KanbanColumn; card?: KanbanCard } | undefined): DropTarget | null {
+function resolveDropTarget(
+  overData: { type?: string; column?: KanbanColumn; card?: KanbanCard } | undefined,
+): DropTarget | null {
   if (overData?.type === 'column' && overData.column) {
     return { toColumnId: overData.column.id, overCard: null };
   }
@@ -33,7 +44,11 @@ function resolveDropTarget(overData: { type?: string; column?: KanbanColumn; car
   return null;
 }
 
-function reorderCards(colCards: KanbanCard[], card: KanbanCard, overCard: KanbanCard | null): KanbanCard[] | null {
+function reorderCards(
+  colCards: KanbanCard[],
+  card: KanbanCard,
+  overCard: KanbanCard | null,
+): KanbanCard[] | null {
   const oldIndex = colCards.findIndex((c) => c.id === card.id);
   const newIndex = overCard ? colCards.findIndex((c) => c.id === overCard.id) : colCards.length - 1;
   if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return null;
@@ -57,9 +72,7 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
   const [columnSettings, setColumnSettings] = useState({ name: '', color: '', wipLimit: '' });
   const [unavailable, setUnavailable] = useState(false);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  );
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const loadBoard = useCallback(async () => {
     if (!isTauri()) {
@@ -81,10 +94,12 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
       setColumns(cols);
 
       const cardsMap: Record<string, KanbanCard[]> = {};
-      await Promise.all(cols.map(async (col) => {
-        const colCards = await invoke<KanbanCard[]>('get_kanban_cards', { columnId: col.id });
-        cardsMap[col.id] = colCards;
-      }));
+      await Promise.all(
+        cols.map(async (col) => {
+          const colCards = await invoke<KanbanCard[]>('get_kanban_cards', { columnId: col.id });
+          cardsMap[col.id] = colCards;
+        }),
+      );
       setCards(cardsMap);
     } catch (e) {
       console.error('[KanbanBoard] load failed:', e);
@@ -92,7 +107,9 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
     setLoading(false);
   }, [projectId]);
 
-  useEffect(() => { loadBoard(); }, [loadBoard]);
+  useEffect(() => {
+    loadBoard();
+  }, [loadBoard]);
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const data = event.active.data.current;
@@ -101,90 +118,104 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
     }
   }, []);
 
-  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
-    setActiveCard(null);
-    const { active, over } = event;
-    if (!over || !active) return;
+  const handleDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      setActiveCard(null);
+      const { active, over } = event;
+      if (!over || !active) return;
 
-    const activeData = active.data.current;
-    if (!activeData || activeData.type !== 'card') return;
+      const activeData = active.data.current;
+      if (!activeData || activeData.type !== 'card') return;
 
-    const card = activeData.card as KanbanCard;
-    const fromColumnId = card.column_id;
-    const target = resolveDropTarget(over.data.current as { type?: string; column?: KanbanColumn; card?: KanbanCard });
-    if (!target) return;
-    const { toColumnId, overCard } = target;
+      const card = activeData.card as KanbanCard;
+      const fromColumnId = card.column_id;
+      const target = resolveDropTarget(
+        over.data.current as { type?: string; column?: KanbanColumn; card?: KanbanCard },
+      );
+      if (!target) return;
+      const { toColumnId, overCard } = target;
 
-    if (fromColumnId === toColumnId) {
-      const reordered = reorderCards(cards[fromColumnId] || [], card, overCard);
-      if (!reordered) return;
-      setCards(prev => ({ ...prev, [fromColumnId]: reordered }));
+      if (fromColumnId === toColumnId) {
+        const reordered = reorderCards(cards[fromColumnId] || [], card, overCard);
+        if (!reordered) return;
+        setCards((prev) => ({ ...prev, [fromColumnId]: reordered }));
 
+        try {
+          const { tauriInvoke: invoke } = await import('../../utils/tauri');
+          await invoke('reorder_kanban_cards', {
+            payload: { column_id: fromColumnId, card_ids: reordered.map((c) => c.id) },
+          });
+        } catch (e) {
+          console.error('[KanbanBoard] reorder failed:', e);
+        }
+      } else {
+        const fromCards = (cards[fromColumnId] || []).filter((c) => c.id !== card.id);
+        const toCards = [...(cards[toColumnId] || []), card];
+        setCards((prev) => ({
+          ...prev,
+          [fromColumnId]: fromCards,
+          [toColumnId]: toCards,
+        }));
+
+        try {
+          const { tauriInvoke: invoke } = await import('../../utils/tauri');
+          await invoke('move_kanban_card', {
+            payload: { card_id: card.id, from_column_id: fromColumnId, to_column_id: toColumnId },
+          });
+        } catch (e) {
+          console.error('[KanbanBoard] move failed:', e);
+        }
+      }
+    },
+    [cards],
+  );
+
+  const handleAddCard = useCallback(
+    async (columnId: string) => {
       try {
         const { tauriInvoke: invoke } = await import('../../utils/tauri');
-        await invoke('reorder_kanban_cards', {
-          payload: { column_id: fromColumnId, card_ids: reordered.map(c => c.id) },
+        const db = await getDb();
+        const result = await db.select<{ title: string }[]>(
+          'SELECT title FROM projects WHERE id = ?',
+          [projectId],
+        );
+        const defaultTitle = result[0]?.title ? `Task for ${result[0].title}` : 'New task';
+        const newCard = await invoke<KanbanCard>('create_kanban_card', {
+          payload: { column_id: columnId, project_id: projectId, title: defaultTitle },
         });
+        setCards((prev) => ({ ...prev, [columnId]: [...(prev[columnId] || []), newCard] }));
       } catch (e) {
-        console.error('[KanbanBoard] reorder failed:', e);
+        console.error('[KanbanBoard] add card failed:', e);
       }
-    } else {
-      const fromCards = (cards[fromColumnId] || []).filter(c => c.id !== card.id);
-      const toCards = [...(cards[toColumnId] || []), card];
-      setCards(prev => ({
-        ...prev,
-        [fromColumnId]: fromCards,
-        [toColumnId]: toCards,
-      }));
+    },
+    [projectId],
+  );
 
+  const handleCardSave = useCallback(
+    async (card: KanbanCard, updates: Partial<KanbanCard>) => {
       try {
         const { tauriInvoke: invoke } = await import('../../utils/tauri');
-        await invoke('move_kanban_card', {
-          payload: { card_id: card.id, from_column_id: fromColumnId, to_column_id: toColumnId },
-        });
+        await invoke('update_kanban_card', { payload: { id: card.id, ...updates } });
+        const colCards = cards[card.column_id] || [];
+        setCards((prev) => ({
+          ...prev,
+          [card.column_id]: colCards.map((c) => (c.id === card.id ? { ...c, ...updates } : c)),
+        }));
       } catch (e) {
-        console.error('[KanbanBoard] move failed:', e);
+        console.error('[KanbanBoard] save card failed:', e);
       }
-    }
-  }, [cards]);
-
-  const handleAddCard = useCallback(async (columnId: string) => {
-    try {
-      const { tauriInvoke: invoke } = await import('../../utils/tauri');
-      const db = await getDb();
-      const result = await db.select<{ title: string }[]>('SELECT title FROM projects WHERE id = ?', [projectId]);
-      const defaultTitle = result[0]?.title ? `Task for ${result[0].title}` : 'New task';
-      const newCard = await invoke<KanbanCard>('create_kanban_card', {
-        payload: { column_id: columnId, project_id: projectId, title: defaultTitle },
-      });
-      setCards(prev => ({ ...prev, [columnId]: [...(prev[columnId] || []), newCard] }));
-    } catch (e) {
-      console.error('[KanbanBoard] add card failed:', e);
-    }
-  }, [projectId]);
-
-  const handleCardSave = useCallback(async (card: KanbanCard, updates: Partial<KanbanCard>) => {
-    try {
-      const { tauriInvoke: invoke } = await import('../../utils/tauri');
-      await invoke('update_kanban_card', { payload: { id: card.id, ...updates } });
-      const colCards = cards[card.column_id] || [];
-      setCards(prev => ({
-        ...prev,
-        [card.column_id]: colCards.map(c => c.id === card.id ? { ...c, ...updates } : c),
-      }));
-    } catch (e) {
-      console.error('[KanbanBoard] save card failed:', e);
-    }
-  }, [cards]);
+    },
+    [cards],
+  );
 
   const handleDeleteCard = useCallback(async (cardId: string) => {
     try {
       const { tauriInvoke: invoke } = await import('../../utils/tauri');
       await invoke('delete_kanban_card', { id: cardId });
-      setCards(prev => {
+      setCards((prev) => {
         const updated = { ...prev };
         for (const colId of Object.keys(updated)) {
-          updated[colId] = updated[colId].filter(c => c.id !== cardId);
+          updated[colId] = updated[colId].filter((c) => c.id !== cardId);
         }
         return updated;
       });
@@ -202,8 +233,8 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
       const col = await invoke<KanbanColumn>('create_kanban_column', {
         payload: { board_id: board.id, name: newColumnName.trim(), color },
       });
-      setColumns(prev => [...prev, col]);
-      setCards(prev => ({ ...prev, [col.id]: [] }));
+      setColumns((prev) => [...prev, col]);
+      setCards((prev) => ({ ...prev, [col.id]: [] }));
       setNewColumnName('');
       setShowAddColumn(false);
     } catch (e) {
@@ -223,43 +254,57 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
           wip_limit: columnSettings.wipLimit ? parseInt(columnSettings.wipLimit) : null,
         },
       });
-      setColumns(prev => prev.map(c =>
-        c.id === editingColumn.id
-          ? { ...c, name: columnSettings.name || c.name, color: columnSettings.color || c.color, wip_limit: columnSettings.wipLimit ? parseInt(columnSettings.wipLimit) : c.wip_limit }
-          : c
-      ));
+      setColumns((prev) =>
+        prev.map((c) =>
+          c.id === editingColumn.id
+            ? {
+                ...c,
+                name: columnSettings.name || c.name,
+                color: columnSettings.color || c.color,
+                wip_limit: columnSettings.wipLimit
+                  ? parseInt(columnSettings.wipLimit)
+                  : c.wip_limit,
+              }
+            : c,
+        ),
+      );
       setEditingColumn(null);
     } catch (e) {
       console.error('[KanbanBoard] update column failed:', e);
     }
   }, [editingColumn, columnSettings]);
 
-  const handleMoveColumn = useCallback(async (columnId: string, direction: 'left' | 'right') => {
-    if (!board) return;
-    const idx = columns.findIndex(c => c.id === columnId);
-    if (idx === -1) return;
-    const swapWith = direction === 'left' ? idx - 1 : idx + 1;
-    if (swapWith < 0 || swapWith >= columns.length) return;
-    const reordered = [...columns];
-    [reordered[idx], reordered[swapWith]] = [reordered[swapWith], reordered[idx]];
-    reordered.forEach((c, i) => { c.sort_order = i; });
-    setColumns(reordered);
-    try {
-      const { tauriInvoke: invoke } = await import('../../utils/tauri');
-      await invoke('reorder_kanban_columns', {
-        payload: { board_id: board.id, column_ids: reordered.map(c => c.id) },
+  const handleMoveColumn = useCallback(
+    async (columnId: string, direction: 'left' | 'right') => {
+      if (!board) return;
+      const idx = columns.findIndex((c) => c.id === columnId);
+      if (idx === -1) return;
+      const swapWith = direction === 'left' ? idx - 1 : idx + 1;
+      if (swapWith < 0 || swapWith >= columns.length) return;
+      const reordered = [...columns];
+      [reordered[idx], reordered[swapWith]] = [reordered[swapWith], reordered[idx]];
+      reordered.forEach((c, i) => {
+        c.sort_order = i;
       });
-    } catch (e) {
-      console.error('[KanbanBoard] reorder columns failed:', e);
-    }
-  }, [columns, board]);
+      setColumns(reordered);
+      try {
+        const { tauriInvoke: invoke } = await import('../../utils/tauri');
+        await invoke('reorder_kanban_columns', {
+          payload: { board_id: board.id, column_ids: reordered.map((c) => c.id) },
+        });
+      } catch (e) {
+        console.error('[KanbanBoard] reorder columns failed:', e);
+      }
+    },
+    [columns, board],
+  );
 
   const handleDeleteColumn = useCallback(async (columnId: string) => {
     try {
       const { tauriInvoke: invoke } = await import('../../utils/tauri');
       await invoke('delete_kanban_column', { id: columnId });
-      setColumns(prev => prev.filter(c => c.id !== columnId));
-      setCards(prev => {
+      setColumns((prev) => prev.filter((c) => c.id !== columnId));
+      setCards((prev) => {
         const updated = { ...prev };
         delete updated[columnId];
         return updated;
@@ -273,7 +318,9 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
     return (
       <div className="space-y-2 rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-secondary)] p-4">
         <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Kanban Board</h4>
-        <p className="text-xs text-[var(--text-tertiary)]">Kanban board is available in the desktop app. In the browser preview it is disabled.</p>
+        <p className="text-xs text-[var(--text-tertiary)]">
+          Kanban board is available in the desktop app. In the browser preview it is disabled.
+        </p>
       </div>
     );
   }
@@ -285,7 +332,12 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Kanban Board</h4>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2">
-          {[1, 2, 3, 4].map(i => <div key={i} className="w-[260px] h-40 bg-[var(--bg-secondary)] rounded-sm animate-pulse flex-shrink-0" />)}
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="w-[260px] h-40 bg-[var(--bg-secondary)] rounded-sm animate-pulse flex-shrink-0"
+            />
+          ))}
         </div>
       </div>
     );
@@ -296,7 +348,9 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Kanban Board ({totalCards})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
+          Kanban Board ({totalCards})
+        </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowAddColumn(true)}>
           <Plus size={12} /> Add Column
         </Button>
@@ -309,7 +363,7 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
         onDragEnd={handleDragEnd}
       >
         <div className="flex gap-2.5 overflow-x-auto pb-2 min-h-[200px]">
-          {columns.map(col => (
+          {columns.map((col) => (
             <div key={col.id} className="group">
               <KanbanColumnComponent
                 column={col}
@@ -320,7 +374,11 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
                 onDeleteColumn={handleDeleteColumn}
                 onEditColumn={(col) => {
                   setEditingColumn(col);
-                  setColumnSettings({ name: col.name, color: col.color || '', wipLimit: col.wip_limit != null ? String(col.wip_limit) : '' });
+                  setColumnSettings({
+                    name: col.name,
+                    color: col.color || '',
+                    wipLimit: col.wip_limit != null ? String(col.wip_limit) : '',
+                  });
                 }}
               />
             </div>
@@ -331,15 +389,22 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
               <input
                 type="text"
                 value={newColumnName}
-                onChange={e => setNewColumnName(e.target.value)}
+                onChange={(e) => setNewColumnName(e.target.value)}
                 placeholder="Column name..."
                 className="w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
                 autoFocus
-                onKeyDown={e => { if (e.key === 'Enter') handleAddColumn(); if (e.key === 'Escape') setShowAddColumn(false); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAddColumn();
+                  if (e.key === 'Escape') setShowAddColumn(false);
+                }}
               />
               <div className="flex justify-end gap-1">
-                <Button variant="secondary" size="sm" onClick={() => setShowAddColumn(false)}>Cancel</Button>
-                <Button size="sm" onClick={handleAddColumn} disabled={!newColumnName.trim()}>Add</Button>
+                <Button variant="secondary" size="sm" onClick={() => setShowAddColumn(false)}>
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleAddColumn} disabled={!newColumnName.trim()}>
+                  Add
+                </Button>
               </div>
             </div>
           )}
@@ -363,24 +428,33 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
       />
 
       {editingColumn && (
-        <Modal open={!!editingColumn} onClose={() => setEditingColumn(null)} title="Column Settings" size="sm">
+        <Modal
+          open={!!editingColumn}
+          onClose={() => setEditingColumn(null)}
+          title="Column Settings"
+          size="sm"
+        >
           <div className="space-y-3">
             <div>
-              <label className="text-[10px] font-medium text-[var(--text-tertiary)] block mb-1">Name</label>
+              <label className="text-[10px] font-medium text-[var(--text-tertiary)] block mb-1">
+                Name
+              </label>
               <input
                 type="text"
                 value={columnSettings.name}
-                onChange={e => setColumnSettings(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) => setColumnSettings((prev) => ({ ...prev, name: e.target.value }))}
                 className="w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               />
             </div>
             <div>
-              <label className="text-[10px] font-medium text-[var(--text-tertiary)] block mb-1">Color</label>
+              <label className="text-[10px] font-medium text-[var(--text-tertiary)] block mb-1">
+                Color
+              </label>
               <div className="flex gap-1.5">
-                {COLUMN_COLORS.map(color => (
+                {COLUMN_COLORS.map((color) => (
                   <button
                     key={color}
-                    onClick={() => setColumnSettings(prev => ({ ...prev, color }))}
+                    onClick={() => setColumnSettings((prev) => ({ ...prev, color }))}
                     className={`w-5 h-5 rounded-full transition-transform ${columnSettings.color === color ? 'ring-2 ring-[var(--accent)] scale-110' : ''}`}
                     style={{ backgroundColor: color }}
                   />
@@ -388,28 +462,52 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
               </div>
             </div>
             <div>
-              <label className="text-[10px] font-medium text-[var(--text-tertiary)] block mb-1">WIP Limit</label>
+              <label className="text-[10px] font-medium text-[var(--text-tertiary)] block mb-1">
+                WIP Limit
+              </label>
               <input
                 type="number"
                 min="0"
                 value={columnSettings.wipLimit}
-                onChange={e => setColumnSettings(prev => ({ ...prev, wipLimit: e.target.value }))}
+                onChange={(e) =>
+                  setColumnSettings((prev) => ({ ...prev, wipLimit: e.target.value }))
+                }
                 placeholder="No limit"
                 className="w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               />
             </div>
-              <div className="flex items-center justify-between pt-2 border-t border-[var(--border-color)]">
+            <div className="flex items-center justify-between pt-2 border-t border-[var(--border-color)]">
               <div className="flex gap-1">
-                <Button variant="ghost" size="sm" onClick={() => { handleMoveColumn(editingColumn.id, 'left'); setEditingColumn(null); }} disabled={editingColumn.sort_order === 0}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    handleMoveColumn(editingColumn.id, 'left');
+                    setEditingColumn(null);
+                  }}
+                  disabled={editingColumn.sort_order === 0}
+                >
                   ← Move Left
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => { handleMoveColumn(editingColumn.id, 'right'); setEditingColumn(null); }} disabled={editingColumn.sort_order === columns.length - 1}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    handleMoveColumn(editingColumn.id, 'right');
+                    setEditingColumn(null);
+                  }}
+                  disabled={editingColumn.sort_order === columns.length - 1}
+                >
                   Move Right →
                 </Button>
               </div>
               <div className="flex gap-2">
-                <Button variant="secondary" size="sm" onClick={() => setEditingColumn(null)}>Cancel</Button>
-                <Button size="sm" onClick={handleUpdateColumn}>Save</Button>
+                <Button variant="secondary" size="sm" onClick={() => setEditingColumn(null)}>
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleUpdateColumn}>
+                  Save
+                </Button>
               </div>
             </div>
           </div>

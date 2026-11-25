@@ -32,7 +32,7 @@ export default function Glossary({ clientId }: { clientId: string }) {
       const db = await getDb();
       const rows = await db.select<(GlossaryTerm & Record<string, unknown>)[]>(
         'SELECT id, client_id, term, approved_translation, notes, created_at FROM glossary_terms WHERE client_id = ? ORDER BY term ASC',
-        [clientId]
+        [clientId],
       );
       setTerms(
         rows.map((r) => ({
@@ -42,7 +42,7 @@ export default function Glossary({ clientId }: { clientId: string }) {
           approved_translation: r.approved_translation as string | undefined,
           notes: r.notes as string | undefined,
           created_at: r.created_at as string,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[Glossary] loadTerms failed:', e);
@@ -63,7 +63,14 @@ export default function Glossary({ clientId }: { clientId: string }) {
       const db = await getDb();
       await db.execute(
         'INSERT INTO glossary_terms (id, client_id, term, approved_translation, notes, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-        [id, clientId, form.term.trim(), form.approved_translation || null, form.notes || null, now]
+        [
+          id,
+          clientId,
+          form.term.trim(),
+          form.approved_translation || null,
+          form.notes || null,
+          now,
+        ],
       );
       const term: GlossaryTerm = {
         id,
@@ -93,13 +100,18 @@ export default function Glossary({ clientId }: { clientId: string }) {
       const db = await getDb();
       await db.execute(
         'UPDATE glossary_terms SET term = ?, approved_translation = ?, notes = ? WHERE id = ?',
-        [editForm.term.trim(), editForm.approved_translation || null, editForm.notes || null, id]
+        [editForm.term.trim(), editForm.approved_translation || null, editForm.notes || null, id],
       );
       setTerms((prev) => {
         const next = prev.map((t) =>
           t.id === id
-            ? { ...t, term: editForm.term.trim(), approved_translation: editForm.approved_translation || undefined, notes: editForm.notes || undefined }
-            : t
+            ? {
+                ...t,
+                term: editForm.term.trim(),
+                approved_translation: editForm.approved_translation || undefined,
+                notes: editForm.notes || undefined,
+              }
+            : t,
         );
         next.sort((a, b) => a.term.localeCompare(b.term));
         return next;
@@ -135,7 +147,7 @@ export default function Glossary({ clientId }: { clientId: string }) {
     ? terms.filter(
         (t) =>
           t.term.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (t.approved_translation || '').toLowerCase().includes(searchQuery.toLowerCase())
+          (t.approved_translation || '').toLowerCase().includes(searchQuery.toLowerCase()),
       )
     : terms;
 
@@ -160,7 +172,9 @@ export default function Glossary({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Glossary ({terms.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
+          Glossary ({terms.length})
+        </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Add Term
         </Button>
@@ -168,7 +182,10 @@ export default function Glossary({ clientId }: { clientId: string }) {
 
       {/* Search */}
       <div className="relative">
-        <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+        <Search
+          size={12}
+          className="absolute left-2 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]"
+        />
         <input
           type="text"
           placeholder="Search terms or translations..."
@@ -177,7 +194,8 @@ export default function Glossary({ clientId }: { clientId: string }) {
           className={inputClass + ' pl-7'}
         />
         {searchQuery && (
-          <button aria-label="Close"
+          <button
+            aria-label="Close"
             onClick={() => setSearchQuery('')}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
           >
@@ -224,7 +242,9 @@ export default function Glossary({ clientId }: { clientId: string }) {
 
       {filtered.length === 0 ? (
         <p className="text-xs text-[var(--text-tertiary)] py-2">
-          {searchQuery ? 'No terms match your search.' : 'No glossary terms yet. Add your first term.'}
+          {searchQuery
+            ? 'No terms match your search.'
+            : 'No glossary terms yet. Add your first term.'}
         </p>
       ) : (
         <div className="space-y-1">
@@ -243,7 +263,9 @@ export default function Glossary({ clientId }: { clientId: string }) {
                   <input
                     type="text"
                     value={editForm.approved_translation}
-                    onChange={(e) => setEditForm({ ...editForm, approved_translation: e.target.value })}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, approved_translation: e.target.value })
+                    }
                     className={inputClass}
                     placeholder="Approved translation"
                   />
@@ -255,14 +277,15 @@ export default function Glossary({ clientId }: { clientId: string }) {
                     placeholder="Notes"
                   />
                   <div className="flex justify-end gap-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setEditingId(null)}
-                    >
+                    <Button variant="secondary" size="sm" onClick={() => setEditingId(null)}>
                       Cancel
                     </Button>
-                    <Button size="sm" onClick={() => handleUpdate(t.id)} loading={saving} disabled={!editForm.term.trim()}>
+                    <Button
+                      size="sm"
+                      onClick={() => handleUpdate(t.id)}
+                      loading={saving}
+                      disabled={!editForm.term.trim()}
+                    >
                       Update
                     </Button>
                   </div>
@@ -285,13 +308,15 @@ export default function Glossary({ clientId }: { clientId: string }) {
                     )}
                   </div>
                   <div className="flex items-center gap-1 ml-2 flex-shrink-0">
-                    <button aria-label="Edit glossary"
+                    <button
+                      aria-label="Edit glossary"
                       onClick={() => handleStartEdit(t)}
                       className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] p-0.5"
                     >
                       <Edit3 size={12} />
                     </button>
-                    <button aria-label="Delete glossary"
+                    <button
+                      aria-label="Delete glossary"
                       onClick={() => handleDelete(t.id)}
                       className="text-[var(--text-tertiary)] hover:text-[#A32D2D] p-0.5"
                     >

@@ -1289,4 +1289,3 @@ export type CommissionTOS = {
   body: string;
   created_at: string;
 };
-

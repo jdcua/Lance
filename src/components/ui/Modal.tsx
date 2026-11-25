@@ -20,7 +20,9 @@ const sizeClasses = {
 export default function Modal({ open, onClose, title, children, size = 'md' }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
-  useEffect(() => { onCloseRef.current = onClose; });
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
 
   // Trap + initial focus + focus return live in the shared hook. Escape is
   // handled here (not in the hook) because every dialog dismisses on it.
@@ -64,7 +66,12 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) onCloseRef.current(); }} />
+      <div
+        className="absolute inset-0 bg-black/30 backdrop-blur-sm animate-fade-in"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onCloseRef.current();
+        }}
+      />
       <div
         ref={modalRef}
         role="dialog"
@@ -84,7 +91,11 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
             <X size={18} />
           </button>
         </div>
-        <div className={`${size === 'full' ? 'flex-1 overflow-hidden' : 'px-6 py-4 overflow-y-auto flex-1'}`}>{children}</div>
+        <div
+          className={`${size === 'full' ? 'flex-1 overflow-hidden' : 'px-6 py-4 overflow-y-auto flex-1'}`}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );

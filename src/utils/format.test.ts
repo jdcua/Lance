@@ -36,6 +36,8 @@ describe('format hardening', () => {
     expect(leap.getMonth()).toBe(1);
     expect(leap.getDate()).toBe(29);
     // Full timestamps pass through untouched.
-    expect(parseDateString('2026-07-01T15:30:00.000Z').toISOString()).toBe('2026-07-01T15:30:00.000Z');
+    expect(parseDateString('2026-07-01T15:30:00.000Z').toISOString()).toBe(
+      '2026-07-01T15:30:00.000Z',
+    );
   });
 });

@@ -55,5 +55,9 @@
 
 ## Responsible Disclosure
 
-Security issues: open an issue at https://github.com/jdcua/Lance/issues
-We aim to respond within 48 hours.
+Please **do not open a public issue** for an unpatched vulnerability. Report it
+privately via GitHub's security advisory form:
+https://github.com/jdcua/Lance/security/advisories/new
+
+We aim to acknowledge within 48 hours. See the root [SECURITY.md](../SECURITY.md)
+for supported versions and the full disclosure policy.

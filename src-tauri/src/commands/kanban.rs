@@ -639,9 +639,6 @@ mod tests {
     #[test]
     fn test_now_iso_is_rfc3339() {
         let ts = now_iso();
-        assert!(
-            chrono::DateTime::parse_from_rfc3339(&ts).is_ok(),
-            "not RFC3339: {ts}"
-        );
+        assert!(chrono::DateTime::parse_from_rfc3339(&ts).is_ok(), "not RFC3339: {ts}");
     }
 }

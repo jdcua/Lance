@@ -2,13 +2,11 @@ import { create } from 'zustand';
 import type {
   Client,
   Project,
-  Milestone,
   Proposal,
   Contract,
   TimeEntry,
   Invoice,
   InvoicePayment,
-  Expense,
   UserProfile,
   Communication,
   RecurringInvoice,
@@ -22,34 +20,22 @@ import type {
   FollowUpLog,
   ExportTemplate,
   ContractTemplate,
-  ArchetypeRenderLog,
-  ArchetypeSession,
-  ArchetypeShoot,
-  ArchetypeRevision,
-  ArchetypeBuild,
-  ArchetypeKeyword,
-  ArchetypeDataset,
   ProjectTemplate,
   ProjectTemplateMilestone,
   PortalActivity,
 } from '../types';
 import { sanitizeInput, truncate, MAX_LENGTHS } from '../utils/sanitize';
-import {
-  pushTrashEntry,
-  trashLabel,
-  restoreTrashEntry as restoreTrashRow,
-} from '../utils/trash';
+import { restoreTrashEntry as restoreTrashRow } from '../utils/trash';
 import { sanitizeRates, normalizeRates } from '../lib/currency';
 import { startLoad, endLoad, setError } from './slices/base';
 import { createMetaSlice } from './slices/meta';
 import { createToastsSlice } from './slices/toasts';
 import { createUpdaterSlice } from './slices/updater';
+import { invoke, snapshotForTrash } from './factories/shared';
+import { createEntityCrud } from './factories/entityCrud';
+import { createArchetypeActions } from './factories/archetype';
 import type { UnifiedStore } from './types';
 export type { UnifiedStore, AppStore } from './types';
-const invoke = async <T>(cmd: string, args?: Record<string, unknown>): Promise<T> => {
-  const { tauriInvoke } = await import('../utils/tauri');
-  return tauriInvoke<T>(cmd, args);
-};
 
 /**
  * Best-effort teardown of share links when their entity is deleted.
@@ -182,19 +168,28 @@ export const useStore = create<UnifiedStore>((set, get) => {
     }
   }
 
-  /** Snapshot a row into the trash bin before a destructive delete. */
-  function snapshotForTrash(
-    table: string,
-    id: string,
-    row: Record<string, unknown> | undefined,
-  ): void {
-    if (!row) return;
-    try {
-      pushTrashEntry(table, id, trashLabel(table, row), { ...row });
-    } catch {
-      /* trash is best-effort; the delete still proceeds */
-    }
-  }
+  // Simple entities whose four actions are structurally identical; their
+  // bodies now come from one generic factory instead of two copies.
+  const milestoneCrud = createEntityCrud(set, get, {
+    key: 'milestones',
+    table: 'milestones',
+    commands: {
+      load: 'get_milestones',
+      create: 'create_milestone',
+      update: 'update_milestone',
+      delete: 'delete_milestone',
+    },
+  });
+  const expenseCrud = createEntityCrud(set, get, {
+    key: 'expenses',
+    table: 'expenses',
+    commands: {
+      load: 'get_expenses',
+      create: 'create_expense',
+      update: 'update_expense',
+      delete: 'delete_expense',
+    },
+  });
 
   return {
     // ── Data init ──
@@ -446,35 +441,10 @@ export const useStore = create<UnifiedStore>((set, get) => {
     },
 
     // ── Milestones ──
-    loadMilestones: async () => {
-      startLoad(set, get, 'milestones');
-      try {
-        set({ milestones: await invoke<Milestone[]>('get_milestones') });
-      } catch (e) {
-        console.error('[store] loadMilestones failed:', e);
-        setError(set, get, 'milestones', String(e));
-      } finally {
-        endLoad(set, get, 'milestones');
-      }
-    },
-    createMilestone: async (data) => {
-      const milestone = await invoke<Milestone>('create_milestone', { payload: data });
-      set({ milestones: [...get().milestones, milestone] });
-      return milestone;
-    },
-    updateMilestone: async (data) => {
-      await invoke('update_milestone', { payload: data });
-      set({ milestones: get().milestones.map((m) => (m.id === data.id ? data : m)) });
-    },
-    deleteMilestone: async (id) => {
-      snapshotForTrash(
-        'milestones',
-        id,
-        get().milestones.find((m) => m.id === id),
-      );
-      await invoke('delete_milestone', { id });
-      set({ milestones: get().milestones.filter((m) => m.id !== id) });
-    },
+    loadMilestones: milestoneCrud.load,
+    createMilestone: milestoneCrud.create,
+    updateMilestone: milestoneCrud.update,
+    deleteMilestone: milestoneCrud.remove,
 
     // ── Proposals ──
     loadProposals: async () => {
@@ -719,35 +689,10 @@ export const useStore = create<UnifiedStore>((set, get) => {
     },
 
     // ── Expenses ──
-    loadExpenses: async () => {
-      startLoad(set, get, 'expenses');
-      try {
-        set({ expenses: await invoke<Expense[]>('get_expenses') });
-      } catch (e) {
-        console.error('[store] loadExpenses failed:', e);
-        setError(set, get, 'expenses', String(e));
-      } finally {
-        endLoad(set, get, 'expenses');
-      }
-    },
-    createExpense: async (data) => {
-      const expense = await invoke<Expense>('create_expense', { payload: data });
-      set({ expenses: [...get().expenses, expense] });
-      return expense;
-    },
-    updateExpense: async (data) => {
-      await invoke('update_expense', { payload: data });
-      set({ expenses: get().expenses.map((e) => (e.id === data.id ? data : e)) });
-    },
-    deleteExpense: async (id) => {
-      snapshotForTrash(
-        'expenses',
-        id,
-        get().expenses.find((e) => e.id === id),
-      );
-      await invoke('delete_expense', { id });
-      set({ expenses: get().expenses.filter((e) => e.id !== id) });
-    },
+    loadExpenses: expenseCrud.load,
+    createExpense: expenseCrud.create,
+    updateExpense: expenseCrud.update,
+    deleteExpense: expenseCrud.remove,
     restoreTrashEntry: async (entry) => {
       const table = await restoreTrashRow(entry);
       const reload: Record<string, () => Promise<void>> = {
@@ -1444,205 +1389,8 @@ export const useStore = create<UnifiedStore>((set, get) => {
       set({ projectTemplates: get().projectTemplates.filter((t) => t.id !== id) });
     },
 
-    // ── Archetype: Render Logs ──
-    loadRenderLogs: async () => {
-      startLoad(set, get, 'renderLogs');
-      try {
-        set({ renderLogs: await invoke<ArchetypeRenderLog[]>('get_all_render_logs') });
-      } catch (e) {
-        console.error('[store] loadRenderLogs failed:', e);
-        setError(set, get, 'renderLogs', String(e));
-      } finally {
-        endLoad(set, get, 'renderLogs');
-      }
-    },
-    createRenderLog: async (data) => {
-      // Guard at the store boundary (single choke point: addRenderLog
-      // delegates here): durations must be finite non-negative numbers
-      // within a sane cap, text fields sanitized. NaN/negative/garbage
-      // previously stored verbatim and poisoned aggregates.
-      const MAX_RENDER_MINUTES = 525600; // 1 year; renders take hours, not eons
-      const rawDuration = data.duration_minutes;
-      const duration =
-        typeof rawDuration === 'number' &&
-        isFinite(rawDuration) &&
-        rawDuration >= 0 &&
-        rawDuration <= MAX_RENDER_MINUTES
-          ? Math.floor(rawDuration)
-          : undefined;
-      const clean = {
-        ...data,
-        pass_name: data.pass_name ? sanitizeInput(data.pass_name).trim() || undefined : undefined,
-        duration_minutes: duration,
-        software: data.software ? sanitizeInput(data.software).trim() || undefined : undefined,
-        frame_range: data.frame_range
-          ? sanitizeInput(data.frame_range).trim() || undefined
-          : undefined,
-        notes: data.notes ? sanitizeInput(data.notes).trim() || undefined : undefined,
-      };
-      const log = await invoke<ArchetypeRenderLog>('create_render_log', { payload: clean });
-      set({ renderLogs: [log, ...get().renderLogs] });
-      return log;
-    },
-    deleteRenderLog: async (id) => {
-      await invoke('delete_render_log', { id });
-      set({ renderLogs: get().renderLogs.filter((l) => l.id !== id) });
-    },
-
-    // ── Archetype: Sessions ──
-    loadSessions: async (clientId, projectId) => {
-      startLoad(set, get, 'sessions');
-      try {
-        set({
-          sessions: await invoke<ArchetypeSession[]>('get_sessions', {
-            clientId: clientId ?? null,
-            projectId: projectId ?? null,
-          }),
-        });
-      } catch (e) {
-        console.error('[store] loadSessions failed:', e);
-        setError(set, get, 'sessions', String(e));
-      } finally {
-        endLoad(set, get, 'sessions');
-      }
-    },
-    createSession: async (data) => {
-      const session = await invoke<ArchetypeSession>('create_session', { payload: data });
-      set({ sessions: [session, ...get().sessions] });
-      return session;
-    },
-    deleteSession: async (id) => {
-      await invoke('delete_session', { id });
-      set({ sessions: get().sessions.filter((s) => s.id !== id) });
-    },
-
-    // ── Archetype: Shoots ──
-    loadShoots: async () => {
-      startLoad(set, get, 'shoots');
-      try {
-        set({ shoots: await invoke<ArchetypeShoot[]>('get_all_shoots') });
-      } catch (e) {
-        console.error('[store] loadShoots failed:', e);
-        setError(set, get, 'shoots', String(e));
-      } finally {
-        endLoad(set, get, 'shoots');
-      }
-    },
-    createShoot: async (data) => {
-      const shoot = await invoke<ArchetypeShoot>('create_shoot', { payload: data });
-      set({ shoots: [shoot, ...get().shoots] });
-      return shoot;
-    },
-    deleteShoot: async (id) => {
-      await invoke('delete_shoot', { id });
-      set({ shoots: get().shoots.filter((s) => s.id !== id) });
-    },
-
-    // ── Archetype: Revisions ──
-    loadRevisions: async () => {
-      startLoad(set, get, 'revisions');
-      try {
-        set({ revisions: await invoke<ArchetypeRevision[]>('get_all_revisions') });
-      } catch (e) {
-        console.error('[store] loadRevisions failed:', e);
-        setError(set, get, 'revisions', String(e));
-      } finally {
-        endLoad(set, get, 'revisions');
-      }
-    },
-    createRevision: async (data) => {
-      const revision = await invoke<ArchetypeRevision>('create_revision', { payload: data });
-      set({ revisions: [revision, ...get().revisions] });
-      return revision;
-    },
-    deleteRevision: async (id) => {
-      await invoke('delete_revision', { id });
-      set({ revisions: get().revisions.filter((r) => r.id !== id) });
-    },
-
-    // ── Archetype: Builds ──
-    loadBuilds: async () => {
-      startLoad(set, get, 'builds');
-      try {
-        set({ builds: await invoke<ArchetypeBuild[]>('get_all_builds') });
-      } catch (e) {
-        console.error('[store] loadBuilds failed:', e);
-        setError(set, get, 'builds', String(e));
-      } finally {
-        endLoad(set, get, 'builds');
-      }
-    },
-    createBuild: async (data) => {
-      const build = await invoke<ArchetypeBuild>('create_build', { payload: data });
-      set({ builds: [build, ...get().builds] });
-      return build;
-    },
-    deleteBuild: async (id) => {
-      await invoke('delete_build', { id });
-      set({ builds: get().builds.filter((b) => b.id !== id) });
-    },
-
-    // ── Archetype: Keywords ──
-    loadKeywords: async () => {
-      startLoad(set, get, 'keywords');
-      try {
-        set({ keywords: await invoke<ArchetypeKeyword[]>('get_all_keywords') });
-      } catch (e) {
-        console.error('[store] loadKeywords failed:', e);
-        setError(set, get, 'keywords', String(e));
-      } finally {
-        endLoad(set, get, 'keywords');
-      }
-    },
-    createKeyword: async (data) => {
-      const keyword = await invoke<ArchetypeKeyword>('create_keyword', { payload: data });
-      set({ keywords: [keyword, ...get().keywords] });
-      return keyword;
-    },
-    updateKeyword: async (id, clientId, positionCurrent, targetPosition) => {
-      await invoke('update_keyword', {
-        id,
-        positionCurrent: positionCurrent ?? null,
-        targetPosition: targetPosition ?? null,
-      });
-      set({
-        keywords: get().keywords.map((k) =>
-          k.id === id
-            ? {
-                ...k,
-                position_current: positionCurrent ?? k.position_current,
-                target_position: targetPosition ?? k.target_position,
-              }
-            : k,
-        ),
-      });
-    },
-    deleteKeyword: async (id, _clientId) => {
-      await invoke('delete_keyword', { id });
-      set({ keywords: get().keywords.filter((k) => k.id !== id) });
-    },
-
-    // ── Archetype: Datasets ──
-    loadDatasets: async () => {
-      startLoad(set, get, 'datasets');
-      try {
-        set({ datasets: await invoke<ArchetypeDataset[]>('get_all_datasets') });
-      } catch (e) {
-        console.error('[store] loadDatasets failed:', e);
-        setError(set, get, 'datasets', String(e));
-      } finally {
-        endLoad(set, get, 'datasets');
-      }
-    },
-    createDataset: async (data) => {
-      const dataset = await invoke<ArchetypeDataset>('create_dataset', { payload: data });
-      set({ datasets: [dataset, ...get().datasets] });
-      return dataset;
-    },
-    deleteDataset: async (id) => {
-      await invoke('delete_dataset', { id });
-      set({ datasets: get().datasets.filter((d) => d.id !== id) });
-    },
+    // ── Archetype domain (see factories/archetype.ts) ──
+    ...createArchetypeActions(set, get),
 
     // ── Backward compatibility aliases ──
     addClient: (data) => get().createClient(data),

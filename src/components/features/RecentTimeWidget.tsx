@@ -18,11 +18,12 @@ export default function RecentTimeWidget() {
       {recent.map((t) => {
         const project = projects.find((p) => p.id === t.project_id);
         return (
-          <div key={t.id} className="flex items-center justify-between px-3 py-1.5 bg-[var(--bg-secondary)] rounded-xs text-xs">
+          <div
+            key={t.id}
+            className="flex items-center justify-between px-3 py-1.5 bg-[var(--bg-secondary)] rounded-xs text-xs"
+          >
             <div className="flex-1 min-w-0">
-              <span className="text-[var(--text-primary)]">
-                {t.description || 'Time Entry'}
-              </span>
+              <span className="text-[var(--text-primary)]">{t.description || 'Time Entry'}</span>
               {project && (
                 <span className="text-[var(--text-tertiary)] ml-1">-- {project.title}</span>
               )}

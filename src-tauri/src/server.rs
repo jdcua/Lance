@@ -201,6 +201,9 @@ struct RespondPayload {
     message: Option<String>,
 }
 
+// Legacy size exception: the portal HTML is one cohesive template.
+// See AUDIT_REPORT.md P1; split the template when this area is refactored.
+#[allow(clippy::too_many_lines)]
 fn build_portal_html(conn: &Connection, token: &TokenRecord) -> Result<String, String> {
     let entity_type = &token.entity_type;
     let entity_id = &token.entity_id;

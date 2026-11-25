@@ -345,9 +345,7 @@ function ExportTemplatesSection() {
             {editing ? 'Edit Template' : 'New Template'}
           </h4>
           <div>
-            <label className="form-label">
-              Template name
-            </label>
+            <label className="form-label">Template name</label>
             <input
               type="text"
               value={form.name}
@@ -357,9 +355,7 @@ function ExportTemplatesSection() {
             />
           </div>
           <div>
-            <label className="form-label">
-              Document type
-            </label>
+            <label className="form-label">Document type</label>
             <select
               value={form.type}
               aria-label="Document type"
@@ -376,9 +372,7 @@ function ExportTemplatesSection() {
             </select>
           </div>
           <div>
-            <label className="form-label">
-              Header
-            </label>
+            <label className="form-label">Header</label>
             <input
               type="text"
               value={form.header}
@@ -388,9 +382,7 @@ function ExportTemplatesSection() {
             />
           </div>
           <div>
-            <label className="form-label">
-              Footer
-            </label>
+            <label className="form-label">Footer</label>
             <input
               type="text"
               value={form.footer}
@@ -400,9 +392,7 @@ function ExportTemplatesSection() {
             />
           </div>
           <div>
-            <label className="form-label">
-              Color scheme
-            </label>
+            <label className="form-label">Color scheme</label>
             <input
               type="text"
               value={form.color_scheme}
@@ -793,9 +783,9 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
               <div>
                 <p className="text-sm text-[var(--text-primary)]">On-device activity</p>
                 <p className="text-xs text-[var(--text-tertiary)]">
-                  Anonymous usage counts that power personal stats and helpful nudges.
-                  Stored only on this machine. Never uploaded, never sold. Names, emails,
-                  and amounts are never recorded.
+                  Anonymous usage counts that power personal stats and helpful nudges. Stored only
+                  on this machine. Never uploaded, never sold. Names, emails, and amounts are never
+                  recorded.
                 </p>
               </div>
             </div>
@@ -804,9 +794,7 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
               const total = Object.values(counts).reduce((a, b) => a + b, 0);
               if (total === 0) {
                 return (
-                  <p className="text-xs text-[var(--text-tertiary)]">
-                    No activity recorded yet.
-                  </p>
+                  <p className="text-xs text-[var(--text-tertiary)]">No activity recorded yet.</p>
                 );
               }
               return (
@@ -884,9 +872,7 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
             {bag.autoBackupEnabled && (
               <>
                 <div>
-                  <label className="form-label">
-                    Frequency
-                  </label>
+                  <label className="form-label">Frequency</label>
                   <select
                     value={bag.autoBackupFreq}
                     aria-label="Auto-backup frequency"
@@ -903,9 +889,7 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
                   </select>
                 </div>
                 <div>
-                  <label className="form-label">
-                    Backup location
-                  </label>
+                  <label className="form-label">Backup location</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
@@ -919,8 +903,7 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
                       size="sm"
                       onClick={async () => {
                         try {
-                          const { openFileDialog } =
-                            await import('../../utils/tauri');
+                          const { openFileDialog } = await import('../../utils/tauri');
                           const selected = await openFileDialog({
                             directory: true,
                             title: 'Choose backup folder',
@@ -961,12 +944,10 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
         <div className="space-y-4">
           {/* Dunning voice: escalation drafts in your voice */}
           <div>
-            <p className="text-sm font-medium text-[var(--text-primary)] mb-1">
-              Dunning voice
-            </p>
+            <p className="text-sm font-medium text-[var(--text-primary)] mb-1">Dunning voice</p>
             <p className="text-xs text-[var(--text-tertiary)] mb-3">
-              Overdue reminders rewritten to sound like you. Auto follows your archetype
-              unless you pick one.
+              Overdue reminders rewritten to sound like you. Auto follows your archetype unless you
+              pick one.
             </p>
             <div className="flex gap-2" role="radiogroup" aria-label="Dunning voice">
               {(['auto', 'warm', 'direct', 'formal'] as const).map((tone) => {
@@ -983,9 +964,7 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
                         : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40'
                     }`}
                   >
-                    {tone === 'auto'
-                      ? `Auto (${resolveDunningTone(profile?.profession)})`
-                      : tone}
+                    {tone === 'auto' ? `Auto (${resolveDunningTone(profile?.profession)})` : tone}
                   </button>
                 );
               })}
@@ -993,9 +972,7 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
           </div>
           {/* Templates */}
           <div>
-            <p className="text-sm font-medium text-[var(--text-primary)] mb-3">
-              Message Templates
-            </p>
+            <p className="text-sm font-medium text-[var(--text-primary)] mb-3">Message Templates</p>
             <p className="text-xs text-[var(--text-tertiary)] mb-4">
               Use{' '}
               <code className="px-1 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px]">
@@ -1057,8 +1034,8 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
               Email Subject Templates
             </p>
             <p className="text-xs text-[var(--text-tertiary)] mb-4">
-              Same variables as message templates. These appear in the email subject line
-              when you click "Open in Email".
+              Same variables as message templates. These appear in the email subject line when you
+              click "Open in Email".
             </p>
             <div className="space-y-3">
               {Object.entries(TEMPLATE_LABELS).map(([key, label]) => (
@@ -1068,9 +1045,7 @@ export default function DataSection({ bag }: { bag: SettingsBag }) {
                   </label>
                   <input
                     type="text"
-                    value={
-                      bag.fuSubjectTemplates[key] || DEFAULT_SUBJECT_TEMPLATES[key] || ''
-                    }
+                    value={bag.fuSubjectTemplates[key] || DEFAULT_SUBJECT_TEMPLATES[key] || ''}
                     onChange={(e) => {
                       const updated = {
                         ...bag.fuSubjectTemplates,

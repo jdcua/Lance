@@ -20,7 +20,6 @@ export const inputClass =
 export const labelClass =
   'block text-xs font-medium text-[var(--text-secondary)] dark:text-[var(--text-tertiary)] mb-1';
 
-
 export const writingStyles = ['professional', 'warm', 'direct', 'bold'];
 
 export const ACCENT_COLORS = [

@@ -44,7 +44,13 @@ describe('payment behavior', () => {
   it('falls back to last payment date without paid_at', () => {
     const noStamp = inv({ paid_at: undefined });
     const payments = [
-      { id: 'p1', invoice_id: 'i1', amount: 100, payment_date: '2026-08-18', payment_method: 'Bank Transfer' },
+      {
+        id: 'p1',
+        invoice_id: 'i1',
+        amount: 100,
+        payment_date: '2026-08-18',
+        payment_method: 'Bank Transfer',
+      },
     ] as InvoicePayment[];
     const b = clientPaymentBehavior('c1', [noStamp], payments);
     expect(b.avgDaysLate).toBe(3);

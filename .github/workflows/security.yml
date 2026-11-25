@@ -135,11 +135,42 @@ jobs:
       # SheetJS moved off npm. package-lock.json carries an integrity hash so
       # `npm ci` verifies the bytes, but that hash lives in the lockfile, so
       # anyone who can change package.json can change the hash in the same
-      # commit. Duplicating the expected hash in package.json (via the
-      # `overrides`-adjacent comment convention this step enforces) means an
-      # attacker has to modify two files, one of which is otherwise inert.
+      # commit. check-xlsx-pin.mjs keeps a second copy of the expected hash in
+      # .github/security/xlsx-integrity.txt and fails if the lockfile drifts
+      # from it, so changing the tarball requires a separate, reviewed file.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
       - run: node .github/security/check-xlsx-pin.mjs
+
+  gitleaks:
+    timeout-minutes: 10
+    name: gitleaks (full history)
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      # fetch-depth: 0 is what makes full-history scanning possible. The
+      # action runs `gitleaks detect` without log-opts on schedule/dispatch
+      # (all commits) and over the commit range on push/PR (fast path). A
+      # shallow checkout would leave older commits invisible to git log.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      # Pinned to the commit behind the v3.0.0 release, not the moving v3 tag.
+      # v3 uses the Node 24 runtime; v2 (Node 20) no longer runs on
+      # GitHub-hosted runners. refs/tags/v3.0.0 resolves to this exact SHA.
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_VERSION: 8.24.3
+          GITLEAKS_CONFIG: .github/workflows/gitleaks.toml
+          # PR comments need pull-requests: write and SARIF upload needs
+          # actions: write. Both are off: this job is contents: read only.
+          GITLEAKS_ENABLE_COMMENTS: false
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
+          # Only organizations need a license key. Harmless when unset for
+          # this personal-account repo; set the secret before any move to an org.
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}

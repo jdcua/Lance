@@ -32,7 +32,7 @@ export default function DependencyTracker({ projectId }: { projectId: string }) 
   const [loading, setLoading] = useState(true);
 
   const list = useMemo(() => {
-    const raw = milestones.filter(m => m.project_id === projectId);
+    const raw = milestones.filter((m) => m.project_id === projectId);
     return raw.map((m) => ({
       ...m,
       depends_on: undefined as string | undefined,
@@ -133,14 +133,17 @@ export default function DependencyTracker({ projectId }: { projectId: string }) 
               onChange={(e) => setForm({ ...form, due_date: e.target.value })}
               className={inputClass}
             />
-            <select aria-label="Depends On"
+            <select
+              aria-label="Depends On"
               value={form.depends_on}
               onChange={(e) => setForm({ ...form, depends_on: e.target.value })}
               className={inputClass}
             >
               <option value="">No dependency</option>
               {list.map((m) => (
-                <option key={m.id} value={m.id}>{m.title}</option>
+                <option key={m.id} value={m.id}>
+                  {m.title}
+                </option>
               ))}
             </select>
           </div>
@@ -154,8 +157,12 @@ export default function DependencyTracker({ projectId }: { projectId: string }) 
             Invoice on completion
           </label>
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.title.trim()}>Save</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.title.trim()}>
+              Save
+            </Button>
           </div>
         </div>
       )}
@@ -177,7 +184,9 @@ export default function DependencyTracker({ projectId }: { projectId: string }) 
                   </button>
                   <span
                     className={`font-medium truncate ${
-                      m.completed ? 'line-through text-[var(--text-tertiary)]' : 'text-[var(--text-primary)]'
+                      m.completed
+                        ? 'line-through text-[var(--text-tertiary)]'
+                        : 'text-[var(--text-primary)]'
                     }`}
                   >
                     {m.title}
@@ -188,19 +197,27 @@ export default function DependencyTracker({ projectId }: { projectId: string }) 
                     </span>
                   )}
                   {m.invoice_on_completion && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#9B59B6]/15 text-[#9B59B6]" title="Invoices on completion">
+                    <span
+                      className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#9B59B6]/15 text-[#9B59B6]"
+                      title="Invoices on completion"
+                    >
                       <DollarSign size={10} className="inline" />
                     </span>
                   )}
                 </div>
                 <button
                   aria-label="Delete dependency tracker"
-                  onClick={() => handleDelete(m.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                  onClick={() => handleDelete(m.id)}
+                  className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2"
+                >
                   <Trash2 size={12} />
                 </button>
               </div>
               {i < deps.length - 1 && (
-                <ArrowRight size={10} className="text-[var(--text-tertiary)] flex-shrink-0 mx-0.5" />
+                <ArrowRight
+                  size={10}
+                  className="text-[var(--text-tertiary)] flex-shrink-0 mx-0.5"
+                />
               )}
             </div>
           ))}

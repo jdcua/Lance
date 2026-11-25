@@ -10,7 +10,13 @@ function escapeHtml(text: string): string {
 export function textToHtml(text: string): string {
   return text
     .split('\n\n')
-    .map((para) => `<p>${para.split('\n').map((line) => escapeHtml(line)).join('<br>')}</p>`)
+    .map(
+      (para) =>
+        `<p>${para
+          .split('\n')
+          .map((line) => escapeHtml(line))
+          .join('<br>')}</p>`,
+    )
     .join('');
 }
 

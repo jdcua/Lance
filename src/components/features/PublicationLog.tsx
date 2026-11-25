@@ -35,7 +35,7 @@ export default function PublicationLog({ projectId }: { projectId: string }) {
       const db = await getDb();
       const rows = await db.select<(Publication & Record<string, unknown>)[]>(
         'SELECT id, project_id, outlet_name, url, publish_date, byline, notes FROM publications WHERE project_id = ? ORDER BY publish_date DESC, rowid DESC',
-        [projectId]
+        [projectId],
       );
       setPublications(
         rows.map((r) => ({
@@ -46,7 +46,7 @@ export default function PublicationLog({ projectId }: { projectId: string }) {
           publish_date: r.publish_date as string | undefined,
           byline: r.byline as string | undefined,
           notes: r.notes as string | undefined,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[PublicationLog] loadPublications failed:', e);
@@ -74,7 +74,7 @@ export default function PublicationLog({ projectId }: { projectId: string }) {
           form.publish_date || null,
           form.byline.trim() || null,
           form.notes.trim() || null,
-        ]
+        ],
       );
       const item: Publication = {
         id,
@@ -119,9 +119,7 @@ export default function PublicationLog({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Publications
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Publications</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -188,7 +186,12 @@ export default function PublicationLog({ projectId }: { projectId: string }) {
             <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleAdd} loading={saving} disabled={!form.outlet_name.trim() && !form.url.trim()}>
+            <Button
+              size="sm"
+              onClick={handleAdd}
+              loading={saving}
+              disabled={!form.outlet_name.trim() && !form.url.trim()}
+            >
               Save
             </Button>
           </div>
@@ -235,7 +238,8 @@ export default function PublicationLog({ projectId }: { projectId: string }) {
                   </div>
                 </div>
               </div>
-              <button aria-label="Delete publication log"
+              <button
+                aria-label="Delete publication log"
                 onClick={() => handleDelete(p.id)}
                 className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0"
               >

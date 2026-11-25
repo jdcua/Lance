@@ -597,7 +597,9 @@ function applyThemePalette(theme: Theme): void {
     if (cb) root.style.setProperty('--colour-base', cb);
     if (cs) root.style.setProperty('--colour-secondary', cs);
     if (ca) root.style.setProperty('--colour-accent', ca);
-  } catch { /* private mode */ }
+  } catch {
+    /* private mode */
+  }
   // Re-apply the contrast boost: writing the palette above clears it.
   applyContrastBoost(root);
 }

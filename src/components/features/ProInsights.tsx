@@ -50,7 +50,10 @@ export default function ProInsights() {
     [totalPaid, totalMinutes, profile],
   );
 
-  const clientRates = useMemo(() => computeClientWinRates(proposals, clients), [proposals, clients]);
+  const clientRates = useMemo(
+    () => computeClientWinRates(proposals, clients),
+    [proposals, clients],
+  );
 
   const totalLost = clientRates.reduce((s, c) => s + c.lostRevenue, 0);
 
@@ -65,11 +68,15 @@ export default function ProInsights() {
     <div className="mt-6">
       <div className="flex items-center gap-2 mb-4">
         <TrendingUp size={16} className="text-[var(--accent-ink,var(--accent))]" />
-        <h3 className="text-sm font-semibold text-[var(--text-primary)]">Projections and Signals</h3>
+        <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+          Projections and Signals
+        </h3>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <Card>
-          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">3-Month Forecast</h3>
+          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">
+            3-Month Forecast
+          </h3>
           <p className="text-[26px] font-semibold text-[var(--text-primary)]">
             {formatCurrency(Math.round(forecast.total), currency)}
           </p>
@@ -89,8 +96,10 @@ export default function ProInsights() {
           <p className="text-[11px] text-[var(--text-tertiary)] mt-4 leading-relaxed">
             Run rate {formatCurrency(Math.round(forecast.runRate), currency)}/mo, retainers{' '}
             {formatCurrency(Math.round(forecast.recurringMonthly), currency)}/mo, pipeline{' '}
-            {formatCurrency(Math.round(forecast.pipelineValue), currency)} weighted by your win rate.
-            {forecast.flatOnly && ' Hourly proposals carry no fixed value, so they stay out of the math.'}
+            {formatCurrency(Math.round(forecast.pipelineValue), currency)} weighted by your win
+            rate.
+            {forecast.flatOnly &&
+              ' Hourly proposals carry no fixed value, so they stay out of the math.'}
           </p>
         </Card>
 
@@ -113,16 +122,23 @@ export default function ProInsights() {
               <div className="mt-4">
                 {rate.alert && rate.leakPerHour !== null ? (
                   <div className="flex items-start gap-2 p-3 rounded-sm bg-[var(--warning-bg)]">
-                    <AlertTriangle size={14} className="text-[var(--warning-text)] flex-shrink-0 mt-0.5" />
+                    <AlertTriangle
+                      size={14}
+                      className="text-[var(--warning-text)] flex-shrink-0 mt-0.5"
+                    />
                     <p className="text-xs text-[var(--warning-text)] leading-relaxed">
-                      You keep about {Math.round((rate.effective / (rate.stated || 1)) * 100)}% of your
-                      stated rate. That is {formatCurrency(Math.round(rate.leakPerHour * 100) / 100, currency)} leaking
+                      You keep about {Math.round((rate.effective / (rate.stated || 1)) * 100)}% of
+                      your stated rate. That is{' '}
+                      {formatCurrency(Math.round(rate.leakPerHour * 100) / 100, currency)} leaking
                       per hour to discounts or unbilled time.
                     </p>
                   </div>
                 ) : (
                   <div className="flex items-start gap-2 p-3 rounded-sm bg-[var(--accent-bg)]">
-                    <CheckCircle2 size={14} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2
+                      size={14}
+                      className="text-[var(--accent-ink,var(--accent))] flex-shrink-0 mt-0.5"
+                    />
                     <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                       {rate.stated !== null
                         ? 'Holding at or above your stated rate. Keep it there.'
@@ -136,7 +152,9 @@ export default function ProInsights() {
         </Card>
 
         <Card>
-          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Win Rate by Client</h3>
+          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">
+            Win Rate by Client
+          </h3>
           {clientRates.length === 0 ? (
             <p className="text-xs text-[var(--text-tertiary)] mt-2 leading-relaxed">
               Resolve a proposal (accepted or declined) to see per-client close rates.
@@ -155,19 +173,14 @@ export default function ProInsights() {
                         </span>
                       </span>
                     </div>
-                    <ProgressBar
-                      value={c.rate || 0}
-                      max={100}
-                      size="sm"
-                      showPercent={false}
-                    />
+                    <ProgressBar value={c.rate || 0} max={100} size="sm" showPercent={false} />
                   </div>
                 ))}
               </div>
               {totalLost > 0 && (
                 <p className="text-[11px] text-[var(--text-tertiary)] mt-4 leading-relaxed">
-                  Declined flat-rate proposals left about {formatCurrency(Math.round(totalLost), currency)} on
-                  the table.
+                  Declined flat-rate proposals left about{' '}
+                  {formatCurrency(Math.round(totalLost), currency)} on the table.
                 </p>
               )}
             </>

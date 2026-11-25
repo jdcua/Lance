@@ -23,9 +23,7 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
   return (
     <>
       {/* Profile section header */}
-      <div className="text-xs text-[var(--text-secondary)] font-semibold mb-4">
-        Profile
-      </div>
+      <div className="text-xs text-[var(--text-secondary)] font-semibold mb-4">Profile</div>
 
       {/* Your profile */}
       <Card className="mb-6">
@@ -159,9 +157,7 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
           <textarea
             value={form.payment_instructions || ''}
             onChange={(e) => setForm({ ...form, payment_instructions: e.target.value })}
-            onBlur={() =>
-              autoSave({ payment_instructions: form.payment_instructions }, 'Rates')
-            }
+            onBlur={() => autoSave({ payment_instructions: form.payment_instructions }, 'Rates')}
             placeholder={
               'e.g. Bank transfer to First National, routing 123456, account 987654321. Or pay online at example.com/pay.'
             }
@@ -169,8 +165,8 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
             className={`${inputClass} resize-none leading-relaxed`}
           />
           <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
-            Bank details, payment links, or anything your clients need to pay you. Stays
-            on your machine, shown only on your invoices.
+            Bank details, payment links, or anything your clients need to pay you. Stays on your
+            machine, shown only on your invoices.
           </p>
         </div>
       </Card>
@@ -184,9 +180,7 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
             <select
               value={form.writing_style || 'professional'}
               aria-label="Writing style"
-              onChange={(e) =>
-                autoSave({ writing_style: e.target.value }, 'Proposal voice')
-              }
+              onChange={(e) => autoSave({ writing_style: e.target.value }, 'Proposal voice')}
               className={inputClass}
             >
               {writingStyles.map((s) => (
@@ -202,16 +196,14 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
               maxLength={1000}
               value={form.writing_voice || ''}
               onChange={(e) => setForm({ ...form, writing_voice: e.target.value })}
-              onBlur={() =>
-                autoSave({ writing_voice: form.writing_voice }, 'Proposal voice')
-              }
+              onBlur={() => autoSave({ writing_voice: form.writing_voice }, 'Proposal voice')}
               placeholder="e.g. I'm a senior full-stack developer who explains things clearly and avoids jargon"
               rows={2}
               className={`${inputClass} resize-none`}
             />
             <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
-              Describe your voice and expertise. This helps the AI write proposals that
-              sound like you.
+              Describe your voice and expertise. This helps the AI write proposals that sound like
+              you.
             </p>
           </div>
           <div>
@@ -232,9 +224,7 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
               maxLength={2000}
               value={form.always_include || ''}
               onChange={(e) => setForm({ ...form, always_include: e.target.value })}
-              onBlur={() =>
-                autoSave({ always_include: form.always_include }, 'Proposal voice')
-              }
+              onBlur={() => autoSave({ always_include: form.always_include }, 'Proposal voice')}
               placeholder="Anything you always want in proposals..."
               rows={3}
               className={`${inputClass} resize-none`}
@@ -271,7 +261,6 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
           </div>
         </div>
       </Card>
-
     </>
   );
 }

@@ -208,9 +208,7 @@ export default function SprintBoard({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Sprint Board
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Sprint Board</h4>
         </div>
         <div className="grid grid-cols-4 gap-2">
           {[1, 2, 3, 4].map((i) => (

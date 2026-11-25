@@ -34,7 +34,7 @@ export default function DietaryAssessment({ clientId }: { clientId: string }) {
       const db = await getDb();
       const rows = await db.select<(DietaryAssessment & Record<string, unknown>)[]>(
         'SELECT id, client_id, date, food_log, analysis, recommendations FROM dietary_assessments WHERE client_id = ? ORDER BY date DESC',
-        [clientId]
+        [clientId],
       );
       setAssessments(
         rows.map((r) => ({
@@ -44,7 +44,7 @@ export default function DietaryAssessment({ clientId }: { clientId: string }) {
           food_log: r.food_log as string | undefined,
           analysis: r.analysis as string | undefined,
           recommendations: r.recommendations as string | undefined,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[DietaryAssessment] loadAssessments failed:', e);
@@ -64,7 +64,14 @@ export default function DietaryAssessment({ clientId }: { clientId: string }) {
       const db = await getDb();
       await db.execute(
         'INSERT INTO dietary_assessments (id, client_id, date, food_log, analysis, recommendations) VALUES (?, ?, ?, ?, ?, ?)',
-        [id, clientId, form.date, form.food_log || null, form.analysis || null, form.recommendations || null]
+        [
+          id,
+          clientId,
+          form.date,
+          form.food_log || null,
+          form.analysis || null,
+          form.recommendations || null,
+        ],
       );
       const assessment: DietaryAssessment = {
         id,
@@ -100,7 +107,9 @@ export default function DietaryAssessment({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Dietary Assessments</h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
+            Dietary Assessments
+          </h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -153,8 +162,12 @@ export default function DietaryAssessment({ clientId }: { clientId: string }) {
             className={inputClass + ' resize-none'}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.date}>Save</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.date}>
+              Save
+            </Button>
           </div>
         </div>
       )}
@@ -167,22 +180,34 @@ export default function DietaryAssessment({ clientId }: { clientId: string }) {
             <div key={a.id}>
               <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
                 <div className="flex-1 min-w-0 flex items-center gap-2">
-                  <button aria-label="Next"
+                  <button
+                    aria-label="Next"
                     onClick={() => setExpanded(expanded === a.id ? null : a.id)}
                     className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                   >
-                    <ChevronRight size={10} className={`transition-transform ${expanded === a.id ? 'rotate-90' : ''}`} />
+                    <ChevronRight
+                      size={10}
+                      className={`transition-transform ${expanded === a.id ? 'rotate-90' : ''}`}
+                    />
                   </button>
                   <span className="font-medium text-[var(--text-primary)]">
-                    {new Date(a.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    {new Date(a.date).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
                   </span>
                   {a.analysis && (
-                    <span className="text-[10px] text-[var(--text-tertiary)] truncate">{a.analysis.split('\n')[0]}</span>
+                    <span className="text-[10px] text-[var(--text-tertiary)] truncate">
+                      {a.analysis.split('\n')[0]}
+                    </span>
                   )}
                 </div>
                 <button
                   aria-label="Delete dietary assessment"
-                  onClick={() => handleDelete(a.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                  onClick={() => handleDelete(a.id)}
+                  className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2"
+                >
                   <Trash2 size={12} />
                 </button>
               </div>
@@ -190,20 +215,32 @@ export default function DietaryAssessment({ clientId }: { clientId: string }) {
                 <div className="mt-1 px-3 py-2 bg-[var(--bg-secondary)]/50 rounded-xs text-xs space-y-2">
                   {a.food_log && (
                     <div>
-                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)]">Food Log</p>
-                      <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{a.food_log}</p>
+                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)]">
+                        Food Log
+                      </p>
+                      <p className="text-[var(--text-secondary)] whitespace-pre-wrap">
+                        {a.food_log}
+                      </p>
                     </div>
                   )}
                   {a.analysis && (
                     <div>
-                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)]">Analysis</p>
-                      <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{a.analysis}</p>
+                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)]">
+                        Analysis
+                      </p>
+                      <p className="text-[var(--text-secondary)] whitespace-pre-wrap">
+                        {a.analysis}
+                      </p>
                     </div>
                   )}
                   {a.recommendations && (
                     <div>
-                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)]">Recommendations</p>
-                      <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{a.recommendations}</p>
+                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)]">
+                        Recommendations
+                      </p>
+                      <p className="text-[var(--text-secondary)] whitespace-pre-wrap">
+                        {a.recommendations}
+                      </p>
                     </div>
                   )}
                   {!a.food_log && !a.analysis && !a.recommendations && (

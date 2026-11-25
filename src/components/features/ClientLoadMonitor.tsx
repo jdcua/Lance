@@ -40,7 +40,7 @@ export default function ClientLoadMonitor() {
       const db = await getDb();
 
       const retainerRows = await db.select<(RetainerRecord & Record<string, unknown>)[]>(
-        'SELECT id, client_id, monthly_hours, rate, renewal_date, active FROM retainers WHERE active = 1'
+        'SELECT id, client_id, monthly_hours, rate, renewal_date, active FROM retainers WHERE active = 1',
       );
       const activeRetainers: RetainerRecord[] = retainerRows.map((r) => ({
         id: r.id as string,
@@ -48,27 +48,29 @@ export default function ClientLoadMonitor() {
         monthly_hours: r.monthly_hours as number,
         rate: r.rate as number,
         renewal_date: r.renewal_date as string | undefined,
-        active: !!(r.active),
+        active: !!r.active,
       }));
       setRetainers(activeRetainers);
 
       const now = new Date();
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+        .toISOString()
+        .split('T')[0];
 
       const vaRows = await db.select<(VASummary & Record<string, unknown>)[]>(
         'SELECT client_id, COALESCE(SUM(duration_minutes), 0) as total_minutes FROM va_tasks WHERE completed_date >= ? AND completed_date <= ? GROUP BY client_id',
-        [monthStart, monthEnd + 'T23:59:59']
+        [monthStart, monthEnd + 'T23:59:59'],
       );
       setVaSummaries(
         vaRows.map((r) => ({
           client_id: r.client_id as string,
           total_minutes: r.total_minutes as number,
-        }))
+        })),
       );
 
       const clientRows = await db.select<(ClientRecord & Record<string, unknown>)[]>(
-        'SELECT id, name FROM clients'
+        'SELECT id, name FROM clients',
       );
       const nameMap: Record<string, string> = {};
       for (const c of clientRows) {
@@ -147,7 +149,9 @@ export default function ClientLoadMonitor() {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Client Load</h4>
-        <span className="text-[10px] text-[var(--text-tertiary)]">{sorted.length} retainer{sorted.length !== 1 ? 's' : ''}</span>
+        <span className="text-[10px] text-[var(--text-tertiary)]">
+          {sorted.length} retainer{sorted.length !== 1 ? 's' : ''}
+        </span>
       </div>
 
       <div className="space-y-2">

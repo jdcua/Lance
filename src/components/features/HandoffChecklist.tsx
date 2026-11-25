@@ -36,13 +36,13 @@ export default function HandoffChecklist({ projectId }: { projectId: string }) {
       const db = await getDb();
       const rows = await db.select<(HandoffItem & Record<string, unknown>)[]>(
         'SELECT id, project_id, item, completed, sort_order FROM handoff_items WHERE project_id = ? ORDER BY sort_order ASC, id ASC',
-        [projectId]
+        [projectId],
       );
-      const loaded = rows.map(r => ({
+      const loaded = rows.map((r) => ({
         id: r.id as string,
         project_id: r.project_id as string,
         item: r.item as string,
-        completed: !!(r.completed),
+        completed: !!r.completed,
         sort_order: (r.sort_order as number) || 0,
       }));
 
@@ -52,64 +52,92 @@ export default function HandoffChecklist({ projectId }: { projectId: string }) {
           const id = crypto.randomUUID();
           await db.execute(
             'INSERT INTO handoff_items (id, project_id, item, completed, sort_order) VALUES (?, ?, ?, ?, ?)',
-            [id, projectId, DEFAULT_ITEMS[i], 0, i]
+            [id, projectId, DEFAULT_ITEMS[i], 0, i],
           );
-          created.push({ id, project_id: projectId, item: DEFAULT_ITEMS[i], completed: false, sort_order: i });
+          created.push({
+            id,
+            project_id: projectId,
+            item: DEFAULT_ITEMS[i],
+            completed: false,
+            sort_order: i,
+          });
         }
         setItems(created);
       } else {
         setItems(loaded);
       }
-    } catch (e) { console.error('[HandoffChecklist] loadItems failed:', e); }
+    } catch (e) {
+      console.error('[HandoffChecklist] loadItems failed:', e);
+    }
     setLoading(false);
   }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId, loadItems]);
+  useEffect(() => {
+    loadItems();
+  }, [projectId, loadItems]);
 
   const handleAdd = async () => {
     if (!newItem.trim()) return;
     setSaving(true);
     try {
       const id = crypto.randomUUID();
-      const nextOrder = items.length > 0 ? Math.max(...items.map(i => i.sort_order)) + 1 : 0;
+      const nextOrder = items.length > 0 ? Math.max(...items.map((i) => i.sort_order)) + 1 : 0;
       const db = await getDb();
       await db.execute(
         'INSERT INTO handoff_items (id, project_id, item, completed, sort_order) VALUES (?, ?, ?, ?, ?)',
-        [id, projectId, newItem.trim(), 0, nextOrder]
+        [id, projectId, newItem.trim(), 0, nextOrder],
       );
-      const item: HandoffItem = { id, project_id: projectId, item: newItem.trim(), completed: false, sort_order: nextOrder };
-      setItems(prev => [...prev, item]);
+      const item: HandoffItem = {
+        id,
+        project_id: projectId,
+        item: newItem.trim(),
+        completed: false,
+        sort_order: nextOrder,
+      };
+      setItems((prev) => [...prev, item]);
       setNewItem('');
       setShowForm(false);
-    } catch (e) { console.error('[HandoffChecklist] add failed:', e); }
+    } catch (e) {
+      console.error('[HandoffChecklist] add failed:', e);
+    }
     setSaving(false);
   };
 
   const handleToggle = async (id: string, current: boolean) => {
     try {
       const db = await getDb();
-      await db.execute('UPDATE handoff_items SET completed = ? WHERE id = ?', [current ? 0 : 1, id]);
-      setItems(prev => prev.map(i => i.id === id ? { ...i, completed: !current } : i));
-    } catch (e) { console.error('[HandoffChecklist] toggle failed:', e); }
+      await db.execute('UPDATE handoff_items SET completed = ? WHERE id = ?', [
+        current ? 0 : 1,
+        id,
+      ]);
+      setItems((prev) => prev.map((i) => (i.id === id ? { ...i, completed: !current } : i)));
+    } catch (e) {
+      console.error('[HandoffChecklist] toggle failed:', e);
+    }
   };
 
   const handleDelete = async (id: string) => {
     try {
       const db = await getDb();
       await db.execute('DELETE FROM handoff_items WHERE id = ?', [id]);
-      setItems(prev => prev.filter(i => i.id !== id));
-    } catch (e) { console.error('[HandoffChecklist] delete failed:', e); }
+      setItems((prev) => prev.filter((i) => i.id !== id));
+    } catch (e) {
+      console.error('[HandoffChecklist] delete failed:', e);
+    }
   };
 
-  const completed = items.filter(i => i.completed).length;
+  const completed = items.filter((i) => i.completed).length;
   const total = items.length;
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   // Default items are those with sort_order < DEFAULT_ITEMS.length (created during auto-populate)
-  const defaultIds = new Set(items.filter(i => i.sort_order < DEFAULT_ITEMS.length).map(i => i.id));
+  const defaultIds = new Set(
+    items.filter((i) => i.sort_order < DEFAULT_ITEMS.length).map((i) => i.id),
+  );
   const isDefault = (item: HandoffItem) => defaultIds.has(item.id);
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass =
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
@@ -118,7 +146,9 @@ export default function HandoffChecklist({ projectId }: { projectId: string }) {
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Handoff Checklist</h4>
         </div>
         <div className="space-y-1">
-          {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
+          ))}
         </div>
       </div>
     );
@@ -127,7 +157,9 @@ export default function HandoffChecklist({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Handoff ({completed}/{total})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
+          Handoff ({completed}/{total})
+        </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Add Item
         </Button>
@@ -156,22 +188,33 @@ export default function HandoffChecklist({ projectId }: { projectId: string }) {
             onChange={(e) => setNewItem(e.target.value)}
             className={inputClass}
             autoFocus
-            onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleAdd();
+            }}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleAdd} loading={saving} disabled={!newItem.trim()}>Add</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleAdd} loading={saving} disabled={!newItem.trim()}>
+              Add
+            </Button>
           </div>
         </div>
       )}
 
       {/* Checklist */}
       {items.length === 0 ? (
-        <p className="text-xs text-[var(--text-tertiary)] py-2">No handoff items yet. Add your first checklist item.</p>
+        <p className="text-xs text-[var(--text-tertiary)] py-2">
+          No handoff items yet. Add your first checklist item.
+        </p>
       ) : (
         <div className="space-y-1">
           {items.map((item) => (
-            <div key={item.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
+            <div
+              key={item.id}
+              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
+            >
               <button
                 onClick={() => handleToggle(item.id, item.completed)}
                 className="flex items-center gap-2 flex-1 min-w-0 text-left"
@@ -181,14 +224,18 @@ export default function HandoffChecklist({ projectId }: { projectId: string }) {
                 ) : (
                   <Circle size={14} className="text-[var(--text-tertiary)] flex-shrink-0" />
                 )}
-                <span className={`${item.completed ? 'line-through text-[var(--text-tertiary)]' : 'text-[var(--text-primary)]'} truncate`}>
+                <span
+                  className={`${item.completed ? 'line-through text-[var(--text-tertiary)]' : 'text-[var(--text-primary)]'} truncate`}
+                >
                   {item.item}
                 </span>
               </button>
               {!isDefault(item) && (
                 <button
                   aria-label="Delete handoff checklist"
-                  onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                  onClick={() => handleDelete(item.id)}
+                  className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0"
+                >
                   <Trash2 size={12} />
                 </button>
               )}

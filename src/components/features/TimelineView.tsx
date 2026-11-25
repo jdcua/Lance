@@ -19,15 +19,18 @@ export default function TimelineView({ projectId }: { projectId: string }) {
     load();
   }, [projectId, loadMilestones]);
 
-  const items = milestones.filter(m => m.project_id === projectId).slice().sort(
-    (a, b) => new Date(a.due_date || '').getTime() - new Date(b.due_date || '').getTime()
-  );
+  const items = milestones
+    .filter((m) => m.project_id === projectId)
+    .slice()
+    .sort((a, b) => new Date(a.due_date || '').getTime() - new Date(b.due_date || '').getTime());
 
   if (loading) {
     return (
       <div className="space-y-2">
         <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Timeline</h4>
-        {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[4px] animate-pulse" />)}
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-[4px] animate-pulse" />
+        ))}
       </div>
     );
   }
@@ -54,11 +57,15 @@ export default function TimelineView({ projectId }: { projectId: string }) {
                   )}
                 </div>
                 <div className="ml-2">
-                  <p className={`text-xs font-medium ${m.completed ? 'text-[var(--text-tertiary)] line-through' : 'text-[var(--text-primary)]'}`}>
+                  <p
+                    className={`text-xs font-medium ${m.completed ? 'text-[var(--text-tertiary)] line-through' : 'text-[var(--text-primary)]'}`}
+                  >
                     {m.title}
                   </p>
                   {m.due_date && (
-                    <span className={`inline-flex items-center gap-1 text-[10px] ${isPast ? 'text-[#DC2626]' : 'text-[var(--text-tertiary)]'}`}>
+                    <span
+                      className={`inline-flex items-center gap-1 text-[10px] ${isPast ? 'text-[#DC2626]' : 'text-[var(--text-tertiary)]'}`}
+                    >
                       <Calendar size={10} />
                       {m.due_date}
                     </span>

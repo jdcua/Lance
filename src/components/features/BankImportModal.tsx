@@ -8,11 +8,7 @@ import { checkAndNotify } from '../../achievements/notify';
 import { sanitizeInput } from '../../utils/sanitize';
 import { formatCurrency } from '../../utils/format';
 import { celebrationLevel, recordCelebration, celebrationToast } from '../../lib/celebration';
-import {
-  suggestInvoiceMatches,
-  invoiceRemaining,
-  type RowMatch,
-} from '../../utils/reconcile';
+import { suggestInvoiceMatches, invoiceRemaining, type RowMatch } from '../../utils/reconcile';
 import {
   detectBankColumns,
   parseBankRows,
@@ -30,7 +26,9 @@ function detectedColumnsLabel(mapping: BankColumnMap): string {
     mapping.amount && `amount: ${mapping.amount}`,
     mapping.debit && `out: ${mapping.debit}`,
     mapping.credit && `in: ${mapping.credit}`,
-  ].filter(Boolean).join(' · ');
+  ]
+    .filter(Boolean)
+    .join(' · ');
 }
 
 function ImportSummaryText({
@@ -48,13 +46,21 @@ function ImportSummaryText({
     <p className="text-sm text-[var(--text-secondary)]">
       Found <strong className="text-[var(--text-primary)]">{rowCount}</strong> expenses to import
       {duplicates > 0 && (
-        <span className="text-[var(--text-tertiary)]"> ({duplicates} already imported, skipped)</span>
+        <span className="text-[var(--text-tertiary)]">
+          {' '}
+          ({duplicates} already imported, skipped)
+        </span>
       )}
       {income > 0 && (
-        <span className="text-[var(--text-tertiary)]">. {income} incoming row{income === 1 ? '' : 's'} below — match them to invoices.</span>
+        <span className="text-[var(--text-tertiary)]">
+          . {income} incoming row{income === 1 ? '' : 's'} below — match them to invoices.
+        </span>
       )}
       {skipped > 0 && (
-        <span className="text-[var(--text-tertiary)]"> {skipped} unreadable row{skipped === 1 ? '' : 's'} skipped.</span>
+        <span className="text-[var(--text-tertiary)]">
+          {' '}
+          {skipped} unreadable row{skipped === 1 ? '' : 's'} skipped.
+        </span>
       )}
     </p>
   );
@@ -85,7 +91,10 @@ function MatchRow({
         <p className="text-[var(--text-tertiary)]">
           {match.row.date} · {formatCurrency(match.row.amount)}
           {inv && top && (
-            <> → {inv.invoice_number} ({top.confidence})</>
+            <>
+              {' '}
+              → {inv.invoice_number} ({top.confidence})
+            </>
           )}
           {!inv && ' · no open invoice matches'}
         </p>
@@ -121,9 +130,15 @@ function MatchRow({
  */
 export default function BankImportModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const {
-    expenses, addExpense, invoices, payments, clients,
-    createPayment, deletePayment, updateInvoice,
-    pendingFollowUps, updateFollowUpStatus,
+    expenses,
+    addExpense,
+    invoices,
+    payments,
+    clients,
+    createPayment,
+    deletePayment,
+    updateInvoice,
+    updateFollowUpStatus,
   } = useStore();
   const addToast = useToasts((s) => s.add);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -176,7 +191,10 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
         setStep(1);
         return;
       }
-      const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[sheetName], { defval: '' });
+      const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(
+        workbook.Sheets[sheetName],
+        { defval: '' },
+      );
       if (jsonData.length === 0) {
         addToast('No data rows found', 'error');
         setStep(1);
@@ -202,7 +220,9 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
       const dupes = fresh.filter((r) =>
         existing.has(expenseFingerprint(r.date, r.amount, r.description)),
       ).length;
-      setRows(fresh.filter((r) => !existing.has(expenseFingerprint(r.date, r.amount, r.description))));
+      setRows(
+        fresh.filter((r) => !existing.has(expenseFingerprint(r.date, r.amount, r.description))),
+      );
       setDuplicates(dupes);
       const incoming = parsed.filter((r) => r.direction === 'in');
       setIncomeRows(incoming);
@@ -273,9 +293,7 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
         reference: sanitizeInput(row.description).slice(0, 500),
         notes: 'Matched from bank import',
       });
-      const updated = useStore
-        .getState()
-        .payments.filter((p) => p.invoice_id === inv.id);
+      const updated = useStore.getState().payments.filter((p) => p.invoice_id === inv.id);
       const paidTotal = updated.reduce((s, p) => s + p.amount, 0);
       const fullyPaid = Math.round(paidTotal * 100) >= Math.round(inv.total * 100);
       const next = fullyPaid ? 'paid' : paidTotal > 0 ? 'partial' : inv.status;
@@ -361,12 +379,16 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
             Columns detected
             {detectedColumnsLabel(mapping)}
           </p>
-          <ImportSummaryText rowCount={rows.length} duplicates={duplicates} income={income} skipped={skipped} />
+          <ImportSummaryText
+            rowCount={rows.length}
+            duplicates={duplicates}
+            income={income}
+            skipped={skipped}
+          />
           <div>
-            <label className="form-label">
-              Category for all imported rows
-            </label>
-            <select aria-label="Category"
+            <label className="form-label">Category for all imported rows</label>
+            <select
+              aria-label="Category"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
@@ -380,7 +402,10 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
           </div>
           <div className="space-y-1.5 max-h-[240px] overflow-y-auto">
             {rows.slice(0, 30).map((r, i) => (
-              <div key={i} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
+              <div
+                key={i}
+                className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
+              >
                 <span className="text-[var(--text-primary)] truncate">{r.description}</span>
                 <span className="text-[var(--text-secondary)] flex-shrink-0 ml-2">
                   {r.date} · {Math.abs(r.amount).toFixed(2)}
@@ -388,7 +413,9 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
               </div>
             ))}
             {rows.length > 30 && (
-              <p className="text-xs text-[var(--text-tertiary)] text-center">+ {rows.length - 30} more</p>
+              <p className="text-xs text-[var(--text-tertiary)] text-center">
+                + {rows.length - 30} more
+              </p>
             )}
           </div>
           <div className="flex justify-between pt-2">
@@ -396,7 +423,13 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
               Back
             </Button>
             <Button onClick={handleImport} size="sm" disabled={importing || rows.length === 0}>
-              {importing ? 'Importing...' : <>Import {rows.length} expenses <ArrowRight size={14} /></>}
+              {importing ? (
+                'Importing...'
+              ) : (
+                <>
+                  Import {rows.length} expenses <ArrowRight size={14} />
+                </>
+              )}
             </Button>
           </div>
           {matches.length > 0 && (
@@ -408,8 +441,8 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
                 </p>
               </div>
               <p className="text-[11px] text-[var(--text-tertiary)] mb-2">
-                Confirm each one — recording creates the real payment with the invoice's
-                remaining balance, never the row alone.
+                Confirm each one — recording creates the real payment with the invoice's remaining
+                balance, never the row alone.
               </p>
               <div className="space-y-1.5 max-h-[220px] overflow-y-auto">
                 {matches.map((m, i) => {
@@ -441,7 +474,9 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
           <p className="text-sm text-[var(--text-primary)] font-medium">
             Imported {imported} expense{imported === 1 ? '' : 's'}
           </p>
-          <p className="text-xs text-[var(--text-tertiary)]">Recategorize anytime from the expenses list.</p>
+          <p className="text-xs text-[var(--text-tertiary)]">
+            Recategorize anytime from the expenses list.
+          </p>
           <Button onClick={handleClose} size="sm">
             Done
           </Button>

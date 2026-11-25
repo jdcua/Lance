@@ -10,10 +10,12 @@ const icons = {
 };
 
 const colors = {
-  success: 'bg-[var(--success-bg)] text-[var(--success-ink,var(--success))] border-[var(--success)]/20',
+  success:
+    'bg-[var(--success-bg)] text-[var(--success-ink,var(--success))] border-[var(--success)]/20',
   error: 'bg-[var(--danger-bg)] text-[var(--danger)] border-[var(--danger)]/20',
   info: 'bg-[var(--info-bg)] text-[var(--info-ink,var(--info))] border-[var(--info)]/20',
-  warning: 'bg-[var(--medium-conf-bg)] text-[var(--medium-conf-text)] border-[var(--medium-conf-text)]/20',
+  warning:
+    'bg-[var(--medium-conf-bg)] text-[var(--medium-conf-text)] border-[var(--medium-conf-text)]/20',
   unlock: 'bg-[var(--accent)] text-[var(--accent-on)] border-[var(--accent)]',
 };
 
@@ -37,7 +39,11 @@ export default function ToastContainer() {
               return <Icon size={16} className="flex-shrink-0" />;
             })()}
             <span className="flex-1 text-[var(--text-primary)]">{toast.message}</span>
-            <button onClick={() => remove(toast.id)} aria-label="Dismiss notification" className="opacity-50 hover:opacity-100">
+            <button
+              onClick={() => remove(toast.id)}
+              aria-label="Dismiss notification"
+              className="opacity-50 hover:opacity-100"
+            >
               <X size={14} />
             </button>
           </div>
@@ -46,7 +52,10 @@ export default function ToastContainer() {
               {toast.actions.map((action) => (
                 <button
                   key={action.label}
-                  onClick={() => { remove(toast.id); action.onClick(); }}
+                  onClick={() => {
+                    remove(toast.id);
+                    action.onClick();
+                  }}
                   className="px-3 py-1 rounded-[4px] border border-current/20 hover:bg-current/10 text-xs font-medium"
                 >
                   {action.label}

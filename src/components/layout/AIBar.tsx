@@ -31,11 +31,15 @@ export default function AIBar() {
     setExpanded(false);
     if (!aiEnabled) return;
     if (prompt) {
-      queryLocalAI(prompt).then((result) => {
-        if (result) setInsight(result);
-      }).catch(() => {});
+      queryLocalAI(prompt)
+        .then((result) => {
+          if (result) setInsight(result);
+        })
+        .catch(() => {});
     } else {
-      setInsight('Tip: Use \u2318K to search, \u2318N to create new items, and \u23181-8 to navigate between sections.');
+      setInsight(
+        'Tip: Use \u2318K to search, \u2318N to create new items, and \u23181-8 to navigate between sections.',
+      );
     }
   }, [prompt, location.pathname, aiEnabled]);
 
@@ -53,14 +57,17 @@ export default function AIBar() {
             onClick={() => setExpanded(!expanded)}
             className="flex items-center gap-1 w-full text-left"
           >
-            <span className={`text-xs text-[var(--text-primary)] leading-relaxed ${expanded ? '' : 'truncate'}`}>
+            <span
+              className={`text-xs text-[var(--text-primary)] leading-relaxed ${expanded ? '' : 'truncate'}`}
+            >
               {insight}
             </span>
-            {insight.length > 120 && (
-              expanded
-                ? <ChevronUp size={14} className="text-[var(--text-secondary)] flex-shrink-0" />
-                : <ChevronDown size={14} className="text-[var(--text-secondary)] flex-shrink-0" />
-            )}
+            {insight.length > 120 &&
+              (expanded ? (
+                <ChevronUp size={14} className="text-[var(--text-secondary)] flex-shrink-0" />
+              ) : (
+                <ChevronDown size={14} className="text-[var(--text-secondary)] flex-shrink-0" />
+              ))}
           </button>
         </div>
       </div>

@@ -45,14 +45,14 @@ export default function StyleTagSystem({ projectId }: { projectId: string }) {
       const db = await getDb();
       const rows = await db.select<(StyleTag & Record<string, unknown>)[]>(
         'SELECT id, project_id, tag FROM project_style_tags WHERE project_id = ? ORDER BY id ASC',
-        [projectId]
+        [projectId],
       );
       setTags(
         rows.map((r) => ({
           id: r.id as string,
           project_id: r.project_id as string,
           tag: r.tag as string,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[StyleTagSystem] loadTags failed:', e);
@@ -115,9 +115,7 @@ export default function StyleTagSystem({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Style Tags
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Style Tags</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -134,12 +132,7 @@ export default function StyleTagSystem({ projectId }: { projectId: string }) {
         <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
           Style Tags ({tags.length})
         </h4>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => handleAdd(input)}
-          disabled={!input.trim()}
-        >
+        <Button variant="ghost" size="sm" onClick={() => handleAdd(input)} disabled={!input.trim()}>
           <Plus size={12} /> Add
         </Button>
       </div>
@@ -177,7 +170,8 @@ export default function StyleTagSystem({ projectId }: { projectId: string }) {
               className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${getTagColor(t.tag)}`}
             >
               {t.tag}
-              <button aria-label="Close"
+              <button
+                aria-label="Close"
                 onClick={() => handleRemove(t.id)}
                 className="hover:opacity-70"
               >

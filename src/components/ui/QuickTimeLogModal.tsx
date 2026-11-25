@@ -55,7 +55,9 @@ export default function QuickTimeLogModal({ open, onClose }: QuickTimeLogModalPr
       const entry = await addTimeEntry({
         project_id: projectId,
         client_id: clientId,
-        description: description ? sanitizeInput(description).slice(0, MAX_LENGTHS.description) : undefined,
+        description: description
+          ? sanitizeInput(description).slice(0, MAX_LENGTHS.description)
+          : undefined,
         start_time: startTime,
         billable: true,
       });
@@ -91,7 +93,8 @@ export default function QuickTimeLogModal({ open, onClose }: QuickTimeLogModalPr
       <div className="space-y-4">
         <div>
           <label className="form-label">Project</label>
-          <select aria-label="Projectid"
+          <select
+            aria-label="Projectid"
             ref={projectSelectRef}
             value={projectId}
             onChange={(e) => handleProjectChange(e.target.value)}
@@ -99,7 +102,9 @@ export default function QuickTimeLogModal({ open, onClose }: QuickTimeLogModalPr
           >
             <option value="">Select project...</option>
             {activeProjects.map((p) => (
-              <option key={p.id} value={p.id}>{p.title}</option>
+              <option key={p.id} value={p.id}>
+                {p.title}
+              </option>
             ))}
           </select>
         </div>
@@ -111,7 +116,9 @@ export default function QuickTimeLogModal({ open, onClose }: QuickTimeLogModalPr
             onChange={(e) => setDurationMinutes(e.target.value)}
             placeholder="e.g. 30"
             className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-card)]"
-            onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSubmit();
+            }}
           />
         </div>
         <div>
@@ -122,12 +129,23 @@ export default function QuickTimeLogModal({ open, onClose }: QuickTimeLogModalPr
             onChange={(e) => setDescription(e.target.value)}
             placeholder="What did you work on?"
             className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-card)]"
-            onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSubmit();
+            }}
           />
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="secondary" onClick={onClose} size="sm">Cancel</Button>
-          <Button onClick={handleSubmit} loading={saving} disabled={!projectId || !clientId || !durationMinutes} size="sm">Log</Button>
+          <Button variant="secondary" onClick={onClose} size="sm">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            loading={saving}
+            disabled={!projectId || !clientId || !durationMinutes}
+            size="sm"
+          >
+            Log
+          </Button>
         </div>
       </div>
     </Modal>

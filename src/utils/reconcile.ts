@@ -43,7 +43,10 @@ export function invoiceRemaining(inv: Invoice, payments: InvoicePayment[]): numb
 
 function nameHits(description: string, clientName: string | undefined): boolean {
   if (!clientName) return false;
-  const words = clientName.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 2);
+  const words = clientName
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w.length > 2);
   const desc = description.toLowerCase();
   return words.some((w) => desc.includes(w));
 }
@@ -56,7 +59,8 @@ export function suggestInvoiceMatches(
   windowDays: number = DEFAULT_WINDOW_DAYS,
 ): RowMatch[] {
   const open = invoices.filter(
-    (i) => (i.status === 'sent' || i.status === 'partial' || i.status === 'overdue') &&
+    (i) =>
+      (i.status === 'sent' || i.status === 'partial' || i.status === 'overdue') &&
       invoiceRemaining(i, payments) > 0.005,
   );
   return incomeRows

@@ -96,7 +96,10 @@ and `prefers-reduced-transparency` always win.
 
 - Cyclomatic complexity must be **<= 15 per function** (ESLint error); new code
   targets <= 10. Cognitive complexity must be <=15 (TS, ESLint error) and <=20
-  (Rust, Clippy error). Run `npm run complexity` to verify no offenders.
+  (Rust policy enforced in CI via `excessive_nesting`, `too_many_lines`,
+  `too_many_arguments` and `type_complexity` — Clippy now discourages
+  `cognitive_complexity` as a measurement lint). Run `npm run complexity`
+  (or `npm run complexity -- 10 --strict`) to verify no offenders.
 - Extract pure helpers or small components rather than adding branches. Never
   change behavior to satisfy a metric. Files stay under ~400 lines; functions
   under ~60; parameters <= 4.
@@ -110,8 +113,9 @@ and `prefers-reduced-transparency` always win.
   or `components/`.
 - Only `src/store/index.ts` may call zustand `create()`; `src/db/index.ts`
   must not import itself.
-- New features go in `src/features/<domain>/` with colocated tests; do not
-  bulk-move existing files.
+- New feature code goes in `src/components/features/` with colocated tests;
+  do not bulk-move existing files. (`src/features/<domain>/` was a dead rule —
+  the directory does not exist.)
 
 ### Testing
 
@@ -126,11 +130,14 @@ and `prefers-reduced-transparency` always win.
 ## 7. Before every commit
 
 ```
-npm run doctor         # check local toolchain
-npm run verify         # typecheck + lint + test + build + OSS audit
+npm run doctor         # check local toolchain (Node/npm/Rust/CLI, not OS libs)
+npm run verify         # typecheck + lint + test + build + audit:oss + licenses + boundaries
 ```
 
-`npm run verify` runs `typecheck`, `lint`, `test`, `build` and `audit:oss`; all must pass.
+`npm run verify` runs `typecheck`, `lint`, `test`, `build`, `audit:oss`,
+`check:licenses` and `check:boundaries -- --strict`; all must pass. Add
+`npm run complexity -- --strict` to catch complexity regressions; all three
+gates also run in CI.
 When Rust is touched also run `cargo test --lib`, `cargo fmt --check` and the
 Clippy quality gate. A characterization test comes before legacy refactors.
 See `CONTRIBUTING.md` for the PR workflow and `docs/ROADMAP.md` for places

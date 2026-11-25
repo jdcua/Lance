@@ -12,8 +12,6 @@ import type { DunningTone } from '../../utils/followUpTemplates';
 
 /** Shared bits for the Invoices split (wave3/4). statusBadge + formatMinutes moved verbatim. */
 
-
-
 /** Shared bits for the Invoices split (wave3/4). statusBadge + formatMinutes moved verbatim. */
 
 export const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {

@@ -1,5 +1,7 @@
 # Lance
 
+[![CI](https://github.com/jdcua/Lance/actions/workflows/ci.yml/badge.svg)](https://github.com/jdcua/Lance/actions/workflows/ci.yml)
+
 Lance is an offline-first desktop app that runs your entire freelance business on your own machine.
 
 ## What it does
@@ -12,7 +14,10 @@ Lance is an offline-first desktop app that runs your entire freelance business o
 
 ## How it works
 
-The desktop shell is Tauri 2 with a Rust backend; the UI is React 18 and TypeScript built with Vite. All business data lives in SQLite on the user's machine, accessed through Tauri commands and a single Zustand store. Profession presets are chosen during onboarding; their trackers are registered in a single registry and rendered by one generic component. There is no account and no server: a small activity log stays on the device and never makes a network call. The app reaches the network only to check for signed updates and fetch public release notes.
+The desktop shell is Tauri 2 with a Rust backend; the UI is React 18 and TypeScript built with Vite. All business data lives in SQLite on the user's machine, accessed through Tauri commands and a single Zustand store. Six onboarding presets choose which trackers appear; those trackers are resolved from a feature-component registry, and one (`BuildLog`) is rendered by the generic `RecordTracker` so far. There is no account and no server: a small activity log stays on the device and never makes a network call. The app reaches the network only to check for signed updates and fetch public release notes.
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the module map and
+[STANDARDS.md](STANDARDS.md) for the code quality bar.
 
 ## Quick start
 

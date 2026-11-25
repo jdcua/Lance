@@ -4,7 +4,14 @@
  */
 import PhaseTracker from './PhaseTracker';
 
-const ANALYSIS_PHASES = ['Data Acquisition', 'Cleaning', 'Exploration', 'Analysis', 'Visualization', 'Reporting'];
+const ANALYSIS_PHASES = [
+  'Data Acquisition',
+  'Cleaning',
+  'Exploration',
+  'Analysis',
+  'Visualization',
+  'Reporting',
+];
 
 export default function AnalysisPhaseTracker({ projectId }: { projectId: string }) {
   return <PhaseTracker projectId={projectId} defaultPhases={ANALYSIS_PHASES} />;

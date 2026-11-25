@@ -3,8 +3,16 @@ import { DEFAULT_CURRENCY } from '../lib/constants';
 import { useSearchParams } from 'react-router-dom';
 import { useStore } from '../store';
 import type {
-  Client, Communication, Contract, Invoice, InvoicePayment, MetricDefinition, MetricTemplate,
-  MetricValue, PortalActivity, Proposal,
+  Client,
+  Communication,
+  Contract,
+  Invoice,
+  InvoicePayment,
+  MetricDefinition,
+  MetricTemplate,
+  MetricValue,
+  PortalActivity,
+  Proposal,
 } from '../types';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
@@ -17,7 +25,28 @@ import Badge from '../components/ui/Badge';
 import { commands } from '../lib/commands';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import Sparkline from '../components/ui/Sparkline';
-import { Plus, Pencil, Trash2, Mail, Phone, Building2, MessageSquare, PhoneCall, MailOpen, Users, X, Check, FileText, FolderKanban, Receipt, Clock, Search, Star, Copy, Upload } from 'lucide-react';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Mail,
+  Phone,
+  Building2,
+  MessageSquare,
+  PhoneCall,
+  MailOpen,
+  Users,
+  X,
+  Check,
+  FileText,
+  FolderKanban,
+  Receipt,
+  Clock,
+  Search,
+  Star,
+  Copy,
+  Upload,
+} from 'lucide-react';
 import { useToasts } from '../store/toastStore';
 import ArchetypeFeatureTabs from '../components/features/ArchetypeFeatureTabs';
 import ClientImportModal from '../components/ui/ClientImportModal';
@@ -169,7 +198,9 @@ function detectCountry(): string {
       const match = navigator.languages?.find((l) => l.includes('-'));
       if (match) return match.split('-')[1].toUpperCase();
     }
-  } catch { /* non-critical */ }
+  } catch {
+    /* non-critical */
+  }
   return 'US';
 }
 
@@ -185,15 +216,17 @@ function paymentBehaviorTone(risk: PaymentBehavior['risk']): string {
 
 function paymentBehaviorLine(behavior: PaymentBehavior): string {
   if (behavior.paidCount === 0 && behavior.openOverdue === 0) return 'No payment history yet.';
-  return [
-    behavior.avgDaysLate != null
-      ? `averages ${behavior.avgDaysLate} days late across ${behavior.paidCount}`
-      : null,
-    behavior.onTimePct != null ? `${behavior.onTimePct}% on time` : null,
-    behavior.openOverdue > 0 ? `${behavior.openOverdue} overdue now` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ') + '.';
+  return (
+    [
+      behavior.avgDaysLate != null
+        ? `averages ${behavior.avgDaysLate} days late across ${behavior.paidCount}`
+        : null,
+      behavior.onTimePct != null ? `${behavior.onTimePct}% on time` : null,
+      behavior.openOverdue > 0 ? `${behavior.openOverdue} overdue now` : null,
+    ]
+      .filter(Boolean)
+      .join(' · ') + '.'
+  );
 }
 
 function PaymentBehaviorLine({
@@ -228,20 +261,31 @@ function timelineFromEntities(
   const items: TimelineItem[] = [];
   for (const p of proposals.filter((x) => x.client_id === selectedId)) {
     items.push({
-      id: `proposal-${p.id}`, kind: 'proposal', date: p.sent_at || p.created_at,
-      title: p.title, sub: `Proposal · ${p.status}`, to: '/proposals',
+      id: `proposal-${p.id}`,
+      kind: 'proposal',
+      date: p.sent_at || p.created_at,
+      title: p.title,
+      sub: `Proposal · ${p.status}`,
+      to: '/proposals',
     });
   }
   for (const c of contracts.filter((x) => x.client_id === selectedId)) {
     items.push({
-      id: `contract-${c.id}`, kind: 'contract', date: c.signed_at || c.created_at,
-      title: c.title, sub: `Contract · ${c.status}`, to: '/contracts',
+      id: `contract-${c.id}`,
+      kind: 'contract',
+      date: c.signed_at || c.created_at,
+      title: c.title,
+      sub: `Contract · ${c.status}`,
+      to: '/contracts',
     });
   }
   for (const i of invoices.filter((x) => x.client_id === selectedId)) {
     items.push({
-      id: `invoice-${i.id}`, kind: 'invoice', date: i.created_at,
-      title: `Invoice ${i.invoice_number}`, sub: `${formatCurrency(i.total, currency)} · ${i.status}`,
+      id: `invoice-${i.id}`,
+      kind: 'invoice',
+      date: i.created_at,
+      title: `Invoice ${i.invoice_number}`,
+      sub: `${formatCurrency(i.total, currency)} · ${i.status}`,
       to: '/invoices',
     });
   }
@@ -259,9 +303,12 @@ function timelineFromPayments(
     const inv = invoices.find((x) => x.id === pay.invoice_id);
     if (!inv || inv.client_id !== selectedId) continue;
     items.push({
-      id: `payment-${pay.id}`, kind: 'payment', date: pay.payment_date,
+      id: `payment-${pay.id}`,
+      kind: 'payment',
+      date: pay.payment_date,
       title: `${formatCurrency(pay.amount, currency)} payment`,
-      sub: `${inv.invoice_number} · ${pay.payment_method}`, to: '/invoices',
+      sub: `${inv.invoice_number} · ${pay.payment_method}`,
+      to: '/invoices',
     });
   }
   return items;
@@ -274,8 +321,11 @@ function timelineFromCommunications(
   const items: TimelineItem[] = [];
   for (const m of communications.filter((x) => x.client_id === selectedId)) {
     items.push({
-      id: `message-${m.id}`, kind: 'message', date: m.date || m.created_at,
-      title: m.type.charAt(0).toUpperCase() + m.type.slice(1), detail: m.summary,
+      id: `message-${m.id}`,
+      kind: 'message',
+      date: m.date || m.created_at,
+      title: m.type.charAt(0).toUpperCase() + m.type.slice(1),
+      detail: m.summary,
     });
   }
   return items;
@@ -297,8 +347,11 @@ function timelineFromPortalActivity(
           : undefined;
     if (!entity || entity.client_id !== selectedId) continue;
     items.push({
-      id: `portal-${a.token}-${a.timestamp}`, kind: 'portal', date: a.timestamp,
-      title: a.activity, sub: entity.title,
+      id: `portal-${a.token}-${a.timestamp}`,
+      kind: 'portal',
+      date: a.timestamp,
+      title: a.activity,
+      sub: entity.title,
       to: a.entity_type === 'proposal' ? '/proposals' : '/contracts',
     });
   }
@@ -315,8 +368,17 @@ type ClientFormState = {
 };
 
 function ClientFormModal({
-  open, onClose, editing, form, setForm, formErrors, setFormErrors, dialCode, profileCurrency,
-  saving, onSave,
+  open,
+  onClose,
+  editing,
+  form,
+  setForm,
+  formErrors,
+  setFormErrors,
+  dialCode,
+  profileCurrency,
+  saving,
+  onSave,
 }: {
   open: boolean;
   onClose: () => void;
@@ -334,7 +396,9 @@ function ClientFormModal({
     <Modal open={open} onClose={onClose} title={editing ? 'Edit Client' : 'New Client'} size="md">
       <div className="space-y-4">
         <div>
-          <label htmlFor="client-name" className="form-label">Name *</label>
+          <label htmlFor="client-name" className="form-label">
+            Name *
+          </label>
           <input
             id="client-name"
             type="text"
@@ -345,30 +409,35 @@ function ClientFormModal({
             className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
             autoFocus
           />
-          {formErrors.name && (
-            <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
-          )}
+          {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="client-email" className="form-label">Email</label>
+            <label htmlFor="client-email" className="form-label">
+              Email
+            </label>
             <input
               id="client-email"
               type="email"
               value={form.email}
-              onChange={(e) => { setForm({ ...form, email: e.target.value }); setFormErrors({}); }}
+              onChange={(e) => {
+                setForm({ ...form, email: e.target.value });
+                setFormErrors({});
+              }}
               placeholder="email@example.com"
               maxLength={MAX_LENGTHS.email}
               className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
             />
-            {formErrors.email && (
-              <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
-            )}
+            {formErrors.email && <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>}
           </div>
           <div>
-            <label htmlFor="client-phone" className="form-label">Phone</label>
+            <label htmlFor="client-phone" className="form-label">
+              Phone
+            </label>
             <div className="flex items-center gap-0">
-              <span className="px-3 py-2 text-sm border border-r-0 border-[var(--border-color)] rounded-l-[8px] text-[var(--text-tertiary)] bg-[var(--bg-secondary)] whitespace-nowrap">{dialCode}</span>
+              <span className="px-3 py-2 text-sm border border-r-0 border-[var(--border-color)] rounded-l-[8px] text-[var(--text-tertiary)] bg-[var(--bg-secondary)] whitespace-nowrap">
+                {dialCode}
+              </span>
               <input
                 id="client-phone"
                 type="text"
@@ -382,7 +451,9 @@ function ClientFormModal({
           </div>
         </div>
         <div>
-          <label htmlFor="client-company" className="form-label">Company</label>
+          <label htmlFor="client-company" className="form-label">
+            Company
+          </label>
           <input
             id="client-company"
             type="text"
@@ -394,22 +465,32 @@ function ClientFormModal({
           />
         </div>
         <div>
-          <label htmlFor="client-currency" className="form-label">Preferred currency</label>
-          <select id="client-currency"
+          <label htmlFor="client-currency" className="form-label">
+            Preferred currency
+          </label>
+          <select
+            id="client-currency"
             value={form.preferred_currency}
             onChange={(e) => setForm({ ...form, preferred_currency: e.target.value })}
             className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20"
           >
             <option value="">Use profile default ({profileCurrency || DEFAULT_CURRENCY})</option>
             {[...CURRENCIES].map((c) => (
-              <option key={c} value={c}>{getCurrencySymbol(c)} {c}</option>
+              <option key={c} value={c}>
+                {getCurrencySymbol(c)} {c}
+              </option>
             ))}
           </select>
-          <p className="text-[10px] text-[var(--text-tertiary)] mt-1">Used when creating invoices for this client</p>
+          <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
+            Used when creating invoices for this client
+          </p>
         </div>
         <div>
-          <label htmlFor="client-notes" className="form-label">Notes</label>
-          <textarea id="client-notes"
+          <label htmlFor="client-notes" className="form-label">
+            Notes
+          </label>
+          <textarea
+            id="client-notes"
             value={form.notes}
             onChange={(e) => setForm({ ...form, notes: e.target.value })}
             placeholder="Any notes about this client..."
@@ -434,9 +515,20 @@ function ClientFormModal({
 type MetricValueFormState = { value: string; period: string; notes: string };
 
 function MetricDefinitionCard({
-  def, values, currency, selectedId, metricDeleteConfirm, setMetricDeleteConfirm,
-  showValueForm, setShowValueForm, valueForm, setValueForm, onLogValue, onEditMetric,
-  onRemoveDef, onRemoveValue,
+  def,
+  values,
+  currency,
+  selectedId,
+  metricDeleteConfirm,
+  setMetricDeleteConfirm,
+  showValueForm,
+  setShowValueForm,
+  valueForm,
+  setValueForm,
+  onLogValue,
+  onEditMetric,
+  onRemoveDef,
+  onRemoveValue,
 }: {
   def: MetricDefinition;
   values: MetricValue[];
@@ -447,7 +539,9 @@ function MetricDefinitionCard({
   showValueForm: boolean;
   setShowValueForm: (value: string | null) => void;
   valueForm: MetricValueFormState;
-  setValueForm: (value: MetricValueFormState | ((prev: MetricValueFormState) => MetricValueFormState)) => void;
+  setValueForm: (
+    value: MetricValueFormState | ((prev: MetricValueFormState) => MetricValueFormState),
+  ) => void;
   onLogValue: (definitionId: string) => void;
   onEditMetric: (def: MetricDefinition) => void;
   onRemoveDef: (id: string, clientId: string) => Promise<void>;
@@ -463,13 +557,12 @@ function MetricDefinitionCard({
           {def.unit_label && (
             <span className="text-[10px] text-[var(--text-tertiary)]">{def.unit_label}</span>
           )}
-          {def.is_headline && (
-            <Star size={12} className="text-[var(--accent-ink,var(--accent))]" />
-          )}
+          {def.is_headline && <Star size={12} className="text-[var(--accent-ink,var(--accent))]" />}
           <Badge variant="default">{def.metric_type}</Badge>
         </div>
         <div className="flex items-center gap-1">
-          <button aria-label="Edit clients"
+          <button
+            aria-label="Edit clients"
             onClick={() => onEditMetric(def)}
             className="p-1 rounded-xs text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
           >
@@ -478,7 +571,10 @@ function MetricDefinitionCard({
           {metricDeleteConfirm === def.id ? (
             <>
               <button
-                onClick={async () => { await onRemoveDef(def.id, selectedId); setMetricDeleteConfirm(null); }}
+                onClick={async () => {
+                  await onRemoveDef(def.id, selectedId);
+                  setMetricDeleteConfirm(null);
+                }}
                 aria-label="Confirm delete metric"
                 className="p-1 rounded-xs text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
               >
@@ -493,7 +589,8 @@ function MetricDefinitionCard({
               </button>
             </>
           ) : (
-            <button aria-label="Delete clients"
+            <button
+              aria-label="Delete clients"
               onClick={() => setMetricDeleteConfirm(def.id)}
               className="p-1 rounded-xs text-[var(--text-tertiary)] hover:text-[var(--danger)] hover:bg-[var(--danger-bg)] transition-colors"
             >
@@ -522,14 +619,24 @@ function MetricDefinitionCard({
           </summary>
           <div className="mt-1.5 space-y-1">
             {values.map((v) => (
-              <div key={v.id} className="flex items-center justify-between px-2 py-1 rounded-xs hover:bg-[var(--bg-secondary)] text-xs group/val">
+              <div
+                key={v.id}
+                className="flex items-center justify-between px-2 py-1 rounded-xs hover:bg-[var(--bg-secondary)] text-xs group/val"
+              >
                 <span className="text-[var(--text-secondary)] tabular-nums">
-                  {v.value}{def.unit_label ? ` ${def.unit_label}` : ''} · <span className="text-[var(--text-tertiary)]">{v.period || relativeDate(v.created_at)}</span>
+                  {v.value}
+                  {def.unit_label ? ` ${def.unit_label}` : ''} ·{' '}
+                  <span className="text-[var(--text-tertiary)]">
+                    {v.period || relativeDate(v.created_at)}
+                  </span>
                 </span>
                 {metricDeleteConfirm === `val:${v.id}` ? (
                   <span className="flex items-center gap-1">
                     <button
-                      onClick={async () => { await onRemoveValue(v.id, def.id); setMetricDeleteConfirm(null); }}
+                      onClick={async () => {
+                        await onRemoveValue(v.id, def.id);
+                        setMetricDeleteConfirm(null);
+                      }}
                       aria-label={`Confirm delete value ${v.value}`}
                       className="text-[var(--danger)] hover:text-[var(--danger-hover)]"
                     >
@@ -566,10 +673,16 @@ function MetricDefinitionCard({
               type={def.metric_type === 'text' ? 'text' : 'number'}
               min={def.metric_type === 'text' ? undefined : 0}
               value={valueForm.value}
-              onChange={(e) => { const v = e.target.value; if (def.metric_type !== 'text' && Number(v) < 0) return; setValueForm({ ...valueForm, value: v }); }}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (def.metric_type !== 'text' && Number(v) < 0) return;
+                setValueForm({ ...valueForm, value: v });
+              }}
               placeholder={`Value${def.unit_label ? ` (${def.unit_label})` : ''}`}
               className="w-full px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
-              onKeyDown={(e) => { if (e.key === 'Enter') onLogValue(def.id); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') onLogValue(def.id);
+              }}
               autoFocus
             />
           </div>
@@ -581,10 +694,14 @@ function MetricDefinitionCard({
               className="w-full px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
             />
           </div>
-          <Button size="sm" onClick={() => onLogValue(def.id)}>Log</Button>
+          <Button size="sm" onClick={() => onLogValue(def.id)}>
+            Log
+          </Button>
           <button
             aria-label="Close"
-            onClick={() => setShowValueForm(null)} className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
+            onClick={() => setShowValueForm(null)}
+            className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+          >
             <X size={14} />
           </button>
         </div>
@@ -621,7 +738,11 @@ function formatMetricValue(
 type ClientTab = 'overview' | 'metrics' | 'timeline';
 
 function ClientDetailHeader({
-  client, activeTab, setActiveTab, onEdit, onDelete,
+  client,
+  activeTab,
+  setActiveTab,
+  onEdit,
+  onDelete,
 }: {
   client: Client;
   activeTab: ClientTab;
@@ -638,13 +759,22 @@ function ClientDetailHeader({
           </SharedView>
           <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)] mt-1">
             {client.email && (
-              <span className="flex items-center gap-1"><Mail size={12} />{client.email}</span>
+              <span className="flex items-center gap-1">
+                <Mail size={12} />
+                {client.email}
+              </span>
             )}
             {client.phone && (
-              <span className="flex items-center gap-1"><Phone size={12} />{client.phone}</span>
+              <span className="flex items-center gap-1">
+                <Phone size={12} />
+                {client.phone}
+              </span>
             )}
             {client.company && (
-              <span className="flex items-center gap-1"><Building2 size={12} />{client.company}</span>
+              <span className="flex items-center gap-1">
+                <Building2 size={12} />
+                {client.company}
+              </span>
             )}
           </div>
         </div>
@@ -668,9 +798,7 @@ function ClientDetailHeader({
         </div>
       </div>
 
-      {client.notes && (
-        <p className="text-xs text-[var(--text-tertiary)] mb-4">{client.notes}</p>
-      )}
+      {client.notes && <p className="text-xs text-[var(--text-tertiary)] mb-4">{client.notes}</p>}
 
       {/* Tabs */}
       <div className="flex items-center gap-1 mb-4 border-b border-[var(--border-color)]">
@@ -704,7 +832,11 @@ type ClientOverview = {
 };
 
 function ClientOverviewCard({
-  overview, currency, selectedId, invoices, payments,
+  overview,
+  currency,
+  selectedId,
+  invoices,
+  payments,
 }: {
   overview: ClientOverview;
   currency?: string;
@@ -721,21 +853,27 @@ function ClientOverviewCard({
             <FolderKanban size={13} className="text-[var(--text-tertiary)]" />
             <span className="text-xs text-[var(--text-secondary)]">Projects</span>
           </div>
-          <span className="text-sm font-semibold text-[var(--text-primary)]">{overview.projectCount}</span>
+          <span className="text-sm font-semibold text-[var(--text-primary)]">
+            {overview.projectCount}
+          </span>
         </div>
         <div>
           <div className="flex items-center gap-1.5 mb-0.5">
             <FileText size={13} className="text-[var(--text-tertiary)]" />
             <span className="text-xs text-[var(--text-secondary)]">Proposals</span>
           </div>
-          <span className="text-sm font-semibold text-[var(--text-primary)]">{overview.proposalCount}</span>
+          <span className="text-sm font-semibold text-[var(--text-primary)]">
+            {overview.proposalCount}
+          </span>
         </div>
         <div>
           <div className="flex items-center gap-1.5 mb-0.5">
             <Receipt size={13} className="text-[var(--text-tertiary)]" />
             <span className="text-xs text-[var(--text-secondary)]">Lifetime</span>
           </div>
-          <span className="text-sm font-semibold text-[var(--text-primary)]">{formatCurrency(overview.lifetime, currency)}</span>
+          <span className="text-sm font-semibold text-[var(--text-primary)]">
+            {formatCurrency(overview.lifetime, currency)}
+          </span>
         </div>
         <div>
           <div className="flex items-center gap-1.5 mb-0.5">
@@ -743,12 +881,16 @@ function ClientOverviewCard({
             <span className="text-xs text-[var(--text-secondary)]">Last contact</span>
           </div>
           <span className="text-xs text-[var(--text-primary)]">
-            {overview.lastComm ? relativeDate(overview.lastComm.created_at || overview.lastComm.date) : 'No interactions'}
+            {overview.lastComm
+              ? relativeDate(overview.lastComm.created_at || overview.lastComm.date)
+              : 'No interactions'}
           </span>
         </div>
         {overview.outstanding > 0 && (
           <div className="col-span-4 mt-1 pt-2 border-t border-[var(--border-color)]">
-            <span className="text-xs text-[var(--warning-text)]">{formatCurrency(overview.outstanding, currency)} outstanding</span>
+            <span className="text-xs text-[var(--warning-text)]">
+              {formatCurrency(overview.outstanding, currency)} outstanding
+            </span>
           </div>
         )}
         <PaymentBehaviorLine clientId={selectedId} invoices={invoices} payments={payments} />
@@ -758,8 +900,16 @@ function ClientOverviewCard({
 }
 
 function MetricTemplates({
-  showPrompt, setShowPrompt, setShowModal, templates, metricDefs, selectedId,
-  metricDeleteConfirm, setMetricDeleteConfirm, onApply, onRemove,
+  showPrompt,
+  setShowPrompt,
+  setShowModal,
+  templates,
+  metricDefs,
+  selectedId,
+  metricDeleteConfirm,
+  setMetricDeleteConfirm,
+  onApply,
+  onRemove,
 }: {
   showPrompt: boolean;
   setShowPrompt: (value: boolean) => void;
@@ -776,17 +926,24 @@ function MetricTemplates({
     <>
       {showPrompt && (
         <div className="px-4 py-3 rounded-[10px] bg-[var(--accent-bg)] border border-[var(--accent)]/20 flex items-center justify-between">
-          <p className="text-xs text-[var(--text-primary)]">Save this metric set as a template for future clients?</p>
+          <p className="text-xs text-[var(--text-primary)]">
+            Save this metric set as a template for future clients?
+          </p>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => { setShowPrompt(false); setShowModal(true); }}
+              onClick={() => {
+                setShowPrompt(false);
+                setShowModal(true);
+              }}
               className="text-xs text-[var(--accent-ink,var(--accent))] font-medium hover:underline"
             >
               Save template
             </button>
             <button
               aria-label="Close"
-              onClick={() => setShowPrompt(false)} className="p-0.5 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
+              onClick={() => setShowPrompt(false)}
+              className="p-0.5 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+            >
               <X size={14} />
             </button>
           </div>
@@ -794,55 +951,56 @@ function MetricTemplates({
       )}
 
       {/* Templates */}
-      {templates.length > 0 && metricDefs.filter((d) => d.client_id === selectedId).length === 0 && (
-        <Card>
-          <h3 className="text-xs font-semibold text-[var(--text-secondary)] mb-3">
-            Apply a template
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {templates.map((tpl) => (
-              <span
-                key={tpl.id}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-[var(--border-color)] text-xs text-[var(--text-secondary)] hover:border-[var(--accent)]/30 hover:text-[var(--text-primary)] transition-colors bg-[var(--bg-secondary)]"
-              >
-                <button
-                  onClick={() => onApply(tpl.name)}
-                  className="flex items-center gap-1.5"
+      {templates.length > 0 &&
+        metricDefs.filter((d) => d.client_id === selectedId).length === 0 && (
+          <Card>
+            <h3 className="text-xs font-semibold text-[var(--text-secondary)] mb-3">
+              Apply a template
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {templates.map((tpl) => (
+                <span
+                  key={tpl.id}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-[var(--border-color)] text-xs text-[var(--text-secondary)] hover:border-[var(--accent)]/30 hover:text-[var(--text-primary)] transition-colors bg-[var(--bg-secondary)]"
                 >
-                  <Copy size={12} />
-                  {tpl.name}
-                </button>
-                {metricDeleteConfirm === `tpl:${tpl.id}` ? (
-                  <>
+                  <button onClick={() => onApply(tpl.name)} className="flex items-center gap-1.5">
+                    <Copy size={12} />
+                    {tpl.name}
+                  </button>
+                  {metricDeleteConfirm === `tpl:${tpl.id}` ? (
+                    <>
+                      <button
+                        onClick={async () => {
+                          await onRemove(tpl.id);
+                          setMetricDeleteConfirm(null);
+                        }}
+                        aria-label={`Confirm delete template ${tpl.name}`}
+                        className="text-[var(--danger)] hover:text-[var(--danger-hover)]"
+                      >
+                        <Check size={12} />
+                      </button>
+                      <button
+                        onClick={() => setMetricDeleteConfirm(null)}
+                        aria-label="Cancel delete"
+                        className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                      >
+                        <X size={12} />
+                      </button>
+                    </>
+                  ) : (
                     <button
-                      onClick={async () => { await onRemove(tpl.id); setMetricDeleteConfirm(null); }}
-                      aria-label={`Confirm delete template ${tpl.name}`}
-                      className="text-[var(--danger)] hover:text-[var(--danger-hover)]"
-                    >
-                      <Check size={12} />
-                    </button>
-                    <button
-                      onClick={() => setMetricDeleteConfirm(null)}
-                      aria-label="Cancel delete"
-                      className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                      onClick={() => setMetricDeleteConfirm(`tpl:${tpl.id}`)}
+                      aria-label={`Delete template ${tpl.name}`}
+                      className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"
                     >
                       <X size={12} />
                     </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => setMetricDeleteConfirm(`tpl:${tpl.id}`)}
-                    aria-label={`Delete template ${tpl.name}`}
-                    className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"
-                  >
-                    <X size={12} />
-                  </button>
-                )}
-              </span>
-            ))}
-          </div>
-        </Card>
-      )}
+                  )}
+                </span>
+              ))}
+            </div>
+          </Card>
+        )}
     </>
   );
 }
@@ -850,28 +1008,65 @@ function MetricTemplates({
 export default function Clients() {
   const clientsError = useStore((s) => s.errors.clients);
   const {
-    clients, loadClients, addClient, updateClient, removeClient,
-    communications, loadCommunications, addCommunication, updateCommunication, removeCommunication,
-    projects, loadProjects,
-    proposals, loadProposals,
-    invoices, loadInvoices,
-    contracts, loadContracts,
-    payments, loadPayments,
-    portalActivity, loadPortalActivity,
-    profile, loadProfile,
-    metricDefs, loadMetricDefs, addMetricDef, updateMetricDef, removeMetricDef, removeMetricValue,
-    metricValues, loadMetricValues, logMetricValue,
-    metricTemplates, loadMetricTemplates, saveMetricTemplate, applyMetricTemplate, removeMetricTemplate,
+    clients,
+    loadClients,
+    addClient,
+    updateClient,
+    removeClient,
+    communications,
+    loadCommunications,
+    addCommunication,
+    updateCommunication,
+    removeCommunication,
+    projects,
+    loadProjects,
+    proposals,
+    loadProposals,
+    invoices,
+    loadInvoices,
+    contracts,
+    loadContracts,
+    payments,
+    loadPayments,
+    portalActivity,
+    loadPortalActivity,
+    profile,
+    loadProfile,
+    metricDefs,
+    loadMetricDefs,
+    addMetricDef,
+    updateMetricDef,
+    removeMetricDef,
+    removeMetricValue,
+    metricValues,
+    loadMetricValues,
+    logMetricValue,
+    metricTemplates,
+    loadMetricTemplates,
+    saveMetricTemplate,
+    applyMetricTemplate,
+    removeMetricTemplate,
   } = useStore();
   const addToast = useToasts((s) => s.add);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ name: '', email: '', phone: '', company: '', notes: '', preferred_currency: '' });
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    company: '',
+    notes: '',
+    preferred_currency: '',
+  });
   const [formErrors, setFormErrors] = useState<{ email?: string; name?: string }>({});
   const [showLogForm, setShowLogForm] = useState(false);
-  const [logForm, setLogForm] = useState({ type: 'note' as Communication['type'], date: todayLocalISO(), summary: '' });
+  const [logForm, setLogForm] = useState({
+    type: 'note' as Communication['type'],
+    date: todayLocalISO(),
+    summary: '',
+  });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -884,7 +1079,12 @@ export default function Clients() {
   const [activeTab, setActiveTab] = useState<'overview' | 'metrics' | 'timeline'>('overview');
   const [showMetricForm, setShowMetricForm] = useState(false);
   const [editingMetric, setEditingMetric] = useState<MetricDefinition | null>(null);
-  const [metricForm, setMetricForm] = useState({ name: '', metric_type: 'number' as MetricDefinition['metric_type'], unit_label: '', is_headline: false });
+  const [metricForm, setMetricForm] = useState({
+    name: '',
+    metric_type: 'number' as MetricDefinition['metric_type'],
+    unit_label: '',
+    is_headline: false,
+  });
   const [showValueForm, setShowValueForm] = useState<string | null>(null);
   const [valueForm, setValueForm] = useState({ value: '', period: todayLocalISO(), notes: '' });
   const [showTemplatePrompt, setShowTemplatePrompt] = useState(false);
@@ -901,10 +1101,27 @@ export default function Clients() {
   };
 
   useEffect(() => {
-    Promise.all([loadClients(), loadProjects(), loadProposals(), loadInvoices(), loadContracts(), loadPayments(), loadProfile()])
-      .catch(err => addToast(err?.toString?.() || 'Failed to load', 'error'))
+    Promise.all([
+      loadClients(),
+      loadProjects(),
+      loadProposals(),
+      loadInvoices(),
+      loadContracts(),
+      loadPayments(),
+      loadProfile(),
+    ])
+      .catch((err) => addToast(err?.toString?.() || 'Failed to load', 'error'))
       .finally(() => setLoading(false));
-  }, [loadClients, loadProjects, loadProposals, loadInvoices, loadContracts, loadPayments, loadProfile, addToast]);
+  }, [
+    loadClients,
+    loadProjects,
+    loadProposals,
+    loadInvoices,
+    loadContracts,
+    loadPayments,
+    loadProfile,
+    addToast,
+  ]);
 
   useEffect(() => {
     if (clients.length > 0 && !selectedId) {
@@ -946,12 +1163,26 @@ export default function Clients() {
       ...timelineFromCommunications(selectedId, communications),
       ...timelineFromPortalActivity(selectedId, portalActivity, proposals, contracts),
     ];
-  }, [selectedId, proposals, contracts, invoices, payments, communications, portalActivity, profile?.currency]);
-  const selectedCountry = useMemo(() => COUNTRY_OPTIONS.find((country) => country.code === phoneCountry) || COUNTRY_OPTIONS[0], [phoneCountry]);
+  }, [
+    selectedId,
+    proposals,
+    contracts,
+    invoices,
+    payments,
+    communications,
+    portalActivity,
+    profile?.currency,
+  ]);
+  const selectedCountry = useMemo(
+    () => COUNTRY_OPTIONS.find((country) => country.code === phoneCountry) || COUNTRY_OPTIONS[0],
+    [phoneCountry],
+  );
 
   const getClientStatus = (clientId: string) => {
     const hasActive = projects.some((p) => p.client_id === clientId && p.status === 'active');
-    const hasProposal = proposals.some((p) => p.client_id === clientId && (p.status === 'sent' || p.status === 'draft'));
+    const hasProposal = proposals.some(
+      (p) => p.client_id === clientId && (p.status === 'sent' || p.status === 'draft'),
+    );
     if (hasActive) return 'bg-[var(--accent)]';
     if (hasProposal) return 'bg-[var(--warning-text)]';
     return 'bg-[var(--neutral-border)]';
@@ -961,16 +1192,27 @@ export default function Clients() {
     const clientProjects = projects.filter((p) => p.client_id === clientId);
     const clientProposals = proposals.filter((p) => p.client_id === clientId);
     const clientInvoices = invoices.filter((i) => i.client_id === clientId);
-    const lifetime = clientInvoices.filter((i) => i.status === 'paid').reduce((s, i) => s + i.total, 0);
-    const outstanding = clientInvoices.filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue').reduce((s, i) => s + i.total, 0);
+    const lifetime = clientInvoices
+      .filter((i) => i.status === 'paid')
+      .reduce((s, i) => s + i.total, 0);
+    const outstanding = clientInvoices
+      .filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue')
+      .reduce((s, i) => s + i.total, 0);
     const lastComm = communications.find((c) => c.client_id === clientId);
-    return { projectCount: clientProjects.length, proposalCount: clientProposals.length, lifetime, outstanding, lastComm };
+    return {
+      projectCount: clientProjects.length,
+      proposalCount: clientProposals.length,
+      lifetime,
+      outstanding,
+      lastComm,
+    };
   };
 
-  const filteredClients = clients.filter(c =>
-    (c.name || '').toLowerCase().includes(search.toLowerCase()) ||
-    (c.company || '').toLowerCase().includes(search.toLowerCase()) ||
-    (c.email || '').toLowerCase().includes(search.toLowerCase())
+  const filteredClients = clients.filter(
+    (c) =>
+      (c.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (c.company || '').toLowerCase().includes(search.toLowerCase()) ||
+      (c.email || '').toLowerCase().includes(search.toLowerCase()),
   );
   const pagedClients = useVisibleList(filteredClients, search);
 
@@ -1001,7 +1243,9 @@ export default function Clients() {
       notes: client.notes || '',
       preferred_currency: client.preferred_currency || '',
     });
-    const inferredCountry = COUNTRY_OPTIONS.find((country) => (client.phone || '').includes(country.dialCode))?.code || 'US';
+    const inferredCountry =
+      COUNTRY_OPTIONS.find((country) => (client.phone || '').includes(country.dialCode))?.code ||
+      'US';
     setPhoneCountry(inferredCountry);
     setFormErrors({});
     setShowModal(true);
@@ -1022,8 +1266,12 @@ export default function Clients() {
       const sanitized = {
         name: sanitizedName.slice(0, MAX_LENGTHS.name),
         email: form.email ? sanitizeInput(form.email).slice(0, MAX_LENGTHS.email) : undefined,
-        phone: form.phone ? normalizePhone(form.phone, selectedCountry.dialCode).slice(0, MAX_LENGTHS.phone) : undefined,
-        company: form.company ? sanitizeInput(form.company).slice(0, MAX_LENGTHS.company) : undefined,
+        phone: form.phone
+          ? normalizePhone(form.phone, selectedCountry.dialCode).slice(0, MAX_LENGTHS.phone)
+          : undefined,
+        company: form.company
+          ? sanitizeInput(form.company).slice(0, MAX_LENGTHS.company)
+          : undefined,
         notes: form.notes ? sanitizeInput(form.notes).slice(0, MAX_LENGTHS.notes) : undefined,
         preferred_currency: form.preferred_currency || undefined,
       };
@@ -1175,13 +1423,16 @@ export default function Clients() {
     const defs = metricDefs.filter((d) => d.client_id === selectedId);
     if (defs.length === 0) return;
     try {
-      await saveMetricTemplate(templateName, defs.map(d => ({
-        name: d.name,
-        metric_type: d.metric_type,
-        unit_label: d.unit_label,
-        is_headline: d.is_headline,
-        sort_order: d.sort_order,
-      })));
+      await saveMetricTemplate(
+        templateName,
+        defs.map((d) => ({
+          name: d.name,
+          metric_type: d.metric_type,
+          unit_label: d.unit_label,
+          is_headline: d.is_headline,
+          sort_order: d.sort_order,
+        })),
+      );
       setShowTemplateModal(false);
       setTemplateName('');
       addToast(`Template "${templateName}" saved`, 'success');
@@ -1203,24 +1454,29 @@ export default function Clients() {
 
   const clientComms = communications.filter((c) => c.client_id === selectedId);
 
-  if (loading) return (
-    <div className="flex flex-col md:flex-row h-full">
-      <div className="w-[240px] border-r border-[var(--glass-border)] glass flex-shrink-0">
-        <div className="px-4 py-3 border-b border-[var(--border-color)]">
-          <div className="h-4 w-16 bg-[var(--bg-secondary)] rounded skeleton-pulse" />
+  if (loading)
+    return (
+      <div className="flex flex-col md:flex-row h-full">
+        <div className="w-[240px] border-r border-[var(--glass-border)] glass flex-shrink-0">
+          <div className="px-4 py-3 border-b border-[var(--border-color)]">
+            <div className="h-4 w-16 bg-[var(--bg-secondary)] rounded skeleton-pulse" />
+          </div>
+          <div className="py-2 space-y-1 px-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-10 bg-[var(--bg-secondary)] rounded-xs skeleton-pulse" />
+            ))}
+          </div>
         </div>
-        <div className="py-2 space-y-1 px-2">
-          {[...Array(5)].map((_, i) => <div key={i} className="h-10 bg-[var(--bg-secondary)] rounded-xs skeleton-pulse" />)}
+        <div className="flex-1 p-6 space-y-4">
+          <div className="h-6 w-48 bg-[var(--bg-secondary)] rounded skeleton-pulse" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-16 bg-[var(--bg-secondary)] rounded-sm skeleton-pulse" />
+            ))}
+          </div>
         </div>
       </div>
-      <div className="flex-1 p-6 space-y-4">
-        <div className="h-6 w-48 bg-[var(--bg-secondary)] rounded skeleton-pulse" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-16 bg-[var(--bg-secondary)] rounded-sm skeleton-pulse" />)}
-        </div>
-      </div>
-    </div>
-  );
+    );
 
   return (
     <div className="flex flex-col md:flex-row h-full">
@@ -1230,11 +1486,14 @@ export default function Clients() {
           <h1 className="text-xs font-semibold text-[var(--text-secondary)]">Clients</h1>
           <LoadError error={clientsError} onRetry={() => loadClients()} />
           <div className="relative">
-            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+            <Search
+              size={12}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]"
+            />
             <input
               type="text"
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Filter..."
               className="w-full pl-7 pr-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]"
             />
@@ -1251,16 +1510,39 @@ export default function Clients() {
                   : 'hover:bg-[var(--bg-secondary)] border-l-2 border-transparent'
               }`}
             >
-              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getClientStatus(c.id)}`} title={projects.some(p => p.client_id === c.id && p.status === 'active') ? 'Active project' : proposals.some(p => p.client_id === c.id && (p.status === 'sent' || p.status === 'draft')) ? 'Proposal open' : communications.some(co => co.client_id === c.id) ? 'Has communication log' : 'No activity'} />
-              <span className={`text-xs truncate ${selectedId === c.id ? 'text-[var(--accent-ink,var(--accent))] font-medium' : 'text-[var(--text-primary)]'}`}>
+              <span
+                className={`w-2 h-2 rounded-full flex-shrink-0 ${getClientStatus(c.id)}`}
+                title={
+                  projects.some((p) => p.client_id === c.id && p.status === 'active')
+                    ? 'Active project'
+                    : proposals.some(
+                          (p) =>
+                            p.client_id === c.id && (p.status === 'sent' || p.status === 'draft'),
+                        )
+                      ? 'Proposal open'
+                      : communications.some((co) => co.client_id === c.id)
+                        ? 'Has communication log'
+                        : 'No activity'
+                }
+              />
+              <span
+                className={`text-xs truncate ${selectedId === c.id ? 'text-[var(--accent-ink,var(--accent))] font-medium' : 'text-[var(--text-primary)]'}`}
+              >
                 <SharedView layoutId={`client-name-${c.id}`}>{c.name}</SharedView>
               </span>
             </button>
           ))}
           {filteredClients.length === 0 && search && (
-            <p className="text-xs text-[var(--text-tertiary)] text-center py-4">No clients match "{search}"</p>
+            <p className="text-xs text-[var(--text-tertiary)] text-center py-4">
+              No clients match "{search}"
+            </p>
           )}
-          <MoreRows total={pagedClients.total} shown={pagedClients.visible.length} hasMore={pagedClients.hasMore} showMore={pagedClients.showMore} />
+          <MoreRows
+            total={pagedClients.total}
+            shown={pagedClients.visible.length}
+            hasMore={pagedClients.hasMore}
+            showMore={pagedClients.showMore}
+          />
           <button
             onClick={openNew}
             className="w-full text-left px-4 py-2.5 flex items-center gap-2.5 text-xs text-[var(--accent-ink,var(--accent))] hover:bg-[var(--bg-secondary)] transition-colors"
@@ -1284,298 +1566,408 @@ export default function Clients() {
           <div className="flex items-center justify-center h-full">
             <div className="text-center py-16">
               <Users size={40} className="text-[var(--text-tertiary)] mx-auto mb-3 opacity-40" />
-              <p className="text-sm font-medium text-[var(--text-primary)]">{clients.length === 0 ? getEmptyCopy('clients').headline : 'Select a client or add a new one.'}</p>
+              <p className="text-sm font-medium text-[var(--text-primary)]">
+                {clients.length === 0
+                  ? getEmptyCopy('clients').headline
+                  : 'Select a client or add a new one.'}
+              </p>
               {clients.length === 0 && (
                 <>
-                  <p className="text-xs text-[var(--text-tertiary)] mt-1 mb-4">{getEmptyCopy('clients').sub}</p>
-                  <button onClick={openNew} className="text-xs font-medium px-3 py-1.5 rounded-sm bg-[var(--accent)] text-[var(--accent-on)] hover:opacity-90">Add your first client</button>
+                  <p className="text-xs text-[var(--text-tertiary)] mt-1 mb-4">
+                    {getEmptyCopy('clients').sub}
+                  </p>
+                  <button
+                    onClick={openNew}
+                    className="text-xs font-medium px-3 py-1.5 rounded-sm bg-[var(--accent)] text-[var(--accent-on)] hover:opacity-90"
+                  >
+                    Add your first client
+                  </button>
                 </>
               )}
             </div>
           </div>
-        ) : (() => {
-          const overview = getOverview(selectedClient.id);
-          return (
-            <>
-              <ClientDetailHeader
-                client={selectedClient}
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                onEdit={openEdit}
-                onDelete={setConfirmDialog}
-              />
+        ) : (
+          (() => {
+            const overview = getOverview(selectedClient.id);
+            return (
+              <>
+                <ClientDetailHeader
+                  client={selectedClient}
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  onEdit={openEdit}
+                  onDelete={setConfirmDialog}
+                />
 
-              {/* Overview tab */}
-              {activeTab === 'overview' && (
-                <>
-                  <ClientOverviewCard
-                    overview={overview}
-                    currency={profile?.currency}
-                    selectedId={selectedId}
-                    invoices={invoices}
-                    payments={payments}
-                  />
+                {/* Overview tab */}
+                {activeTab === 'overview' && (
+                  <>
+                    <ClientOverviewCard
+                      overview={overview}
+                      currency={profile?.currency}
+                      selectedId={selectedId}
+                      invoices={invoices}
+                      payments={payments}
+                    />
 
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-xs font-semibold text-[var(--text-secondary)]">Communication log</h3>
-                      <button
-                        onClick={() => { setShowLogForm(!showLogForm); setLogForm({ type: 'note', date: todayLocalISO(), summary: '' }); }}
-                        className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline flex items-center gap-1"
-                      >
-                        <Plus size={12} /> Log interaction
-                      </button>
-                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-xs font-semibold text-[var(--text-secondary)]">
+                          Communication log
+                        </h3>
+                        <button
+                          onClick={() => {
+                            setShowLogForm(!showLogForm);
+                            setLogForm({ type: 'note', date: todayLocalISO(), summary: '' });
+                          }}
+                          className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline flex items-center gap-1"
+                        >
+                          <Plus size={12} /> Log interaction
+                        </button>
+                      </div>
 
-                    {showLogForm && (
-                      <Card className="mb-4">
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            {(['note', 'call', 'email', 'meeting'] as Communication['type'][]).map((t) => {
-                              const Icon = commIcons[t];
-                              return (
-                                <button
-                                  key={t}
-                                  onClick={() => setLogForm({ ...logForm, type: t })}
-                                  className={`flex items-center gap-1 px-3 py-1.5 rounded-xs text-xs transition-colors ${
-                                    logForm.type === t
-                                      ? 'bg-[var(--accent)] text-[var(--accent-on)]'
-                                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
-                                  }`}
-                                >
-                                  <Icon size={12} />
-                                  {commLabels[t]}
-                                </button>
-                              );
-                            })}
+                      {showLogForm && (
+                        <Card className="mb-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              {(
+                                ['note', 'call', 'email', 'meeting'] as Communication['type'][]
+                              ).map((t) => {
+                                const Icon = commIcons[t];
+                                return (
+                                  <button
+                                    key={t}
+                                    onClick={() => setLogForm({ ...logForm, type: t })}
+                                    className={`flex items-center gap-1 px-3 py-1.5 rounded-xs text-xs transition-colors ${
+                                      logForm.type === t
+                                        ? 'bg-[var(--accent)] text-[var(--accent-on)]'
+                                        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
+                                    }`}
+                                  >
+                                    <Icon size={12} />
+                                    {commLabels[t]}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <div>
+                              <label className="block text-[10px] text-[var(--text-tertiary)] mb-1">
+                                Date
+                              </label>
+                              <input
+                                type="date"
+                                value={logForm.date}
+                                onChange={(e) => setLogForm({ ...logForm, date: e.target.value })}
+                                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)]"
+                              />
+                            </div>
+                            <div>
+                              <textarea
+                                value={logForm.summary}
+                                onChange={(e) =>
+                                  setLogForm({ ...logForm, summary: e.target.value })
+                                }
+                                placeholder="What happened?"
+                                rows={3}
+                                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none"
+                                autoFocus
+                              />
+                            </div>
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                onClick={() => setShowLogForm(false)}
+                                size="sm"
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                onClick={handleSaveLog}
+                                loading={saving}
+                                disabled={!logForm.summary.trim()}
+                                size="sm"
+                              >
+                                Save
+                              </Button>
+                            </div>
                           </div>
-                          <div>
-                            <label className="block text-[10px] text-[var(--text-tertiary)] mb-1">Date</label>
-                            <input
-                              type="date"
-                              value={logForm.date}
-                              onChange={(e) => setLogForm({ ...logForm, date: e.target.value })}
-                              className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)]"
-                            />
-                          </div>
-                          <div>
-                            <textarea
-                              value={logForm.summary}
-                              onChange={(e) => setLogForm({ ...logForm, summary: e.target.value })}
-                              placeholder="What happened?"
-                              rows={3}
-                              className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none"
-                              autoFocus
-                            />
-                          </div>
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" onClick={() => setShowLogForm(false)} size="sm">Cancel</Button>
-                            <Button onClick={handleSaveLog} loading={saving} disabled={!logForm.summary.trim()} size="sm">Save</Button>
-                          </div>
-                        </div>
-                      </Card>
-                    )}
+                        </Card>
+                      )}
 
-                    {clientComms.length === 0 ? (
-                      <p className="text-xs text-[var(--text-tertiary)]">No interactions logged yet.</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {clientComms.map((comm) => {
-                          const Icon = commIcons[comm.type] || MessageSquare;
-                          const isConfirming = deleteConfirm === comm.id;
-                          return (
-                            <div
-                              key={comm.id}
-                              className="flex items-start gap-3 px-3 py-2.5 rounded-sm hover:bg-[var(--bg-secondary)] transition-colors group"
-                              onMouseEnter={() => setHoveredComm(comm.id)}
-                              onMouseLeave={() => { setHoveredComm(null); setDeleteConfirm(null); }}
-                            >
-                              <Icon size={14} className="text-[var(--text-tertiary)] mt-0.5 flex-shrink-0" />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-[10px] text-[var(--text-tertiary)] mb-0.5">
-                                  {commLabels[comm.type]} &middot; {relativeDate(comm.created_at || comm.date)}
-                                </p>
-                                {editingCommId === comm.id ? (
-                                  <div>
-                                    <textarea
-                                      value={editCommText}
-                                      onChange={(e) => setEditCommText(e.target.value)}
-                                      rows={2}
-                                      className="w-full px-2 py-1.5 text-[13px] border border-[var(--accent)] rounded-xs focus:outline-none resize-none"
-                                      autoFocus
-                                    />
-                                    <div className="flex justify-end gap-1.5 mt-1.5">
-                                      <button onClick={() => setEditingCommId(null)} aria-label="Cancel edit" className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
-                                        <X size={14} />
-                                      </button>
-                                      <button onClick={() => handleSaveCommEdit(comm.id)} aria-label="Save edit" disabled={!editCommText.trim()} className="text-[var(--accent-ink,var(--accent))] hover:text-[var(--accent-hover)] disabled:opacity-40">
-                                        <Check size={14} />
-                                      </button>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <p className="text-[13px] text-[var(--text-primary)] leading-relaxed">{comm.summary}</p>
-                                )}
-                              </div>
-                              {hoveredComm === comm.id && editingCommId !== comm.id && (
-                                <div className="flex-shrink-0 flex items-center gap-1">
-                                  {isConfirming ? (
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-[10px] text-[var(--danger)]">Delete?</span>
-                                      <button onClick={() => handleDeleteComm(comm.id)} aria-label="Confirm delete" className="text-[var(--danger)] hover:text-[var(--danger-hover)]">
-                                        <Check size={14} />
-                                      </button>
-                                      <button onClick={() => setDeleteConfirm(null)} aria-label="Cancel delete" className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
-                                        <X size={14} />
-                                      </button>
+                      {clientComms.length === 0 ? (
+                        <p className="text-xs text-[var(--text-tertiary)]">
+                          No interactions logged yet.
+                        </p>
+                      ) : (
+                        <div className="space-y-2">
+                          {clientComms.map((comm) => {
+                            const Icon = commIcons[comm.type] || MessageSquare;
+                            const isConfirming = deleteConfirm === comm.id;
+                            return (
+                              <div
+                                key={comm.id}
+                                className="flex items-start gap-3 px-3 py-2.5 rounded-sm hover:bg-[var(--bg-secondary)] transition-colors group"
+                                onMouseEnter={() => setHoveredComm(comm.id)}
+                                onMouseLeave={() => {
+                                  setHoveredComm(null);
+                                  setDeleteConfirm(null);
+                                }}
+                              >
+                                <Icon
+                                  size={14}
+                                  className="text-[var(--text-tertiary)] mt-0.5 flex-shrink-0"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[10px] text-[var(--text-tertiary)] mb-0.5">
+                                    {commLabels[comm.type]} &middot;{' '}
+                                    {relativeDate(comm.created_at || comm.date)}
+                                  </p>
+                                  {editingCommId === comm.id ? (
+                                    <div>
+                                      <textarea
+                                        value={editCommText}
+                                        onChange={(e) => setEditCommText(e.target.value)}
+                                        rows={2}
+                                        className="w-full px-2 py-1.5 text-[13px] border border-[var(--accent)] rounded-xs focus:outline-none resize-none"
+                                        autoFocus
+                                      />
+                                      <div className="flex justify-end gap-1.5 mt-1.5">
+                                        <button
+                                          onClick={() => setEditingCommId(null)}
+                                          aria-label="Cancel edit"
+                                          className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                                        >
+                                          <X size={14} />
+                                        </button>
+                                        <button
+                                          onClick={() => handleSaveCommEdit(comm.id)}
+                                          aria-label="Save edit"
+                                          disabled={!editCommText.trim()}
+                                          className="text-[var(--accent-ink,var(--accent))] hover:text-[var(--accent-hover)] disabled:opacity-40"
+                                        >
+                                          <Check size={14} />
+                                        </button>
+                                      </div>
                                     </div>
                                   ) : (
-                                    <>
-                                      <button onClick={() => { setEditingCommId(comm.id); setEditCommText(comm.summary); setDeleteConfirm(null); }} aria-label="Edit communication" className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))]">
-                                        <Pencil size={13} />
-                                      </button>
-                                      <button onClick={() => handleDeleteComm(comm.id)} aria-label="Delete communication" className="text-[var(--text-tertiary)] hover:text-[var(--danger)]">
-                                        <X size={13} />
-                                      </button>
-                                    </>
+                                    <p className="text-[13px] text-[var(--text-primary)] leading-relaxed">
+                                      {comm.summary}
+                                    </p>
                                   )}
                                 </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-
-              {/* Metrics tab */}
-              {activeTab === 'metrics' && selectedId && (
-                <div className="space-y-6">
-                  <MetricTemplates
-                    showPrompt={showTemplatePrompt}
-                    setShowPrompt={setShowTemplatePrompt}
-                    setShowModal={setShowTemplateModal}
-                    templates={metricTemplates}
-                    metricDefs={metricDefs}
-                    selectedId={selectedId}
-                    metricDeleteConfirm={metricDeleteConfirm}
-                    setMetricDeleteConfirm={setMetricDeleteConfirm}
-                    onApply={handleApplyTemplate}
-                    onRemove={removeMetricTemplate}
-                  />
-
-                  {/* Metric definitions + values */}
-                  <div className="space-y-4">
-                    {metricDefs.filter((d) => d.client_id === selectedId).map((def) => (
-                      <MetricDefinitionCard
-                        key={def.id}
-                        def={def}
-                        values={metricValues.filter((v) => v.definition_id === def.id)}
-                        currency={profile?.currency}
-                        selectedId={selectedId}
-                        metricDeleteConfirm={metricDeleteConfirm}
-                        setMetricDeleteConfirm={setMetricDeleteConfirm}
-                        showValueForm={showValueForm === def.id}
-                        setShowValueForm={setShowValueForm}
-                        valueForm={valueForm}
-                        setValueForm={setValueForm}
-                        onLogValue={handleLogValue}
-                        onEditMetric={(metric) => {
-                          setEditingMetric(metric);
-                          setMetricForm({
-                            name: metric.name,
-                            metric_type: metric.metric_type,
-                            unit_label: metric.unit_label || '',
-                            is_headline: metric.is_headline,
-                          });
-                          setShowMetricForm(true);
-                        }}
-                        onRemoveDef={removeMetricDef}
-                        onRemoveValue={removeMetricValue}
-                      />
-                    ))}
-
-                    {/* Add metric button */}
-                    {!showMetricForm && (
-                      <button
-                        onClick={() => {
-                          setEditingMetric(null);
-                          setMetricForm({ name: '', metric_type: 'number', unit_label: '', is_headline: false });
-                          setShowMetricForm(true);
-                        }}
-                        className="w-full flex items-center justify-center gap-1.5 py-3 border border-dashed border-[var(--border-color)] rounded-[10px] text-xs text-[var(--text-tertiary)] hover:border-[var(--accent)]/30 hover:text-[var(--accent-ink,var(--accent))] transition-colors"
-                      >
-                        <Plus size={14} /> Add metric
-                      </button>
-                    )}
-
-                    {/* New metric definition form */}
-                    {showMetricForm && (
-                      <Card className="!p-4">
-                        <div className="space-y-3">
-                          <div>
-                            <input
-                              type="text"
-                              value={metricForm.name}
-                              onChange={(e) => setMetricForm({ ...metricForm, name: e.target.value })}
-                              placeholder="Metric name (e.g. CPM, ROAS, Story Points)"
-                              className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
-                              autoFocus
-                              onKeyDown={(e) => { if (e.key === 'Enter') handleSaveMetricDef(); }}
-                            />
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <select aria-label="Metric type"
-                              value={metricForm.metric_type}
-                              onChange={(e) => setMetricForm({ ...metricForm, metric_type: e.target.value as MetricDefinition['metric_type'] })}
-                              className="px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-                            >
-                              <option value="number">Number</option>
-                              <option value="percentage">Percentage</option>
-                              <option value="currency">Currency</option>
-                              <option value="text">Text</option>
-                            </select>
-                            <input
-                              type="text"
-                              value={metricForm.unit_label}
-                              onChange={(e) => setMetricForm({ ...metricForm, unit_label: e.target.value })}
-                              placeholder="Unit (e.g. per 1000)"
-                              className="flex-1 px-3 py-1.5 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
-                            />
-                            <label className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] cursor-pointer flex-shrink-0">
-                              <input
-                                type="checkbox"
-                                checked={metricForm.is_headline}
-                                onChange={(e) => setMetricForm({ ...metricForm, is_headline: e.target.checked })}
-                                className="rounded border-[var(--border-color)] text-[var(--accent-ink,var(--accent))] focus:ring-[var(--accent)]"
-                              />
-                              Headline
-                            </label>
-                          </div>
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => { setShowMetricForm(false); setEditingMetric(null); }}>
-                              Cancel
-                            </Button>
-                            <Button size="sm" onClick={handleSaveMetricDef} loading={saving} disabled={!metricForm.name.trim()}>
-                              {editingMetric ? 'Save' : 'Add'}
-                            </Button>
-                          </div>
+                                {hoveredComm === comm.id && editingCommId !== comm.id && (
+                                  <div className="flex-shrink-0 flex items-center gap-1">
+                                    {isConfirming ? (
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-[10px] text-[var(--danger)]">
+                                          Delete?
+                                        </span>
+                                        <button
+                                          onClick={() => handleDeleteComm(comm.id)}
+                                          aria-label="Confirm delete"
+                                          className="text-[var(--danger)] hover:text-[var(--danger-hover)]"
+                                        >
+                                          <Check size={14} />
+                                        </button>
+                                        <button
+                                          onClick={() => setDeleteConfirm(null)}
+                                          aria-label="Cancel delete"
+                                          className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                                        >
+                                          <X size={14} />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <button
+                                          onClick={() => {
+                                            setEditingCommId(comm.id);
+                                            setEditCommText(comm.summary);
+                                            setDeleteConfirm(null);
+                                          }}
+                                          aria-label="Edit communication"
+                                          className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))]"
+                                        >
+                                          <Pencil size={13} />
+                                        </button>
+                                        <button
+                                          onClick={() => handleDeleteComm(comm.id)}
+                                          aria-label="Delete communication"
+                                          className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"
+                                        >
+                                          <X size={13} />
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
-                      </Card>
-                    )}
-                  </div>
-                </div>
-              )}
+                      )}
+                    </div>
+                  </>
+                )}
 
-              {/* Timeline tab */}
-              {activeTab === 'timeline' && selectedId && (
-                <Timeline items={clientTimeline} />
-              )}
-            </>
-          );
-        })()}
+                {/* Metrics tab */}
+                {activeTab === 'metrics' && selectedId && (
+                  <div className="space-y-6">
+                    <MetricTemplates
+                      showPrompt={showTemplatePrompt}
+                      setShowPrompt={setShowTemplatePrompt}
+                      setShowModal={setShowTemplateModal}
+                      templates={metricTemplates}
+                      metricDefs={metricDefs}
+                      selectedId={selectedId}
+                      metricDeleteConfirm={metricDeleteConfirm}
+                      setMetricDeleteConfirm={setMetricDeleteConfirm}
+                      onApply={handleApplyTemplate}
+                      onRemove={removeMetricTemplate}
+                    />
+
+                    {/* Metric definitions + values */}
+                    <div className="space-y-4">
+                      {metricDefs
+                        .filter((d) => d.client_id === selectedId)
+                        .map((def) => (
+                          <MetricDefinitionCard
+                            key={def.id}
+                            def={def}
+                            values={metricValues.filter((v) => v.definition_id === def.id)}
+                            currency={profile?.currency}
+                            selectedId={selectedId}
+                            metricDeleteConfirm={metricDeleteConfirm}
+                            setMetricDeleteConfirm={setMetricDeleteConfirm}
+                            showValueForm={showValueForm === def.id}
+                            setShowValueForm={setShowValueForm}
+                            valueForm={valueForm}
+                            setValueForm={setValueForm}
+                            onLogValue={handleLogValue}
+                            onEditMetric={(metric) => {
+                              setEditingMetric(metric);
+                              setMetricForm({
+                                name: metric.name,
+                                metric_type: metric.metric_type,
+                                unit_label: metric.unit_label || '',
+                                is_headline: metric.is_headline,
+                              });
+                              setShowMetricForm(true);
+                            }}
+                            onRemoveDef={removeMetricDef}
+                            onRemoveValue={removeMetricValue}
+                          />
+                        ))}
+
+                      {/* Add metric button */}
+                      {!showMetricForm && (
+                        <button
+                          onClick={() => {
+                            setEditingMetric(null);
+                            setMetricForm({
+                              name: '',
+                              metric_type: 'number',
+                              unit_label: '',
+                              is_headline: false,
+                            });
+                            setShowMetricForm(true);
+                          }}
+                          className="w-full flex items-center justify-center gap-1.5 py-3 border border-dashed border-[var(--border-color)] rounded-[10px] text-xs text-[var(--text-tertiary)] hover:border-[var(--accent)]/30 hover:text-[var(--accent-ink,var(--accent))] transition-colors"
+                        >
+                          <Plus size={14} /> Add metric
+                        </button>
+                      )}
+
+                      {/* New metric definition form */}
+                      {showMetricForm && (
+                        <Card className="!p-4">
+                          <div className="space-y-3">
+                            <div>
+                              <input
+                                type="text"
+                                value={metricForm.name}
+                                onChange={(e) =>
+                                  setMetricForm({ ...metricForm, name: e.target.value })
+                                }
+                                placeholder="Metric name (e.g. CPM, ROAS, Story Points)"
+                                className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveMetricDef();
+                                }}
+                              />
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <select
+                                aria-label="Metric type"
+                                value={metricForm.metric_type}
+                                onChange={(e) =>
+                                  setMetricForm({
+                                    ...metricForm,
+                                    metric_type: e.target.value as MetricDefinition['metric_type'],
+                                  })
+                                }
+                                className="px-2.5 py-1.5 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                              >
+                                <option value="number">Number</option>
+                                <option value="percentage">Percentage</option>
+                                <option value="currency">Currency</option>
+                                <option value="text">Text</option>
+                              </select>
+                              <input
+                                type="text"
+                                value={metricForm.unit_label}
+                                onChange={(e) =>
+                                  setMetricForm({ ...metricForm, unit_label: e.target.value })
+                                }
+                                placeholder="Unit (e.g. per 1000)"
+                                className="flex-1 px-3 py-1.5 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+                              />
+                              <label className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] cursor-pointer flex-shrink-0">
+                                <input
+                                  type="checkbox"
+                                  checked={metricForm.is_headline}
+                                  onChange={(e) =>
+                                    setMetricForm({ ...metricForm, is_headline: e.target.checked })
+                                  }
+                                  className="rounded border-[var(--border-color)] text-[var(--accent-ink,var(--accent))] focus:ring-[var(--accent)]"
+                                />
+                                Headline
+                              </label>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setShowMetricForm(false);
+                                  setEditingMetric(null);
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={handleSaveMetricDef}
+                                loading={saving}
+                                disabled={!metricForm.name.trim()}
+                              >
+                                {editingMetric ? 'Save' : 'Add'}
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Timeline tab */}
+                {activeTab === 'timeline' && selectedId && <Timeline items={clientTimeline} />}
+              </>
+            );
+          })()
+        )}
       </div>
 
       {/* Client add/edit modal */}
@@ -1594,7 +1986,12 @@ export default function Clients() {
       />
 
       {/* Save Template Modal */}
-      <Modal open={showTemplateModal} onClose={() => setShowTemplateModal(false)} title="Save Metric Template" size="sm">
+      <Modal
+        open={showTemplateModal}
+        onClose={() => setShowTemplateModal(false)}
+        title="Save Metric Template"
+        size="sm"
+      >
         <div className="space-y-3">
           <p className="text-xs text-[var(--text-secondary)]">
             Save this metric configuration so you can apply it to other clients with one click.
@@ -1606,11 +2003,17 @@ export default function Clients() {
             placeholder="Template name (e.g. Paid Ads Client)"
             className="w-full px-3 py-2 text-xs border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
             autoFocus
-            onKeyDown={(e) => { if (e.key === 'Enter') handleSaveAsTemplate(); }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSaveAsTemplate();
+            }}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setShowTemplateModal(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleSaveAsTemplate} disabled={!templateName.trim()}>Save Template</Button>
+            <Button variant="ghost" size="sm" onClick={() => setShowTemplateModal(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSaveAsTemplate} disabled={!templateName.trim()}>
+              Save Template
+            </Button>
           </div>
         </div>
       </Modal>
@@ -1625,13 +2028,8 @@ export default function Clients() {
         variant="danger"
         loading={deleting}
       />
-      {selectedId && (
-        <ArchetypeFeatureTabs screen="clients" context={{ clientId: selectedId }} />
-      )}
-      <ClientImportModal
-        open={showImportModal}
-        onClose={() => setShowImportModal(false)}
-      />
+      {selectedId && <ArchetypeFeatureTabs screen="clients" context={{ clientId: selectedId }} />}
+      <ClientImportModal open={showImportModal} onClose={() => setShowImportModal(false)} />
     </div>
   );
 }

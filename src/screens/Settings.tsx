@@ -113,12 +113,21 @@ export default function Settings() {
     try {
       const raw = localStorage.getItem('lance:features');
       return raw ? JSON.parse(raw) : {};
-    } catch { return {}; }
+    } catch {
+      return {};
+    }
   });
   const setFeatures = useCallback((action: React.SetStateAction<Record<string, boolean>>) => {
     setFeaturesState((prev) => {
-      const next = typeof action === 'function' ? (action as (p: Record<string, boolean>) => Record<string, boolean>)(prev) : action;
-      try { localStorage.setItem('lance:features', JSON.stringify(next)); } catch { /* private mode */ }
+      const next =
+        typeof action === 'function'
+          ? (action as (p: Record<string, boolean>) => Record<string, boolean>)(prev)
+          : action;
+      try {
+        localStorage.setItem('lance:features', JSON.stringify(next));
+      } catch {
+        /* private mode */
+      }
       return next;
     });
   }, []);
@@ -927,92 +936,92 @@ export default function Settings() {
 
       {/* Import summary modal */}
       {(() => (
-      <Modal
-        open={showImportSummary}
-        onClose={() => setShowImportSummary(false)}
-        title="Import summary"
-        size="md"
-      >
-        <div className="space-y-4">
-          <div className="text-sm text-[var(--text-primary)]">
-            <p className="mb-2">
-              Found:{' '}
-              <span className="font-medium">
-                {importSummaryData?.tableCounts
-                  ? formatTableCounts(importSummaryData.tableCounts)
-                  : '...'}
-              </span>
-            </p>
-          </div>
+        <Modal
+          open={showImportSummary}
+          onClose={() => setShowImportSummary(false)}
+          title="Import summary"
+          size="md"
+        >
+          <div className="space-y-4">
+            <div className="text-sm text-[var(--text-primary)]">
+              <p className="mb-2">
+                Found:{' '}
+                <span className="font-medium">
+                  {importSummaryData?.tableCounts
+                    ? formatTableCounts(importSummaryData.tableCounts)
+                    : '...'}
+                </span>
+              </p>
+            </div>
 
-          <div className="p-3 rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-color)]">
-            <p className="text-xs text-[var(--text-secondary)]">
-              {importReplaceMode
-                ? 'REPLACE all existing data with the imported data. This cannot be undone.'
-                : 'This will ADD to your existing data. Duplicate records (same ID) will be skipped.'}
-            </p>
-          </div>
+            <div className="p-3 rounded-sm bg-[var(--bg-secondary)] border border-[var(--border-color)]">
+              <p className="text-xs text-[var(--text-secondary)]">
+                {importReplaceMode
+                  ? 'REPLACE all existing data with the imported data. This cannot be undone.'
+                  : 'This will ADD to your existing data. Duplicate records (same ID) will be skipped.'}
+              </p>
+            </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={importReplaceMode}
-                  onChange={(e) => {
-                    setImportReplaceMode(e.target.checked);
-                    setImportReplaceConfirm('');
-                  }}
-                  className="sr-only peer"
-                />
-                <div className="w-9 h-5 bg-[var(--border-color)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-colors peer-checked:bg-red-500" />
-              </label>
-              <div>
-                <p
-                  className={`text-sm font-medium ${importReplaceMode ? 'text-[var(--danger)]' : 'text-[var(--text-primary)]'}`}
-                >
-                  {importReplaceMode ? 'Replace all data' : 'Add to existing data'}
-                </p>
-                <p className="text-[10px] text-[var(--text-tertiary)]">
-                  {importReplaceMode
-                    ? 'Destructive · removes all current data first'
-                    : 'Default · safe'}
-                </p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={importReplaceMode}
+                    onChange={(e) => {
+                      setImportReplaceMode(e.target.checked);
+                      setImportReplaceConfirm('');
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-[var(--border-color)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-colors peer-checked:bg-red-500" />
+                </label>
+                <div>
+                  <p
+                    className={`text-sm font-medium ${importReplaceMode ? 'text-[var(--danger)]' : 'text-[var(--text-primary)]'}`}
+                  >
+                    {importReplaceMode ? 'Replace all data' : 'Add to existing data'}
+                  </p>
+                  <p className="text-[10px] text-[var(--text-tertiary)]">
+                    {importReplaceMode
+                      ? 'Destructive · removes all current data first'
+                      : 'Default · safe'}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {importReplaceMode && (
-            <div>
-              <label className="block text-xs font-medium text-[var(--danger)] mb-1">
-                Type REPLACE to confirm
-              </label>
-              <input
-                type="text"
-                value={importReplaceConfirm}
-                onChange={(e) => setImportReplaceConfirm(e.target.value)}
-                placeholder="REPLACE"
-                className="w-full px-3 py-2 text-sm border border-red-300 dark:border-red-700 rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-red-500 font-mono"
-              />
+            {importReplaceMode && (
+              <div>
+                <label className="block text-xs font-medium text-[var(--danger)] mb-1">
+                  Type REPLACE to confirm
+                </label>
+                <input
+                  type="text"
+                  value={importReplaceConfirm}
+                  onChange={(e) => setImportReplaceConfirm(e.target.value)}
+                  placeholder="REPLACE"
+                  className="w-full px-3 py-2 text-sm border border-red-300 dark:border-red-700 rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-red-500 font-mono"
+                />
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="secondary" onClick={() => setShowImportSummary(false)} size="sm">
+                Cancel
+              </Button>
+              <Button
+                variant={importReplaceMode ? 'danger' : 'primary'}
+                onClick={handleConfirmImport}
+                loading={importPending}
+                disabled={importReplaceMode && importReplaceConfirm !== 'REPLACE'}
+                size="sm"
+              >
+                {importReplaceMode ? 'Replace & import' : 'Import'}
+              </Button>
             </div>
-          )}
-
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="secondary" onClick={() => setShowImportSummary(false)} size="sm">
-              Cancel
-            </Button>
-            <Button
-              variant={importReplaceMode ? 'danger' : 'primary'}
-              onClick={handleConfirmImport}
-              loading={importPending}
-              disabled={importReplaceMode && importReplaceConfirm !== 'REPLACE'}
-              size="sm"
-            >
-              {importReplaceMode ? 'Replace & import' : 'Import'}
-            </Button>
           </div>
-        </div>
-      </Modal>
+        </Modal>
       ))()}
 
       <ConfirmDialog
@@ -1030,9 +1039,3 @@ export default function Settings() {
     </>
   );
 }
-
-
-
-
-
-

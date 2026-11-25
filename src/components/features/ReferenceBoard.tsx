@@ -114,9 +114,7 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Reference Board
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Reference Board</h4>
         </div>
         <div className="grid grid-cols-3 gap-2">
           {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -175,7 +173,8 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
               autoFocus
             />
           ) : (
-            <select aria-label="Selectedassetid"
+            <select
+              aria-label="Selectedassetid"
               value={selectedAssetId}
               onChange={(e) => setSelectedAssetId(e.target.value)}
               className={inputClass}
@@ -255,7 +254,8 @@ export default function ReferenceBoard({ projectId }: { projectId: string }) {
                     </span>
                   </div>
                 )}
-                <button aria-label="Delete reference board"
+                <button
+                  aria-label="Delete reference board"
                   onClick={() => handleDelete(item.id)}
                   className="absolute top-1 right-1 w-5 h-5 rounded-full bg-[#A32D2D]/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                 >

@@ -35,10 +35,26 @@ standards and will take appropriate and fair corrective action in response to
 any behavior that they deem inappropriate, threatening, offensive or harmful.
 
 Instances of abusive, harassing or otherwise unacceptable behavior may be
-reported privately through
-[GitHub security advisories](https://github.com/jdcua/Lance/security/advisories/new).
-All complaints will be reviewed and investigated promptly and fairly. Maintainers
-are obligated to respect the privacy and security of the reporter.
+reported privately through the
+[private reporting form](https://github.com/jdcua/Lance/security/advisories/new)
+with "Code of Conduct" in the title. Please do not file conduct complaints as
+public issues. All complaints will be reviewed and investigated promptly and
+fairly. Maintainers are obligated to respect the privacy and security of the
+reporter.
+
+## Enforcement
+
+Community maintainers will follow the Contributor Covenant 2.1 enforcement
+tiers, applying the response proportionate to the impact:
+
+1. **Correction** — a private, written warning with clarity about the nature
+   of the violation and why the behavior was inappropriate.
+2. **Warning** — a warning with consequences for continued behavior, including
+   no interaction with the people involved for a specified period.
+3. **Temporary ban** — a temporary ban from any sort of interaction or public
+   communication with the community for a specified period.
+4. **Permanent ban** — a permanent ban from any sort of public interaction
+   within the community.
 
 ## Scope
 

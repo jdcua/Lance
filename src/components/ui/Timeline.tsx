@@ -2,12 +2,24 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
-  FileText, PenLine, Receipt, Banknote, MessageCircle, Link2, FolderKanban,
+  FileText,
+  PenLine,
+  Receipt,
+  Banknote,
+  MessageCircle,
+  Link2,
+  FolderKanban,
 } from 'lucide-react';
 import { relativeDate } from '../../utils/format';
 
 export type TimelineKind =
-  | 'proposal' | 'contract' | 'project' | 'invoice' | 'payment' | 'message' | 'portal';
+  | 'proposal'
+  | 'contract'
+  | 'project'
+  | 'invoice'
+  | 'payment'
+  | 'message'
+  | 'portal';
 
 export interface TimelineItem {
   id: string;
@@ -79,7 +91,11 @@ export default function Timeline({
             const Icon = KIND_ICON[item.kind];
             const open = openId === item.id;
             return (
-              <motion.div key={item.id} layout transition={{ type: 'spring', stiffness: 300, damping: 30 }}>
+              <motion.div
+                key={item.id}
+                layout
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              >
                 <button
                   onClick={() => {
                     if (item.detail) setOpenId(open ? null : item.id);
@@ -95,7 +111,9 @@ export default function Timeline({
                       {item.title}
                     </span>
                     {item.sub && (
-                      <span className="block text-[11px] text-[var(--text-tertiary)] truncate">{item.sub}</span>
+                      <span className="block text-[11px] text-[var(--text-tertiary)] truncate">
+                        {item.sub}
+                      </span>
                     )}
                     {open && item.detail && (
                       <span className="block text-xs text-[var(--text-secondary)] mt-1 whitespace-pre-wrap">

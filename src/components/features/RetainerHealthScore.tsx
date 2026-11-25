@@ -7,7 +7,6 @@ import { useStore } from '../../store';
 import { getDb } from '../../db';
 import { Activity, FileCheck, Calendar, MessageSquare } from 'lucide-react';
 
-
 export default function RetainerHealthScore({ clientId }: { clientId: string }) {
   const { timeEntries, loadTimeEntries } = useStore();
   const [loading, setLoading] = useState(true);
@@ -24,25 +23,27 @@ export default function RetainerHealthScore({ clientId }: { clientId: string }) 
 
       const seoRows = await db.select<{ completed: number }[]>(
         'SELECT completed FROM seo_deliverables WHERE client_id = ? AND period = ?',
-        [clientId, currentPeriod]
+        [clientId, currentPeriod],
       );
       const total = seoRows.length;
-      const completed = seoRows.filter(r => r.completed).length;
+      const completed = seoRows.filter((r) => r.completed).length;
       const dScore = total > 0 ? Math.round((completed / total) * 100) : 0;
       setDeliverableScore(dScore);
 
       const reportRows = await db.select<{ date: string }[]>(
         'SELECT date FROM client_reports WHERE client_id = ? ORDER BY date DESC LIMIT 1',
-        [clientId]
+        [clientId],
       );
       let rScore = 0;
       if (reportRows.length > 0) {
         const lastReportDate = new Date(reportRows[0].date);
-        const daysSinceReport = Math.floor((Date.now() - lastReportDate.getTime()) / (1000 * 60 * 60 * 24));
+        const daysSinceReport = Math.floor(
+          (Date.now() - lastReportDate.getTime()) / (1000 * 60 * 60 * 24),
+        );
 
         const cadenceRows = await db.select<{ frequency: string }[]>(
           'SELECT frequency FROM client_report_cadence WHERE client_id = ? LIMIT 1',
-          [clientId]
+          [clientId],
         );
         const freq = cadenceRows.length > 0 ? cadenceRows[0].frequency : 'monthly';
         const maxDays = freq === 'weekly' ? 7 : freq === 'quarterly' ? 90 : 30;
@@ -58,7 +59,7 @@ export default function RetainerHealthScore({ clientId }: { clientId: string }) 
 
       let cScore = 0;
       const clientEntries = timeEntries
-        .filter(t => t.client_id === clientId)
+        .filter((t) => t.client_id === clientId)
         .sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime());
 
       if (clientEntries.length > 0) {
@@ -69,17 +70,21 @@ export default function RetainerHealthScore({ clientId }: { clientId: string }) 
       setCommunicationScore(cScore);
 
       setOverallScore(Math.round((dScore + rScore + cScore) / 3));
-    } catch (e) { console.error('[RetainerHealthScore] load failed:', e); }
+    } catch (e) {
+      console.error('[RetainerHealthScore] load failed:', e);
+    }
     setLoading(false);
   }, [clientId, loadTimeEntries, timeEntries]);
 
-  useEffect(() => { load(); }, [clientId, load]);
+  useEffect(() => {
+    load();
+  }, [clientId, load]);
 
   useEffect(() => {
     if (timeEntries.length > 0) {
       let cScore = 0;
       const clientEntries = timeEntries
-        .filter(t => t.client_id === clientId)
+        .filter((t) => t.client_id === clientId)
         .sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime());
 
       if (clientEntries.length > 0) {
@@ -110,16 +115,36 @@ export default function RetainerHealthScore({ clientId }: { clientId: string }) 
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Retainer Health</h4>
         </div>
         <div className="space-y-1">
-          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
+          ))}
         </div>
       </div>
     );
   }
 
   const subScores = [
-    { label: 'Deliverables', score: deliverableScore, icon: FileCheck, desc: `${deliverableScore}% complete this month` },
-    { label: 'Report Freshness', score: reportScore, icon: Calendar, desc: reportScore > 0 ? `${reportScore}% fresh` : 'No reports yet' },
-    { label: 'Communication', score: communicationScore, icon: MessageSquare, desc: communicationScore > 0 ? `Last contact: ${communicationScore}% recent` : 'No time entries yet' },
+    {
+      label: 'Deliverables',
+      score: deliverableScore,
+      icon: FileCheck,
+      desc: `${deliverableScore}% complete this month`,
+    },
+    {
+      label: 'Report Freshness',
+      score: reportScore,
+      icon: Calendar,
+      desc: reportScore > 0 ? `${reportScore}% fresh` : 'No reports yet',
+    },
+    {
+      label: 'Communication',
+      score: communicationScore,
+      icon: MessageSquare,
+      desc:
+        communicationScore > 0
+          ? `Last contact: ${communicationScore}% recent`
+          : 'No time entries yet',
+    },
   ];
 
   return (
@@ -130,7 +155,9 @@ export default function RetainerHealthScore({ clientId }: { clientId: string }) 
 
       <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-3">
         <div className="flex items-center gap-3">
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${scoreBg(overallScore)} text-white`}>
+          <div
+            className={`w-12 h-12 rounded-full flex items-center justify-center ${scoreBg(overallScore)} text-white`}
+          >
             <span className="text-lg font-semibold">{overallScore}</span>
           </div>
           <div>
@@ -143,7 +170,7 @@ export default function RetainerHealthScore({ clientId }: { clientId: string }) 
         </div>
 
         <div className="space-y-2">
-          {subScores.map(s => {
+          {subScores.map((s) => {
             const Icon = s.icon;
             return (
               <div key={s.label}>
@@ -155,7 +182,10 @@ export default function RetainerHealthScore({ clientId }: { clientId: string }) 
                   <span className={`font-medium ${scoreColor(s.score)}`}>{s.score}%</span>
                 </div>
                 <div className="h-1.5 bg-[var(--border-color)] rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-colors ${scoreBg(s.score)}`} style={{ width: `${Math.max(2, s.score)}%` }} />
+                  <div
+                    className={`h-full rounded-full transition-colors ${scoreBg(s.score)}`}
+                    style={{ width: `${Math.max(2, s.score)}%` }}
+                  />
                 </div>
               </div>
             );

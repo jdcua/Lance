@@ -471,9 +471,6 @@ mod tests {
     #[test]
     fn chrono_now_is_rfc3339() {
         let now = chrono_now();
-        assert!(
-            chrono::DateTime::parse_from_rfc3339(&now).is_ok(),
-            "not RFC3339: {now}"
-        );
+        assert!(chrono::DateTime::parse_from_rfc3339(&now).is_ok(), "not RFC3339: {now}");
     }
 }

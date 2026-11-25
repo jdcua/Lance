@@ -6,7 +6,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { getDb } from '../../db';
 import Button from '../ui/Button';
 
-type Spec = { id: string; project_id: string; format?: string; resolution?: string; aspect_ratio?: string; audio_spec?: string; delivery_method?: string; notes?: string };
+type Spec = {
+  id: string;
+  project_id: string;
+  format?: string;
+  resolution?: string;
+  aspect_ratio?: string;
+  audio_spec?: string;
+  delivery_method?: string;
+  notes?: string;
+};
 
 const FIELDS: { key: keyof Spec; label: string }[] = [
   { key: 'format', label: 'Format' },
@@ -44,7 +53,10 @@ export default function DeliverableSpecs({ projectId }: { projectId: string }) {
   const loadSpec = useCallback(async () => {
     try {
       const db = await getDb();
-      const rows = await db.select<(Spec & Record<string, unknown>)[]>('SELECT id, project_id, format, resolution, aspect_ratio, audio_spec, delivery_method, notes FROM deliverable_specs WHERE project_id = ? LIMIT 1', [projectId]);
+      const rows = await db.select<(Spec & Record<string, unknown>)[]>(
+        'SELECT id, project_id, format, resolution, aspect_ratio, audio_spec, delivery_method, notes FROM deliverable_specs WHERE project_id = ? LIMIT 1',
+        [projectId],
+      );
       if (rows.length > 0) {
         const r = rows[0];
         const loaded: Spec = {
@@ -67,11 +79,15 @@ export default function DeliverableSpecs({ projectId }: { projectId: string }) {
           notes: loaded.notes || '',
         });
       }
-    } catch (e) { console.error('[DeliverableSpecs] loadSpec failed:', e); }
+    } catch (e) {
+      console.error('[DeliverableSpecs] loadSpec failed:', e);
+    }
     setLoading(false);
   }, [projectId]);
 
-  useEffect(() => { loadSpec(); }, [projectId, loadSpec]);
+  useEffect(() => {
+    loadSpec();
+  }, [projectId, loadSpec]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -82,19 +98,21 @@ export default function DeliverableSpecs({ projectId }: { projectId: string }) {
       if (spec) {
         await db.execute(
           'UPDATE deliverable_specs SET format = ?, resolution = ?, aspect_ratio = ?, audio_spec = ?, delivery_method = ?, notes = ? WHERE id = ?',
-          [...values, spec.id]
+          [...values, spec.id],
         );
         setSpec({ ...spec, ...optional });
       } else {
         const id = crypto.randomUUID();
         await db.execute(
           'INSERT INTO deliverable_specs (id, project_id, format, resolution, aspect_ratio, audio_spec, delivery_method, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          [id, projectId, ...values]
+          [id, projectId, ...values],
         );
         setSpec({ id, project_id: projectId, ...optional });
       }
       setEditing(false);
-    } catch (e) { console.error('[DeliverableSpecs] save failed:', e); }
+    } catch (e) {
+      console.error('[DeliverableSpecs] save failed:', e);
+    }
     setSaving(false);
   };
 
@@ -110,19 +128,24 @@ export default function DeliverableSpecs({ projectId }: { projectId: string }) {
     setEditing(true);
   };
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass =
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
 
-  const hasAnyValue = spec && FIELDS.some(f => spec[f.key]);
+  const hasAnyValue = spec && FIELDS.some((f) => spec[f.key]);
 
   if (loading) {
-    return <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Deliverable Specs</h4>
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Deliverable Specs</h4>
+        </div>
+        <div className="space-y-1">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
+          ))}
+        </div>
       </div>
-      <div className="space-y-1">
-        {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
-      </div>
-    </div>;
+    );
   }
 
   return (
@@ -130,7 +153,9 @@ export default function DeliverableSpecs({ projectId }: { projectId: string }) {
       <div className="flex items-center justify-between">
         <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Deliverable Specs</h4>
         {editing ? (
-          <Button size="sm" onClick={handleSave} loading={saving}>Save</Button>
+          <Button size="sm" onClick={handleSave} loading={saving}>
+            Save
+          </Button>
         ) : (
           <Button variant="ghost" size="sm" onClick={startEdit}>
             {spec ? 'Edit' : 'Add Specs'}
@@ -139,12 +164,16 @@ export default function DeliverableSpecs({ projectId }: { projectId: string }) {
       </div>
 
       {!editing && !hasAnyValue ? (
-        <p className="text-xs text-[var(--text-tertiary)] py-2">No deliverable specs set. Add your delivery specifications.</p>
+        <p className="text-xs text-[var(--text-tertiary)] py-2">
+          No deliverable specs set. Add your delivery specifications.
+        </p>
       ) : editing ? (
         <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
-          {FIELDS.map(f => (
+          {FIELDS.map((f) => (
             <div key={f.key}>
-              <label className="text-[10px] text-[var(--text-tertiary)] block mb-0.5">{f.label}</label>
+              <label className="text-[10px] text-[var(--text-tertiary)] block mb-0.5">
+                {f.label}
+              </label>
               {f.key === 'notes' ? (
                 <textarea
                   placeholder={f.label}
@@ -165,17 +194,25 @@ export default function DeliverableSpecs({ projectId }: { projectId: string }) {
             </div>
           ))}
           <div className="flex justify-end gap-2 pt-1">
-            <Button variant="secondary" size="sm" onClick={() => setEditing(false)}>Cancel</Button>
+            <Button variant="secondary" size="sm" onClick={() => setEditing(false)}>
+              Cancel
+            </Button>
           </div>
         </div>
       ) : (
         <div className="space-y-1">
-          {spec && FIELDS.map(f => (
-            <div key={f.key} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
-              <span className="text-[var(--text-tertiary)]">{f.label}</span>
-              <span className="font-medium text-[var(--text-primary)]">{spec[f.key] || '--'}</span>
-            </div>
-          ))}
+          {spec &&
+            FIELDS.map((f) => (
+              <div
+                key={f.key}
+                className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
+              >
+                <span className="text-[var(--text-tertiary)]">{f.label}</span>
+                <span className="font-medium text-[var(--text-primary)]">
+                  {spec[f.key] || '--'}
+                </span>
+              </div>
+            ))}
         </div>
       )}
     </div>

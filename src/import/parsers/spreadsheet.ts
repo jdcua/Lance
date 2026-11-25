@@ -66,7 +66,11 @@ export async function parseSpreadsheet(file: File): Promise<ImportDetection> {
   // sheet_to_json, by which point a 5MB xlsx declaring !ref="A1:XFD1048576"
   // has already made SheetJS materialise ~17 billion cells. Tell the parser the
   // ceiling up front so it never allocates them.
-  const workbook = XLSX.read(arrayBuffer, { type: 'array', sheetRows: MAX_ROWS + 1, cellDates: true });
+  const workbook = XLSX.read(arrayBuffer, {
+    type: 'array',
+    sheetRows: MAX_ROWS + 1,
+    cellDates: true,
+  });
 
   const sheetName = workbook.SheetNames[0];
   if (!sheetName) {

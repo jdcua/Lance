@@ -24,7 +24,12 @@ type OutcomeForm = {
   testimonial_draft: string;
 };
 
-const OUTCOME_KEYS: (keyof OutcomeForm)[] = ['before_state', 'after_state', 'metrics_improved', 'testimonial_draft'];
+const OUTCOME_KEYS: (keyof OutcomeForm)[] = [
+  'before_state',
+  'after_state',
+  'metrics_improved',
+  'testimonial_draft',
+];
 
 const toNull = (v: string) => v || null;
 const toOptional = (v: string) => v || undefined;
@@ -57,7 +62,7 @@ export default function OutcomeNotes({ projectId }: { projectId: string }) {
       const db = await getDb();
       const rows = await db.select<(Outcome & Record<string, unknown>)[]>(
         'SELECT id, project_id, before_state, after_state, metrics_improved, testimonial_draft, created_at FROM outcomes WHERE project_id = ?',
-        [projectId]
+        [projectId],
       );
       if (rows.length > 0) {
         const o: Outcome = {
@@ -99,7 +104,7 @@ export default function OutcomeNotes({ projectId }: { projectId: string }) {
       if (outcome) {
         await db.execute(
           'UPDATE outcomes SET before_state = ?, after_state = ?, metrics_improved = ?, testimonial_draft = ? WHERE id = ?',
-          [...values, outcome.id]
+          [...values, outcome.id],
         );
         setOutcome({ ...outcome, ...optional });
       } else {
@@ -107,7 +112,7 @@ export default function OutcomeNotes({ projectId }: { projectId: string }) {
         const now = new Date().toISOString();
         await db.execute(
           'INSERT INTO outcomes (id, project_id, before_state, after_state, metrics_improved, testimonial_draft, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [id, projectId, ...values, now]
+          [id, projectId, ...values, now],
         );
         setOutcome({ id, project_id: projectId, ...optional, created_at: now });
       }
@@ -124,9 +129,7 @@ export default function OutcomeNotes({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Outcome Notes
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Outcome Notes</h4>
         </div>
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
@@ -140,9 +143,7 @@ export default function OutcomeNotes({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-          Outcome Notes
-        </h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Outcome Notes</h4>
         <Button size="sm" onClick={handleSave} loading={saving}>
           <Save size={12} /> Save
         </Button>

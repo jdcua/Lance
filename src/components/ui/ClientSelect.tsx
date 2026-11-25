@@ -9,18 +9,24 @@ interface ClientSelectProps {
   placeholder?: string;
 }
 
-export default function ClientSelect({ clients, value, onChange, placeholder = 'Select a client...' }: ClientSelectProps) {
+export default function ClientSelect({
+  clients,
+  value,
+  onChange,
+  placeholder = 'Select a client...',
+}: ClientSelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [activeIndex, setActiveIndex] = useState(-1);
   const ref = useRef<HTMLDivElement>(null);
 
-  const selected = clients.find(c => c.id === value);
+  const selected = clients.find((c) => c.id === value);
 
-  const filtered = clients.filter(c =>
-    (c.name || '').toLowerCase().includes(search.toLowerCase()) ||
-    (c.company || '').toLowerCase().includes(search.toLowerCase()) ||
-    (c.email || '').toLowerCase().includes(search.toLowerCase())
+  const filtered = clients.filter(
+    (c) =>
+      (c.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (c.company || '').toLowerCase().includes(search.toLowerCase()) ||
+      (c.email || '').toLowerCase().includes(search.toLowerCase()),
   );
 
   useEffect(() => {
@@ -48,11 +54,11 @@ export default function ClientSelect({ clients, value, onChange, placeholder = '
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setActiveIndex(prev => Math.min(prev + 1, filtered.length - 1));
+        setActiveIndex((prev) => Math.min(prev + 1, filtered.length - 1));
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setActiveIndex(prev => Math.max(prev - 1, 0));
+        setActiveIndex((prev) => Math.max(prev - 1, 0));
         break;
       case 'Enter':
         e.preventDefault();
@@ -73,7 +79,8 @@ export default function ClientSelect({ clients, value, onChange, placeholder = '
     }
   };
 
-  const inputClass = "w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)] text-[var(--text-primary)]";
+  const inputClass =
+    'w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)] text-[var(--text-primary)]';
 
   return (
     <div ref={ref} className="relative">
@@ -83,14 +90,26 @@ export default function ClientSelect({ clients, value, onChange, placeholder = '
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-label={placeholder || 'Select a client'}
-        onClick={() => { setOpen(!open); setActiveIndex(0); }}
+        onClick={() => {
+          setOpen(!open);
+          setActiveIndex(0);
+        }}
         onKeyDown={handleKeyDown}
         className={`${inputClass} text-left flex items-center justify-between`}
       >
-        <span className={selected ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)] truncate'}>
-          {selected ? `${selected.name}${selected.company ? ` (${selected.company})` : ''}` : placeholder}
+        <span
+          className={
+            selected ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)] truncate'
+          }
+        >
+          {selected
+            ? `${selected.name}${selected.company ? ` (${selected.company})` : ''}`
+            : placeholder}
         </span>
-        <ChevronDown size={14} className={`text-[var(--text-tertiary)] flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          size={14}
+          className={`text-[var(--text-tertiary)] flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
+        />
       </button>
 
       {open && (
@@ -99,16 +118,18 @@ export default function ClientSelect({ clients, value, onChange, placeholder = '
             <input
               type="text"
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Search clients..."
               className="w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] bg-[var(--bg-secondary)]"
               autoFocus
-              onClick={e => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
           <div className="overflow-y-auto" role="listbox">
             {filtered.length === 0 ? (
-              <p className="px-3 py-4 text-xs text-[var(--text-tertiary)] text-center">No clients found</p>
+              <p className="px-3 py-4 text-xs text-[var(--text-tertiary)] text-center">
+                No clients found
+              </p>
             ) : (
               filtered.map((c, idx) => (
                 <button
@@ -124,17 +145,24 @@ export default function ClientSelect({ clients, value, onChange, placeholder = '
                   }}
                   className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between transition-colors ${
                     idx === activeIndex ? 'bg-[var(--accent-bg)]' : ''
-                  } ${
-                    c.id === value ? 'bg-[var(--accent-bg)]' : 'hover:bg-[var(--bg-secondary)]'
-                  }`}
+                  } ${c.id === value ? 'bg-[var(--accent-bg)]' : 'hover:bg-[var(--bg-secondary)]'}`}
                 >
                   <div className="min-w-0">
-                    <span className={`truncate block ${c.id === value ? 'text-[var(--accent-ink,var(--accent))] font-medium' : 'text-[var(--text-primary)]'}`}>
+                    <span
+                      className={`truncate block ${c.id === value ? 'text-[var(--accent-ink,var(--accent))] font-medium' : 'text-[var(--text-primary)]'}`}
+                    >
                       {c.name}
                     </span>
-                    {c.company && <span className="text-[10px] text-[var(--text-tertiary)]">{c.company}</span>}
+                    {c.company && (
+                      <span className="text-[10px] text-[var(--text-tertiary)]">{c.company}</span>
+                    )}
                   </div>
-                  {c.id === value && <Check size={14} className="text-[var(--accent-ink,var(--accent))] flex-shrink-0 ml-2" />}
+                  {c.id === value && (
+                    <Check
+                      size={14}
+                      className="text-[var(--accent-ink,var(--accent))] flex-shrink-0 ml-2"
+                    />
+                  )}
                 </button>
               ))
             )}

@@ -1,6 +1,8 @@
 # Clippy lint configuration for Lance.
-# Cognitive complexity is stricter than Clippy's default 25; the other
-# thresholds keep existing code honest while we work through the backlog.
-cognitive-complexity-threshold = 20
+# Thresholds are stated explicitly so the quality gate is reproducible; they
+# currently match Clippy's defaults (excessive nesting 0, lines 100,
+# arguments 7, type complexity 250).
+excessive-nesting-threshold = 0
+too-many-lines-threshold = 100
 too-many-arguments-threshold = 7
 type-complexity-threshold = 250

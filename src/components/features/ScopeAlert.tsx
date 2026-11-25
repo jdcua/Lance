@@ -33,9 +33,12 @@ export default function ScopeAlert({ clientId }: { clientId?: string }) {
 
         const retainers = await db.select<(RetainerRecord & Record<string, unknown>)[]>(
           'SELECT id, client_id, monthly_hours, active FROM retainers WHERE client_id = ? AND active = 1',
-          [clientId]
+          [clientId],
         );
-        const totalMonthlyHours = retainers.reduce((sum, r) => sum + ((r.monthly_hours as number) || 0), 0);
+        const totalMonthlyHours = retainers.reduce(
+          (sum, r) => sum + ((r.monthly_hours as number) || 0),
+          0,
+        );
 
         if (totalMonthlyHours === 0) {
           setUsagePct(0);
@@ -45,22 +48,25 @@ export default function ScopeAlert({ clientId }: { clientId?: string }) {
 
         const tasks = await db.select<(TaskRecord & Record<string, unknown>)[]>(
           'SELECT id, duration_minutes FROM va_tasks WHERE client_id = ?',
-          [clientId]
+          [clientId],
         );
-        const totalMinutes = tasks.reduce((sum, t) => sum + ((t.duration_minutes as number) || 0), 0);
+        const totalMinutes = tasks.reduce(
+          (sum, t) => sum + ((t.duration_minutes as number) || 0),
+          0,
+        );
         const totalHours = totalMinutes / 60;
 
         setUsagePct(Math.round((totalHours / totalMonthlyHours) * 100));
-      } catch (e) { console.error('[ScopeAlert] load failed:', e); }
+      } catch (e) {
+        console.error('[ScopeAlert] load failed:', e);
+      }
       setLoading(false);
     };
     load();
   }, [clientId]);
 
   if (loading) {
-    return (
-      <div className="h-12 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
-    );
+    return <div className="h-12 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />;
   }
 
   if (!clientId) {
@@ -81,7 +87,9 @@ export default function ScopeAlert({ clientId }: { clientId?: string }) {
       <div className="flex items-center gap-2 px-3 py-2 bg-[#DC2626]/10 border border-[#DC2626]/30 rounded-xs text-xs">
         <AlertTriangle size={14} className="text-[#DC2626] flex-shrink-0" />
         <span className="text-[#DC2626] font-medium">Scope Alert:</span>
-        <span className="text-[var(--text-primary)]">Task hours at <strong>{usagePct}%</strong> of monthly retainer. Review scope.</span>
+        <span className="text-[var(--text-primary)]">
+          Task hours at <strong>{usagePct}%</strong> of monthly retainer. Review scope.
+        </span>
       </div>
     );
   }
@@ -89,7 +97,9 @@ export default function ScopeAlert({ clientId }: { clientId?: string }) {
   return (
     <div className="flex items-center gap-2 px-3 py-2 bg-[#2ECC71]/10 border border-[#2ECC71]/30 rounded-xs text-xs">
       <CheckCircle size={14} className="text-[#2ECC71] flex-shrink-0" />
-      <span className="text-[var(--text-primary)]">Hours within scope ({usagePct}% of retainer).</span>
+      <span className="text-[var(--text-primary)]">
+        Hours within scope ({usagePct}% of retainer).
+      </span>
     </div>
   );
 }

@@ -1,25 +1,25 @@
 #!/usr/bin/env node
 /**
- * Enforces that the `xlsx` CDN tarball stays hash-pinned in TWO independent
- * places.
+ * Enforces that the `xlsx` CDN tarball stays hash-pinned in two independent
+ * files.
  *
  * `package.json` pins a tarball URL, not a registry version, because SheetJS
- * moved off npm. `package-lock.json` therefore carries the only integrity hash
- * in the build, and the lockfile is exactly the file a supply-chain attacker
- * would edit alongside package.json. One file is not a check.
+ * moved off npm. `package-lock.json` therefore carries the integrity hash that
+ * `npm ci` verifies, and the lockfile is exactly the file a supply-chain
+ * attacker would edit alongside package.json. A second copy of that hash is
+ * kept in .github/security/xlsx-integrity.txt; this script fails if the
+ * lockfile drifts from it, so changing the tarball means editing a separate,
+ * reviewed file rather than only package.json and the lockfile.
  *
  * `xlsx` also parses attacker-supplied binary input in the shipped app (client
  * and bank CSV/XLSX import) and is the single dependency that no `npm audit`
  * coverage reaches, so its provenance matters more than average.
  *
- * This script fails if the lockfile's integrity hash drifts from the one
- * recorded here in the repo. Update it deliberately:
+ * Update the recorded hash deliberately:
  *   node .github/security/check-xlsx-pin.mjs --update
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 
-const EXPECTED =
-  'sha512-oLDq3jw7AcLqKWH2AhCpVTZl8mf6X2YReP+Neh0SJUzV/BdZYjth94tG5toiMB1PPrYtxOCfaoUCkvtuH+3AJA==';
 const RECORDED_IN = '.github/security/xlsx-integrity.txt';
 
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'));

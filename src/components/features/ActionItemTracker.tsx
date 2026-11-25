@@ -44,7 +44,7 @@ export default function ActionItemTracker({ clientId }: { clientId: string }) {
       const db = await getDb();
       const rows = await db.select<(ActionItem & Record<string, unknown>)[]>(
         'SELECT id, client_id, session_id, title, owner, due_date, completed, created_at FROM action_items WHERE client_id = ? ORDER BY completed ASC, due_date ASC NULLS LAST, created_at DESC',
-        [clientId]
+        [clientId],
       );
       setItems(
         rows.map((r) => ({
@@ -54,9 +54,9 @@ export default function ActionItemTracker({ clientId }: { clientId: string }) {
           title: r.title as string,
           owner: r.owner as string,
           due_date: r.due_date as string | undefined,
-          completed: !!(r.completed),
+          completed: !!r.completed,
           created_at: r.created_at as string,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[ActionItemTracker] loadItems failed:', e);
@@ -77,15 +77,7 @@ export default function ActionItemTracker({ clientId }: { clientId: string }) {
       const db = await getDb();
       await db.execute(
         'INSERT INTO action_items (id, client_id, title, owner, due_date, completed, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [
-          id,
-          clientId,
-          form.title.trim(),
-          form.owner,
-          form.due_date || null,
-          0,
-          now,
-        ]
+        [id, clientId, form.title.trim(), form.owner, form.due_date || null, 0, now],
       );
       const item: ActionItem = {
         id,
@@ -109,9 +101,12 @@ export default function ActionItemTracker({ clientId }: { clientId: string }) {
     try {
       const db = await getDb();
       const newCompleted = item.completed ? 0 : 1;
-      await db.execute('UPDATE action_items SET completed = ? WHERE id = ?', [newCompleted, item.id]);
+      await db.execute('UPDATE action_items SET completed = ? WHERE id = ?', [
+        newCompleted,
+        item.id,
+      ]);
       setItems((prev) =>
-        prev.map((i) => (i.id === item.id ? { ...i, completed: !i.completed } : i))
+        prev.map((i) => (i.id === item.id ? { ...i, completed: !i.completed } : i)),
       );
     } catch (e) {
       console.error('[ActionItemTracker] toggle failed:', e);
@@ -156,9 +151,7 @@ export default function ActionItemTracker({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Action Items
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Action Items</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -191,7 +184,8 @@ export default function ActionItemTracker({ clientId }: { clientId: string }) {
             autoFocus
           />
           <div className="grid grid-cols-2 gap-2">
-            <select aria-label="Owner"
+            <select
+              aria-label="Owner"
               value={form.owner}
               onChange={(e) => setForm({ ...form, owner: e.target.value })}
               className={selectClass}
@@ -235,7 +229,9 @@ export default function ActionItemTracker({ clientId }: { clientId: string }) {
       </div>
 
       {filteredItems.length === 0 ? (
-        <p className="text-xs text-[var(--text-tertiary)] py-2">No action items yet. Add your first item.</p>
+        <p className="text-xs text-[var(--text-tertiary)] py-2">
+          No action items yet. Add your first item.
+        </p>
       ) : (
         <div className="space-y-1">
           {filteredItems.map((item) => {
@@ -244,7 +240,9 @@ export default function ActionItemTracker({ clientId }: { clientId: string }) {
               <div
                 key={item.id}
                 className={`flex items-center justify-between px-3 py-2 rounded-xs text-xs ${
-                  overdue ? 'bg-[#DC2626]/10 border-l-2 border-[#DC2626]' : 'bg-[var(--bg-secondary)]'
+                  overdue
+                    ? 'bg-[#DC2626]/10 border-l-2 border-[#DC2626]'
+                    : 'bg-[var(--bg-secondary)]'
                 }`}
               >
                 <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -262,11 +260,13 @@ export default function ActionItemTracker({ clientId }: { clientId: string }) {
                       {item.title}
                     </span>
                     <div className="flex items-center gap-2 text-[10px] text-[var(--text-tertiary)]">
-                      <span className={`px-1 py-0.5 rounded-full ${
-                        item.owner === 'consultant'
-                          ? 'bg-[#2563EB]/15 text-[#2563EB]'
-                          : 'bg-[#9B59B6]/15 text-[#9B59B6]'
-                      }`}>
+                      <span
+                        className={`px-1 py-0.5 rounded-full ${
+                          item.owner === 'consultant'
+                            ? 'bg-[#2563EB]/15 text-[#2563EB]'
+                            : 'bg-[#9B59B6]/15 text-[#9B59B6]'
+                        }`}
+                      >
                         {item.owner}
                       </span>
                       {item.due_date && (
@@ -294,7 +294,8 @@ export default function ActionItemTracker({ clientId }: { clientId: string }) {
                     </div>
                   </div>
                 </div>
-                <button aria-label="Delete action item tracker"
+                <button
+                  aria-label="Delete action item tracker"
                   onClick={() => handleDelete(item.id)}
                   className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0"
                 >

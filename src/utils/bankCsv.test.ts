@@ -38,10 +38,12 @@ describe('bank CSV importing', () => {
     expect(signed.parsed[1]).toMatchObject({ amount: 1200, direction: 'in' });
     expect(signed.skipped).toBe(1);
 
-    const split = parseBankRows(
-      [{ D: '2026-09-01', M: 'Ads', Out: '50.00', In: '' }],
-      { date: 'D', description: 'M', debit: 'Out', credit: 'In' },
-    );
+    const split = parseBankRows([{ D: '2026-09-01', M: 'Ads', Out: '50.00', In: '' }], {
+      date: 'D',
+      description: 'M',
+      debit: 'Out',
+      credit: 'In',
+    });
     expect(split.parsed[0]).toMatchObject({ amount: -50, direction: 'out' });
   });
 

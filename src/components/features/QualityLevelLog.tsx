@@ -64,7 +64,7 @@ export default function QualityLevelLog({ projectId }: { projectId: string }) {
       const db = await getDb();
       const rows = await db.select<(ProjectQuality & Record<string, unknown>)[]>(
         'SELECT id, project_id, quality_tier, notes FROM project_quality WHERE project_id = ?',
-        [projectId]
+        [projectId],
       );
       if (rows.length > 0) {
         const q: ProjectQuality = {
@@ -96,18 +96,24 @@ export default function QualityLevelLog({ projectId }: { projectId: string }) {
     try {
       const db = await getDb();
       if (quality) {
-        await db.execute(
-          'UPDATE project_quality SET quality_tier = ?, notes = ? WHERE id = ?',
-          [selectedTier, notes || null, quality.id]
-        );
+        await db.execute('UPDATE project_quality SET quality_tier = ?, notes = ? WHERE id = ?', [
+          selectedTier,
+          notes || null,
+          quality.id,
+        ]);
         setQuality({ ...quality, quality_tier: selectedTier, notes: notes || undefined });
       } else {
         const id = crypto.randomUUID();
         await db.execute(
           'INSERT INTO project_quality (id, project_id, quality_tier, notes) VALUES (?, ?, ?, ?)',
-          [id, projectId, selectedTier, notes || null]
+          [id, projectId, selectedTier, notes || null],
         );
-        setQuality({ id, project_id: projectId, quality_tier: selectedTier, notes: notes || undefined });
+        setQuality({
+          id,
+          project_id: projectId,
+          quality_tier: selectedTier,
+          notes: notes || undefined,
+        });
       }
     } catch (e) {
       console.error('[QualityLevelLog] save failed:', e);
@@ -146,7 +152,9 @@ export default function QualityLevelLog({ projectId }: { projectId: string }) {
         <div className={`p-2 rounded-xs border-l-[3px] ${TIER_COLORS[quality.quality_tier] || ''}`}>
           <div className="flex items-center gap-1.5">
             {TIER_CONFIG[quality.quality_tier]?.icon}
-            <span className="text-xs font-medium text-[var(--text-primary)]">{TIER_CONFIG[quality.quality_tier]?.label || quality.quality_tier}</span>
+            <span className="text-xs font-medium text-[var(--text-primary)]">
+              {TIER_CONFIG[quality.quality_tier]?.label || quality.quality_tier}
+            </span>
           </div>
           {quality.notes && (
             <p className="text-[10px] text-[var(--text-tertiary)] mt-1">{quality.notes}</p>
@@ -178,7 +186,9 @@ export default function QualityLevelLog({ projectId }: { projectId: string }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
                   {cfg.icon}
-                  <span className="text-xs font-medium text-[var(--text-primary)]">{cfg.label}</span>
+                  <span className="text-xs font-medium text-[var(--text-primary)]">
+                    {cfg.label}
+                  </span>
                 </div>
                 <p className="text-[10px] text-[var(--text-tertiary)] mt-0.5">{cfg.description}</p>
               </div>
@@ -188,7 +198,9 @@ export default function QualityLevelLog({ projectId }: { projectId: string }) {
       </div>
 
       <div>
-        <label className="text-[10px] font-medium text-[var(--text-secondary)] mb-1 block">Notes</label>
+        <label className="text-[10px] font-medium text-[var(--text-secondary)] mb-1 block">
+          Notes
+        </label>
         <textarea
           placeholder="Additional quality notes..."
           value={notes}
@@ -199,7 +211,9 @@ export default function QualityLevelLog({ projectId }: { projectId: string }) {
       </div>
 
       {!quality && (
-        <p className="text-xs text-[var(--text-tertiary)] py-2">No quality level set. Select a tier and save.</p>
+        <p className="text-xs text-[var(--text-tertiary)] py-2">
+          No quality level set. Select a tier and save.
+        </p>
       )}
     </div>
   );

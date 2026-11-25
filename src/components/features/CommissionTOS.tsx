@@ -22,7 +22,7 @@ export default function CommissionTOS() {
   const [showForm, setShowForm] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [activeTOSId, setActiveTOSId] = useState<string | null>(
-    localStorage.getItem(ACTIVE_TOS_KEY)
+    localStorage.getItem(ACTIVE_TOS_KEY),
   );
   const [form, setForm] = useState({ title: '', body: '' });
   const [saving, setSaving] = useState(false);
@@ -31,7 +31,7 @@ export default function CommissionTOS() {
     try {
       const db = await getDb();
       const rows = await db.select<(TOS & Record<string, unknown>)[]>(
-        'SELECT id, title, body, created_at FROM commission_tos ORDER BY created_at DESC'
+        'SELECT id, title, body, created_at FROM commission_tos ORDER BY created_at DESC',
       );
       setTemplates(
         rows.map((r) => ({
@@ -39,7 +39,7 @@ export default function CommissionTOS() {
           title: r.title as string,
           body: r.body as string,
           created_at: r.created_at as string,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[CommissionTOS] loadTemplates failed:', e);
@@ -60,7 +60,7 @@ export default function CommissionTOS() {
       const createdAt = new Date().toISOString();
       await db.execute(
         'INSERT INTO commission_tos (id, title, body, created_at) VALUES (?, ?, ?, ?)',
-        [id, form.title.trim(), form.body.trim(), createdAt]
+        [id, form.title.trim(), form.body.trim(), createdAt],
       );
       const item: TOS = {
         id,
@@ -103,9 +103,7 @@ export default function CommissionTOS() {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Commission TOS
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Commission TOS</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -170,7 +168,8 @@ export default function CommissionTOS() {
             <div key={t.id}>
               <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
                 <div className="flex-1 min-w-0 flex items-center gap-2">
-                  <button aria-label="Next"
+                  <button
+                    aria-label="Next"
                     onClick={() => setExpanded(expanded === t.id ? null : t.id)}
                     className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                   >
@@ -196,7 +195,8 @@ export default function CommissionTOS() {
                       <Check size={12} />
                     </button>
                   )}
-                  <button aria-label="Delete commission tos"
+                  <button
+                    aria-label="Delete commission tos"
                     onClick={() => handleDelete(t.id)}
                     className="text-[var(--text-tertiary)] hover:text-[#A32D2D]"
                   >

@@ -56,7 +56,7 @@ export default function WordTracker({ timeEntryId }: { timeEntryId?: string }) {
       const db = await getDb();
       const rows = await db.select<(WordEntry & Record<string, unknown>)[]>(
         'SELECT id, time_entry_id, word_count FROM time_entry_words WHERE time_entry_id = ?',
-        [teId]
+        [teId],
       );
       if (rows.length > 0) {
         const entry: WordEntry = {
@@ -84,7 +84,7 @@ export default function WordTracker({ timeEntryId }: { timeEntryId?: string }) {
          FROM time_entries te
          LEFT JOIN time_entry_words tew ON tew.time_entry_id = te.id
          ORDER BY te.start_time DESC
-         LIMIT 50`
+         LIMIT 50`,
       );
       setRecentEntries(
         rows.map((r) => ({
@@ -97,7 +97,7 @@ export default function WordTracker({ timeEntryId }: { timeEntryId?: string }) {
           duration_minutes: r.duration_minutes as number | undefined,
           word_count: r.word_count != null ? (r.word_count as number) : undefined,
           words_id: r.words_id as string | undefined,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[WordTracker] loadRecentEntriesWithWords failed:', e);
@@ -121,15 +121,17 @@ export default function WordTracker({ timeEntryId }: { timeEntryId?: string }) {
       const db = await getDb();
       if (timeEntryId) {
         if (wordEntry) {
-          await db.execute('UPDATE time_entry_words SET word_count = ? WHERE id = ?', [num, wordEntry.id]);
+          await db.execute('UPDATE time_entry_words SET word_count = ? WHERE id = ?', [
+            num,
+            wordEntry.id,
+          ]);
           setWordEntry({ ...wordEntry, word_count: num });
         } else {
           const id = crypto.randomUUID();
-          await db.execute('INSERT INTO time_entry_words (id, time_entry_id, word_count) VALUES (?, ?, ?)', [
-            id,
-            timeEntryId,
-            num,
-          ]);
+          await db.execute(
+            'INSERT INTO time_entry_words (id, time_entry_id, word_count) VALUES (?, ?, ?)',
+            [id, timeEntryId, num],
+          );
           setWordEntry({ id, time_entry_id: timeEntryId, word_count: num });
         }
       }
@@ -146,19 +148,21 @@ export default function WordTracker({ timeEntryId }: { timeEntryId?: string }) {
     try {
       const db = await getDb();
       if (wordsId) {
-        await db.execute('UPDATE time_entry_words SET word_count = ? WHERE id = ?', [wordCount, wordsId]);
+        await db.execute('UPDATE time_entry_words SET word_count = ? WHERE id = ?', [
+          wordCount,
+          wordsId,
+        ]);
       } else {
         const id = crypto.randomUUID();
-        await db.execute('INSERT INTO time_entry_words (id, time_entry_id, word_count) VALUES (?, ?, ?)', [
-          id,
-          entryId,
-          wordCount,
-        ]);
+        await db.execute(
+          'INSERT INTO time_entry_words (id, time_entry_id, word_count) VALUES (?, ?, ?)',
+          [id, entryId, wordCount],
+        );
       }
       setRecentEntries((prev) =>
         prev.map((e) =>
-          e.id === entryId ? { ...e, word_count: wordCount, words_id: wordsId || undefined } : e
-        )
+          e.id === entryId ? { ...e, word_count: wordCount, words_id: wordsId || undefined } : e,
+        ),
       );
     } catch (e) {
       console.error('[WordTracker] handleInlineSave failed:', e);
@@ -173,9 +177,7 @@ export default function WordTracker({ timeEntryId }: { timeEntryId?: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Word Count
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Word Count</h4>
         </div>
         <div className="space-y-1">
           {[1, 2].map((i) => (
@@ -190,9 +192,7 @@ export default function WordTracker({ timeEntryId }: { timeEntryId?: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Word Count
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Word Count</h4>
         </div>
         <div className="flex items-center gap-2 px-3 py-2 bg-[var(--bg-secondary)] rounded-xs">
           <input
@@ -207,7 +207,9 @@ export default function WordTracker({ timeEntryId }: { timeEntryId?: string }) {
             <Save size={12} /> Save
           </Button>
           {wordEntry && (
-            <span className="text-xs text-[var(--text-tertiary)]">{wordEntry.word_count.toLocaleString()} words</span>
+            <span className="text-xs text-[var(--text-tertiary)]">
+              {wordEntry.word_count.toLocaleString()} words
+            </span>
           )}
         </div>
       </div>
@@ -229,7 +231,9 @@ export default function WordTracker({ timeEntryId }: { timeEntryId?: string }) {
           ))}
         </div>
       ) : recentEntries.length === 0 ? (
-        <p className="text-xs text-[var(--text-tertiary)] py-2">No time entries yet. Log some time first.</p>
+        <p className="text-xs text-[var(--text-tertiary)] py-2">
+          No time entries yet. Log some time first.
+        </p>
       ) : (
         <div className="space-y-1 max-h-80 overflow-y-auto">
           {recentEntries.map((entry) => (

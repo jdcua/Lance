@@ -34,7 +34,9 @@ describe('metric templates', () => {
       'lance:store:metric_templates',
       JSON.stringify([{ id: 't-bad', name: 'Broken', definitions_json: '{oops' }]),
     );
-    await expect(useStore.getState().applyMetricTemplate('Broken', 'c1')).rejects.toThrow(/corrupted/);
+    await expect(useStore.getState().applyMetricTemplate('Broken', 'c1')).rejects.toThrow(
+      /corrupted/,
+    );
   });
 
   it('ignores unknown apply targets silently', async () => {

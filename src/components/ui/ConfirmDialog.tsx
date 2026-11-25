@@ -49,7 +49,9 @@ export default function ConfirmDialog({
     <div className="fixed inset-0 z-[70] flex items-center justify-center">
       <div
         className="absolute inset-0 bg-black/30 backdrop-blur-sm animate-fade-in"
-        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
       />
       <div
         ref={dialogRef}

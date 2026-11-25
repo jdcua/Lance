@@ -61,7 +61,9 @@ export function computeForecast(
   // Pipeline: flat-rate open proposals weighted by win rate. Hourly proposals
   // carry no fixed value, so they are counted separately, never guessed.
   const openFlat = proposals.filter((p) => p.status === 'sent' && p.rate_type !== 'hourly');
-  const openHourlyCount = proposals.filter((p) => p.status === 'sent' && p.rate_type === 'hourly').length;
+  const openHourlyCount = proposals.filter(
+    (p) => p.status === 'sent' && p.rate_type === 'hourly',
+  ).length;
   const pipelineValue = openFlat.reduce((sum, p) => sum + (p.rate || 0), 0) * winRateFraction;
 
   const months: ForecastMonth[] = [0, 1, 2].map((offset) => {
@@ -96,14 +98,20 @@ export function computeEffectiveRate(
   statedRate: number | null | undefined,
 ): EffectiveRate {
   const hours = totalMinutes / 60;
-  if (hours <= 0) return { effective: null, stated: statedRate || null, alert: false, leakPerHour: null };
+  if (hours <= 0)
+    return { effective: null, stated: statedRate || null, alert: false, leakPerHour: null };
   const effective = totalPaid / hours;
   if (!statedRate || statedRate <= 0) {
     return { effective, stated: null, alert: false, leakPerHour: null };
   }
   const ratio = effective / statedRate;
   const alert = ratio < 0.85;
-  return { effective, stated: statedRate, alert, leakPerHour: alert ? statedRate - effective : null };
+  return {
+    effective,
+    stated: statedRate,
+    alert,
+    leakPerHour: alert ? statedRate - effective : null,
+  };
 }
 
 export interface ClientWinRate {

@@ -19,17 +19,18 @@ export default function StatusReportGenerator({ projectId }: { projectId: string
     load();
   }, [projectId, loadTimeEntries, loadMilestones]);
 
-  const projectEntries = timeEntries.filter(t => t.project_id === projectId);
+  const projectEntries = timeEntries.filter((t) => t.project_id === projectId);
   const totalMinutes = projectEntries.reduce((sum, t) => sum + (t.duration_minutes || 0), 0);
   const totalHours = totalMinutes / 60;
-  const projectMilestones = milestones.filter(m => m.project_id === projectId);
-  const completedCount = projectMilestones.filter(m => m.completed).length;
-  const lastActivity = projectEntries.length > 0
-    ? projectEntries.reduce((latest, t) => {
-        const d = t.start_time || '';
-        return d > latest ? d : latest;
-      }, '')
-    : null;
+  const projectMilestones = milestones.filter((m) => m.project_id === projectId);
+  const completedCount = projectMilestones.filter((m) => m.completed).length;
+  const lastActivity =
+    projectEntries.length > 0
+      ? projectEntries.reduce((latest, t) => {
+          const d = t.start_time || '';
+          return d > latest ? d : latest;
+        }, '')
+      : null;
 
   if (loading) {
     return (
@@ -54,7 +55,9 @@ export default function StatusReportGenerator({ projectId }: { projectId: string
             <Clock size={14} className="text-[var(--accent-ink,var(--accent))]" />
             Total Hours
           </div>
-          <span className="text-sm font-semibold text-[var(--text-primary)]">{totalHours.toFixed(1)}h</span>
+          <span className="text-sm font-semibold text-[var(--text-primary)]">
+            {totalHours.toFixed(1)}h
+          </span>
         </div>
 
         <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs">

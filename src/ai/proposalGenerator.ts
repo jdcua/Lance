@@ -82,7 +82,10 @@ const approachByType: Record<string, string[]> = {
 };
 
 const vaguePatterns = [
-  { pattern: /as needed/i, warning: '"As needed" is vague \u2014 define a maximum revision count.' },
+  {
+    pattern: /as needed/i,
+    warning: '"As needed" is vague \u2014 define a maximum revision count.',
+  },
   { pattern: /unlimited/i, warning: '"Unlimited" revisions will cause scope creep. Set a number.' },
   { pattern: /and more/i, warning: '"And more" is open-ended. List everything explicitly.' },
   { pattern: /etc\b/i, warning: '"Etc." leaves scope undefined. Be specific.' },
@@ -116,23 +119,23 @@ function getOpening(inputs: ProposalInputs): string {
   if (voice.includes('bold')) {
     lines.push(
       `I am the right person for ${clientName}'s ${projectType}. ` +
-      `This proposal outlines exactly how I will deliver outstanding results \u2014 on time and within scope.`
+        `This proposal outlines exactly how I will deliver outstanding results \u2014 on time and within scope.`,
     );
   } else if (voice.includes('direct')) {
     lines.push(
       `I have reviewed your requirements for the ${projectType} project and I am confident I can deliver exactly what ${clientName} needs. ` +
-      `This proposal outlines my approach, timeline, and investment.`
+        `This proposal outlines my approach, timeline, and investment.`,
     );
   } else if (voice.includes('warm')) {
     lines.push(
       `Thank you for trusting me with this ${projectType} project, ${clientName}. ` +
-      `I have enjoyed our conversations and I am genuinely excited about the work ahead. ` +
-      `Here is my plan for bringing your vision to life.`
+        `I have enjoyed our conversations and I am genuinely excited about the work ahead. ` +
+        `Here is my plan for bringing your vision to life.`,
     );
   } else {
     lines.push(
       `Thank you for the opportunity to work with ${clientName} on this ${projectType} project. ` +
-      `Based on our conversation, I have a clear picture of what you need and I am confident I can deliver something exceptional.`
+        `Based on our conversation, I have a clear picture of what you need and I am confident I can deliver something exceptional.`,
     );
   }
 
@@ -141,7 +144,7 @@ function getOpening(inputs: ProposalInputs): string {
 
 function getApproach(projectType: string): string[] {
   const key = Object.keys(approachByType).find(
-    (k) => k.toLowerCase() === projectType.toLowerCase()
+    (k) => k.toLowerCase() === projectType.toLowerCase(),
   );
   return approachByType[key || 'default'] || approachByType.default;
 }
@@ -173,9 +176,7 @@ export function generateProposalBody(inputs: ProposalInputs): string {
     sections.push('');
     sections.push(inputs.scope);
     sections.push('');
-    sections.push(
-      'If anything here needs clarification, I am happy to discuss before we proceed.'
-    );
+    sections.push('If anything here needs clarification, I am happy to discuss before we proceed.');
   }
 
   // 3. Approach
@@ -190,24 +191,18 @@ export function generateProposalBody(inputs: ProposalInputs): string {
 
   // 4. Investment
   sections.push('');
-  sections.push(
-    `Investment: ${rateStr}`
-  );
+  sections.push(`Investment: ${rateStr}`);
   if (inputs.timeline) {
     sections.push(`Timeline: ${inputs.timeline}`);
   }
   sections.push('');
-  sections.push(
-    'This proposal is valid for 14 days from the date above.'
-  );
-  sections.push(
-    'To proceed, simply reply to confirm and I will send over a contract.'
-  );
+  sections.push('This proposal is valid for 14 days from the date above.');
+  sections.push('To proceed, simply reply to confirm and I will send over a contract.');
 
   // 5. Closing
   sections.push('');
   sections.push(
-    `I am looking forward to working together. Please do not hesitate to reach out with any questions.`
+    `I am looking forward to working together. Please do not hesitate to reach out with any questions.`,
   );
   sections.push('');
   sections.push(freelancerName);

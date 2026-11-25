@@ -185,9 +185,7 @@ export default function FeedbackLog({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Feedback
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Feedback</h4>
         </div>
         <div className="flex gap-2">
           <div className="h-6 w-24 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />

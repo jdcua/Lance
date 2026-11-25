@@ -11,7 +11,7 @@ export { exportProposalDOCX, exportInvoiceDOCX, exportContractDOCX } from './doc
 export async function exportProposalPDF(
   proposal: Proposal,
   client: Client,
-  profile: UserProfile
+  profile: UserProfile,
 ): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const doc = createElement(ProposalPDF, { proposal, client, profile }) as any;
@@ -24,7 +24,7 @@ export async function exportProposalPDF(
 export async function exportInvoicePDF(
   invoice: Invoice,
   client: Client,
-  profile: UserProfile
+  profile: UserProfile,
 ): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const doc = createElement(InvoicePDF, { invoice, client, profile }) as any;
@@ -36,7 +36,7 @@ export async function exportInvoicePDF(
 export async function exportContractPDF(
   contract: Contract,
   client: Client,
-  profile: UserProfile
+  profile: UserProfile,
 ): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const doc = createElement(ContractPDF, { contract, client, profile }) as any;

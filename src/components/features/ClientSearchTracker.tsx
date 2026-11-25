@@ -128,9 +128,7 @@ export default function ClientSearchTracker({ clientId }: { clientId: string }) 
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Client Searches
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Client Searches</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -243,7 +241,8 @@ export default function ClientSearchTracker({ clientId }: { clientId: string }) 
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
-                  <select aria-label="Search.status"
+                  <select
+                    aria-label="Search.status"
                     value={search.status}
                     onChange={(e) => handleStatusChange(search.id, e.target.value)}
                     className="text-[10px] bg-transparent border-none text-[var(--text-tertiary)] cursor-pointer"

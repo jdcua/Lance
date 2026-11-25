@@ -202,7 +202,8 @@ export const ATTACHMENT_ENTITY_TYPE = {
   LIBRARY: 'library',
 } as const;
 
-export type AttachmentEntityType = (typeof ATTACHMENT_ENTITY_TYPE)[keyof typeof ATTACHMENT_ENTITY_TYPE];
+export type AttachmentEntityType =
+  (typeof ATTACHMENT_ENTITY_TYPE)[keyof typeof ATTACHMENT_ENTITY_TYPE];
 
 // ── Rate Types ──
 export const RATE_TYPE = {
@@ -240,7 +241,8 @@ export const FOLLOW_UP_TEMPLATE_KEYS = {
   INVOICE_DAY14: 'invoice_day14',
 } as const;
 
-export type FollowUpTemplateKey = (typeof FOLLOW_UP_TEMPLATE_KEYS)[keyof typeof FOLLOW_UP_TEMPLATE_KEYS];
+export type FollowUpTemplateKey =
+  (typeof FOLLOW_UP_TEMPLATE_KEYS)[keyof typeof FOLLOW_UP_TEMPLATE_KEYS];
 
 // ── Share Token Entity Types ──
 export const SHARE_TOKEN_ENTITY_TYPE = {
@@ -280,4 +282,3 @@ export const MAX_PREVIEW_ROWS = 50;
 export const SPREADSHEET_EXTS = ['xlsx', 'csv', 'xls'] as const;
 export const DOCUMENT_EXTS = ['pdf', 'docx', 'doc'] as const;
 export const IMAGE_EXTS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'] as const;
-

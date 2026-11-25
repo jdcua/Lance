@@ -16,7 +16,13 @@ interface EmptyStateProps {
  * Personality empty state. Copy rotates daily so it never repeats back to
  * back; callers pass through their existing action buttons unchanged.
  */
-export default function EmptyState({ screen = 'generic', icon, action, hint, compact }: EmptyStateProps) {
+export default function EmptyState({
+  screen = 'generic',
+  icon,
+  action,
+  hint,
+  compact,
+}: EmptyStateProps) {
   const copy = getEmptyCopy(screen);
   return (
     <div

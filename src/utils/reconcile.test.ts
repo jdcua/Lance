@@ -45,7 +45,10 @@ describe('reconcile matcher', () => {
   it('matches remaining balance after a partial payment', () => {
     const payments: InvoicePayment[] = [
       {
-        id: 'p1', invoice_id: 'i1', amount: 40, payment_date: '2026-09-10',
+        id: 'p1',
+        invoice_id: 'i1',
+        amount: 40,
+        payment_date: '2026-09-10',
         payment_method: 'Bank Transfer',
       } as InvoicePayment,
     ];

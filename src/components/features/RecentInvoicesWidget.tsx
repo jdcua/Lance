@@ -24,17 +24,18 @@ export default function RecentInvoicesWidget() {
       {recent.map((inv) => {
         const client = clients.find((c) => c.id === inv.client_id);
         return (
-          <div key={inv.id} className="flex items-center justify-between px-3 py-1.5 bg-[var(--bg-secondary)] rounded-xs text-xs">
+          <div
+            key={inv.id}
+            className="flex items-center justify-between px-3 py-1.5 bg-[var(--bg-secondary)] rounded-xs text-xs"
+          >
             <div className="flex-1 min-w-0">
-              <span className="text-[var(--text-primary)]">
-                {inv.invoice_number}
-              </span>
-              {client && (
-                <span className="text-[var(--text-tertiary)] ml-1">-- {client.name}</span>
-              )}
+              <span className="text-[var(--text-primary)]">{inv.invoice_number}</span>
+              {client && <span className="text-[var(--text-tertiary)] ml-1">-- {client.name}</span>}
             </div>
             <div className="flex items-center gap-2 ml-2 shrink-0">
-              <span className="text-[var(--text-primary)] font-medium">${inv.total.toFixed(2)}</span>
+              <span className="text-[var(--text-primary)] font-medium">
+                ${inv.total.toFixed(2)}
+              </span>
               <span className={`${statusColor(inv.status)} capitalize text-[10px]`}>
                 {inv.status === 'paid' && <Check size={10} className="inline mr-0.5" />}
                 {inv.status}

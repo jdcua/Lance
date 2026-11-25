@@ -4,10 +4,16 @@
  * pulse — only while a timer runs. Renders nothing when idle. Breathe is
  * ambient-motion: calm intensity and reduced-motion disable it.
  */
-export default function TimerRing({ elapsedMinutes, label }: { elapsedMinutes: number; label: string }) {
+export default function TimerRing({
+  elapsedMinutes,
+  label,
+}: {
+  elapsedMinutes: number;
+  label: string;
+}) {
   const r = 34;
   const c = 2 * Math.PI * r;
-  const frac = ((elapsedMinutes % 60) + 60) % 60 / 60;
+  const frac = (((elapsedMinutes % 60) + 60) % 60) / 60;
   const h = Math.floor(elapsedMinutes / 60);
   const m = Math.floor(elapsedMinutes % 60);
   const text = h > 0 ? `${h}h ${m}m` : `${m}m`;
@@ -36,7 +42,9 @@ export default function TimerRing({ elapsedMinutes, label }: { elapsedMinutes: n
         />
       </svg>
       <div className="min-w-0">
-        <p className="text-lg font-semibold text-[var(--text-primary)] tnum leading-tight">{text}</p>
+        <p className="text-lg font-semibold text-[var(--text-primary)] tnum leading-tight">
+          {text}
+        </p>
         <p className="text-[11px] text-[var(--text-secondary)] truncate">{label}</p>
       </div>
     </div>

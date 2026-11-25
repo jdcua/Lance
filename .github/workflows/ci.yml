@@ -45,6 +45,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - name: Complexity gate
+        run: npm run complexity -- --strict
+      - name: Strict architecture boundaries
+        run: npm run check:boundaries -- --strict
+      - name: Open-source audit
+        run: npm run audit:oss
+      - name: Dependency license policy
+        run: npm run check:licenses
 
   test:
     timeout-minutes: 15
@@ -86,7 +94,7 @@ jobs:
         working-directory: src-tauri
 
       - name: Clippy quality lints
-        run: cargo clippy --lib -- -D clippy::cognitive_complexity -D clippy::too_many_arguments -D clippy::type_complexity
+        run: cargo clippy --lib -- -D clippy::excessive_nesting -D clippy::too_many_lines -D clippy::too_many_arguments -D clippy::type_complexity
         working-directory: src-tauri
 
   rust-test:

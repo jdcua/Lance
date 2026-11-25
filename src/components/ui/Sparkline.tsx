@@ -55,19 +55,13 @@ export default function Sparkline({
         strokeLinejoin="round"
       />
       {/* Last value dot */}
-      {values.length > 0 && (() => {
-        const lastV = values[values.length - 1];
-        const lastX = padding + ((values.length - 1) / (values.length - 1)) * plotWidth;
-        const lastY = padding + plotHeight - ((lastV - min) / range) * plotHeight;
-        return (
-          <circle
-            cx={lastX}
-            cy={lastY}
-            r="2"
-            fill={trend ? color : 'var(--danger)'}
-          />
-        );
-      })()}
+      {values.length > 0 &&
+        (() => {
+          const lastV = values[values.length - 1];
+          const lastX = padding + ((values.length - 1) / (values.length - 1)) * plotWidth;
+          const lastY = padding + plotHeight - ((lastV - min) / range) * plotHeight;
+          return <circle cx={lastX} cy={lastY} r="2" fill={trend ? color : 'var(--danger)'} />;
+        })()}
     </svg>
   );
 }

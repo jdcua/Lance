@@ -49,9 +49,22 @@ type InvoiceDraftForm = {
 };
 
 const HOURLY_RATE_TYPES = new Set([
-  'hourly', 'per-shoot', 'per-session', 'per-track', 'per-word', 'per-look',
-  'per-event', 'per-commission', 'per-plan', 'per-closing', 'per-campaign',
-  'per-placement', 'per-project', 'milestone', 'retainer', 'commission-based',
+  'hourly',
+  'per-shoot',
+  'per-session',
+  'per-track',
+  'per-word',
+  'per-look',
+  'per-event',
+  'per-commission',
+  'per-plan',
+  'per-closing',
+  'per-campaign',
+  'per-placement',
+  'per-project',
+  'milestone',
+  'retainer',
+  'commission-based',
 ]);
 
 function normalizeRateType(rateType: string): 'flat' | 'hourly' {
@@ -154,9 +167,7 @@ async function syncInvoiceStatusAfterPayment(
   updateFollowUpStatus: AppStore['updateFollowUpStatus'],
 ): Promise<void> {
   // Read payments back AFTER the insert — addPayment already appended the row.
-  const updatedPayments = useStore
-    .getState()
-    .payments.filter((p) => p.invoice_id === inv.id);
+  const updatedPayments = useStore.getState().payments.filter((p) => p.invoice_id === inv.id);
   const paidTotal = updatedPayments.reduce((s, p) => s + p.amount, 0);
   const newStatus = computeInvoiceStatus(inv, paidTotal);
   const isFullyPaid = newStatus === 'paid';
@@ -166,15 +177,16 @@ async function syncInvoiceStatusAfterPayment(
     await updateInvoice({ ...inv, ...updateData, status: newStatus } as Invoice);
   }
   if (isFullyPaid) {
-    const fu = pendingFollowUps.find(
-      (f) => f.entity_type === 'invoice' && f.entity_id === inv.id,
-    );
+    const fu = pendingFollowUps.find((f) => f.entity_type === 'invoice' && f.entity_id === inv.id);
     if (fu) await updateFollowUpStatus(fu.id, 'paid', 'marked_paid').catch(() => {});
   }
 }
 
 function SummaryMetrics({
-  invoices, moneyValue, totalOutstanding, totalPaid,
+  invoices,
+  moneyValue,
+  totalOutstanding,
+  totalPaid,
 }: {
   invoices: Invoice[];
   moneyValue: (list: { currency?: string; total: number }[], single: number) => string;
@@ -203,7 +215,10 @@ function SummaryMetrics({
       />
       <MetricCard
         label="Overdue"
-        value={moneyValue(overdue, overdue.reduce((s, i) => s + i.total, 0))}
+        value={moneyValue(
+          overdue,
+          overdue.reduce((s, i) => s + i.total, 0),
+        )}
         subtext="needs attention"
         trend={overdue.length > 0 ? 'down' : 'neutral'}
         color={overdue.length > 0 ? 'red' : 'gray'}
@@ -315,7 +330,6 @@ export default function Invoices() {
     markFollowedUp: false,
   });
 
-
   // Smart dunning: overdue drafts speak in the freelancer's voice and
   // can carry an accrued late fee.
   const dunningTone: DunningTone | undefined = useMemo(
@@ -364,10 +378,7 @@ export default function Invoices() {
       addToast('Could not add the late fee', 'error');
     }
   };
-  const defaultPaymentTerms = useMemo(
-    () => profile?.payment_terms ?? 14,
-    [profile?.payment_terms],
-  );
+  const defaultPaymentTerms = useMemo(() => profile?.payment_terms ?? 14, [profile?.payment_terms]);
 
   useEffect(() => {
     Promise.all([loadInvoices(), loadClients(), loadProfile(), loadProjects(), loadTimeEntries()])
@@ -773,7 +784,8 @@ export default function Invoices() {
   const getClient = (clientId: string) => clients.find((c) => c.id === clientId);
   const getClientName = (clientId: string) => getClient(clientId)?.name || 'Unknown';
 
-  const getInvoiceCurrency = (inv: Invoice) => inv.currency || profile?.currency || DEFAULT_CURRENCY;
+  const getInvoiceCurrency = (inv: Invoice) =>
+    inv.currency || profile?.currency || DEFAULT_CURRENCY;
 
   const fmtInv = (amount: number, inv: Invoice) => {
     const cur = getInvoiceCurrency(inv);
@@ -985,7 +997,8 @@ export default function Invoices() {
     .filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue')
     .reduce((s, i) => s + i.total, 0);
   const totalPaid = invoices.filter((i) => i.status === 'paid').reduce((s, i) => s + i.total, 0);
-  const invCurrency = (i: { currency?: string }) => i.currency || profile?.currency || DEFAULT_CURRENCY;
+  const invCurrency = (i: { currency?: string }) =>
+    i.currency || profile?.currency || DEFAULT_CURRENCY;
   const sumByCurrency = (list: { currency?: string; total: number }[]) => {
     const by: Record<string, number> = {};
     list.forEach((i) => {
@@ -1056,30 +1069,109 @@ export default function Invoices() {
   // Section prop bag: shell-local state, handlers, and derived figures.
   // Sections are verbatim relocation; computations stay here.
   const bag: InvoicesBag = {
-    invoices, filteredInvoices, clients, profile, projects, recurringInvoices,
-    timeEntries, payments, loadPayments, pendingFollowUps, followUpSettings,
-    search, filteredRecurring, paged, unbilledTime,
-    fmtInv, fmtInvDisplay, getClient, getClientName, getPaidTotal, getRemainingBalance,
-    relativeDate, hourlyRate, getCurrencySymbol, dunningTone, lateFeeOn, lateFeePercent,
-    withFeeNote, dropdownRef, feeConfirm, setFeeConfirm, updateFollowUpStatus,
-    form, setForm, items, setItems, subtotal, total,
-    updateItem, removeItem, toggleTimeSelection, selectedTimeIds,
-    riForm, setRiForm, riItems, setRiItems, riSubtotal, riTotal,
-    updateRiItem, removeRiItem,
-    editing, editingRecurring, saving, deleting, deletingPayment, paymentSaving,
-    showModal, setShowModal, showPaymentModal, setShowPaymentModal,
-    showRecurringModal, setShowRecurringModal,
-    paymentInv, paymentForm, setPaymentForm,
-    reminderInv, setReminderInv, reminderForm, setReminderForm,
-    confirmDelete, setConfirmDelete, confirmDeletePayment, setConfirmDeletePayment,
-    expandedInv, setExpandedInv, exportDropdown, setExportDropdown,
-    sanitizeInvoiceNumber, addItem, addRiItem, importSelectedTime, handleClientChange,
-    openNew, openEdit, openPaymentModal, openReminderModal,
-    openNewRecurring, openEditRecurring, handleCreateFromEmptyState,
-    handleSave, handleDelete, handleRecordPayment, handleDeletePayment,
-    handleSendReminder, handleSaveRecurring, handleToggleActive,
-    handleMarkSent, handleDuplicate, handleAddLateFee, handleExportPDF, handleExportDOCX,
-    addToast, depositHint,
+    invoices,
+    filteredInvoices,
+    clients,
+    profile,
+    projects,
+    recurringInvoices,
+    timeEntries,
+    payments,
+    loadPayments,
+    pendingFollowUps,
+    followUpSettings,
+    search,
+    filteredRecurring,
+    paged,
+    unbilledTime,
+    fmtInv,
+    fmtInvDisplay,
+    getClient,
+    getClientName,
+    getPaidTotal,
+    getRemainingBalance,
+    relativeDate,
+    hourlyRate,
+    getCurrencySymbol,
+    dunningTone,
+    lateFeeOn,
+    lateFeePercent,
+    withFeeNote,
+    dropdownRef,
+    feeConfirm,
+    setFeeConfirm,
+    updateFollowUpStatus,
+    form,
+    setForm,
+    items,
+    setItems,
+    subtotal,
+    total,
+    updateItem,
+    removeItem,
+    toggleTimeSelection,
+    selectedTimeIds,
+    riForm,
+    setRiForm,
+    riItems,
+    setRiItems,
+    riSubtotal,
+    riTotal,
+    updateRiItem,
+    removeRiItem,
+    editing,
+    editingRecurring,
+    saving,
+    deleting,
+    deletingPayment,
+    paymentSaving,
+    showModal,
+    setShowModal,
+    showPaymentModal,
+    setShowPaymentModal,
+    showRecurringModal,
+    setShowRecurringModal,
+    paymentInv,
+    paymentForm,
+    setPaymentForm,
+    reminderInv,
+    setReminderInv,
+    reminderForm,
+    setReminderForm,
+    confirmDelete,
+    setConfirmDelete,
+    confirmDeletePayment,
+    setConfirmDeletePayment,
+    expandedInv,
+    setExpandedInv,
+    exportDropdown,
+    setExportDropdown,
+    sanitizeInvoiceNumber,
+    addItem,
+    addRiItem,
+    importSelectedTime,
+    handleClientChange,
+    openNew,
+    openEdit,
+    openPaymentModal,
+    openReminderModal,
+    openNewRecurring,
+    openEditRecurring,
+    handleCreateFromEmptyState,
+    handleSave,
+    handleDelete,
+    handleRecordPayment,
+    handleDeletePayment,
+    handleSendReminder,
+    handleSaveRecurring,
+    handleToggleActive,
+    handleMarkSent,
+    handleDuplicate,
+    handleAddLateFee,
+    handleExportPDF,
+    handleExportDOCX,
+    addToast,
+    depositHint,
   };
 
   if (loading)
@@ -1100,7 +1192,9 @@ export default function Invoices() {
 
   return (
     <div className="p-6">
-      <h1 className="font-display text-lg font-semibold text-[var(--text-primary)] mb-2">Invoices</h1>
+      <h1 className="font-display text-lg font-semibold text-[var(--text-primary)] mb-2">
+        Invoices
+      </h1>
       <LoadError error={invoicesError} onRetry={() => loadInvoices()} />
       <SummaryMetrics
         invoices={invoices}
@@ -1167,11 +1261,7 @@ export default function Invoices() {
         )}
       </div>
 
-      {activeTab === 'all' ? (
-        <InvoiceList bag={bag} />
-      ) : (
-        <RecurringList bag={bag} />
-      )}
+      {activeTab === 'all' ? <InvoiceList bag={bag} /> : <RecurringList bag={bag} />}
 
       <InvoiceModals bag={bag} />
     </div>

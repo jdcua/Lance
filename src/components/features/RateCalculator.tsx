@@ -33,20 +33,24 @@ export default function RateCalculator() {
   const annualRequired = requiredRate * 2080;
 
   const currentRate = profile?.hourly_rate || 0;
-  const hoursNeededAtCurrentRate = currentRate > 0 && targetNum + expensesNum > 0
-    ? Math.ceil((targetNum + expensesNum) / currentRate)
-    : null;
+  const hoursNeededAtCurrentRate =
+    currentRate > 0 && targetNum + expensesNum > 0
+      ? Math.ceil((targetNum + expensesNum) / currentRate)
+      : null;
 
   const handleSaveTarget = async () => {
     if (!profile) return;
     setSaving(true);
     try {
       await saveProfile({ ...profile, income_target: targetNum || undefined });
-    } catch (e) { console.error('[RateCalculator] saveTarget failed:', e); }
+    } catch (e) {
+      console.error('[RateCalculator] saveTarget failed:', e);
+    }
     setSaving(false);
   };
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass =
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
@@ -55,7 +59,9 @@ export default function RateCalculator() {
           <h3 className="text-xs font-semibold text-[var(--text-secondary)]">Rate Calculator</h3>
         </div>
         <div className="space-y-2">
-          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
+          ))}
         </div>
       </div>
     );
@@ -65,7 +71,13 @@ export default function RateCalculator() {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-semibold text-[var(--text-secondary)]">Rate Calculator</h3>
-        <Button variant="ghost" size="sm" onClick={handleSaveTarget} loading={saving} disabled={!profile}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleSaveTarget}
+          loading={saving}
+          disabled={!profile}
+        >
           <Calculator size={12} /> Save Target
         </Button>
       </div>
@@ -73,35 +85,50 @@ export default function RateCalculator() {
       <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
         <div className="grid grid-cols-3 gap-2">
           <div>
-            <label className="text-[10px] text-[var(--text-tertiary)] block mb-1">Monthly Target ($)</label>
+            <label className="text-[10px] text-[var(--text-tertiary)] block mb-1">
+              Monthly Target ($)
+            </label>
             <input
               type="number"
               min={0}
               placeholder="e.g. 8000"
               value={target}
-              onChange={(e) => { const v = e.target.value; setTarget(Number(v) < 0 ? '0' : v); }}
+              onChange={(e) => {
+                const v = e.target.value;
+                setTarget(Number(v) < 0 ? '0' : v);
+              }}
               className={inputClass}
             />
           </div>
           <div>
-            <label className="text-[10px] text-[var(--text-tertiary)] block mb-1">Avail. Hours/Mo</label>
+            <label className="text-[10px] text-[var(--text-tertiary)] block mb-1">
+              Avail. Hours/Mo
+            </label>
             <input
               type="number"
               min={0}
               placeholder="e.g. 120"
               value={hours}
-              onChange={(e) => { const v = e.target.value; setHours(Number(v) < 0 ? '0' : v); }}
+              onChange={(e) => {
+                const v = e.target.value;
+                setHours(Number(v) < 0 ? '0' : v);
+              }}
               className={inputClass}
             />
           </div>
           <div>
-            <label className="text-[10px] text-[var(--text-tertiary)] block mb-1">Expenses ($)</label>
+            <label className="text-[10px] text-[var(--text-tertiary)] block mb-1">
+              Expenses ($)
+            </label>
             <input
               type="number"
               min={0}
               placeholder="e.g. 500"
               value={expenses}
-              onChange={(e) => { const v = e.target.value; setExpenses(Number(v) < 0 ? '0' : v); }}
+              onChange={(e) => {
+                const v = e.target.value;
+                setExpenses(Number(v) < 0 ? '0' : v);
+              }}
               className={inputClass}
             />
           </div>
@@ -115,7 +142,11 @@ export default function RateCalculator() {
                 <div>
                   <div className="text-[10px] text-[var(--text-tertiary)]">Required Rate</div>
                   <div className="text-sm font-semibold text-[var(--text-primary)]">
-                    ${requiredRate.toFixed(2)}<span className="text-[10px] font-normal text-[var(--text-tertiary)]"> /hr</span>
+                    ${requiredRate.toFixed(2)}
+                    <span className="text-[10px] font-normal text-[var(--text-tertiary)]">
+                      {' '}
+                      /hr
+                    </span>
                   </div>
                 </div>
               </div>
@@ -125,7 +156,11 @@ export default function RateCalculator() {
                 <div>
                   <div className="text-[10px] text-[var(--text-tertiary)]">Annual Equivalent</div>
                   <div className="text-sm font-semibold text-[var(--text-primary)]">
-                    ${annualRequired.toLocaleString(undefined, { maximumFractionDigits: 0 })}<span className="text-[10px] font-normal text-[var(--text-tertiary)]"> /yr</span>
+                    ${annualRequired.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    <span className="text-[10px] font-normal text-[var(--text-tertiary)]">
+                      {' '}
+                      /yr
+                    </span>
                   </div>
                 </div>
               </div>
@@ -135,9 +170,15 @@ export default function RateCalculator() {
                   <div className="flex items-center gap-1.5">
                     <Clock size={14} className="text-[var(--accent-ink,var(--accent))]" />
                     <div>
-                      <div className="text-[10px] text-[var(--text-tertiary)]">At ${currentRate}/hr</div>
+                      <div className="text-[10px] text-[var(--text-tertiary)]">
+                        At ${currentRate}/hr
+                      </div>
                       <div className="text-sm font-semibold text-[var(--text-primary)]">
-                        {hoursNeededAtCurrentRate}<span className="text-[10px] font-normal text-[var(--text-tertiary)]"> hrs/mo</span>
+                        {hoursNeededAtCurrentRate}
+                        <span className="text-[10px] font-normal text-[var(--text-tertiary)]">
+                          {' '}
+                          hrs/mo
+                        </span>
                       </div>
                     </div>
                   </div>

@@ -17,7 +17,9 @@ npm run doctor      # verifies your local toolchain
 npm run tauri dev
 ```
 
-`npm run doctor` is read-only and tells you exactly what is missing.
+`npm run doctor` is read-only and checks Node, npm, Rust, installed npm
+dependencies and the Tauri CLI. It does **not** check the Tauri OS libraries
+(listed above); on Linux, install those separately.
 
 ## Find something to work on
 
@@ -42,11 +44,16 @@ npm run tauri dev
 5. Run the full check suite before pushing:
 
 ```bash
-npm run verify      # typecheck + lint + tests + build + OSS audit
+npm run verify      # typecheck + lint + tests + build + OSS audit + strict boundaries
+npm run complexity  # cyclomatic/cognitive offenders (optional but recommended)
 ```
 
-`npm run audit:oss` rejects stray secrets, personal paths and junk files. CI runs the same checks plus `cargo check --lib`, `cargo test --lib`, npm and
-Cargo audits, and an xlsx integrity check. All must pass.
+`npm run audit:oss` rejects stray secrets, personal paths and junk files; the
+strict boundary check enforces the architecture rules in `AGENTS.md`. CI runs
+typecheck, lint, tests, build, Rust check/fmt/clippy/test, npm and Cargo
+audits, and an xlsx integrity check — it does **not** yet run `audit:oss`, the
+strict boundary check or `npm run complexity`, so run them locally as above.
+All gates must pass.
 
 ## Open a pull request
 

@@ -37,13 +37,14 @@ export function buildWeeklyDigest(
     const t = new Date(i.paid_at || i.created_at).getTime();
     return !isNaN(t) && t >= start;
   });
-  const hours = timeEntries
-    .filter((t) => {
-      if (!t.duration_minutes) return false;
-      const s = new Date(t.start_time).getTime();
-      return !isNaN(s) && s >= start;
-    })
-    .reduce((s, t) => s + (t.duration_minutes || 0), 0) / 60;
+  const hours =
+    timeEntries
+      .filter((t) => {
+        if (!t.duration_minutes) return false;
+        const s = new Date(t.start_time).getTime();
+        return !isNaN(s) && s >= start;
+      })
+      .reduce((s, t) => s + (t.duration_minutes || 0), 0) / 60;
   const openProposals = proposals.filter((p) => p.status === 'sent').length;
   const overdueCount = invoices.filter((i) => i.status === 'overdue').length;
   return {

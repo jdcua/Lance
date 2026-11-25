@@ -68,36 +68,34 @@ function lazyRoute(element: ReactNode, skeleton: SkeletonVariant = 'list') {
   );
 }
 
-export const router = createBrowserRouter(
-  [
-    {
-      path: '/',
-      element: <App />,
-      children: [
-        { index: true, element: lazyRoute(<Dashboard />, 'dashboard') },
-        { path: 'proposals', element: lazyRoute(<Proposals />, 'table') },
-        { path: 'proposals/new', element: lazyRoute(<NewProposal />, 'form') },
-        { path: 'contracts', element: lazyRoute(<Contracts />, 'table') },
-        { path: 'projects', element: lazyRoute(<Projects />, 'cards') },
-        { path: 'time', element: lazyRoute(<Time />, 'list') },
-        { path: 'invoices', element: lazyRoute(<Invoices />, 'table') },
-        { path: 'follow-ups', element: lazyRoute(<FollowUps />, 'table') },
-        { path: 'pipeline', element: lazyRoute(<Pipeline />, 'cards') },
-        { path: 'clients', element: lazyRoute(<Clients />, 'detail') },
-        { path: 'finance', element: lazyRoute(<Finance />, 'dashboard') },
-        { path: 'insights', element: lazyRoute(<Insights />, 'cards') },
-        { path: 'settings', element: lazyRoute(<SettingsView />, 'form') },
-        { path: 'achievements', element: lazyRoute(<AchievementsPage />, 'cards') },
-        { path: 'assets', element: lazyRoute(<Assets />, 'cards') },
-        { path: 'search', element: lazyRoute(<SearchScreen />, 'list') },
-        { path: 'onboarding', element: lazyRoute(<OnboardingScreen />, 'cards') },
-        { path: '*', element: lazyRoute(<NotFound />, 'list') },
-      ],
-    },
-    {
-      // Public, client-facing share portal · rendered WITHOUT the app shell
-      path: 'share/:token',
-      element: lazyRoute(<ShareView />),
-    },
-  ],
-);
+export const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <App />,
+    children: [
+      { index: true, element: lazyRoute(<Dashboard />, 'dashboard') },
+      { path: 'proposals', element: lazyRoute(<Proposals />, 'table') },
+      { path: 'proposals/new', element: lazyRoute(<NewProposal />, 'form') },
+      { path: 'contracts', element: lazyRoute(<Contracts />, 'table') },
+      { path: 'projects', element: lazyRoute(<Projects />, 'cards') },
+      { path: 'time', element: lazyRoute(<Time />, 'list') },
+      { path: 'invoices', element: lazyRoute(<Invoices />, 'table') },
+      { path: 'follow-ups', element: lazyRoute(<FollowUps />, 'table') },
+      { path: 'pipeline', element: lazyRoute(<Pipeline />, 'cards') },
+      { path: 'clients', element: lazyRoute(<Clients />, 'detail') },
+      { path: 'finance', element: lazyRoute(<Finance />, 'dashboard') },
+      { path: 'insights', element: lazyRoute(<Insights />, 'cards') },
+      { path: 'settings', element: lazyRoute(<SettingsView />, 'form') },
+      { path: 'achievements', element: lazyRoute(<AchievementsPage />, 'cards') },
+      { path: 'assets', element: lazyRoute(<Assets />, 'cards') },
+      { path: 'search', element: lazyRoute(<SearchScreen />, 'list') },
+      { path: 'onboarding', element: lazyRoute(<OnboardingScreen />, 'cards') },
+      { path: '*', element: lazyRoute(<NotFound />, 'list') },
+    ],
+  },
+  {
+    // Public, client-facing share portal · rendered WITHOUT the app shell
+    path: 'share/:token',
+    element: lazyRoute(<ShareView />),
+  },
+]);

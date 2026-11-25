@@ -7,7 +7,6 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import type { NavigateFunction } from 'react-router-dom';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
 import AIBar from './components/layout/AIBar';
@@ -25,10 +24,14 @@ import DropZoneOverlay from './components/ui/DropZoneOverlay';
 import UpdaterModal from './components/ui/UpdaterModal';
 import ShortcutsModal from './components/ui/ShortcutsModal';
 import { commands } from './lib/commands';
-import type { FollowUpSettings, TimeEntry } from './types';
+import type { TimeEntry } from './types';
 import { useStore, type AppStore } from './store';
 import { useToasts } from './store/toastStore';
 import { useAutoUpdater } from './hooks/useAutoUpdater';
+import { useShellModals } from './hooks/useShellModals';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useFollowUpChecks } from './hooks/useFollowUpChecks';
+import { useChangelogNotice } from './hooks/useChangelogNotice';
 import {
   shouldGenerate,
   getNextDueDate,
@@ -42,11 +45,8 @@ import { useChangelog } from './utils/changelog';
 import { applyTheme, getTheme, THEMES } from './themes/themes';
 import { checkAchievements } from './achievements/checker';
 import { ACHIEVEMENTS } from './achievements';
-import { parseDateString, DAY_MS } from './utils/format';
 import { recordTelemetry } from './utils/telemetry';
 import { usePortalPolling } from './lib/engines/usePortalPolling';
-import { getRuntimeVersion } from './lib/version';
-import type { getStage, getTemplateKey } from './utils/followUpTemplates';
 
 /**
  * Run `fn` at the next idle opportunity, but never later than `ms`.
@@ -73,93 +73,6 @@ export function idleOrTimeout(fn: () => void, ms = 400): () => void {
     clearTimeout(timer);
     if (idle !== null) cancelIdleCallback(idle);
   };
-}
-
-type FollowUpFns = {
-  getStage: typeof getStage;
-  getTemplateKey: typeof getTemplateKey;
-};
-
-/** A stage is skipped when already pending or already actioned in history. */
-function followUpStageHandled(
-  state: AppStore,
-  entityType: 'proposal' | 'invoice',
-  entityId: string,
-  stage: number,
-): boolean {
-  const alreadyPending = state.pendingFollowUps.some(
-    (l) => l.entity_type === entityType && l.entity_id === entityId && l.stage === stage,
-  );
-  const alreadyLogged = (state.followUpLogs[`${entityType}:${entityId}`] || []).some(
-    (l) => l.stage === stage,
-  );
-  return alreadyPending || alreadyLogged;
-}
-
-async function checkProposalFollowUps(
-  state: AppStore,
-  settings: FollowUpSettings,
-  now: Date,
-  fns: FollowUpFns,
-): Promise<void> {
-  for (const p of state.proposals) {
-    if (p.status !== 'sent') continue;
-    const client = state.clients.find((c) => c.id === p.client_id);
-    if (!client?.email) {
-      console.warn(`Skipping proposal follow-up for "${p.title}" · client has no email`);
-      continue;
-    }
-    const sentDate = p.sent_at ? new Date(p.sent_at) : new Date(p.created_at);
-    const daysElapsed = Math.floor((now.getTime() - sentDate.getTime()) / DAY_MS);
-    if (daysElapsed < settings.proposal_delay_days) continue;
-    const stage = fns.getStage('proposal', daysElapsed - settings.proposal_delay_days);
-    if (followUpStageHandled(state, 'proposal', p.id, stage)) continue;
-    const templateKey = fns.getTemplateKey('proposal', daysElapsed, settings.proposal_delay_days);
-    if (!templateKey) continue;
-    await state.logFollowUp({ entity_type: 'proposal', entity_id: p.id, stage });
-  }
-}
-
-async function processInvoiceFollowUp(
-  inv: AppStore['invoices'][number],
-  state: AppStore,
-  settings: FollowUpSettings,
-  now: Date,
-  fns: FollowUpFns,
-): Promise<void> {
-  if (inv.status !== 'sent' && inv.status !== 'overdue') return;
-  if (!inv.due_date) return;
-  const client = state.clients.find((c) => c.id === inv.client_id);
-  if (!client?.email) {
-    console.warn(`Skipping invoice follow-up for "${inv.invoice_number}" · client has no email`);
-    return;
-  }
-  const dueDate = parseDateString(inv.due_date);
-  const daysElapsed = Math.floor((now.getTime() - dueDate.getTime()) / DAY_MS);
-  if (inv.status === 'sent' && daysElapsed >= 1) {
-    try {
-      await state.updateInvoice({ ...inv, status: 'overdue' });
-    } catch {
-      /* non-critical; follow-up still queues below */
-    }
-  }
-  if (daysElapsed < settings.invoice_delay_days) return;
-  const stage = fns.getStage('invoice', daysElapsed);
-  if (followUpStageHandled(state, 'invoice', inv.id, stage)) return;
-  const templateKey = fns.getTemplateKey('invoice', daysElapsed, settings.invoice_delay_days);
-  if (!templateKey) return;
-  await state.logFollowUp({ entity_type: 'invoice', entity_id: inv.id, stage });
-}
-
-async function checkInvoiceFollowUps(
-  state: AppStore,
-  settings: FollowUpSettings,
-  now: Date,
-  fns: FollowUpFns,
-): Promise<void> {
-  for (const inv of state.invoices) {
-    await processInvoiceFollowUp(inv, state, settings, now, fns);
-  }
 }
 
 type TimerConfigResult =
@@ -234,108 +147,6 @@ function persistTimerConfig(entry: TimeEntry): void {
   }
 }
 
-type ShortcutDeps = {
-  navigate: NavigateFunction;
-  pathname: string;
-  isEditing: () => boolean;
-  toggleTimer: () => void;
-  setPalette: (value: boolean | ((prev: boolean) => boolean)) => void;
-  setQuickLog: (value: boolean) => void;
-  setShortcuts: (value: boolean | ((prev: boolean) => boolean)) => void;
-};
-
-function handlePaletteAndSettingsShortcut(e: KeyboardEvent, deps: ShortcutDeps): boolean {
-  if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-    e.preventDefault();
-    deps.setPalette((prev) => !prev);
-    return true;
-  }
-  if (e.key === ',' && (e.metaKey || e.ctrlKey)) {
-    e.preventDefault();
-    if (!deps.isEditing()) deps.navigate('/settings', { replace: true });
-    return true;
-  }
-  return false;
-}
-
-function handleModShiftShortcut(e: KeyboardEvent, deps: ShortcutDeps): boolean {
-  if (!(e.metaKey || e.ctrlKey) || !e.shiftKey) return false;
-  if (e.key === 'T' || e.key === 't') {
-    e.preventDefault();
-    deps.toggleTimer();
-    return true;
-  }
-  if (e.key === 'L' || e.key === 'l') {
-    e.preventDefault();
-    deps.setQuickLog(true);
-    return true;
-  }
-  return false;
-}
-
-type NewShortcutCommand =
-  | 'lance:add-client'
-  | 'lance:add-invoice'
-  | 'lance:add-project'
-  | 'lance:add-time'
-  | 'lance:add-contract'
-  | 'lance:add-expense';
-
-const NEW_SHORTCUT_COMMANDS: Array<[string, NewShortcutCommand]> = [
-  ['/clients', 'lance:add-client'],
-  ['/invoices', 'lance:add-invoice'],
-  ['/projects', 'lance:add-project'],
-  ['/time', 'lance:add-time'],
-  ['/contracts', 'lance:add-contract'],
-  ['/finance', 'lance:add-expense'],
-];
-
-function handleNewShortcut(e: KeyboardEvent, pathname: string, navigate: NavigateFunction): void {
-  if (pathname.startsWith('/proposals')) {
-    e.preventDefault();
-    navigate('/proposals/new');
-    return;
-  }
-  for (const [prefix, command] of NEW_SHORTCUT_COMMANDS) {
-    if (pathname.startsWith(prefix)) {
-      e.preventDefault();
-      commands.dispatch(command);
-      return;
-    }
-  }
-}
-
-function navigateToNumberedPath(e: KeyboardEvent, navigate: NavigateFunction): void {
-  if (e.shiftKey || e.key < '1' || e.key > '8') return;
-  e.preventDefault();
-  const paths = [
-    '/',
-    '/clients',
-    '/projects',
-    '/invoices',
-    '/contracts',
-    '/finance',
-    '/insights',
-    '/settings',
-  ];
-  const path = paths[parseInt(e.key) - 1];
-  if (path) navigate(path);
-}
-
-function handleNonEditingShortcut(e: KeyboardEvent, deps: ShortcutDeps): void {
-  if (!(e.metaKey || e.ctrlKey)) return;
-  if (e.key === '/' || e.key === '?') {
-    e.preventDefault();
-    deps.setShortcuts((prev) => !prev);
-    return;
-  }
-  if (e.key === 'n') {
-    handleNewShortcut(e, deps.pathname, deps.navigate);
-    return;
-  }
-  navigateToNumberedPath(e, deps.navigate);
-}
-
 export default function App() {
   const {
     profile,
@@ -348,7 +159,6 @@ export default function App() {
     loadInvoices,
     addInvoice,
     loadClients,
-    loadFollowUpSettings,
     setPortalPort,
     setPortalFailed,
   } = useStore();
@@ -358,89 +168,37 @@ export default function App() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [hasRanAutoGen, setHasRanAutoGen] = useState(false);
 
-  const [showCommandPalette, setShowCommandPalette] = useState(false);
-  const [showShortcuts, setShowShortcuts] = useState(false);
-  const [showQuickLogModal, setShowQuickLogModal] = useState(false);
   // Guard against double-processing recurring invoices when invoices.length
   // changes mid-generation and re-triggers the idle-callback effect.
   const autoGenProcessedRef = useRef<Set<string>>(new Set());
   const toggleTimerRunning = useRef(false);
-  const [showChangelog, setShowChangelog] = useState(false);
   const [showWalkthrough, setShowWalkthrough] = useState(false);
   const [showSpotlight, setShowSpotlight] = useState(false);
-  // Time entries are logged through the global quick-log modal (the Time
-  // screen has no new-entry trigger of its own). This wires the checklist
-  // and the Cmd/Ctrl+N shortcut, which previously dispatched to nothing.
-  useEffect(() => {
-    const onAddTime = () => setShowQuickLogModal(true);
-    commands.on('lance:add-time', onAddTime);
-    return () => commands.off('lance:add-time', onAddTime);
-  }, []);
+
+  const {
+    showCommandPalette,
+    setShowCommandPalette,
+    showShortcuts,
+    setShowShortcuts,
+    showQuickLogModal,
+    setShowQuickLogModal,
+    showImportModal,
+    importFiles,
+    isDragOver,
+    closeImport,
+  } = useShellModals();
 
   // Pro open alerts: polled in usePortalPolling hook (src/lib/engines/usePortalPolling.ts).
   usePortalPolling();
 
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [importFiles, setImportFiles] = useState<File[] | undefined>(undefined);
-  const [isDragOver, setIsDragOver] = useState(false);
-  const dragCounter = useRef(0);
-
-  const [appVersion, setAppVersion] = useState<string>('');
   const { changelog } = useChangelog();
-
-  useEffect(() => {
-    getRuntimeVersion().then(setAppVersion);
-  }, []);
+  const { showChangelog, dismissChangelog, appVersion } = useChangelogNotice(changelog);
 
   // Local-first telemetry: one launch tick per mount. Powers personal
   // stats and struggle detection. Never leaves the machine.
   useEffect(() => {
     recordTelemetry('app_launch');
   }, []);
-
-  // Changelog check on mount. Depends on appVersion: getRuntimeVersion()
-  // resolves after mount, so an empty-deps effect bails on the initial ''
-  // and the "What's new" modal never appears. Re-running is safe: dismiss
-  // persists changelog-seen, which stops repeat shows.
-  // Brand-new users (no seen version AND no previous run on record) have
-  // nothing to catch up on: mark the current version seen silently instead
-  // of ambushing them with release notes on first launch.
-  useEffect(() => {
-    if (!appVersion) return;
-    const seen = localStorage.getItem('lance:changelog-seen');
-    const lastRun = localStorage.getItem('lance:last-run-version');
-    try {
-      localStorage.setItem('lance:last-run-version', appVersion);
-    } catch {
-      /* private mode */
-    }
-    if (seen === appVersion) return;
-    // If onboarding hasn't been completed yet, defer changelog to next session
-    // (the version check will still find it unseen)
-    const onboardingCompleted = localStorage.getItem('lance:onboarding-completed') === 'true';
-    if (!onboardingCompleted) return;
-    if (!seen && !lastRun) {
-      try {
-        localStorage.setItem('lance:changelog-seen', appVersion);
-      } catch {
-        /* private mode */
-      }
-      return;
-    }
-    setShowChangelog(true);
-  }, [appVersion]);
-
-  const dismissChangelog = () => {
-    const latestVersion = changelog[0]?.version || appVersion;
-    // Never persist a "seen" version older than the installed app, otherwise
-    // the changelog modal re-shows with stale notes on every launch.
-    const seenVersion =
-      latestVersion.localeCompare(appVersion, undefined, { numeric: true }) >= 0
-        ? latestVersion
-        : appVersion;
-    localStorage.setItem('lance:changelog-seen', seenVersion);
-    setShowChangelog(false);
-  };
 
   useEffect(() => {
     let cleanup: (() => void) | undefined;
@@ -784,169 +542,9 @@ export default function App() {
     return () => cancelIdleCallback(handle);
   }, [hasRanAutoGen, addToast]);
 
-  // Follow-up checker · deferred after first render, runs every 30 minutes
-  useEffect(() => {
-    if (!profileLoaded) return;
-    loadFollowUpSettings();
-
-    const checkFollowUps = async () => {
-      try {
-        const fns = await import('./utils/followUpTemplates');
-        const state = useStore.getState();
-        const settings = state.followUpSettings;
-        if (!settings.enabled) return;
-
-        await state.loadProposals();
-        await state.loadInvoices();
-        await state.loadClients();
-        await state.loadPendingFollowUps();
-        // Full history (keyed entity_type:entity_id) so we never re-draft a
-        // stage already actioned (sent/dismissed); the pending-only guard
-        // would re-create an identical draft every run after actioning.
-        await state.loadAllFollowUpLogs();
-        const current = useStore.getState();
-        const now = new Date();
-        await checkProposalFollowUps(current, settings, now, fns);
-        await checkInvoiceFollowUps(current, settings, now, fns);
-      } catch {
-        /* follow-up check is non-critical */
-      }
-    };
-
-    const initialHandle = requestIdleCallback(() => checkFollowUps());
-    const interval = setInterval(checkFollowUps, 30 * 60 * 1000);
-    return () => {
-      cancelIdleCallback(initialHandle);
-      clearInterval(interval);
-    };
-  }, [profileLoaded, loadFollowUpSettings]);
-
-  // Proposal expiry engine · deferred after first render, runs every hour
-  useEffect(() => {
-    if (!profileLoaded) return;
-
-    const checkExpiry = async () => {
-      try {
-        // Shared invoke (NOT @tauri-apps/api/core directly): the browser
-        // shim implements this command, and a direct import throws outside
-        // Tauri — which used to silently disable expiry for browser users.
-        const { tauriInvoke } = await import('./utils/tauri');
-        const expired = await tauriInvoke<Array<{ id: string; client_id: string; title: string }>>(
-          'expire_sent_proposals',
-          {},
-        );
-        if (expired.length === 0) return;
-
-        const state = useStore.getState();
-        await state.loadClients();
-        await state.loadProposals();
-        const settings = state.followUpSettings;
-
-        for (const ep of expired) {
-          const client = state.clients.find((c) => c.id === ep.client_id);
-          const clientName = client?.name || 'Unknown';
-
-          // Retire pre-expiry nudges first: a "chase this proposal" draft
-          // for a now-expired proposal is stale (the expiry engine bypasses
-          // store.updateProposal, so its auto-resolve doesn't run here).
-          try {
-            await state.loadPendingFollowUps();
-            for (const l of useStore
-              .getState()
-              .pendingFollowUps.filter(
-                (f) => f.entity_type === 'proposal' && f.entity_id === ep.id,
-              )) {
-              await state.updateFollowUpStatus(l.id, 'dismissed', 'auto-resolved');
-            }
-          } catch {
-            /* expiry stands regardless */
-          }
-
-          await state.addCommunication({
-            id: crypto.randomUUID(),
-            client_id: ep.client_id,
-            type: 'note',
-            summary: `Proposal '${ep.title}' expired automatically`,
-            date: new Date().toISOString(),
-            created_at: new Date().toISOString(),
-          });
-
-          if (settings.enabled && client?.email) {
-            await state.logFollowUp({ entity_type: 'proposal', entity_id: ep.id, stage: 3 });
-          }
-
-          if (settings.enabled) {
-            addToast(`Proposal '${ep.title}' for ${clientName} has expired`, 'info');
-          }
-        }
-      } catch {
-        /* expiry check is non-critical */
-      }
-    };
-
-    const initialHandle = requestIdleCallback(() => checkExpiry());
-    const interval = setInterval(checkExpiry, 60 * 60 * 1000);
-    return () => {
-      cancelIdleCallback(initialHandle);
-      clearInterval(interval);
-    };
-  }, [profileLoaded, addToast]);
+  useFollowUpChecks();
 
   useAutoUpdater();
-
-  // Global drag-and-drop for import
-  useEffect(() => {
-    const handleDragEnter = (e: DragEvent) => {
-      e.preventDefault();
-      dragCounter.current++;
-      if (dragCounter.current === 1) {
-        setIsDragOver(true);
-      }
-    };
-    const handleDragLeave = (e: DragEvent) => {
-      e.preventDefault();
-      dragCounter.current--;
-      if (dragCounter.current === 0) {
-        setIsDragOver(false);
-      }
-    };
-    const handleDragOver = (e: DragEvent) => {
-      e.preventDefault();
-    };
-    const handleDrop = (e: DragEvent) => {
-      e.preventDefault();
-      dragCounter.current = 0;
-      setIsDragOver(false);
-
-      if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-        const files = Array.from(e.dataTransfer.files);
-        setImportFiles(files);
-        setShowImportModal(true);
-      }
-    };
-
-    document.addEventListener('dragenter', handleDragEnter);
-    document.addEventListener('dragleave', handleDragLeave);
-    document.addEventListener('dragover', handleDragOver);
-    document.addEventListener('drop', handleDrop);
-
-    return () => {
-      document.removeEventListener('dragenter', handleDragEnter);
-      document.removeEventListener('dragleave', handleDragLeave);
-      document.removeEventListener('dragover', handleDragOver);
-      document.removeEventListener('drop', handleDrop);
-    };
-  }, []);
-
-  // Listen for lance:open-import (sidebar button)
-  useEffect(() => {
-    const onOpenImport = () => {
-      setImportFiles(undefined);
-      setShowImportModal(true);
-    };
-    commands.on('lance:open-import', onOpenImport);
-    return () => commands.off('lance:open-import', onOpenImport);
-  }, []);
 
   const toggleTimer = useCallback(async () => {
     // In-flight guard: two rapid toggles would both read "none running" and
@@ -1008,44 +606,12 @@ export default function App() {
     return () => commands.off('lance:toggle-timer', onToggleTimer);
   }, [toggleTimer]);
 
-  // Open command palette from Topbar search
-  useEffect(() => {
-    const onOpenCommand = () => setShowCommandPalette(true);
-    commands.on('lance:open-command', onOpenCommand);
-    return () => commands.off('lance:open-command', onOpenCommand);
-  }, []);
-
-  // Keyboard shortcuts
-  const isEditing = useCallback((): boolean => {
-    const tag = (document.activeElement?.tagName || '').toLowerCase();
-    if (['input', 'textarea', 'select'].includes(tag)) return true;
-    if (
-      document.activeElement?.closest('[contenteditable="true"]') ||
-      document.activeElement?.closest('.tiptap')
-    )
-      return true;
-    return false;
-  }, []);
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const deps: ShortcutDeps = {
-        navigate,
-        pathname: location.pathname,
-        isEditing,
-        toggleTimer,
-        setPalette: setShowCommandPalette,
-        setQuickLog: setShowQuickLogModal,
-        setShortcuts: setShowShortcuts,
-      };
-      if (handlePaletteAndSettingsShortcut(e, deps)) return;
-      if (handleModShiftShortcut(e, deps)) return;
-      if (isEditing()) return;
-      handleNonEditingShortcut(e, deps);
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [navigate, location, isEditing, toggleTimer]);
+  useKeyboardShortcuts({
+    toggleTimer,
+    setPalette: setShowCommandPalette,
+    setQuickLog: setShowQuickLogModal,
+    setShortcuts: setShowShortcuts,
+  });
 
   // Listen for lance:edit-client from FollowUps (client missing email)
   useEffect(() => {
@@ -1167,14 +733,7 @@ export default function App() {
           }}
         />
 
-        <ImportModal
-          open={showImportModal}
-          onClose={() => {
-            setShowImportModal(false);
-            setImportFiles(undefined);
-          }}
-          initialFiles={importFiles}
-        />
+        <ImportModal open={showImportModal} onClose={closeImport} initialFiles={importFiles} />
 
         <DropZoneOverlay visible={isDragOver} />
 

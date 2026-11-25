@@ -60,6 +60,8 @@ type RecordTrackerProps<T extends Record<string, unknown>> = {
   idOf?: (row: T) => string;
   emptyMessage?: string;
   filterBy?: (row: T) => boolean;
+  addLabel?: string; // defaults to `Log ${title}`; set to keep a tracker's original button text
+  showCount?: boolean; // defaults to false; set to keep `(N)` in the header
 };
 
 export default function RecordTracker<T extends Record<string, unknown>>({
@@ -80,6 +82,8 @@ export default function RecordTracker<T extends Record<string, unknown>>({
     ),
   emptyMessage = `No ${entity}s logged yet.`,
   filterBy,
+  addLabel,
+  showCount = false,
 }: RecordTrackerProps<T>) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<Record<string, string>>({});
@@ -140,9 +144,10 @@ export default function RecordTracker<T extends Record<string, unknown>>({
         <h4 className="text-xs font-semibold text-[var(--text-secondary)] flex items-center gap-1.5">
           <Icon size={14} className="text-[var(--text-tertiary)]" />
           {title}
+          {showCount && ` (${visible.length})`}
         </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
-          <Plus size={12} /> Log {title}
+          <Plus size={12} /> {addLabel ?? `Log ${title}`}
         </Button>
       </div>
 

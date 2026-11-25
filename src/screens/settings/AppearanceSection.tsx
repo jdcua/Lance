@@ -12,11 +12,13 @@ import { SectionHead, ACCENT_COLORS, type SettingsBag } from './shared';
 export default function AppearanceSection({ bag }: { bag: SettingsBag }) {
   const { form, autoSave, saved } = bag;
   const addToast = useToasts((s) => s.add);
-  const [colours, setColours] = useState<{ base: string; secondary: string; accent: string }>(() => ({
-    base: localStorage.getItem(STORAGE_KEYS.COLOUR_BASE) || '#F8F7F3',
-    secondary: localStorage.getItem(STORAGE_KEYS.COLOUR_SECONDARY) || '#EFEFEA',
-    accent: localStorage.getItem(STORAGE_KEYS.COLOUR_ACCENT) || '#FFAD00',
-  }));
+  const [colours, setColours] = useState<{ base: string; secondary: string; accent: string }>(
+    () => ({
+      base: localStorage.getItem(STORAGE_KEYS.COLOUR_BASE) || '#F8F7F3',
+      secondary: localStorage.getItem(STORAGE_KEYS.COLOUR_SECONDARY) || '#EFEFEA',
+      accent: localStorage.getItem(STORAGE_KEYS.COLOUR_ACCENT) || '#FFAD00',
+    }),
+  );
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty('--colour-base', colours.base);
@@ -26,15 +28,15 @@ export default function AppearanceSection({ bag }: { bag: SettingsBag }) {
       localStorage.setItem(STORAGE_KEYS.COLOUR_BASE, colours.base);
       localStorage.setItem(STORAGE_KEYS.COLOUR_SECONDARY, colours.secondary);
       localStorage.setItem(STORAGE_KEYS.COLOUR_ACCENT, colours.accent);
-    } catch { /* private mode */ }
+    } catch {
+      /* private mode */
+    }
   }, [colours]);
 
   return (
     <>
       {/* Preferences section header */}
-      <div className="text-xs text-[var(--text-secondary)] font-semibold mb-4">
-        Preferences
-      </div>
+      <div className="text-xs text-[var(--text-secondary)] font-semibold mb-4">Preferences</div>
 
       {/* Appearance (light/dark, density) */}
       <Card className="mb-6">
@@ -126,9 +128,7 @@ export default function AppearanceSection({ bag }: { bag: SettingsBag }) {
                     isActive ? 'border-[var(--accent)]' : 'border-[var(--neutral-border)]'
                   }`}
                 >
-                  {isActive && (
-                    <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />
-                  )}
+                  {isActive && <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p
@@ -136,14 +136,10 @@ export default function AppearanceSection({ bag }: { bag: SettingsBag }) {
                   >
                     {theme.name}
                   </p>
-                  <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
-                    {theme.description}
-                  </p>
+                  <p className="text-xs text-[var(--text-tertiary)] mt-0.5">{theme.description}</p>
                 </div>
                 {isUnlocked ? (
-                  <span className="text-[10px] text-[var(--text-tertiary)]">
-                    {theme.name}
-                  </span>
+                  <span className="text-[10px] text-[var(--text-tertiary)]">{theme.name}</span>
                 ) : (
                   <span className="flex items-center gap-1 text-[10px] text-[var(--text-tertiary)]">
                     <Lock size={10} />
@@ -161,8 +157,7 @@ export default function AppearanceSection({ bag }: { bag: SettingsBag }) {
         <Card className="mb-6">
           <SectionHead title="Accent color" isSaved={saved.has('Accent color')} />
           <p className="text-xs text-[var(--text-tertiary)] mb-3">
-            Choose a color that personalizes buttons, badges, progress bars, and metric
-            cards.
+            Choose a color that personalizes buttons, badges, progress bars, and metric cards.
           </p>
           <div className="grid grid-cols-4 gap-2">
             {ACCENT_COLORS.map((color) => (
@@ -175,13 +170,8 @@ export default function AppearanceSection({ bag }: { bag: SettingsBag }) {
                     : 'border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-secondary)]'
                 }`}
               >
-                <div
-                  className="w-6 h-6 rounded-full"
-                  style={{ backgroundColor: color.hex }}
-                />
-                <span className="text-[10px] text-[var(--text-primary)]">
-                  {color.label}
-                </span>
+                <div className="w-6 h-6 rounded-full" style={{ backgroundColor: color.hex }} />
+                <span className="text-[10px] text-[var(--text-primary)]">{color.label}</span>
               </button>
             ))}
           </div>

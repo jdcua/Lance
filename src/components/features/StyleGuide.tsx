@@ -28,7 +28,13 @@ type StyleGuideForm = {
   notes: string;
 };
 
-const GUIDE_KEYS: (keyof StyleGuideForm)[] = ['tone', 'formatting_rules', 'banned_words', 'style_guide_ref', 'notes'];
+const GUIDE_KEYS: (keyof StyleGuideForm)[] = [
+  'tone',
+  'formatting_rules',
+  'banned_words',
+  'style_guide_ref',
+  'notes',
+];
 
 const toNull = (v: string) => v || null;
 const toOptional = (v: string) => v || undefined;
@@ -64,7 +70,7 @@ export default function StyleGuide({ clientId }: { clientId: string }) {
       const db = await getDb();
       const rows = await db.select<(StyleGuide & Record<string, unknown>)[]>(
         'SELECT id, client_id, tone, formatting_rules, banned_words, style_guide_ref, notes FROM client_style_guides WHERE client_id = ?',
-        [clientId]
+        [clientId],
       );
       if (rows.length > 0) {
         const g: StyleGuide = {
@@ -86,12 +92,21 @@ export default function StyleGuide({ clientId }: { clientId: string }) {
         });
         setBannedWordsList(
           g.banned_words
-            ? g.banned_words.split(',').map((w) => w.trim()).filter(Boolean)
-            : []
+            ? g.banned_words
+                .split(',')
+                .map((w) => w.trim())
+                .filter(Boolean)
+            : [],
         );
       } else {
         setGuide(null);
-        setForm({ tone: '', formatting_rules: '', banned_words: '', style_guide_ref: '', notes: '' });
+        setForm({
+          tone: '',
+          formatting_rules: '',
+          banned_words: '',
+          style_guide_ref: '',
+          notes: '',
+        });
         setBannedWordsList([]);
       }
     } catch (e) {
@@ -136,14 +151,14 @@ export default function StyleGuide({ clientId }: { clientId: string }) {
       if (guide) {
         await db.execute(
           'UPDATE client_style_guides SET tone = ?, formatting_rules = ?, banned_words = ?, style_guide_ref = ?, notes = ? WHERE id = ?',
-          [...values, guide.id]
+          [...values, guide.id],
         );
         setGuide({ ...guide, ...optional });
       } else {
         const id = crypto.randomUUID();
         await db.execute(
           'INSERT INTO client_style_guides (id, client_id, tone, formatting_rules, banned_words, style_guide_ref, notes) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [id, clientId, ...values]
+          [id, clientId, ...values],
         );
         setGuide({ id, client_id: clientId, ...optional });
       }
@@ -162,9 +177,7 @@ export default function StyleGuide({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Style Guide
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Style Guide</h4>
         </div>
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
@@ -178,9 +191,7 @@ export default function StyleGuide({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-          Style Guide
-        </h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Style Guide</h4>
         <Button size="sm" onClick={handleSave} loading={saving}>
           <Save size={12} /> Save
         </Button>
@@ -188,7 +199,9 @@ export default function StyleGuide({ clientId }: { clientId: string }) {
 
       <div className="space-y-2">
         <div>
-          <label className="text-[10px] font-medium text-[var(--text-secondary)] mb-1 block">Tone & Voice</label>
+          <label className="text-[10px] font-medium text-[var(--text-secondary)] mb-1 block">
+            Tone & Voice
+          </label>
           <textarea
             placeholder="Describe the client's preferred tone and voice..."
             value={form.tone}
@@ -224,7 +237,12 @@ export default function StyleGuide({ clientId }: { clientId: string }) {
               onKeyDown={handleBannedWordKeyDown}
               className={inputClass + ' flex-1'}
             />
-            <Button variant="ghost" size="sm" onClick={addBannedWord} disabled={!bannedWordInput.trim()}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={addBannedWord}
+              disabled={!bannedWordInput.trim()}
+            >
               <Plus size={12} />
             </Button>
           </div>
@@ -238,7 +256,9 @@ export default function StyleGuide({ clientId }: { clientId: string }) {
                   {word}
                   <button
                     aria-label="Close"
-                    onClick={() => removeBannedWord(word)} className="hover:opacity-70">
+                    onClick={() => removeBannedWord(word)}
+                    className="hover:opacity-70"
+                  >
                     <X size={10} />
                   </button>
                 </span>
@@ -251,7 +271,8 @@ export default function StyleGuide({ clientId }: { clientId: string }) {
           <label className="text-[10px] font-medium text-[var(--text-secondary)] mb-1 block">
             Style Guide Reference
           </label>
-          <select aria-label="Style Guide Ref"
+          <select
+            aria-label="Style Guide Ref"
             value={form.style_guide_ref}
             onChange={(e) => setForm({ ...form, style_guide_ref: e.target.value })}
             className={selectClass}

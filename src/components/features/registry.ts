@@ -309,7 +309,6 @@ const FeatureComponents: Record<string, unknown> = {
 
   // ── Translator extras ──
 
-
   // ── Virtual Assistant extras ──
 
   ScopeAlert: lazy(() => import('./ScopeAlert')),
@@ -363,8 +362,6 @@ const FeatureComponents: Record<string, unknown> = {
   ReportCadenceWidget: lazy(() => import('./ReportCadence')),
   PhaseGateWidget: lazy(() => import('./PhaseGateTracker')),
   InfraHealthWidget: lazy(() => import('./InfraDashboard')),
-
-
 
   // ── Simple utility widgets ──
   RecentTime: lazy(() => import('./RecentTimeWidget')),

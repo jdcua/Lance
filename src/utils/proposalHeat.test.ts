@@ -23,24 +23,29 @@ describe('proposal heat scoring', () => {
   });
 
   it('flags long-unopened sent proposals as cooling', () => {
-    expect(
-      scoreProposalHeat({ status: 'sent', createdAt: '2026-08-01', opens: 0 }, NOW),
-    ).toBe('cooling');
-    expect(
-      scoreProposalHeat({ status: 'sent', createdAt: '2026-09-05', opens: 0 }, NOW),
-    ).toBe('neutral');
+    expect(scoreProposalHeat({ status: 'sent', createdAt: '2026-08-01', opens: 0 }, NOW)).toBe(
+      'cooling',
+    );
+    expect(scoreProposalHeat({ status: 'sent', createdAt: '2026-09-05', opens: 0 }, NOW)).toBe(
+      'neutral',
+    );
   });
 
   it('ignores non-sent proposals', () => {
     expect(
       scoreProposalHeat(
-        { status: 'accepted', createdAt: '2026-08-01', opens: 9, lastOpenedAt: '2026-09-08T10:00:00Z' },
+        {
+          status: 'accepted',
+          createdAt: '2026-08-01',
+          opens: 9,
+          lastOpenedAt: '2026-09-08T10:00:00Z',
+        },
         NOW,
       ),
     ).toBe('neutral');
-    expect(
-      scoreProposalHeat({ status: 'draft', createdAt: '2026-08-01', opens: 0 }, NOW),
-    ).toBe('neutral');
+    expect(scoreProposalHeat({ status: 'draft', createdAt: '2026-08-01', opens: 0 }, NOW)).toBe(
+      'neutral',
+    );
   });
 
   it('orders hot first', () => {

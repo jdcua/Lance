@@ -10,7 +10,11 @@ const STEP = 100;
  * `resetKey` must change whenever the filter/sort changes (e.g. the query
  * string) so a new result set starts at the first page.
  */
-export function useVisibleList<T>(items: T[], resetKey: string, pageSize = PAGE): {
+export function useVisibleList<T>(
+  items: T[],
+  resetKey: string,
+  pageSize = PAGE,
+): {
   visible: T[];
   total: number;
   hasMore: boolean;

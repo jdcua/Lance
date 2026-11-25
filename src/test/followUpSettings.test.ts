@@ -4,7 +4,13 @@ import { useStore } from '../store';
 beforeEach(() => {
   localStorage.clear();
   useStore.setState({
-    followUpSettings: { enabled: true, proposal_delay_days: 3, invoice_delay_days: 0, templates: {}, subject_templates: {} },
+    followUpSettings: {
+      enabled: true,
+      proposal_delay_days: 3,
+      invoice_delay_days: 0,
+      templates: {},
+      subject_templates: {},
+    },
   } as never);
 });
 
@@ -17,14 +23,17 @@ describe('follow-up settings hardening', () => {
   });
 
   it('sanitizes hand-edited garbage instead of trusting it', () => {
-    localStorage.setItem('lance:follow-up-settings', JSON.stringify({
-      enabled: 'yes',
-      proposal_delay_days: -5,
-      invoice_delay_days: 'soon',
-      tone: 'yolo',
-      templates: { a: 1, b: 'ok' },
-      subject_templates: null,
-    }));
+    localStorage.setItem(
+      'lance:follow-up-settings',
+      JSON.stringify({
+        enabled: 'yes',
+        proposal_delay_days: -5,
+        invoice_delay_days: 'soon',
+        tone: 'yolo',
+        templates: { a: 1, b: 'ok' },
+        subject_templates: null,
+      }),
+    );
     useStore.getState().loadFollowUpSettings();
     const s = useStore.getState().followUpSettings;
     expect(s.enabled).toBe(true);
@@ -36,11 +45,14 @@ describe('follow-up settings hardening', () => {
   });
 
   it('clamps out-of-range numbers into bounds', () => {
-    localStorage.setItem('lance:follow-up-settings', JSON.stringify({
-      proposal_delay_days: 9999,
-      invoice_delay_days: 45,
-      tone: 'formal',
-    }));
+    localStorage.setItem(
+      'lance:follow-up-settings',
+      JSON.stringify({
+        proposal_delay_days: 9999,
+        invoice_delay_days: 45,
+        tone: 'formal',
+      }),
+    );
     useStore.getState().loadFollowUpSettings();
     const s = useStore.getState().followUpSettings;
     expect(s.proposal_delay_days).toBe(30);

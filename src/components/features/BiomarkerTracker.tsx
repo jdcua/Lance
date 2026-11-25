@@ -37,7 +37,7 @@ export default function BiomarkerTracker({ clientId }: { clientId: string }) {
       const db = await getDb();
       const rows = await db.select<(Biomarker & Record<string, unknown>)[]>(
         'SELECT id, client_id, name, value, unit, date, reference_range, notes FROM biomarkers WHERE client_id = ? ORDER BY name ASC, date DESC',
-        [clientId]
+        [clientId],
       );
       setBiomarkers(
         rows.map((r) => ({
@@ -49,7 +49,7 @@ export default function BiomarkerTracker({ clientId }: { clientId: string }) {
           date: r.date as string,
           reference_range: r.reference_range as string | undefined,
           notes: r.notes as string | undefined,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[BiomarkerTracker] loadBiomarkers failed:', e);
@@ -76,7 +76,16 @@ export default function BiomarkerTracker({ clientId }: { clientId: string }) {
       const db = await getDb();
       await db.execute(
         'INSERT INTO biomarkers (id, client_id, name, value, unit, date, reference_range, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [id, clientId, form.name.trim(), parseFloat(form.value), form.unit || null, form.date, form.reference_range || null, form.notes || null]
+        [
+          id,
+          clientId,
+          form.name.trim(),
+          parseFloat(form.value),
+          form.unit || null,
+          form.date,
+          form.reference_range || null,
+          form.notes || null,
+        ],
       );
       const biomarker: Biomarker = {
         id,
@@ -89,9 +98,18 @@ export default function BiomarkerTracker({ clientId }: { clientId: string }) {
         notes: form.notes || undefined,
       };
       setBiomarkers((prev) =>
-        [...prev, biomarker].sort((a, b) => a.name.localeCompare(b.name) || b.date.localeCompare(a.date))
+        [...prev, biomarker].sort(
+          (a, b) => a.name.localeCompare(b.name) || b.date.localeCompare(a.date),
+        ),
       );
-      setForm({ name: '', value: '', unit: '', date: new Date().toISOString().split('T')[0], reference_range: '', notes: '' });
+      setForm({
+        name: '',
+        value: '',
+        unit: '',
+        date: new Date().toISOString().split('T')[0],
+        reference_range: '',
+        notes: '',
+      });
       setShowForm(false);
     } catch (e) {
       console.error('[BiomarkerTracker] handleSave failed:', e);
@@ -186,8 +204,17 @@ export default function BiomarkerTracker({ clientId }: { clientId: string }) {
             className={inputClass + ' resize-none'}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.name.trim() || !form.value}>Save</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              loading={saving}
+              disabled={!form.name.trim() || !form.value}
+            >
+              Save
+            </Button>
           </div>
         </div>
       )}
@@ -201,7 +228,8 @@ export default function BiomarkerTracker({ clientId }: { clientId: string }) {
               <div key={name} className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
                 <p className="text-[10px] text-[var(--text-tertiary)]">{name}</p>
                 <p className="text-lg font-semibold text-[var(--text-primary)]">
-                  {b.value}{b.unit ? ` ${b.unit}` : ''}
+                  {b.value}
+                  {b.unit ? ` ${b.unit}` : ''}
                 </p>
                 {b.reference_range && (
                   <p className="text-[10px] text-[var(--text-tertiary)]">{b.reference_range}</p>
@@ -212,19 +240,35 @@ export default function BiomarkerTracker({ clientId }: { clientId: string }) {
 
           <div className="space-y-1">
             {biomarkers.map((b) => (
-              <div key={b.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
+              <div
+                key={b.id}
+                className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
+              >
                 <div className="flex-1 min-w-0 flex items-center gap-2">
                   <span className="font-medium text-[var(--text-primary)]">{b.name}</span>
                   <span className="text-[var(--text-primary)] font-mono">
-                    {b.value}{b.unit ? ` ${b.unit}` : ''}
+                    {b.value}
+                    {b.unit ? ` ${b.unit}` : ''}
                   </span>
-                  <span className="text-[10px] text-[var(--text-tertiary)]">{b.date?.split('T')[0]}</span>
-                  {b.reference_range && <span className="text-[10px] text-[var(--text-tertiary)]">{b.reference_range}</span>}
-                  {b.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">{b.notes}</span>}
+                  <span className="text-[10px] text-[var(--text-tertiary)]">
+                    {b.date?.split('T')[0]}
+                  </span>
+                  {b.reference_range && (
+                    <span className="text-[10px] text-[var(--text-tertiary)]">
+                      {b.reference_range}
+                    </span>
+                  )}
+                  {b.notes && (
+                    <span className="text-[10px] text-[var(--text-tertiary)] truncate">
+                      {b.notes}
+                    </span>
+                  )}
                 </div>
                 <button
                   aria-label="Delete biomarker tracker"
-                  onClick={() => handleDelete(b.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                  onClick={() => handleDelete(b.id)}
+                  className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2"
+                >
                   <Trash2 size={12} />
                 </button>
               </div>

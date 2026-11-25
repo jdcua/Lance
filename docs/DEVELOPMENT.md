@@ -10,7 +10,7 @@
 
 ```bash
 git clone https://github.com/jdcua/Lance.git
-cd lance
+cd Lance
 npm install
 npm run tauri dev
 ```
@@ -22,9 +22,9 @@ npm run tauri dev
 | `npm run tauri dev` | Start dev server with hot reload |
 | `npm run tauri build` | Production build (no signing) |
 | `npm run version:bump 1.2.0` | Bump version across all 3 files |
-| `npm run doctor` | Check Node, Rust and installed dependencies |
+| `npm run doctor` | Check Node, npm, Rust and installed npm dependencies (does not check OS libraries) |
 | `npm run typecheck` | Typecheck without building |
-| `npm run verify` | Run typecheck, lint, tests, build and the OSS audit |
+| `npm run verify` | Typecheck, lint, tests, build, OSS audit and strict boundary check |
 | `npm run audit:oss` | Check tracked files for secrets, personal paths and junk |
 | `npm run check:boundaries` | Report architecture boundary violations (warn-only) |
 | `npm run complexity` | List cyclomatic and cognitive complexity offenders |

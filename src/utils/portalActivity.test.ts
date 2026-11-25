@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  parseViewCount,
-  getProposalViews,
-  snapshotOpens,
-  detectNewOpens,
-} from './portalActivity';
+import { parseViewCount, getProposalViews, snapshotOpens, detectNewOpens } from './portalActivity';
 import type { PortalActivity } from '../types';
 
 function act(over: Partial<PortalActivity>): PortalActivity {

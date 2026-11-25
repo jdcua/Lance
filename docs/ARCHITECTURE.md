@@ -105,7 +105,12 @@ both the Rust schema and the browser database mock. New trackers must use
 
 ## Database schema
 
-All tables use `CREATE TABLE IF NOT EXISTS`. Migrations are inline in `src-tauri/src/db.rs`.
+All tables use `CREATE TABLE IF NOT EXISTS`. Migrations are split into ordered
+per-stage SQL functions in `src-tauri/src/db.rs`, run by a thin `run_migrations`.
+
+Legacy license columns (`license_key`, `licensed_at`, `trial_started_at`, etc.)
+remain in some tables and payload types for on-disk compatibility only. The app
+does not read or write them and there is no licensing gate; do not add one.
 
 | Table | Description |
 |-------|-------------|
@@ -121,9 +126,7 @@ All tables use `CREATE TABLE IF NOT EXISTS`. Migrations are inline in `src-tauri
 | `recurring_invoices` | Recurring invoice templates with cron-like scheduling, next_due |
 | `communications` | Client communication log (emails, calls, meetings) |
 | `follow_up_log` | Follow-up tracking for sent proposals and overdue invoices |
-| `follow_up_settings` | User's follow-up timing preferences |
 | `share_tokens` | Client portal tokens with view counts and client responses |
-| `portal_activity` | Client portal view/response event log |
 | `metric_definitions` | Dashboard metric schemas (domain-specific: renders, sessions, etc.) |
 | `metric_values` | Time-series metric data points |
 | `metric_templates` | Reusable metric templates |
@@ -132,6 +135,10 @@ All tables use `CREATE TABLE IF NOT EXISTS`. Migrations are inline in `src-tauri
 | `export_templates` | User-defined PDF/DOCX export layouts |
 | `contract_templates` | Saved contract templates |
 | `project_templates` | Saved project structures with milestones |
+| `project_template_milestones` | Milestone definitions belonging to a project template |
+| `kanban_boards` | Kanban boards for pipeline workflows |
+| `kanban_columns` | Columns belonging to a kanban board |
+| `kanban_cards` | Cards belonging to a kanban column |
 | `attachments` | File attachments linked to entities |
 | `import_log` | Audit log of CSV/client imports |
 | `app_events` | Audit trail (e.g., `update_applied` events) |

@@ -73,7 +73,13 @@ function CreateShareView({
       </div>
 
       <div className="pt-2">
-        <Button onClick={onCreate} loading={loading} disabled={shareDisabled} size="sm" title={shareTooltip}>
+        <Button
+          onClick={onCreate}
+          loading={loading}
+          disabled={shareDisabled}
+          size="sm"
+          title={shareTooltip}
+        >
           <Link size={14} />
           Generate Share Link
         </Button>

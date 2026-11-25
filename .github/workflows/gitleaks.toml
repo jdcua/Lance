@@ -1,0 +1,25 @@
+# Gitleaks config used by both CI (GITLEAKS_CONFIG) and the pre-commit hook.
+# Kept next to the workflow that references it so the two cannot drift.
+# Co-locating here also avoids a root-level config that contributors' local
+# gitleaks installs might pick up silently.
+
+title = "Lance gitleaks config"
+
+[extend]
+useDefault = true
+
+# The default `generic-api-key` rule matches two known, harmless code
+# patterns in this repository's history:
+#   - `templateKey: 'proposal_day7'` / `templateKey = 'invoice_day14'` —
+#     enum values that look like random keys to the regex.
+#   - `license_key: 'LANCE-...'` inside a deleted QA browser script — a fake
+#     license key used to drive a local checkout UI test, never a credential.
+# The regexes are anchored to those exact shapes, so a real token in either
+# file is still reported. Do not widen them to silence a genuine finding.
+[allowlist]
+description = "Known generic-api-key false positives in Lance source and QA scripts"
+regexTarget = "match"
+regexes = [
+  '''templateKey\s*[:=]\s*['"][A-Za-z0-9_-]+['"]''',
+  '''license_key\s*:\s*['"]LANCE-[A-Z0-9-]+['"]''',
+]

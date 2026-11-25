@@ -67,7 +67,6 @@ type PortalState =
       profile?: UserProfile | null;
     };
 
-
 function shareStatusScreen(kind: 'loading' | 'notfound' | 'expired'): ReactNode {
   if (kind === 'loading') {
     return (
@@ -149,7 +148,11 @@ function ProposalMeta({ entity, currency }: { entity: Proposal; currency: string
 }
 
 function ResponseStatus({
-  isContract, respondedName, respDate, respValue, clientName,
+  isContract,
+  respondedName,
+  respDate,
+  respValue,
+  clientName,
 }: {
   isContract: boolean;
   respondedName: string | undefined;
@@ -174,7 +177,15 @@ function ResponseStatus({
 }
 
 function ShareActions({
-  isContract, submitting, name, signature, error, onRespond, onSign, setName, setSignature,
+  isContract,
+  submitting,
+  name,
+  signature,
+  error,
+  onRespond,
+  onSign,
+  setName,
+  setSignature,
 }: {
   isContract: boolean;
   submitting: boolean;
@@ -262,11 +273,7 @@ function sharePresentation(
   };
 }
 
-function respondedDisplay(
-  isContract: boolean,
-  responded: ShareToken | null,
-  token: ShareToken,
-) {
+function respondedDisplay(isContract: boolean, responded: ShareToken | null, token: ShareToken) {
   const respondedName = isContract
     ? responded?.client_signature || token.client_signature
     : responded?.client_name || token.client_name;
@@ -377,8 +384,7 @@ export default function ShareView() {
 
   const handleRespond = (response: 'accepted' | 'declined') =>
     submitResponse({ response, client_name: name });
-  const handleSign = () =>
-    submitResponse({ response: 'accepted', client_signature: signature });
+  const handleSign = () => submitResponse({ response: 'accepted', client_signature: signature });
 
   return (
     <div className="share-root">
@@ -418,7 +424,9 @@ export default function ShareView() {
           />
         )}
 
-        <div className="share-foot">Powered by Lance · This link only works while Lance is open</div>
+        <div className="share-foot">
+          Powered by Lance · This link only works while Lance is open
+        </div>
       </div>
     </div>
   );

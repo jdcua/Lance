@@ -1,10 +1,13 @@
 /**
- * Reports cyclomatic complexity above a threshold (default 15).
- * Read-only. Use `npm run complexity -- 12` for a stricter pass.
+ * Reports cyclomatic and cognitive complexity above a threshold (default 15).
+ * Use `npm run complexity -- 12` for a stricter pass, or `-- --strict` to
+ * exit non-zero when offenders exist (used as a CI gate).
  */
 import { spawnSync } from 'node:child_process';
 
-const threshold = Number(process.argv[2]) || 15;
+const strict = process.argv.includes('--strict');
+const thresholdArg = process.argv.find((arg) => /^\d+$/.test(arg));
+const threshold = Number(thresholdArg) || 15;
 const result = spawnSync(
   'npx',
   ['eslint', 'src/', '--rule', JSON.stringify({ complexity: ['warn', threshold] }), '-f', 'json'],
@@ -43,4 +46,5 @@ if (offenders.length === 0) {
   for (const o of offenders) {
     console.log(`  ${String(o.score).padStart(3)}  ${o.kind.padEnd(10)} ${o.file}:${o.line}`);
   }
+  if (strict) process.exitCode = 1;
 }
