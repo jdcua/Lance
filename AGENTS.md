@@ -94,8 +94,7 @@ and `prefers-reduced-transparency` always win.
 ## 6. Complexity and testing
 
 - Cyclomatic complexity must be **<= 15 per function** (ESLint error).
-  Extract pure
-  helpers or small components instead of adding more branches to an existing
+  Extract pure helpers or small components instead of adding more branches to an existing
   function. Never change behavior to satisfy the metric. Run
   `npm run complexity` to see the current backlog.
 
