@@ -15,6 +15,7 @@ on:
 
 jobs:
   welcome:
+    timeout-minutes: 10
     name: Welcome first-time contributors
     runs-on: ubuntu-latest
     steps:
@@ -47,6 +48,7 @@ jobs:
           esac
 
   label:
+    timeout-minutes: 10
     name: Label pull requests by changed paths
     if: github.event_name == 'pull_request_target' && github.event.action == 'opened'
     runs-on: ubuntu-latest
