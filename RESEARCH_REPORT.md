@@ -412,15 +412,25 @@ docs/ARCHITECTURE.md          accurate architecture map
 
 ---
 
-# 8. Review questions before Phase 1
+# 8. Decisions recorded (reviewed 2026-11-25)
 
-1. Do we adopt cognitive complexity as a hard error immediately, or warn-first
-   with a baseline? (Recommended: warn-first, then error.)
-2. Do we permit `src/features/<domain>/` for new code only, or begin migrating
-   one existing domain in Phase 3? (Recommended: new code only in this pass.)
-3. Which Rust clippy lints become `-D warnings` vs warn-only in the first PR?
-4. Is the optional SonarCloud/CodeScene pilot in scope for this mission, or
-   deferred? (Recommended: deferred.)
+1. **Cognitive complexity: warn-first.** Add `eslint-plugin-sonarjs`
+   `cognitive-complexity` as a warning and track the backlog; promote to an
+   error only after the backlog is burned down. Cyclomatic complexity stays an
+   error at 15.
+2. **Feature folders: new code only.** `src/features/<domain>/` is the target
+   for new work; existing files migrate opportunistically when a task already
+   touches them, never in a bulk move.
+3. **Rust Clippy: `-D warnings`** on the selected quality lints
+   (`cognitive_complexity`, `too_many_lines`, `too_many_arguments`,
+   `type_complexity`) alongside `cargo fmt --check`.
+4. **SonarCloud and CodeScene are in scope.** They are SaaS services (free for
+   public OSS): SonarCloud reports bugs, smells, vulnerabilities, duplication
+   and coverage with quality gates on new code and PR decoration; CodeScene
+   reports CodeHealth, churn×complexity hotspots and change coupling to
+   prioritize work. Configuration and CI hooks will be prepared; enabling them
+   requires a GitHub app install/token owned by the repository owner. Until
+   connected they are warn-only and never block CI.
 
 ---
 
