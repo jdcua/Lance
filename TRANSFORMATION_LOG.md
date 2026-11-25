@@ -255,3 +255,22 @@ Six parallel subagents closed the handoff backlog:
 Final verification: `npm run verify` green (303 tests, 0 errors), strict
 complexity/boundaries clean, `format:check` clean, 38 Rust tests + fmt +
 Clippy clean. Everything is staged but not committed or tagged.
+
+## 2026-11-25 — Playwright QA and final fixes
+
+- Ran a full Chromium QA pass against the built preview: 9 E2E specs / 42
+  tests under `e2e/`. Initial result 40/42 exposed a first-run onboarding
+  ship-blocker (profile-save effect reset the step; finish buttons required a
+  name input that was never rendered). **Why:** verify the refactor end to end
+  in a browser. Fixed with a one-time hydration ref, an optional name field,
+  and `onClose()` on finish; verified 3/3 fresh contexts.
+- The archetype surface is intentionally disabled (`ArchetypeFeatureTabs`
+  returns null), so migrated trackers cannot be exercised via routes. Added six
+  component-level tests (`src/test/recordTrackerMigration.test.tsx`) and
+  changed the E2E spec to assert the disabled surface does not leak panels.
+  **Why:** verify the migration without re-enabling a deliberately disabled UI.
+- Mocked the GitHub release-notes endpoint in E2E so rate-limit 403s no longer
+  produce false console errors. **Why:** deterministic QA harness.
+- Final gates: `npm run verify` green (309 tests / 69 files), strict
+  complexity/boundaries clean, Rust 38 tests + fmt + Clippy clean, and
+  `npx playwright test` **42 passed / 0 failed**.

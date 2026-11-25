@@ -42,7 +42,8 @@ closeout are complete. No business behavior changed.
 
 | Check | Result |
 |---|---|
-| `npm run verify` | typecheck, lint (0 errors), **303 tests / 68 files**, build, OSS audit (610 files), license policy, strict boundaries — pass |
+| `npm run verify` | typecheck, lint (0 errors), **309 tests / 69 files**, build, OSS audit (610 files), license policy, strict boundaries — pass |
+| `npx playwright test` | **42 passed / 0 failed** against the built preview (Chromium) |
 | `npm run complexity -- --strict` | 0 functions above cyclomatic/cognitive 15 |
 | `npm run check:boundaries -- --strict` | 0 warnings |
 | `npm run format:check` | clean |
@@ -51,7 +52,32 @@ closeout are complete. No business behavior changed.
 | gitleaks full history | configured in CI with pinned SHA and false-positive allowlist; local scan found 0 findings after allowlisting |
 | GitHub private vulnerability reporting | enabled (`true`) |
 
-All changes are staged in git; nothing has been committed or tagged.
+## Playwright QA (post-refactor)
+
+A full browser pass was added under `e2e/` (9 specs, 42 tests) and run against
+the built preview. It covers cold load, first-run onboarding, 16 routes,
+client/project CRUD with reload persistence, command palette/search, settings
+persistence, all four dialogs, Pipeline/Follow-ups, migrated trackers, network
+privacy and axe checks on three screens. Final result: **42 passed / 0 failed**.
+
+Two issues surfaced and were resolved:
+
+- **First-run onboarding blocker:** a profile-save effect reset the wizard to
+  step 1, and the finish buttons required a name input that was never rendered.
+  Fixed with a one-time hydration guard, an optional name field, and closing the
+  modal on finish. Verified in 3/3 fresh browser contexts.
+- **Disabled archetype surface:** the six migrated trackers and `KanbanBoard`
+  have no route because `ArchetypeFeatureTabs` intentionally renders nothing.
+  Kept that design decision; the trackers are now verified by six component
+  tests in `src/test/recordTrackerMigration.test.tsx`, and the E2E spec asserts
+  the disabled surface does not leak half-rendered panels.
+
+Release-note API calls are mocked in E2E so GitHub rate limiting (HTTP 403)
+does not create false console errors. Evidence and screenshots are in the QA
+report and `qa-shots/`.
+
+All work is committed on `test/rust-commands` and pushed to `origin`; the
+release itself has not been tagged or published.
 
 ## Remaining items (deliberate decisions or external actions)
 

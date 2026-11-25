@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { DEFAULT_CURRENCY } from '../lib/constants';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
@@ -197,9 +197,13 @@ export default function Onboarding({ visible = true, onClose = () => {} }: Onboa
   const [selectedProfession, setSelectedProfession] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
+  const hydrated = useRef(false);
 
   useEffect(() => {
-    if (!profileLoaded || !profile) return;
+    // Hydrate once. persist() saves the profile on each step, which would
+    // otherwise re-trigger this effect and snap the user back to step 1.
+    if (!profileLoaded || !profile || hydrated.current) return;
+    hydrated.current = true;
     setForm({
       name: profile.name || '',
       email: profile.email || '',
@@ -256,7 +260,6 @@ export default function Onboarding({ visible = true, onClose = () => {} }: Onboa
   const handleBack = () => setStep((s) => Math.max(1, s - 1));
 
   const finish = async () => {
-    if (!form.name.trim()) return;
     setIsSaving(true);
     try {
       await saveProfile({
@@ -270,6 +273,7 @@ export default function Onboarding({ visible = true, onClose = () => {} }: Onboa
       });
       localStorage.setItem('lance:onboarding-completed', 'true');
       localStorage.setItem('lance:onboarding-step', 'complete');
+      onClose();
     } finally {
       setIsSaving(false);
     }
@@ -446,6 +450,18 @@ export default function Onboarding({ visible = true, onClose = () => {} }: Onboa
               </p>
               <div className="space-y-3">
                 <div>
+                  <label className="form-label">
+                    Your name <span className="font-normal text-[var(--text-tertiary)]">(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={form.name}
+                    onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                    placeholder="How should we address you?"
+                    className={`w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 bg-[var(--bg-card)] text-[var(--text-primary)]`}
+                  />
+                </div>
+                <div>
                   <label className={`form-label`}>
                     Default Hourly Rate ({form.currency}){' '}
                     <span className="font-normal text-[var(--text-tertiary)]">(optional)</span>
@@ -493,7 +509,7 @@ export default function Onboarding({ visible = true, onClose = () => {} }: Onboa
                     variant="secondary"
                     size="sm"
                     onClick={finish}
-                    disabled={isSaving || !form.name.trim()}
+                    disabled={isSaving}
                     className="flex-1"
                   >
                     Skip · start fresh
@@ -501,7 +517,7 @@ export default function Onboarding({ visible = true, onClose = () => {} }: Onboa
                   <Button
                     size="sm"
                     onClick={finish}
-                    disabled={isSaving || !form.name.trim()}
+                    disabled={isSaving}
                     className="flex-1"
                   >
                     Yes, show me around

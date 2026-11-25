@@ -283,7 +283,7 @@ The P0/P1 items above were addressed during Phase 3. Final state:
 
 | Metric | At audit | At handoff |
 |---|---:|---:|
-| Frontend tests | 273 / 64 files | **303 / 68 files** |
+| Frontend tests | 273 / 64 files | **309 / 69 files** (+ 42 Playwright E2E, all passing) |
 | Rust tests | 22 | **38** |
 | Lint warnings | 32 | **7** (fast-refresh DX only, documented concession) |
 | Complexity offenders | 0 | **0** (strict CI gate) |
