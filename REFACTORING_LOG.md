@@ -117,3 +117,11 @@ Each entry records what changed, why, and which standard it satisfies.
   narrowing or typed helpers across 12 files. **Why:** type safety is the
   cheapest invariant for agents. **Standard:** no `any` without reason.
 - Lint warnings: 57 → 32 (0 errors). Tests still 263 passing.
+
+## 2026-11-25 — Large-file split
+
+- Moved `UnifiedStore`/`AppStore` declarations to `src/store/types.ts`
+  (store/index.ts 2242 → 1829 lines) and static SQL arrays to
+  `src/db/schema.ts` (db/index.ts 1744 → 1640 lines). **Why:** reduce file
+  size without moving logic. **Standard:** one reason to change per module;
+  single `create()` remains in `store/index.ts`.
