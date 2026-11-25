@@ -102,3 +102,11 @@ Each entry records what changed, why, and which standard it satisfies.
   `index.ts`/`shared.tsx` are intentional).
 - `npm run check:boundaries -- --strict` now runs inside `npm run verify`.
   Boundary warnings: 16 → 0.
+
+## 2026-11-25 — Characterization tests for parsers/exports/polling
+
+- Added `documentParser.test.ts`, `spreadsheetParser.test.ts`,
+  `exportCommon.test.ts` and `usePortalPolling.test.tsx` (17 assertions).
+  **Why:** pin previously untested behavior before further refactoring.
+  **Standard:** behavior tests, no DOM internals; no new dependencies.
+- Test suite: 246 → 263 tests, 59 → 63 files.
