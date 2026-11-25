@@ -1,7 +1,12 @@
 use tauri_plugin_opener::OpenerExt;
 
 #[tauri::command]
-pub async fn open_mailto(app: tauri::AppHandle, address: String, subject: String, body: String) -> Result<(), String> {
+pub async fn open_mailto(
+    app: tauri::AppHandle,
+    address: String,
+    subject: String,
+    body: String,
+) -> Result<(), String> {
     let encoded_subject = urlencoding(&subject);
     let encoded_body = urlencoding(&body);
     let uri = format!("mailto:{}?subject={}&body={}", address, encoded_subject, encoded_body);

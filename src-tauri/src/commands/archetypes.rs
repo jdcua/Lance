@@ -259,64 +259,67 @@ pub fn get_sessions(
         let mut stmt = conn
             .prepare("SELECT id, client_id, project_id, session_type, duration_minutes, notes, action_items, next_session_date, created_at FROM archetype_sessions WHERE client_id = ? ORDER BY created_at DESC")
             .map_err(|_| "Database operation failed".to_string())?;
-        let rows: Vec<ArchetypeSession> = stmt.query_map([cid], |row| {
-            Ok(ArchetypeSession {
-                id: row.get(0)?,
-                client_id: row.get(1)?,
-                project_id: row.get(2)?,
-                session_type: row.get(3)?,
-                duration_minutes: row.get(4)?,
-                notes: row.get(5)?,
-                action_items: row.get(6)?,
-                next_session_date: row.get(7)?,
-                created_at: row.get(8)?,
+        let rows: Vec<ArchetypeSession> = stmt
+            .query_map([cid], |row| {
+                Ok(ArchetypeSession {
+                    id: row.get(0)?,
+                    client_id: row.get(1)?,
+                    project_id: row.get(2)?,
+                    session_type: row.get(3)?,
+                    duration_minutes: row.get(4)?,
+                    notes: row.get(5)?,
+                    action_items: row.get(6)?,
+                    next_session_date: row.get(7)?,
+                    created_at: row.get(8)?,
+                })
             })
-        })
-        .map_err(|_| "Database operation failed".to_string())?
-        .filter_map(|r| r.ok())
-        .collect();
+            .map_err(|_| "Database operation failed".to_string())?
+            .filter_map(|r| r.ok())
+            .collect();
         rows
     } else if let Some(ref pid) = project_id {
         let mut stmt = conn
             .prepare("SELECT id, client_id, project_id, session_type, duration_minutes, notes, action_items, next_session_date, created_at FROM archetype_sessions WHERE project_id = ? ORDER BY created_at DESC")
             .map_err(|_| "Database operation failed".to_string())?;
-        let rows: Vec<ArchetypeSession> = stmt.query_map([pid], |row| {
-            Ok(ArchetypeSession {
-                id: row.get(0)?,
-                client_id: row.get(1)?,
-                project_id: row.get(2)?,
-                session_type: row.get(3)?,
-                duration_minutes: row.get(4)?,
-                notes: row.get(5)?,
-                action_items: row.get(6)?,
-                next_session_date: row.get(7)?,
-                created_at: row.get(8)?,
+        let rows: Vec<ArchetypeSession> = stmt
+            .query_map([pid], |row| {
+                Ok(ArchetypeSession {
+                    id: row.get(0)?,
+                    client_id: row.get(1)?,
+                    project_id: row.get(2)?,
+                    session_type: row.get(3)?,
+                    duration_minutes: row.get(4)?,
+                    notes: row.get(5)?,
+                    action_items: row.get(6)?,
+                    next_session_date: row.get(7)?,
+                    created_at: row.get(8)?,
+                })
             })
-        })
-        .map_err(|_| "Database operation failed".to_string())?
-        .filter_map(|r| r.ok())
-        .collect();
+            .map_err(|_| "Database operation failed".to_string())?
+            .filter_map(|r| r.ok())
+            .collect();
         rows
     } else {
         let mut stmt = conn
             .prepare("SELECT id, client_id, project_id, session_type, duration_minutes, notes, action_items, next_session_date, created_at FROM archetype_sessions ORDER BY created_at DESC")
             .map_err(|_| "Database operation failed".to_string())?;
-        let rows: Vec<ArchetypeSession> = stmt.query_map([], |row| {
-            Ok(ArchetypeSession {
-                id: row.get(0)?,
-                client_id: row.get(1)?,
-                project_id: row.get(2)?,
-                session_type: row.get(3)?,
-                duration_minutes: row.get(4)?,
-                notes: row.get(5)?,
-                action_items: row.get(6)?,
-                next_session_date: row.get(7)?,
-                created_at: row.get(8)?,
+        let rows: Vec<ArchetypeSession> = stmt
+            .query_map([], |row| {
+                Ok(ArchetypeSession {
+                    id: row.get(0)?,
+                    client_id: row.get(1)?,
+                    project_id: row.get(2)?,
+                    session_type: row.get(3)?,
+                    duration_minutes: row.get(4)?,
+                    notes: row.get(5)?,
+                    action_items: row.get(6)?,
+                    next_session_date: row.get(7)?,
+                    created_at: row.get(8)?,
+                })
             })
-        })
-        .map_err(|_| "Database operation failed".to_string())?
-        .filter_map(|r| r.ok())
-        .collect();
+            .map_err(|_| "Database operation failed".to_string())?
+            .filter_map(|r| r.ok())
+            .collect();
         rows
     };
     Ok(sessions)
@@ -385,7 +388,10 @@ pub fn get_all_shoots(app: tauri::AppHandle) -> Result<Vec<ArchetypeShoot>, Stri
 }
 
 #[tauri::command]
-pub fn get_shoots(app: tauri::AppHandle, project_id: String) -> Result<Vec<ArchetypeShoot>, String> {
+pub fn get_shoots(
+    app: tauri::AppHandle,
+    project_id: String,
+) -> Result<Vec<ArchetypeShoot>, String> {
     let state = app.state::<DbState>();
     let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let mut stmt = conn
@@ -555,7 +561,10 @@ pub fn get_all_builds(app: tauri::AppHandle) -> Result<Vec<ArchetypeBuild>, Stri
 }
 
 #[tauri::command]
-pub fn get_builds(app: tauri::AppHandle, project_id: String) -> Result<Vec<ArchetypeBuild>, String> {
+pub fn get_builds(
+    app: tauri::AppHandle,
+    project_id: String,
+) -> Result<Vec<ArchetypeBuild>, String> {
     let state = app.state::<DbState>();
     let conn = state.0.lock().map_err(|e| format!("Lock error: {}", e))?;
     let mut stmt = conn
@@ -591,7 +600,14 @@ pub fn create_build(
         "INSERT INTO archetype_builds (id, project_id, version, platform, notes, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
         rusqlite::params![id, payload.project_id, payload.version, payload.platform, payload.notes, created_at],
     ).map_err(|_| "Database operation failed".to_string())?;
-    Ok(ArchetypeBuild { id, project_id: payload.project_id, version: payload.version, platform: payload.platform, notes: payload.notes, created_at })
+    Ok(ArchetypeBuild {
+        id,
+        project_id: payload.project_id,
+        version: payload.version,
+        platform: payload.platform,
+        notes: payload.notes,
+        created_at,
+    })
 }
 
 #[tauri::command]

@@ -1,3 +1,4 @@
+use axum::response::IntoResponse;
 use axum::{
     extract::{ConnectInfo, Path, State},
     response::Html,
@@ -14,7 +15,6 @@ use std::time::Duration;
 use tauri::{AppHandle, Emitter};
 use tokio::runtime::Runtime;
 use tokio::sync::Mutex;
-use axum::response::IntoResponse;
 use tower_http::{limit::RequestBodyLimitLayer, timeout::TimeoutLayer};
 
 const RATE_LIMIT_MAX: u64 = 60;
@@ -168,7 +168,20 @@ fn sanitize_html(html: &str) -> String {
     let clean_tags: std::collections::HashSet<&str> =
         ["script", "style", "iframe", "object", "embed", "form", "input"].into_iter().collect();
     cleaner
-        .add_tags(&["p", "strong", "em", "a", "h1", "h2", "ul", "ol", "li", "blockquote", "hr", "br"])
+        .add_tags(&[
+            "p",
+            "strong",
+            "em",
+            "a",
+            "h1",
+            "h2",
+            "ul",
+            "ol",
+            "li",
+            "blockquote",
+            "hr",
+            "br",
+        ])
         .add_tag_attributes("a", &["href", "title"])
         // Links are freelancer-authored (portfolio, payment URLs), not
         // attacker input — but href stays scheme-gated by ammonia's default
@@ -705,10 +718,7 @@ async fn handle_respond(
     // socket allowed. Tokens are 256-bit so blind enumeration is infeasible, but
     // confirming a leaked one is exactly the case that matters.
     if !state.check_rate_limit(&token).await {
-        return Err((
-            axum::http::StatusCode::TOO_MANY_REQUESTS,
-            "Too many requests.".to_string(),
-        ));
+        return Err((axum::http::StatusCode::TOO_MANY_REQUESTS, "Too many requests.".to_string()));
     }
     let source = addr.ip().to_string();
     if !state.record_token_failure(&source).await {
@@ -718,11 +728,14 @@ async fn handle_respond(
         ));
     }
 
-    let conn = db_connection(&state.db_path)
-        .map_err(|_| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, "Database unavailable.".to_string()))?;
+    let conn = db_connection(&state.db_path).map_err(|_| {
+        (axum::http::StatusCode::INTERNAL_SERVER_ERROR, "Database unavailable.".to_string())
+    })?;
 
     let record = find_token(&conn, &token)
-        .map_err(|_| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, "Database unavailable.".to_string()))?
+        .map_err(|_| {
+            (axum::http::StatusCode::INTERNAL_SERVER_ERROR, "Database unavailable.".to_string())
+        })?
         .ok_or_else(|| (axum::http::StatusCode::NOT_FOUND, "Share link not found.".to_string()))?;
 
     // The client needs honest feedback, but the client is the legitimate holder
@@ -870,24 +883,26 @@ pub fn start_server(db_path: String, app_handle: AppHandle) -> Result<ServerHand
         // cannot get a permit is shed before it reaches a handler or opens a
         // SQLite handle. `try_acquire_owned` means we shed rather than queue,
         // because queueing would just move the backlog into the kernel.
-        .layer(axum::middleware::from_fn(move |req: axum::extract::Request, next: axum::middleware::Next| {
-            let permits = permits.clone();
-            async move {
-                match permits.clone().try_acquire_owned() {
-                    Ok(permit) => {
-                        let response = next.run(req).await;
-                        drop(permit);
-                        response
+        .layer(axum::middleware::from_fn(
+            move |req: axum::extract::Request, next: axum::middleware::Next| {
+                let permits = permits.clone();
+                async move {
+                    match permits.clone().try_acquire_owned() {
+                        Ok(permit) => {
+                            let response = next.run(req).await;
+                            drop(permit);
+                            response
+                        }
+                        Err(_) => (
+                            axum::http::StatusCode::TOO_MANY_REQUESTS,
+                            [(axum::http::header::CONTENT_TYPE, "text/plain; charset=utf-8")],
+                            "Portal busy",
+                        )
+                            .into_response(),
                     }
-                    Err(_) => (
-                        axum::http::StatusCode::TOO_MANY_REQUESTS,
-                        [(axum::http::header::CONTENT_TYPE, "text/plain; charset=utf-8")],
-                        "Portal busy",
-                    )
-                        .into_response(),
                 }
-            }
-        }));
+            },
+        ));
 
     let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<()>();
 
@@ -1003,7 +1018,8 @@ mod portal_tests {
     /// handlers die while the link text is preserved.
     #[test]
     fn links_survive_with_safe_schemes_only() {
-        let https = super::sanitize_html(r#"<p>See <a href="https://example.com/work">portfolio</a></p>"#);
+        let https =
+            super::sanitize_html(r#"<p>See <a href="https://example.com/work">portfolio</a></p>"#);
         assert!(
             https.contains(r#"<a href="https://example.com/work" rel="noopener">portfolio</a>"#),
             "https link kept with rel: {https}"
@@ -1015,7 +1031,8 @@ mod portal_tests {
             assert!(!out.contains("href="), "dangerous scheme stripped ({bad}): {out}");
             assert!(out.contains("click"), "link text survives: {out}");
         }
-        let handler = super::sanitize_html(r#"<a href="https://example.com" onclick="alert(1)">x</a>"#);
+        let handler =
+            super::sanitize_html(r#"<a href="https://example.com" onclick="alert(1)">x</a>"#);
         assert!(!handler.contains("onclick"), "event handler stripped: {handler}");
     }
 }

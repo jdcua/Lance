@@ -39,9 +39,7 @@ pub fn get_communications(
             vec![],
         ),
     };
-    let mut stmt = conn
-        .prepare(&sql)
-        .map_err(|_| "Database operation failed".to_string())?;
+    let mut stmt = conn.prepare(&sql).map_err(|_| "Database operation failed".to_string())?;
     let comms = stmt
         .query_map(rusqlite::params_from_iter(params), |row| {
             Ok(Communication {

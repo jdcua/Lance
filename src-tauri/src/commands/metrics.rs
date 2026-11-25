@@ -263,6 +263,8 @@ pub fn delete_metric_value(app: tauri::AppHandle, id: String) -> Result<(), Stri
     Ok(())
 }
 
+type HeadlineRow = (String, String, String, String, Option<String>, Option<String>);
+
 #[tauri::command]
 pub fn get_all_headline_metrics(app: tauri::AppHandle) -> Result<Vec<HeadlineMetric>, String> {
     let state = app.state::<DbState>();
@@ -270,16 +272,9 @@ pub fn get_all_headline_metrics(app: tauri::AppHandle) -> Result<Vec<HeadlineMet
     let mut stmt = conn
         .prepare("SELECT md.id, md.client_id, md.name, md.metric_type, md.unit_label, c.name as client_name FROM metric_definitions md LEFT JOIN clients c ON md.client_id = c.id WHERE md.is_headline = 1 ORDER BY c.name, md.sort_order")
         .map_err(|_| "Database operation failed".to_string())?;
-    let rows: Vec<(String, String, String, String, Option<String>, Option<String>)> = stmt
+    let rows: Vec<HeadlineRow> = stmt
         .query_map([], |row| {
-            Ok((
-                row.get(0)?,
-                row.get(1)?,
-                row.get(2)?,
-                row.get(3)?,
-                row.get(4)?,
-                row.get(5)?,
-            ))
+            Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?, row.get(5)?))
         })
         .map_err(|_| "Database operation failed".to_string())?
         .filter_map(|r| r.ok())
