@@ -368,17 +368,25 @@ export default function Finance() {
       revenueByCurrency[cur] = (revenueByCurrency[cur] || 0) + i.total;
     });
 
-  const convRevenue = showConverted ? convertByCurrency(revenueByCurrency, profCur, rates) : null;
-  const convOutstanding = showConverted
-    ? convertByCurrency(outstandingByCurrency, profCur, rates)
-    : null;
-  const convProfit = showConverted && convRevenue != null ? convRevenue - totalExpenses : null;
-
-  // Typical-month inputs for MoneyFlow: trailing averages, read-only.
-  const paidVals = Object.values(monthlyPaid);
-  const expVals = Object.values(monthlyExpenses);
-  const avgIncome = paidVals.length > 0 ? paidVals.reduce((s, v) => s + v, 0) / paidVals.length : 0;
-  const avgExpenses = expVals.length > 0 ? expVals.reduce((s, v) => s + v, 0) / expVals.length : 0;
+  // Conversion + trailing averages, computed together in one pure derivation
+  // so the shell stays a flat sequence of assignments.
+  const { convRevenue, convOutstanding, convProfit, avgIncome, avgExpenses } = (() => {
+    const convRevenue = showConverted
+      ? convertByCurrency(revenueByCurrency, profCur, rates)
+      : null;
+    const convOutstanding = showConverted
+      ? convertByCurrency(outstandingByCurrency, profCur, rates)
+      : null;
+    const convProfit = showConverted && convRevenue != null ? convRevenue - totalExpenses : null;
+    // Typical-month inputs for MoneyFlow: trailing averages, read-only.
+    const paidVals = Object.values(monthlyPaid);
+    const expVals = Object.values(monthlyExpenses);
+    const avgIncome =
+      paidVals.length > 0 ? paidVals.reduce((s, v) => s + v, 0) / paidVals.length : 0;
+    const avgExpenses =
+      expVals.length > 0 ? expVals.reduce((s, v) => s + v, 0) / expVals.length : 0;
+    return { convRevenue, convOutstanding, convProfit, avgIncome, avgExpenses };
+  })();
 
   const saveRate = async (cur: string, raw: string) => {
     if (!profile) return;
@@ -483,21 +491,10 @@ export default function Finance() {
     </div>
   );
 
-  return (
-    <div className="p-6">
-      <h1 className="font-display text-lg font-semibold text-[var(--text-primary)] mb-2">Finance</h1>
-      <TabBar />
-      <LoadError
-        error={financeError}
-        onRetry={() => {
-          loadExpenses();
-          loadInvoices();
-        }}
-      />
-
-      {tab === 'overview' ? (
-        <OverviewSection bag={bag} />
-      ) : tab === 'aging' ? (
+  const renderTabContent = () => {
+    if (tab === 'overview') return <OverviewSection bag={bag} />;
+    if (tab === 'aging') {
+      return (
         <AgingReport
           invoices={finvoices}
           payments={payments.reduce<Record<string, InvoicePayment[]>>((acc, p) => {
@@ -511,129 +508,148 @@ export default function Finance() {
           addToast={(msg: string, type?: ToastType) => addToast(msg, type)}
           curFallback={profCur}
         />
-      ) : (
-        <ForecastSection bag={bag} />
-      )}
+      );
+    }
+    return <ForecastSection bag={bag} />;
+  };
 
-      <Modal
-        open={showModal}
-        onClose={() => setShowModal(false)}
-        title={editing ? 'Edit Expense' : 'Add Expense'}
-        size="sm"
-      >
-        <div className="space-y-4">
+  const renderExpenseModal = () => (
+    <Modal
+      open={showModal}
+      onClose={() => setShowModal(false)}
+      title={editing ? 'Edit Expense' : 'Add Expense'}
+      size="sm"
+    >
+      <div className="space-y-4">
+        <div>
+          <label className="form-label">
+            Category
+          </label>
+          <select aria-label="Category"
+            value={form.category}
+            onChange={(e) => setForm({ ...form, category: e.target.value })}
+            className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)]"
+          >
+            {categories.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="form-label">
+            Description *
+          </label>
+          <input
+            type="text"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            placeholder="What was this expense for?"
+            className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
+            autoFocus
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="form-label">
-              Category
-            </label>
-            <select aria-label="Category"
-              value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)]"
-            >
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="form-label">
-              Description *
+              Amount *
             </label>
             <input
-              type="text"
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="What was this expense for?"
+              type="number"
+              min={0}
+              value={form.amount}
+              onChange={(e) => {
+                const v = e.target.value;
+                setForm({ ...form, amount: Number(v) < 0 ? '0' : v });
+              }}
+              placeholder="0.00"
               className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
-              autoFocus
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="form-label">
-                Amount *
-              </label>
-              <input
-                type="number"
-                min={0}
-                value={form.amount}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setForm({ ...form, amount: Number(v) < 0 ? '0' : v });
-                }}
-                placeholder="0.00"
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
-              />
-            </div>
-            <div>
-              <label className="form-label">
-                Date
-              </label>
-              <input
-                type="date"
-                value={form.date}
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)]"
-              />
-            </div>
-          </div>
-          <div className="border-t border-[var(--border-color)] pt-4">
-            <div className="flex items-center justify-between mb-3">
-              <label className="text-xs font-medium text-[var(--text-primary)]">
-                Mark as Recurring
-              </label>
-              <button
-                type="button"
-                onClick={() =>
-                  setForm({
-                    ...form,
-                    recurring: !form.recurring,
-                    frequency: form.frequency || 'monthly',
-                  })
-                }
-                className={`relative w-9 h-5 rounded-full transition-colors ${form.recurring ? 'bg-[var(--accent)]' : 'bg-[var(--border-color)]'}`}
-              >
-                <div
-                  className={`absolute top-0.5 w-4 h-4 rounded-full bg-[var(--bg-card)] shadow transition-transform ${form.recurring ? 'translate-x-4' : 'translate-x-0.5'}`}
-                />
-              </button>
-            </div>
-            {form.recurring && (
-              <div>
-                <label className="form-label">
-                  Frequency
-                </label>
-                <select aria-label="Frequency"
-                  value={form.frequency}
-                  onChange={(e) => setForm({ ...form, frequency: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-                >
-                  <option value="weekly">Weekly</option>
-                  <option value="biweekly">Biweekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="quarterly">Quarterly</option>
-                </select>
-              </div>
-            )}
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="secondary" onClick={() => setShowModal(false)} size="sm">
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              loading={saving}
-              disabled={!form.description.trim() || !form.amount}
-              size="sm"
-            >
-              {editing ? 'Save Changes' : 'Add Expense'}
-            </Button>
+          <div>
+            <label className="form-label">
+              Date
+            </label>
+            <input
+              type="date"
+              value={form.date}
+              onChange={(e) => setForm({ ...form, date: e.target.value })}
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)]"
+            />
           </div>
         </div>
-      </Modal>
+        <div className="border-t border-[var(--border-color)] pt-4">
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-xs font-medium text-[var(--text-primary)]">
+              Mark as Recurring
+            </label>
+            <button
+              type="button"
+              onClick={() =>
+                setForm({
+                  ...form,
+                  recurring: !form.recurring,
+                  frequency: form.frequency || 'monthly',
+                })
+              }
+              className={`relative w-9 h-5 rounded-full transition-colors ${form.recurring ? 'bg-[var(--accent)]' : 'bg-[var(--border-color)]'}`}
+            >
+              <div
+                className={`absolute top-0.5 w-4 h-4 rounded-full bg-[var(--bg-card)] shadow transition-transform ${form.recurring ? 'translate-x-4' : 'translate-x-0.5'}`}
+              />
+            </button>
+          </div>
+          {form.recurring && (
+            <div>
+              <label className="form-label">
+                Frequency
+              </label>
+              <select aria-label="Frequency"
+                value={form.frequency}
+                onChange={(e) => setForm({ ...form, frequency: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              >
+                <option value="weekly">Weekly</option>
+                <option value="biweekly">Biweekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+              </select>
+            </div>
+          )}
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="secondary" onClick={() => setShowModal(false)} size="sm">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            loading={saving}
+            disabled={!form.description.trim() || !form.amount}
+            size="sm"
+          >
+            {editing ? 'Save Changes' : 'Add Expense'}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+
+  return (
+    <div className="p-6">
+      <h1 className="font-display text-lg font-semibold text-[var(--text-primary)] mb-2">Finance</h1>
+      <TabBar />
+      <LoadError
+        error={financeError}
+        onRetry={() => {
+          loadExpenses();
+          loadInvoices();
+        }}
+      />
+
+      {renderTabContent()}
+
+      {renderExpenseModal()}
 
       <ConfirmDialog
         open={!!confirmDelete}

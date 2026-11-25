@@ -16,6 +16,56 @@ import { useToasts } from '../store/toastStore';
 import { checkAndNotify } from '../achievements/notify';
 import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
 
+// Rate-type → unit suffix. Replaces a long ternary chain with one lookup so
+// the form render stays flat; unknown types keep the bare currency symbol.
+const RATE_UNIT_BY_TYPE: Record<string, string> = {
+  hourly: 'hr',
+  'per-shoot': 'shoot',
+  'per-word': 'word',
+  'per-session': 'session',
+  'per-track': 'track',
+  'per-look': 'look',
+  'per-event': 'event',
+  'per-commission': 'commission',
+  'per-plan': 'plan',
+  'per-closing': 'closing',
+  'per-campaign': 'campaign',
+  'per-placement': 'placement',
+  'per-project': 'project',
+  milestone: 'milestone',
+  retainer: 'retainer',
+};
+
+function rateTypeLabel(rateType: string, currencySymbol: string): string {
+  const unit = RATE_UNIT_BY_TYPE[rateType];
+  return unit ? `${currencySymbol}/${unit}` : currencySymbol;
+}
+
+function buildProposalPayload(
+  form: {
+    client_id: string;
+    title: string;
+    scope: string;
+    timeline: string;
+    rate_type: string;
+    body: string;
+  },
+  status: 'draft' | 'sent',
+  rateNum: number | undefined,
+  expiry: { expiresAt: string | undefined },
+) {
+  return {
+    client_id: form.client_id,
+    title: sanitizeInput(form.title).slice(0, MAX_LENGTHS.title),
+    status,
+    scope: form.scope ? sanitizeInput(form.scope).slice(0, MAX_LENGTHS.description) : undefined,
+    timeline: form.timeline ? sanitizeInput(form.timeline).slice(0, 200) : undefined,
+    rate: rateNum !== undefined ? Math.max(0, rateNum) : undefined,
+    rate_type: (form.rate_type === 'hourly' ? 'hourly' : 'flat') as 'hourly' | 'flat',
+    body: form.body,
+    expires_at: expiry.expiresAt,
+  };
+}
 
 export default function NewProposal() {
   const { clients, loadClients, addProposal, profile, loadProfile } = useStore();
@@ -111,17 +161,7 @@ export default function NewProposal() {
     setSaving(true);
     try {
       const expiry = status === 'sent' ? computeExpiry() : { expiresAt: undefined };
-      await addProposal({
-        client_id: form.client_id,
-        title: sanitizeInput(form.title).slice(0, MAX_LENGTHS.title),
-        status,
-        scope: form.scope ? sanitizeInput(form.scope).slice(0, MAX_LENGTHS.description) : undefined,
-        timeline: form.timeline ? sanitizeInput(form.timeline).slice(0, 200) : undefined,
-        rate: rateNum !== undefined ? Math.max(0, rateNum) : undefined,
-        rate_type: form.rate_type === 'hourly' ? 'hourly' : 'flat',
-        body: form.body,
-        expires_at: expiry.expiresAt,
-      });
+      await addProposal(buildProposalPayload(form, status, rateNum, expiry));
       navigate('/proposals');
       checkAndNotify(useStore.getState(), addToast);
     } catch (err) {
@@ -159,6 +199,8 @@ export default function NewProposal() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_380px] items-start">
         <div className="min-w-0">
+      {(() => (
+      <>
       <Card className="mb-6">
         <div className="space-y-4">
           <div>
@@ -220,7 +262,7 @@ export default function NewProposal() {
               </select>
             </div>
             <div>
-              <label className="form-label">Rate ({form.rate_type === 'hourly' ? `${currencySymbol}/hr` : form.rate_type === 'per-shoot' ? `${currencySymbol}/shoot` : form.rate_type === 'per-word' ? `${currencySymbol}/word` : form.rate_type === 'per-session' ? `${currencySymbol}/session` : form.rate_type === 'per-track' ? `${currencySymbol}/track` : form.rate_type === 'per-look' ? `${currencySymbol}/look` : form.rate_type === 'per-event' ? `${currencySymbol}/event` : form.rate_type === 'per-commission' ? `${currencySymbol}/commission` : form.rate_type === 'per-plan' ? `${currencySymbol}/plan` : form.rate_type === 'per-closing' ? `${currencySymbol}/closing` : form.rate_type === 'per-campaign' ? `${currencySymbol}/campaign` : form.rate_type === 'per-placement' ? `${currencySymbol}/placement` : form.rate_type === 'per-project' ? `${currencySymbol}/project` : form.rate_type === 'per-track' ? `${currencySymbol}/track` : form.rate_type === 'milestone' ? `${currencySymbol}/milestone` : form.rate_type === 'retainer' ? `${currencySymbol}/retainer` : currencySymbol})</label>
+              <label className="form-label">Rate ({rateTypeLabel(form.rate_type, currencySymbol)})</label>
               <input
                 type="number"
                 min={0}
@@ -321,8 +363,11 @@ export default function NewProposal() {
           {expiryPreview}
         </p>
       )}
+      </>
+      ))()}
         </div>
         <div className="hidden lg:block min-w-0 lg:sticky lg:top-6">
+          {(() => (
           <DocPreview
             eyebrow="Proposal"
             title={form.title}
@@ -338,6 +383,7 @@ export default function NewProposal() {
             bodyHtml={form.body || undefined}
             notes={form.scope ? `Scope: ${form.scope}` : undefined}
           />
+          ))()}
         </div>
       </div>
     </div>

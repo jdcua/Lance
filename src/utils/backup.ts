@@ -72,23 +72,8 @@ export function validateImportEnvelope(raw: unknown): ImportValidationResult {
   const tableCounts: Record<string, number> = {};
 
   for (const [key, value] of Object.entries(data)) {
-    if (!Array.isArray(value)) {
-      return { valid: false, error: `Invalid data for table "${key}": expected an array` };
-    }
-    if (value.length > 0) {
-      const first = value[0] as Record<string, unknown>;
-      // user_profile is a singleton row and may predate the id column ,
-      // its shape check below is the real gate, not a generic id.
-      if (key !== 'user_profile' && !first.id) {
-        return { valid: false, error: `Invalid record in "${key}": missing "id" field` };
-      }
-      try {
-        validateTableShape(key, first);
-      } catch (e) {
-        return { valid: false, error: (e as Error)?.message || `Invalid record in "${key}"` };
-      }
-    }
-    tableCounts[key] = value.length;
+    const error = validateDataTable(key, value, tableCounts);
+    if (error) return { valid: false, error };
   }
 
   const envelope: BackupEnvelope = {
@@ -100,6 +85,35 @@ export function validateImportEnvelope(raw: unknown): ImportValidationResult {
   };
 
   return { valid: true, envelope, tableCounts };
+}
+
+/** Validate one table's rows; returns an error message or undefined on success. */
+function validateDataTable(
+  key: string,
+  value: unknown,
+  tableCounts: Record<string, number>,
+): string | undefined {
+  if (!Array.isArray(value)) return `Invalid data for table "${key}": expected an array`;
+  if (value.length > 0) {
+    const first = value[0] as Record<string, unknown>;
+    // user_profile is a singleton row and may predate the id column ,
+    // its shape check below is the real gate, not a generic id.
+    if (key !== 'user_profile' && !first.id) {
+      return `Invalid record in "${key}": missing "id" field`;
+    }
+    try {
+      validateTableShape(key, first);
+    } catch (e) {
+      return (e as Error)?.message || `Invalid record in "${key}"`;
+    }
+  }
+  tableCounts[key] = value.length;
+  return undefined;
+}
+
+/** Uniform string coercion for errors thrown anywhere in this module. */
+function errorMessage(err: unknown): string {
+  return (err as Error)?.message || String(err);
 }
 
 function validateTableShape(table: string, record: Record<string, unknown>): void {
@@ -321,6 +335,26 @@ export function sanitizeBlobName(name: string): string {
   return safe || 'file';
 }
 
+/** Read the bytes for one attachment row, or null when unreachable. */
+async function readAttachmentBytes(
+  row: { file_path: string },
+  tauri: boolean,
+): Promise<Uint8Array | null> {
+  try {
+    if (!tauri && row.file_path.startsWith('idb:')) {
+      const { getAssetFile } = await import('../demo/assetStore');
+      const blob = await getAssetFile(row.file_path.slice(4));
+      if (blob) return new Uint8Array(await blob.arrayBuffer());
+    } else if (tauri) {
+      const { readFile } = await import('@tauri-apps/plugin-fs');
+      return await readFile(row.file_path);
+    }
+  } catch {
+    /* unreachable bytes */
+  }
+  return null;
+}
+
 /**
  * Collect portable bytes for attachments whose contents are reachable:
  * browser idb: paths (IndexedDB) and desktop disk files. Returns blobs plus
@@ -348,19 +382,7 @@ export async function fetchAttachmentBlobs(): Promise<{
     const tauri = isTauri();
     for (const row of rows || []) {
       if (!row || !row.id) continue;
-      let bytes: Uint8Array | null = null;
-      try {
-        if (!tauri && row.file_path.startsWith('idb:')) {
-          const { getAssetFile } = await import('../demo/assetStore');
-          const blob = await getAssetFile(row.file_path.slice(4));
-          if (blob) bytes = new Uint8Array(await blob.arrayBuffer());
-        } else if (tauri) {
-          const { readFile } = await import('@tauri-apps/plugin-fs');
-          bytes = await readFile(row.file_path);
-        }
-      } catch {
-        bytes = null;
-      }
+      const bytes = await readAttachmentBytes(row, tauri);
       if (!bytes || bytes.length === 0) {
         skipped++;
         continue;
@@ -818,6 +840,138 @@ export const TABLE_INSERT_MAP: Record<string, { table: string; columns: string[]
   },
 };
 
+type LanceDb = Awaited<ReturnType<typeof import('../db').getDb>>;
+type InsertMapping = { table: string; columns: string[] };
+
+/** Walk the envelope's OWN keys, hand-listed tables first in dependency order. */
+function orderBackupTableNames(data: Record<string, unknown[]>): string[] {
+  return Object.keys(data)
+    .filter((name) => name !== 'schema_version' && name !== 'sqlite_sequence')
+    .sort((a, b) => {
+      const ai = TABLE_ORDER.indexOf(a);
+      const bi = TABLE_ORDER.indexOf(b);
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return 1;
+      return a.localeCompare(b);
+    });
+}
+
+/** Clear tables in reverse dependency order for a replace import. */
+async function clearTablesForReplace(db: LanceDb, present: string[]): Promise<void> {
+  for (const tableName of present) {
+    const mapping = TABLE_INSERT_MAP[tableName];
+    try {
+      await db.execute(`DELETE FROM ${mapping ? mapping.table : tableName}`);
+    } catch {
+      /* table may not exist in this app version */
+    }
+  }
+}
+
+/** Coerce record values to SQL params, re-keying unmapped tables. */
+function prepareRecordValues(record: unknown, columns: string[], offsetId: number): unknown[] {
+  const values = columns.map((col) => {
+    const val = (record as Record<string, unknown>)[col];
+    if (typeof val === 'object' && val !== null && !(val instanceof Date)) {
+      return JSON.stringify(val);
+    }
+    return val ?? null;
+  });
+  if (offsetId > 0) {
+    const idIdx = columns.indexOf('id');
+    if (idIdx !== -1 && typeof values[idIdx] === 'number') {
+      values[idIdx] = (values[idIdx] as number) + offsetId;
+    }
+  }
+  return values;
+}
+
+/** Import one record; returns true only when a row was actually written. */
+async function importBackupRecord(
+  db: LanceDb,
+  tableName: string,
+  mapping: InsertMapping | undefined,
+  columns: string[],
+  offsetId: number,
+  record: unknown,
+  result: ImportResult,
+): Promise<boolean> {
+  try {
+    const values = prepareRecordValues(record, columns, offsetId);
+
+    if (tableName === 'user_profile' && mapping) {
+      await upsertUserProfile(values, mapping.columns);
+      return true;
+    }
+
+    if (columns.length === 0) return false;
+    const targetTable = mapping ? mapping.table : tableName;
+    const placeholders = columns.map(() => '?').join(', ');
+    const columnsStr = columns.join(', ');
+
+    try {
+      await db.execute(
+        `INSERT INTO ${targetTable} (${columnsStr}) VALUES (${placeholders})`,
+        values,
+      );
+      return true;
+    } catch (insertErr) {
+      const msg = errorMessage(insertErr);
+      if (msg.includes('UNIQUE constraint') || msg.includes('PRIMARY KEY')) {
+        result.skipped++;
+      } else {
+        result.failed++;
+        result.errors.push(`${tableName}[${(record as Record<string, unknown>).id}]: ${msg}`);
+      }
+      return false;
+    }
+  } catch (err) {
+    result.failed++;
+    result.errors.push(`${tableName}: ${errorMessage(err)}`);
+    return false;
+  }
+}
+
+/** Import all records of one table, counting one write per written table. */
+async function importBackupTable(
+  db: LanceDb,
+  tableName: string,
+  records: unknown,
+  result: ImportResult,
+): Promise<void> {
+  if (!records || !Array.isArray(records) || records.length === 0) return;
+
+  const mapping = TABLE_INSERT_MAP[tableName];
+  let tableWritten = false;
+  // No hand-written mapping: one of the ~136 archetype tables. Derive columns
+  // from the first record and re-key ids so a restore cannot collide.
+  const columns = mapping?.columns ?? inferColumns(records[0]);
+  let offsetId = 0;
+  if (!mapping && columns.length > 0) {
+    offsetId = await maxNumericId(db, tableName, columns);
+  }
+
+  for (const record of records) {
+    const written = await importBackupRecord(
+      db,
+      tableName,
+      mapping,
+      columns,
+      offsetId,
+      record,
+      result,
+    );
+    if (written) {
+      result.imported++;
+      if (!tableWritten) {
+        tableWritten = true;
+        result.tablesWritten++;
+      }
+    }
+  }
+}
+
 export async function performImport(
   envelope: BackupEnvelope,
   mode: 'additive' | 'replace',
@@ -839,109 +993,13 @@ export async function performImport(
   await db.execute('BEGIN TRANSACTION');
 
   try {
-    // Walk the envelope's OWN keys, not TABLE_ORDER. The export now discovers
-    // ~136 runtime archetype tables, and this is what lets them come back.
-    const present = Object.keys(envelope.data ?? {})
-      .filter((name) => name !== 'schema_version' && name !== 'sqlite_sequence')
-      .sort((a, b) => {
-        const ai = TABLE_ORDER.indexOf(a);
-        const bi = TABLE_ORDER.indexOf(b);
-        // Hand-listed tables first, in their dependency order; the rest after.
-        if (ai !== -1 && bi !== -1) return ai - bi;
-        if (ai !== -1) return -1;
-        if (bi !== -1) return 1;
-        return a.localeCompare(b);
-      });
-
+    const present = orderBackupTableNames(envelope.data ?? {});
     if (mode === 'replace') {
-      for (const tableName of present) {
-        const mapping = TABLE_INSERT_MAP[tableName];
-        try {
-          // Reverse order on delete so FK children clear before parents.
-          await db.execute(`DELETE FROM ${mapping ? mapping.table : tableName}`);
-        } catch {
-          /* table may not exist in this app version */
-        }
-      }
+      await clearTablesForReplace(db, present);
     }
-
     for (const tableName of present) {
-      const records = envelope.data[tableName];
-      if (!records || !Array.isArray(records) || records.length === 0) continue;
-
-      const mapping = TABLE_INSERT_MAP[tableName];
-
-      let tableWritten = false;
-
-      // No hand-written mapping: this is one of the ~136 archetype tables. Derive
-      // the columns from the first record so they still restore, instead of
-      // dropping the table because nobody enumerated it. Identifiers stay
-      // SQLite-internal: we re-key so a restore cannot collide with rows already
-      // on the machine.
-      const columns = mapping?.columns ?? inferColumns(records[0]);
-      let offsetId = 0;
-      if (!mapping && columns.length > 0) {
-        offsetId = await maxNumericId(db, tableName, columns);
-      }
-
-      for (const record of records) {
-        try {
-          const values = columns.map((col) => {
-            const val = (record as Record<string, unknown>)[col];
-            if (typeof val === 'object' && val !== null && !(val instanceof Date)) {
-              return JSON.stringify(val);
-            }
-            return val ?? null;
-          });
-
-          if (offsetId > 0) {
-            const idIdx = columns.indexOf('id');
-            if (idIdx !== -1 && typeof values[idIdx] === 'number') {
-              values[idIdx] = (values[idIdx] as number) + offsetId;
-            }
-          }
-
-          if (tableName === 'user_profile' && mapping) {
-            await upsertUserProfile(values, mapping.columns);
-            result.imported++;
-            if (!tableWritten) {
-              tableWritten = true;
-              result.tablesWritten++;
-            }
-            continue;
-          }
-
-          if (columns.length === 0) continue;
-          const targetTable = mapping ? mapping.table : tableName;
-          const placeholders = columns.map(() => '?').join(', ');
-          const columnsStr = columns.join(', ');
-
-          try {
-            await db.execute(
-              `INSERT INTO ${targetTable} (${columnsStr}) VALUES (${placeholders})`,
-              values,
-            );
-            result.imported++;
-            if (!tableWritten) {
-              tableWritten = true;
-              result.tablesWritten++;
-            }
-          } catch (insertErr) {
-            const msg = (insertErr as Error)?.message || String(insertErr);
-            if (msg.includes('UNIQUE constraint') || msg.includes('PRIMARY KEY')) {
-              result.skipped++;
-            } else {
-              result.failed++;
-              result.errors.push(`${tableName}[${(record as Record<string, unknown>).id}]: ${msg}`);
-            }
-          }
-        } catch (err) {
-          result.failed++;
-          result.errors.push(`${tableName}: ${(err as Error)?.message || String(err)}`);
-        }
-      }
+      await importBackupTable(db, tableName, envelope.data[tableName], result);
     }
-
     await db.execute('COMMIT');
   } catch (err) {
     try {
@@ -952,7 +1010,7 @@ export async function performImport(
     result.failed += result.imported;
     result.imported = 0;
     result.tablesWritten = 0;
-    result.errors.push(`Transaction rolled back: ${(err as Error)?.message || String(err)}`);
+    result.errors.push(`Transaction rolled back: ${errorMessage(err)}`);
   }
 
   // File bytes ride outside the transaction: a failed thumbnail must never
@@ -1080,6 +1138,26 @@ async function upsertUserProfile(values: unknown[], columns: string[]): Promise<
   );
 }
 
+/** True when the configured frequency's interval has elapsed (or no run yet). */
+function shouldRunBackup(frequency: string, lastBackupAt: string | null, now: Date): boolean {
+  if (!lastBackupAt) return true;
+  const diffMs = now.getTime() - new Date(lastBackupAt).getTime();
+  const diffHours = diffMs / (1000 * 60 * 60);
+  let skip = false;
+  switch (frequency) {
+    case 'daily':
+      if (diffHours < 24) skip = true;
+      break;
+    case 'weekly':
+      if (diffHours < 24 * 7) skip = true;
+      break;
+    case 'monthly':
+      if (diffHours < 24 * 30) skip = true;
+      break;
+  }
+  return !skip;
+}
+
 export async function runAutoBackup(): Promise<{ success: boolean; error?: string }> {
   try {
     const { getDb } = await import('../db');
@@ -1108,23 +1186,7 @@ export async function runAutoBackup(): Promise<{ success: boolean; error?: strin
     }
 
     const now = new Date();
-    if (lastBackupAt) {
-      const lastDate = new Date(lastBackupAt);
-      const diffMs = now.getTime() - lastDate.getTime();
-      const diffHours = diffMs / (1000 * 60 * 60);
-
-      switch (frequency) {
-        case 'daily':
-          if (diffHours < 24) return { success: true };
-          break;
-        case 'weekly':
-          if (diffHours < 24 * 7) return { success: true };
-          break;
-        case 'monthly':
-          if (diffHours < 24 * 30) return { success: true };
-          break;
-      }
-    }
+    if (!shouldRunBackup(frequency, lastBackupAt, now)) return { success: true };
 
     const data: Record<string, unknown[]> = await fetchBackupTables();
 
@@ -1160,12 +1222,13 @@ export async function runAutoBackup(): Promise<{ success: boolean; error?: strin
     try {
       const { getDb } = await import('../db');
       const db = await getDb();
-      const msg = (err as Error)?.message || String(err);
-      await db.execute('UPDATE auto_backup_state SET last_backup_error = ? WHERE id = 1', [msg]);
+      await db.execute('UPDATE auto_backup_state SET last_backup_error = ? WHERE id = 1', [
+        errorMessage(err),
+      ]);
     } catch {
       /* non-critical */
     }
-    return { success: false, error: (err as Error)?.message || String(err) };
+    return { success: false, error: errorMessage(err) };
   }
 }
 

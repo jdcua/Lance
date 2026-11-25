@@ -11,6 +11,25 @@ import { useToasts } from '../store/toastStore';
 import { Lightbulb, BarChart3, TrendingUp, TrendingDown, Minus, Star } from 'lucide-react';
 import ProInsights from '../components/features/ProInsights';
 
+// Trend derivation for the headline-metrics table, split out of the row
+// renderer so the row itself stays a plain mapping over the data.
+function metricTrend(latest: number, previous: number) {
+  const valid = !isNaN(latest) && !isNaN(previous);
+  const isUp = valid && latest > previous;
+  const isDown = valid && latest < previous;
+  return {
+    isUp,
+    isDown,
+    TrendIcon: isUp ? TrendingUp : isDown ? TrendingDown : Minus,
+    trendColor: isUp
+      ? 'text-[var(--accent-ink,var(--accent))]'
+      : isDown
+        ? 'text-[var(--danger)]'
+        : 'text-[var(--text-tertiary)]',
+    sparkColor: isUp ? 'var(--accent)' : isDown ? 'var(--danger)' : 'var(--text-tertiary)',
+  };
+}
+
 export default function Insights() {
   const { projects, loadProjects, invoices, loadInvoices, timeEntries, loadTimeEntries, clients, loadClients, proposals, loadProposals, expenses, loadExpenses, profile, loadProfile, headlineMetrics, loadHeadlineMetrics, getFinanceSummary } = useStore();
   const addToast = useToasts((s) => s.add);
@@ -66,6 +85,11 @@ export default function Insights() {
     const n = parseFloat(v);
     if (isNaN(n)) return v;
     return formatCurrency(n, profile?.currency);
+  };
+  const formatMetricValue = (value: string, metricType: string) => {
+    if (metricType === 'currency') return formatMetricCurrency(value);
+    if (metricType === 'percentage') return `${formatMetricVal(value)}%`;
+    return value;
   };
 
   // Client revenue ranking
@@ -133,13 +157,16 @@ export default function Insights() {
           Invoices span multiple currencies · totals are shown per currency, not converted.
         </p>
       )}
+      {(() => (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <MetricCard label="Active Projects" value={activeProjects} subtext={`${completedProjects} completed`} color="gray" />
         <MetricCard label="Total Revenue" value={mixedInvoiceCurrencies ? moneyByCurrency(invoices.filter((i) => i.status === 'paid')) : formatCurrency(totalPaid, profile?.currency)} subtext={`${invoices.filter((i) => i.status === 'paid').length} paid invoices`} trend="up" color="green" />
         <MetricCard label="Outstanding" value={mixedInvoiceCurrencies ? moneyByCurrency(invoices.filter((i) => i.status === 'sent' || i.status === 'partial' || i.status === 'overdue')) : formatCurrency(totalOutstanding, profile?.currency)} subtext={overdueInvoices > 0 ? `${overdueInvoices} overdue` : 'all current'} trend={overdueInvoices > 0 ? 'down' : 'neutral'} color={overdueInvoices > 0 ? 'red' : 'amber'} />
         <MetricCard label="Win Rate" value={`${winRate}%`} subtext={`${proposalsAccepted}/${proposalsResolved} resolved`} trend={winRate >= 50 ? 'up' : 'down'} color={winRate >= 50 ? 'green' : 'gray'} />
       </div>
+      ))()}
 
+      {(() => (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Project Health */}
         {!hiddenPanels.includes('project-health') && (
@@ -192,7 +219,9 @@ export default function Insights() {
           </Card>
         )}
       </div>
+      ))()}
 
+      {(() => (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Top Clients */}
         {!hiddenPanels.includes('top-clients') && (
@@ -253,13 +282,15 @@ export default function Insights() {
           </Card>
         )}
       </div>
+      ))()}
 
       {/* Pro depth: forecast, effective rate, per-client win rates.
           All insights are available in every build with real headline numbers. */}
       <ProInsights />
 
       {/* Client Performance */}
-      {!hiddenPanels.includes('client-performance') && (
+      {(() => (
+      !hiddenPanels.includes('client-performance') && (
         <div className="mt-6">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 size={16} className="text-[var(--text-tertiary)]" />
@@ -295,11 +326,7 @@ export default function Insights() {
 
                       const latest = parseFloat(hm.latest_value || '');
                       const previous = parseFloat(hm.previous_value || '');
-                      const isUp = !isNaN(latest) && !isNaN(previous) && latest > previous;
-                      const isDown = !isNaN(latest) && !isNaN(previous) && latest < previous;
-
-                      const TrendIcon = isUp ? TrendingUp : isDown ? TrendingDown : Minus;
-                      const trendColor = isUp ? 'text-[var(--accent-ink,var(--accent))]' : isDown ? 'text-[var(--danger)]' : 'text-[var(--text-tertiary)]';
+                      const { TrendIcon, trendColor, sparkColor } = metricTrend(latest, previous);
 
                       return (
                         <tr key={`${hm.client_id}:${hm.definition_id}`} className="border-t border-[var(--border-color)] hover:bg-[var(--bg-secondary)]/50 transition-colors">
@@ -316,25 +343,17 @@ export default function Insights() {
                             {numericValues.length >= 2 ? (
                               <div className="flex items-center justify-center gap-2">
                                 <TrendIcon size={12} className={trendColor} />
-                                <Sparkline values={[...numericValues].reverse()} width={60} height={22} color={isUp ? 'var(--accent)' : isDown ? 'var(--danger)' : 'var(--text-tertiary)'} />
+                                <Sparkline values={[...numericValues].reverse()} width={60} height={22} color={sparkColor} />
                               </div>
                             ) : (
                               <span className="text-[var(--text-tertiary)]">--</span>
                             )}
                           </td>
                           <td className="px-4 py-3 text-right font-medium text-[var(--text-primary)]">
-                            {hm.latest_value
-                              ? hm.metric_type === 'currency' ? formatMetricCurrency(hm.latest_value) :
-                                hm.metric_type === 'percentage' ? `${formatMetricVal(hm.latest_value)}%` :
-                                hm.latest_value
-                              : '--'}
+                            {hm.latest_value ? formatMetricValue(hm.latest_value, hm.metric_type) : '--'}
                           </td>
                           <td className="px-4 py-3 text-right text-[var(--text-tertiary)]">
-                            {hm.previous_value
-                              ? hm.metric_type === 'currency' ? formatMetricCurrency(hm.previous_value) :
-                                hm.metric_type === 'percentage' ? `${formatMetricVal(hm.previous_value)}%` :
-                                hm.previous_value
-                              : '--'}
+                            {hm.previous_value ? formatMetricValue(hm.previous_value, hm.metric_type) : '--'}
                           </td>
                         </tr>
                       );
@@ -345,7 +364,8 @@ export default function Insights() {
             </Card>
           )}
         </div>
-      )}
+      )
+      ))()}
     </div>
   );
 }

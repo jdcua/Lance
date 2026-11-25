@@ -13,25 +13,323 @@ import { computeLateFee } from '../../utils/lateFees';
 import { getCurrencySymbol } from '../../lib/currency';
 import { parseDateString, DAY_MS, relativeDate, formatCurrency } from '../../utils/format';
 import { statusBadge, type InvoicesBag } from './shared';
+import type { Client, Invoice } from '../../types';
 
 /**
  * Invoice list tab: empty state, search-no-match, invoice table with
  * payments, reminders, exports and follow-up badges. Pure relocation.
  */
+
+function LateFeeLine({ inv, bag }: { inv: Invoice; bag: InvoicesBag }) {
+  const { lateFeeOn, lateFeePercent, feeConfirm, handleAddLateFee, profile } = bag;
+  if (!lateFeeOn) return null;
+  if (inv.status !== 'sent' && inv.status !== 'overdue' && inv.status !== 'partial') return null;
+  const fee = computeLateFee(inv.total, inv.due_date, lateFeePercent);
+  if (fee.fee <= 0) return null;
+  return (
+    <>
+      <span className="text-[var(--danger)]">
+        +{formatCurrency(fee.fee, inv.currency || profile?.currency)} late fee ({fee.periods}p)
+      </span>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          handleAddLateFee(inv);
+        }}
+        className="text-[var(--accent-ink,var(--accent))] hover:underline"
+        title={
+          feeConfirm === inv.id
+            ? 'Click again to confirm adding the fee'
+            : 'Add the accrued late fee as a line item'
+        }
+      >
+        {feeConfirm === inv.id ? 'Confirm add?' : 'Add to invoice'}
+      </button>
+    </>
+  );
+}
+
+function buildFollowUpDraftAndSubject(
+  inv: Invoice,
+  client: Client | undefined,
+  daysElapsed: number,
+  bag: InvoicesBag,
+) {
+  const { profile, followUpSettings, dunningTone, withFeeNote } = bag;
+  const templateKey =
+    daysElapsed >= 10
+      ? 'invoice_day14'
+      : daysElapsed >= 4
+        ? 'invoice_day7'
+        : 'invoice_day1';
+  const context = {
+    clientName: client?.name || 'Unknown',
+    invoiceNumber: inv.invoice_number,
+    amount: formatCurrency(inv.total),
+    dueDate: inv.due_date,
+    daysElapsed,
+    freelancerName: profile?.name || 'Freelancer',
+  };
+  return {
+    draft: withFeeNote(
+      generateFollowUpDraft(templateKey, context, followUpSettings.templates, dunningTone),
+      inv,
+    ),
+    subject: generateSubjectLine(
+      templateKey,
+      context,
+      followUpSettings.subject_templates,
+      dunningTone,
+    ),
+  };
+}
+
+function FollowUpStrip({ inv, bag }: { inv: Invoice; bag: InvoicesBag }) {
+  const { pendingFollowUps, getClient, updateFollowUpStatus, addToast, openPaymentModal } = bag;
+  const fu = pendingFollowUps.find(
+    (f) => f.entity_type === 'invoice' && f.entity_id === inv.id,
+  );
+  if (!fu || inv.status === 'paid') return null;
+  const client = getClient(inv.client_id);
+  const dueDate = inv.due_date ? parseDateString(inv.due_date) : null;
+  const daysElapsed = dueDate ? Math.floor((Date.now() - dueDate.getTime()) / DAY_MS) : 0;
+  const { draft, subject } = buildFollowUpDraftAndSubject(inv, client, daysElapsed, bag);
+  const hasEmail = !!client?.email;
+  return (
+    <div className="flex items-center gap-1.5 mt-1.5">
+      <Bell size={10} className="text-[var(--accent-ink,var(--accent))]" />
+      <span className="text-[10px] text-[var(--accent-ink,var(--accent))]">
+        {daysElapsed > 0 ? `Follow-up ready · ${daysElapsed}d overdue` : 'Follow-up ready'}
+      </span>
+      {!hasEmail && (
+        <span className="flex items-center gap-0.5 text-[10px] text-[var(--warning-text)]">
+          <AlertTriangle size={9} /> No email
+        </span>
+      )}
+      <button
+        onClick={async (e) => {
+          e.stopPropagation();
+          if (!client?.email) {
+            addToast('No email on file for this client', 'error');
+            return;
+          }
+          try {
+            await openMailTo(client.email, subject, draft);
+            addToast('Email opened in your default mail client', 'success');
+          } catch {
+            addToast('Failed to open email client', 'error');
+          }
+        }}
+        className="text-[10px] btn-accent px-1.5 py-0.5 rounded-[4px] transition-colors flex-shrink-0"
+      >
+        <Mail size={10} className="inline mr-0.5" /> Email
+      </button>
+      <button
+        onClick={async (e) => {
+          e.stopPropagation();
+          await updateFollowUpStatus(fu.id, 'sent', 'sent');
+          addToast('Marked as sent', 'success');
+        }}
+        className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] px-1 flex-shrink-0"
+        aria-label="Mark follow-up as sent"
+        title="Mark as sent"
+      >
+        <Check size={10} />
+      </button>
+      <button
+        onClick={async (e) => {
+          e.stopPropagation();
+          await updateFollowUpStatus(fu.id, 'dismissed', 'dismissed');
+          addToast('Dismissed', 'info');
+        }}
+        className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] px-1 flex-shrink-0"
+        aria-label="Dismiss follow-up"
+        title="Dismiss"
+      >
+        <X size={10} />
+      </button>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          openPaymentModal(inv);
+        }}
+        className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline ml-auto flex-shrink-0"
+      >
+        Record Payment
+      </button>
+    </div>
+  );
+}
+
+function InvoiceActions({
+  inv, hasFollowUpStrip, bag,
+}: {
+  inv: Invoice;
+  hasFollowUpStrip: boolean;
+  bag: InvoicesBag;
+}) {
+  const {
+    dropdownRef, exportDropdown, setExportDropdown, handleMarkSent, openReminderModal,
+    openPaymentModal, handleExportPDF, handleExportDOCX, handleDuplicate, openEdit,
+    setConfirmDelete,
+  } = bag;
+  return (
+    <div className="flex items-center gap-1 flex-shrink-0">
+      {inv.status === 'draft' && (
+        <button
+          onClick={() => handleMarkSent(inv)}
+          className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline px-1"
+        >
+          Mark Sent
+        </button>
+      )}
+      {(inv.status === 'sent' ||
+        inv.status === 'overdue' ||
+        inv.status === 'partial') && (
+        <>
+          <button
+            onClick={() => openReminderModal(inv)}
+            className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline px-1 flex items-center gap-0.5"
+          >
+            <Mail size={10} /> Remind
+          </button>
+          {!hasFollowUpStrip && (
+            <button
+              onClick={() => openPaymentModal(inv)}
+              className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline px-1"
+            >
+              Record Payment
+            </button>
+          )}
+        </>
+      )}
+      <div className="relative" ref={exportDropdown === inv.id ? dropdownRef : undefined}>
+        <button
+          onClick={() => setExportDropdown(exportDropdown === inv.id ? null : inv.id)}
+          aria-label="Export invoice"
+          className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-sm"
+          title="Export"
+        >
+          <Download size={13} />
+        </button>
+        {exportDropdown === inv.id && (
+          <div className="absolute right-0 top-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-sm shadow-lg py-1 z-10 w-28">
+            <button
+              onClick={() => handleExportPDF(inv)}
+              className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
+            >
+              PDF
+            </button>
+            <button
+              onClick={() => handleExportDOCX(inv)}
+              className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
+            >
+              DOCX
+            </button>
+          </div>
+        )}
+      </div>
+      <button
+        onClick={() => handleDuplicate(inv)}
+        aria-label="Duplicate invoice"
+        className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-sm"
+        title="Duplicate"
+      >
+        <Copy size={14} />
+      </button>
+      <button
+        onClick={() => openEdit(inv)}
+        aria-label="Edit invoice"
+        className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-sm"
+      >
+        <Pencil size={14} />
+      </button>
+      <button
+        onClick={() =>
+          setConfirmDelete({ id: inv.id, label: inv.invoice_number, type: 'invoice' })
+        }
+        aria-label="Delete invoice"
+        className="p-1 text-[var(--text-tertiary)] hover:text-[var(--danger)] rounded-sm"
+      >
+        <Trash2 size={14} />
+      </button>
+    </div>
+  );
+}
+
+function ExpandedPayments({
+  inv, paidTotal, remaining, bag,
+}: {
+  inv: Invoice;
+  paidTotal: number;
+  remaining: number;
+  bag: InvoicesBag;
+}) {
+  const { payments, fmtInv, setConfirmDeletePayment } = bag;
+  const invPayments = payments.filter((p) => p.invoice_id === inv.id);
+  return (
+    <div className="border-t border-[var(--border-color)] bg-[var(--bg-secondary)]/30 px-4 py-3">
+      <div className="flex items-center justify-between mb-2">
+        <h4 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
+          <DollarSign size={12} />
+          Payments
+        </h4>
+      </div>
+      <div className="flex items-center gap-4 mb-2 text-[10px]">
+        <span className="text-[var(--text-secondary)]">
+          Total paid:{' '}
+          <span className="font-medium text-[var(--accent-ink,var(--accent))]">
+            {fmtInv(paidTotal, inv)}
+          </span>
+        </span>
+        <span className="text-[var(--text-secondary)]">
+          Remaining:{' '}
+          <span
+            className={`font-medium ${remaining > 0 ? 'text-[var(--warning-text)]' : 'text-[var(--accent-ink,var(--accent))]'}`}
+          >
+            {fmtInv(remaining, inv)}
+          </span>
+        </span>
+      </div>
+      {invPayments.length === 0 ? (
+        <p className="text-[10px] text-[var(--text-secondary)]">No payments recorded yet.</p>
+      ) : (
+        <div className="space-y-1">
+          {invPayments.map((p) => (
+            <div
+              key={p.id}
+              className="flex items-center justify-between px-2 py-1.5 rounded-xs bg-[var(--bg-card)]"
+            >
+              <div className="flex items-center gap-3 text-[10px]">
+                <span className="text-[var(--text-primary)] font-medium">{fmtInv(p.amount, inv)}</span>
+                <span className="text-[var(--text-secondary)]">
+                  {relativeDate(p.created_at || p.payment_date)}
+                </span>
+                <span className="text-[var(--text-secondary)]">{p.payment_method}</span>
+                {p.reference && (
+                  <span className="text-[var(--text-secondary)]">Ref: {p.reference}</span>
+                )}
+              </div>
+              <button
+                aria-label="Delete invoices"
+                onClick={() => setConfirmDeletePayment({ id: p.id, invoiceId: inv.id })}
+                className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"
+              >
+                <Trash2 size={11} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function InvoiceList({ bag }: { bag: InvoicesBag }) {
   const {
-    invoices, filteredInvoices, clients, profile, payments, loadPayments,
-    pendingFollowUps, followUpSettings, search, paged,
-    fmtInv, fmtInvDisplay, getClient, getClientName, getPaidTotal, getRemainingBalance,
-    hourlyRate,
-    dunningTone, lateFeeOn, lateFeePercent, withFeeNote,
-    dropdownRef, feeConfirm, setFeeConfirm, updateFollowUpStatus,
-    expandedInv, setExpandedInv, exportDropdown, setExportDropdown,
-    setConfirmDelete, setConfirmDeletePayment,
-    openEdit, openPaymentModal, openReminderModal,
-    handleCreateFromEmptyState, handleMarkSent, handleDuplicate,
-    handleAddLateFee, handleExportPDF, handleExportDOCX,
-    addToast,
+    invoices, filteredInvoices, clients, search, paged, loadPayments, pendingFollowUps,
+    fmtInv, fmtInvDisplay, getClientName, getPaidTotal, getRemainingBalance,
+    expandedInv, setExpandedInv, handleCreateFromEmptyState,
   } = bag;
   return (
 
@@ -69,7 +367,6 @@ export default function InvoiceList({ bag }: { bag: InvoicesBag }) {
                 const isExpanded = expandedInv === inv.id;
                 const paidTotal = getPaidTotal(inv.id);
                 const remaining = getRemainingBalance(inv);
-                const invPayments = payments.filter((p) => p.invoice_id === inv.id);
                 // The follow-up strip below already carries its own Record
                 // Payment action, hide the duplicate in the action row.
                 const hasFollowUpStrip =
@@ -127,310 +424,20 @@ export default function InvoiceList({ bag }: { bag: InvoicesBag }) {
                           <span>
                             {inv.line_items.length} item{inv.line_items.length !== 1 ? 's' : ''}
                           </span>
-                          {(() => {
-                            if (!lateFeeOn) return null;
-                            if (
-                              inv.status !== 'sent' &&
-                              inv.status !== 'overdue' &&
-                              inv.status !== 'partial'
-                            )
-                              return null;
-                            const fee = computeLateFee(inv.total, inv.due_date, lateFeePercent);
-                            if (fee.fee <= 0) return null;
-                            return (
-                              <>
-                                <span className="text-[var(--danger)]">
-                                  +{formatCurrency(fee.fee, inv.currency || profile?.currency)} late
-                                  fee ({fee.periods}p)
-                                </span>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleAddLateFee(inv);
-                                  }}
-                                  className="text-[var(--accent-ink,var(--accent))] hover:underline"
-                                  title={
-                                    feeConfirm === inv.id
-                                      ? 'Click again to confirm adding the fee'
-                                      : 'Add the accrued late fee as a line item'
-                                  }
-                                >
-                                  {feeConfirm === inv.id ? 'Confirm add?' : 'Add to invoice'}
-                                </button>
-                              </>
-                            );
-                          })()}
+                          <LateFeeLine inv={inv} bag={bag} />
                         </div>
                         {/* Follow-up indicator */}
-                        {(() => {
-                          const fu = pendingFollowUps.find(
-                            (f) => f.entity_type === 'invoice' && f.entity_id === inv.id,
-                          );
-                          if (!fu || inv.status === 'paid') return null;
-                          const client = getClient(inv.client_id);
-                          const dueDate = inv.due_date ? parseDateString(inv.due_date) : null;
-                          const daysElapsed = dueDate
-                            ? Math.floor((Date.now() - dueDate.getTime()) / DAY_MS)
-                            : 0;
-                          const templateKey =
-                            daysElapsed >= 10
-                              ? 'invoice_day14'
-                              : daysElapsed >= 4
-                                ? 'invoice_day7'
-                                : 'invoice_day1';
-                          const draft = withFeeNote(
-                            generateFollowUpDraft(
-                              templateKey,
-                              {
-                                clientName: client?.name || 'Unknown',
-                                invoiceNumber: inv.invoice_number,
-                                amount: formatCurrency(inv.total),
-                                dueDate: inv.due_date,
-                                daysElapsed,
-                                freelancerName: profile?.name || 'Freelancer',
-                              },
-                              followUpSettings.templates,
-                              dunningTone,
-                            ),
-                            inv,
-                          );
-                          const subject = generateSubjectLine(
-                            templateKey,
-                            {
-                              clientName: client?.name || 'Unknown',
-                              invoiceNumber: inv.invoice_number,
-                              amount: formatCurrency(inv.total),
-                              dueDate: inv.due_date,
-                              daysElapsed,
-                              freelancerName: profile?.name || 'Freelancer',
-                            },
-                            followUpSettings.subject_templates,
-                            dunningTone,
-                          );
-                          const hasEmail = !!client?.email;
-                          return (
-                            <div className="flex items-center gap-1.5 mt-1.5">
-                              <Bell size={10} className="text-[var(--accent-ink,var(--accent))]" />
-                              <span className="text-[10px] text-[var(--accent-ink,var(--accent))]">
-                                {daysElapsed > 0
-                                  ? `Follow-up ready · ${daysElapsed}d overdue`
-                                  : 'Follow-up ready'}
-                              </span>
-                              {!hasEmail && (
-                                <span className="flex items-center gap-0.5 text-[10px] text-[var(--warning-text)]">
-                                  <AlertTriangle size={9} /> No email
-                                </span>
-                              )}
-                              <button
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  if (!client?.email) {
-                                    addToast('No email on file for this client', 'error');
-                                    return;
-                                  }
-                                  try {
-                                    await openMailTo(client.email, subject, draft);
-                                    addToast('Email opened in your default mail client', 'success');
-                                  } catch {
-                                    addToast('Failed to open email client', 'error');
-                                  }
-                                }}
-                                className="text-[10px] btn-accent px-1.5 py-0.5 rounded-[4px] transition-colors flex-shrink-0"
-                              >
-                                <Mail size={10} className="inline mr-0.5" /> Email
-                              </button>
-                              <button
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  await updateFollowUpStatus(fu.id, 'sent', 'sent');
-                                  addToast('Marked as sent', 'success');
-                                }}
-                                className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] px-1 flex-shrink-0"
-                                aria-label="Mark follow-up as sent"
-                                title="Mark as sent"
-                              >
-                                <Check size={10} />
-                              </button>
-                              <button
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  await updateFollowUpStatus(fu.id, 'dismissed', 'dismissed');
-                                  addToast('Dismissed', 'info');
-                                }}
-                                className="text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] px-1 flex-shrink-0"
-                                aria-label="Dismiss follow-up"
-                                title="Dismiss"
-                              >
-                                <X size={10} />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openPaymentModal(inv);
-                                }}
-                                className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline ml-auto flex-shrink-0"
-                              >
-                                Record Payment
-                              </button>
-                            </div>
-                          );
-                        })()}
+                        <FollowUpStrip inv={inv} bag={bag} />
                       </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        {inv.status === 'draft' && (
-                          <button
-                            onClick={() => handleMarkSent(inv)}
-                            className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline px-1"
-                          >
-                            Mark Sent
-                          </button>
-                        )}
-                        {(inv.status === 'sent' ||
-                          inv.status === 'overdue' ||
-                          inv.status === 'partial') && (
-                          <>
-                            <button
-                              onClick={() => openReminderModal(inv)}
-                              className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline px-1 flex items-center gap-0.5"
-                            >
-                              <Mail size={10} /> Remind
-                            </button>
-                            {!hasFollowUpStrip && (
-                              <button
-                                onClick={() => openPaymentModal(inv)}
-                                className="text-[10px] text-[var(--accent-ink,var(--accent))] hover:underline px-1"
-                              >
-                                Record Payment
-                              </button>
-                            )}
-                          </>
-                        )}
-                        <div
-                          className="relative"
-                          ref={exportDropdown === inv.id ? dropdownRef : undefined}
-                        >
-                          <button
-                            onClick={() =>
-                              setExportDropdown(exportDropdown === inv.id ? null : inv.id)
-                            }
-                            aria-label="Export invoice"
-                            className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-sm"
-                            title="Export"
-                          >
-                            <Download size={13} />
-                          </button>
-                          {exportDropdown === inv.id && (
-                            <div className="absolute right-0 top-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-sm shadow-lg py-1 z-10 w-28">
-                              <button
-                                onClick={() => handleExportPDF(inv)}
-                                className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
-                              >
-                                PDF
-                              </button>
-                              <button
-                                onClick={() => handleExportDOCX(inv)}
-                                className="w-full text-left px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
-                              >
-                                DOCX
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => handleDuplicate(inv)}
-                          aria-label="Duplicate invoice"
-                          className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-sm"
-                          title="Duplicate"
-                        >
-                          <Copy size={14} />
-                        </button>
-                        <button
-                          onClick={() => openEdit(inv)}
-                          aria-label="Edit invoice"
-                          className="p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-sm"
-                        >
-                          <Pencil size={14} />
-                        </button>
-                        <button
-                          onClick={() =>
-                            setConfirmDelete({
-                              id: inv.id,
-                              label: inv.invoice_number,
-                              type: 'invoice',
-                            })
-                          }
-                          aria-label="Delete invoice"
-                          className="p-1 text-[var(--text-tertiary)] hover:text-[var(--danger)] rounded-sm"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
+                      <InvoiceActions inv={inv} hasFollowUpStrip={hasFollowUpStrip} bag={bag} />
                     </div>
                     {isExpanded && (
-                      <div className="border-t border-[var(--border-color)] bg-[var(--bg-secondary)]/30 px-4 py-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
-                            <DollarSign size={12} />
-                            Payments
-                          </h4>
-                        </div>
-                        <div className="flex items-center gap-4 mb-2 text-[10px]">
-                          <span className="text-[var(--text-secondary)]">
-                            Total paid:{' '}
-                            <span className="font-medium text-[var(--accent-ink,var(--accent))]">
-                              {fmtInv(paidTotal, inv)}
-                            </span>
-                          </span>
-                          <span className="text-[var(--text-secondary)]">
-                            Remaining:{' '}
-                            <span
-                              className={`font-medium ${remaining > 0 ? 'text-[var(--warning-text)]' : 'text-[var(--accent-ink,var(--accent))]'}`}
-                            >
-                              {fmtInv(remaining, inv)}
-                            </span>
-                          </span>
-                        </div>
-                        {invPayments.length === 0 ? (
-                          <p className="text-[10px] text-[var(--text-secondary)]">
-                            No payments recorded yet.
-                          </p>
-                        ) : (
-                          <div className="space-y-1">
-                            {invPayments.map((p) => (
-                              <div
-                                key={p.id}
-                                className="flex items-center justify-between px-2 py-1.5 rounded-xs bg-[var(--bg-card)]"
-                              >
-                                <div className="flex items-center gap-3 text-[10px]">
-                                  <span className="text-[var(--text-primary)] font-medium">
-                                    {fmtInv(p.amount, inv)}
-                                  </span>
-                                  <span className="text-[var(--text-secondary)]">
-                                    {relativeDate(p.created_at || p.payment_date)}
-                                  </span>
-                                  <span className="text-[var(--text-secondary)]">
-                                    {p.payment_method}
-                                  </span>
-                                  {p.reference && (
-                                    <span className="text-[var(--text-secondary)]">
-                                      Ref: {p.reference}
-                                    </span>
-                                  )}
-                                </div>
-                                <button
-                                  aria-label="Delete invoices"
-                                  onClick={() =>
-                                    setConfirmDeletePayment({ id: p.id, invoiceId: inv.id })
-                                  }
-                                  className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"
-                                >
-                                  <Trash2 size={11} />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                      <ExpandedPayments
+                        inv={inv}
+                        paidTotal={paidTotal}
+                        remaining={remaining}
+                        bag={bag}
+                      />
                     )}
                   </div>
                 );

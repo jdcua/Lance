@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { DEFAULT_CURRENCY } from '../lib/constants';
 import { useParams } from 'react-router-dom';
 import { useStore } from '../store';
@@ -167,6 +168,215 @@ type PortalState =
       profile?: UserProfile | null;
     };
 
+
+function shareStatusScreen(kind: 'loading' | 'notfound' | 'expired'): ReactNode {
+  if (kind === 'loading') {
+    return (
+      <div className="share-root">
+        <style>{PORTAL_CSS}</style>
+        <div className="share-card share-center">
+          <h1>Loading…</h1>
+          <p>Preparing your document.</p>
+        </div>
+      </div>
+    );
+  }
+  if (kind === 'notfound') {
+    return (
+      <div className="share-root">
+        <style>{PORTAL_CSS}</style>
+        <div className="share-card share-center">
+          <h1>Share link not found</h1>
+          <p>This link is invalid or has been revoked.</p>
+          <p style={{ marginTop: 16, fontSize: 12, color: '#a1a1a6' }}>
+            Ask the sender for a fresh link.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="share-root">
+      <style>{PORTAL_CSS}</style>
+      <div className="share-card share-center">
+        <h1>Link expired</h1>
+        <p>This share link is no longer active.</p>
+        <p style={{ marginTop: 16, fontSize: 12, color: '#a1a1a6' }}>
+          Ask the sender for a fresh link.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ShareBrand({ name, tagline }: { name: string; tagline?: string }) {
+  return (
+    <div className="share-brand">
+      <div className="share-logo">{(name[0] || 'L').toUpperCase()}</div>
+      <div>
+        <div className="share-brand-name">{name}</div>
+        {tagline && <div className="share-brand-tag">{tagline}</div>}
+      </div>
+    </div>
+  );
+}
+
+function ProposalMeta({ entity, currency }: { entity: Proposal; currency: string }) {
+  return (
+    <div className="share-meta">
+      {entity.scope && (
+        <div className="share-meta-item">
+          <div className="share-meta-label">Scope</div>
+          <div className="share-meta-value">{entity.scope}</div>
+        </div>
+      )}
+      {entity.timeline && (
+        <div className="share-meta-item">
+          <div className="share-meta-label">Timeline</div>
+          <div className="share-meta-value">{entity.timeline}</div>
+        </div>
+      )}
+      {entity.rate !== undefined && (
+        <div className="share-meta-item">
+          <div className="share-meta-label">Rate</div>
+          <div className="share-meta-value">
+            {formatCurrency(entity.rate || 0, currency)}
+            {entity.rate_type === 'hourly' ? '/hr' : ''}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ResponseStatus({
+  isContract, respondedName, respDate, respValue, clientName,
+}: {
+  isContract: boolean;
+  respondedName: string | undefined;
+  respDate: string;
+  respValue: string | undefined;
+  clientName: string;
+}) {
+  return (
+    <>
+      <hr className="share-divider" />
+      <div className="share-signed">
+        <strong>
+          {isContract
+            ? `Signed by ${respondedName || clientName}`
+            : `${respondedName || clientName} ${respValue} this proposal`}
+        </strong>
+        <br />
+        {formatDate(respDate)}
+      </div>
+    </>
+  );
+}
+
+function ShareActions({
+  isContract, submitting, name, signature, error, onRespond, onSign, setName, setSignature,
+}: {
+  isContract: boolean;
+  submitting: boolean;
+  name: string;
+  signature: string;
+  error: string;
+  onRespond: (response: 'accepted' | 'declined') => void;
+  onSign: () => void;
+  setName: (value: string) => void;
+  setSignature: (value: string) => void;
+}) {
+  return (
+    <div className="share-actions">
+      {isContract ? (
+        <>
+          <label className="share-field-label" htmlFor="share-signature">
+            Type your full name to sign
+          </label>
+          <input
+            id="share-signature"
+            className="share-field"
+            type="text"
+            placeholder="e.g. Jane Smith"
+            value={signature}
+            maxLength={200}
+            onChange={(e) => setSignature(e.target.value)}
+          />
+          <div className="share-btn-row">
+            <button
+              className="share-btn share-btn-success"
+              disabled={submitting || signature.trim().length === 0}
+              onClick={onSign}
+            >
+              {submitting ? 'Signing…' : 'Sign contract'}
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <label className="share-field-label" htmlFor="share-name">
+            Your name
+          </label>
+          <input
+            id="share-name"
+            className="share-field"
+            type="text"
+            placeholder="e.g. Jane Smith"
+            value={name}
+            maxLength={200}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <div className="share-btn-row">
+            <button
+              className="share-btn share-btn-primary"
+              disabled={submitting || name.trim().length === 0}
+              onClick={() => onRespond('accepted')}
+            >
+              {submitting ? 'Sending…' : 'Accept proposal'}
+            </button>
+            <button
+              className="share-btn share-btn-danger"
+              disabled={submitting || name.trim().length === 0}
+              onClick={() => onRespond('declined')}
+            >
+              Decline
+            </button>
+          </div>
+        </>
+      )}
+      {error && <div className="share-banner share-banner-error">{error}</div>}
+    </div>
+  );
+}
+
+function sharePresentation(
+  profile: UserProfile | null | undefined,
+  client: Client | undefined,
+  body: string | undefined,
+) {
+  return {
+    freelancerName: profile?.name?.trim() || 'Freelancer',
+    clientName: client?.name?.trim() || 'Client',
+    currency: profile?.currency || DEFAULT_CURRENCY,
+    bodyHtml: sanitizeShareHtml(body || ''),
+  };
+}
+
+function respondedDisplay(
+  isContract: boolean,
+  responded: ShareToken | null,
+  token: ShareToken,
+) {
+  const respondedName = isContract
+    ? responded?.client_signature || token.client_signature
+    : responded?.client_name || token.client_name;
+  const hasResponded = !!(responded?.client_response || token.client_response);
+  const respDate = responded?.client_response_at || token.client_response_at || '';
+  const respValue = responded?.client_response || token.client_response;
+  return { respondedName, hasResponded, respDate, respValue };
+}
+
 export default function ShareView() {
   const { token: tokenParam = '' } = useParams();
   const [state, setState] = useState<PortalState>({ kind: 'loading' });
@@ -234,64 +444,29 @@ export default function ShareView() {
     };
   }, [state]);
 
-  if (state.kind === 'loading') {
-    return (
-      <div className="share-root">
-        <style>{PORTAL_CSS}</style>
-        <div className="share-card share-center">
-          <h1>Loading…</h1>
-          <p>Preparing your document.</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (state.kind === 'notfound') {
-    return (
-      <div className="share-root">
-        <style>{PORTAL_CSS}</style>
-        <div className="share-card share-center">
-          <h1>Share link not found</h1>
-          <p>This link is invalid or has been revoked.</p>
-          <p style={{ marginTop: 16, fontSize: 12, color: '#a1a1a6' }}>
-            Ask the sender for a fresh link.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (state.kind === 'expired') {
-    return (
-      <div className="share-root">
-        <style>{PORTAL_CSS}</style>
-        <div className="share-card share-center">
-          <h1>Link expired</h1>
-          <p>This share link is no longer active.</p>
-          <p style={{ marginTop: 16, fontSize: 12, color: '#a1a1a6' }}>
-            Ask the sender for a fresh link.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  if (state.kind !== 'ready') return shareStatusScreen(state.kind);
 
   const { token, entity, client, profile } = state;
   const isContract = token.entity_type === 'contract';
-  const freelancerName = profile?.name?.trim() || 'Freelancer';
-  const clientName = client?.name?.trim() || 'Client';
-  const currency = profile?.currency || DEFAULT_CURRENCY;
-  const bodyHtml = sanitizeShareHtml(entity.body || '');
+  const { freelancerName, clientName, currency, bodyHtml } = sharePresentation(
+    profile,
+    client,
+    entity.body,
+  );
+  const { respondedName, hasResponded, respDate, respValue } = respondedDisplay(
+    isContract,
+    responded,
+    token,
+  );
 
-  const handleRespond = async (response: 'accepted' | 'declined') => {
+  const submitResponse = async (payload: Record<string, string>) => {
     if (state.kind !== 'ready' || responded) return;
     setError('');
     setSubmitting(true);
     try {
       const updated = await tauriInvoke<ShareToken>('respond_share_token', {
         token: token.token,
-        response,
-        client_name: name,
+        ...payload,
       });
       setResponded(updated);
     } catch (e) {
@@ -301,42 +476,16 @@ export default function ShareView() {
     }
   };
 
-  const handleSign = async () => {
-    if (state.kind !== 'ready' || responded) return;
-    setError('');
-    setSubmitting(true);
-    try {
-      const updated = await tauriInvoke<ShareToken>('respond_share_token', {
-        token: token.token,
-        response: 'accepted',
-        client_signature: signature,
-      });
-      setResponded(updated);
-    } catch (e) {
-      setError(e?.toString?.() || 'Something went wrong. Please try again.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const respondedName = isContract
-    ? responded?.client_signature || token.client_signature
-    : responded?.client_name || token.client_name;
-  const hasResponded = !!(responded?.client_response || token.client_response);
-  const respDate = responded?.client_response_at || token.client_response_at || '';
-  const respValue = responded?.client_response || token.client_response;
+  const handleRespond = (response: 'accepted' | 'declined') =>
+    submitResponse({ response, client_name: name });
+  const handleSign = () =>
+    submitResponse({ response: 'accepted', client_signature: signature });
 
   return (
     <div className="share-root">
       <style>{PORTAL_CSS}</style>
       <div className="share-card">
-        <div className="share-brand">
-          <div className="share-logo">{(freelancerName[0] || 'L').toUpperCase()}</div>
-          <div>
-            <div className="share-brand-name">{freelancerName}</div>
-            {profile?.tagline && <div className="share-brand-tag">{profile.tagline}</div>}
-          </div>
-        </div>
+        <ShareBrand name={freelancerName} tagline={profile?.tagline} />
 
         <div className="share-prepped">Prepared for {clientName}</div>
         <h1 className="font-display share-title">{entity.title}</h1>
@@ -344,107 +493,30 @@ export default function ShareView() {
           {isContract ? 'Service agreement' : 'Proposal'} · {formatDate(token.created_at)}
         </div>
 
-        {!isContract && (
-          <div className="share-meta">
-            {(entity as Proposal).scope && (
-              <div className="share-meta-item">
-                <div className="share-meta-label">Scope</div>
-                <div className="share-meta-value">{(entity as Proposal).scope}</div>
-              </div>
-            )}
-            {(entity as Proposal).timeline && (
-              <div className="share-meta-item">
-                <div className="share-meta-label">Timeline</div>
-                <div className="share-meta-value">{(entity as Proposal).timeline}</div>
-              </div>
-            )}
-            {(entity as Proposal).rate !== undefined && (
-              <div className="share-meta-item">
-                <div className="share-meta-label">Rate</div>
-                <div className="share-meta-value">
-                  {formatCurrency((entity as Proposal).rate || 0, currency)}
-                  {(entity as Proposal).rate_type === 'hourly' ? '/hr' : ''}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        {!isContract && <ProposalMeta entity={entity as Proposal} currency={currency} />}
 
         <div className="share-body" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
 
         {hasResponded ? (
-          <>
-            <hr className="share-divider" />
-            <div className="share-signed">
-              <strong>
-                {isContract
-                  ? `Signed by ${respondedName || clientName}`
-                  : `${respondedName || clientName} ${respValue} this proposal`}
-              </strong>
-              <br />
-              {formatDate(respDate)}
-            </div>
-          </>
+          <ResponseStatus
+            isContract={isContract}
+            respondedName={respondedName}
+            respDate={respDate}
+            respValue={respValue}
+            clientName={clientName}
+          />
         ) : (
-          <div className="share-actions">
-            {isContract ? (
-              <>
-                <label className="share-field-label" htmlFor="share-signature">
-                  Type your full name to sign
-                </label>
-                <input
-                  id="share-signature"
-                  className="share-field"
-                  type="text"
-                  placeholder="e.g. Jane Smith"
-                  value={signature}
-                  maxLength={200}
-                  onChange={(e) => setSignature(e.target.value)}
-                />
-                <div className="share-btn-row">
-                  <button
-                    className="share-btn share-btn-success"
-                    disabled={submitting || signature.trim().length === 0}
-                    onClick={handleSign}
-                  >
-                    {submitting ? 'Signing…' : 'Sign contract'}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <label className="share-field-label" htmlFor="share-name">
-                  Your name
-                </label>
-                <input
-                  id="share-name"
-                  className="share-field"
-                  type="text"
-                  placeholder="e.g. Jane Smith"
-                  value={name}
-                  maxLength={200}
-                  onChange={(e) => setName(e.target.value)}
-                />
-                <div className="share-btn-row">
-                  <button
-                    className="share-btn share-btn-primary"
-                    disabled={submitting || name.trim().length === 0}
-                    onClick={() => handleRespond('accepted')}
-                  >
-                    {submitting ? 'Sending…' : 'Accept proposal'}
-                  </button>
-                  <button
-                    className="share-btn share-btn-danger"
-                    disabled={submitting || name.trim().length === 0}
-                    onClick={() => handleRespond('declined')}
-                  >
-                    Decline
-                  </button>
-                </div>
-              </>
-            )}
-            {error && <div className="share-banner share-banner-error">{error}</div>}
-          </div>
+          <ShareActions
+            isContract={isContract}
+            submitting={submitting}
+            name={name}
+            signature={signature}
+            error={error}
+            onRespond={handleRespond}
+            onSign={handleSign}
+            setName={setName}
+            setSignature={setSignature}
+          />
         )}
 
         <div className="share-foot">Powered by Lance · This link only works while Lance is open</div>

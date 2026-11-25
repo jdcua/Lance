@@ -16,6 +16,42 @@ type BrandVoice = {
   dos_donts?: string;
 };
 
+const toNull = (v: string) => v || null;
+const toOptional = (v: string) => v || undefined;
+
+function BrandVoiceDisplay({ brandVoice }: { brandVoice: BrandVoice }) {
+  return (
+    <div className="space-y-2">
+      {brandVoice.name && (
+        <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
+          <p className="font-medium text-[var(--text-primary)]">{brandVoice.name}</p>
+        </div>
+      )}
+      {brandVoice.attributes && (
+        <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
+          <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1">Attributes</p>
+          <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{brandVoice.attributes}</p>
+        </div>
+      )}
+      {brandVoice.examples && (
+        <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
+          <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1">Examples</p>
+          <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{brandVoice.examples}</p>
+        </div>
+      )}
+      {brandVoice.dos_donts && (
+        <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
+          <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1">Do's / Don'ts</p>
+          <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{brandVoice.dos_donts}</p>
+        </div>
+      )}
+      {!brandVoice.name && !brandVoice.attributes && !brandVoice.examples && !brandVoice.dos_donts && (
+        <p className="text-xs text-[var(--text-tertiary)] py-2">No brand voice defined yet.</p>
+      )}
+    </div>
+  );
+}
+
 export default function BrandVoiceNotes({ clientId }: { clientId: string }) {
   const [brandVoice, setBrandVoice] = useState<BrandVoice | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,32 +105,26 @@ export default function BrandVoiceNotes({ clientId }: { clientId: string }) {
     setSaving(true);
     try {
       const db = await getDb();
+      const values = [toNull(form.name), toNull(form.attributes), toNull(form.examples), toNull(form.dos_donts)];
+      const optional = {
+        name: toOptional(form.name),
+        attributes: toOptional(form.attributes),
+        examples: toOptional(form.examples),
+        dos_donts: toOptional(form.dos_donts),
+      };
       if (brandVoice) {
         await db.execute(
           'UPDATE brand_voices SET name = ?, attributes = ?, examples = ?, dos_donts = ? WHERE id = ?',
-          [form.name || null, form.attributes || null, form.examples || null, form.dos_donts || null, brandVoice.id]
+          [...values, brandVoice.id]
         );
-        setBrandVoice({
-          ...brandVoice,
-          name: form.name || undefined,
-          attributes: form.attributes || undefined,
-          examples: form.examples || undefined,
-          dos_donts: form.dos_donts || undefined,
-        });
+        setBrandVoice({ ...brandVoice, ...optional });
       } else {
         const id = crypto.randomUUID();
         await db.execute(
           'INSERT INTO brand_voices (id, client_id, name, attributes, examples, dos_donts) VALUES (?, ?, ?, ?, ?, ?)',
-          [id, clientId, form.name || null, form.attributes || null, form.examples || null, form.dos_donts || null]
+          [id, clientId, ...values]
         );
-        setBrandVoice({
-          id,
-          client_id: clientId,
-          name: form.name || undefined,
-          attributes: form.attributes || undefined,
-          examples: form.examples || undefined,
-          dos_donts: form.dos_donts || undefined,
-        });
+        setBrandVoice({ id, client_id: clientId, ...optional });
       }
       setShowForm(false);
     } catch (e) {
@@ -196,36 +226,7 @@ export default function BrandVoiceNotes({ clientId }: { clientId: string }) {
         </div>
       )}
 
-      {brandVoice && !showForm && (
-        <div className="space-y-2">
-          {brandVoice.name && (
-            <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
-              <p className="font-medium text-[var(--text-primary)]">{brandVoice.name}</p>
-            </div>
-          )}
-          {brandVoice.attributes && (
-            <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
-              <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1">Attributes</p>
-              <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{brandVoice.attributes}</p>
-            </div>
-          )}
-          {brandVoice.examples && (
-            <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
-              <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1">Examples</p>
-              <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{brandVoice.examples}</p>
-            </div>
-          )}
-          {brandVoice.dos_donts && (
-            <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
-              <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1">Do's / Don'ts</p>
-              <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{brandVoice.dos_donts}</p>
-            </div>
-          )}
-          {!brandVoice.name && !brandVoice.attributes && !brandVoice.examples && !brandVoice.dos_donts && (
-            <p className="text-xs text-[var(--text-tertiary)] py-2">No brand voice defined yet.</p>
-          )}
-        </div>
-      )}
+      {brandVoice && !showForm && <BrandVoiceDisplay brandVoice={brandVoice} />}
     </div>
   );
 }

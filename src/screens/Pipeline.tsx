@@ -185,56 +185,71 @@ export default function Pipeline() {
 
   const reject = (msg: string) => addToast(msg, 'info');
 
+  // Shared guard for every drag: returns true when the move is a no-op or
+  // was rejected with an explanation. Kept out of onDragEnd so the handler
+  // stays a thin dispatcher over the per-kind transitions below.
+  const rejectDrag = (card: CardData, target: Stage): boolean => {
+    if (target === card.kind) return true; // same column: settle back, no-op
+    const fromIdx = STAGES.indexOf(card.kind);
+    const toIdx = STAGES.indexOf(target);
+    if (toIdx < fromIdx) {
+      reject('Backward moves happen on the record itself — open it to walk work back.');
+      return true;
+    }
+    if (toIdx > fromIdx + 1) {
+      reject('Move one stage at a time — each step creates the real next artifact.');
+      return true;
+    }
+    if (target === 'paid' && card.kind !== 'invoice') return true;
+    return false;
+  };
+
   const onDragEnd = (e: DragEndEvent) => {
     setActiveCard(null);
     const card = e.active.data.current?.card as CardData | undefined;
     const over = String(e.over?.id || '');
     if (!card || !over.startsWith('col:')) return;
     const target = over.slice(4) as Stage;
-    if (target === card.kind) return; // same column: settle back, no-op
-    const fromIdx = STAGES.indexOf(card.kind);
-    const toIdx = STAGES.indexOf(target);
-    if (toIdx < fromIdx) {
-      reject('Backward moves happen on the record itself — open it to walk work back.');
-      return;
-    }
-    if (toIdx > fromIdx + 1) {
-      reject('Move one stage at a time — each step creates the real next artifact.');
-      return;
-    }
-    if (target === 'paid' && card.kind !== 'invoice') return;
-    // Adjacent forward moves by kind:
-    if (card.kind === 'proposal' && target === 'contract') {
-      const p = proposals.find((x) => x.id === card.id);
-      if (!p) return;
-      if (p.status === 'draft') {
-        reject('Send or accept the proposal before turning it into a contract.');
-        return;
-      }
-      setAdvanceTitle(p.title);
-      setAdvance({ from: 'proposal', proposal: p });
-    } else if (card.kind === 'contract' && target === 'project') {
-      const c = contracts.find((x) => x.id === card.id);
-      if (!c) return;
-      setAdvanceTitle(c.title);
-      setAdvance({ from: 'contract', contract: c });
-    } else if (card.kind === 'project' && target === 'invoice') {
-      const p = projects.find((x) => x.id === card.id);
-      navigate('/invoices');
-      addToast(
-        p ? `New invoice opened — bill ${p.title} with real amounts.` : 'New invoice opened — fill in real amounts.',
-        'info',
-      );
-      setTimeout(() => commands.dispatch('lance:add-invoice'), 350);
-    } else if (card.kind === 'invoice' && target === 'paid') {
-      const inv = invoices.find((x) => x.id === card.id);
-      if (!inv) return;
-      const paidSoFar = payments.filter((p) => p.invoice_id === inv.id).reduce((s, p) => s + p.amount, 0);
-      setPayAmount((Math.max(0, inv.total - paidSoFar)).toFixed(2));
-      setPayDate(todayLocalISO());
-      setPayMethod(PAYMENT_METHODS[0]);
-      setPayInv(inv);
-    }
+    if (rejectDrag(card, target)) return;
+
+    // Adjacent forward moves by kind, dispatched by kind→target key.
+    const transitions: Record<string, () => void> = {
+      'proposal->contract': () => {
+        const p = proposals.find((x) => x.id === card.id);
+        if (!p) return;
+        if (p.status === 'draft') {
+          reject('Send or accept the proposal before turning it into a contract.');
+          return;
+        }
+        setAdvanceTitle(p.title);
+        setAdvance({ from: 'proposal', proposal: p });
+      },
+      'contract->project': () => {
+        const c = contracts.find((x) => x.id === card.id);
+        if (!c) return;
+        setAdvanceTitle(c.title);
+        setAdvance({ from: 'contract', contract: c });
+      },
+      'project->invoice': () => {
+        const p = projects.find((x) => x.id === card.id);
+        navigate('/invoices');
+        addToast(
+          p ? `New invoice opened — bill ${p.title} with real amounts.` : 'New invoice opened — fill in real amounts.',
+          'info',
+        );
+        setTimeout(() => commands.dispatch('lance:add-invoice'), 350);
+      },
+      'invoice->paid': () => {
+        const inv = invoices.find((x) => x.id === card.id);
+        if (!inv) return;
+        const paidSoFar = payments.filter((p) => p.invoice_id === inv.id).reduce((s, p) => s + p.amount, 0);
+        setPayAmount((Math.max(0, inv.total - paidSoFar)).toFixed(2));
+        setPayDate(todayLocalISO());
+        setPayMethod(PAYMENT_METHODS[0]);
+        setPayInv(inv);
+      },
+    };
+    transitions[`${card.kind}->${target}`]?.();
   };
 
   const handleAdvance = async () => {

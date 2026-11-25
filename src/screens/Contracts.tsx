@@ -69,6 +69,51 @@ const PREBUILT_TEMPLATES: Omit<ContractTemplate, 'id' | 'created_at'>[] = [
   },
 ];
 
+// Contract save is split into three pure steps: who the parties are, which
+// currency symbol to print, and the template substitutions themselves.
+function contractParties(
+  client: { name?: string; email?: string } | undefined,
+  profile: { name?: string } | null,
+) {
+  return {
+    clientName: client?.name || 'Client',
+    contactName: client?.email || client?.name || 'Client',
+    freelancerName: profile?.name || '',
+  };
+}
+
+function contractCurrencySymbol(currency?: string): string {
+  let currencySymbol = '$';
+  try {
+    const part = new Intl.NumberFormat('en-CA', {
+      style: 'currency',
+      currency: currency || DEFAULT_CURRENCY,
+    })
+      .formatToParts(0)
+      .find((p) => p.type === 'currency');
+    if (part?.value) currencySymbol = part.value;
+  } catch {
+    /* fall back to $ */
+  }
+  return currencySymbol;
+}
+
+function fillContractTemplate(
+  body: string,
+  clientName: string,
+  contactName: string,
+  today: string,
+  freelancerName: string,
+  currencySymbol: string,
+): string {
+  return (body || '')
+    .replace(/\{client_name\}/g, clientName)
+    .replace(/\{client_contact\}/g, contactName)
+    .replace(/\{date\}/g, today)
+    .replace(/\{freelancer_name\}/g, freelancerName)
+    .replace(/\$\s(?=\{)/g, `${currencySymbol} `);
+}
+
 const TEMPLATE_BADGE_COLORS: Record<string, string> = {
   General: 'info',
   Retainer: 'success',
@@ -160,19 +205,16 @@ export default function Contracts() {
     setSaving(true);
     try {
       const client = clients.find((c) => c.id === form.client_id);
-      const contactName = client?.email || client?.name || 'Client';
+      const { clientName, contactName, freelancerName } = contractParties(client, profile);
       const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-      let currencySymbol = '$';
-      try {
-        const part = new Intl.NumberFormat('en-CA', { style: 'currency', currency: profile?.currency || DEFAULT_CURRENCY }).formatToParts(0).find((p) => p.type === 'currency');
-        if (part?.value) currencySymbol = part.value;
-      } catch { /* fall back to $ */ }
-      const filledBody = (form.body || '')
-        .replace(/\{client_name\}/g, client?.name || 'Client')
-        .replace(/\{client_contact\}/g, contactName)
-        .replace(/\{date\}/g, today)
-        .replace(/\{freelancer_name\}/g, profile?.name || '')
-        .replace(/\$\s(?=\{)/g, `${currencySymbol} `);
+      const filledBody = fillContractTemplate(
+        form.body,
+        clientName,
+        contactName,
+        today,
+        freelancerName,
+        contractCurrencySymbol(profile?.currency),
+      );
       if (editing) {
         await updateContract({ ...editing, ...form, title: title.slice(0, MAX_LENGTHS.title), body: filledBody });
       } else {
@@ -366,7 +408,8 @@ export default function Contracts() {
 
       <TabBar />
 
-      {tab === 'contracts' ? (
+      {(() => (
+      tab === 'contracts' ? (
         <>
           {clients.length > 0 && contracts.length > 0 && (
             <div className="mb-4 relative">
@@ -590,7 +633,8 @@ export default function Contracts() {
             })
           )}
         </div>
-      )}
+      )
+      ))()}
 
       <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Contract' : 'New Contract'} size="lg">
         <div className="grid gap-6 lg:grid-cols-[1fr_340px]">

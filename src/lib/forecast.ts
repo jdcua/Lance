@@ -109,6 +109,45 @@ function computeRecurringInvoicesByMonth(
   return result;
 }
 
+/** Spread one active project's budget across its milestone/forecast months. */
+function addProjectBudgetToMonths(
+  project: Project,
+  milestones: Milestone[],
+  forecastMonths: ForecastMonth[],
+  result: Record<string, number>,
+): void {
+  const budget = project.budget || 0;
+  const invoiceMilestones = milestones.filter(
+    (m) => m.invoice_on_completion && m.due_date,
+  );
+
+  if (invoiceMilestones.length > 0) {
+    const sharePerMilestone = budget / invoiceMilestones.length;
+    for (const ms of invoiceMilestones) {
+      const msMonth = ms.due_date!.substring(0, 7);
+      for (const fm of forecastMonths) {
+        if (fm.key === msMonth) {
+          result[fm.key] = (result[fm.key] || 0) + sharePerMilestone;
+        }
+      }
+    }
+  } else if (project.end_date) {
+    const startKey = project.start_date
+      ? project.start_date.substring(0, 7)
+      : thisMonthKeyFromMonths(forecastMonths);
+    const endKey = project.end_date.substring(0, 7);
+    const totalMonths = monthDiff(endKey, startKey) + 1;
+    if (totalMonths > 0) {
+      const perMonth = budget / totalMonths;
+      for (const fm of forecastMonths) {
+        if (fm.key >= startKey && fm.key <= endKey) {
+          result[fm.key] = (result[fm.key] || 0) + perMonth;
+        }
+      }
+    }
+  }
+}
+
 function computeMilestoneInvoicesByMonth(
   projects: Project[],
   milestonesByProject: Record<string, Milestone[]>,
@@ -118,37 +157,12 @@ function computeMilestoneInvoicesByMonth(
 
   for (const project of projects) {
     if (project.status !== 'active' || !project.budget) continue;
-
-    const milestones = milestonesByProject[project.id] || [];
-    const invoiceMilestones = milestones.filter(
-      (m) => m.invoice_on_completion && m.due_date,
+    addProjectBudgetToMonths(
+      project,
+      milestonesByProject[project.id] || [],
+      forecastMonths,
+      result,
     );
-
-    if (invoiceMilestones.length > 0) {
-      const sharePerMilestone = project.budget / invoiceMilestones.length;
-      for (const ms of invoiceMilestones) {
-        const msMonth = ms.due_date!.substring(0, 7);
-        for (const fm of forecastMonths) {
-          if (fm.key === msMonth) {
-            result[fm.key] = (result[fm.key] || 0) + sharePerMilestone;
-          }
-        }
-      }
-    } else if (project.end_date) {
-      const startKey = project.start_date
-        ? project.start_date.substring(0, 7)
-        : thisMonthKeyFromMonths(forecastMonths);
-      const endKey = project.end_date.substring(0, 7);
-      const totalMonths = monthDiff(endKey, startKey) + 1;
-      if (totalMonths > 0) {
-        const perMonth = project.budget / totalMonths;
-        for (const fm of forecastMonths) {
-          if (fm.key >= startKey && fm.key <= endKey) {
-            result[fm.key] = (result[fm.key] || 0) + perMonth;
-          }
-        }
-      }
-    }
   }
 
   return result;

@@ -51,6 +51,41 @@ export function sanitizeChangelogItems(items: string[]): string[] {
   return clean.slice(0, 6);
 }
 
+/** Fetch user-facing entries from the public releases API (online only). */
+async function fetchReleaseEntries(): Promise<ChangelogEntry[]> {
+  const releaseEndpoints = ['https://api.github.com/repos/jdcua/Lance/releases?per_page=5'];
+  if (typeof navigator === 'undefined' || navigator.onLine !== false) {
+    for (const url of releaseEndpoints) {
+      try {
+        const response = await fetch(url, {
+          headers: { Accept: 'application/vnd.github.v3+json' },
+        });
+        if (!response.ok) throw new Error(`release notes ${response.status}`);
+        const data = (await response.json()) as GitHubRelease | GitHubRelease[];
+        const releases = (Array.isArray(data) ? data : [data]).filter(
+          (r) => !r.draft && !r.prerelease,
+        );
+        const mapped = releases
+          .map((r) => ({
+            version: r.tag_name.replace(/^v/, ''),
+            date: (r.published_at || '').split('T')[0],
+            items: sanitizeChangelogItems(
+              (r.body || '').split('\n').map((line: string) => line.replace(/^[-*]\s*/, '').trim()),
+            ),
+          }))
+          .map((e) => ({
+            ...e,
+            items: e.items.length > 0 ? e.items : ['Small fixes and polish in this release.'],
+          }));
+        if (mapped.length > 0) return mapped;
+      } catch {
+        /* try the next source, silently */
+      }
+    }
+  }
+  return [];
+}
+
 /**
  * Dynamic changelog loader.
  * Priority:
@@ -78,43 +113,9 @@ export async function loadChangelog(): Promise<ChangelogEntry[]> {
     /* ignore cache errors */
   }
 
-  let entries: ChangelogEntry[] = [];
-
   // 2. Release notes from the public repository, then local git tags (dev).
   // Offline clients skip the network entirely with zero console noise.
-  const releaseEndpoints = ['https://api.github.com/repos/jdcua/Lance/releases?per_page=5'];
-  if (typeof navigator === 'undefined' || navigator.onLine !== false) {
-    for (const url of releaseEndpoints) {
-      try {
-        const response = await fetch(url, {
-          headers: { Accept: 'application/vnd.github.v3+json' },
-        });
-        if (!response.ok) throw new Error(`release notes ${response.status}`);
-        const data = (await response.json()) as GitHubRelease | GitHubRelease[];
-        const releases = (Array.isArray(data) ? data : [data]).filter(
-          (r) => !r.draft && !r.prerelease,
-        );
-        const mapped = releases
-          .map((r) => ({
-            version: r.tag_name.replace(/^v/, ''),
-            date: (r.published_at || '').split('T')[0],
-            items: sanitizeChangelogItems(
-              (r.body || '').split('\n').map((line: string) => line.replace(/^[-*]\s*/, '').trim()),
-            ),
-          }))
-          .map((e) => ({
-            ...e,
-            items: e.items.length > 0 ? e.items : ['Small fixes and polish in this release.'],
-          }));
-        if (mapped.length > 0) {
-          entries = mapped;
-          break;
-        }
-      } catch {
-        /* try the next source, silently */
-      }
-    }
-  }
+  let entries: ChangelogEntry[] = await fetchReleaseEntries();
 
   // 3. Fallback: parse local git tags (dev mode, Tauri only)
   if (

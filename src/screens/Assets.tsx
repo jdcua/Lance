@@ -411,6 +411,8 @@ export default function Assets() {
 
   return (
     <div className="p-6 space-y-5" onClick={() => setContextMenu(null)}>
+      {(() => (
+      <>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -591,7 +593,11 @@ export default function Assets() {
           Any file type supported · stored locally in your assets folder (see Settings for location)
         </p>
       </div>
+      </>
+      ))()}
 
+      {(() => (
+      <>
       {/* Content */}
       {scopeAssets.length === 0 && searchResults === null ? (
         <div className="text-center py-16">
@@ -650,7 +656,11 @@ export default function Assets() {
       ) : (
         renderAssetList(scopeAssets)
       )}
+      </>
+      ))()}
 
+      {(() => (
+      <>
       {/* Preview Modal */}
       <Modal
         open={!!previewAsset}
@@ -969,6 +979,9 @@ export default function Assets() {
           </button>
         </div>
       )}
+      </>
+      ))()}
+
       <ArchetypeFeatureTabs
         screen="assets"
         context={{

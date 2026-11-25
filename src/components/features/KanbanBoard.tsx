@@ -21,6 +21,28 @@ import type { KanbanBoard, KanbanColumn, KanbanCard } from '../../types';
 
 const COLUMN_COLORS = ['#6B7280', '#3B82F6', '#F59E0B', '#10B981', '#8B5CF6', '#EC4899', '#6366F1', '#14B8A6'];
 
+type DropTarget = { toColumnId: string; overCard: KanbanCard | null };
+
+function resolveDropTarget(overData: { type?: string; column?: KanbanColumn; card?: KanbanCard } | undefined): DropTarget | null {
+  if (overData?.type === 'column' && overData.column) {
+    return { toColumnId: overData.column.id, overCard: null };
+  }
+  if (overData?.type === 'card' && overData.card) {
+    return { toColumnId: overData.card.column_id, overCard: overData.card };
+  }
+  return null;
+}
+
+function reorderCards(colCards: KanbanCard[], card: KanbanCard, overCard: KanbanCard | null): KanbanCard[] | null {
+  const oldIndex = colCards.findIndex((c) => c.id === card.id);
+  const newIndex = overCard ? colCards.findIndex((c) => c.id === overCard.id) : colCards.length - 1;
+  if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return null;
+  const reordered = [...colCards];
+  reordered.splice(oldIndex, 1);
+  reordered.splice(newIndex, 0, card);
+  return reordered;
+}
+
 export default function KanbanBoardComponent({ projectId }: { projectId: string }) {
   const [board, setBoard] = useState<KanbanBoard | null>(null);
   const [columns, setColumns] = useState<KanbanColumn[]>([]);
@@ -85,31 +107,17 @@ export default function KanbanBoardComponent({ projectId }: { projectId: string 
     if (!over || !active) return;
 
     const activeData = active.data.current;
-    const overData = over.data.current;
     if (!activeData || activeData.type !== 'card') return;
 
     const card = activeData.card as KanbanCard;
     const fromColumnId = card.column_id;
-
-    let toColumnId: string;
-    if (overData?.type === 'column') {
-      toColumnId = overData.column.id;
-    } else if (overData?.type === 'card') {
-      toColumnId = overData.card.column_id;
-    } else {
-      return;
-    }
+    const target = resolveDropTarget(over.data.current as { type?: string; column?: KanbanColumn; card?: KanbanCard });
+    if (!target) return;
+    const { toColumnId, overCard } = target;
 
     if (fromColumnId === toColumnId) {
-      const colCards = cards[fromColumnId] || [];
-      const oldIndex = colCards.findIndex(c => c.id === card.id);
-      const overCard = overData?.type === 'card' ? overData.card as KanbanCard : null;
-      const newIndex = overCard ? colCards.findIndex(c => c.id === overCard.id) : colCards.length - 1;
-      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
-
-      const reordered = [...colCards];
-      reordered.splice(oldIndex, 1);
-      reordered.splice(newIndex, 0, card);
+      const reordered = reorderCards(cards[fromColumnId] || [], card, overCard);
+      if (!reordered) return;
       setCards(prev => ({ ...prev, [fromColumnId]: reordered }));
 
       try {

@@ -6,6 +6,7 @@ import { formatCurrency } from '../../utils/format';
 import { rankSearch } from '../../utils/searchRank';
 import { getShortcutModifierLabel } from '../../utils/shortcuts';
 import { useDialogFocus } from './useDialogFocus';
+import type { Client, Proposal, Project, Invoice, Contract, TimeEntry, Expense, Attachment } from '../../types';
 
 type ResultItem = {
   id: string;
@@ -67,6 +68,107 @@ function parseTags(tags: string): string[] {
   try { return JSON.parse(tags); } catch { return []; }
 }
 
+function aiActionItems(q: string, aiEnabled: boolean): ResultItem[] {
+  if (!aiEnabled) return [];
+  const items: ResultItem[] = [];
+  if (q.includes('generate proposal') || q.includes('new proposal') || q.includes('proposal')) {
+    items.push({
+      id: 'ai-proposal', label: 'Generate a proposal',
+      sublabel: 'AI-assisted proposal writing', type: 'action',
+      path: '/proposals/new',
+    });
+  }
+  if (q.includes('summarize') || q.includes('summary') || q.includes('insight')) {
+    items.push({
+      id: 'ai-summary', label: 'Generate business summary',
+      sublabel: 'AI-powered insights', type: 'action',
+      path: '/insights',
+    });
+  }
+  return items;
+}
+
+type EntitySources = {
+  clients: Client[];
+  proposals: Proposal[];
+  projects: Project[];
+  invoices: Invoice[];
+  contracts: Contract[];
+  timeEntries: TimeEntry[];
+  expenses: Expense[];
+  allAttachments: Attachment[];
+  currency?: string;
+};
+
+function collectPrimaryItems(q: string, sources: EntitySources): ResultItem[] {
+  const { clients, proposals, projects, invoices, contracts } = sources;
+  const items: ResultItem[] = [];
+
+  for (const c of rankSearch(clients, (x) => [x.name || '', x.company || ''], q, MAX_PER_GROUP.client)) {
+    items.push({ id: c.id, label: c.name, sublabel: 'Client' + (c.company ? ` · ${c.company}` : ''), type: 'client', path: `/clients` });
+  }
+  for (const p of rankSearch(proposals, (x) => [x.title || ''], q, MAX_PER_GROUP.proposal)) {
+    items.push({ id: p.id, label: p.title, sublabel: 'Proposal', type: 'proposal', path: `/proposals` });
+  }
+  for (const p of rankSearch(projects, (x) => [x.title || ''], q, MAX_PER_GROUP.project)) {
+    items.push({ id: p.id, label: p.title, sublabel: 'Project', type: 'project', path: `/projects` });
+  }
+  for (const inv of rankSearch(
+    invoices,
+    (x) => [x.invoice_number || '', clients.find((c) => c.id === x.client_id)?.name || ''],
+    q,
+    MAX_PER_GROUP.invoice,
+  )) {
+    const clientName = clients.find((c) => c.id === inv.client_id)?.name || '';
+    items.push({ id: inv.id, label: inv.invoice_number, sublabel: `Invoice${clientName ? ` · ${clientName}` : ''}`, type: 'invoice', path: `/invoices` });
+  }
+  for (const c of rankSearch(contracts, (x) => [x.title || ''], q, MAX_PER_GROUP.contract)) {
+    items.push({ id: c.id, label: c.title, sublabel: 'Contract', type: 'contract', path: `/contracts` });
+  }
+
+  return items;
+}
+
+function collectSecondaryItems(q: string, sources: EntitySources): ResultItem[] {
+  const { projects, timeEntries, expenses, allAttachments } = sources;
+  const items: ResultItem[] = [];
+
+  for (const t of rankSearch(timeEntries, (x) => [x.description || ''], q, MAX_PER_GROUP.time_entry)) {
+    const project = projects.find((p) => p.id === t.project_id);
+    const projectName = project?.title || 'Unknown';
+    items.push({
+      id: t.id,
+      label: t.description || 'No description',
+      sublabel: `${projectName} · ${formatDateShort(t.start_time)} · ${t.duration_minutes ? formatDuration(t.duration_minutes) : 'In progress'}`,
+      type: 'time_entry',
+      path: '/time',
+    });
+  }
+
+  for (const e of rankSearch(expenses, (x) => [x.description || '', x.category || ''], q, MAX_PER_GROUP.expense)) {
+    items.push({
+      id: e.id,
+      label: e.description,
+      sublabel: `${e.category} · ${formatCurrency(e.amount, sources.currency)} on ${formatDateShort(e.date)}`,
+      type: 'expense',
+      path: '/finance',
+    });
+  }
+
+  for (const a of rankSearch(allAttachments, (x) => [x.filename || '', ...parseTags(x.tags)], q, MAX_PER_GROUP.asset)) {
+    const locationLabel = a.entity_type === 'library' ? 'Library' : a.entity_type;
+    items.push({
+      id: a.id,
+      label: a.filename,
+      sublabel: `${a.mime_type} · ${locationLabel}`,
+      type: 'asset',
+      path: `/assets?highlight=${a.id}`,
+    });
+  }
+
+  return items;
+}
+
 export default function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { clients, proposals, projects, invoices, contracts, profile } = useStore();
   const timeEntries = useStore((s) => s.timeEntries);
@@ -115,84 +217,20 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
     if (!debouncedQuery.trim()) return [];
     const q = debouncedQuery.trim();
 
-    const items: ResultItem[] = [];
+    const items = [
+      ...aiActionItems(q, aiEnabled),
+      ...collectPrimaryItems(q, {
+        clients, proposals, projects, invoices, contracts,
+        timeEntries, expenses, allAttachments, currency: profile?.currency,
+      }),
+      ...collectSecondaryItems(q, {
+        clients, proposals, projects, invoices, contracts,
+        timeEntries, expenses, allAttachments, currency: profile?.currency,
+      }),
+    ];
 
-    if (aiEnabled) {
-      if (q.includes('generate proposal') || q.includes('new proposal') || q.includes('proposal')) {
-        items.push({
-          id: 'ai-proposal', label: 'Generate a proposal',
-          sublabel: 'AI-assisted proposal writing', type: 'action',
-          path: '/proposals/new',
-        });
-      }
-      if (q.includes('summarize') || q.includes('summary') || q.includes('insight')) {
-        items.push({
-          id: 'ai-summary', label: 'Generate business summary',
-          sublabel: 'AI-powered insights', type: 'action',
-          path: '/insights',
-        });
-      }
-    }
-
-    for (const c of rankSearch(clients, (x) => [x.name || '', x.company || ''], q, MAX_PER_GROUP.client)) {
-      items.push({ id: c.id, label: c.name, sublabel: 'Client' + (c.company ? ` · ${c.company}` : ''), type: 'client', path: `/clients` });
-    }
-    for (const p of rankSearch(proposals, (x) => [x.title || ''], q, MAX_PER_GROUP.proposal)) {
-      items.push({ id: p.id, label: p.title, sublabel: 'Proposal', type: 'proposal', path: `/proposals` });
-    }
-    for (const p of rankSearch(projects, (x) => [x.title || ''], q, MAX_PER_GROUP.project)) {
-      items.push({ id: p.id, label: p.title, sublabel: 'Project', type: 'project', path: `/projects` });
-    }
-    for (const inv of rankSearch(
-      invoices,
-      (x) => [x.invoice_number || '', clients.find((c) => c.id === x.client_id)?.name || ''],
-      q,
-      MAX_PER_GROUP.invoice,
-    )) {
-      const clientName = clients.find((c) => c.id === inv.client_id)?.name || '';
-      items.push({ id: inv.id, label: inv.invoice_number, sublabel: `Invoice${clientName ? ` · ${clientName}` : ''}`, type: 'invoice', path: `/invoices` });
-    }
-    for (const c of rankSearch(contracts, (x) => [x.title || ''], q, MAX_PER_GROUP.contract)) {
-      items.push({ id: c.id, label: c.title, sublabel: 'Contract', type: 'contract', path: `/contracts` });
-    }
-
-    for (const t of rankSearch(timeEntries, (x) => [x.description || ''], q, MAX_PER_GROUP.time_entry)) {
-      const project = projects.find((p) => p.id === t.project_id);
-      const projectName = project?.title || 'Unknown';
+    if (items.length > 0) {
       items.push({
-        id: t.id,
-        label: t.description || 'No description',
-        sublabel: `${projectName} · ${formatDateShort(t.start_time)} · ${t.duration_minutes ? formatDuration(t.duration_minutes) : 'In progress'}`,
-        type: 'time_entry',
-        path: '/time',
-      });
-    }
-
-    for (const e of rankSearch(expenses, (x) => [x.description || '', x.category || ''], q, MAX_PER_GROUP.expense)) {
-      items.push({
-        id: e.id,
-        label: e.description,
-        sublabel: `${e.category} · ${formatCurrency(e.amount, profile?.currency)} on ${formatDateShort(e.date)}`,
-        type: 'expense',
-        path: '/finance',
-      });
-    }
-
-    for (const a of rankSearch(allAttachments, (x) => [x.filename || '', ...parseTags(x.tags)], q, MAX_PER_GROUP.asset)) {
-      const locationLabel = a.entity_type === 'library' ? 'Library' : a.entity_type;
-      items.push({
-        id: a.id,
-        label: a.filename,
-        sublabel: `${a.mime_type} · ${locationLabel}`,
-        type: 'asset',
-        path: `/assets?highlight=${a.id}`,
-      });
-    }
-
-    const flat = items;
-
-    if (flat.length > 0) {
-      flat.push({
         id: 'search-all',
         label: `Search all results for '${debouncedQuery}'`,
         sublabel: '',
@@ -201,7 +239,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
       });
     }
 
-    return flat;
+    return items;
   }, [debouncedQuery, clients, proposals, projects, invoices, contracts, timeEntries, expenses, allAttachments, aiEnabled, profile?.currency]);
 
   const grouped = useMemo(() => {

@@ -19,6 +19,27 @@ const INITIAL_DELAY = 3000;
  * That is a rollback to a build with a known vulnerability, and without a
  * high-water mark the client has no memory to notice it.
  */
+function comparePreRelease(a: string, b: string): number {
+  const parts = (s: string) => s.split('.').map((p) => (/^\d+$/.test(p) ? parseInt(p, 10) : null));
+  const ap = parts(a);
+  const bp = parts(b);
+  for (let i = 0; i < Math.max(ap.length, bp.length); i++) {
+    const x = ap[i];
+    const y = bp[i];
+    if (x === undefined) return -1; // fewer fields sorts first
+    if (y === undefined) return 1;
+    if (x === null || y === null) {
+      // At least one non-numeric: fall back to string order for that pair.
+      const sx = String(x ?? '');
+      const sy = String(y ?? '');
+      if (sx !== sy) return sx < sy ? -1 : 1;
+      continue;
+    }
+    if (x !== y) return x < y ? -1 : 1;
+  }
+  return 0;
+}
+
 function compareVersions(a: string, b: string): number {
   // Semver-ish: numeric core, then a pre-release suffix. Enough for versions like
   // 0.9.9-1 without pulling in a semver dependency.
@@ -44,23 +65,7 @@ function compareVersions(a: string, b: string): number {
   // Compare pre-release parts piece by piece, numerically where they are numbers.
   // Comparing the whole suffix as a string put '10' before '2', which would let
   // 0.9.9-10 be served to an install that had already seen 0.9.9-2.
-  const ap = A.pre.split('.').map((p) => (/^\d+$/.test(p) ? parseInt(p, 10) : null));
-  const bp = B.pre.split('.').map((p) => (/^\d+$/.test(p) ? parseInt(p, 10) : null));
-  for (let i = 0; i < Math.max(ap.length, bp.length); i++) {
-    const x = ap[i];
-    const y = bp[i];
-    if (x === undefined) return -1; // fewer fields sorts first
-    if (y === undefined) return 1;
-    if (x === null || y === null) {
-      // At least one non-numeric: fall back to string order for that pair.
-      const sx = String(x ?? '');
-      const sy = String(y ?? '');
-      if (sx !== sy) return sx < sy ? -1 : 1;
-      continue;
-    }
-    if (x !== y) return x < y ? -1 : 1;
-  }
-  return 0;
+  return comparePreRelease(A.pre, B.pre);
 }
 
 function readHighWater(): string {

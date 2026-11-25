@@ -27,6 +27,25 @@ const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
 
 type SortKey = 'title' | 'client' | 'status' | 'budget' | 'date';
 
+// Validation is a pure decision: the caller only stops (silently or with the
+// one message) and never duplicates the branch logic.
+function validateProjectForm(
+  sanitizedTitle: string,
+  form: { title: string; client_id: string; budget: string; notes: string },
+): { stop: boolean; message?: string } {
+  if (!sanitizedTitle || !form.client_id) {
+    if (!sanitizedTitle && form.title.trim()) {
+      return { stop: true, message: 'Project title is not allowed · remove markup and try again' };
+    }
+    return { stop: true };
+  }
+  const budget = form.budget ? parseFloat(form.budget) : undefined;
+  if (budget !== undefined && (!isFinite(budget) || budget < 0)) {
+    return { stop: true, message: 'Budget must be a valid non-negative number' };
+  }
+  return { stop: false };
+}
+
 export default function Projects() {
   const { projects, loadProjects, addProject, updateProject, removeProject, clients, loadClients, milestones, loadMilestones, addMilestone, updateMilestone, removeMilestone, loadInvoices, addInvoice, profile, loadProfile, projectTemplates, loadProjectTemplates, loadTemplateMilestones, projectTemplateMilestones, addProjectTemplate, loadTimeEntries } = useStore();
   const addToast = useToasts((s) => s.add);
@@ -86,12 +105,56 @@ export default function Projects() {
     setShowProjectModal(true);
   };
 
+  // Completion audit: best-effort, and deliberately separate from the save
+  // itself so a slow/failed time-entry load can never block the status change.
+  const auditCompletionLooseEnds = async (project: Project) => {
+    await loadTimeEntries();
+    const st = useStore.getState();
+    const openMs = st.milestones.filter((m) => m.project_id === project.id && !m.completed).length;
+    const unbilledMin = st.timeEntries
+      .filter((t) => t.project_id === project.id && !t.invoiced)
+      .reduce((s, t) => s + (t.duration_minutes || 0), 0);
+    const running = st.timeEntries.some((t) => t.project_id === project.id && !t.end_time);
+    const loose: string[] = [];
+    if (openMs > 0) loose.push(`${openMs} open milestone${openMs === 1 ? '' : 's'}`);
+    if (unbilledMin > 0) loose.push(`${Math.round(unbilledMin / 60 * 10) / 10}h unbilled`);
+    if (running) loose.push('timer still running');
+    if (loose.length > 0) {
+      addToast(`Completed with loose ends: ${loose.join(', ')}`, 'warning', 6000);
+    }
+  };
+
+  // Template milestones are applied only on creation, and only when a
+  // template was picked — the selection is cleared on every successful path.
+  const applySelectedTemplate = async (createdProjectId: string) => {
+    if (!selectedTemplateId) return;
+    const template = projectTemplates.find((t) => t.id === selectedTemplateId);
+    if (!template) return;
+    let tplMilestones = projectTemplateMilestones[template.id];
+    if (!tplMilestones) {
+      await loadTemplateMilestones(template.id);
+      tplMilestones = useStore.getState().projectTemplateMilestones[template.id] || [];
+    }
+    for (const tplMs of tplMilestones) {
+      const dueDate = pform.start_date
+        ? new Date(new Date(pform.start_date).getTime() + tplMs.days_from_start * DAY_MS).toISOString().split('T')[0]
+        : undefined;
+      await addMilestone({
+        project_id: createdProjectId,
+        title: tplMs.title,
+        due_date: dueDate,
+        completed: false,
+        invoice_on_completion: tplMs.invoice_on_completion,
+      });
+    }
+    setSelectedTemplateId('');
+  };
+
   const handleSaveProject = async () => {
     const sanitizedTitle = sanitizeInput(pform.title).trim();
-    if (!sanitizedTitle || !pform.client_id) {
-      if (!sanitizedTitle && pform.title.trim()) {
-        addToast('Project title is not allowed · remove markup and try again', 'error');
-      }
+    const validation = validateProjectForm(sanitizedTitle, pform);
+    if (validation.stop) {
+      if (validation.message) addToast(validation.message, 'error');
       return;
     }
     setSaving(true);
@@ -105,10 +168,6 @@ export default function Projects() {
         budget: pform.budget ? parseFloat(pform.budget) : undefined,
         notes: pform.notes ? sanitizeInput(pform.notes).slice(0, MAX_LENGTHS.notes) : undefined,
       };
-      if (data.budget !== undefined && (!isFinite(data.budget) || data.budget < 0)) {
-        addToast('Budget must be a valid non-negative number', 'error');
-        return;
-      }
       if (editingProject) {
         await updateProject({ ...editingProject, ...data, status: data.status });
         // Completing with loose ends strands them silently (open milestones,
@@ -116,47 +175,12 @@ export default function Projects() {
         // but say so out loud.
         if (editingProject.status !== 'completed' && data.status === 'completed') {
           try {
-            await loadTimeEntries();
-            const st = useStore.getState();
-            const openMs = st.milestones.filter((m) => m.project_id === editingProject.id && !m.completed).length;
-            const unbilledMin = st.timeEntries
-              .filter((t) => t.project_id === editingProject.id && !t.invoiced)
-              .reduce((s, t) => s + (t.duration_minutes || 0), 0);
-            const running = st.timeEntries.some((t) => t.project_id === editingProject.id && !t.end_time);
-            const loose: string[] = [];
-            if (openMs > 0) loose.push(`${openMs} open milestone${openMs === 1 ? '' : 's'}`);
-            if (unbilledMin > 0) loose.push(`${Math.round(unbilledMin / 60 * 10) / 10}h unbilled`);
-            if (running) loose.push('timer still running');
-            if (loose.length > 0) {
-              addToast(`Completed with loose ends: ${loose.join(', ')}`, 'warning', 6000);
-            }
+            await auditCompletionLooseEnds(editingProject);
           } catch { /* completion stands; the audit is best-effort */ }
         }
       } else {
         const created = await addProject(data);
-        if (selectedTemplateId) {
-          const template = projectTemplates.find((t) => t.id === selectedTemplateId);
-          if (template) {
-            let tplMilestones = projectTemplateMilestones[template.id];
-            if (!tplMilestones) {
-              await loadTemplateMilestones(template.id);
-              tplMilestones = useStore.getState().projectTemplateMilestones[template.id] || [];
-            }
-            for (const tplMs of tplMilestones) {
-              const dueDate = pform.start_date
-                ? new Date(new Date(pform.start_date).getTime() + tplMs.days_from_start * DAY_MS).toISOString().split('T')[0]
-                : undefined;
-              await addMilestone({
-                project_id: created.id,
-                title: tplMs.title,
-                due_date: dueDate,
-                completed: false,
-                invoice_on_completion: tplMs.invoice_on_completion,
-              });
-            }
-          }
-          setSelectedTemplateId('');
-        }
+        await applySelectedTemplate(created.id);
       }
       setShowProjectModal(false);
     } catch (err) {
@@ -436,13 +460,15 @@ export default function Projects() {
         </div>
       </div>
 
-      {clients.length === 0 && (
+      {(() => (
+      clients.length === 0 && (
         <Card className="mb-4 border-[var(--warning-bg)] bg-[var(--warning-bg)]/50">
           <p className="text-sm text-[var(--warning-text)]">
             Add at least one client before creating a project.
           </p>
         </Card>
-      )}
+      )
+      ))()}
 
       {projects.length === 0 ? (
         <EmptyState

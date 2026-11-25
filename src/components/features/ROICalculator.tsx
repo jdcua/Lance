@@ -5,6 +5,24 @@
 import { useState } from 'react';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
+function roiPctColor(roiPct: number): string {
+  if (roiPct > 0) return 'text-[#2ECC71]';
+  if (roiPct < 0) return 'text-[#E74C3C]';
+  return 'text-[var(--text-primary)]';
+}
+
+function profitStyle(profit: number): string {
+  if (profit > 0) return 'bg-[#2ECC71]/10 text-[#2ECC71]';
+  if (profit < 0) return 'bg-[#E74C3C]/10 text-[#E74C3C]';
+  return 'bg-[var(--border-color)]/50 text-[var(--text-secondary)]';
+}
+
+function profitIcon(profit: number) {
+  if (profit > 0) return <TrendingUp size={14} />;
+  if (profit < 0) return <TrendingDown size={14} />;
+  return null;
+}
+
 export default function ROICalculator() {
   const [cost, setCost] = useState('');
   const [revenue, setRevenue] = useState('');
@@ -40,7 +58,7 @@ export default function ROICalculator() {
           <div className="grid grid-cols-2 gap-2">
             <div className="p-2 glass rounded-xs text-center">
               <p className="text-[10px] text-[var(--text-tertiary)]">ROI %</p>
-              <p className={`text-sm font-semibold tabular-nums ${roiPct > 0 ? 'text-[#2ECC71]' : roiPct < 0 ? 'text-[#E74C3C]' : 'text-[var(--text-primary)]'}`}>
+              <p className={`text-sm font-semibold tabular-nums ${roiPctColor(roiPct)}`}>
                 {roiPct >= 0 ? '+' : ''}{roiPct.toFixed(1)}%
               </p>
             </div>
@@ -54,8 +72,8 @@ export default function ROICalculator() {
         )}
 
         {hasData && (
-          <div className={`flex items-center gap-2 px-3 py-2 rounded-xs text-xs font-medium ${profit > 0 ? 'bg-[#2ECC71]/10 text-[#2ECC71]' : profit < 0 ? 'bg-[#E74C3C]/10 text-[#E74C3C]' : 'bg-[var(--border-color)]/50 text-[var(--text-secondary)]'}`}>
-            {profit > 0 ? <TrendingUp size={14} /> : profit < 0 ? <TrendingDown size={14} /> : null}
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-xs text-xs font-medium ${profitStyle(profit)}`}>
+            {profitIcon(profit)}
             {profit >= 0 ? 'Profit' : 'Loss'}: ${Math.abs(profit).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
         )}

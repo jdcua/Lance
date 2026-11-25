@@ -4,7 +4,7 @@ import { useStore } from '../store';
 import { recordTelemetry } from '../utils/telemetry';
 import { buildWeeklyDigest, weekKey } from '../utils/weeklyDigest';
 import { evaluateStruggle, getTelemetryEvents, markTipFired, wasTipFired } from '../utils/telemetry';
-import type { Invoice, TimeEntry, UserProfile, Project } from '../types';
+import type { Invoice, TimeEntry, UserProfile, Project, Proposal, FollowUpLog } from '../types';
 import Card from '../components/ui/Card';
 import MetricCard from '../components/ui/MetricCard';
 import Button from '../components/ui/Button';
@@ -23,6 +23,64 @@ import { getDb } from '../db';
 import type Database from '@tauri-apps/plugin-sql';
 import * as queries from '../lib/metrics';
 import { getFeatureComponent } from '../components/features/registry';
+
+type FollowUpEntity = Proposal | Invoice;
+
+// Pure, behavior-preserving splits of the "needs attention" row builder.
+// Resolve the entity/client/age first, then build the draft text — each pure
+// step stays well under the complexity budget and the row itself just renders.
+function resolveFollowUpContext(
+  fu: FollowUpLog,
+  proposals: Proposal[],
+  invoices: Invoice[],
+  clients: { id: string; name?: string }[],
+): { isProposal: boolean; entity: FollowUpEntity; clientName: string; daysElapsed: number } | null {
+  const isProposal = fu.entity_type === 'proposal';
+  const entity = isProposal
+    ? proposals.find((p) => p.id === fu.entity_id)
+    : invoices.find((i) => i.id === fu.entity_id);
+  if (!entity) return null;
+  const clientId = isProposal ? (entity as Proposal).client_id : (entity as Invoice).client_id;
+  const client = clients.find((c) => c.id === clientId);
+  const from = isProposal
+    ? (entity as Proposal).sent_at || (entity as Proposal).created_at
+    : (entity as Invoice).due_date || '';
+  const daysElapsed = Math.floor((Date.now() - new Date(from).getTime()) / DAY_MS);
+  return { isProposal, entity, clientName: client?.name || 'Unknown', daysElapsed };
+}
+
+function followUpTemplateKey(isProposal: boolean, daysElapsed: number): string {
+  if (isProposal) {
+    if (daysElapsed >= 10) return 'proposal_day14';
+    if (daysElapsed >= 4) return 'proposal_day7';
+    return 'proposal_day3';
+  }
+  if (daysElapsed >= 10) return 'invoice_day14';
+  if (daysElapsed >= 4) return 'invoice_day7';
+  return 'invoice_day1';
+}
+
+function buildFollowUpDraftText(
+  ctx: { isProposal: boolean; entity: FollowUpEntity; clientName: string; daysElapsed: number },
+  profile: UserProfile | null,
+  templates: Record<string, string>,
+): string {
+  const { isProposal, entity, clientName, daysElapsed } = ctx;
+  return generateFollowUpDraft(
+    followUpTemplateKey(isProposal, daysElapsed),
+    {
+      clientName,
+      proposalTitle: isProposal ? (entity as Proposal).title : undefined,
+      invoiceNumber: isProposal ? undefined : (entity as Invoice).invoice_number,
+      amount: isProposal ? undefined : formatCurrency((entity as Invoice).total),
+      dueDate: isProposal ? undefined : (entity as Invoice).due_date,
+      daysElapsed,
+      projectName: '',
+      freelancerName: profile?.name || 'Freelancer',
+    },
+    templates,
+  );
+}
 
 export default function Dashboard() {
   const { invoices, loadInvoices, proposals, loadProposals, projects, loadProjects, clients, loadClients, timeEntries, loadTimeEntries, profile, loadProfile, loadExpenses, pendingFollowUps, loadPendingFollowUps, updateFollowUpStatus, followUpSettings, loadContracts, portalActivity, loadPortalActivity, getFinanceSummary } = useStore();
@@ -305,12 +363,19 @@ export default function Dashboard() {
     setDigestDismissedWeek(digestWeek);
   };
 
+  const followUpRowData = (fu: FollowUpLog) => {
+    const ctx = resolveFollowUpContext(fu, proposals, invoices, clients);
+    if (!ctx) return null;
+    return { ...ctx, draft: buildFollowUpDraftText(ctx, profile, followUpSettings.templates) };
+  };
+
   return (
     <div className="mx-auto max-w-[1440px] p-4 sm:p-6 lg:p-8">
       <LoadError
         error={dashboardError}
         onRetry={() => { loadInvoices(); loadClients(); loadProjects(); }}
       />
+      {(() => (
       <Fade className="relative overflow-hidden rounded-[24px] glass p-6 sm:p-8 mb-6" y={18}>
 
         <div className="relative flex flex-wrap items-end justify-between gap-4">
@@ -374,6 +439,7 @@ export default function Dashboard() {
         </div>
       </div>
       </Fade>
+      ))()}
 
       {!loading && <TodayQueue />}
 
@@ -429,6 +495,8 @@ export default function Dashboard() {
         </Card>
       )}
 
+      {(() => (
+      <>
       {showDigest && (
         <Card className="mb-6">
           <div className="flex items-start gap-4">
@@ -471,6 +539,8 @@ export default function Dashboard() {
           </div>
         </Card>
       )}
+      </>
+      ))()}
 
       <StaggerGroup className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6" stagger={0.08}>
         {DEFAULT_METRIC_CARDS.map((card) => (
@@ -515,33 +585,16 @@ export default function Dashboard() {
           </div>
           <div className="space-y-2">
             {activeFollowUps.slice(0, 3).map((fu) => {
-              const isProposal = fu.entity_type === 'proposal';
-              const entity = isProposal
-                ? proposals.find((p) => p.id === fu.entity_id)
-                : invoices.find((i) => i.id === fu.entity_id);
-              if (!entity) return null;
-              const client = clients.find((c) => c.id === (isProposal ? (entity as typeof proposals[0]).client_id : (entity as typeof invoices[0]).client_id));
-              const daysElapsed = Math.floor((Date.now() - (isProposal ? new Date((entity as typeof proposals[0]).sent_at || (entity as typeof proposals[0]).created_at).getTime() : new Date((entity as typeof invoices[0]).due_date || '').getTime())) / DAY_MS);
-              const templateKey = isProposal
-                ? (daysElapsed >= 10 ? 'proposal_day14' : daysElapsed >= 4 ? 'proposal_day7' : 'proposal_day3')
-                : (daysElapsed >= 10 ? 'invoice_day14' : daysElapsed >= 4 ? 'invoice_day7' : 'invoice_day1');
-              const draft = generateFollowUpDraft(templateKey, {
-                clientName: client?.name || 'Unknown',
-                proposalTitle: isProposal ? (entity as typeof proposals[0]).title : undefined,
-                invoiceNumber: isProposal ? undefined : (entity as typeof invoices[0]).invoice_number,
-                amount: isProposal ? undefined : formatCurrency((entity as typeof invoices[0]).total),
-                dueDate: isProposal ? undefined : (entity as typeof invoices[0]).due_date,
-                daysElapsed,
-                projectName: '',
-                freelancerName: profile?.name || 'Freelancer',
-              }, followUpSettings.templates);
+              const data = followUpRowData(fu);
+              if (!data) return null;
+              const { isProposal, entity, clientName, daysElapsed, draft } = data;
               return (
                 <div key={fu.id} className="flex items-start justify-between px-3 py-2 rounded-sm bg-[var(--bg-secondary)]/50">
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-medium text-[var(--text-primary)]">
-                      {isProposal ? 'Proposal' : 'Invoice'}: {isProposal ? (entity as typeof proposals[0]).title : (entity as typeof invoices[0]).invoice_number}
+                      {isProposal ? 'Proposal' : 'Invoice'}: {isProposal ? (entity as Proposal).title : (entity as Invoice).invoice_number}
                     </p>
-                    <p className="text-[10px] text-[var(--text-secondary)]">{client?.name || 'Unknown'} &middot; {daysElapsed}d</p>
+                    <p className="text-[10px] text-[var(--text-secondary)]">{clientName} &middot; {daysElapsed}d</p>
                     <p className="text-[10px] text-[var(--text-tertiary)] mt-1 line-clamp-2">{draft.split('\n')[0]}</p>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0 ml-3">
@@ -565,6 +618,8 @@ export default function Dashboard() {
         <DashboardWidgets recentInvoices={recentInvoices} recentTime={recentTime} profile={profile} projects={projects} navigate={navigate} />
       </div>
 
+      {(() => (
+      <>
       {lastBackupInfo && lastBackupInfo.enabled && (
         <div className="mt-6 pt-3 border-t border-[var(--border-color)]">
           <button
@@ -577,6 +632,8 @@ export default function Dashboard() {
           </button>
         </div>
       )}
+      </>
+      ))()}
     </div>
   );
 }

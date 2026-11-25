@@ -51,4 +51,47 @@ describe('browser-mode store boundary', () => {
     const logs = await tauriInvoke<Array<{ id: string }>>('get_all_follow_up_logs');
     expect(logs).toEqual([{ id: 'l1' }]);
   });
+
+  it('marks a proposal accepted and records a client response', async () => {
+    localStorage.setItem('lance:store:proposals', JSON.stringify([{ id: 'p1', status: 'sent' }]));
+    const token = await tauriInvoke<{ token: string }>('create_share_token', {
+      payload: { entity_type: 'proposal', entity_id: 'p1' },
+    });
+    await tauriInvoke('respond_share_token', {
+      token: token.token,
+      response: 'accepted',
+      client_name: 'A Client',
+    });
+    expect(await tauriInvoke('get_proposals')).toEqual([{ id: 'p1', status: 'accepted' }]);
+    const tokens = await tauriInvoke<Array<{ client_response: string; client_name: string }>>(
+      'get_all_share_tokens',
+    );
+    expect(tokens[0]).toMatchObject({ client_response: 'accepted', client_name: 'A Client' });
+  });
+
+  it('signs a contract through a share response', async () => {
+    localStorage.setItem('lance:store:contracts', JSON.stringify([{ id: 'c1' }]));
+    const token = await tauriInvoke<{ token: string }>('create_share_token', {
+      payload: { entity_type: 'contract', entity_id: 'c1' },
+    });
+    await tauriInvoke('respond_share_token', {
+      token: token.token,
+      client_signature: 'Signed',
+    });
+    const contracts = await tauriInvoke<Array<{ signed_at?: string }>>('get_contracts');
+    expect(contracts[0].signed_at).toBeTruthy();
+  });
+
+  it('cascades a client delete to client- and project-scoped rows', async () => {
+    localStorage.setItem('lance:store:clients', JSON.stringify([{ id: 'c1' }, { id: 'c2' }]));
+    localStorage.setItem('lance:store:projects', JSON.stringify([{ id: 'pr1', client_id: 'c1' }]));
+    localStorage.setItem(
+      'lance:store:proposals',
+      JSON.stringify([{ id: 'p1', client_id: 'c1' }, { id: 'p2', client_id: 'c2' }]),
+    );
+    await tauriInvoke('delete_client', { id: 'c1' });
+    expect(await tauriInvoke('get_clients')).toEqual([{ id: 'c2' }]);
+    expect(await tauriInvoke('get_proposals')).toEqual([{ id: 'p2', client_id: 'c2' }]);
+    expect(await tauriInvoke('get_projects')).toEqual([]);
+  });
 });

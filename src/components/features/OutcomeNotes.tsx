@@ -17,6 +17,30 @@ type Outcome = {
   created_at: string;
 };
 
+type OutcomeForm = {
+  before_state: string;
+  after_state: string;
+  metrics_improved: string;
+  testimonial_draft: string;
+};
+
+const OUTCOME_KEYS: (keyof OutcomeForm)[] = ['before_state', 'after_state', 'metrics_improved', 'testimonial_draft'];
+
+const toNull = (v: string) => v || null;
+const toOptional = (v: string) => v || undefined;
+
+function outcomeValues(form: OutcomeForm) {
+  return OUTCOME_KEYS.map((key) => toNull(form[key]));
+}
+
+function outcomeFromForm(form: OutcomeForm) {
+  const result: Partial<OutcomeForm> = {};
+  for (const key of OUTCOME_KEYS) {
+    result[key] = toOptional(form[key]);
+  }
+  return result;
+}
+
 export default function OutcomeNotes({ projectId }: { projectId: string }) {
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,48 +94,22 @@ export default function OutcomeNotes({ projectId }: { projectId: string }) {
     setSaving(true);
     try {
       const db = await getDb();
+      const values = outcomeValues(form);
+      const optional = outcomeFromForm(form);
       if (outcome) {
         await db.execute(
           'UPDATE outcomes SET before_state = ?, after_state = ?, metrics_improved = ?, testimonial_draft = ? WHERE id = ?',
-          [
-            form.before_state || null,
-            form.after_state || null,
-            form.metrics_improved || null,
-            form.testimonial_draft || null,
-            outcome.id,
-          ]
+          [...values, outcome.id]
         );
-        setOutcome({
-          ...outcome,
-          before_state: form.before_state || undefined,
-          after_state: form.after_state || undefined,
-          metrics_improved: form.metrics_improved || undefined,
-          testimonial_draft: form.testimonial_draft || undefined,
-        });
+        setOutcome({ ...outcome, ...optional });
       } else {
         const id = crypto.randomUUID();
         const now = new Date().toISOString();
         await db.execute(
           'INSERT INTO outcomes (id, project_id, before_state, after_state, metrics_improved, testimonial_draft, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [
-            id,
-            projectId,
-            form.before_state || null,
-            form.after_state || null,
-            form.metrics_improved || null,
-            form.testimonial_draft || null,
-            now,
-          ]
+          [id, projectId, ...values, now]
         );
-        setOutcome({
-          id,
-          project_id: projectId,
-          before_state: form.before_state || undefined,
-          after_state: form.after_state || undefined,
-          metrics_improved: form.metrics_improved || undefined,
-          testimonial_draft: form.testimonial_draft || undefined,
-          created_at: now,
-        });
+        setOutcome({ id, project_id: projectId, ...optional, created_at: now });
       }
     } catch (e) {
       console.error('[OutcomeNotes] handleSave failed:', e);

@@ -23,6 +23,97 @@ import {
 
 const CATEGORIES = ['Software', 'Equipment', 'Office', 'Travel', 'Marketing', 'Fees', 'Other'];
 
+function detectedColumnsLabel(mapping: BankColumnMap): string {
+  return [
+    mapping.date && `date: ${mapping.date}`,
+    mapping.description && `description: ${mapping.description}`,
+    mapping.amount && `amount: ${mapping.amount}`,
+    mapping.debit && `out: ${mapping.debit}`,
+    mapping.credit && `in: ${mapping.credit}`,
+  ].filter(Boolean).join(' · ');
+}
+
+function ImportSummaryText({
+  rowCount,
+  duplicates,
+  income,
+  skipped,
+}: {
+  rowCount: number;
+  duplicates: number;
+  income: number;
+  skipped: number;
+}) {
+  return (
+    <p className="text-sm text-[var(--text-secondary)]">
+      Found <strong className="text-[var(--text-primary)]">{rowCount}</strong> expenses to import
+      {duplicates > 0 && (
+        <span className="text-[var(--text-tertiary)]"> ({duplicates} already imported, skipped)</span>
+      )}
+      {income > 0 && (
+        <span className="text-[var(--text-tertiary)]">. {income} incoming row{income === 1 ? '' : 's'} below — match them to invoices.</span>
+      )}
+      {skipped > 0 && (
+        <span className="text-[var(--text-tertiary)]"> {skipped} unreadable row{skipped === 1 ? '' : 's'} skipped.</span>
+      )}
+    </p>
+  );
+}
+
+type InvoiceLike = { id: string; invoice_number: string };
+
+function MatchRow({
+  match,
+  index,
+  inv,
+  done,
+  recording,
+  onRecord,
+}: {
+  match: RowMatch;
+  index: number;
+  inv: InvoiceLike | undefined;
+  done: boolean;
+  recording: number | null;
+  onRecord: (index: number, invoiceId: string) => void;
+}) {
+  const top = match.matches[0];
+  return (
+    <div className="flex items-center justify-between gap-2 px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
+      <div className="min-w-0 flex-1">
+        <p className="text-[var(--text-primary)] truncate">{match.row.description}</p>
+        <p className="text-[var(--text-tertiary)]">
+          {match.row.date} · {formatCurrency(match.row.amount)}
+          {inv && top && (
+            <> → {inv.invoice_number} ({top.confidence})</>
+          )}
+          {!inv && ' · no open invoice matches'}
+        </p>
+        {inv && top && (
+          <p className="text-[var(--text-tertiary)] truncate" title={top.reasons.join(' · ')}>
+            {top.reasons.join(' · ')}
+          </p>
+        )}
+      </div>
+      {inv && top && !done && (
+        <Button
+          size="sm"
+          variant="secondary"
+          disabled={recording !== null}
+          onClick={() => onRecord(index, top.invoiceId)}
+        >
+          {recording === index ? 'Recording…' : 'Record payment'}
+        </Button>
+      )}
+      {done && (
+        <span className="text-[11px] font-medium text-[var(--accent-ink,var(--accent))] flex-shrink-0">
+          Recorded
+        </span>
+      )}
+    </div>
+  );
+}
+
 /**
  * Bank statement import: maps any bank CSV to expenses. Outflows import
  * (deduplicated); inflows match open invoices so a deposit becomes a
@@ -268,20 +359,9 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
         <div className="space-y-4">
           <p className="text-[11px] text-[var(--text-tertiary)]">
             Columns detected
-            {[mapping.date && `date: ${mapping.date}`, mapping.description && `description: ${mapping.description}`, mapping.amount && `amount: ${mapping.amount}`, mapping.debit && `out: ${mapping.debit}`, mapping.credit && `in: ${mapping.credit}`].filter(Boolean).join(' · ')}
+            {detectedColumnsLabel(mapping)}
           </p>
-          <p className="text-sm text-[var(--text-secondary)]">
-            Found <strong className="text-[var(--text-primary)]">{rows.length}</strong> expenses to import
-            {duplicates > 0 && (
-              <span className="text-[var(--text-tertiary)]"> ({duplicates} already imported, skipped)</span>
-            )}
-            {income > 0 && (
-              <span className="text-[var(--text-tertiary)]">. {income} incoming row{income === 1 ? '' : 's'} below — match them to invoices.</span>
-            )}
-            {skipped > 0 && (
-              <span className="text-[var(--text-tertiary)]"> {skipped} unreadable row{skipped === 1 ? '' : 's'} skipped.</span>
-            )}
-          </p>
+          <ImportSummaryText rowCount={rows.length} duplicates={duplicates} income={income} skipped={skipped} />
           <div>
             <label className="form-label">
               Category for all imported rows
@@ -335,43 +415,16 @@ export default function BankImportModal({ open, onClose }: { open: boolean; onCl
                 {matches.map((m, i) => {
                   const top = m.matches[0];
                   const inv = top ? invoiceById(top.invoiceId) : undefined;
-                  const done = recorded.has(i);
                   return (
-                    <div
+                    <MatchRow
                       key={i}
-                      className="flex items-center justify-between gap-2 px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[var(--text-primary)] truncate">{m.row.description}</p>
-                        <p className="text-[var(--text-tertiary)]">
-                          {m.row.date} · {formatCurrency(m.row.amount)}
-                          {inv && top && (
-                            <> → {inv.invoice_number} ({top.confidence})</>
-                          )}
-                          {!inv && ' · no open invoice matches'}
-                        </p>
-                        {inv && top && (
-                          <p className="text-[var(--text-tertiary)] truncate" title={top.reasons.join(' · ')}>
-                            {top.reasons.join(' · ')}
-                          </p>
-                        )}
-                      </div>
-                      {inv && top && !done && (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          disabled={recording !== null}
-                          onClick={() => handleRecordMatch(i, top.invoiceId)}
-                        >
-                          {recording === i ? 'Recording…' : 'Record payment'}
-                        </Button>
-                      )}
-                      {done && (
-                        <span className="text-[11px] font-medium text-[var(--accent-ink,var(--accent))] flex-shrink-0">
-                          Recorded
-                        </span>
-                      )}
-                    </div>
+                      match={m}
+                      index={i}
+                      inv={inv}
+                      done={recorded.has(i)}
+                      recording={recording}
+                      onRecord={handleRecordMatch}
+                    />
                   );
                 })}
               </div>

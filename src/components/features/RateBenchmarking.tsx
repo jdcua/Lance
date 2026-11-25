@@ -14,6 +14,17 @@ type WordInvoicePair = {
   per_word_rate: number;
 };
 
+type Trend = 'up' | 'down' | 'flat';
+
+function computeTrend(pairs: WordInvoicePair[]): Trend {
+  if (pairs.length < 2) return 'flat';
+  const first = pairs[0].per_word_rate;
+  const last = pairs[pairs.length - 1].per_word_rate;
+  if (last > first) return 'up';
+  if (last < first) return 'down';
+  return 'flat';
+}
+
 export default function RateBenchmarking() {
   const { timeEntries, loadTimeEntries, invoices, loadInvoices } = useStore();
   const [loading, setLoading] = useState(true);
@@ -103,16 +114,7 @@ export default function RateBenchmarking() {
             ? recentPairs.reduce((s, p) => s + p.per_word_rate, 0) / recentPairs.length
             : null;
 
-        const trend =
-          pairs.length >= 2
-            ? pairs[pairs.length - 1].per_word_rate > pairs[0].per_word_rate
-              ? 'up'
-              : pairs[pairs.length - 1].per_word_rate < pairs[0].per_word_rate
-              ? 'down'
-              : 'flat'
-            : 'flat';
-
-        setStats({ latest, threeMonthAvg, highest, lowest, allPairs: pairs, trend });
+        setStats({ latest, threeMonthAvg, highest, lowest, allPairs: pairs, trend: computeTrend(pairs) });
       }
     } catch (e) {
       console.error('[RateBenchmarking] computeRates failed:', e);

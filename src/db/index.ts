@@ -125,6 +125,27 @@ function normalizeParams(sql: string, params?: unknown[]): unknown[] {
   return Array.from({ length: Math.max(0, ...map.keys()) + 1 }, (_, i) => map.get(i) ?? null).slice(1);
 }
 
+type Row = Record<string, unknown>;
+type ExecResult = { rowsAffected: number; lastInsertId: number };
+
+/** Aggregate implementations shared by SELECT projection. `col` is null for COUNT(*). */
+const AGGREGATE_FNS = new Map<string, (col: string | null, rows: Row[]) => unknown>([
+  ['COUNT', (col, rows) => col ? rows.filter((r) => r[col] !== null && r[col] !== undefined).length : rows.length],
+  ['SUM', (col, rows) => rows.reduce((s, r) => s + (col && r[col] ? Number(r[col]) || 0 : 0), 0)],
+  ['AVG', (col, rows) => {
+    const vals = col ? rows.map((r) => Number(r[col]) || 0).filter((v) => !isNaN(v)) : [];
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+  }],
+  ['MIN', (col, rows) => {
+    const vals = col ? rows.map((r) => r[col]).filter((v) => v !== null && v !== undefined) : [];
+    return vals.length ? Math.min(...vals.map((v) => Number(v))) : null;
+  }],
+  ['MAX', (col, rows) => {
+    const vals = col ? rows.map((r) => r[col]).filter((v) => v !== null && v !== undefined) : [];
+    return vals.length ? Math.max(...vals.map((v) => Number(v))) : null;
+  }],
+]);
+
 class MockDatabase {
   private table(sql: string): string | null {
     const m = sql.match(/\b(?:FROM|INTO|UPDATE)\s+([A-Za-z_][A-Za-z0-9_]*)/i) || sql.match(/\bDELETE\s+FROM\s+([A-Za-z_][A-Za-z0-9_]*)/i);
@@ -139,6 +160,12 @@ class MockDatabase {
     return String(a ?? '') === String(b ?? '');
   }
 
+  /** Escape a LIKE pattern into a case-insensitive whole-string RegExp. */
+  private likePattern(val: unknown): RegExp {
+    const pattern = String(val).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*').replace(/_/g, '.');
+    return new RegExp('^' + pattern + '$', 'i');
+  }
+
   /** Compare a row value against a literal/param value with an operator. */
   private compareValue(colVal: unknown, op: string, val: unknown): boolean {
     // SQLite compares TEXT columns lexicographically (ISO-8601 dates work).
@@ -150,27 +177,23 @@ class MockDatabase {
       if (!isNaN(na) && !isNaN(nb)) return na - nb;
       return String(a ?? '').localeCompare(String(b ?? ''));
     };
-    switch (op) {
-      case '=': return this.matchesValue(colVal, val);
-      case '!=': case '<>': return !this.matchesValue(colVal, val);
-      case '>': return orderCompare(colVal, val) > 0;
-      case '<': return orderCompare(colVal, val) < 0;
-      case '>=': return orderCompare(colVal, val) >= 0;
-      case '<=': return orderCompare(colVal, val) <= 0;
-      case 'LIKE': {
-        const pattern = String(val).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*').replace(/_/g, '.');
-        return new RegExp('^' + pattern + '$', 'i').test(String(colVal ?? ''));
-      }
-      case 'NOT LIKE': {
-        const pattern = String(val).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*').replace(/_/g, '.');
-        return !new RegExp('^' + pattern + '$', 'i').test(String(colVal ?? ''));
-      }
-      case 'IS NULL': return colVal === null || colVal === undefined;
-      case 'IS NOT NULL': return colVal !== null && colVal !== undefined;
-      case 'IN': return Array.isArray(val) && val.some((v) => this.matchesValue(colVal, v));
-      case 'NOT IN': return !(Array.isArray(val) && val.some((v) => this.matchesValue(colVal, v)));
-      default: return false;
-    }
+    const inValues = (): boolean => Array.isArray(val) && val.some((v) => this.matchesValue(colVal, v));
+    const comparators = new Map<string, () => boolean>([
+      ['=', () => this.matchesValue(colVal, val)],
+      ['!=', () => !this.matchesValue(colVal, val)],
+      ['<>', () => !this.matchesValue(colVal, val)],
+      ['>', () => orderCompare(colVal, val) > 0],
+      ['<', () => orderCompare(colVal, val) < 0],
+      ['>=', () => orderCompare(colVal, val) >= 0],
+      ['<=', () => orderCompare(colVal, val) <= 0],
+      ['LIKE', () => this.likePattern(val).test(String(colVal ?? ''))],
+      ['NOT LIKE', () => !this.likePattern(val).test(String(colVal ?? ''))],
+      ['IS NULL', () => colVal === null || colVal === undefined],
+      ['IS NOT NULL', () => colVal !== null && colVal !== undefined],
+      ['IN', inValues],
+      ['NOT IN', () => !inValues()],
+    ]);
+    return comparators.get(op)?.() ?? false;
   }
 
   /**
@@ -360,8 +383,8 @@ class MockDatabase {
   }
 
   /** Handle aggregate projections: COUNT(*), COUNT(col), SUM(col), AVG(col), MIN(col), MAX(col), with optional AS alias. */
-  private projectAggregates(cols: string[], rows: Record<string, unknown>[]): Record<string, unknown>[] | null {
-    const out: Record<string, unknown> = {};
+  private projectAggregates(cols: string[], rows: Row[]): Row[] | null {
+    const out: Row = {};
     let anyAgg = false;
     for (const c of cols) {
       const aliasM = c.match(/^(.+?)\s+as\s+([A-Za-z_][A-Za-z0-9_]*)$/i);
@@ -371,27 +394,97 @@ class MockDatabase {
       // optionally wrapped in COALESCE(<agg>, default).
       const m = expr.match(/^(?:COALESCE\s*\(\s*)?(COUNT|SUM|AVG|MIN|MAX)\s*\((\*|[A-Za-z_][A-Za-z0-9_.]*)\)(?:\s*,\s*[^)]*)?\)?$/i);
       if (!m) continue;
-      const fn = m[1].toUpperCase();
-      const arg = m[2];
       anyAgg = true;
+      const arg = m[2];
       const col = arg === '*' ? null : arg.split('.').pop()!.toLowerCase();
-      if (fn === 'COUNT') {
-        out[alias] = col ? rows.filter((r) => r[col] !== null && r[col] !== undefined).length : rows.length;
-      } else if (fn === 'SUM') {
-        out[alias] = rows.reduce((s, r) => s + (col && r[col] ? Number(r[col]) || 0 : 0), 0);
-      } else if (fn === 'AVG') {
-        const vals = col ? rows.map((r) => Number(r[col]) || 0).filter((v) => !isNaN(v)) : [];
-        out[alias] = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
-      } else if (fn === 'MIN') {
-        const vals = col ? rows.map((r) => r[col]).filter((v) => v !== null && v !== undefined) : [];
-        out[alias] = vals.length ? Math.min(...vals.map((v) => Number(v))) : null;
-      } else if (fn === 'MAX') {
-        const vals = col ? rows.map((r) => r[col]).filter((v) => v !== null && v !== undefined) : [];
-        out[alias] = vals.length ? Math.max(...vals.map((v) => Number(v))) : null;
-      }
+      const aggregate = AGGREGATE_FNS.get(m[1].toUpperCase());
+      if (aggregate) out[alias] = aggregate(col, rows);
     }
     if (!anyAgg) return null;
     return [out];
+  }
+
+  /** Apply an INSERT statement against the mock store. */
+  private executeInsert(ins: RegExpMatchArray, p: unknown[]): ExecResult {
+    const table = ins[1];
+    const cols = ins[2].split(',').map((c) => c.trim().toLowerCase());
+    // Split VALUES into per-column tokens so literal values (e.g. `1` in
+    // `VALUES (1, ?, ?, ?)`) don't consume placeholders · params must bind
+    // ONLY to `?`/`$N` tokens, in order.
+    const valueParts = this.splitTopLevelComma(ins[3]).map((v) => v.trim());
+    const row: Row = {};
+    let pi = 0;
+    for (let i = 0; i < cols.length; i++) {
+      if (i < valueParts.length) {
+        row[cols[i]] = this.literalValue(valueParts[i], p, () => pi++);
+      } else {
+        row[cols[i]] = null;
+      }
+    }
+    const rows = mockTableRows(table);
+    const conflictCols = ins[4] ? ins[4].split(',').map((c) => c.trim().toLowerCase()) : [];
+    let upserted = -1;
+    if (conflictCols.length) {
+      upserted = rows.findIndex((r) => conflictCols.every((c) => this.matchesValue(r[c], row[c])));
+    }
+    if (upserted !== -1) {
+      rows[upserted] = { ...rows[upserted], ...row };
+      mockWriteTable(table, rows);
+      return { rowsAffected: 1, lastInsertId: upserted + 1 };
+    }
+    // Plain INSERT without ON CONFLICT: real SQLite enforces the primary
+    // key and throws. The mock must do the same, or re-imports (backup
+    // restore twice) silently duplicate every row in browser mode while
+    // Tauri correctly counts them as skipped.
+    if (row.id !== undefined && row.id !== null) {
+      const dup = rows.some((r) => this.matchesValue(r.id, row.id));
+      if (dup) {
+        throw new Error(`UNIQUE constraint failed: ${table}.id`);
+      }
+    }
+    rows.push(row);
+    mockWriteTable(table, rows);
+    return { rowsAffected: 1, lastInsertId: rows.length };
+  }
+
+  /** Apply an UPDATE statement against the mock store. */
+  private executeUpdate(upd: RegExpMatchArray, p: unknown[]): ExecResult {
+    const table = upd[1];
+    const sets: [string, unknown][] = [];
+    const setRe = /([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(\?|\$\d+|NULL|'[^']*'|\d+(?:\.\d+)?)/g;
+    let sm: RegExpExecArray | null;
+    // SET placeholders consume params from index 0; WHERE params continue after.
+    let si = 0;
+    while ((sm = setRe.exec(upd[2]))) {
+      let val: unknown;
+      if (sm[2] === '?') val = p[si++];
+      else if (/^\d/.test(sm[2])) val = Number(sm[2]);
+      else if (sm[2] === 'NULL') val = null;
+      else val = sm[2].slice(1, -1);
+      sets.push([sm[1].toLowerCase(), val]);
+    }
+    const conds = upd[3] ? this.parseWhere(upd[3], p.slice(si)) : [];
+    const rows = mockTableRows(table);
+    let affected = 0;
+    for (const r of rows) {
+      if (this.matches(r, conds)) {
+        for (const [col, val] of sets) r[col] = val;
+        affected++;
+      }
+    }
+    mockWriteTable(table, rows);
+    return { rowsAffected: affected, lastInsertId: 0 };
+  }
+
+  /** Apply a DELETE statement against the mock store. */
+  private executeDelete(del: RegExpMatchArray, p: unknown[]): ExecResult {
+    const table = del[1];
+    const conds = del[2] ? this.parseWhere(del[2], p) : [];
+    let rows = mockTableRows(table);
+    if (conds.length) rows = rows.filter((r) => !this.matches(r, conds));
+    else rows = [];
+    mockWriteTable(table, rows);
+    return { rowsAffected: 1, lastInsertId: 0 };
   }
 
   async execute(sql: string, params?: unknown[]): Promise<unknown> {
@@ -404,89 +497,15 @@ class MockDatabase {
 
     // INSERT INTO table (cols) VALUES (?, ?, ...) [ON CONFLICT(id) DO UPDATE ...]
     const ins = sql.match(/^INSERT\s+INTO\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]+)\)\s*VALUES\s*\((.+?)\)(?:\s+ON\s+CONFLICT\s*\(([^)]*)\)\s+DO\s+UPDATE\s+SET\s+(.+))?\s*$/i);
-    if (ins) {
-      const table = ins[1];
-      const cols = ins[2].split(',').map((c) => c.trim().toLowerCase());
-      // Split VALUES into per-column tokens so literal values (e.g. `1` in
-      // `VALUES (1, ?, ?, ?)`) don't consume placeholders · params must bind
-      // ONLY to `?`/`$N` tokens, in order.
-      const valueParts = this.splitTopLevelComma(ins[3]).map((v) => v.trim());
-      const row: Record<string, unknown> = {};
-      let pi = 0;
-      for (let i = 0; i < cols.length; i++) {
-        if (i < valueParts.length) {
-          row[cols[i]] = this.literalValue(valueParts[i], p, () => pi++);
-        } else {
-          row[cols[i]] = null;
-        }
-      }
-      const rows = mockTableRows(table);
-      const conflictCols = ins[4] ? ins[4].split(',').map((c) => c.trim().toLowerCase()) : [];
-      let upserted = -1;
-      if (conflictCols.length) {
-        upserted = rows.findIndex((r) => conflictCols.every((c) => this.matchesValue(r[c], row[c])));
-      }
-      if (upserted !== -1) {
-        rows[upserted] = { ...rows[upserted], ...row };
-        mockWriteTable(table, rows);
-        return { rowsAffected: 1, lastInsertId: upserted + 1 };
-      }
-      // Plain INSERT without ON CONFLICT: real SQLite enforces the primary
-      // key and throws. The mock must do the same, or re-imports (backup
-      // restore twice) silently duplicate every row in browser mode while
-      // Tauri correctly counts them as skipped.
-      if (row.id !== undefined && row.id !== null) {
-        const dup = rows.some((r) => this.matchesValue(r.id, row.id));
-        if (dup) {
-          throw new Error(`UNIQUE constraint failed: ${table}.id`);
-        }
-      }
-      rows.push(row);
-      mockWriteTable(table, rows);
-      return { rowsAffected: 1, lastInsertId: rows.length };
-    }
+    if (ins) return this.executeInsert(ins, p);
 
     // UPDATE table SET col = ?, ... WHERE ...
     const upd = sql.match(/^UPDATE\s+([A-Za-z_][A-Za-z0-9_]*)\s+SET\s+(.+?)(?:\s+WHERE\s+(.+))?$/i);
-    if (upd) {
-      const table = upd[1];
-      const sets: [string, unknown][] = [];
-      const setRe = /([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(\?|\$\d+|NULL|'[^']*'|\d+(?:\.\d+)?)/g;
-      let sm: RegExpExecArray | null;
-      // SET placeholders consume params from index 0; WHERE params continue after.
-      let si = 0;
-      while ((sm = setRe.exec(upd[2]))) {
-        let val: unknown;
-        if (sm[2] === '?') val = p[si++];
-        else if (/^\d/.test(sm[2])) val = Number(sm[2]);
-        else if (sm[2] === 'NULL') val = null;
-        else val = sm[2].slice(1, -1);
-        sets.push([sm[1].toLowerCase(), val]);
-      }
-      const conds = upd[3] ? this.parseWhere(upd[3], p.slice(si)) : [];
-      const rows = mockTableRows(table);
-      let affected = 0;
-      for (const r of rows) {
-        if (this.matches(r, conds)) {
-          for (const [col, val] of sets) r[col] = val;
-          affected++;
-        }
-      }
-      mockWriteTable(table, rows);
-      return { rowsAffected: affected, lastInsertId: 0 };
-    }
+    if (upd) return this.executeUpdate(upd, p);
 
     // DELETE FROM table WHERE ...
     const del = sql.match(/^DELETE\s+FROM\s+([A-Za-z_][A-Za-z0-9_]*)(?:\s+WHERE\s+(.+))?$/i);
-    if (del) {
-      const table = del[1];
-      const conds = del[2] ? this.parseWhere(del[2], p) : [];
-      let rows = mockTableRows(table);
-      if (conds.length) rows = rows.filter((r) => !this.matches(r, conds));
-      else rows = [];
-      mockWriteTable(table, rows);
-      return { rowsAffected: 1, lastInsertId: 0 };
-    }
+    if (del) return this.executeDelete(del, p);
 
     // Unsupported statement · no-op without throwing
     return { rowsAffected: 0, lastInsertId: 0 };
