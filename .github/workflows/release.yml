@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   build:
+    timeout-minutes: 120
     # The build job runs npm ci, the whole Vite + Tauri toolchain, and an
     # upload-artifact step, all while the updater signing key is in scope. It has
     # no reason to hold a write token: with one, a compromised dependency or an
@@ -40,6 +41,11 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: src-tauri -> target
+          shared-key: release-${{ matrix.os }}
 
       # The updater manifest advertises one macOS artifact for both
       # darwin-aarch64 and darwin-x86_64, so the mac build must be a true
@@ -111,6 +117,7 @@ jobs:
           if-no-files-found: error
 
   publish:
+    timeout-minutes: 15
     needs: build
     runs-on: ubuntu-latest
     # The only job that creates the Release. It runs no build steps and holds no
