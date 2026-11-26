@@ -110,6 +110,7 @@ would only be reconsidered if a real secret were discovered (rotate first).
 | ~144 hand-rolled trackers | Intentional: each has custom UI/validation; migrate on demand. `RecordTracker` is mandatory for new entity screens. |
 | 7 fast-refresh DX warnings | Intentional concession: DX-only, every export has a consumer, splitting would worsen boundaries. Documented in `STANDARDS.md`. |
 | Vite chunk-size warnings (`pdf`, `import`) | Informational; dynamic imports already in place. Further splitting is behavior-riskier than the warning warrants. |
+| Negative invoice qty/rate | QA nit: values are coerced to 0 and a clear "total looks off" validation appears on submit; data integrity is preserved. Left as-is rather than changing form behavior at release time. |
 | Cloudflare Workers Builds check | External GitHub App still posts failures; disable in the Cloudflare dashboard (not a required check). |
 | GitHub Organization + backup admin | Human decision (needs a named collaborator); see `GOVERNANCE.md`. |
 | Code of Conduct reporting channel | Advisory form works, but confirm the account is monitored; ideally add a dedicated conduct mailbox. |
