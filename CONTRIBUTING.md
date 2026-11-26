@@ -53,16 +53,35 @@ for the Playwright suite, which also runs in CI.
 5. Run the full check suite before pushing:
 
 ```bash
-npm run verify      # typecheck + lint + tests + build + audit:oss + check:licenses + strict boundaries
+npm run verify                  # typecheck + lint + tests + build + audit:oss + check:licenses + format:check + strict boundaries
 npm run complexity -- --strict  # cyclomatic/cognitive offenders (CI gate)
+npm run check:trackers          # no new hand-rolled CRUD outside RecordTracker (CI gate)
+npm run format:check            # Prettier check (in verify and CI); `npm run format` writes
 ```
 
 `npm run audit:oss` rejects stray secrets, personal paths and junk files; the
 strict boundary check enforces the architecture rules in `AGENTS.md`. CI runs
 typecheck, lint, tests, build, Rust check/fmt/clippy/test, npm and Cargo audits,
-xlsx integrity, `audit:oss`, `check:licenses`, `complexity -- --strict` and
-strict boundaries (`.github/workflows/ci.yml:48-55`), so run the same gates
-locally before pushing. All gates must pass.
+xlsx integrity, `audit:oss`, `check:licenses`, `format:check`,
+`complexity -- --strict`, `check:trackers` and strict boundaries
+(`.github/workflows/ci.yml:48-61`), so run the same gates locally before
+pushing. All gates must pass.
+
+`npm run check:trackers` is a zero-dependency ratchet: it fails on any new
+hand-rolled CRUD component under `src/components/features/` that does not use
+`RecordTracker`. Existing offenders are enumerated in
+`scripts/tracker-baseline.json`; CI runs the same gate
+(`.github/workflows/ci.yml:56-57`). The baseline excludes `*.test.*` files.
+
+Database schema compatibility is protected by a golden fixture at
+`src-tauri/tests/schema_golden.txt`. If you intentionally change the schema,
+regenerate it from `src-tauri/` with
+`UPDATE_GOLDEN=1 cargo test --lib db::tests::schema_golden` and commit the
+updated fixture; a plain `cargo test --lib` fails on drift with that command in
+its message. Pure forecast and currency math is additionally covered by
+`fast-check` properties in `src/lib/*.property.test.ts` (e.g. conversion
+reciprocity, forecast telescoping, scenario monotonicity). A failed property
+prints a replayable seed — keep it in the bug report or test.
 
 ## Browser E2E tests
 
@@ -105,6 +124,8 @@ The `e2e` job is informational, not a required branch-protection check.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — layers, routes, tables, engines.
 - [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — commands and project tree.
 - [docs/SECURITY.md](docs/SECURITY.md) — local-first threat model.
+- [docs/adr/README.md](docs/adr/README.md) — ADR index: single Zustand store,
+  typed command registry, MIT license and pre-OSS history decision.
 
 ## For AI agents and automated contributors
 

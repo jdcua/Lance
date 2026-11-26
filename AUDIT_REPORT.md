@@ -408,3 +408,16 @@ fixes and re-verify all gates.
 **Status:** implemented in iteration 3. See `HANDOFF.md` "Iteration 3 refresh"
 and `TRANSFORMATION_LOG.md`. Validity checks, SBOM, FUNDING, provenance,
 jscpd/knip/Stryker, generated indexes and ADR code links remain explicit skips.
+
+### Iteration 4 follow-up
+
+- The critical `zip` waiver's revisit condition was met: stable
+  `tauri-plugin-updater` 2.14.1 requires `zip ^9`. Bumped (zip 9.8.2) and
+  deleted the waiver.
+- React Router already resolves patched 6.30.6; the two remaining moderate
+  advisories are unreachable in this declarative SPA — **no v7 migration**.
+- Added `format:check` and `typecheck:e2e` to `verify`/CI, fixed the tracker
+  ratchet's `*.test.*` false positive (141 → 140), hardened the golden-schema
+  path, and removed the surviving v2 roadmap from `docs/ARCHITECTURE.md`.
+- Dependabot config and a required `e2e` check remain intentional skips
+  (redundant with `deps.yml`; required checks need a branch-protection admin).

@@ -55,4 +55,6 @@ MIT — see [LICENSE.md](LICENSE.md).
 
 Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md) and
 [docs/ROADMAP.md](docs/ROADMAP.md); agent instructions live in
-[AGENTS.md](AGENTS.md).
+[AGENTS.md](AGENTS.md). Architecture decisions (single store, typed command
+registry, MIT/keep-history) are recorded in
+[docs/adr/README.md](docs/adr/README.md).

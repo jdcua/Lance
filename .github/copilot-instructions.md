@@ -11,8 +11,11 @@ component, the glass-chrome UI standard, and the testing rules.
 
 ```bash
 npm run doctor   # verify Node, Rust and installed dependencies (not OS libs)
-npm run verify   # typecheck + lint + tests + build + audit:oss + licenses + boundaries
+npm run verify   # typecheck + lint + tests + build + audit:oss + licenses + format:check + boundaries
 npm run complexity -- --strict   # complexity gate (also runs in CI)
+npm run check:trackers           # no new hand-rolled CRUD outside RecordTracker (CI gate)
+npm run format:check             # Prettier check (part of verify and CI); `npm run format` writes
+npm run typecheck:e2e            # typecheck Playwright specs outside the main tsconfig (CI step)
 ```
 
 ## Local map
@@ -33,3 +36,5 @@ npm run complexity -- --strict   # complexity gate (also runs in CI)
 - Never skip or weaken a test. Tests describe behavior, not DOM internals.
 - Preserve the single store and command registry; do not add parallel systems.
 - Keep diffs small and open one PR per task. Use `.github/PULL_REQUEST_TEMPLATE.md`.
+- Attach test/CI evidence for non-UI claims, link an ADR for decisions that
+  outlive the PR, and disclose AI assistance with an `Assisted-by:` trailer.

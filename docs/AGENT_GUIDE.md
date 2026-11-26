@@ -26,8 +26,17 @@ read → plan → branch → change → npm run verify → PR → self-review �
   extract helpers rather than growing a branch tree.
   `npm run complexity -- --strict` is the CI gate; use it locally.
   `npm run check:boundaries -- --strict` fails on layer violations (CI does).
+- `npm run check:trackers` fails on any new hand-rolled CRUD component outside
+  `RecordTracker` (baseline: `scripts/tracker-baseline.json`; CI step).
+- `npm run format:check` is part of `verify`; `npm run format` fixes drift.
+- Schema change? Regenerate `src-tauri/tests/schema_golden.txt` with
+  `UPDATE_GOLDEN=1 cargo test --lib db::tests::schema_golden` from `src-tauri/`.
+- Pure math change? Add or update a `fast-check` property in
+  `src/lib/*.property.test.ts`; failed seeds are printed for replay.
 - Use the PR template. State what changed, why, what you deleted, and what you
   deliberately left untouched.
+- Disclose AI assistance with an `Assisted-by:` trailer in the PR description
+  or squash commit. This is a convention, not a CI gate.
 - After opening the PR, re-read the diff as a reviewer. Check for secrets,
   personal paths, dead imports, and docs that contradict the code.
 
@@ -35,7 +44,7 @@ read → plan → branch → change → npm run verify → PR → self-review �
 
 ```bash
 npm run doctor                       # environment check
-npm run verify                       # typecheck + lint + test + build + audit:oss + licenses + strict boundaries
+npm run verify                       # typecheck + lint + test + build + audit:oss + licenses + format:check + strict boundaries
 gh issue list --repo jdcua/Lance     # find work
 gh pr create --repo jdcua/Lance      # open a PR (or use your GitHub MCP tool)
 ```
@@ -57,3 +66,4 @@ gh pr create --repo jdcua/Lance      # open a PR (or use your GitHub MCP tool)
 - All checks pass, no secret or personal path is present, docs match behavior,
   the PR is small and described, and the final report lists deletions,
   changes, and deliberate non-changes.
+- AI assistance disclosed with `Assisted-by:` in the PR or commit (convention only).

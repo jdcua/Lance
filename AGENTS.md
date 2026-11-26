@@ -89,6 +89,8 @@ and `prefers-reduced-transparency` always win.
 - Do not hand-roll list/create/delete UI for a new entity.
 - Store-based: pass store slice actions. DB-based: pass `getDb()` functions.
 - RecordTracker props: `entity`, `title`, `icon`, `list`, `load`, `create`, `update?`, `remove`, `fields`, `columns`, `filterBy?`.
+- `npm run check:trackers` fails on any new hand-rolled CRUD component under
+  `src/components/features/`; legacy files are listed in `scripts/tracker-baseline.json`.
 
 ---
 
@@ -124,7 +126,6 @@ and `prefers-reduced-transparency` always win.
 - Spy on `commands.dispatch` for command-registry interactions.
 - Remove tests that repeat the implementation or can't fail.
 - Fix failing tests — never skip or ignore.
-- After any change: `npm run build`, `npm run lint`, `npm run test` must all pass.
 
 ---
 
@@ -132,13 +133,11 @@ and `prefers-reduced-transparency` always win.
 
 ```
 npm run doctor         # check local toolchain (Node/npm/Rust/CLI, not OS libs)
-npm run verify         # typecheck + lint + test + build + audit:oss + licenses + boundaries
+npm run verify         # typecheck + lint + test + build + audit:oss + licenses + format:check + boundaries
 ```
 
-`npm run verify` runs `typecheck`, `lint`, `test`, `build`, `audit:oss`,
-`check:licenses` and `check:boundaries -- --strict`; all must pass. Add
-`npm run complexity -- --strict` to catch complexity regressions; all three
-gates also run in CI.
+`npm run verify` runs typecheck, lint, test, build, `audit:oss`, `check:licenses`,
+`format:check` and strict boundaries; complexity and tracker ratchets are CI gates.
 When Rust is touched also run `cargo test --lib`, `cargo fmt --check` and the
 Clippy quality gate. A characterization test comes before legacy refactors.
 See `CONTRIBUTING.md` for the PR workflow and `docs/ROADMAP.md` for places
@@ -149,6 +148,7 @@ where outside contributions are welcome.
 - `npm run verify` green: typecheck, lint, tests, build, `audit:oss`, licenses
   and strict boundaries.
 - `npm run complexity -- --strict` and `npm run format:check` clean.
+- `npm run check:trackers` clean (no new hand-rolled CRUD outside `RecordTracker`).
 - Rust touched: `cargo test --lib`, `cargo fmt --check` and the Clippy gate green.
 - A behavior test was added or updated; failing tests are fixed, never skipped.
 - Docs contradicted by the change are updated in the same PR; decisions that

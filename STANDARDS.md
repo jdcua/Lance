@@ -14,7 +14,7 @@ change during a refactor unless explicitly approved.
 | Cyclomatic complexity (TS) | ≤15 per function | ESLint `complexity: ['error', 15]`; `npm run complexity -- 10` for a stricter local pass |
 | Cognitive complexity (TS) | ≤15 | `sonarjs/cognitive-complexity: ['error', 15]` |
 | Rust nesting / length / args / type | nesting ≤3, 100 lines, 7 args, 250 type complexity | `src-tauri/clippy.toml` (lowercase — Linux CI only reads lowercase) + `-D` lints in CI |
-| Boundaries | no cycles, no UI→Tauri, no component→screen, single `create()` | `check:boundaries -- --strict` in `verify` and CI |
+| Boundaries | no **new** cycles (one legacy cycle baselined in `scripts/cycle-baseline.json`), no UI→Tauri, no component→screen, single `create()` | `check:boundaries -- --strict` in `verify`/CI; `check:boundaries -- --cycles` in CI |
 | Duplication | no identical functions | CI-only SonarJS `no-identical-functions` advisory; token-level clones are review-only |
 
 **Review targets (not gates):** new code cyclomatic ≤10; function length 40
@@ -68,6 +68,9 @@ more than four parameters or must return two values, redesign the flow instead.
   4. Only `src/store/index.ts` may call zustand `create()`.
   5. `src/db/index.ts` must not import itself.
 - `npm run check:boundaries` reports violations; `--strict` fails once clean.
+- `npm run check:trackers` fails on any *new* hand-rolled CRUD component under
+  `src/components/features/`; existing cases are baselined in
+  `scripts/tracker-baseline.json` (CI gate, iteration 4).
 - Keep the single Zustand store and the command registry; do not introduce a
   second state system or raw `lance:` events.
 
@@ -93,9 +96,11 @@ more than four parameters or must return two values, redesign the flow instead.
 - Every new bug fix has a failing-then-passing test; every new feature has a
   behavior test.
 - File-scoped iteration: `npm run test -- path/to/file.test.ts`.
-- Definition of done: `npm run verify` green; `cargo test --lib`,
-  `cargo fmt --check` and the Clippy gate green when Rust is touched;
-  `npm run complexity -- --strict` shows no regression.
+- Definition of done: `npm run verify` green (typecheck, lint, tests, build,
+  `audit:oss`, `check:licenses`, `format:check`, strict boundaries);
+  `npm run complexity -- --strict`, `npm run check:trackers` and
+  `npm run typecheck:e2e` clean; `cargo test --lib`, `cargo fmt --check` and
+  the Clippy gate green when Rust is touched.
 - Coverage percentages are reported, not gated.
 
 ## 6. Concessions (things we explicitly will not over-engineer)

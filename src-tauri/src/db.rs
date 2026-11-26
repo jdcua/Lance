@@ -727,7 +727,8 @@ mod tests {
 
     #[test]
     fn schema_golden() {
-        const GOLDEN: &str = include_str!("../tests/schema_golden.txt");
+        const GOLDEN: &str =
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/schema_golden.txt"));
 
         fn snapshot(conn: &Connection) -> String {
             let mut out = String::new();
@@ -797,12 +798,20 @@ mod tests {
         let actual = snapshot(&conn);
 
         if std::env::var_os("UPDATE_GOLDEN").is_some() {
-            std::fs::write("tests/schema_golden.txt", &actual).expect("write schema golden");
+            let golden = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("tests")
+                .join("schema_golden.txt");
+            std::fs::write(&golden, &actual).unwrap_or_else(|e| {
+                panic!(
+                    "failed to write schema golden at {}: {e}; run from the crate with: cd src-tauri && UPDATE_GOLDEN=1 cargo test --lib db::tests::schema_golden",
+                    golden.display()
+                )
+            });
             return;
         }
         assert_eq!(
             actual, GOLDEN,
-            "schema drift — regenerate with: UPDATE_GOLDEN=1 cargo test --lib db::tests::schema_golden"
+            "schema drift — regenerate with: cd src-tauri && UPDATE_GOLDEN=1 cargo test --lib db::tests::schema_golden"
         );
     }
 }

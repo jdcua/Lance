@@ -45,7 +45,8 @@ closeout are complete. No business behavior changed.
 |---|---|
 | `npm run verify` | typecheck, lint (0 errors), **321 tests / 72 files**, build, OSS audit (635 files), license policy, strict boundaries — pass |
 | `npx playwright test` | **65 passed / 0 failed** against the built preview (Chromium) |
-| `npm run check:trackers` | 0 new hand-rolled trackers (141 baselined) |
+| `npm run check:trackers` | 0 new hand-rolled trackers (140 baselined; test files excluded) |
+| `npm run typecheck:e2e` | 0 errors across 19 E2E TypeScript files |
 | `cargo test --lib` | **39 tests**, 0 failed |
 | `npm run complexity -- --strict` | 0 functions above cyclomatic/cognitive 15 |
 | `npm run check:boundaries -- --strict` | 0 warnings |
@@ -153,6 +154,29 @@ trackers, format, 39 Rust tests + fmt + Clippy with the live nesting gate, and
 during an entrance animation was fixed by waiting for reduced-motion settle
 in the E2E spec — not a product defect.
 
+## Iteration 4 refresh (2026-11-26)
+
+Final consistency pass:
+
+- **Dependency advisory resolved:** `tauri-plugin-updater` 2.13.1 → 2.14.1,
+  moving the Windows-only `zip` dependency from 4.6.1 to 9.8.2 (patched for
+  RUSTSEC-2026-0548). The `fixBlockedBy` waiver was deleted; Rust tests, fmt and
+  Clippy remain green. React Router was already on patched 6.30.6, so no v7
+  migration is needed.
+- **New gates:** `format:check` in `verify` + CI, and a new `typecheck:e2e`
+  script/CI step covering all 19 Playwright TypeScript files.
+- **Ratchet fix:** the tracker detector no longer counts `*.test.*` files;
+  baseline 141 → 140 real trackers.
+- **Golden test hardening:** `CARGO_MANIFEST_DIR` paths and actionable drift
+  messages make schema regeneration work from the repo root too.
+- **Docs:** removed the surviving v2 cloud roadmap from `docs/ARCHITECTURE.md`,
+  documented the privacy gate and the new gates, linked ADRs, and aligned
+  retrospective statements (no new cycles; one baselined legacy cycle).
+
+Final gates: `npm run verify`, `npm run complexity -- --strict`,
+`npm run check:trackers`, `npm run typecheck:e2e`, format check, 39 Rust tests +
+fmt + Clippy, and 65 Playwright tests all pass.
+
 ## Pre-OSS tagged history — owner decision
 
 The current tree is MIT-clean, but **16 old tags** (`v0.9.0`–`v0.9.9-5`,
@@ -176,8 +200,8 @@ would only be reconsidered if a real secret were discovered (rotate first).
 |---|---|
 | Legacy hand-rolled trackers (see `src/components/features/registry.ts`) | Intentional: each has custom UI/validation; migrate on demand. `RecordTracker` is mandatory for new entity screens; a ratchet blocks new offenders. |
 | 7 fast-refresh DX warnings | Intentional concession: DX-only, every export has a consumer, splitting would worsen boundaries. Documented in `STANDARDS.md`. |
-| `zip` RUSTSEC-2026-0548 (critical, Windows-only) | Waived in `.github/security/cargo-audit-allow.json` with `fixBlockedBy`: `tauri-plugin-updater` 2.13.1 pins `zip ^4`; patched 9.0.5 is a major bump. Not compiled on macOS/Linux, no untrusted ZIP extraction, signed update bundles. Revisit when a stable updater release accepts zip ≥ 9.0.5. |
-| React Router moderate advisories (prod) | Fix requires a major upgrade to v7.18.7; deferred as a human-reviewed migration, not a silent dependency bump. `npm audit --omit=dev --audit-level=high` still passes. |
+| ~~`zip` RUSTSEC-2026-0548~~ | **Resolved in iteration 4:** stable `tauri-plugin-updater` 2.14.1 requires `zip ^9`; lockfile now resolves zip 9.8.2 and the waiver was deleted (stale waivers fail the gate). |
+| React Router moderate advisories (prod) | Lockfile already resolves 6.30.6, which patches the reachable CVE. Two remaining moderate advisories only affect v7-fixable code paths (SSR hydration / backslash redirects) and are not reachable in this declarative desktop SPA with internal navigation only; no v7 migration. `npm audit --omit=dev --audit-level=high` passes. |
 | Vite chunk-size warnings (`pdf`, `import`) | Informational; dynamic imports already in place. Further splitting is behavior-riskier than the warning warrants. |
 | Negative invoice qty/rate | QA nit: values are coerced to 0 and a clear "total looks off" validation appears on submit; data integrity is preserved. Left as-is rather than changing form behavior at release time. |
 | Cloudflare Workers Builds check | External GitHub App still posts failures; disable in the Cloudflare dashboard (not a required check). |

@@ -29,15 +29,18 @@ npm run tauri dev      # requires Tauri 2 OS libraries on Linux
 | `npm run version:bump 1.2.0` | Bump version across all 3 files |
 | `npm run doctor` | Check Node, npm, Rust and installed npm dependencies (does not check OS libraries) |
 | `npm run typecheck` | Typecheck without building |
-| `npm run verify` | Typecheck, lint, tests, build, OSS audit, license policy and strict boundary check |
+| `npm run verify` | Typecheck, lint, tests, build, OSS audit, license policy, Prettier check and strict boundary check |
 | `npm run audit:oss` | Check tracked files for secrets, personal paths and junk |
 | `npm run check:boundaries` | Report boundary violations (use `-- --strict` to fail; CI does) |
 | `npm run complexity -- --strict` | List cyclomatic and cognitive complexity offenders (CI gate) |
+| `npm run check:trackers` | Fail on any new hand-rolled CRUD component outside `RecordTracker` (CI gate; baseline `scripts/tracker-baseline.json`) |
+| `npm run typecheck:e2e` | Typecheck Playwright specs outside the main `tsconfig.json` (CI step; iteration 4) |
 | `npm run lint` | Lint frontend code |
 | `npm run format` | Format frontend code with Prettier |
-| `npm run format:check` | Check formatting without writing |
+| `npm run format:check` | Check formatting without writing (part of `verify` and CI) |
 | `cargo clippy` | Lint Rust code (run from `src-tauri/`) |
 | `cargo test` | Run Rust tests (run from `src-tauri/`) |
+| `UPDATE_GOLDEN=1 cargo test --lib db::tests::schema_golden` | Regenerate the schema golden fixture (run from `src-tauri/`; commit the diff) |
 
 ## Browser E2E tests
 
@@ -99,3 +102,6 @@ lance/
 ## Architecture
 
 See `docs/ARCHITECTURE.md` for a detailed architecture overview.
+
+Schema drift is caught by `src-tauri/tests/schema_golden.txt`; pure math by
+`fast-check` properties in `src/lib/*.property.test.ts`.

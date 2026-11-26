@@ -164,13 +164,13 @@ and `setInterval`; `usePortalPolling` lives in `src/lib/engines/`:
 | Auto-backup | On mount | One-time | Creates JSON backup to configured path, keeps last 10 |
 | Follow-up checker | On mount | Every 30 min | Scans sent proposals and overdue invoices, creates `follow_up_log` entries from templates |
 | Proposal expiry engine | On mount | Every 1 hour | Marks sent proposals as `expired` if `expires_at <= now` |
-| Auto-updater | On mount | Every 4 hours | Checks GitHub Releases for updates via Tauri updater plugin |
+| Auto-updater | On mount | Every 4 hours | Checks GitHub Releases for updates via Tauri updater plugin. Runs only while the persisted default-on `networkChecksEnabled` preference is true; the "Release and update checks" switch in Settings → General disables it together with the release-notes GET (future checks only). |
 | Achievement checker | After initial load | One-time | Checks unlocked achievements, shows toasts |
 
 **Engine utility files**:
 - `src/utils/recurringEngine.ts`: next_due calculation, cycle counting, catch-up cap
 - `src/utils/followUpTemplates.ts`: 6 default templates with variable substitution, mailto: generation
-- `src/hooks/useAutoUpdater.ts`: Tauri updater plugin integration with 4-hour check interval
+- `src/hooks/useAutoUpdater.ts`: Tauri updater plugin integration with 4-hour check interval; gated by `networkChecksEnabled` (`src/store/slices/meta.ts:58,65`, `src/hooks/useAutoUpdater.ts:105`)
 
 ## Client portal architecture
 
@@ -247,14 +247,8 @@ All app routes are lazy-loaded via `React.lazy` with a loading skeleton fallback
 
 ## Future work
 
-The schema keeps a `user_id` column and an `app_events` audit table for optional multi-user sync. Lance itself remains local-first and account-free.
-
-Planned for v2:
-- Supabase Auth (JWT, magic link, OAuth)
-- PostgreSQL migration (with row-level security)
-- End-to-end encryption for sensitive fields before cloud sync
-- Multi-device sync via Supabase
-- Rate limiting on cloud API endpoints
-- GDPR compliance (data export and deletion)
-- Full audit log for all data mutations
-- Internationalization (i18n)
+None. There is no cloud, multi-user, sync, or i18n roadmap. Many tables carry a
+`user_id INTEGER NOT NULL DEFAULT 1` column and `app_events` records local
+activity (`src-tauri/src/db.rs`), but neither implies accounts or remote
+storage. See [HANDOFF.md](../HANDOFF.md#non-goals-do-not-reintroduce) for the
+explicit non-goals.

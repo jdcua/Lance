@@ -356,3 +356,24 @@ Clippy clean. Everything is staged but not committed or tagged.
   via `tauri-plugin-updater`, unpatched in its pinned `zip ^4`, and waived with
   a substantive `fixBlockedBy` reason in the cargo-audit gate. **Why:** document
   a critical waiver explicitly rather than ignoring or silently upgrading.
+
+## 2026-11-26 — Mission iteration 4 (final consistency pass)
+
+- Resolved the critical `zip` advisory: `tauri-plugin-updater` 2.13.1 → 2.14.1
+  (stable, requires `zip ^9`; lockfile now 9.8.2) and deleted the waiver — a
+  stale allowlist entry would fail the cargo-audit gate. **Why:** the waiver's
+  own revisit condition was met.
+- Corrected the React Router note: lockfile already resolves patched 6.30.6;
+  remaining moderate advisories are unreachable in a declarative SPA, so no
+  major v7 migration. **Why:** avoid a pointless framework upgrade.
+- Added `format:check` to `verify`/CI and `typecheck:e2e` (new `e2e/tsconfig.json`)
+  so the 19 Playwright TS files get static analysis. **Why:** promised by the
+  DoD but unenforced; E2E had no typecheck.
+- Fixed tracker-ratchet false positive (`*.test.*` excluded; baseline 141 → 140)
+  and made the schema golden fixture cwd-independent via `CARGO_MANIFEST_DIR`
+  with actionable regeneration messages.
+- Docs: removed the surviving v2 cloud roadmap from ARCHITECTURE, documented the
+  privacy gate and new gates, linked ADRs, aligned STANDARDS/HANDOFF wording.
+- Final gates: verify (typecheck + e2e typecheck + lint + format + 321 tests),
+  complexity/trackers/boundaries clean, 39 Rust tests + fmt + Clippy, Playwright
+  65/65. All dependency/gate decisions are documented in HANDOFF.md.

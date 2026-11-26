@@ -105,20 +105,23 @@ dual licensing. Keep the SPDX identifier consistent in all three locations.
   bundles; commit the generated attribution file and fail CI on drift.
 - Watch transitive GPL/AGPL components; isolate or replace them. Tool output
   is guidance, not legal advice.
-- **Current state (verified 2026-11-25):** `npm audit` and `cargo audit` already
-  run in `.github/workflows/security.yml`; **license checking and secret
-  scanning do not**. The `xlsx` dependency comes from `cdn.sheetjs.com`,
-  outside the npm registry audit path — document that exception.
+- **State as of the first audit (2026-11-25):** `npm audit` and `cargo audit`
+  already ran in `.github/workflows/security.yml`; license checking and secret
+  scanning did not. **Both were added in iteration 1** (`check:licenses` gate,
+  pinned gitleaks CI + pre-commit hook) and GitHub secret scanning/push
+  protection were enabled in iteration 2. See HANDOFF.md for the current state.
+  The `xlsx` dependency comes from `cdn.sheetjs.com`, outside the npm registry
+  audit path — its hash is pinned and checked in CI.
 
 ## 0.5 Community files checklist
 
 | File | State | Action |
 |---|---|---|
 | README, LICENSE, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, AGENTS.md, issue/PR templates | Present | Keep current; fix stale claims (see AUDIT_REPORT.md) |
-| SUPPORT.md | Missing | **Add** — where to get help, what is out of scope |
+| SUPPORT.md | **Added in iteration 1** | Where to get help, what is out of scope |
 | CHANGELOG.md | Present | Keep Keep-a-Changelog format with SemVer releases |
-| GitHub private vulnerability reporting | Unverified | **Enable** in repo settings; confirm SECURITY.md contact is monitored |
-| GOVERNANCE.md | Absent | Optional now; add when contributors arrive |
+| GitHub private vulnerability reporting | **Enabled** (API-verified) | Confirm advisory notifications reach a monitored account |
+| GOVERNANCE.md | **Added in iteration 1** | BDFL model with contributor → reviewer → maintainer ladder |
 
 ## 0.6 Governance
 
@@ -525,7 +528,9 @@ cargo-machete 0.10.1 — all active.
    `too_many_lines`, with explicit thresholds in `Clippy.toml`.
 3. No empty catch blocks, no `any` without reason, no raw Tauri `invoke` in
    UI code. No real secrets in tracked files or history (rotate-first rule).
-4. No dependency cycles; dependency direction stable → volatile.
+4. No **new** dependency cycles (one legacy `store/index.ts ↔ slices/meta.ts`
+   cycle is baselined in `scripts/cycle-baseline.json`); dependency direction
+   stable → volatile.
 5. `npm run verify` green before every PR; characterization test before
    refactoring legacy logic.
 6. AGENTS.md ≤200 lines with commands, invariants and definition of done.
@@ -588,9 +593,9 @@ cargo-machete 0.10.1 — all active.
    `restriction` lint that upstream says is not a measurement tool. Use
    `excessive_nesting` and `too_many_lines`, plus `too_many_arguments` and
    `type_complexity`, with thresholds configured explicitly in
-   `src-tauri/Clippy.toml` (currently cognitive 20, arguments 7,
-   type-complexity 250, no too-many-lines setting). Delete or align the stale
-   root `Clippy.toml` (30). Keep `cargo fmt --check`.
+   the lowercase `src-tauri/clippy.toml` (iteration 2 renamed the capitalized
+   file, which Clippy ignores on case-sensitive Linux CI). Current gates: nesting
+   3, 100 lines, 7 arguments, type-complexity 250. Keep `cargo fmt --check`.
 4. **License and contribution law: keep MIT; no CLA, no dual licensing.**
    DCO is the optional lightweight provenance mechanism if contributors grow.
 5. **Secret scanning + license policy are the remaining legal/hygiene work:**
@@ -738,6 +743,57 @@ is at a deliberate steady state; most earlier concessions remain correct.
 - https://trustedoss.github.io/en/ai-coding/legal-considerations
 - https://aaif.io/blog/writing-an-effective-agents-md
 - https://www.anthropic.com/research/effective-context-engineering-for-ai-agents
+
+---
+
+# 11. Iteration 4 refresh (2026-11-26) — final consistency pass
+
+## 11.1 Open-source readiness
+
+| Item | Decision |
+|---|---|
+| `zip` RUSTSEC-2026-0548 waiver | **REMOVE** — its revisit condition is met: stable `tauri-plugin-updater` 2.14.1 requires `zip ^9` (patched ≥9.0.5). Bump the updater (Cargo.toml already allows `2`), verify `cargo tree -i zip --target all`, then delete the waiver. |
+| React Router moderate advisories | **ALREADY FINE** — lockfile already resolves 6.30.6, which patches the reachable CVE. Two remaining moderate advisories are v7-only and non-exploitable in this declarative desktop SPA; **no v7 migration**. Correct the stale HANDOFF note. |
+| `.github/dependabot.yml` | **SKIP** — alerts/security updates work without it and `deps.yml` covers version updates; do not duplicate signals. |
+| Required `e2e` check | **SKIP** — impossible without a branch-protection admin change; keep the advisory note. |
+| `security.txt`, FUNDING, SBOM, SPDX, AI disclosure | **ALREADY FINE / SKIP** per recorded decisions. |
+| Research/audit doc contradictions | **ADD (doc fixes)** — §0.4/§0.5 still describe pre-iteration-1 state; §8 Clippy path/threshold is stale; HANDOFF count and React Router lines are stale. |
+
+## 11.2 Code quality
+
+- **ADD:** `format:check` into `npm run verify` and the CI lint job (already
+  clean everywhere; AGENTS.md DoD promises it).
+- **ADD:** `e2e/tsconfig.json` + `typecheck:e2e` script + CI step. Playwright
+  specs are outside `tsconfig.json`/ESLint/Prettier scopes, so 65 E2E tests
+  currently have no static analysis.
+- **FIX:** tracker ratchet false positive — `PhaseTracker.test.tsx` is baselined
+  because it mocks `getDb` and contains `INSERT INTO`; exclude `*.test.*` files
+  from the detector and regenerate the baseline (140 real trackers).
+- **OPTIONAL:** use `CARGO_MANIFEST_DIR` for the schema golden fixture path and
+  add `cd src-tauri &&` to the failure message.
+- **SKIP:** baseline decay warnings (zero stale entries), fixed fast-check
+  seeds (failures already print replayable seeds), jscpd/knip/Stryker.
+- Confirm the 7 fast-refresh warnings and 141→140 tracker counts locally.
+
+## 11.3 Agent/contributor docs
+
+- **P1:** delete the remaining v2 cloud roadmap in `docs/ARCHITECTURE.md` and
+  document the default-on privacy preference in the updater row.
+- **P2:** document `check:trackers`, the golden-schema regeneration and
+  property tests, `format:check`, and `Assisted-by:` in contributor-facing docs
+  (not only retrospectives). Link the ADR index from README/CONTRIBUTING.
+- **P3:** align STANDARDS DoD, HANDOFF counts/dates, and "no cycles" wording to
+  "no **new** cycles; one baselined legacy cycle".
+- AGENTS.md is 187/200 lines; two redundant lines can fund a `check:trackers`
+  pointer. No new instruction files, generated indexes or code-level ADR links.
+
+## 11.4 Sources added
+
+- https://crates.io/api/v1/crates/tauri-plugin-updater/2.14.1/dependencies
+- https://github.com/advisories/GHSA-jjmj-jmhj-qwj2 · GHSA-wrjc-x8rr-h8h6 · GHSA-337j-9hxr-rhxg
+- https://reactrouter.com/7.18.4/upgrading/v6
+- https://playwright.dev/docs/test-typescript
+- https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches
 
 ---
 

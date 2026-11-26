@@ -85,7 +85,6 @@
   "src/components/features/OutcomeNotes.tsx",
   "src/components/features/PerformanceSnapshot.tsx",
   "src/components/features/PhaseGateTracker.tsx",
-  "src/components/features/PhaseTracker.test.tsx",
   "src/components/features/PhaseTracker.tsx",
   "src/components/features/PlacementLog.tsx",
   "src/components/features/PlatformLog.tsx",

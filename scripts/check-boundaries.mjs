@@ -151,6 +151,7 @@ const TRACKER_BASELINE = 'scripts/tracker-baseline.json';
 if (process.argv.includes('--trackers')) {
   const offenders = files
     .filter((f) => f.startsWith('src/components/features/') && f.endsWith('.tsx'))
+    .filter((f) => !f.includes('.test.'))
     .filter((f) => {
       const text = readFileSync(f, 'utf8');
       if (/\bRecordTracker\b/.test(text)) return false;
