@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useRef } from 'react';
+import { useStore } from '../store';
 import { useUpdaterStore } from '../store/updaterStore';
 
 const LATER_KEY = 'lance_update_deferred_until';
@@ -101,6 +102,7 @@ export function useAutoUpdater() {
 
   const doCheck = useCallback(async () => {
     try {
+      if (!useStore.getState().networkChecksEnabled) return;
       const deferredUntil = localStorage.getItem(LATER_KEY);
       if (deferredUntil && Date.now() < parseInt(deferredUntil, 10)) return;
 

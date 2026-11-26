@@ -1,10 +1,11 @@
 /**
- * Generic RecordTracker · replaces the ~187 copy-paste feature trackers
+ * Generic RecordTracker · replaces copy-paste feature trackers
  * (BiomarkerTracker, BugLog, BuildLog, ShootLog, …).
  *
  * Every tracker had the same shape: a list, a create form, per-row delete,
  * and load/create/update/delete against a data source. Instead of copying
- * that structure 187 times, one component here is configured per entity.
+ * that structure for each entity, one component here is configured per entity.
+ * The current tracker set lives in src/components/features/registry.ts.
  *
  * Two data-source shapes are supported:
  *  - Store: pass `useStore()` slice actions (load, create, update, delete)

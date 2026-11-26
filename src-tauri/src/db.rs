@@ -724,4 +724,85 @@ mod tests {
             .expect("read foreign_keys pragma");
         assert_eq!(foreign_keys, 1, "foreign_keys must be enabled");
     }
+
+    #[test]
+    fn schema_golden() {
+        const GOLDEN: &str = include_str!("../tests/schema_golden.txt");
+
+        fn snapshot(conn: &Connection) -> String {
+            let mut out = String::new();
+
+            // sqlite_% (notably sqlite_sequence from AUTOINCREMENT tables) is
+            // intentionally excluded: it is engine bookkeeping, not our schema.
+            {
+                let mut stmt = conn
+                    .prepare(
+                        "SELECT type, name, tbl_name, sql FROM sqlite_master \
+                         WHERE name NOT LIKE 'sqlite_%' ORDER BY type, name",
+                    )
+                    .expect("prepare sqlite_master");
+                let rows = stmt
+                    .query_map([], |row| {
+                        Ok((
+                            row.get::<_, String>(0)?,
+                            row.get::<_, String>(1)?,
+                            row.get::<_, String>(2)?,
+                            row.get::<_, Option<String>>(3)?,
+                        ))
+                    })
+                    .expect("query sqlite_master");
+                for row in rows {
+                    out.push_str(&format!("{:?}\n", row.expect("sqlite_master row")));
+                }
+            }
+
+            let names: Vec<String> = {
+                let mut stmt = conn
+                    .prepare(
+                        "SELECT name FROM sqlite_master WHERE type = 'table' \
+                         AND name NOT LIKE 'sqlite_%' ORDER BY name",
+                    )
+                    .expect("prepare table names");
+                stmt.query_map([], |row| row.get::<_, String>(0))
+                    .expect("query table names")
+                    .map(|row| row.expect("table name row"))
+                    .collect()
+            };
+
+            for table in names {
+                out.push_str(&format!("[table_info:{table}]\n"));
+                let pragma = format!("PRAGMA table_info('{}')", table.replace('\'', "''"));
+                let mut stmt = conn.prepare(&pragma).expect("prepare table_info");
+                let rows = stmt
+                    .query_map([], |row| {
+                        Ok((
+                            row.get::<_, i64>(0)?,            // cid
+                            row.get::<_, String>(1)?,         // name
+                            row.get::<_, String>(2)?,         // type
+                            row.get::<_, i64>(3)?,            // notnull
+                            row.get::<_, Option<String>>(4)?, // dflt_value
+                            row.get::<_, i64>(5)?,            // pk
+                        ))
+                    })
+                    .expect("query table_info");
+                for row in rows {
+                    out.push_str(&format!("{:?}\n", row.expect("table_info row")));
+                }
+            }
+            out
+        }
+
+        let conn = Connection::open_in_memory().expect("open in-memory sqlite");
+        run_migrations(&conn).expect("migrations succeed on a fresh database");
+        let actual = snapshot(&conn);
+
+        if std::env::var_os("UPDATE_GOLDEN").is_some() {
+            std::fs::write("tests/schema_golden.txt", &actual).expect("write schema golden");
+            return;
+        }
+        assert_eq!(
+            actual, GOLDEN,
+            "schema drift — regenerate with: UPDATE_GOLDEN=1 cargo test --lib db::tests::schema_golden"
+        );
+    }
 }

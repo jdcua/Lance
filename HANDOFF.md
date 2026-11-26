@@ -30,8 +30,9 @@ closeout are complete. No business behavior changed.
 7. **Tests** — 303 frontend tests / 68 files, 38 Rust tests. Added coverage for
    exporters, image parser, archetype payloads, 20 screens, Kanban behavior,
    store CRUD across four entities, and two more Rust command modules.
-8. **Trackers** — 6 of ~150 now use `RecordTracker`; the remaining ones have
-   genuinely custom UI and need per-domain decisions, not a mechanical rewrite.
+8. **Trackers** — legacy archetype trackers are enumerated in
+   `src/components/features/registry.ts`; some use `RecordTracker`, the rest
+   have custom UI. A ratchet now blocks new hand-rolled CRUD (141-file baseline).
 9. **CI** — `audit:oss`, `check:licenses`, strict complexity and strict
    boundaries all run in CI; Rust gate migrated off the misleading
    `cognitive_complexity` lint; stale root `Clippy.toml` deleted.
@@ -42,12 +43,14 @@ closeout are complete. No business behavior changed.
 
 | Check | Result |
 |---|---|
-| `npm run verify` | typecheck, lint (0 errors), **309 tests / 69 files**, build, OSS audit (610 files), license policy, strict boundaries — pass |
+| `npm run verify` | typecheck, lint (0 errors), **321 tests / 72 files**, build, OSS audit (635 files), license policy, strict boundaries — pass |
 | `npx playwright test` | **65 passed / 0 failed** against the built preview (Chromium) |
+| `npm run check:trackers` | 0 new hand-rolled trackers (141 baselined) |
+| `cargo test --lib` | **39 tests**, 0 failed |
 | `npm run complexity -- --strict` | 0 functions above cyclomatic/cognitive 15 |
 | `npm run check:boundaries -- --strict` | 0 warnings |
 | `npm run format:check` | clean |
-| `cargo test --lib` | **38 tests**, 0 failed |
+| `cargo test --lib` + fmt + Clippy | **39 tests**, 0 failed; clean |
 | `cargo fmt --check` + Clippy quality gate | clean |
 | gitleaks full history | configured in CI with pinned SHA and false-positive allowlist; local scan found 0 findings after allowlisting |
 | GitHub private vulnerability reporting | enabled (`true`) |
@@ -117,6 +120,39 @@ Final iteration-2 gates: `npm run verify` (309 tests), strict complexity and
 boundaries, format check, 38 Rust tests + fmt + Clippy (with the live nesting
 gate), and `npx playwright test` (65 tests, auto-started preview) all pass.
 
+## Iteration 3 refresh (2026-11-26)
+
+A third full mission pass closed the remaining gaps:
+
+- **CI runtime:** all 26 pinned `actions/checkout`/`setup-node` lines moved from
+  node20 v4 SHAs to node24 v6.1.0/v7.1.0 SHAs (GitHub removed node20 from
+  hosted runners). Workflow job names and `node-version: 22` unchanged.
+- **Privacy:** a persisted default-on `networkChecksEnabled` preference in the
+  meta slice gates only the release-notes GET and updater check, with a
+  "Release and update checks" switch in Settings → General. Caches, offline
+  fallback, timers, the 24h "Later" deferral and rollback protection are
+  untouched. Six behavior tests cover the toggle.
+- **Structural ratchet:** `npm run check:trackers` (CI step) blocks any *new*
+  hand-rolled CRUD component outside `RecordTracker`; 141 legacy files are
+  baselined in `scripts/tracker-baseline.json`.
+- **Tests:** golden DB-schema fixture (`src-tauri/tests/schema_golden.txt`,
+  `UPDATE_GOLDEN=1` regeneration) plus six fast-check properties over pure
+  forecast/currency math. Rust 38 → 39 tests; frontend 309 → 321.
+- **Docs/agent clarity:** removed the stale v2 cloud roadmap, documented the
+  privacy toggle, added `Assisted-by:` disclosure convention, fixed E2E/CI
+  claims and the broken HANDOFF anchor, added the Definition of Done to
+  AGENTS.md and evidence checkboxes to the PR template, and replaced drifting
+  tracker counts with a pointer to `registry.ts`.
+- **Skipped with rationale:** GitHub validity checks (org/Advanced-Security
+  gated; repo is a personal public repo), SBOM/FUNDING/provenance, jscpd/knip/
+  Stryker/MI, generated component index, code-level ADR links.
+
+Final iteration-3 gates: verify (321 tests), strict complexity/boundaries/
+trackers, format, 39 Rust tests + fmt + Clippy with the live nesting gate, and
+65 Playwright tests all pass. One flaky axe contrast check caused by measuring
+during an entrance animation was fixed by waiting for reduced-motion settle
+in the E2E spec — not a product defect.
+
 ## Pre-OSS tagged history — owner decision
 
 The current tree is MIT-clean, but **16 old tags** (`v0.9.0`–`v0.9.9-5`,
@@ -138,7 +174,7 @@ would only be reconsidered if a real secret were discovered (rotate first).
 
 | Item | Status / plan |
 |---|---|
-| ~144 hand-rolled trackers | Intentional: each has custom UI/validation; migrate on demand. `RecordTracker` is mandatory for new entity screens. |
+| Legacy hand-rolled trackers (see `src/components/features/registry.ts`) | Intentional: each has custom UI/validation; migrate on demand. `RecordTracker` is mandatory for new entity screens; a ratchet blocks new offenders. |
 | 7 fast-refresh DX warnings | Intentional concession: DX-only, every export has a consumer, splitting would worsen boundaries. Documented in `STANDARDS.md`. |
 | Vite chunk-size warnings (`pdf`, `import`) | Informational; dynamic imports already in place. Further splitting is behavior-riskier than the warning warrants. |
 | Negative invoice qty/rate | QA nit: values are coerced to 0 and a clear "total looks off" validation appears on submit; data integrity is preserved. Left as-is rather than changing form behavior at release time. |

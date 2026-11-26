@@ -144,6 +144,17 @@ Clippy quality gate. A characterization test comes before legacy refactors.
 See `CONTRIBUTING.md` for the PR workflow and `docs/ROADMAP.md` for places
 where outside contributions are welcome.
 
+### Definition of done
+
+- `npm run verify` green: typecheck, lint, tests, build, `audit:oss`, licenses
+  and strict boundaries.
+- `npm run complexity -- --strict` and `npm run format:check` clean.
+- Rust touched: `cargo test --lib`, `cargo fmt --check` and the Clippy gate green.
+- A behavior test was added or updated; failing tests are fixed, never skipped.
+- Docs contradicted by the change are updated in the same PR; decisions that
+  outlive the PR get an ADR in `docs/adr/`.
+- The final report states what changed, what was deleted and what was left untouched.
+
 ---
 
 ## 8. Key shared modules

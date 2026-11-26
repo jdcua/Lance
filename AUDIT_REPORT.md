@@ -354,3 +354,57 @@ zero-dependency structural ratchets and CI-only E2E retries, then re-verify.
 and `TRANSFORMATION_LOG.md` for exact changes and final verification. Validity
 checks remain off (Advanced Security-gated); the `e2e` job is not a required
 check (branch protection intentionally unchanged).
+
+---
+
+## 9. Iteration 3 audit (2026-11-26)
+
+Three audits checked only what remained after iteration 2. No new secret,
+license defect, or exploit path was found; risk is LOW–MODERATE.
+
+### P0
+
+1. **All 26 pinned `actions/checkout@v4` / `setup-node@v4` lines declare
+   `node20`**, which GitHub removed from hosted runners on 2026-09-23.
+   Verified replacements: checkout `d23441a48e516b6c34aea4fa41551a30e30af803`
+   (v6.1.0) and setup-node `949feb2413d6458794dcd2491c4babbbce0c15c1`
+   (v7.1.0), both `node24`. Keep `node-version: 22` inputs.
+
+### P1
+
+2. **Persisted privacy preference:** one default-on `networkChecksEnabled`
+   preference in the meta slice, gating only `fetchReleaseEntries()` and
+   `doCheck()`; leave caches, fallbacks, timers, `navigator.onLine`, the 24h
+   "Later" deferral and rollback high-water mark untouched. Add a Settings
+   switch and update the network-disclosure docs.
+3. **Stale v2 cloud roadmap** in `docs/SECURITY.md:40-47` contradicts the
+   project's non-goals; delete it and relabel the surrounding headings while
+   keeping real `user_id`/`app_events`/CSP facts.
+4. **Hand-rolled CRUD ratchet:** 141 current offenders (135 DB-based + 6
+   store-based) among 179 feature components. Extend `check-boundaries.mjs`
+   with `--trackers` + a committed 141-path baseline; fail only on new files.
+5. **Golden DB-schema test** in the existing in-memory migration test,
+   snapshotting `sqlite_master` + key `PRAGMA table_info` into
+   `src-tauri/tests/schema_golden.txt`.
+
+### P2
+
+6. Six `fast-check` properties over pure `forecast.ts`/`currency.ts` math;
+   `metrics.ts` is DB-bound and excluded. No score gate.
+7. AI-assistance disclosure convention (`Assisted-by:`) in CONTRIBUTING and a
+   PR checkbox — convention only, no CI gate.
+8. Definition of Done missing from AGENTS.md §7; PR template lacks
+   complexity/Rust/format/evidence checkboxes.
+9. Contributor docs wrongly say E2E is not in CI and require a manual preview;
+   stale HANDOFF anchor; five conflicting tracker counts.
+10. Make the jscpd/knip/Stryker skip explicit in `STANDARDS.md`.
+
+### Implementation order
+
+Bump action pins, add the privacy toggle + docs, add the tracker ratchet and
+schema golden test, add property tests, then apply the contributor/agent doc
+fixes and re-verify all gates.
+
+**Status:** implemented in iteration 3. See `HANDOFF.md` "Iteration 3 refresh"
+and `TRANSFORMATION_LOG.md`. Validity checks, SBOM, FUNDING, provenance,
+jscpd/knip/Stryker, generated indexes and ADR code links remain explicit skips.

@@ -41,14 +41,18 @@ npm run tauri dev      # requires Tauri 2 OS libraries on Linux
 
 ## Browser E2E tests
 
-Browser E2E tests are not part of `verify` or CI. Run them manually with the
-built app preview serving port 4173:
+Browser E2E tests run in CI in the `e2e` job of `.github/workflows/ci.yml` on
+pull requests and pushes to `main`; they are separate from `npm run verify`.
+`playwright.config.ts` starts the built preview on port 4173 automatically, so
+no manually started server is needed. To run the same suite locally:
 
 ```bash
-npm run build && npm run preview   # terminal 1, serves 4173
+npm run build                       # CI builds before Playwright
 npx playwright install chromium     # first time only
 npx playwright test                 # 18 specs / 65 tests
 ```
+
+The `e2e` job is informational, not a required branch-protection check.
 
 ## Dependency updates
 
@@ -63,7 +67,7 @@ not be confused.
 ```
 lance/
 ├── src/                    # React + TypeScript frontend
-│   ├── components/         # UI, layout, and 180+ archetype trackers
+│   ├── components/         # UI, layout, and archetype trackers (see src/components/features/registry.ts)
 │   ├── screens/            # Route-level page components
 │   ├── store/              # Zustand state management
 │   ├── types/              # TypeScript type definitions

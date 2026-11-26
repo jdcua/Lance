@@ -326,3 +326,27 @@ Clippy clean. Everything is staged but not committed or tagged.
   - Deleted unused `toastStore` object and stale UpdaterModal comment.
 - Final gates all green: verify (309 tests), complexity/boundaries/cycles,
   format, Rust 38 tests + fmt + Clippy with live nesting gate, Playwright 65.
+
+## 2026-11-26 — Mission iteration 3 (final gap pass)
+
+- Phase 0/1: three research + three audit subagents found a node20 action-runtime
+  hazard, a missing network opt-out, a stale v2 cloud roadmap, an unbounded
+  hand-rolled-CRUD pattern, no schema golden test, and doc/DoD gaps.
+  **Why:** finish the remaining actionable items without bulk rewrites.
+- Bumped all 26 pinned `checkout`/`setup-node` lines to node24 SHAs. **Why:** the
+  node20 action runtime was removed from hosted runners.
+- Added persisted default-on `networkChecksEnabled` in the meta slice, gating
+  only the two automatic GitHub calls, with a Settings switch and six tests.
+  **Why:** align "offline-first" with user control; preserve caches/fallbacks.
+- Added a `--trackers` ratchet + 141-file baseline and CI step. **Why:** stop new
+  hand-rolled CRUD without migrating legacy components in bulk.
+- Added a golden DB-schema test (`UPDATE_GOLDEN=1`) and six fast-check properties
+  over pure forecast/currency math. **Why:** protect on-disk compatibility and
+  algebraic invariants of pricing code.
+- Docs: removed v2 cloud roadmap, documented the toggle and `Assisted-by:`
+  convention, fixed E2E/CI claims, broken anchor, AGENTS.md DoD, PR-template
+  evidence checkboxes, and replaced drifting tracker counts with a registry
+  pointer. **Why:** published docs and agent instructions must match behavior.
+- Final gates: verify (321 tests / 72 files), strict complexity/boundaries/
+  trackers, format, Rust 39 tests + fmt + Clippy, Playwright 65/65. Axe E2E now
+  waits for reduced-motion settle before measuring contrast (harness fix).

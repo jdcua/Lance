@@ -3,6 +3,7 @@ import { DEFAULT_CURRENCY, CURRENCIES } from '../../lib/constants';
 import { useToasts } from '../../store/toastStore';
 import { getCurrencySymbol } from '../../lib/currency';
 import Card from '../../components/ui/Card';
+import PrefToggle from '../../components/ui/PrefToggle';
 import {
   SectionHead,
   labelClass,
@@ -18,6 +19,8 @@ import {
 export default function GeneralSection({ bag }: { bag: SettingsBag }) {
   const { form, setForm, autoSave, saved } = bag;
   const profile = useStore((s) => s.profile);
+  const networkChecksEnabled = useStore((s) => s.networkChecksEnabled);
+  const setNetworkChecksEnabled = useStore((s) => s.setNetworkChecksEnabled);
   const addToast = useToasts((s) => s.add);
 
   return (
@@ -259,6 +262,19 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
               Sent proposals will automatically expire after this period.
             </p>
           </div>
+        </div>
+      </Card>
+
+      {/* Connectivity */}
+      <Card className="mb-6">
+        <SectionHead title="Connectivity" isSaved={false} />
+        <div className="space-y-3">
+          <PrefToggle
+            checked={networkChecksEnabled}
+            onChange={setNetworkChecksEnabled}
+            label="Release and update checks"
+            hint="Allow this app to contact GitHub for release notes and update checks"
+          />
         </div>
       </Card>
     </>

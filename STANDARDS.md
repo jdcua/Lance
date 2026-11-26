@@ -130,5 +130,10 @@ more than four parameters or must return two values, redesign the flow instead.
   compatibility. The Rust profile command round-trips them, but no feature
   uses them — do not add gating logic around them. A future migration may drop
   them, but only with an explicit, approved data migration.
-- Existing 177 hand-rolled trackers migrate one at a time; `RecordTracker` is
-  mandatory only for new entity screens.
+- Existing hand-rolled trackers (enumerated in
+  `src/components/features/registry.ts`) migrate one at a time;
+  `RecordTracker` is mandatory only for new entity screens. A ratchet blocks
+  *new* hand-rolled CRUD, not the existing set.
+- jscpd, knip, Stryker and Maintainability Index gates are explicitly skipped:
+  they overlap existing ratchets, add churn without a decision signal, or
+  contradict the low-dependency stance. Revisit only with a concrete need.

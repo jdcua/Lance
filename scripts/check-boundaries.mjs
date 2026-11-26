@@ -146,6 +146,36 @@ if (process.argv.includes('--cycles')) {
   }
 }
 
+// Hand-rolled CRUD ratchet. Pass --trackers to enforce the RecordTracker rule.
+const TRACKER_BASELINE = 'scripts/tracker-baseline.json';
+if (process.argv.includes('--trackers')) {
+  const offenders = files
+    .filter((f) => f.startsWith('src/components/features/') && f.endsWith('.tsx'))
+    .filter((f) => {
+      const text = readFileSync(f, 'utf8');
+      if (/\bRecordTracker\b/.test(text)) return false;
+      const dbCrud = /\bgetDb\b/.test(text) && /INSERT\s+INTO/i.test(text);
+      const storeCrud =
+        /\buseStore\s*\(/.test(text) &&
+        /\bload[A-Z]\w*/.test(text) &&
+        /\b(?:add|create)[A-Z]\w*/.test(text) &&
+        /\b(?:remove|delete)[A-Z]\w*/.test(text);
+      return dbCrud || storeCrud;
+    })
+    .sort();
+
+  if (!existsSync(TRACKER_BASELINE)) {
+    writeFileSync(TRACKER_BASELINE, `${JSON.stringify(offenders, null, 2)}\n`);
+    console.log(`Wrote ${offenders.length} tracker baseline(s) to ${TRACKER_BASELINE}.`);
+  } else {
+    const baseline = new Set(JSON.parse(readFileSync(TRACKER_BASELINE, 'utf8')));
+    const added = offenders.filter((f) => !baseline.has(f));
+    for (const f of added) console.log(`new-hand-rolled-tracker: ${f}`);
+    console.log(`${added.length} new hand-rolled tracker(s) (${offenders.length} total).`);
+    if (added.length) process.exitCode = 1;
+  }
+}
+
 for (const v of violations) console.log(v);
 console.log(`${violations.length} boundary warning(s).`);
 if (process.argv.includes('--strict') && violations.length) process.exit(1);

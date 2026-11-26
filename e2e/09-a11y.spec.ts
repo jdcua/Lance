@@ -5,6 +5,10 @@ import { gotoApp, seedReady, shot } from './helpers';
 const AXE = resolve('node_modules/axe-core/axe.min.js');
 
 async function runAxe(page: import('@playwright/test').Page, label: string) {
+  // Entrance animations temporarily lower opacity, which makes axe report a
+  // false color-contrast failure. Settle the UI before measuring contrast.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.waitForTimeout(300);
   await page.addScriptTag({ path: AXE });
   const result = await page.evaluate(async () => {
     // axe-core is injected above; use a loose cast because it is not a TS dep of this file.

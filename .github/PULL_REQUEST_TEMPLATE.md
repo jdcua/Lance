@@ -16,9 +16,14 @@
 ## Verification
 
 - [ ] `npm run verify` passed locally
+- [ ] `npm run complexity -- --strict` shows no regression
+- [ ] `npm run format:check` clean
+- [ ] Rust touched: `cargo test --lib`, `cargo fmt --check` and the Clippy gate pass
 - [ ] Added or updated a behavior test
 - [ ] Checked UI changes in the app (attach a screenshot if visible)
+- [ ] Evidence attached for non-UI claims (test/CI output or command transcript) when requested
 - [ ] Linked an ADR for decisions that outlive this PR (docs/adr/)
+- [ ] AI assistance disclosed (`Assisted-by:` trailer or note in this PR)
 
 ## For reviewers
 

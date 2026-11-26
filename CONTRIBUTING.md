@@ -28,7 +28,7 @@ npm run tauri dev      # requires Tauri 2 OS libraries on Linux
 dependencies and the Tauri CLI. It does **not** check the Tauri OS libraries;
 on Linux, install `libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev
 patchelf` separately. After setup, see [Browser E2E tests](#browser-e2e-tests)
-for the optional Playwright suite.
+for the Playwright suite, which also runs in CI.
 
 ## Find something to work on
 
@@ -66,14 +66,18 @@ locally before pushing. All gates must pass.
 
 ## Browser E2E tests
 
-Browser E2E tests are not part of `verify` or CI. Run them manually with the
-built app preview serving port 4173:
+Browser E2E tests run in CI in the `e2e` job of `.github/workflows/ci.yml` on
+pull requests and pushes to `main`; they are separate from `npm run verify`.
+`playwright.config.ts` starts the built preview on port 4173 automatically, so
+no manually started server is needed. To run the same suite locally:
 
 ```bash
-npm run build && npm run preview   # terminal 1, serves 4173
-npx playwright install chromium    # first time only
-npx playwright test                # 18 specs / 65 tests
+npm run build                       # CI builds before Playwright
+npx playwright install chromium     # first time only
+npx playwright test                 # 18 specs / 65 tests
 ```
+
+The `e2e` job is informational, not a required branch-protection check.
 
 ## Open a pull request
 
@@ -108,6 +112,7 @@ npx playwright test                # 18 specs / 65 tests
   and `CLAUDE.md` point to it. Do not duplicate its rules in new files.
 - [docs/AGENT_GUIDE.md](docs/AGENT_GUIDE.md) describes the PR loop, how to
   add workflows safely, and what to include in the final report.
+- Disclose AI assistance with an `Assisted-by:` trailer in the PR description or squash commit; this is a convention, not a CI gate.
 - Start with `npm run doctor`, then `npm run verify` after every change.
 - Prefer one small PR per task. Never change core business logic to satisfy a
   failing test, never skip tests, and never commit secrets or personal paths.
@@ -130,7 +135,7 @@ updates, not Dependabot *security alerts and updates*, which are enabled in repo
 settings without a config file. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#dependency-updates).
 
 Pre-OSS tags (`v0.9.0`–`v0.9.9-5`, `v1.1.0`–`v1.2.6`) are deliberately retained
-per [HANDOFF.md](HANDOFF.md#pre-oss-tagged-history--needs-an-owner-decision):
+per [HANDOFF.md](HANDOFF.md#pre-oss-tagged-history--owner-decision):
 a full scan found no live credentials and a rewrite would break SHAs, tags,
 forks and CI pins. Do not delete them.
 

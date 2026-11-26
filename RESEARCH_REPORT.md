@@ -683,6 +683,64 @@ stand unless explicitly superseded.
 
 ---
 
+# 10. Iteration 3 refresh (2026-11-26) — final gap pass
+
+A third research pass checked only what remained after iteration 2. The repo
+is at a deliberate steady state; most earlier concessions remain correct.
+
+## 10.1 Open-source readiness
+
+| Item | Decision |
+|---|---|
+| GitHub Advanced Security / secret-scanning validity checks | **SKIP** — validity checks require an org-owned repo on Team/Enterprise with Secret Protection; the free public-repo secret scanning + push protection + pinned gitleaks stack is sufficient |
+| SBOM / FUNDING.yml / npm provenance | **SKIP** — no funding channel, `private: true`, no npm publish; `THIRD_PARTY_NOTICES.md` + license gates cover attribution |
+| Signed git commits | **ALREADY FINE** — recent commits verified |
+| Persisted network-checks preference | **ADD** — one default-on localStorage preference gating both the release-notes GET and updater check, with a Settings switch and doc updates |
+| Stale "v2 cloud roadmap" in docs/SECURITY.md | **ADD (doc fix)** — remove Supabase/Postgres/GDPR/RLS roadmap that contradicts non-goals |
+| AI-assisted-code disclosure | **ADD (convention only)** — recommend `Assisted-by:` trailer in CONTRIBUTING and a PR checkbox; no CI gate |
+
+## 10.2 Code quality
+
+- **ADD:** zero-dependency ratchet that fails on any **new** hand-rolled CRUD
+  component in `src/components/features/` not using `RecordTracker`, with a
+  committed allowlist for the ~138 existing files. No bulk migration.
+- **ADD:** golden DB-schema test in the existing in-memory Rust migration test
+  (`sqlite_master` + key `PRAGMA table_info`) to protect on-disk compatibility.
+- **ADD (narrow):** property-based tests for pure pricing/forecast math with
+  `fast-check` (antisymmetry, non-negativity, bounded occurrences, currency
+  round-trip, monotonicity). One new devDependency, no gate on score.
+- **SKIP:** jscpd (overlaps the new ratchet + SonarJS duplicate rule), co-change
+  tooling (Python/SaaS, low-dependency stance), Tauri IPC contract tests
+  (needs cross-language schema), Stryker mutation testing (disproportionate).
+- **ALREADY FINE:** fast-refresh warnings, Vite chunk warnings, no MI gate.
+
+## 10.3 Agent-facing patterns and tooling
+
+- **P1:** pinned `actions/checkout@v4` / `setup-node@v4` SHAs declare `node20`,
+  which GitHub removed from hosted runners 2026-09-23. Bump to pinned v6.1.0 /
+  v7.1.0 SHAs (node24), keeping `node-version: 22` inputs.
+- **ADD:** explicit Definition of Done in AGENTS.md §7 and evidence checkboxes
+  in the PR template — both already promised by STANDARDS/RESEARCH_REPORT.
+- **ADD (doc fixes):** CONTRIBUTING/DEVELOPMENT still say E2E is not in CI and
+  require a manual preview; fix. Fix stale HANDOFF anchor. Replace drifting
+  tracker counts with a pointer to `registry.ts`.
+- **SKIP:** generated component index, code-level ADR links, path-scoped
+  instruction duplicates, gitleaks CLI bump. The repo map, ADR index and
+  hand-curated `registry.ts` are sufficient per 2026 AAIF/Anthropic evidence.
+
+## 10.4 Sources added
+
+- https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+- https://docs.github.com/en/enterprise-cloud@latest/code-security/how-tos/secure-your-secrets/customize-leak-detection/enable-validity-checks
+- https://keepassxc.org/privacy/ · https://gdpr-info.eu/art-25-gdpr/
+- https://fast-check.dev/docs/introduction/what-is-property-based-testing/
+- https://allthingsopen.org/articles/open-source-ai-contributions-assisted-by-git-trailer-standard
+- https://trustedoss.github.io/en/ai-coding/legal-considerations
+- https://aaif.io/blog/writing-an-effective-agents-md
+- https://www.anthropic.com/research/effective-context-engineering-for-ai-agents
+
+---
+
 # Sources
 
 **Metrics:** https://sonarsource.com/resources/cognitive-complexity ·
