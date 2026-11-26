@@ -350,3 +350,9 @@ Clippy clean. Everything is staged but not committed or tagged.
 - Final gates: verify (321 tests / 72 files), strict complexity/boundaries/
   trackers, format, Rust 39 tests + fmt + Clippy, Playwright 65/65. Axe E2E now
   waits for reduced-motion settle before measuring contrast (harness fix).
+- Dependency review after GitHub reported 25 Dependabot alerts: prod `npm audit`
+  has only two moderate React Router advisories requiring a major v7 migration
+  (deferred for human review); the critical Rust `zip` advisory is Windows-only
+  via `tauri-plugin-updater`, unpatched in its pinned `zip ^4`, and waived with
+  a substantive `fixBlockedBy` reason in the cargo-audit gate. **Why:** document
+  a critical waiver explicitly rather than ignoring or silently upgrading.

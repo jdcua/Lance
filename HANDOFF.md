@@ -176,6 +176,8 @@ would only be reconsidered if a real secret were discovered (rotate first).
 |---|---|
 | Legacy hand-rolled trackers (see `src/components/features/registry.ts`) | Intentional: each has custom UI/validation; migrate on demand. `RecordTracker` is mandatory for new entity screens; a ratchet blocks new offenders. |
 | 7 fast-refresh DX warnings | Intentional concession: DX-only, every export has a consumer, splitting would worsen boundaries. Documented in `STANDARDS.md`. |
+| `zip` RUSTSEC-2026-0548 (critical, Windows-only) | Waived in `.github/security/cargo-audit-allow.json` with `fixBlockedBy`: `tauri-plugin-updater` 2.13.1 pins `zip ^4`; patched 9.0.5 is a major bump. Not compiled on macOS/Linux, no untrusted ZIP extraction, signed update bundles. Revisit when a stable updater release accepts zip ≥ 9.0.5. |
+| React Router moderate advisories (prod) | Fix requires a major upgrade to v7.18.7; deferred as a human-reviewed migration, not a silent dependency bump. `npm audit --omit=dev --audit-level=high` still passes. |
 | Vite chunk-size warnings (`pdf`, `import`) | Informational; dynamic imports already in place. Further splitting is behavior-riskier than the warning warrants. |
 | Negative invoice qty/rate | QA nit: values are coerced to 0 and a clear "total looks off" validation appears on submit; data integrity is preserved. Left as-is rather than changing form behavior at release time. |
 | Cloudflare Workers Builds check | External GitHub App still posts failures; disable in the Cloudflare dashboard (not a required check). |
