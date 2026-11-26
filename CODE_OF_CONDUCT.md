@@ -28,7 +28,7 @@ Examples of unacceptable behavior:
 - Other conduct which could reasonably be considered inappropriate in a
   professional setting.
 
-## Enforcement
+## Our Responsibility
 
 Community maintainers are responsible for clarifying and enforcing these
 standards and will take appropriate and fair corrective action in response to

@@ -377,3 +377,32 @@ Clippy clean. Everything is staged but not committed or tagged.
 - Final gates: verify (typecheck + e2e typecheck + lint + format + 321 tests),
   complexity/trackers/boundaries clean, 39 Rust tests + fmt + Clippy, Playwright
   65/65. All dependency/gate decisions are documented in HANDOFF.md.
+
+## 2026-11-26 — Mission iteration 5 (exhaustive QA + CI parity)
+
+- Research/audit found PR #44 (this branch) red on Ubuntu CI: two E2E specs
+  hard-coded the macOS `⌘K` label while Linux renders `CtrlK`, and cargo-audit
+  failed on newly published advisories. **Why:** local macOS runs were green but
+  not portable; live CI is authoritative.
+- Fixed the E2E locators to `/Search… (⌘|Ctrl)K/` and cleared all fixable Rust
+  advisories via Cargo.lock updates (rustls 0.23.46, url 2.5.9, webpki* 1.0.12,
+  cookie 0.18.3, ammonia 4.2.5), adding 3 documented semver-blocked waivers for
+  rsa/sqlx/libsqlite3-sys. Local `cargo audit` gate now passes (0 blocking).
+- Exhaustive browser QA pressed all 17 routes, six Settings tabs, global tools,
+  CRUD, shortcuts, drag/drop and axe; added five E2E specs / 19 tests. Result:
+  **84 passed / 0 failed**, reproduced 3×. No product bug; two early failures
+  were harness timing/selector issues fixed inside the specs.
+- Typed the four target `any` sites (`router.tsx` ComponentType, three PDF
+  export casts via `ReactElement<DocumentProps>`); two icon-map `any` sites
+  remain intentionally untouched. Added a zero-dependency doc-command drift
+  gate (82 references validated). A registry-wide render-smoke test was tried
+  but reverted: ~173 mocked data seams caused effect loops/OOM and hangs;
+  recorded as a deferral in HANDOFF.md rather than destabilizing the suite.
+- Corrected documentation: false "all green everywhere" claim qualified, stale
+  counts/headings removed, AI-provenance sentence added, duplicate AGENTS.md /
+  AGENT_GUIDE / copilot rules removed (AGENTS.md now 177 lines).
+- Verified the cargo-audit gate locally after reinstalling cargo-audit: 0
+  blocking, 3 documented waivers. Fixed a flaky exhaustive-QA assertion that
+  waited for all 246 registry checkboxes to rerender; it now samples four.
+- Merge to protected `main`, tag/release, Org/backup admin, Cloudflare check and
+  CoC mailbox remain explicit human actions; no local push to `main` attempted.

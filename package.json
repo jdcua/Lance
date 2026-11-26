@@ -30,6 +30,7 @@
     "notices:generate": "node scripts/generate-notices.mjs",
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "check:trackers": "node scripts/check-boundaries.mjs --trackers",
+    "check:doc-commands": "node scripts/check-doc-commands.mjs",
     "complexity": "node scripts/complexity.mjs",
     "doctor": "node scripts/doctor.mjs",
     "test:axe": "node scripts/axe-gate.mjs",

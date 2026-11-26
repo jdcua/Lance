@@ -96,11 +96,12 @@ more than four parameters or must return two values, redesign the flow instead.
 - Every new bug fix has a failing-then-passing test; every new feature has a
   behavior test.
 - File-scoped iteration: `npm run test -- path/to/file.test.ts`.
-- Definition of done: `npm run verify` green (typecheck, lint, tests, build,
-  `audit:oss`, `check:licenses`, `format:check`, strict boundaries);
-  `npm run complexity -- --strict`, `npm run check:trackers` and
-  `npm run typecheck:e2e` clean; `cargo test --lib`, `cargo fmt --check` and
-  the Clippy gate green when Rust is touched.
+- Definition of done: `npm run verify` green (typecheck, `typecheck:e2e`, lint,
+  tests, build, `audit:oss`, `check:licenses`, `format:check`, strict
+  boundaries); `npm run complexity -- --strict`, `npm run check:trackers` and
+  CI-only `npm run check:boundaries -- --cycles` clean (one legacy cycle
+  baselined); `cargo test --lib`, `cargo fmt --check` and the Clippy gate green
+  when Rust is touched.
 - Coverage percentages are reported, not gated.
 
 ## 6. Concessions (things we explicitly will not over-engineer)

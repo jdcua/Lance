@@ -132,28 +132,27 @@ and `prefers-reduced-transparency` always win.
 ## 7. Before every commit
 
 ```
-npm run doctor         # check local toolchain (Node/npm/Rust/CLI, not OS libs)
-npm run verify         # typecheck + lint + test + build + audit:oss + licenses + format:check + boundaries
+npm run doctor          # local toolchain (Node/npm/Rust/CLI, not OS libs)
+npm run verify          # typecheck, typecheck:e2e, lint, test, build, audit:oss, licenses, format:check, boundaries
 ```
 
-`npm run verify` runs typecheck, lint, test, build, `audit:oss`, `check:licenses`,
-`format:check` and strict boundaries; complexity and tracker ratchets are CI gates.
-When Rust is touched also run `cargo test --lib`, `cargo fmt --check` and the
-Clippy quality gate. A characterization test comes before legacy refactors.
-See `CONTRIBUTING.md` for the PR workflow and `docs/ROADMAP.md` for places
-where outside contributions are welcome.
+`npm run verify` covers typecheck (including `typecheck:e2e`), lint, tests,
+build, `audit:oss`, licenses, `format:check` and strict boundaries; complexity,
+`check:trackers` and CI-only `check:boundaries -- --cycles` are CI gates. For
+Rust also run `cargo test --lib`, `cargo fmt --check` and Clippy; add a
+characterization test before legacy refactors. See `CONTRIBUTING.md` and
+`docs/ROADMAP.md`.
 
 ### Definition of done
 
-- `npm run verify` green: typecheck, lint, tests, build, `audit:oss`, licenses
-  and strict boundaries.
-- `npm run complexity -- --strict` and `npm run format:check` clean.
-- `npm run check:trackers` clean (no new hand-rolled CRUD outside `RecordTracker`).
-- Rust touched: `cargo test --lib`, `cargo fmt --check` and the Clippy gate green.
-- A behavior test was added or updated; failing tests are fixed, never skipped.
-- Docs contradicted by the change are updated in the same PR; decisions that
-  outlive the PR get an ADR in `docs/adr/`.
-- The final report states what changed, what was deleted and what was left untouched.
+- `npm run verify` green (typecheck, `typecheck:e2e`, lint, tests, build,
+  `audit:oss`, licenses, `format:check`, strict boundaries).
+- `npm run complexity -- --strict`, `npm run check:trackers` and CI-only
+  `check:boundaries -- --cycles` clean (no new cycle; one legacy baselined).
+- Rust touched: `cargo test --lib`, `cargo fmt --check` and Clippy green.
+- A behavior test was added/updated; failing tests fixed, never skipped.
+- Docs contradicted by the change updated in the same PR (ADR in `docs/adr/`
+  for lasting decisions); report changes, deletions and deliberate non-changes.
 
 ---
 
@@ -170,17 +169,8 @@ where outside contributions are welcome.
 | `src/components/ui/RecordTracker.tsx` | Generic tracker (replaces copy-paste feature trackers) |
 
 Duplicate basenames (`index.ts` ×8, `shared.tsx` ×3) are intentional; import by
-full path. Do not rename on touch.
-
----
-
-## 9. What NOT to do
-
-- Don't add new `lance:...` CustomEvent dispatch/listen sites.
-- Don't add `transition-all`, `backdrop-blur`, gradient fills, or decorative sparkles.
-- Don't create a new feature tracker by copying an existing one — use RecordTracker.
-- Don't add state/actions to the store without considering if they belong in a slice.
-- Don't ignore test failures.
+full path. Do not rename on touch. The prohibitions in §§1–6 are all enforced
+by a rule or a lint gate; there is no separate "what not to do" list.
 
 ---
 

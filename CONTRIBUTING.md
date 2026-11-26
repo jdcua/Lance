@@ -133,7 +133,12 @@ The `e2e` job is informational, not a required branch-protection check.
   and `CLAUDE.md` point to it. Do not duplicate its rules in new files.
 - [docs/AGENT_GUIDE.md](docs/AGENT_GUIDE.md) describes the PR loop, how to
   add workflows safely, and what to include in the final report.
-- Disclose AI assistance with an `Assisted-by:` trailer in the PR description or squash commit; this is a convention, not a CI gate.
+- Disclose AI assistance with an `Assisted-by:` trailer in the PR description
+  or squash commit; this is a convention, not a CI gate. `Assisted-by:` is a
+  provenance disclosure, not a copyright or license claim: the human submitter
+  remains the author, confirms they reviewed the result, and confirms the right
+  to license it under MIT, including AI-assisted portions. Models are tools,
+  not `Co-authored-by`; Lance has no DCO, so no agent may add `Signed-off-by`.
 - Start with `npm run doctor`, then `npm run verify` after every change.
 - Prefer one small PR per task. Never change core business logic to satisfy a
   failing test, never skip tests, and never commit secrets or personal paths.

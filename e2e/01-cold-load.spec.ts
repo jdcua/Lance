@@ -9,7 +9,8 @@ test.describe('flow 1 · cold load', () => {
 
     await expect(page.getByRole('complementary', { name: 'Primary navigation' })).toBeVisible();
     await expect(page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('heading', { name: 'Dashboard' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Search… ⌘K' })).toBeVisible();
+    // Shortcut label is platform-dependent (⌘ on macOS, Ctrl elsewhere).
+    await expect(page.getByRole('button', { name: /Search… (⌘|Ctrl)K/ })).toBeVisible();
     await expect(page.getByRole('contentinfo', { name: 'Status' })).toContainText('Lance');
     const path = await shot(page, '01-cold-load-dashboard');
     console.log(`[evidence] cold-load screenshot: ${path}`);

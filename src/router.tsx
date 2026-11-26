@@ -32,8 +32,7 @@ const NotFound = lazyRetry(() => import('./screens/NotFound'));
  * reload loops; a successful import clears it.
  */
 const CHUNK_RETRY_KEY = 'lance:chunk-retry';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function lazyRetry<T extends ComponentType<any>>(importer: () => Promise<{ default: T }>) {
+function lazyRetry<T extends ComponentType>(importer: () => Promise<{ default: T }>) {
   return lazy(() =>
     importer()
       .then((m): { default: T } => {

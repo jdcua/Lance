@@ -29,7 +29,8 @@ test.describe('flow 4 · search and command palette', () => {
   test('topbar Search button opens palette and shows shortcut help when empty', async ({ page }) => {
     await seedReady(page);
     await gotoApp(page, '/clients');
-    await page.getByRole('button', { name: 'Search… ⌘K' }).click();
+    // Shortcut label is platform-dependent (⌘ on macOS, Ctrl elsewhere).
+    await page.getByRole('button', { name: /Search… (⌘|Ctrl)K/ }).click();
     const palette = page.getByRole('dialog', { name: 'Command palette' });
     await expect(palette).toBeVisible();
     await expect(palette.getByRole('listbox', { name: 'Search results' })).toContainText(

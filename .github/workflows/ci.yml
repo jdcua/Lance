@@ -59,6 +59,8 @@ jobs:
         run: npm run check:boundaries -- --cycles
       - name: No new hand-rolled trackers
         run: npm run check:trackers
+      - name: Doc command references
+        run: npm run check:doc-commands
       - name: Open-source audit
         run: npm run audit:oss
       - name: Dependency license policy

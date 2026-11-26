@@ -623,7 +623,7 @@ stand unless explicitly superseded.
 | Item | Decision |
 |---|---|
 | Keep MIT, no CLA/dual licensing | **Already fine** — unchanged |
-| GitHub Secret Protection + push protection + validity checks | **ADD / verify in settings.** Free on public repos; complements gitleaks with validity checks and push-time blocking. API check found all three **disabled**; enable in Phase 3 (Dependabot security updates enabled alongside). |
+| GitHub Secret Protection + push protection + validity checks | **Superseded by §10.1:** secret scanning and push protection are **enabled**; validity checks are **SKIP** (org/Advanced-Security gated). Original row: **ADD / verify in settings** — API check found all three disabled; enable in Phase 3. |
 | GitHub Discussions + private vulnerability reporting | **Already enabled** (API-verified 2026-11-26), so the issue-template/security links are live |
 | Network/privacy disclosure | **ADD** one short paragraph naming the unauthenticated `api.github.com` release-notes GET, the silent signed-updater check, and the loopback-only portal with capability URL token |
 | SPDX IDs in new source files | **ADD gradually** (one line + CONTRIBUTING note); full REUSE compliance is overkill for a single-license MIT app |
@@ -639,10 +639,11 @@ stand unless explicitly superseded.
 - Reconcile Rust thresholds with STANDARDS: Clippy currently enforces 100
   lines / 7 args; the 60-line / 4-param figures are review targets, not gates.
   Make the standard say so explicitly rather than silently promising more.
-- **Add narrow tooling:** jscpd advisory with `minTokens` 70–100 + baseline
-  (targets the ~150 hand-rolled trackers), knip with an issue budget, and one
-  dependency-cruiser `no-circular` CI rule. All with baselines; none as hard
-  global gates.
+- **Superseded by §10.2 — SKIP.** Original iteration-2 proposal: jscpd advisory
+  with `minTokens` 70–100 + baseline (targets the ~150 hand-rolled trackers),
+  knip with an issue budget, and one dependency-cruiser `no-circular` CI rule.
+  Withdrawn: the tracker ratchet and SonarJS duplicate rule cover duplication,
+  and the cycle rule already lives in `STANDARDS.md` §1.
 - **Skip** Maintainability Index as a gate (LOC-dominated, no actionable signal).
 - **Add** CI-only Playwright retries (2) with existing trace-on-failure;
   quarantine with `test.fixme()` + issue link. Do not treat retries as a fix.
@@ -757,7 +758,7 @@ is at a deliberate steady state; most earlier concessions remain correct.
 | `.github/dependabot.yml` | **SKIP** — alerts/security updates work without it and `deps.yml` covers version updates; do not duplicate signals. |
 | Required `e2e` check | **SKIP** — impossible without a branch-protection admin change; keep the advisory note. |
 | `security.txt`, FUNDING, SBOM, SPDX, AI disclosure | **ALREADY FINE / SKIP** per recorded decisions. |
-| Research/audit doc contradictions | **ADD (doc fixes)** — §0.4/§0.5 still describe pre-iteration-1 state; §8 Clippy path/threshold is stale; HANDOFF count and React Router lines are stale. |
+| Research/audit doc contradictions | **ADD (doc fixes)** — correction: §0.4/§0.5 and the §8 Clippy path/threshold were **already fixed** in iteration 4 (see §§0.4, 0.5 and 8), not still stale. The remaining stale items were the HANDOFF counts/date and React Router note, plus the §9.1/§9.2 rows now marked superseded above. |
 
 ## 11.2 Code quality
 
@@ -773,7 +774,8 @@ is at a deliberate steady state; most earlier concessions remain correct.
   add `cd src-tauri &&` to the failure message.
 - **SKIP:** baseline decay warnings (zero stale entries), fixed fast-check
   seeds (failures already print replayable seeds), jscpd/knip/Stryker.
-- Confirm the 7 fast-refresh warnings and 141→140 tracker counts locally.
+- Confirm the 7 fast-refresh warnings and the corrected 140-tracker baseline
+  locally.
 
 ## 11.3 Agent/contributor docs
 
@@ -784,8 +786,9 @@ is at a deliberate steady state; most earlier concessions remain correct.
   (not only retrospectives). Link the ADR index from README/CONTRIBUTING.
 - **P3:** align STANDARDS DoD, HANDOFF counts/dates, and "no cycles" wording to
   "no **new** cycles; one baselined legacy cycle".
-- AGENTS.md is 187/200 lines; two redundant lines can fund a `check:trackers`
-  pointer. No new instruction files, generated indexes or code-level ADR links.
+- AGENTS.md was 187/200 lines at iteration 4; iteration 5 reclaimed the
+  duplicated §9 rules and named `typecheck:e2e` plus the CI-only cycles gate.
+  No new instruction files, generated indexes or code-level ADR links.
 
 ## 11.4 Sources added
 
@@ -794,6 +797,32 @@ is at a deliberate steady state; most earlier concessions remain correct.
 - https://reactrouter.com/7.18.4/upgrading/v6
 - https://playwright.dev/docs/test-typescript
 - https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches
+
+---
+
+# 12. Iteration 5 refresh (2026-11-26) — QA and CI-parity pass
+
+A fifth full mission pass focused on exhaustive browser QA and live CI parity.
+
+## 12.1 Findings and decisions
+
+| Item | Decision |
+|---|---|
+| Merge `test/rust-commands` into protected `main` | **HUMAN** — PR #44 is open; branch protection, review process and six conflicting Dependabot PRs make a local push unsafe |
+| Live PR #44 CI failures | **FIXED:** platform-dependent E2E locators (`⌘K` vs `CtrlK`) made regex-based; cargo-audit advisories cleared by Cargo.lock updates (rustls, url, webpki, cookie, ammonia 4) with 3 documented semver-blocked waivers |
+| Exhaustive app QA | **ADD:** 5 new E2E specs / 19 tests covering all 17 routes, six Settings tabs, global tools, CRUD, shortcuts, drag/drop, axe — 84 E2E tests total, 0 failures, reproduced 3× |
+| Disabled archetype surface (~173 components) | **ADD:** registry-wide Vitest render-smoke test with mocked data seams; no app-surface change |
+| Six explicit `any` sites | **ADD:** type them with concrete types / narrowing |
+| Doc command drift | **ADD:** zero-dep `check:doc-commands.mjs` CI step validating all `npm run X` references in agent docs (82 references) |
+| Doc contradictions (HANDOFF/RESEARCH/AGENTS/CoC) | **FIXED:** false "all green everywhere" claim qualified (local macOS vs Ubuntu CI), stale counts/headings/rows corrected, AI provenance sentence added, duplicated AGENTS/AGENT_GUIDE/copilot rules removed |
+| Required `e2e` check, Org/backup admin, Cloudflare app, conduct mailbox, tag/release | **HUMAN** — either needs an admin, external dashboard, or a monitored inbox; none performed without approval |
+
+## 12.2 Sources added
+
+- US Copyright Office Part 2 (2025) and FSFE/ATO/Trusted OSS AI-provenance guidance
+- GitHub check-run data for PR #44 (live CI evidence)
+- https://playwright.dev/docs/test-typescript
+- arXiv 2602.11988 and 2610.31715 (context-file cost / repo census)
 
 ---
 

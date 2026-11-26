@@ -9,14 +9,10 @@ component, the glass-chrome UI standard, and the testing rules.
 
 ## Before changing anything
 
-```bash
-npm run doctor   # verify Node, Rust and installed dependencies (not OS libs)
-npm run verify   # typecheck + lint + tests + build + audit:oss + licenses + format:check + boundaries
-npm run complexity -- --strict   # complexity gate (also runs in CI)
-npm run check:trackers           # no new hand-rolled CRUD outside RecordTracker (CI gate)
-npm run format:check             # Prettier check (part of verify and CI); `npm run format` writes
-npm run typecheck:e2e            # typecheck Playwright specs outside the main tsconfig (CI step)
-```
+Run the command sequence in [`AGENTS.md` §7](../AGENTS.md#7-before-every-commit)
+(`npm run doctor`, `npm run verify` and the complexity/tracker gates); setup and
+gate details are in [`CONTRIBUTING.md`](../CONTRIBUTING.md). Do not duplicate
+those lists here.
 
 ## Local map
 
@@ -32,9 +28,9 @@ npm run typecheck:e2e            # typecheck Playwright specs outside the main t
 
 ## Non-negotiables
 
-- No accounts, cloud, telemetry, analytics, license keys or paywalls.
-- Never skip or weaken a test. Tests describe behavior, not DOM internals.
-- Preserve the single store and command registry; do not add parallel systems.
-- Keep diffs small and open one PR per task. Use `.github/PULL_REQUEST_TEMPLATE.md`.
-- Attach test/CI evidence for non-UI claims, link an ADR for decisions that
-  outlive the PR, and disclose AI assistance with an `Assisted-by:` trailer.
+The rules live in [`AGENTS.md`](../AGENTS.md) §§1–6 and
+[`CONTRIBUTING.md`](../CONTRIBUTING.md): no accounts/cloud/telemetry/paywalls,
+one store and command registry, no skipped tests, small diffs and one PR per
+task. Use [`PULL_REQUEST_TEMPLATE.md`](PULL_REQUEST_TEMPLATE.md), attach
+test/CI evidence for non-UI claims, link an ADR for decisions that outlive the
+PR, and disclose AI assistance with an `Assisted-by:` trailer.
