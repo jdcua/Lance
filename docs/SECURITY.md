@@ -14,7 +14,7 @@
 
 - Remote code execution via network
 - Account takeover (no accounts)
-- Data breach via server (no server)
+- Data breach via remote server (none; the client portal binds 127.0.0.1 only)
 - Man-in-the-middle on update download
   (mitigated by Tauri's signature verification)
 

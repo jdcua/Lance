@@ -88,7 +88,7 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
           <div>
             <label className={labelClass}>Default hourly rate</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-secondary)]">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-primary)]">
                 {getCurrencySymbol(form.currency || profile?.currency || DEFAULT_CURRENCY)}
               </span>
               <input

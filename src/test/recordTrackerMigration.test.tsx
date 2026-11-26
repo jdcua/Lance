@@ -25,12 +25,7 @@ type Row = Record<string, unknown>;
 let seq = 0;
 
 /** Seed the real store with an in-memory slice whose add appends to the list. */
-function seedStore<T extends Row>(
-  key: string,
-  loadKey: string,
-  addKey: string,
-  removeKey: string,
-) {
+function seedStore<T extends Row>(key: string, loadKey: string, addKey: string, removeKey: string) {
   const add = vi.fn(async (data: Partial<T>) => {
     const row = { ...data, id: `row-${++seq}`, project_id: 'p1' } as unknown as T;
     useStore.setState((s) => {

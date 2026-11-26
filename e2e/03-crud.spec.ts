@@ -34,9 +34,9 @@ test.describe('flow 3 · core CRUD in browser (localStorage shim)', () => {
     await expect(confirm).toBeVisible();
     await expect(confirm).toContainText(EDITED);
     await confirm.getByRole('button', { name: 'Delete', exact: true }).click();
-    await expect(page.getByText('Your roster awaits')).toBeVisible();
+    await expect(page.getByText(/No clients yet|Your roster awaits|Nobody on the books/)).toBeVisible();
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await expect(page.getByText('Your roster awaits')).toBeVisible();
+    await expect(page.getByText(/No clients yet|Your roster awaits|Nobody on the books/)).toBeVisible();
     await shot(page, '07-client-deleted');
     console.log('[evidence] deleted client absent after reload; empty state present');
   });

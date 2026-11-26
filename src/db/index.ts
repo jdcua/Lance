@@ -612,7 +612,8 @@ async function runMigrations(database: Database): Promise<void> {
 
   // ─── Alter columns for backward compatibility ───
   // Legacy license_* and trial_started_at columns are retained so existing
-  // SQLite databases keep opening. The app no longer reads or writes them.
+  // SQLite databases keep opening. The browser DB path no longer reads or
+  // writes them; the Rust profile command round-trips the columns.
   for (const sql of newColumns) {
     try {
       await database.execute(sql);

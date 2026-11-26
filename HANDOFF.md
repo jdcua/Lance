@@ -43,7 +43,7 @@ closeout are complete. No business behavior changed.
 | Check | Result |
 |---|---|
 | `npm run verify` | typecheck, lint (0 errors), **309 tests / 69 files**, build, OSS audit (610 files), license policy, strict boundaries — pass |
-| `npx playwright test` | **42 passed / 0 failed** against the built preview (Chromium) |
+| `npx playwright test` | **65 passed / 0 failed** against the built preview (Chromium) |
 | `npm run complexity -- --strict` | 0 functions above cyclomatic/cognitive 15 |
 | `npm run check:boundaries -- --strict` | 0 warnings |
 | `npm run format:check` | clean |
@@ -54,11 +54,18 @@ closeout are complete. No business behavior changed.
 
 ## Playwright QA (post-refactor)
 
-A full browser pass was added under `e2e/` (9 specs, 42 tests) and run against
+A full browser pass was added under `e2e/` (18 specs, 65 tests) and run against
 the built preview. It covers cold load, first-run onboarding, 16 routes,
 client/project CRUD with reload persistence, command palette/search, settings
 persistence, all four dialogs, Pipeline/Follow-ups, migrated trackers, network
-privacy and axe checks on three screens. Final result: **42 passed / 0 failed**.
+privacy, axe checks on three screens, plus edge cases: empty states, delete
+guards, corrupt localStorage, long/negative inputs, stacked-dialog Escape and
+focus return, backup export→reset→import, share-link fallback and all 7 themes.
+Final result: **65 passed / 0 failed**.
+
+Edge-case findings fixed: resuming a stored onboarding step, topmost-dialog
+Escape handling, focus return to the dialog trigger, and a serious color-contrast
+violation on `/settings`.
 
 Two issues surfaced and were resolved:
 
@@ -78,6 +85,23 @@ report and `qa-shots/`.
 
 All work is committed on `test/rust-commands` and pushed to `origin`; the
 release itself has not been tagged or published.
+
+## Pre-OSS tagged history — needs an owner decision
+
+The current tree is MIT-clean, but **16 old tags** (`v0.9.0`–`v0.9.9-5`,
+`v1.1.0`–`v1.2.6`) still point at the pre-OSS commercial lineage. Those tagged
+commits contain the deleted `landing/`, `promo/` and `license-worker/` trees:
+published paywall prices, Paddle license fulfillment (HMAC/webhook secret
+*references*, no values), three account-linked price IDs, a Cloudflare KV ID,
+owner-identifying `*.cuajuandiego.workers.dev` subdomains and the promo launch
+playbook. A full scan found **no live credentials**, so no rotation is needed.
+
+This is a discoverability/privacy decision, not a security compromise.
+**Decision (owner, 2026-11-25): keep everything.** No live secret was found, so
+there is nothing to rotate or scrub; the project's paid past stays public and
+the tags/history are untouched. A full history rewrite is explicitly rejected:
+it would break SHAs, tags, forks and CI pins without purging cached blobs. It
+would only be reconsidered if a real secret were discovered (rotate first).
 
 ## Remaining items (deliberate decisions or external actions)
 

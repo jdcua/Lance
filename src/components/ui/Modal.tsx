@@ -45,6 +45,13 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
     if (open) {
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key !== 'Escape') return;
+        // Only the dialog that received the key may consume Escape. Check the
+        // event origin first: React can unmount the palette before this
+        // document-level listener runs, so a DOM count alone is unreliable.
+        const origin = e.target instanceof Element ? e.target.closest('[role="dialog"]') : null;
+        if (origin && origin !== modalRef.current) return;
+        const dialogs = document.querySelectorAll('[role="dialog"]');
+        if (dialogs.length > 1 && dialogs[dialogs.length - 1] !== modalRef.current) return;
         e.preventDefault();
         e.stopPropagation();
         // Close even when an input is focused

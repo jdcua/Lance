@@ -401,25 +401,6 @@ select {
   animation: timer-breathe 4s ease-in-out infinite;
 }
 
-/* Onboarding/landing orbit: slow tool rings around the mark. Transform
-   rotation only; ambient-motion silences it under calm + reduced-motion. */
-@keyframes orbit-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-orbit-slow {
-  animation: orbit-spin 36s linear infinite;
-}
-
-.animate-orbit-slower {
-  animation: orbit-spin 60s linear infinite;
-}
-
 /* ── Dark mode ── */
 html.dark body,
 html.dark #root {
@@ -557,7 +538,7 @@ html.dark * {
 /* Intensity control (prefs.intensity, default balanced; see
    src/design/tokens.ts). Calm disables ambient motion and caps hero moments
    at the daily-motion ceiling; expressive is honored during onboarding
-   surfaces only — the app never reads it as permission for orbit/spin. */
+   surfaces only. */
 [data-intensity='calm'] .ambient-motion {
   animation: none !important;
 }

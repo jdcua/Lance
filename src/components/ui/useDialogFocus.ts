@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 
 const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -15,13 +15,20 @@ export function useDialogFocus(
   open: boolean,
   opts?: { initialSelector?: string; returnFocus?: boolean },
 ): void {
+  // Capture the trigger during render, before any child effect can move focus
+  // into the dialog (some dialogs auto-focus their first input on mount).
+  const returnTargetRef = useRef<HTMLElement | null>(null);
+  if (open && !returnTargetRef.current) {
+    const active = document.activeElement;
+    returnTargetRef.current = active instanceof HTMLElement ? active : null;
+  }
+
   useEffect(() => {
     if (!open) return;
     const el = containerRef.current;
     if (!el) return;
 
-    const previouslyFocused =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previouslyFocused = returnTargetRef.current;
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return;
@@ -56,12 +63,21 @@ export function useDialogFocus(
       // silently reset to <body>), so "still inside" is the wrong test.
       // Restore unless the user has deliberately moved focus to a live
       // element elsewhere — yanking it back would be rude.
-      const active = document.activeElement;
-      const movedElsewhere =
-        active instanceof HTMLElement && active !== document.body && !el.contains(active);
-      if (opts?.returnFocus !== false && previouslyFocused && !movedElsewhere) {
-        previouslyFocused.focus();
-      }
+      const target = previouslyFocused;
+      // Restore on the next frame: by cleanup time React may have detached the
+      // dialog and reset focus to <body>, and focusing a node that is being
+      // removed is a no-op.
+      requestAnimationFrame(() => {
+        if (opts?.returnFocus === false || !target || !document.contains(target)) return;
+        const active = document.activeElement;
+        const movedElsewhere =
+          active instanceof HTMLElement &&
+          active !== document.body &&
+          active !== target &&
+          !el.contains(active);
+        if (!movedElsewhere) target.focus();
+        returnTargetRef.current = null;
+      });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);

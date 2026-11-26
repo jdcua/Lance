@@ -274,3 +274,25 @@ Clippy clean. Everything is staged but not committed or tagged.
 - Final gates: `npm run verify` green (309 tests / 69 files), strict
   complexity/boundaries clean, Rust 38 tests + fmt + Clippy clean, and
   `npx playwright test` **42 passed / 0 failed**.
+
+## 2026-11-25 — Marketing/history audit and edge-case QA
+
+- Audited the deleted marketing site, promo workflows and license worker. They
+  are absent from the working tree and current CI; no live secret or payment
+  credential was found anywhere in git history. The 16 old tags still reference
+  the pre-OSS commercial lineage (prices, Paddle IDs, owner subdomains).
+  **Owner decision: keep tags and history as-is** — no rotation, no rewrite.
+  Recorded in `HANDOFF.md`. **Why:** flag high-risk history changes for review.
+- Removed stale landing/orbit comments and dead orbit CSS from `tokens.ts`,
+  `prefs.ts` and `index.css`. **Why:** no consumer remains after the landing
+  site was deleted.
+- Corrected the README/SECURITY "no server" claims (the portal binds
+  127.0.0.1) and the "never read or written" claims about legacy license
+  columns (the Rust profile command round-trips them).
+- Expanded Playwright to 18 specs / 65 tests covering nine edge-case groups.
+  Fixed four real defects surfaced: onboarding ignored the stored step on
+  reload, Escape closed both a dialog and the command palette, focus was not
+  returned to the dialog trigger, and a serious contrast violation on
+  `/settings`. **Why:** verify behavior under edge cases before release.
+- Final gates: `npm run verify`, strict complexity/boundaries, `format:check`,
+  Rust 38 tests + fmt + Clippy, and `npx playwright test` **65 passed / 0 failed**.

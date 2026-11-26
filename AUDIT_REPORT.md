@@ -123,8 +123,9 @@ and the Clippy gate also pass. **No P0 build or correctness blockers remain.**
    `src-tauri/src/commands/finance.rs:53-54,66-70,186,246-252`,
    `src-tauri/src/db.rs:166-180,517-521`, `src/db/schema.ts:8-9,31-35` and
    `src/types/index.ts:143-144,158-161`, while `CHANGELOG.md:11` claims all
-   gating infrastructure was removed. Decide: compatibility-only (document
-   explicitly) or drop via migration.
+   gating infrastructure was removed. **RESOLVED 2026-11-25:** compatibility-only
+   decision recorded in `STANDARDS.md` and `docs/ARCHITECTURE.md`; columns
+   intentionally retained because dropping them would break existing databases.
 6. `scripts/audit-oss.mjs:13-23,45` is a regex, not a license or secret
    scanner, and misses legacy licensing identifiers; it excludes `.md` from
    proprietary-string checks.

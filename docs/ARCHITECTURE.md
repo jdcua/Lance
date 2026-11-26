@@ -109,8 +109,9 @@ All tables use `CREATE TABLE IF NOT EXISTS`. Migrations are split into ordered
 per-stage SQL functions in `src-tauri/src/db.rs`, run by a thin `run_migrations`.
 
 Legacy license columns (`license_key`, `licensed_at`, `trial_started_at`, etc.)
-remain in some tables and payload types for on-disk compatibility only. The app
-does not read or write them and there is no licensing gate; do not add one.
+remain in some tables and payload types for on-disk compatibility. The Rust
+profile command round-trips them, but no feature reads them and there is no
+licensing gate; do not add one.
 
 | Table | Description |
 |-------|-------------|

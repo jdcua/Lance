@@ -116,7 +116,8 @@ more than four parameters or must return two values, redesign the flow instead.
 - Preserve odd-looking behavior until a separate, explicitly approved change.
 - Legacy license columns (`license_key`, `licensed_at`, `trial_started_at`, etc.)
   are retained in the database and TypeScript/Rust payload types for on-disk
-  compatibility only. They are never read or written by application code; do
-  not add gating logic around them. A future migration may drop them.
+  compatibility. The Rust profile command round-trips them, but no feature
+  uses them — do not add gating logic around them. A future migration may drop
+  them, but only with an explicit, approved data migration.
 - Existing 177 hand-rolled trackers migrate one at a time; `RecordTracker` is
   mandatory only for new entity screens.

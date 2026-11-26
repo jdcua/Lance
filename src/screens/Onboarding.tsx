@@ -204,6 +204,8 @@ export default function Onboarding({ visible = true, onClose = () => {} }: Onboa
     // otherwise re-trigger this effect and snap the user back to step 1.
     if (!profileLoaded || !profile || hydrated.current) return;
     hydrated.current = true;
+    const stored = localStorage.getItem('lance:onboarding-step');
+    const resumedStep = stored === '2' || stored === '3' ? Number(stored) : 1;
     setForm({
       name: profile.name || '',
       email: profile.email || '',
@@ -213,8 +215,8 @@ export default function Onboarding({ visible = true, onClose = () => {} }: Onboa
       writing_style: profile.writing_style || 'professional',
       ai_enabled: profile.ai_enabled ?? false,
     });
-    setStep(1);
-    setIsResuming(true);
+    setStep(resumedStep);
+    setIsResuming(resumedStep > 1 || Boolean(profile.name));
   }, [profile, profileLoaded]);
 
   const persist = useCallback(
@@ -451,7 +453,8 @@ export default function Onboarding({ visible = true, onClose = () => {} }: Onboa
               <div className="space-y-3">
                 <div>
                   <label className="form-label">
-                    Your name <span className="font-normal text-[var(--text-tertiary)]">(optional)</span>
+                    Your name{' '}
+                    <span className="font-normal text-[var(--text-tertiary)]">(optional)</span>
                   </label>
                   <input
                     type="text"
@@ -514,12 +517,7 @@ export default function Onboarding({ visible = true, onClose = () => {} }: Onboa
                   >
                     Skip · start fresh
                   </Button>
-                  <Button
-                    size="sm"
-                    onClick={finish}
-                    disabled={isSaving}
-                    className="flex-1"
-                  >
+                  <Button size="sm" onClick={finish} disabled={isSaving} className="flex-1">
                     Yes, show me around
                   </Button>
                 </div>
