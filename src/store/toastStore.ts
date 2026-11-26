@@ -10,22 +10,6 @@ export type Toast = {
   actions?: ToastAction[];
 };
 
-const toastStore = {
-  get toasts() {
-    return useStore.getState().toasts;
-  },
-  add: (
-    message: string,
-    type: ToastType = 'info',
-    duration?: number,
-    actions?: ToastAction[],
-  ): string => useStore.getState().addToast(message, type, duration, actions),
-  remove: (id: string) => useStore.getState().removeToast(id),
-  update: (id: string, message: string) => useStore.getState().updateToast(id, message),
-  pause: (id: string) => useStore.getState().pauseToast(id),
-  resume: (id: string) => useStore.getState().resumeToast(id),
-};
-
 export interface ToastSlice {
   toasts: Toast[];
   add: (message: string, type?: ToastType, duration?: number, actions?: ToastAction[]) => string;
@@ -57,5 +41,3 @@ export function useToasts(selector?: (state: ToastSlice) => unknown) {
     resume: bundle.resumeToast,
   };
 }
-
-export { toastStore };

@@ -16,6 +16,9 @@ both imprecise. 593 files are tracked.
 
 ## 1. Current state and measurements
 
+**These are Phase 1 audit-time snapshots.** Final post-transformation numbers
+are in §7 and `HANDOFF.md`; do not read later counts as regressions.
+
 | Area | Current | Prior audit |
 |---|---:|---:|
 | `src/` TS/TSX files / LOC | 407 / 88,185 | 400 / ~88,000 |
@@ -298,3 +301,56 @@ The P0/P1 items above were addressed during Phase 3. Final state:
 A fresh clone (`git clone` + `npm ci` + `npm run verify`) and a copy of the
 final working tree both pass end to end. See `HANDOFF.md` for the complete
 release checklist and remaining debt.
+
+---
+
+## 8. Iteration 2 audit (2026-11-26) — new gaps
+
+Three parallel audits re-checked only the new items from `RESEARCH_REPORT.md` §9.
+No new live secret or P0 legal defect was found.
+
+### P0 — code quality
+
+1. **The Rust nesting gate cannot fire.** `excessive-nesting-threshold = 0`
+   makes Clippy's lint return immediately (verified empirically at 0 vs 3).
+2. **`src-tauri/Clippy.toml` is never read on Linux CI.** Clippy only looks for
+   `.clippy.toml` / `clippy.toml` (lowercase); proven on a case-sensitive
+   volume. Harmless today only because all configured values equal defaults.
+   Renaming is a prerequisite for any threshold change. At threshold 3 there
+   are 3 offenders, all in `src/server.rs` (279, 281, 894).
+
+### P1
+
+3. `CONTRIBUTING.md:53-55` claims CI does **not** run three gates it actually
+   runs. Also `npm install` vs CI's `npm ci` drift in all quickstarts.
+4. ADRs promised by `GOVERNANCE.md` and Tier 3 are absent.
+5. Network disclosure is broadly right but omits endpoints, timing, data sent
+   and opt-out status (release notes, silent updater, loopback portal).
+6. `CONTRIBUTING.md:3` has no inbound MIT contribution statement; no SPDX
+   header exists in any first-party source file.
+7. No clone, dead-code or cycle detection; no CI job runs the 65 E2E tests;
+   `playwright.config.ts` has no CI retries.
+8. GitHub Secret Protection, push protection and validity checks remain
+   disabled. Discussions and private vulnerability reporting are already
+   enabled (verified). Dependabot alerts/security updates unverified.
+
+### P2
+
+9. `src/store/toastStore.ts` / `updaterStore.ts` are typed accessors over the
+   single store (31 importer files), not second stores; document, do not rename.
+   The unused `toastStore` object has zero importers and can be deleted.
+10. Eight `index.ts` and three `shared.tsx` basenames need a path map, not renames.
+11. Stale `UpdaterModal` comment claims no caller exists; `useAutoUpdater` does.
+12. Signed git commits are already satisfied (20/20 recent commits verified);
+    research §9.1 rationale should say "already satisfied", not "skip".
+
+### Implementation order
+
+Fix the Rust gate (rename + threshold + 3 local refactors), enable GitHub
+security settings, add the privacy/disclosure/docs fixes and ADRs, add narrow
+zero-dependency structural ratchets and CI-only E2E retries, then re-verify.
+
+**Status:** implemented in iteration 2. See `HANDOFF.md` "Iteration 2 refresh"
+and `TRANSFORMATION_LOG.md` for exact changes and final verification. Validity
+checks remain off (Advanced Security-gated); the `e2e` job is not a required
+check (branch protection intentionally unchanged).

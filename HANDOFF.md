@@ -86,7 +86,38 @@ report and `qa-shots/`.
 All work is committed on `test/rust-commands` and pushed to `origin`; the
 release itself has not been tagged or published.
 
-## Pre-OSS tagged history — needs an owner decision
+## Iteration 2 refresh (2026-11-26)
+
+A second full mission pass found and fixed remaining gaps:
+
+- **Rust gate repaired:** `src-tauri/Clippy.toml` → `clippy.toml` (Linux CI
+  only reads lowercase) and `excessive-nesting-threshold` 0 → 3. The gate was
+  provably a no-op before. Three offenders in `server.rs` fixed with a
+  `rate_label` helper and one narrow, documented `#[allow]`.
+- **GitHub hardening:** secret scanning, push protection and Dependabot
+  security updates **enabled** via API. Validity checks could not be enabled
+  (Advanced Security-gated field); Discussions and private vulnerability
+  reporting were already enabled. gitleaks CI remains defence in depth.
+- **Standards honesty:** STANDARDS/AGENTS now separate CI gates (nesting 3,
+  100 lines, 7 args, 250 type complexity) from review targets (60 lines, 4
+  params, cognitive 20). `toastStore.ts`/`updaterStore.ts` are documented as
+  accessors over the single store; the unused `toastStore` object was deleted.
+- **Three ADRs** added under `docs/adr/` (single store, typed command registry,
+  MIT/keep-history), with index and PR-template checkbox.
+- **Docs:** inbound MIT contribution statement + gradual SPDX note; full
+  network/privacy disclosure; `npm ci` quickstarts; corrected CI-gate and
+  architecture text; Playwright E2E instructions; Dependabot vs `deps.yml`.
+- **CI:** CI-only duplicate-function advisory and import-cycle baseline (one
+  known cycle: `store/index.ts ↔ slices/meta.ts`), a new `e2e` job with
+  CI-only retries and automatic preview `webServer`, and a note that the job
+  is **not** yet a required check (branch protection unchanged).
+- **Source hygiene:** removed stale UpdaterModal comment.
+
+Final iteration-2 gates: `npm run verify` (309 tests), strict complexity and
+boundaries, format check, 38 Rust tests + fmt + Clippy (with the live nesting
+gate), and `npx playwright test` (65 tests, auto-started preview) all pass.
+
+## Pre-OSS tagged history — owner decision
 
 The current tree is MIT-clean, but **16 old tags** (`v0.9.0`–`v0.9.9-5`,
 `v1.1.0`–`v1.2.6`) still point at the pre-OSS commercial lineage. Those tagged

@@ -155,6 +155,16 @@ fn format_date(iso: &str) -> String {
     iso.split('T').next().unwrap_or(iso).to_string()
 }
 
+// Extracted from build_portal_html so that template stays under the
+// excessive-nesting gate. The emitted label is unchanged.
+fn rate_label(rate: f64, currency: &str, rate_type: &str) -> String {
+    if rate_type == "hourly" {
+        format!("${:.2}/hr {}", rate, currency)
+    } else {
+        format!("${:.2} flat {}", rate, currency)
+    }
+}
+
 fn escape_html(s: &str) -> String {
     s.replace('&', "&amp;")
         .replace('<', "&lt;")
@@ -276,11 +286,7 @@ fn build_portal_html(conn: &Connection, token: &TokenRecord) -> Result<String, S
         if let Some(r) = rate {
             let curr = currency.unwrap_or_else(|| "CAD".into());
             let rt = rate_type.unwrap_or_else(|| "flat".into());
-            let label = if rt == "hourly" {
-                format!("${:.2}/hr {}", r, curr)
-            } else {
-                format!("${:.2} flat {}", r, curr)
-            };
+            let label = rate_label(r, &curr, &rt);
             details.push_str(&format!(
                 "<div class=\"detail\"><span class=\"label\">Rate</span><span>{}</span></div>",
                 escape_html(&label)
@@ -866,6 +872,11 @@ pub fn start_server(db_path: String, app_handle: AppHandle) -> Result<ServerHand
     };
 
     let permits = std::sync::Arc::new(tokio::sync::Semaphore::new(MAX_CONCURRENT_REQUESTS));
+    // The shed/serve match sits inside a closure plus an async block, which
+    // reads as depth 4 to clippy. Flattening it (e.g. a let-else) still trips
+    // the lint because the else block is counted too; keep the explicit permit
+    // drop and allow this one statement instead.
+    #[allow(clippy::excessive_nesting)]
     let app = Router::new()
         // axum 0.7 uses `:param` (matchit normalises params to `b':'`, see
         // matchit-0.7 tree.rs). The `{token}` spelling is axum 0.8 syntax, so

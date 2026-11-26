@@ -1,0 +1,13 @@
+# Clippy lint configuration for Lance.
+#
+# This file MUST be lowercase `clippy.toml`: Clippy only searches for
+# `.clippy.toml` / `clippy.toml`. The former capitalized `Clippy.toml` was
+# silently ignored on case-sensitive Linux CI, so none of these thresholds
+# were actually enforced there.
+#
+# These four thresholds are the real gates enforced by `cargo clippy --lib`
+# in CI (ci.yml), which promotes the matching lints to errors with -D.
+excessive-nesting-threshold = 3
+too-many-lines-threshold = 100
+too-many-arguments-threshold = 7
+type-complexity-threshold = 250

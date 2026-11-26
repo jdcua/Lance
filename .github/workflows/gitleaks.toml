@@ -16,6 +16,8 @@ useDefault = true
 #     license key used to drive a local checkout UI test, never a credential.
 # The regexes are anchored to those exact shapes, so a real token in either
 # file is still reported. Do not widen them to silence a genuine finding.
+# NOTE: gitleaks 8.25+ renames [allowlist] to [[allowlists]]. If GITLEAKS_VERSION
+# in security.yml is bumped past 8.24.3, update this key and dry-run the scan.
 [allowlist]
 description = "Known generic-api-key false positives in Lance source and QA scripts"
 regexTarget = "match"

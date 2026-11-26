@@ -10,8 +10,9 @@ component, the glass-chrome UI standard, and the testing rules.
 ## Before changing anything
 
 ```bash
-npm run doctor   # verify Node, Rust and dependencies
-npm run verify   # typecheck + lint + tests + build
+npm run doctor   # verify Node, Rust and installed dependencies (not OS libs)
+npm run verify   # typecheck + lint + tests + build + audit:oss + licenses + boundaries
+npm run complexity -- --strict   # complexity gate (also runs in CI)
 ```
 
 ## Local map
@@ -24,6 +25,7 @@ npm run verify   # typecheck + lint + tests + build
 | Change SQLite schema | `src/db/index.ts` **and** `src-tauri/src/db.rs` |
 | Add a Rust command | `src-tauri/src/commands/`, register in `src-tauri/src/lib.rs` |
 | Find contribution ideas | `docs/ROADMAP.md` |
+| Resolve a duplicate basename | Full paths only: `src/store/index.ts`, `src/db/index.ts`, `src/types/index.ts`, `src/screens/{finance,invoices,settings}/shared.tsx`; `src/export/common.ts` and `src/store/types.ts` are unique |
 
 ## Non-negotiables
 

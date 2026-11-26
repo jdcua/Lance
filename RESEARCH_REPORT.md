@@ -607,6 +607,82 @@ cargo-machete 0.10.1 — all active.
 
 ---
 
+# 9. Iteration 2 refresh (2026-11-25) — remaining gaps and decisions
+
+A second research pass re-checked the transformed repository against late-2026
+guidance. Only new or corrected findings are recorded here; earlier decisions
+stand unless explicitly superseded.
+
+## 9.1 Open-source readiness
+
+| Item | Decision |
+|---|---|
+| Keep MIT, no CLA/dual licensing | **Already fine** — unchanged |
+| GitHub Secret Protection + push protection + validity checks | **ADD / verify in settings.** Free on public repos; complements gitleaks with validity checks and push-time blocking. API check found all three **disabled**; enable in Phase 3 (Dependabot security updates enabled alongside). |
+| GitHub Discussions + private vulnerability reporting | **Already enabled** (API-verified 2026-11-26), so the issue-template/security links are live |
+| Network/privacy disclosure | **ADD** one short paragraph naming the unauthenticated `api.github.com` release-notes GET, the silent signed-updater check, and the loopback-only portal with capability URL token |
+| SPDX IDs in new source files | **ADD gradually** (one line + CONTRIBUTING note); full REUSE compliance is overkill for a single-license MIT app |
+| FUNDING.yml, SBOM, npm provenance, signed git commits, contributor-ladder doc | **SKIP** — no funding channel, no npm publish, signed updater artifacts already cover integrity, GOVERNANCE.md already defines the ladder |
+| History rewrite / tag deletion | **SKIP** — owner decision to keep tags; no live secrets |
+
+## 9.2 Code quality and complexity
+
+- **Fix a no-op gate:** `src-tauri/Clippy.toml` sets
+  `excessive-nesting-threshold = 0`; Clippy's lint returns immediately at 0,
+  so `-D clippy::excessive_nesting` can never fire. Set a real threshold
+  (2–3) with scoped `#[allow]` ratchets where needed.
+- Reconcile Rust thresholds with STANDARDS: Clippy currently enforces 100
+  lines / 7 args; the 60-line / 4-param figures are review targets, not gates.
+  Make the standard say so explicitly rather than silently promising more.
+- **Add narrow tooling:** jscpd advisory with `minTokens` 70–100 + baseline
+  (targets the ~150 hand-rolled trackers), knip with an issue budget, and one
+  dependency-cruiser `no-circular` CI rule. All with baselines; none as hard
+  global gates.
+- **Skip** Maintainability Index as a gate (LOC-dominated, no actionable signal).
+- **Add** CI-only Playwright retries (2) with existing trace-on-failure;
+  quarantine with `test.fixme()` + issue link. Do not treat retries as a fix.
+- **Skip** Stryker mutation testing as a gate; if adopted at all, narrow to pure
+  math on a scheduled warn-only job.
+- Structural risk remains the hand-rolled feature components and high-fan-in
+  `shared.tsx` seams; migrate opportunistically, never in a bulk rewrite.
+
+## 9.3 Agent-facing patterns and tooling
+
+- **ADD 2–3 ADRs** under `docs/adr/` (single Zustand store, typed command
+  registry, MIT/no-history-rewrite). GOVERNANCE.md and Tier 3 already promise
+  ADRs; the directory does not exist.
+- **FIX** the stale Copilot documentation URL in §3.3/§3.6 of this report.
+- **Clarify store accessors:** `src/store/toastStore.ts` and
+  `updaterStore.ts` are typed accessors over the single store, **not** second
+  stores. Name them as such in AGENTS.md/STANDARDS.md to prevent agents
+  "fixing" a non-problem. Keep them (17+ importers).
+- **SKIP** duplicated `.claude/rules/`, `.github/instructions/`, skills and
+  hooks: 2026 evidence shows instruction duplication creates drift without a
+  measured correctness gain. Revisit only after a repeated, observed failure.
+- **SKIP** LSP plugins as repo dependencies; keep grep + typecheck.
+- Repeated basenames (8 `index.ts`, generic `shared.tsx`) are mitigated by the
+  existing local map in `copilot-instructions.md`; domain-prefix only on touch.
+- **Watch** gitleaks 8.25+ allowlist key rename (`[allowlist]` →
+  `[[allowlists]]`); pinned at 8.24.3 today. Note added to `gitleaks.toml`.
+- **Correction:** signed git commits are **already satisfied** (20/20 recent
+  commits verified), so this is not a "skip for burden" item.
+
+## 9.4 Sources added
+
+- https://raw.githubusercontent.com/rust-lang/rust-clippy/master/clippy_lints/src/excessive_nesting.rs
+- https://doc.rust-lang.org/clippy/lint_configuration.html
+- https://www.emmanueldemey.dev/blog/2026-11-12-jscpd-duplicate-code-detection/
+- https://rev-dep.com/docs/comparison-with-other-tools/overview
+- https://arxiv.org/abs/2508.14727 · https://arxiv.org/abs/2607.22880
+- https://aaif.io/blog/writing-an-effective-agents-md
+- https://www.anthropic.com/research/effective-context-engineering-for-ai-agents
+- https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation
+- https://docs.github.com/en/code-security/how-tos/secure-your-secrets/detect-secret-leaks/enable-secret-scanning
+- https://spdx.dev/learn/handling-license-info/ · https://reuse.software/spec-3.3/
+- https://docs.github.com/en/copilot/concepts/prompting-and-context/custom-instructions
+
+---
+
 # Sources
 
 **Metrics:** https://sonarsource.com/resources/cognitive-complexity ·
@@ -630,7 +706,7 @@ https://arxiv.org/html/2611.10545v2
 
 **Agent patterns:** https://agents.md/ · https://code.claude.com/docs/en/best-practices ·
 https://code.claude.com/docs/en/memory (source of the ≤200-line guidance) ·
-https://docs.github.com/en/copilot/how-tos/custom-instructions/adding-repository-custom-instructions-for-github-copilot ·
+https://docs.github.com/en/copilot/concepts/prompting-and-context/custom-instructions ·
 https://sourcegraph.com/blog/why-coding-agents-fail-large-codebases ·
 https://zzet.org/gortex/why-ai-coding-agents-fail-large-codebases/ ·
 https://arxiv.org/abs/2307.03172 ·

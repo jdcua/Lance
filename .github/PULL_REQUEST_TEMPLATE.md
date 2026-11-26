@@ -18,6 +18,7 @@
 - [ ] `npm run verify` passed locally
 - [ ] Added or updated a behavior test
 - [ ] Checked UI changes in the app (attach a screenshot if visible)
+- [ ] Linked an ADR for decisions that outlive this PR (docs/adr/)
 
 ## For reviewers
 

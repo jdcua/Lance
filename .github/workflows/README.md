@@ -20,5 +20,7 @@
   on an issue or PR should not check out any code.
 - Never add a new secret for a normal contribution; release signing is the only
   credential used here.
-- Validate the YAML locally, then open a PR. CI does not automatically lint
-  workflow files, so review the Actions tab after merge.
+- Validate the YAML locally, then open a PR. Workflow files are not linted by
+  the lint job, but every workflow runs on its own triggers; review the Actions
+  tab after merge. The `e2e` job starts the built preview automatically via
+  Playwright's `webServer` config and is not a required check yet.

@@ -4,7 +4,7 @@
  * fail once the backlog is cleared.
  */
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 const files = execFileSync('git', ['ls-files', 'src'], { encoding: 'utf8' })
@@ -66,6 +66,83 @@ for (const file of files) {
 for (const [name, paths] of basenames) {
   if (paths.length > 1) {
     violations.push(`duplicate-basename: ${name} (${paths.length} files)`);
+  }
+}
+
+// Import-cycle detection. Resolves the same specifiers importsOf() already
+// reads, so no parser or dependency is added. Pass --cycles to enable.
+const CYCLE_BASELINE = 'scripts/cycle-baseline.json';
+const fileSet = new Set(files);
+
+function resolveSpecifier(fromFile, spec) {
+  let target;
+  if (spec.startsWith('@/')) {
+    target = path.posix.normalize(`src/${spec.slice(2)}`);
+  } else if (spec.startsWith('.')) {
+    target = path.posix.normalize(path.posix.join(path.posix.dirname(fromFile), spec));
+  } else {
+    return null; // bare module, not part of the local import graph
+  }
+  for (const candidate of [target, `${target}.ts`, `${target}.tsx`, `${target}/index.ts`, `${target}/index.tsx`]) {
+    if (fileSet.has(candidate)) return candidate;
+  }
+  return null;
+}
+
+const graph = new Map();
+for (const file of files) {
+  const edges = new Set();
+  for (const spec of importsOf(file)) {
+    const target = resolveSpecifier(file, spec);
+    if (target) edges.add(target);
+  }
+  graph.set(file, edges);
+}
+
+// Enumerate each elementary cycle once: the traversal only visits nodes whose
+// index is >= the start node, so the start node is the smallest in the cycle.
+function findCycles() {
+  const nodes = [...graph.keys()].sort();
+  const index = new Map(nodes.map((node, i) => [node, i]));
+  const cycles = [];
+
+  for (const start of nodes) {
+    const startIndex = index.get(start);
+    const onPath = new Set([start]);
+    const trail = [start];
+
+    function walk(node) {
+      for (const next of [...graph.get(node)].sort()) {
+        if (index.get(next) < startIndex) continue;
+        if (next === start) {
+          cycles.push([...trail, start]);
+        } else if (!onPath.has(next)) {
+          onPath.add(next);
+          trail.push(next);
+          walk(next);
+          trail.pop();
+          onPath.delete(next);
+        }
+      }
+    }
+    walk(start);
+  }
+  return cycles;
+}
+
+if (process.argv.includes('--cycles')) {
+  const cycles = findCycles();
+  const keys = cycles.map((cycle) => cycle.join(' -> '));
+
+  if (!existsSync(CYCLE_BASELINE)) {
+    writeFileSync(CYCLE_BASELINE, `${JSON.stringify(keys.sort(), null, 2)}\n`);
+    console.log(`Wrote ${keys.length} baseline import cycle(s) to ${CYCLE_BASELINE}.`);
+  } else {
+    const baseline = new Set(JSON.parse(readFileSync(CYCLE_BASELINE, 'utf8')));
+    const newCycles = keys.filter((key) => !baseline.has(key));
+    for (const key of newCycles) console.log(`new-import-cycle: ${key}`);
+    console.log(`${newCycles.length} new import cycle(s) (${keys.length} total).`);
+    if (newCycles.length) process.exitCode = 1;
   }
 }
 

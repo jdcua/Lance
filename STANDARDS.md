@@ -7,16 +7,22 @@ change during a refactor unless explicitly approved.
 
 ## 1. Complexity and size budgets
 
-| Metric | Standard | Enforcement |
+**CI gates (machine-enforced):**
+
+| Metric | Gate | Enforcement |
 |---|---|---|
-| Cyclomatic complexity | ≤15 per function; **new code target ≤10** | ESLint `complexity: ['error', 15]`; `npm run complexity -- 10` |
-| Cognitive complexity (TS) | ≤15 (ESLint error) | `sonarjs/cognitive-complexity: ['error', 15]` |
-| Cognitive complexity (Rust) | ≤20 (policy; see note) | CI now uses `excessive_nesting` + `too_many_lines` + `too_many_arguments` + `type_complexity`; upstream discourages Clippy's `cognitive_complexity` as a measurement lint. Legacy size offenders are annotated with scoped `#[allow]` ratchets. |
-| Function length | 40 lines target, 60 warning | review + Phase 3 lint budget |
-| File length | 400 soft / 800 hard (TS); 300–500 (Rust) | review + Phase 3 lint budget |
-| Nesting depth | ≤3 (≤2 in JSX-heavy components) | review |
-| Parameters | ≤4; use a parameter object beyond | review |
-| Duplication | <3% new code; no new clone ≥10 lines | Phase 3 jscpd baseline |
+| Cyclomatic complexity (TS) | ≤15 per function | ESLint `complexity: ['error', 15]`; `npm run complexity -- 10` for a stricter local pass |
+| Cognitive complexity (TS) | ≤15 | `sonarjs/cognitive-complexity: ['error', 15]` |
+| Rust nesting / length / args / type | nesting ≤3, 100 lines, 7 args, 250 type complexity | `src-tauri/clippy.toml` (lowercase — Linux CI only reads lowercase) + `-D` lints in CI |
+| Boundaries | no cycles, no UI→Tauri, no component→screen, single `create()` | `check:boundaries -- --strict` in `verify` and CI |
+| Duplication | no identical functions | CI-only SonarJS `no-identical-functions` advisory; token-level clones are review-only |
+
+**Review targets (not gates):** new code cyclomatic ≤10; function length 40
+target / 60 warning; file length 400 soft / 800 hard (TS) and 300–500 (Rust);
+nesting ≤3 (≤2 in JSX-heavy components); parameters ≤4. Rust cognitive ≤20 is
+a review policy — Clippy's `cognitive_complexity` is a `restriction` lint that
+upstream says is not a measurement tool, so CI enforces structural proxies
+instead. Never claim the 60-line / 4-param targets are CI-enforced.
 
 Rationale: cyclomatic complexity measures testability, cognitive complexity
 measures readability. A flat dispatcher may score high cyclomatic but be easy
@@ -89,7 +95,7 @@ more than four parameters or must return two values, redesign the flow instead.
 - File-scoped iteration: `npm run test -- path/to/file.test.ts`.
 - Definition of done: `npm run verify` green; `cargo test --lib`,
   `cargo fmt --check` and the Clippy gate green when Rust is touched;
-  `npm run complexity` shows no regression.
+  `npm run complexity -- --strict` shows no regression.
 - Coverage percentages are reported, not gated.
 
 ## 6. Concessions (things we explicitly will not over-engineer)
@@ -97,6 +103,11 @@ more than four parameters or must return two values, redesign the flow instead.
 - No wholesale directory restructure; new feature code uses the existing
   `src/components/features/` tree. An empty `src/features/` placeholder is
   intentionally not created — rules must point at real paths.
+- `toastStore.ts` / `updaterStore.ts` are typed accessor hooks over the single
+  store, not parallel stores; do not "consolidate" them into `store/index.ts`
+  (31 importer files). Delete only genuinely unused exports.
+- Duplicate basenames (`index.ts` ×8, `shared.tsx` ×3) are intentional; import
+  by full path and do not rename on touch.
 - No DI framework, no interface for a single implementation, no class
   hierarchies for SOLID's sake.
 - The remaining 7 `react-refresh/only-export-components` warnings are a

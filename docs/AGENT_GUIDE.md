@@ -23,8 +23,9 @@ read → plan → branch → change → npm run verify → PR → self-review �
 - `npm run verify` must pass before you open the PR. Never skip or weaken a
   test, and never change business logic to make a test green. Keep new
   functions at complexity <= 15 (the `complexity` ESLint rule is an error);
-  extract helpers rather than growing a branch tree. `npm run complexity`
-  lists any offenders. `npm run check:boundaries` reports layer violations.
+  extract helpers rather than growing a branch tree.
+  `npm run complexity -- --strict` is the CI gate; use it locally.
+  `npm run check:boundaries -- --strict` fails on layer violations (CI does).
 - Use the PR template. State what changed, why, what you deleted, and what you
   deliberately left untouched.
 - After opening the PR, re-read the diff as a reviewer. Check for secrets,
@@ -34,7 +35,7 @@ read → plan → branch → change → npm run verify → PR → self-review �
 
 ```bash
 npm run doctor                       # environment check
-npm run verify                       # typecheck + lint + test + build + OSS audit
+npm run verify                       # typecheck + lint + test + build + audit:oss + licenses + strict boundaries
 gh issue list --repo jdcua/Lance     # find work
 gh pr create --repo jdcua/Lance      # open a PR (or use your GitHub MCP tool)
 ```

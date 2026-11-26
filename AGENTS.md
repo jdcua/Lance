@@ -94,15 +94,16 @@ and `prefers-reduced-transparency` always win.
 
 ## 6. Complexity and testing
 
-- Cyclomatic complexity must be **<= 15 per function** (ESLint error); new code
-  targets <= 10. Cognitive complexity must be <=15 (TS, ESLint error) and <=20
-  (Rust policy enforced in CI via `excessive_nesting`, `too_many_lines`,
-  `too_many_arguments` and `type_complexity` — Clippy now discourages
-  `cognitive_complexity` as a measurement lint). Run `npm run complexity`
-  (or `npm run complexity -- 10 --strict`) to verify no offenders.
-- Extract pure helpers or small components rather than adding branches. Never
-  change behavior to satisfy a metric. Files stay under ~400 lines; functions
-  under ~60; parameters <= 4.
+- Cyclomatic <=15 per function and cognitive <=15 (TS) are ESLint errors; new
+  code targets <=10. Rust CI gates nesting <=3, 100 lines, 7 args and 250 type
+  complexity via lowercase `src-tauri/clippy.toml`; Rust cognitive <=20 is a
+  **review policy**, not a CI measurement (Clippy discourages
+  `cognitive_complexity` as a metric). Run `npm run complexity -- --strict`.
+- Function length 40 target / 60 warning, files ~400 lines, parameters <=4 and
+  nesting <=3 are **review targets, not gates**. Extract pure helpers rather
+  than adding branches; never change behavior to satisfy a metric.
+- `src/store/toastStore.ts` and `src/store/updaterStore.ts` are typed accessors
+  over the single store, not second stores; keep them and import them directly.
 
 ### Boundary rules (lintable)
 
@@ -156,6 +157,9 @@ where outside contributions are welcome.
 | `src/store/slices/updater.ts` | Update-check slice |
 | `src/lib/engines/usePortalPolling.ts` | Portal polling engine (was inline in App.tsx) |
 | `src/components/ui/RecordTracker.tsx` | Generic tracker (replaces copy-paste feature trackers) |
+
+Duplicate basenames (`index.ts` ×8, `shared.tsx` ×3) are intentional; import by
+full path. Do not rename on touch.
 
 ---
 

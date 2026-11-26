@@ -15,8 +15,8 @@
 - Remote code execution via network
 - Account takeover (no accounts)
 - Data breach via remote server (none; the client portal binds 127.0.0.1 only)
-- Man-in-the-middle on update download
-  (mitigated by Tauri's signature verification)
+- Man-in-the-middle on update download (mitigated by Tauri's signature verification).
+  Bundles are signed and verified with the pinned public key; the manifest is not signed, so rollback to an older signed build is blocked by a client-side version high-water mark in localStorage.
 
 ### Mitigations implemented
 
@@ -52,6 +52,10 @@
 - `app_events` audit trail table created
 - Sensitive fields annotated with `-- SECURITY: encrypt with user key in v2`
 - Tauri CSP `connect-src` allows only the app origin and the public GitHub API for release notes.
+
+## Network access & privacy
+
+Lance makes three kinds of network request: an unauthenticated GET to `api.github.com` for public release notes (at startup, cached for one hour); a silent update check to `github.com/jdcua/Lance/releases/latest/download/latest.json` (3 seconds after launch, then every 4 hours), with signed bundles downloaded only if you choose Install; and a loopback-only HTTP server on `127.0.0.1` ports 39821–39830 that serves client share links while the app is open. No request carries your business data, account, or telemetry. No accounts or remote storage exist. There is currently no setting to disable the first two checks.
 
 ## Responsible Disclosure
 

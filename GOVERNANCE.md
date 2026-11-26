@@ -22,7 +22,8 @@ decisions are made and how that can change as the project grows.
   open an issue first. These are the stable seams described in
   `docs/ARCHITECTURE.md`; changes there need explicit agreement.
 - Disagreements are settled by the BDFL after discussion. Technical decisions
-  that outlive a pull request should be recorded as an ADR in `docs/`.
+  that outlive a pull request should be recorded as an ADR in
+  [`docs/adr/`](docs/adr/) and linked from the relevant code or PR.
 
 ## Joining as a maintainer
 

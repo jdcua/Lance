@@ -24,7 +24,7 @@
 ```
 lance/
 ├── src/                         # Frontend (React + TypeScript)
-│   ├── App.tsx                  # Root component, background engines, changelog
+│   ├── App.tsx                  # Thin root shell; state + outlet + engine hooks
 │   ├── main.tsx                 # React mount point
 │   ├── router.tsx               # 18 app routes + a public share route, lazy-loaded
 │   ├── index.css                # Global Tailwind styles
@@ -77,7 +77,7 @@ lance/
 
 1. **User interacts** with a React component (e.g., clicks "Save" on `Clients.tsx`)
 2. **Component calls** a Zustand store action (e.g., `useStore().addClient(data)`)
-3. **Store action** calls a Tauri invoke command: `invoke('create_client', { data })`
+3. **Store action** calls a Tauri invoke command: `invoke<Client>('create_client', { payload: data })`
 4. **Tauri routes** the invoke to the registered Rust handler in `lib.rs`
 5. **Rust command** opens a SQLite connection, executes a parameterized query
 6. **Rows returned** to the Rust handler, deserialized into typed structs
@@ -90,7 +90,7 @@ User Action → React Component → Zustand store → Tauri invoke
     → Store setState → React re-render
 ```
 
-Background engines (recurring invoices, follow-ups, expiry, updater) bypass the user action step and run on timers in `App.tsx`.
+Background engines are hooks under `src/lib/engines/` (e.g. `usePortalPolling`) driven from a thin `App.tsx`; see `AGENTS.md` §4.
 
 ## Profession presets and trackers
 
@@ -155,7 +155,8 @@ licensing gate; do not add one.
 
 ## Background engines
 
-All engines run from `src/App.tsx` using `requestIdleCallback` and `setInterval`:
+Engines are hooks driven from a thin `src/App.tsx`, using `requestIdleCallback`
+and `setInterval`; `usePortalPolling` lives in `src/lib/engines/`:
 
 | Engine | Trigger | Interval | What it does |
 |--------|---------|----------|-------------|
@@ -193,10 +194,14 @@ The client portal allows freelancers to share proposals and contracts with clien
 **How it works**:
 1. User clicks "Share" on a proposal or contract → `ShareModal.tsx` calls `create_share_token`
 2. Backend generates a 64-char hex crypto-random token, stores it in `share_tokens`
-3. The share link is `http://127.0.0.1:{port}/share/{token}`. It works only while Lance is running
+3. The share link is `http://127.0.0.1:{port}/share/{token}`, where `{port}` is
+   39821–39830 with an ephemeral fallback. It works only while Lance is running
 4. Client opens the link → Axum server at `src-tauri/src/server.rs` renders the HTML
 5. Client can accept/decline proposals or sign contracts
 6. Responses update `share_tokens` and the entity status (proposal accepted, contract signed)
+
+Treat the share URL as a secret — it grants read/write response access while
+Lance is open and can leak via browser history or clipboard.
 
 **Security** (server.rs):
 - Rate limiting: 60 requests/min per token

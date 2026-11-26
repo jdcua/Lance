@@ -296,3 +296,33 @@ Clippy clean. Everything is staged but not committed or tagged.
   `/settings`. **Why:** verify behavior under edge cases before release.
 - Final gates: `npm run verify`, strict complexity/boundaries, `format:check`,
   Rust 38 tests + fmt + Clippy, and `npx playwright test` **65 passed / 0 failed**.
+
+## 2026-11-26 — Mission iteration 2 (research → audit → standards → execution)
+
+- Phase 0: three research subagents found remaining 2026 gaps; recorded as
+  `RESEARCH_REPORT.md` §9 with explicit add/skip decisions. **Why:** re-check
+  settled decisions against current guidance rather than re-litigating them.
+- Phase 1: three audit subagents verified the gaps with evidence (empirical
+  Clippy scratch-crate test, GitHub API state, docs/config diff). **Why:**
+  evidence before action; discovered the capitalized Clippy config was never
+  read on Linux CI.
+- Phase 2: STANDARDS/AGENTS now distinguish CI gates from review targets and
+  document the store accessors and duplicate basenames. **Why:** honest,
+  machine-checkable standards.
+- Phase 3:
+  - `git mv src-tauri/Clippy.toml src-tauri/clippy.toml`; nesting threshold 3;
+    `rate_label` helper + one scoped allow in `server.rs`. **Why:** the gate
+    was a no-op and the config was ignored on Linux.
+  - Enabled GitHub secret scanning, push protection and Dependabot security
+    updates via authenticated API (validity checks are Advanced-Security-gated
+    and remain off). **Why:** complement gitleaks with push-time blocking.
+  - Added CI-only duplicate-function advisory and import-cycle baseline (one
+    known cycle), an `e2e` job with CI retries and automatic preview server,
+    and a note that the job is not a required check. **Why:** structural
+    ratchets without slowing the local loop or changing branch protection.
+  - Added 3 ADRs + index, inbound MIT contribution statement, gradual SPDX
+    note, network/privacy disclosure, `npm ci` quickstarts, corrected CI and
+    architecture docs, and E2E instructions. **Why:** contributor/agent clarity.
+  - Deleted unused `toastStore` object and stale UpdaterModal comment.
+- Final gates all green: verify (309 tests), complexity/boundaries/cycles,
+  format, Rust 38 tests + fmt + Clippy with live nesting gate, Playwright 65.

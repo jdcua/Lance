@@ -16,14 +16,26 @@ Lance is an offline-first desktop app that runs your entire freelance business o
 
 The desktop shell is Tauri 2 with a Rust backend; the UI is React 18 and TypeScript built with Vite. All business data lives in SQLite on the user's machine, accessed through Tauri commands and a single Zustand store. Six onboarding presets choose which trackers appear; those trackers are resolved from a feature-component registry, and six are rendered by the generic `RecordTracker` so far. There is no account and no remote server: a small activity log stays on the device and never makes a network call. A localhost-only HTTP server serves read-only client share links. The app reaches the network only to verify signed update bundles and fetch public release notes.
 
+### Network access & privacy
+
+Lance makes three kinds of network request: an unauthenticated GET to `api.github.com` for public release notes (at startup, cached for one hour); a silent update check to `github.com/jdcua/Lance/releases/latest/download/latest.json` (3 seconds after launch, then every 4 hours), with signed bundles downloaded only if you choose Install; and a loopback-only HTTP server on `127.0.0.1` ports 39821–39830 that serves client share links while the app is open. No request carries your business data, account, or telemetry. No accounts or remote storage exist. There is currently no setting to disable the first two checks.
+
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the module map and
 [STANDARDS.md](STANDARDS.md) for the code quality bar.
 
 ## Quick start
 
 ```bash
-git clone https://github.com/jdcua/Lance.git && cd Lance && npm install && npm run tauri dev
+git clone https://github.com/jdcua/Lance.git && cd Lance
+npm ci                 # exact lockfile install (what CI uses)
+npm run doctor         # read-only toolchain check; does not check OS libs
+npm run verify         # typecheck + lint + test + build + audit:oss + licenses + boundaries
+npm run tauri dev      # requires Tauri 2 OS libraries on Linux
 ```
+
+On Linux, install `libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev
+patchelf` first (see Requirements below). The optional Playwright E2E suite is
+documented in [CONTRIBUTING.md](CONTRIBUTING.md#browser-e2e-tests).
 
 ## Requirements
 

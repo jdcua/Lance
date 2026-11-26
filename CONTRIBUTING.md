@@ -3,6 +3,12 @@
 Lance is open source under the MIT license. Contributions of code, docs, tests,
 bug reports and design fixes are welcome — no prior context required.
 
+By submitting a pull request, you agree that your contribution is licensed under
+the MIT License, and that you have the right to license it under those terms. No
+CLA or DCO is required. New source files should start with
+`SPDX-License-Identifier: MIT` (`//` in TS/TSX and Rust files, `#` in YAML);
+existing files are not retrofitted. JSON cannot carry comments.
+
 ## Get set up
 
 Requirements: Node.js 22+, Rust stable, and the Tauri 2 system libraries for
@@ -10,16 +16,19 @@ your platform ([prerequisites](https://v2.tauri.app/start/prerequisites/)).
 No account, API key or environment variable is needed.
 
 ```bash
-git clone https://github.com/jdcua/Lance.git
-cd Lance
-npm install
-npm run doctor      # verifies your local toolchain
-npm run tauri dev
+git clone https://github.com/jdcua/Lance.git && cd Lance
+npm ci                 # exact lockfile install (what CI uses)
+git config core.hooksPath .githooks   # opt in to the gitleaks pre-commit hook
+npm run doctor         # read-only toolchain check; does not check OS libs
+npm run verify         # typecheck + lint + test + build + audit:oss + licenses + boundaries
+npm run tauri dev      # requires Tauri 2 OS libraries on Linux
 ```
 
 `npm run doctor` is read-only and checks Node, npm, Rust, installed npm
-dependencies and the Tauri CLI. It does **not** check the Tauri OS libraries
-(listed above); on Linux, install those separately.
+dependencies and the Tauri CLI. It does **not** check the Tauri OS libraries;
+on Linux, install `libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev
+patchelf` separately. After setup, see [Browser E2E tests](#browser-e2e-tests)
+for the optional Playwright suite.
 
 ## Find something to work on
 
@@ -44,16 +53,27 @@ dependencies and the Tauri CLI. It does **not** check the Tauri OS libraries
 5. Run the full check suite before pushing:
 
 ```bash
-npm run verify      # typecheck + lint + tests + build + OSS audit + strict boundaries
-npm run complexity  # cyclomatic/cognitive offenders (optional but recommended)
+npm run verify      # typecheck + lint + tests + build + audit:oss + check:licenses + strict boundaries
+npm run complexity -- --strict  # cyclomatic/cognitive offenders (CI gate)
 ```
 
 `npm run audit:oss` rejects stray secrets, personal paths and junk files; the
 strict boundary check enforces the architecture rules in `AGENTS.md`. CI runs
-typecheck, lint, tests, build, Rust check/fmt/clippy/test, npm and Cargo
-audits, and an xlsx integrity check — it does **not** yet run `audit:oss`, the
-strict boundary check or `npm run complexity`, so run them locally as above.
-All gates must pass.
+typecheck, lint, tests, build, Rust check/fmt/clippy/test, npm and Cargo audits,
+xlsx integrity, `audit:oss`, `check:licenses`, `complexity -- --strict` and
+strict boundaries (`.github/workflows/ci.yml:48-55`), so run the same gates
+locally before pushing. All gates must pass.
+
+## Browser E2E tests
+
+Browser E2E tests are not part of `verify` or CI. Run them manually with the
+built app preview serving port 4173:
+
+```bash
+npm run build && npm run preview   # terminal 1, serves 4173
+npx playwright install chromium    # first time only
+npx playwright test                # 18 specs / 65 tests
+```
 
 ## Open a pull request
 
@@ -104,7 +124,16 @@ git tag -a v1.2.0 -m "<changelog summary>"
 git push origin main --tags
 ```
 
-A weekly workflow opens an issue with outdated npm and Cargo dependencies for
-manual review. Security issues should be reported privately via
+The `.github/workflows/deps.yml` workflow opens a weekly issue with outdated
+npm and Cargo dependencies for manual review; it replaces Dependabot *version*
+updates, not Dependabot *security alerts and updates*, which are enabled in repo
+settings without a config file. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#dependency-updates).
+
+Pre-OSS tags (`v0.9.0`–`v0.9.9-5`, `v1.1.0`–`v1.2.6`) are deliberately retained
+per [HANDOFF.md](HANDOFF.md#pre-oss-tagged-history--needs-an-owner-decision):
+a full scan found no live credentials and a rewrite would break SHAs, tags,
+forks and CI pins. Do not delete them.
+
+Security issues should be reported privately via
 [GitHub security advisories](https://github.com/jdcua/Lance/security/advisories/new),
 not in public issues.
