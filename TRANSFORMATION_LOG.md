@@ -406,3 +406,16 @@ Clippy clean. Everything is staged but not committed or tagged.
   waited for all 246 registry checkboxes to rerender; it now samples four.
 - Merge to protected `main`, tag/release, Org/backup admin, Cloudflare check and
   CoC mailbox remain explicit human actions; no local push to `main` attempted.
+
+## 2026-11-26 — Public release actions (owner-approved)
+
+- Merged PR #44 into protected `main` via GitHub (`bb5663a`) after all six
+  required checks passed (the external Cloudflare check is non-required and
+  still red). Re-verified merged `main` locally: 321/39/84 tests, all gates.
+- Fixed one flaky share-view E2E assertion directly on `main` (`4ba8b69`) after
+  confirming 3/3 passes in isolation.
+- Deleted eight unused commercial-era Actions secrets (Paddle, license worker,
+  license admin token); kept Cloudflare, GH_TOKEN and updater signing keys.
+- Pushed the first OSS tag `v1.3.0`; the signed release workflow started.
+- Still human-only: verify published installers, disable Cloudflare check,
+  test advisory notifications, Org/backup admin decision.

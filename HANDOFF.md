@@ -233,6 +233,25 @@ No product bugs found. The intentionally disabled archetype surface remains a
 documented decision; a registry-wide render-smoke test now covers those
 components without changing the app's UI.
 
+## Release action taken (2026-11-26)
+
+- PR #44 was **merged** into protected `main` (`bb5663a`), after all six
+  required CI checks passed. The only red check was the external Cloudflare
+  Workers Builds check (non-required).
+- Merged `main` was re-verified locally: 321 frontend tests, 39 Rust tests,
+  84 Playwright tests, cargo-audit gate, license/boundary/complexity/tracker/
+  doc-reference gates — all green.
+- One flaky E2E assertion (share view read before hydration) was fixed directly
+  on `main` (`4ba8b69`) after passing 3/3 in isolation.
+- Eight unused commercial-era GitHub Actions secrets (Paddle IDs/webhook,
+  `LANCE_LICENSE_SECRET`, `LANCE_LICENSE_WORKER_URL`, `LICENSE_ADMIN_TOKEN`)
+  were **deleted**; only Cloudflare, `GH_TOKEN` and the updater signing pair
+  remain.
+- First OSS tag **`v1.3.0`** was pushed; the signed multi-platform release
+  workflow is running. Remaining human items: confirm the published release
+  artifacts, disable the external Cloudflare check, and test that advisory
+  notifications reach a monitored account.
+
 ## Pre-OSS tagged history — owner decision
 
 The current tree is MIT-clean, but **16 old tags** (`v0.9.0`–`v0.9.9-5`,
