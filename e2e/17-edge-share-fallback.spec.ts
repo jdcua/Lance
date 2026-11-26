@@ -29,6 +29,9 @@ test.describe('edge 8 · share link in browser mode', () => {
 
     const viewer = await page.context().newPage();
     const response = await viewer.goto(url, { waitUntil: 'domcontentloaded' });
+    // The share view hydrates after the initial HTML shell; wait for its
+    // content before asserting (a bare 200 can still be an empty container).
+    await expect(viewer.getByText('Share Edge Proposal')).toBeVisible({ timeout: 10000 });
     const body = (await viewer.locator('body').innerText()).replace(/\n/g, ' | ');
     console.log(`[evidence] shared view status=${response?.status()} body="${body.slice(0, 180)}"`);
     expect(response?.status()).toBe(200);
