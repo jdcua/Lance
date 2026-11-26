@@ -33,7 +33,7 @@
     "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
     "shortDescription": "Freelancer OS",
     "longDescription": "Win work. Run projects. Get paid. Run your business.",
-    "copyright": "Copyright © 2026 Lance. All rights reserved.",
+    "copyright": "Copyright (c) 2026 Juan Diego Cua and Lance contributors",
     "category": "Productivity",
     "macOS": {
       "dmg": {
@@ -44,7 +44,7 @@
       }
     },
     "externalBin": [],
-    "resources": []
+    "resources": ["../THIRD_PARTY_NOTICES.md", "../public/fonts/OFL.txt"]
   },
   "plugins": {
     "sql": {

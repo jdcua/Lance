@@ -46,26 +46,42 @@ describe('local-first telemetry', () => {
   it('detects struggles without nagging twice', () => {
     expect(
       evaluateStruggle({
-        launches: 4, checklistDone: 0, checklistTotal: 5,
-        validationErrors: {}, overdueCount: 0, followUpsEnabled: true,
+        launches: 4,
+        checklistDone: 0,
+        checklistTotal: 5,
+        validationErrors: {},
+        overdueCount: 0,
+        followUpsEnabled: true,
       }),
     ).toEqual(['stalled_checklist']);
     expect(
       evaluateStruggle({
-        launches: 1, checklistDone: 0, checklistTotal: 5,
-        validationErrors: { email: 4 }, overdueCount: 0, followUpsEnabled: true,
+        launches: 1,
+        checklistDone: 0,
+        checklistTotal: 5,
+        validationErrors: { email: 4 },
+        overdueCount: 0,
+        followUpsEnabled: true,
       }),
     ).toEqual(['repeat_validation']);
     expect(
       evaluateStruggle({
-        launches: 10, checklistDone: 5, checklistTotal: 5,
-        validationErrors: {}, overdueCount: 2, followUpsEnabled: false,
+        launches: 10,
+        checklistDone: 5,
+        checklistTotal: 5,
+        validationErrors: {},
+        overdueCount: 2,
+        followUpsEnabled: false,
       }),
     ).toEqual(['overdue_no_followups']);
     expect(
       evaluateStruggle({
-        launches: 10, checklistDone: 5, checklistTotal: 5,
-        validationErrors: {}, overdueCount: 0, followUpsEnabled: true,
+        launches: 10,
+        checklistDone: 5,
+        checklistTotal: 5,
+        validationErrors: {},
+        overdueCount: 0,
+        followUpsEnabled: true,
       }),
     ).toEqual([]);
     expect(wasTipFired('stalled_checklist')).toBe(false);

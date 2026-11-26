@@ -3,6 +3,7 @@ import { DEFAULT_CURRENCY, CURRENCIES } from '../../lib/constants';
 import { useToasts } from '../../store/toastStore';
 import { getCurrencySymbol } from '../../lib/currency';
 import Card from '../../components/ui/Card';
+import PrefToggle from '../../components/ui/PrefToggle';
 import {
   SectionHead,
   labelClass,
@@ -18,14 +19,14 @@ import {
 export default function GeneralSection({ bag }: { bag: SettingsBag }) {
   const { form, setForm, autoSave, saved } = bag;
   const profile = useStore((s) => s.profile);
+  const networkChecksEnabled = useStore((s) => s.networkChecksEnabled);
+  const setNetworkChecksEnabled = useStore((s) => s.setNetworkChecksEnabled);
   const addToast = useToasts((s) => s.add);
 
   return (
     <>
       {/* Profile section header */}
-      <div className="text-xs text-[var(--text-secondary)] font-semibold mb-4">
-        Profile
-      </div>
+      <div className="text-xs text-[var(--text-secondary)] font-semibold mb-4">Profile</div>
 
       {/* Your profile */}
       <Card className="mb-6">
@@ -90,7 +91,7 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
           <div>
             <label className={labelClass}>Default hourly rate</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-secondary)]">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-primary)]">
                 {getCurrencySymbol(form.currency || profile?.currency || DEFAULT_CURRENCY)}
               </span>
               <input
@@ -159,9 +160,7 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
           <textarea
             value={form.payment_instructions || ''}
             onChange={(e) => setForm({ ...form, payment_instructions: e.target.value })}
-            onBlur={() =>
-              autoSave({ payment_instructions: form.payment_instructions }, 'Rates')
-            }
+            onBlur={() => autoSave({ payment_instructions: form.payment_instructions }, 'Rates')}
             placeholder={
               'e.g. Bank transfer to First National, routing 123456, account 987654321. Or pay online at example.com/pay.'
             }
@@ -169,8 +168,8 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
             className={`${inputClass} resize-none leading-relaxed`}
           />
           <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
-            Bank details, payment links, or anything your clients need to pay you. Stays
-            on your machine, shown only on your invoices.
+            Bank details, payment links, or anything your clients need to pay you. Stays on your
+            machine, shown only on your invoices.
           </p>
         </div>
       </Card>
@@ -184,9 +183,7 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
             <select
               value={form.writing_style || 'professional'}
               aria-label="Writing style"
-              onChange={(e) =>
-                autoSave({ writing_style: e.target.value }, 'Proposal voice')
-              }
+              onChange={(e) => autoSave({ writing_style: e.target.value }, 'Proposal voice')}
               className={inputClass}
             >
               {writingStyles.map((s) => (
@@ -202,16 +199,14 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
               maxLength={1000}
               value={form.writing_voice || ''}
               onChange={(e) => setForm({ ...form, writing_voice: e.target.value })}
-              onBlur={() =>
-                autoSave({ writing_voice: form.writing_voice }, 'Proposal voice')
-              }
+              onBlur={() => autoSave({ writing_voice: form.writing_voice }, 'Proposal voice')}
               placeholder="e.g. I'm a senior full-stack developer who explains things clearly and avoids jargon"
               rows={2}
               className={`${inputClass} resize-none`}
             />
             <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
-              Describe your voice and expertise. This helps the AI write proposals that
-              sound like you.
+              Describe your voice and expertise. This helps the AI write proposals that sound like
+              you.
             </p>
           </div>
           <div>
@@ -232,9 +227,7 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
               maxLength={2000}
               value={form.always_include || ''}
               onChange={(e) => setForm({ ...form, always_include: e.target.value })}
-              onBlur={() =>
-                autoSave({ always_include: form.always_include }, 'Proposal voice')
-              }
+              onBlur={() => autoSave({ always_include: form.always_include }, 'Proposal voice')}
               placeholder="Anything you always want in proposals..."
               rows={3}
               className={`${inputClass} resize-none`}
@@ -272,6 +265,18 @@ export default function GeneralSection({ bag }: { bag: SettingsBag }) {
         </div>
       </Card>
 
+      {/* Connectivity */}
+      <Card className="mb-6">
+        <SectionHead title="Connectivity" isSaved={false} />
+        <div className="space-y-3">
+          <PrefToggle
+            checked={networkChecksEnabled}
+            onChange={setNetworkChecksEnabled}
+            label="Release and update checks"
+            hint="Allow this app to contact GitHub for release notes and update checks"
+          />
+        </div>
+      </Card>
     </>
   );
 }

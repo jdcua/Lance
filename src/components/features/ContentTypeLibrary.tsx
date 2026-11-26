@@ -34,7 +34,7 @@ export default function ContentTypeLibrary({ clientId }: { clientId: string }) {
       const db = await getDb();
       const rows = await db.select<(ContentType & Record<string, unknown>)[]>(
         'SELECT id, client_id, name, category, template, notes FROM content_types WHERE client_id = ? ORDER BY category ASC, name ASC',
-        [clientId]
+        [clientId],
       );
       setItems(
         rows.map((r) => ({
@@ -44,7 +44,7 @@ export default function ContentTypeLibrary({ clientId }: { clientId: string }) {
           category: r.category as string | undefined,
           template: r.template as string | undefined,
           notes: r.notes as string | undefined,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[ContentTypeLibrary] loadItems failed:', e);
@@ -64,7 +64,14 @@ export default function ContentTypeLibrary({ clientId }: { clientId: string }) {
       const db = await getDb();
       await db.execute(
         'INSERT INTO content_types (id, client_id, name, category, template, notes) VALUES (?, ?, ?, ?, ?, ?)',
-        [id, clientId, form.name.trim(), form.category || null, form.template || null, form.notes || null]
+        [
+          id,
+          clientId,
+          form.name.trim(),
+          form.category || null,
+          form.template || null,
+          form.notes || null,
+        ],
       );
       const item: ContentType = {
         id,
@@ -74,7 +81,12 @@ export default function ContentTypeLibrary({ clientId }: { clientId: string }) {
         template: form.template || undefined,
         notes: form.notes || undefined,
       };
-      setItems((prev) => [...prev, item].sort((a, b) => (a.category || '').localeCompare(b.category || '') || a.name.localeCompare(b.name)));
+      setItems((prev) =>
+        [...prev, item].sort(
+          (a, b) =>
+            (a.category || '').localeCompare(b.category || '') || a.name.localeCompare(b.name),
+        ),
+      );
       setForm({ name: '', category: '', template: '', notes: '' });
       setShowForm(false);
     } catch (e) {
@@ -154,8 +166,12 @@ export default function ContentTypeLibrary({ clientId }: { clientId: string }) {
             className={inputClass + ' resize-none'}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.name.trim()}>Save</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.name.trim()}>
+              Save
+            </Button>
           </div>
         </div>
       )}
@@ -168,11 +184,15 @@ export default function ContentTypeLibrary({ clientId }: { clientId: string }) {
             <div key={item.id}>
               <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
                 <div className="flex-1 min-w-0 flex items-center gap-2">
-                  <button aria-label="Next"
+                  <button
+                    aria-label="Next"
                     onClick={() => setExpanded(expanded === item.id ? null : item.id)}
                     className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                   >
-                    <ChevronRight size={10} className={`transition-transform ${expanded === item.id ? 'rotate-90' : ''}`} />
+                    <ChevronRight
+                      size={10}
+                      className={`transition-transform ${expanded === item.id ? 'rotate-90' : ''}`}
+                    />
                   </button>
                   <span className="font-medium text-[var(--text-primary)]">{item.name}</span>
                   {item.category && (
@@ -183,7 +203,9 @@ export default function ContentTypeLibrary({ clientId }: { clientId: string }) {
                 </div>
                 <button
                   aria-label="Delete content type library"
-                  onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                  onClick={() => handleDelete(item.id)}
+                  className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2"
+                >
                   <Trash2 size={12} />
                 </button>
               </div>
@@ -191,8 +213,12 @@ export default function ContentTypeLibrary({ clientId }: { clientId: string }) {
                 <div className="mt-1 px-3 py-2 bg-[var(--bg-secondary)]/50 rounded-xs text-xs space-y-2">
                   {item.template && (
                     <div>
-                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)]">Template</p>
-                      <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{item.template}</p>
+                      <p className="text-[10px] font-semibold text-[var(--text-tertiary)]">
+                        Template
+                      </p>
+                      <p className="text-[var(--text-secondary)] whitespace-pre-wrap">
+                        {item.template}
+                      </p>
                     </div>
                   )}
                   {item.notes && (

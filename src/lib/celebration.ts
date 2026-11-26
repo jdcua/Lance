@@ -26,9 +26,7 @@ function readCounts(): Record<string, number> {
     const raw = localStorage.getItem(KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw) as unknown;
-    return typeof parsed === 'object' && parsed !== null
-      ? (parsed as Record<string, number>)
-      : {};
+    return typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, number>) : {};
   } catch {
     return {};
   }
@@ -54,11 +52,18 @@ export function recordCelebration(kind: CelebrationKind): void {
 }
 
 const TOASTS: Record<CelebrationKind, string[]> = {
-  'invoice-paid': ['Paid. Money in the account.', 'Invoice settled.', 'That one\'s done — paid in full.'],
+  'invoice-paid': [
+    'Paid. Money in the account.',
+    'Invoice settled.',
+    "That one's done — paid in full.",
+  ],
   'milestone-hit': ['Milestone hit.', 'Another milestone down.', 'Milestone cleared.'],
   'project-completed': ['Project complete. Ship it.', 'Wrapped. Nice work.', 'Project closed out.'],
   'queue-cleared': ['Today queue clear.', 'All caught up.', 'Nothing left that needs you.'],
-  'first-proposal': ['First proposal sent. That\'s the hardest one.', 'Proposal away. Fingers crossed, professionally.'],
+  'first-proposal': [
+    "First proposal sent. That's the hardest one.",
+    'Proposal away. Fingers crossed, professionally.',
+  ],
   'revenue-goal': ['Revenue goal reached.', 'Goal hit. Raise the bar?', 'Target met.'],
 };
 

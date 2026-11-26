@@ -19,7 +19,12 @@ function revisionTheme(overLimit: boolean, atLimit: boolean) {
   };
 }
 
-function isChangeOrderDisabled(orderAmount: string, defaultAmount: string, ordering: boolean, hasProject: boolean) {
+function isChangeOrderDisabled(
+  orderAmount: string,
+  defaultAmount: string,
+  ordering: boolean,
+  hasProject: boolean,
+) {
   return ordering || !(parseFloat(orderAmount || defaultAmount || '0') > 0) || !hasProject;
 }
 
@@ -45,7 +50,8 @@ function ChangeOrderPanel({
   return (
     <div className="px-4 py-3 rounded-sm bg-[var(--warning-bg)] space-y-2.5">
       <p className="text-xs text-[var(--warning-text)] leading-relaxed">
-        {overBy} round{overBy === 1 ? '' : 's'} past your {revisionLimit}-round limit. Bill it instead of absorbing it.
+        {overBy} round{overBy === 1 ? '' : 's'} past your {revisionLimit}-round limit. Bill it
+        instead of absorbing it.
       </p>
       <div className="flex gap-2">
         <input
@@ -67,16 +73,19 @@ function ChangeOrderPanel({
 }
 
 export default function RevisionCounter({ projectId }: { projectId: string }) {
-  const { revisions, loadRevisions, addRevision, profile, projects, invoices, addInvoice } = useStore();
+  const { revisions, loadRevisions, addRevision, profile, projects, invoices, addInvoice } =
+    useStore();
   const addToast = useToasts((s) => s.add);
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [ordering, setOrdering] = useState(false);
   const [orderAmount, setOrderAmount] = useState('');
 
-  useEffect(() => { loadRevisions(); }, [projectId, loadRevisions]);
+  useEffect(() => {
+    loadRevisions();
+  }, [projectId, loadRevisions]);
 
-  const list = revisions.filter(r => r.project_id === projectId);
+  const list = revisions.filter((r) => r.project_id === projectId);
   const nextRound = list.length > 0 ? Math.max(...list.map((r) => r.round_number)) + 1 : 1;
 
   const revisionLimit = 3;
@@ -125,13 +134,25 @@ export default function RevisionCounter({ projectId }: { projectId: string }) {
   };
 
   const theme = revisionTheme(overLimit, atLimit);
-  const changeOrderDisabled = isChangeOrderDisabled(orderAmount, defaultAmount, ordering, !!project);
+  const changeOrderDisabled = isChangeOrderDisabled(
+    orderAmount,
+    defaultAmount,
+    ordering,
+    !!project,
+  );
 
   const handleAddRound = async () => {
     setSaving(true);
     try {
-      await addRevision({ project_id: projectId, round_number: nextRound, change_summary: `Revision round ${nextRound}`, approved: false });
-    } catch { /* handled */ }
+      await addRevision({
+        project_id: projectId,
+        round_number: nextRound,
+        change_summary: `Revision round ${nextRound}`,
+        approved: false,
+      });
+    } catch {
+      /* handled */
+    }
     setSaving(false);
   };
 
@@ -144,14 +165,14 @@ export default function RevisionCounter({ projectId }: { projectId: string }) {
         </Button>
       </div>
 
-      <div className={`flex items-center justify-center gap-3 px-4 py-3 rounded-sm ${theme.bgColor}`}>
+      <div
+        className={`flex items-center justify-center gap-3 px-4 py-3 rounded-sm ${theme.bgColor}`}
+      >
         <RotateCcw size={16} className={theme.countColor} />
         <span className={`text-lg font-semibold ${theme.countColor}`}>
           {currentRound} / {revisionLimit}
         </span>
-        <span className={`text-xs ${theme.countColor}`}>
-          {theme.label}
-        </span>
+        <span className={`text-xs ${theme.countColor}`}>{theme.label}</span>
       </div>
 
       {overLimit && (
@@ -168,18 +189,29 @@ export default function RevisionCounter({ projectId }: { projectId: string }) {
       )}
 
       {list.length === 0 ? (
-        <p className="text-xs text-[var(--text-tertiary)] py-2">No revisions yet. Add your first round.</p>
+        <p className="text-xs text-[var(--text-tertiary)] py-2">
+          No revisions yet. Add your first round.
+        </p>
       ) : (
         <div className="space-y-1">
           {list.map((r) => (
-            <div key={r.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
+            <div
+              key={r.id}
+              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
+            >
               <div className="flex items-center gap-2">
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] flex-shrink-0 ${r.approved ? 'bg-[var(--accent)] text-[var(--accent-on)]' : 'bg-[var(--border-color)] text-[var(--text-secondary)]'}`}>
+                <span
+                  className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] flex-shrink-0 ${r.approved ? 'bg-[var(--accent)] text-[var(--accent-on)]' : 'bg-[var(--border-color)] text-[var(--text-secondary)]'}`}
+                >
                   {r.round_number}
                 </span>
-                <span className="text-[var(--text-primary)]">{r.change_summary || 'No summary'}</span>
+                <span className="text-[var(--text-primary)]">
+                  {r.change_summary || 'No summary'}
+                </span>
               </div>
-              {r.approved && <span className="text-[10px] text-[var(--accent-ink,var(--accent))]">Approved</span>}
+              {r.approved && (
+                <span className="text-[10px] text-[var(--accent-ink,var(--accent))]">Approved</span>
+              )}
             </div>
           ))}
         </div>

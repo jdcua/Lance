@@ -82,7 +82,9 @@ export default function WeekView({ entries }: { entries: TimeEntry[] }) {
                 }}
               />
             </div>
-            <span className="text-[10px] font-medium text-[var(--text-secondary)]">{DAY_SHORT[i]}</span>
+            <span className="text-[10px] font-medium text-[var(--text-secondary)]">
+              {DAY_SHORT[i]}
+            </span>
             <span className="text-[10px] text-[var(--text-tertiary)] tnum">{fmt(perDay[i])}</span>
           </div>
         ))}

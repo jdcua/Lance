@@ -1,7 +1,12 @@
 import { useMemo, useState } from 'react';
 import { DEFAULT_CURRENCY } from '../../lib/constants';
 import { useStore } from '../../store';
-import { buildYearSummary, yearSummaryCsv, yearSummaryYears, downloadTextFile } from '../../utils/yearSummary';
+import {
+  buildYearSummary,
+  yearSummaryCsv,
+  yearSummaryYears,
+  downloadTextFile,
+} from '../../utils/yearSummary';
 import { formatCurrency } from '../../utils/format';
 import { convertByCurrency } from '../../lib/currency';
 import Card from '../ui/Card';
@@ -25,7 +30,12 @@ export default function YearSummary() {
   );
 
   const maxQ = Math.max(1, ...pack.quarters.map((q) => Math.max(q.revenue, q.expenses)));
-  const mixedCurrencies = new Set(invoices.filter((i) => i.status !== 'draft').map((i) => i.currency || currency || DEFAULT_CURRENCY)).size > 1;
+  const mixedCurrencies =
+    new Set(
+      invoices
+        .filter((i) => i.status !== 'draft')
+        .map((i) => i.currency || currency || DEFAULT_CURRENCY),
+    ).size > 1;
   // Converted year revenue, computed with the same paid-in-year rule as the
   // pack (status paid, paid_at fallback created_at) so the ≈ line agrees
   // with the headline. Shown only when rates cover every currency present.
@@ -70,8 +80,9 @@ export default function YearSummary() {
           ))}
         </select>
       </div>
-          <p className="text-[10px] text-[var(--text-secondary)] mb-4">
-        Summaries for your own records only. Not financial, tax, or legal advice — confirm everything with a qualified professional.
+      <p className="text-[10px] text-[var(--text-secondary)] mb-4">
+        Summaries for your own records only. Not financial, tax, or legal advice — confirm
+        everything with a qualified professional.
         {mixedCurrencies && ' Amounts span multiple currencies and are shown without conversion.'}
       </p>
 
@@ -82,7 +93,10 @@ export default function YearSummary() {
             {formatCurrency(Math.round(pack.revenuePaid), currency)}
           </p>
           {convertedRevenue != null && (
-            <p className="text-[11px] text-[var(--text-secondary)] tnum" title="Converted at your manual exchange rates">
+            <p
+              className="text-[11px] text-[var(--text-secondary)] tnum"
+              title="Converted at your manual exchange rates"
+            >
               ≈ {formatCurrency(Math.round(convertedRevenue), currency || DEFAULT_CURRENCY)}
             </p>
           )}

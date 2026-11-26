@@ -35,7 +35,7 @@ export default function MealPlanBuilder({ clientId }: { clientId: string }) {
       const db = await getDb();
       const rows = await db.select<(MealPlan & Record<string, unknown>)[]>(
         'SELECT id, client_id, title, days, calories_per_day, plan_data, created_at FROM meal_plans WHERE client_id = ? ORDER BY created_at DESC',
-        [clientId]
+        [clientId],
       );
       setPlans(
         rows.map((r) => ({
@@ -46,7 +46,7 @@ export default function MealPlanBuilder({ clientId }: { clientId: string }) {
           calories_per_day: r.calories_per_day as number | undefined,
           plan_data: r.plan_data as string | undefined,
           created_at: r.created_at as string,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[MealPlanBuilder] loadPlans failed:', e);
@@ -75,7 +75,7 @@ export default function MealPlanBuilder({ clientId }: { clientId: string }) {
           form.calories_per_day ? parseInt(form.calories_per_day) : null,
           form.plan_data || null,
           now,
-        ]
+        ],
       );
       const plan: MealPlan = {
         id,
@@ -168,8 +168,12 @@ export default function MealPlanBuilder({ clientId }: { clientId: string }) {
             className={inputClass + ' resize-none'}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.title.trim()}>Save</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.title.trim()}>
+              Save
+            </Button>
           </div>
         </div>
       )}
@@ -182,18 +186,26 @@ export default function MealPlanBuilder({ clientId }: { clientId: string }) {
             <div key={plan.id}>
               <div className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
                 <div className="flex-1 min-w-0 flex items-center gap-2">
-                  <button aria-label="Next"
+                  <button
+                    aria-label="Next"
                     onClick={() => setExpanded(expanded === plan.id ? null : plan.id)}
                     className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                   >
-                    <ChevronRight size={10} className={`transition-transform ${expanded === plan.id ? 'rotate-90' : ''}`} />
+                    <ChevronRight
+                      size={10}
+                      className={`transition-transform ${expanded === plan.id ? 'rotate-90' : ''}`}
+                    />
                   </button>
-                  <span className="font-medium text-[var(--text-primary)] truncate">{plan.title}</span>
+                  <span className="font-medium text-[var(--text-primary)] truncate">
+                    {plan.title}
+                  </span>
                   {plan.days != null && (
                     <span className="text-[10px] text-[var(--text-tertiary)]">{plan.days}d</span>
                   )}
                   {plan.calories_per_day != null && (
-                    <span className="text-[10px] text-[var(--text-tertiary)]">{plan.calories_per_day} cal/d</span>
+                    <span className="text-[10px] text-[var(--text-tertiary)]">
+                      {plan.calories_per_day} cal/d
+                    </span>
                   )}
                   <span className="text-[10px] text-[var(--text-tertiary)]">
                     {new Date(plan.created_at).toLocaleDateString()}
@@ -201,14 +213,18 @@ export default function MealPlanBuilder({ clientId }: { clientId: string }) {
                 </div>
                 <button
                   aria-label="Delete meal plan builder"
-                  onClick={() => handleDelete(plan.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                  onClick={() => handleDelete(plan.id)}
+                  className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2"
+                >
                   <Trash2 size={12} />
                 </button>
               </div>
               {expanded === plan.id && (
                 <div className="mt-1 px-3 py-2 bg-[var(--bg-secondary)]/50 rounded-xs text-xs">
                   {plan.plan_data ? (
-                    <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{plan.plan_data}</p>
+                    <p className="text-[var(--text-secondary)] whitespace-pre-wrap">
+                      {plan.plan_data}
+                    </p>
                   ) : (
                     <p className="text-[var(--text-tertiary)] italic">No plan data.</p>
                   )}

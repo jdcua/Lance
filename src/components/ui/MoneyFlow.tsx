@@ -45,8 +45,18 @@ export default function MoneyFlow({
 
   const rows = [
     { label: 'In', amount: income, width: (income / max) * 100, color: 'var(--accent)' },
-    { label: 'Out', amount: expenses, width: (Math.min(expenses, income) / max) * 100, color: 'var(--danger)' },
-    { label: 'Set aside', amount: setAside, width: (setAside / max) * 100, color: 'var(--warning)' },
+    {
+      label: 'Out',
+      amount: expenses,
+      width: (Math.min(expenses, income) / max) * 100,
+      color: 'var(--danger)',
+    },
+    {
+      label: 'Set aside',
+      amount: setAside,
+      width: (setAside / max) * 100,
+      color: 'var(--warning)',
+    },
     { label: 'Keep', amount: keep, width: (keep / max) * 100, color: 'var(--metric-blue)' },
   ];
 
@@ -59,7 +69,9 @@ export default function MoneyFlow({
       <div className="space-y-2.5">
         {rows.map((r) => (
           <div key={r.label} className="flex items-center gap-3">
-            <span className="w-16 text-[11px] text-[var(--text-secondary)] flex-shrink-0">{r.label}</span>
+            <span className="w-16 text-[11px] text-[var(--text-secondary)] flex-shrink-0">
+              {r.label}
+            </span>
             <div className="flex-1 h-3 rounded-full bg-[var(--bg-secondary)] overflow-hidden">
               <div
                 className="h-full rounded-full chart-draw-x origin-left"

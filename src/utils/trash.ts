@@ -62,9 +62,7 @@ export function loadTrash(): TrashEntry[] {
     return !isNaN(t) && t >= cutoff;
   });
   if (live.length !== readTrash().length) writeTrash(live);
-  return live.sort(
-    (a, b) => new Date(b.deletedAt).getTime() - new Date(a.deletedAt).getTime(),
-  );
+  return live.sort((a, b) => new Date(b.deletedAt).getTime() - new Date(a.deletedAt).getTime());
 }
 
 export function pushTrashEntry(

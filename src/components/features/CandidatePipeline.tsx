@@ -163,19 +163,14 @@ export default function CandidatePipeline({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Pipeline
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Pipeline</h4>
         </div>
         <div className="grid grid-cols-3 gap-2">
           {[1, 2, 3].map((i) => (
             <div key={i} className="space-y-1">
               <div className="h-4 bg-[var(--bg-secondary)] rounded-[4px] animate-pulse w-16 mb-1" />
               {[1, 2].map((j) => (
-                <div
-                  key={j}
-                  className="h-12 bg-[var(--bg-secondary)] rounded-xs animate-pulse"
-                />
+                <div key={j} className="h-12 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
               ))}
             </div>
           ))}
@@ -297,7 +292,8 @@ export default function CandidatePipeline({ clientId }: { clientId: string }) {
                       </p>
                     )}
                     <div className="flex items-center gap-1 mt-1 pt-1 border-t border-[var(--border-color)]/50">
-                      <select aria-label="Candidate.status"
+                      <select
+                        aria-label="Candidate.status"
                         value={candidate.status}
                         onChange={(e) => handleMove(candidate.id, e.target.value)}
                         className="text-[9px] bg-transparent border border-[var(--border-color)] rounded-[4px] px-1 py-0.5 text-[var(--text-tertiary)] cursor-pointer w-full"

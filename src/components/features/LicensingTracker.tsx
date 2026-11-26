@@ -19,14 +19,7 @@ type AssetLicense = {
   created_at: string;
 };
 
-const LICENSE_TYPES = [
-  'commercial',
-  'editorial',
-  'exclusive',
-  'print-rights',
-  'web-only',
-  'other',
-];
+const LICENSE_TYPES = ['commercial', 'editorial', 'exclusive', 'print-rights', 'web-only', 'other'];
 
 export default function LicensingTracker({ assetId }: { assetId?: string }) {
   const [licenses, setLicenses] = useState<AssetLicense[]>([]);
@@ -48,11 +41,11 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
       if (assetId) {
         rows = await db.select<(AssetLicense & Record<string, unknown>)[]>(
           'SELECT id, asset_id, license_type, licensee, term, fee, currency, created_at FROM asset_licenses WHERE asset_id = ? ORDER BY created_at DESC',
-          [assetId]
+          [assetId],
         );
       } else {
         rows = await db.select<(AssetLicense & Record<string, unknown>)[]>(
-          'SELECT id, asset_id, license_type, licensee, term, fee, currency, created_at FROM asset_licenses ORDER BY created_at DESC'
+          'SELECT id, asset_id, license_type, licensee, term, fee, currency, created_at FROM asset_licenses ORDER BY created_at DESC',
         );
       }
       setLicenses(
@@ -65,7 +58,7 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
           fee: r.fee as number | undefined,
           currency: r.currency as string,
           created_at: r.created_at as string,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[LicensingTracker] loadLicenses failed:', e);
@@ -95,7 +88,7 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
           form.fee ? parseFloat(form.fee) : null,
           form.currency,
           new Date().toISOString(),
-        ]
+        ],
       );
       const item: AssetLicense = {
         id,
@@ -151,9 +144,7 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Licenses
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Licenses</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -190,7 +181,8 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
 
       {showForm && (
         <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
-          <select aria-label="License Type"
+          <select
+            aria-label="License Type"
             value={form.license_type}
             onChange={(e) => setForm({ ...form, license_type: e.target.value })}
             className={inputClass}
@@ -227,7 +219,8 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
               min="0"
               step="0.01"
             />
-            <select aria-label="Currency"
+            <select
+              aria-label="Currency"
               value={form.currency}
               onChange={(e) => setForm({ ...form, currency: e.target.value })}
               className={inputClass}
@@ -261,9 +254,7 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
                 <span className="text-[10px] font-semibold text-[var(--text-tertiary)]">
                   {type}
                 </span>
-                <span className="text-[10px] text-[var(--text-tertiary)]">
-                  ({items.length})
-                </span>
+                <span className="text-[10px] text-[var(--text-tertiary)]">({items.length})</span>
               </div>
               <div className="space-y-1">
                 {items.map((l) => (
@@ -287,7 +278,8 @@ export default function LicensingTracker({ assetId }: { assetId?: string }) {
                         </span>
                       )}
                     </div>
-                    <button aria-label="Delete licensing tracker"
+                    <button
+                      aria-label="Delete licensing tracker"
                       onClick={() => handleDelete(l.id)}
                       className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0"
                     >

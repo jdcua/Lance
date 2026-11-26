@@ -29,22 +29,28 @@ export default function BuildDeliveryLog({ projectId }: { projectId: string }) {
       const db = await getDb();
       const rows = await db.select<(BuildDelivery & Record<string, unknown>)[]>(
         'SELECT id, project_id, version, date, platform, notes, created_at FROM build_deliveries WHERE project_id = ? ORDER BY created_at DESC, date DESC',
-        [projectId]
+        [projectId],
       );
-      setDeliveries(rows.map(r => ({
-        id: r.id as string,
-        project_id: r.project_id as string,
-        version: r.version as string | undefined,
-        date: r.date as string | undefined,
-        platform: r.platform as string | undefined,
-        notes: r.notes as string | undefined,
-        created_at: r.created_at as string,
-      })));
-    } catch (e) { console.error('[BuildDeliveryLog] loadDeliveries failed:', e); }
+      setDeliveries(
+        rows.map((r) => ({
+          id: r.id as string,
+          project_id: r.project_id as string,
+          version: r.version as string | undefined,
+          date: r.date as string | undefined,
+          platform: r.platform as string | undefined,
+          notes: r.notes as string | undefined,
+          created_at: r.created_at as string,
+        })),
+      );
+    } catch (e) {
+      console.error('[BuildDeliveryLog] loadDeliveries failed:', e);
+    }
     setLoading(false);
   }, [projectId]);
 
-  useEffect(() => { loadDeliveries(); }, [projectId, loadDeliveries]);
+  useEffect(() => {
+    loadDeliveries();
+  }, [projectId, loadDeliveries]);
 
   const handleAdd = async () => {
     setSaving(true);
@@ -54,7 +60,15 @@ export default function BuildDeliveryLog({ projectId }: { projectId: string }) {
       const db = await getDb();
       await db.execute(
         'INSERT INTO build_deliveries (id, project_id, version, date, platform, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [id, projectId, form.version || null, form.date || null, form.platform || null, form.notes || null, createdAt]
+        [
+          id,
+          projectId,
+          form.version || null,
+          form.date || null,
+          form.platform || null,
+          form.notes || null,
+          createdAt,
+        ],
       );
       const delivery: BuildDelivery = {
         id,
@@ -65,10 +79,12 @@ export default function BuildDeliveryLog({ projectId }: { projectId: string }) {
         notes: form.notes || undefined,
         created_at: createdAt,
       };
-      setDeliveries(prev => [delivery, ...prev]);
+      setDeliveries((prev) => [delivery, ...prev]);
       setForm({ version: '', date: '', platform: '', notes: '' });
       setShowForm(false);
-    } catch (e) { console.error('[BuildDeliveryLog] add failed:', e); }
+    } catch (e) {
+      console.error('[BuildDeliveryLog] add failed:', e);
+    }
     setSaving(false);
   };
 
@@ -76,11 +92,14 @@ export default function BuildDeliveryLog({ projectId }: { projectId: string }) {
     try {
       const db = await getDb();
       await db.execute('DELETE FROM build_deliveries WHERE id = ?', [id]);
-      setDeliveries(prev => prev.filter(d => d.id !== id));
-    } catch (e) { console.error('[BuildDeliveryLog] delete failed:', e); }
+      setDeliveries((prev) => prev.filter((d) => d.id !== id));
+    } catch (e) {
+      console.error('[BuildDeliveryLog] delete failed:', e);
+    }
   };
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass =
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
@@ -89,7 +108,9 @@ export default function BuildDeliveryLog({ projectId }: { projectId: string }) {
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Build Deliveries</h4>
         </div>
         <div className="space-y-1">
-          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
+          ))}
         </div>
       </div>
     );
@@ -98,7 +119,9 @@ export default function BuildDeliveryLog({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Build Deliveries ({deliveries.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
+          Build Deliveries ({deliveries.length})
+        </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Log Delivery
         </Button>
@@ -137,18 +160,27 @@ export default function BuildDeliveryLog({ projectId }: { projectId: string }) {
             className={inputClass}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleAdd} loading={saving}>Add</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleAdd} loading={saving}>
+              Add
+            </Button>
           </div>
         </div>
       )}
 
       {deliveries.length === 0 ? (
-        <p className="text-xs text-[var(--text-tertiary)] py-2">No build deliveries yet. Log your first build.</p>
+        <p className="text-xs text-[var(--text-tertiary)] py-2">
+          No build deliveries yet. Log your first build.
+        </p>
       ) : (
         <div className="space-y-1">
           {deliveries.map((d) => (
-            <div key={d.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
+            <div
+              key={d.id}
+              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
+            >
               <div className="flex-1 min-w-0 flex items-center gap-2">
                 <Package size={10} className="text-[var(--text-tertiary)] flex-shrink-0" />
                 {d.version ? (
@@ -166,13 +198,13 @@ export default function BuildDeliveryLog({ projectId }: { projectId: string }) {
                     <Calendar size={9} /> {d.date}
                   </span>
                 )}
-                {d.notes && (
-                  <span className="text-[var(--text-tertiary)] truncate">{d.notes}</span>
-                )}
+                {d.notes && <span className="text-[var(--text-tertiary)] truncate">{d.notes}</span>}
               </div>
               <button
                 aria-label="Delete build delivery log"
-                onClick={() => handleDelete(d.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0">
+                onClick={() => handleDelete(d.id)}
+                className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0"
+              >
                 <Trash2 size={12} />
               </button>
             </div>

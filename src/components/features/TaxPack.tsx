@@ -48,7 +48,8 @@ export default function TaxPack() {
         </select>
       </div>
       <p className="text-[10px] text-[var(--text-tertiary)] mb-4">
-        Summaries for your records. Lance is not a tax advisor; confirm everything with your accountant.
+        Summaries for your records. Lance is not a tax advisor; confirm everything with your
+        accountant.
       </p>
 
       <div className="grid grid-cols-3 gap-3 mb-4">
@@ -107,7 +108,8 @@ export default function TaxPack() {
         Download accountant CSV
       </Button>
       <p className="text-[11px] text-[var(--text-tertiary)] mt-2 leading-relaxed">
-        Revenue, quarters, per-client totals, and expenses by category in one file your accountant can open.
+        Revenue, quarters, per-client totals, and expenses by category in one file your accountant
+        can open.
       </p>
     </Card>
   );

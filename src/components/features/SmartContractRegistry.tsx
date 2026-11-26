@@ -155,9 +155,7 @@ export default function SmartContractRegistry({ projectId }: { projectId: string
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Smart Contracts
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Smart Contracts</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -190,7 +188,8 @@ export default function SmartContractRegistry({ projectId }: { projectId: string
             autoFocus
           />
           <div className="grid grid-cols-2 gap-2">
-            <select aria-label="Network"
+            <select
+              aria-label="Network"
               value={form.network}
               onChange={(e) => setForm({ ...form, network: e.target.value })}
               className={inputClass}
@@ -201,7 +200,8 @@ export default function SmartContractRegistry({ projectId }: { projectId: string
                 </option>
               ))}
             </select>
-            <select aria-label="Status"
+            <select
+              aria-label="Status"
               value={form.status}
               onChange={(e) => setForm({ ...form, status: e.target.value })}
               className={inputClass}
@@ -286,7 +286,8 @@ export default function SmartContractRegistry({ projectId }: { projectId: string
                   </button>
                 )}
               </div>
-              <button aria-label="Delete smart contract registry"
+              <button
+                aria-label="Delete smart contract registry"
                 onClick={() => handleDelete(contract.id)}
                 className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0"
               >

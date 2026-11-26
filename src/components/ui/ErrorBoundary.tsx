@@ -34,7 +34,8 @@ export default class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
 
-      const isDomError = this.state.error?.message?.includes('removeChild') ||
+      const isDomError =
+        this.state.error?.message?.includes('removeChild') ||
         this.state.error?.message?.includes('Node');
 
       return (
@@ -62,11 +63,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               <Button onClick={this.handleReload} size="sm">
                 Reload Application
               </Button>
-              <Button
-                variant="secondary"
-                onClick={this.handleDismiss}
-                size="sm"
-              >
+              <Button variant="secondary" onClick={this.handleDismiss} size="sm">
                 Dismiss &amp; Continue
               </Button>
             </div>

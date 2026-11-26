@@ -43,7 +43,11 @@ export function minutesByClient(
   return totals;
 }
 
-export function currentMonthBounds(now: Date = new Date()): { start: string; end: string; label: string } {
+export function currentMonthBounds(now: Date = new Date()): {
+  start: string;
+  end: string;
+  label: string;
+} {
   const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
   const label = now.toLocaleString('en-US', { month: 'long' });

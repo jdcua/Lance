@@ -1,6 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, CalendarClock, FileText, Clock, CheckCircle2, ChevronRight } from 'lucide-react';
+import {
+  AlertCircle,
+  CalendarClock,
+  FileText,
+  Clock,
+  CheckCircle2,
+  ChevronRight,
+} from 'lucide-react';
 import { useStore } from '../../store';
 import Card from './Card';
 import Fade from '../motion/Fade';
@@ -52,28 +59,36 @@ export default function TodayQueue() {
   const rows: QueueRow[] = [];
   if (overdue.length > 0)
     rows.push({
-      id: 'overdue', icon: AlertCircle, tone: 'danger',
+      id: 'overdue',
+      icon: AlertCircle,
+      tone: 'danger',
       text: `${overdue.length} overdue invoice${overdue.length === 1 ? '' : 's'}`,
       sub: 'Clients owe you — chase the oldest first',
       to: '/invoices',
     });
   if (dueSoon.length > 0)
     rows.push({
-      id: 'due', icon: CalendarClock, tone: 'warn',
+      id: 'due',
+      icon: CalendarClock,
+      tone: 'warn',
       text: `${dueSoon.length} due this week`,
       sub: 'Landing before the weekend keeps cash smooth',
       to: '/invoices',
     });
   if (awaiting.length > 0)
     rows.push({
-      id: 'awaiting', icon: FileText, tone: 'accent',
+      id: 'awaiting',
+      icon: FileText,
+      tone: 'accent',
       text: `${awaiting.length} proposal${awaiting.length === 1 ? '' : 's'} awaiting reply`,
       sub: 'A nudge today beats a rewrite next month',
       to: '/proposals',
     });
   if (unbilledHours > 0.5)
     rows.push({
-      id: 'unbilled', icon: Clock, tone: 'neutral',
+      id: 'unbilled',
+      icon: Clock,
+      tone: 'neutral',
       text: `${Math.round(unbilledHours * 10) / 10}h unbilled`,
       sub: 'Logged work with no invoice attached',
       to: '/time',
@@ -109,7 +124,9 @@ export default function TodayQueue() {
         {rows.length === 0 ? (
           <div className="flex items-center gap-2 py-2">
             <CheckCircle2 size={14} className="text-[var(--accent-ink,var(--accent))]" />
-            <p className="text-xs text-[var(--text-secondary)]">All clear. Nothing needs you right now.</p>
+            <p className="text-xs text-[var(--text-secondary)]">
+              All clear. Nothing needs you right now.
+            </p>
           </div>
         ) : (
           <div className="divide-y divide-[var(--border-color)]">
@@ -119,12 +136,22 @@ export default function TodayQueue() {
                 onClick={() => navigate(r.to)}
                 className="w-full flex items-center gap-3 py-2.5 text-left group"
               >
-                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${toneDot[r.tone]}`} aria-hidden="true" />
+                <span
+                  className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${toneDot[r.tone]}`}
+                  aria-hidden="true"
+                />
                 <span className="flex-1 min-w-0">
-                  <span className="block text-[13px] font-medium text-[var(--text-primary)]">{r.text}</span>
-                  <span className="block text-[11px] text-[var(--text-tertiary)] truncate">{r.sub}</span>
+                  <span className="block text-[13px] font-medium text-[var(--text-primary)]">
+                    {r.text}
+                  </span>
+                  <span className="block text-[11px] text-[var(--text-tertiary)] truncate">
+                    {r.sub}
+                  </span>
                 </span>
-                <ChevronRight size={14} className="text-[var(--text-tertiary)] group-hover:text-[var(--text-primary)] group-hover:translate-x-[1px] transition-colors flex-shrink-0" />
+                <ChevronRight
+                  size={14}
+                  className="text-[var(--text-tertiary)] group-hover:text-[var(--text-primary)] group-hover:translate-x-[1px] transition-colors flex-shrink-0"
+                />
               </button>
             ))}
           </div>

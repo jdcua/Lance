@@ -5,5 +5,10 @@
 import PhaseTracker from './PhaseTracker';
 
 export default function ProductionPhaseTracker({ projectId }: { projectId: string }) {
-  return <PhaseTracker projectId={projectId} defaultPhases={['Pre-production', 'Production', 'Post-production', 'Delivery']} />;
+  return (
+    <PhaseTracker
+      projectId={projectId}
+      defaultPhases={['Pre-production', 'Production', 'Post-production', 'Delivery']}
+    />
+  );
 }

@@ -70,7 +70,12 @@ export default function RetainerBurnDown() {
 
   if (retainers.length === 0) return null;
 
-  const handleTopUp = async (clientId: string, clientName: string, overByHours: number, rate: number) => {
+  const handleTopUp = async (
+    clientId: string,
+    clientName: string,
+    overByHours: number,
+    rate: number,
+  ) => {
     const amount = Math.round(overByHours * rate * 100) / 100;
     if (!(amount > 0)) return;
     setOrderingId(clientId);
@@ -127,7 +132,9 @@ export default function RetainerBurnDown() {
           return (
             <div key={retainer.id} className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-[var(--text-primary)] font-medium truncate">{clientName}</span>
+                <span className="text-[var(--text-primary)] font-medium truncate">
+                  {clientName}
+                </span>
                 <span className="text-[var(--text-secondary)] flex-shrink-0 ml-2">
                   {burn.hoursLogged} / {retainer.monthly_hours}h
                   {burn.status === 'over' && (
@@ -136,18 +143,28 @@ export default function RetainerBurnDown() {
                     </span>
                   )}
                   {burn.status === 'watch' && (
-                    <span className="text-[var(--warning-text)] font-medium ml-1.5">{burn.percent}%</span>
+                    <span className="text-[var(--warning-text)] font-medium ml-1.5">
+                      {burn.percent}%
+                    </span>
                   )}
                 </span>
               </div>
-              <ProgressBar value={Math.min(burn.percent, 100)} max={100} size="sm" showPercent={false} className={barColor} />
+              <ProgressBar
+                value={Math.min(burn.percent, 100)}
+                max={100}
+                size="sm"
+                showPercent={false}
+                className={barColor}
+              />
               {burn.status === 'over' && (
                 <Button
                   size="sm"
                   variant="secondary"
                   className="w-full"
                   disabled={orderingId === retainer.client_id}
-                  onClick={() => handleTopUp(retainer.client_id, clientName, burn.overByHours, rate)}
+                  onClick={() =>
+                    handleTopUp(retainer.client_id, clientName, burn.overByHours, rate)
+                  }
                 >
                   <FilePlus2 size={12} />
                   {orderingId === retainer.client_id

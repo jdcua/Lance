@@ -14,7 +14,7 @@ const IMAGE_EXTS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'];
 
 const ACCEPTED_EXTENSIONS = [...SPREADSHEET_EXTS, ...DOCUMENT_EXTS, ...IMAGE_EXTS];
 
-export const ACCEPTED_EXTENSIONS_STRING = ACCEPTED_EXTENSIONS.map(e => `.${e}`).join(',');
+export const ACCEPTED_EXTENSIONS_STRING = ACCEPTED_EXTENSIONS.map((e) => `.${e}`).join(',');
 
 function getFileExtension(filename: string): string {
   return (filename.split('.').pop() || '').toLowerCase();
@@ -34,7 +34,7 @@ export function isFileSupported(file: File): boolean {
  */
 export async function processImportFiles(
   files: File[],
-  onProgress?: (current: number, total: number, filename: string) => void
+  onProgress?: (current: number, total: number, filename: string) => void,
 ): Promise<ImportDetection[]> {
   const results: ImportDetection[] = [];
 
@@ -80,5 +80,3 @@ export async function processImportFiles(
 
   return results;
 }
-
-

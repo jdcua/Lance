@@ -1,9 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  celebrationLevel,
-  recordCelebration,
-  celebrationToast,
-} from './celebration';
+import { celebrationLevel, recordCelebration, celebrationToast } from './celebration';
 
 beforeEach(() => {
   localStorage.clear();

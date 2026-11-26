@@ -6,7 +6,13 @@ import { AlertTriangle, RotateCcw } from 'lucide-react';
  * indistinguishable from genuinely having no data. Render this above
  * content (not instead of it: cached rows may still be usable).
  */
-export default function LoadError({ error, onRetry }: { error: string | null | undefined; onRetry: () => void }) {
+export default function LoadError({
+  error,
+  onRetry,
+}: {
+  error: string | null | undefined;
+  onRetry: () => void;
+}) {
   if (!error) return null;
   return (
     <div

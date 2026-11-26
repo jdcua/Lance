@@ -376,6 +376,35 @@ fn cents(amount: f64) -> i64 {
     (amount * 100.0).round() as i64
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn whole_and_fractional_amounts_round_to_cents() {
+        assert_eq!(cents(0.0), 0);
+        assert_eq!(cents(1.0), 100);
+        assert_eq!(cents(12.34), 1234);
+    }
+
+    #[test]
+    fn half_cents_round_away_from_zero() {
+        assert_eq!(cents(0.005), 1);
+        assert_eq!(cents(-0.005), -1);
+    }
+
+    #[test]
+    fn binary_float_noise_does_not_change_the_cent() {
+        assert_eq!(cents(0.1 + 0.2), 30);
+        assert_eq!(cents(19.99), 1999);
+    }
+
+    #[test]
+    fn negative_amounts_keep_their_sign() {
+        assert_eq!(cents(-42.5), -4250);
+    }
+}
+
 #[tauri::command]
 pub fn delete_invoice_payment(app: tauri::AppHandle, id: String) -> Result<(), String> {
     let state = app.state::<DbState>();

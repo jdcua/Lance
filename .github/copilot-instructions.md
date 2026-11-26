@@ -9,10 +9,10 @@ component, the glass-chrome UI standard, and the testing rules.
 
 ## Before changing anything
 
-```bash
-npm run doctor   # verify Node, Rust and dependencies
-npm run verify   # typecheck + lint + tests + build
-```
+Run the command sequence in [`AGENTS.md` §7](../AGENTS.md#7-before-every-commit)
+(`npm run doctor`, `npm run verify` and the complexity/tracker gates); setup and
+gate details are in [`CONTRIBUTING.md`](../CONTRIBUTING.md). Do not duplicate
+those lists here.
 
 ## Local map
 
@@ -24,10 +24,13 @@ npm run verify   # typecheck + lint + tests + build
 | Change SQLite schema | `src/db/index.ts` **and** `src-tauri/src/db.rs` |
 | Add a Rust command | `src-tauri/src/commands/`, register in `src-tauri/src/lib.rs` |
 | Find contribution ideas | `docs/ROADMAP.md` |
+| Resolve a duplicate basename | Full paths only: `src/store/index.ts`, `src/db/index.ts`, `src/types/index.ts`, `src/screens/{finance,invoices,settings}/shared.tsx`; `src/export/common.ts` and `src/store/types.ts` are unique |
 
 ## Non-negotiables
 
-- No accounts, cloud, telemetry, analytics, license keys or paywalls.
-- Never skip or weaken a test. Tests describe behavior, not DOM internals.
-- Preserve the single store and command registry; do not add parallel systems.
-- Keep diffs small and open one PR per task. Use `.github/PULL_REQUEST_TEMPLATE.md`.
+The rules live in [`AGENTS.md`](../AGENTS.md) §§1–6 and
+[`CONTRIBUTING.md`](../CONTRIBUTING.md): no accounts/cloud/telemetry/paywalls,
+one store and command registry, no skipped tests, small diffs and one PR per
+task. Use [`PULL_REQUEST_TEMPLATE.md`](PULL_REQUEST_TEMPLATE.md), attach
+test/CI evidence for non-UI claims, link an ADR for decisions that outlive the
+PR, and disclose AI assistance with an `Assisted-by:` trailer.

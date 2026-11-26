@@ -150,9 +150,7 @@ export default function CollectionTracker({ projectId }: { projectId: string }) 
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Collections
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Collections</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -292,7 +290,8 @@ export default function CollectionTracker({ projectId }: { projectId: string }) 
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
-                  <select aria-label="Col.status"
+                  <select
+                    aria-label="Col.status"
                     value={col.status}
                     onChange={(e) => handleStatusChange(col.id, e.target.value)}
                     className="text-[10px] bg-transparent border-none text-[var(--text-tertiary)] cursor-pointer"

@@ -21,8 +21,8 @@ export default function DangerSection({ bag }: { bag: SettingsBag }) {
           <div>
             <p className="text-sm text-[var(--danger)]">Delete all records permanently</p>
             <p className="text-xs text-[var(--text-tertiary)]">
-              All clients, projects, proposals, contracts, invoices, time entries, and
-              expenses will be removed.
+              All clients, projects, proposals, contracts, invoices, time entries, and expenses will
+              be removed.
             </p>
           </div>
           <Button variant="danger" onClick={() => bag.setShowResetModal(true)} size="sm">

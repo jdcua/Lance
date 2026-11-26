@@ -85,7 +85,7 @@ export default function LanguagePairTracker({ projectId }: { projectId: string }
       const db = await getDb();
       const rows = await db.select<(LanguagePair & Record<string, unknown>)[]>(
         'SELECT id, project_id, source_lang, target_lang FROM project_language_pairs WHERE project_id = ? ORDER BY id ASC',
-        [projectId]
+        [projectId],
       );
       setPairs(
         rows.map((r) => ({
@@ -93,7 +93,7 @@ export default function LanguagePairTracker({ projectId }: { projectId: string }
           project_id: r.project_id as string,
           source_lang: r.source_lang as string,
           target_lang: r.target_lang as string,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[LanguagePairTracker] loadPairs failed:', e);
@@ -127,9 +127,12 @@ export default function LanguagePairTracker({ projectId }: { projectId: string }
         const db = await getDb();
         await db.execute(
           'INSERT INTO project_language_pairs (id, project_id, source_lang, target_lang) VALUES (?, ?, ?, ?)',
-          [id, projectId, source, target]
+          [id, projectId, source, target],
         );
-        setPairs((prev) => [...prev, { id, project_id: projectId, source_lang: source, target_lang: target }]);
+        setPairs((prev) => [
+          ...prev,
+          { id, project_id: projectId, source_lang: source, target_lang: target },
+        ]);
       } catch (e) {
         console.error('[LanguagePairTracker] add failed:', e);
       }
@@ -163,9 +166,12 @@ export default function LanguagePairTracker({ projectId }: { projectId: string }
       const db = await getDb();
       await db.execute(
         'INSERT INTO project_language_pairs (id, project_id, source_lang, target_lang) VALUES (?, ?, ?, ?)',
-        [id, projectId, src, tgt]
+        [id, projectId, src, tgt],
       );
-      setPairs((prev) => [...prev, { id, project_id: projectId, source_lang: src, target_lang: tgt }]);
+      setPairs((prev) => [
+        ...prev,
+        { id, project_id: projectId, source_lang: src, target_lang: tgt },
+      ]);
       setCustomSource('');
       setCustomTarget('');
     } catch (e) {
@@ -214,7 +220,9 @@ export default function LanguagePairTracker({ projectId }: { projectId: string }
               {getLangName(p.source_lang)} → {getLangName(p.target_lang)}
               <button
                 aria-label="Close"
-                onClick={() => handleDeletePair(p.id)} className="hover:opacity-70">
+                onClick={() => handleDeletePair(p.id)}
+                className="hover:opacity-70"
+              >
                 <X size={10} />
               </button>
             </span>
@@ -271,7 +279,11 @@ export default function LanguagePairTracker({ projectId }: { projectId: string }
             size="sm"
             onClick={handleAddCustom}
             loading={saving}
-            disabled={!customSource.trim() || !customTarget.trim() || customSource.trim().toUpperCase() === customTarget.trim().toUpperCase()}
+            disabled={
+              !customSource.trim() ||
+              !customTarget.trim() ||
+              customSource.trim().toUpperCase() === customTarget.trim().toUpperCase()
+            }
           >
             Add
           </Button>
@@ -279,7 +291,9 @@ export default function LanguagePairTracker({ projectId }: { projectId: string }
       </div>
 
       {pairs.length === 0 && (
-        <p className="text-xs text-[var(--text-tertiary)] py-2">No language pairs set yet. Select a common pair or add a custom one.</p>
+        <p className="text-xs text-[var(--text-tertiary)] py-2">
+          No language pairs set yet. Select a common pair or add a custom one.
+        </p>
       )}
     </div>
   );

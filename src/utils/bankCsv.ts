@@ -21,14 +21,38 @@ export interface BankColumnMap {
   credit?: string;
 }
 
-const DATE_ALIASES = ['date', 'transaction_date', 'transactiondate', 'posted_date', 'posting_date', 'value_date', 'booking_date', 'day'];
-const DESC_ALIASES = ['description', 'memo', 'details', 'narrative', 'narration', 'payee', 'merchant', 'name', 'transaction', 'label'];
+const DATE_ALIASES = [
+  'date',
+  'transaction_date',
+  'transactiondate',
+  'posted_date',
+  'posting_date',
+  'value_date',
+  'booking_date',
+  'day',
+];
+const DESC_ALIASES = [
+  'description',
+  'memo',
+  'details',
+  'narrative',
+  'narration',
+  'payee',
+  'merchant',
+  'name',
+  'transaction',
+  'label',
+];
 const AMOUNT_ALIASES = ['amount', 'value', 'sum', 'total'];
 const DEBIT_ALIASES = ['debit', 'withdrawal', 'money_out', 'paid_out', 'debits', 'outflow'];
 const CREDIT_ALIASES = ['credit', 'deposit', 'money_in', 'paid_in', 'credits', 'inflow'];
 
 function norm(h: string): string {
-  return h.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+  return h
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '');
 }
 
 function pick(headers: string[], aliases: string[]): string | undefined {
@@ -106,10 +130,7 @@ export interface ParsedBankRow extends BankRow {
 }
 
 /** Debit columns win, then credit, then a single signed amount column. */
-function resolveBankAmount(
-  row: Record<string, unknown>,
-  map: BankColumnMap,
-): number | null {
+function resolveBankAmount(row: Record<string, unknown>, map: BankColumnMap): number | null {
   let amount: number | null = null;
   if (map.debit) {
     const debit = parseMoney(row[map.debit]);

@@ -20,7 +20,7 @@ export function computeLateFee(
   percentPerPeriod: number,
   now: Date = new Date(),
 ): LateFee {
-  if (!dueDateIso || !(total > 0) || !(percentPerMonthValid(percentPerPeriod))) {
+  if (!dueDateIso || !(total > 0) || !percentPerMonthValid(percentPerPeriod)) {
     return { periods: 0, percentPerPeriod, fee: 0 };
   }
   const due = new Date(dueDateIso);

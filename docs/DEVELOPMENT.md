@@ -9,11 +9,16 @@
 ## Setup
 
 ```bash
-git clone https://github.com/jdcua/Lance.git
-cd lance
-npm install
-npm run tauri dev
+git clone https://github.com/jdcua/Lance.git && cd Lance
+npm ci                 # exact lockfile install (what CI uses)
+git config core.hooksPath .githooks   # opt in to the gitleaks pre-commit hook
+npm run doctor         # read-only toolchain check; does not check OS libs
+npm run verify         # typecheck + lint + test + build + audit:oss + licenses + boundaries
+npm run tauri dev      # requires Tauri 2 OS libraries on Linux
 ```
+
+`npm run doctor` is read-only and does not check OS libraries; on Linux install
+`libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf` first.
 
 ## Common commands
 
@@ -22,24 +27,50 @@ npm run tauri dev
 | `npm run tauri dev` | Start dev server with hot reload |
 | `npm run tauri build` | Production build (no signing) |
 | `npm run version:bump 1.2.0` | Bump version across all 3 files |
-| `npm run doctor` | Check Node, Rust and installed dependencies |
+| `npm run doctor` | Check Node, npm, Rust and installed npm dependencies (does not check OS libraries) |
 | `npm run typecheck` | Typecheck without building |
-| `npm run verify` | Run typecheck, lint, tests, build and the OSS audit |
+| `npm run verify` | Typecheck, lint, tests, build, OSS audit, license policy, Prettier check and strict boundary check |
 | `npm run audit:oss` | Check tracked files for secrets, personal paths and junk |
-| `npm run check:boundaries` | Report architecture boundary violations (warn-only) |
-| `npm run complexity` | List cyclomatic and cognitive complexity offenders |
+| `npm run check:boundaries` | Report boundary violations (use `-- --strict` to fail; CI does) |
+| `npm run complexity -- --strict` | List cyclomatic and cognitive complexity offenders (CI gate) |
+| `npm run check:trackers` | Fail on any new hand-rolled CRUD component outside `RecordTracker` (CI gate; baseline `scripts/tracker-baseline.json`) |
+| `npm run typecheck:e2e` | Typecheck Playwright specs outside the main `tsconfig.json` (CI step; iteration 4) |
 | `npm run lint` | Lint frontend code |
 | `npm run format` | Format frontend code with Prettier |
-| `npm run format:check` | Check formatting without writing |
+| `npm run format:check` | Check formatting without writing (part of `verify` and CI) |
 | `cargo clippy` | Lint Rust code (run from `src-tauri/`) |
 | `cargo test` | Run Rust tests (run from `src-tauri/`) |
+| `UPDATE_GOLDEN=1 cargo test --lib db::tests::schema_golden` | Regenerate the schema golden fixture (run from `src-tauri/`; commit the diff) |
+
+## Browser E2E tests
+
+Browser E2E tests run in CI in the `e2e` job of `.github/workflows/ci.yml` on
+pull requests and pushes to `main`; they are separate from `npm run verify`.
+`playwright.config.ts` starts the built preview on port 4173 automatically, so
+no manually started server is needed. To run the same suite locally:
+
+```bash
+npm run build                       # CI builds before Playwright
+npx playwright install chromium     # first time only
+npx playwright test                 # 18 specs / 65 tests
+```
+
+The `e2e` job is informational, not a required branch-protection check.
+
+## Dependency updates
+
+`.github/workflows/deps.yml` handles dependency *version* updates by opening a
+weekly issue for manual review; it is not a security-update mechanism. Dependabot
+*alerts* and *security updates* are enabled in repo settings (no
+`.github/dependabot.yml` is needed) and complement the workflow. The two should
+not be confused.
 
 ## Project structure
 
 ```
 lance/
 ├── src/                    # React + TypeScript frontend
-│   ├── components/         # UI, layout, and 180+ archetype trackers
+│   ├── components/         # UI, layout, and archetype trackers (see src/components/features/registry.ts)
 │   ├── screens/            # Route-level page components
 │   ├── store/              # Zustand state management
 │   ├── types/              # TypeScript type definitions
@@ -71,3 +102,6 @@ lance/
 ## Architecture
 
 See `docs/ARCHITECTURE.md` for a detailed architecture overview.
+
+Schema drift is caught by `src-tauri/tests/schema_golden.txt`; pure math by
+`fast-check` properties in `src/lib/*.property.test.ts`.

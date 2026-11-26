@@ -17,7 +17,8 @@ import { CURRENCIES } from '../../lib/constants';
  */
 
 function TimeImportSection({ bag }: { bag: InvoicesBag }) {
-  const { selectedTimeIds, importSelectedTime, hourlyRate, toggleTimeSelection, unbilledTime } = bag;
+  const { selectedTimeIds, importSelectedTime, hourlyRate, toggleTimeSelection, unbilledTime } =
+    bag;
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
@@ -38,9 +39,7 @@ function TimeImportSection({ bag }: { bag: InvoicesBag }) {
           Set your hourly rate in profile to use time import.
         </p>
       ) : unbilledTime.length === 0 ? (
-        <p className="text-xs text-[var(--text-tertiary)]">
-          No unbilled time entries to import.
-        </p>
+        <p className="text-xs text-[var(--text-tertiary)]">No unbilled time entries to import.</p>
       ) : (
         <div className="space-y-1 max-h-36 overflow-y-auto border border-[var(--border-color)] rounded-sm p-1">
           {unbilledTime.map((t) => {
@@ -75,172 +74,209 @@ function TimeImportSection({ bag }: { bag: InvoicesBag }) {
 
 function InvoiceEditorModal({ bag }: { bag: InvoicesBag }) {
   const {
-    clients, profile, projects, form, setForm, items,
-    subtotal, total, updateItem, removeItem,
-    editing, saving, showModal, setShowModal,
-    sanitizeInvoiceNumber, addItem, handleClientChange,
-    handleSave, depositHint,
+    clients,
+    profile,
+    projects,
+    form,
+    setForm,
+    items,
+    subtotal,
+    total,
+    updateItem,
+    removeItem,
+    editing,
+    saving,
+    showModal,
+    setShowModal,
+    sanitizeInvoiceNumber,
+    addItem,
+    handleClientChange,
+    handleSave,
+    depositHint,
   } = bag;
   return (
-    <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Invoice' : 'New Invoice'} size="lg">
+    <Modal
+      open={showModal}
+      onClose={() => setShowModal(false)}
+      title={editing ? 'Edit Invoice' : 'New Invoice'}
+      size="lg"
+    >
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
         <div className="space-y-4 min-w-0">
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className="form-label">Client *</label>
-            <ClientSelect
-              clients={clients}
-              value={form.client_id}
-              onChange={handleClientChange}
-              placeholder="Select a client..."
-            />
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="form-label">Client *</label>
+              <ClientSelect
+                clients={clients}
+                value={form.client_id}
+                onChange={handleClientChange}
+                placeholder="Select a client..."
+              />
+            </div>
+            <div>
+              <label className="form-label">Project (optional)</label>
+              <select
+                aria-label="Project"
+                value={form.project_id}
+                onChange={(e) => setForm({ ...form, project_id: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              >
+                <option value="">None</option>
+                {projects
+                  .filter((p) => !form.client_id || p.client_id === form.client_id)
+                  .map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.title}
+                    </option>
+                  ))}
+              </select>
+            </div>
+            <div>
+              <label className="form-label">Invoice #</label>
+              <input
+                type="text"
+                value={form.invoice_number}
+                onChange={(e) =>
+                  setForm({ ...form, invoice_number: sanitizeInvoiceNumber(e.target.value) })
+                }
+                maxLength={40}
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)]"
+              />
+            </div>
           </div>
-          <div>
-            <label className="form-label">Project (optional)</label>
-            <select aria-label="Project"
-              value={form.project_id}
-              onChange={(e) => setForm({ ...form, project_id: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-            >
-              <option value="">None</option>
-              {projects
-                .filter((p) => !form.client_id || p.client_id === form.client_id)
-                .map((p) => (
-                  <option key={p.id} value={p.id}>{p.title}</option>
-                ))}
-            </select>
-          </div>
-          <div>
-            <label className="form-label">Invoice #</label>
-            <input
-              type="text"
-              value={form.invoice_number}
-              onChange={(e) =>
-                setForm({ ...form, invoice_number: sanitizeInvoiceNumber(e.target.value) })
-              }
-              maxLength={40}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)]"
-            />
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="form-label">Due Date</label>
-            <input
-              type="date"
-              value={form.due_date}
-              onChange={(e) => setForm({ ...form, due_date: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)]"
-            />
-          </div>
-          <div>
-            <label className="form-label">Currency</label>
-            <select aria-label="Currency"
-              value={form.currency}
-              onChange={(e) => setForm({ ...form, currency: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-            >
-              <option value="">
-                {profile?.currency
-                  ? `${getCurrencySymbol(profile.currency)} (default)`
-                  : 'Default'}
-              </option>
-              {CURRENCIES.map((c) => (
-                <option key={c} value={c}>
-                  {getCurrencySymbol(c)} {c}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="form-label">Due Date</label>
+              <input
+                type="date"
+                value={form.due_date}
+                onChange={(e) => setForm({ ...form, due_date: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm focus:outline-none focus:border-[var(--accent)]"
+              />
+            </div>
+            <div>
+              <label className="form-label">Currency</label>
+              <select
+                aria-label="Currency"
+                value={form.currency}
+                onChange={(e) => setForm({ ...form, currency: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              >
+                <option value="">
+                  {profile?.currency
+                    ? `${getCurrencySymbol(profile.currency)} (default)`
+                    : 'Default'}
                 </option>
+                {CURRENCIES.map((c) => (
+                  <option key={c} value={c}>
+                    {getCurrencySymbol(c)} {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          {!editing && <TimeImportSection bag={bag} />}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-medium text-[var(--text-secondary)]">Line Items</label>
+              <button
+                onClick={addItem}
+                className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline"
+              >
+                + Add Line
+              </button>
+            </div>
+            <div className="space-y-2">
+              {items.map((item, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={item.description}
+                    onChange={(e) => updateItem(i, 'description', e.target.value)}
+                    placeholder="Description"
+                    className="flex-1 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs focus:outline-none focus:border-[var(--accent)]"
+                  />
+                  <input
+                    type="number"
+                    value={item.quantity || ''}
+                    onChange={(e) => updateItem(i, 'quantity', parseFloat(e.target.value) || 0)}
+                    placeholder="Qty"
+                    className="w-16 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs focus:outline-none focus:border-[var(--accent)]"
+                  />
+                  <input
+                    type="number"
+                    value={item.unit_price || ''}
+                    onChange={(e) => updateItem(i, 'unit_price', parseFloat(e.target.value) || 0)}
+                    placeholder="Rate"
+                    className="w-24 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs focus:outline-none focus:border-[var(--accent)]"
+                  />
+                  <span className="text-xs text-[var(--text-secondary)] w-20 text-right font-medium tabular-nums">
+                    {formatCurrency(item.total)}
+                  </span>
+                  <button
+                    onClick={() => removeItem(i)}
+                    aria-label="Remove line item"
+                    className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               ))}
-            </select>
+            </div>
           </div>
-        </div>
-        {!editing && <TimeImportSection bag={bag} />}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-medium text-[var(--text-secondary)]">Line Items</label>
-            <button onClick={addItem} className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline">
-              + Add Line
-            </button>
+          <div className="border-t border-[var(--border-color)] pt-3 space-y-1 text-sm">
+            <div className="flex justify-between">
+              <span className="text-[var(--text-secondary)]">Subtotal</span>
+              <span className="text-[var(--text-primary)] font-medium">
+                {formatCurrency(subtotal)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[var(--text-secondary)]">VAT / sales tax (%)</span>
+              <input
+                type="number"
+                min={0}
+                value={form.tax_rate}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setForm({ ...form, tax_rate: Number(v) < 0 ? '0' : v });
+                }}
+                placeholder="0"
+                className="w-20 px-2 py-1 text-xs text-right border border-[var(--border-color)] rounded-xs focus:outline-none focus:border-[var(--accent)]"
+              />
+            </div>
+            <div className="flex justify-between pt-1 border-t border-[var(--border-color)]">
+              <span className="font-medium text-[var(--text-primary)]">Total</span>
+              <span className="font-semibold text-[var(--text-primary)]">
+                {formatCurrency(total)}
+              </span>
+            </div>
+            {depositHint && (
+              <p className="text-[11px] text-[var(--text-tertiary)]">
+                Typical deposit for your craft: {depositHint.pct}% (
+                {formatCurrency(depositHint.amount)}). Add a line above if you take deposits
+                upfront.
+              </p>
+            )}
           </div>
-          <div className="space-y-2">
-            {items.map((item, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={item.description}
-                  onChange={(e) => updateItem(i, 'description', e.target.value)}
-                  placeholder="Description"
-                  className="flex-1 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs focus:outline-none focus:border-[var(--accent)]"
-                />
-                <input
-                  type="number"
-                  value={item.quantity || ''}
-                  onChange={(e) => updateItem(i, 'quantity', parseFloat(e.target.value) || 0)}
-                  placeholder="Qty"
-                  className="w-16 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs focus:outline-none focus:border-[var(--accent)]"
-                />
-                <input
-                  type="number"
-                  value={item.unit_price || ''}
-                  onChange={(e) => updateItem(i, 'unit_price', parseFloat(e.target.value) || 0)}
-                  placeholder="Rate"
-                  className="w-24 px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs focus:outline-none focus:border-[var(--accent)]"
-                />
-                <span className="text-xs text-[var(--text-secondary)] w-20 text-right font-medium tabular-nums">
-                  {formatCurrency(item.total)}
-                </span>
-                <button onClick={() => removeItem(i)} aria-label="Remove line item" className="text-[var(--text-tertiary)] hover:text-[var(--danger)]">
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="border-t border-[var(--border-color)] pt-3 space-y-1 text-sm">
-          <div className="flex justify-between">
-            <span className="text-[var(--text-secondary)]">Subtotal</span>
-            <span className="text-[var(--text-primary)] font-medium">{formatCurrency(subtotal)}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[var(--text-secondary)]">VAT / sales tax (%)</span>
-            <input
-              type="number"
-              min={0}
-              value={form.tax_rate}
-              onChange={(e) => {
-                const v = e.target.value;
-                setForm({ ...form, tax_rate: Number(v) < 0 ? '0' : v });
-              }}
-              placeholder="0"
-              className="w-20 px-2 py-1 text-xs text-right border border-[var(--border-color)] rounded-xs focus:outline-none focus:border-[var(--accent)]"
+          <div>
+            <label className="form-label">Notes</label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              placeholder="Invoice notes..."
+              rows={2}
+              className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none"
             />
           </div>
-          <div className="flex justify-between pt-1 border-t border-[var(--border-color)]">
-            <span className="font-medium text-[var(--text-primary)]">Total</span>
-            <span className="font-semibold text-[var(--text-primary)]">{formatCurrency(total)}</span>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" onClick={() => setShowModal(false)} size="sm">
+              Cancel
+            </Button>
+            <Button onClick={handleSave} loading={saving} disabled={!form.client_id} size="sm">
+              {editing ? 'Save Changes' : 'Create Invoice'}
+            </Button>
           </div>
-          {depositHint && (
-            <p className="text-[11px] text-[var(--text-tertiary)]">
-              Typical deposit for your craft: {depositHint.pct}% ({formatCurrency(depositHint.amount)}).
-              Add a line above if you take deposits upfront.
-            </p>
-          )}
-        </div>
-        <div>
-          <label className="form-label">Notes</label>
-          <textarea
-            value={form.notes}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            placeholder="Invoice notes..."
-            rows={2}
-            className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)] resize-none"
-          />
-        </div>
-        <div className="flex justify-end gap-2 pt-2">
-          <Button variant="secondary" onClick={() => setShowModal(false)} size="sm">Cancel</Button>
-          <Button onClick={handleSave} loading={saving} disabled={!form.client_id} size="sm">
-            {editing ? 'Save Changes' : 'Create Invoice'}
-          </Button>
-        </div>
         </div>
         <div className="hidden lg:block min-w-0">
           <DocPreview
@@ -255,15 +291,18 @@ function InvoiceEditorModal({ bag }: { bag: InvoicesBag }) {
             lines={items.map((li) => ({
               description: li.description,
               detail:
-                li.quantity > 1
-                  ? `${li.quantity} × ${formatCurrency(li.unit_price)}`
-                  : undefined,
+                li.quantity > 1 ? `${li.quantity} × ${formatCurrency(li.unit_price)}` : undefined,
               amount: formatCurrency(li.total),
             }))}
             totals={[
               { label: 'Subtotal', value: formatCurrency(subtotal) },
               ...(total - subtotal > 0
-                ? [{ label: `Tax${form.tax_rate ? ` (${form.tax_rate}%)` : ''}`, value: formatCurrency(total - subtotal) }]
+                ? [
+                    {
+                      label: `Tax${form.tax_rate ? ` (${form.tax_rate}%)` : ''}`,
+                      value: formatCurrency(total - subtotal),
+                    },
+                  ]
                 : []),
               { label: 'Total', value: formatCurrency(total), strong: true },
             ]}
@@ -277,12 +316,28 @@ function InvoiceEditorModal({ bag }: { bag: InvoicesBag }) {
 
 function RecurringInvoiceModal({ bag }: { bag: InvoicesBag }) {
   const {
-    clients, riForm, setRiForm, riItems, riSubtotal, riTotal,
-    updateRiItem, removeRiItem, editingRecurring, saving, showRecurringModal,
-    setShowRecurringModal, addRiItem, handleSaveRecurring,
+    clients,
+    riForm,
+    setRiForm,
+    riItems,
+    riSubtotal,
+    riTotal,
+    updateRiItem,
+    removeRiItem,
+    editingRecurring,
+    saving,
+    showRecurringModal,
+    setShowRecurringModal,
+    addRiItem,
+    handleSaveRecurring,
   } = bag;
   return (
-    <Modal open={showRecurringModal} onClose={() => setShowRecurringModal(false)} title={editingRecurring ? 'Edit Recurring Invoice' : 'New Recurring Invoice'} size="lg">
+    <Modal
+      open={showRecurringModal}
+      onClose={() => setShowRecurringModal(false)}
+      title={editingRecurring ? 'Edit Recurring Invoice' : 'New Recurring Invoice'}
+      size="lg"
+    >
       <div className="space-y-4">
         <div className="grid grid-cols-3 gap-4">
           <div>
@@ -296,7 +351,8 @@ function RecurringInvoiceModal({ bag }: { bag: InvoicesBag }) {
           </div>
           <div>
             <label className="form-label">Frequency</label>
-            <select aria-label="Frequency"
+            <select
+              aria-label="Frequency"
               value={riForm.frequency}
               onChange={(e) =>
                 setRiForm({
@@ -336,7 +392,10 @@ function RecurringInvoiceModal({ bag }: { bag: InvoicesBag }) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="text-xs font-medium text-[var(--text-secondary)]">Line Items</label>
-            <button onClick={addRiItem} className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline">
+            <button
+              onClick={addRiItem}
+              className="text-xs text-[var(--accent-ink,var(--accent))] hover:underline"
+            >
               + Add Line
             </button>
           </div>
@@ -367,7 +426,11 @@ function RecurringInvoiceModal({ bag }: { bag: InvoicesBag }) {
                 <span className="text-xs text-[var(--text-secondary)] w-20 text-right font-medium tabular-nums">
                   {formatCurrency(item.total)}
                 </span>
-                <button onClick={() => removeRiItem(i)} aria-label="Remove line item" className="text-[var(--text-tertiary)] hover:text-[var(--danger)]">
+                <button
+                  onClick={() => removeRiItem(i)}
+                  aria-label="Remove line item"
+                  className="text-[var(--text-tertiary)] hover:text-[var(--danger)]"
+                >
                   <Trash2 size={14} />
                 </button>
               </div>
@@ -377,7 +440,9 @@ function RecurringInvoiceModal({ bag }: { bag: InvoicesBag }) {
         <div className="border-t border-[var(--border-color)] pt-3 space-y-1 text-sm">
           <div className="flex justify-between">
             <span className="text-[var(--text-secondary)]">Subtotal</span>
-            <span className="text-[var(--text-primary)] font-medium">{formatCurrency(riSubtotal)}</span>
+            <span className="text-[var(--text-primary)] font-medium">
+              {formatCurrency(riSubtotal)}
+            </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-[var(--text-secondary)]">VAT / sales tax (%)</span>
@@ -395,7 +460,9 @@ function RecurringInvoiceModal({ bag }: { bag: InvoicesBag }) {
           </div>
           <div className="flex justify-between pt-1 border-t border-[var(--border-color)]">
             <span className="font-medium text-[var(--text-primary)]">Total</span>
-            <span className="font-semibold text-[var(--text-primary)]">{formatCurrency(riTotal)}</span>
+            <span className="font-semibold text-[var(--text-primary)]">
+              {formatCurrency(riTotal)}
+            </span>
           </div>
         </div>
         <div>
@@ -409,7 +476,9 @@ function RecurringInvoiceModal({ bag }: { bag: InvoicesBag }) {
           />
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="secondary" onClick={() => setShowRecurringModal(false)} size="sm">Cancel</Button>
+          <Button variant="secondary" onClick={() => setShowRecurringModal(false)} size="sm">
+            Cancel
+          </Button>
           <Button
             onClick={handleSaveRecurring}
             loading={saving}
@@ -426,15 +495,29 @@ function RecurringInvoiceModal({ bag }: { bag: InvoicesBag }) {
 
 function PaymentRecordingModal({ bag }: { bag: InvoicesBag }) {
   const {
-    paymentInv, paymentForm, setPaymentForm, paymentSaving, showPaymentModal,
-    setShowPaymentModal, handleRecordPayment, fmtInvDisplay, getClientName,
+    paymentInv,
+    paymentForm,
+    setPaymentForm,
+    paymentSaving,
+    showPaymentModal,
+    setShowPaymentModal,
+    handleRecordPayment,
+    fmtInvDisplay,
+    getClientName,
   } = bag;
   return (
-    <Modal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} title="Record Payment" size="sm">
+    <Modal
+      open={showPaymentModal}
+      onClose={() => setShowPaymentModal(false)}
+      title="Record Payment"
+      size="sm"
+    >
       <div className="space-y-4">
         {paymentInv && (
           <div className="px-3 py-2 rounded-sm bg-[var(--bg-secondary)]">
-            <p className="text-xs font-medium text-[var(--text-primary)]">{paymentInv.invoice_number}</p>
+            <p className="text-xs font-medium text-[var(--text-primary)]">
+              {paymentInv.invoice_number}
+            </p>
             <p className="text-[10px] text-[var(--text-secondary)]">
               {getClientName(paymentInv.client_id)} &middot; {fmtInvDisplay(paymentInv)}
             </p>
@@ -465,16 +548,27 @@ function PaymentRecordingModal({ bag }: { bag: InvoicesBag }) {
         </div>
         <div>
           <label className="form-label">Payment Method</label>
-          <select aria-label="Payment Method"
+          <select
+            aria-label="Payment Method"
             value={paymentForm.payment_method}
             onChange={(e) => setPaymentForm({ ...paymentForm, payment_method: e.target.value })}
             className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
           >
             {[
-              'Bank Transfer', 'E-Transfer', 'Cash', 'Cheque', 'Credit Card',
-              'PayPal', 'Stripe', 'Wise', 'Crypto', 'Other',
+              'Bank Transfer',
+              'E-Transfer',
+              'Cash',
+              'Cheque',
+              'Credit Card',
+              'PayPal',
+              'Stripe',
+              'Wise',
+              'Crypto',
+              'Other',
             ].map((m) => (
-              <option key={m} value={m}>{m}</option>
+              <option key={m} value={m}>
+                {m}
+              </option>
             ))}
           </select>
         </div>
@@ -499,8 +593,15 @@ function PaymentRecordingModal({ bag }: { bag: InvoicesBag }) {
           />
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="secondary" onClick={() => setShowPaymentModal(false)} size="sm">Cancel</Button>
-          <Button onClick={handleRecordPayment} loading={paymentSaving} disabled={!paymentForm.amount} size="sm">
+          <Button variant="secondary" onClick={() => setShowPaymentModal(false)} size="sm">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleRecordPayment}
+            loading={paymentSaving}
+            disabled={!paymentForm.amount}
+            size="sm"
+          >
             Record Payment
           </Button>
         </div>
@@ -511,10 +612,20 @@ function PaymentRecordingModal({ bag }: { bag: InvoicesBag }) {
 
 function ReminderModal({ bag }: { bag: InvoicesBag }) {
   const {
-    addToast, reminderInv, setReminderInv, reminderForm, setReminderForm, handleSendReminder,
+    addToast,
+    reminderInv,
+    setReminderInv,
+    reminderForm,
+    setReminderForm,
+    handleSendReminder,
   } = bag;
   return (
-    <Modal open={!!reminderInv} onClose={() => setReminderInv(null)} title="Send Invoice Reminder" size="md">
+    <Modal
+      open={!!reminderInv}
+      onClose={() => setReminderInv(null)}
+      title="Send Invoice Reminder"
+      size="md"
+    >
       {reminderInv && (
         <div className="space-y-3">
           {!reminderForm.to && (
@@ -555,7 +666,9 @@ function ReminderModal({ bag }: { bag: InvoicesBag }) {
             <input
               type="checkbox"
               checked={reminderForm.markFollowedUp}
-              onChange={(e) => setReminderForm({ ...reminderForm, markFollowedUp: e.target.checked })}
+              onChange={(e) =>
+                setReminderForm({ ...reminderForm, markFollowedUp: e.target.checked })
+              }
               className="w-3.5 h-3.5 rounded border-[var(--border-color)] text-[var(--accent-ink,var(--accent))] focus:ring-[var(--accent)]"
             />
             Mark as followed up (logs a communication entry)
@@ -575,7 +688,9 @@ function ReminderModal({ bag }: { bag: InvoicesBag }) {
             >
               <Copy size={12} className="mr-1" /> Copy
             </Button>
-            <Button variant="secondary" size="sm" onClick={() => setReminderInv(null)}>Cancel</Button>
+            <Button variant="secondary" size="sm" onClick={() => setReminderInv(null)}>
+              Cancel
+            </Button>
             <Button size="sm" onClick={handleSendReminder}>
               <Mail size={12} className="mr-1" /> Open in Email
             </Button>
@@ -588,8 +703,14 @@ function ReminderModal({ bag }: { bag: InvoicesBag }) {
 
 export default function InvoiceModals({ bag }: { bag: InvoicesBag }) {
   const {
-    confirmDelete, setConfirmDelete, handleDelete, deleting,
-    confirmDeletePayment, setConfirmDeletePayment, handleDeletePayment, deletingPayment,
+    confirmDelete,
+    setConfirmDelete,
+    handleDelete,
+    deleting,
+    confirmDeletePayment,
+    setConfirmDeletePayment,
+    handleDeletePayment,
+    deletingPayment,
   } = bag;
   return (
     <>

@@ -162,9 +162,7 @@ export default function BugLog({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Bugs
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Bugs</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -178,9 +176,7 @@ export default function BugLog({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-          Bugs ({bugs.length})
-        </h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Bugs ({bugs.length})</h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Report Bug
         </Button>

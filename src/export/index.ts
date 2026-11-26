@@ -1,5 +1,6 @@
 import { pdf } from '@react-pdf/renderer';
-import { createElement } from 'react';
+import { createElement, type ReactElement } from 'react';
+import type { DocumentProps } from '@react-pdf/renderer';
 import { ProposalPDF, InvoicePDF, ContractPDF } from './pdf';
 import { saveFile } from './common';
 import { sanitizeInvoiceNumber, sanitizeFilenamePart } from '../utils/invoiceNumber';
@@ -11,10 +12,13 @@ export { exportProposalDOCX, exportInvoiceDOCX, exportContractDOCX } from './doc
 export async function exportProposalPDF(
   proposal: Proposal,
   client: Client,
-  profile: UserProfile
+  profile: UserProfile,
 ): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const doc = createElement(ProposalPDF, { proposal, client, profile }) as any;
+  const doc = createElement(ProposalPDF, {
+    proposal,
+    client,
+    profile,
+  }) as unknown as ReactElement<DocumentProps>;
   const blob = await pdf(doc).toBlob();
   const date = todayLocalISO();
   const filename = `Lance_Proposal_${sanitizeFilenamePart(client.name, 'client')}_${date}.pdf`;
@@ -24,10 +28,13 @@ export async function exportProposalPDF(
 export async function exportInvoicePDF(
   invoice: Invoice,
   client: Client,
-  profile: UserProfile
+  profile: UserProfile,
 ): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const doc = createElement(InvoicePDF, { invoice, client, profile }) as any;
+  const doc = createElement(InvoicePDF, {
+    invoice,
+    client,
+    profile,
+  }) as unknown as ReactElement<DocumentProps>;
   const blob = await pdf(doc).toBlob();
   const filename = `Lance_Invoice_${sanitizeFilenamePart(sanitizeInvoiceNumber(invoice.invoice_number), 'INV')}_${sanitizeFilenamePart(client.name, 'client')}.pdf`;
   await saveFile(blob, filename);
@@ -36,10 +43,13 @@ export async function exportInvoicePDF(
 export async function exportContractPDF(
   contract: Contract,
   client: Client,
-  profile: UserProfile
+  profile: UserProfile,
 ): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const doc = createElement(ContractPDF, { contract, client, profile }) as any;
+  const doc = createElement(ContractPDF, {
+    contract,
+    client,
+    profile,
+  }) as unknown as ReactElement<DocumentProps>;
   const blob = await pdf(doc).toBlob();
   const date = todayLocalISO();
   const filename = `Lance_Contract_${sanitizeFilenamePart(client.name, 'client')}_${date}.pdf`;

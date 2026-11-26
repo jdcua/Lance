@@ -30,16 +30,25 @@ export default function FeatureSettings({ bag }: { bag: SettingsBag }) {
         Toggle which feature panels are available. Changes apply immediately.
       </p>
       <div className="flex gap-2 mb-3">
-        <button onClick={enableAll} className="text-xs px-2 py-1 border border-[var(--border-color)] rounded-sm hover:bg-[var(--bg-secondary)] transition-colors">
+        <button
+          onClick={enableAll}
+          className="text-xs px-2 py-1 border border-[var(--border-color)] rounded-sm hover:bg-[var(--bg-secondary)] transition-colors"
+        >
           Enable all
         </button>
-        <button onClick={disableAll} className="text-xs px-2 py-1 border border-[var(--border-color)] rounded-sm hover:bg-[var(--bg-secondary)] transition-colors">
+        <button
+          onClick={disableAll}
+          className="text-xs px-2 py-1 border border-[var(--border-color)] rounded-sm hover:bg-[var(--bg-secondary)] transition-colors"
+        >
           Disable all
         </button>
       </div>
       <div className="max-h-[420px] overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-1">
         {FEATURE_COMPONENT_NAMES.map((name) => (
-          <label key={name} className="flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-[var(--bg-secondary)] cursor-pointer text-xs">
+          <label
+            key={name}
+            className="flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-[var(--bg-secondary)] cursor-pointer text-xs"
+          >
             <input
               type="checkbox"
               checked={isEnabled(name)}

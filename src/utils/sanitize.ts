@@ -27,14 +27,16 @@ export function sanitizeText(value: string): string {
  */
 export function sanitizeSql(value: string): string {
   if (!value) return '';
-  return value
-    // Neutralize classic injection sequences
-    .replace(/'\s*(OR|AND)\s+\d+\s*=\s*\d+\s*'/gi, " '")
-    .replace(/'\s*(\s*(OR|AND)\s+['"]?[0-9a-z_-]+['"]?\s*=\s*['"]?[0-9a-z_-]+['"]?)/gi, '$1')
-    .replace(/'(--|#|\s*(OR|AND)\b)/gi, '$1')
-    .replace(/;\s*(DROP|DELETE|UPDATE|INSERT|ALTER|CREATE|TRUNCATE)\b/gi, ' $1')
-    .replace(/\/\*.*\*\//g, '')
-    .replace(/--/g, '');
+  return (
+    value
+      // Neutralize classic injection sequences
+      .replace(/'\s*(OR|AND)\s+\d+\s*=\s*\d+\s*'/gi, " '")
+      .replace(/'\s*(\s*(OR|AND)\s+['"]?[0-9a-z_-]+['"]?\s*=\s*['"]?[0-9a-z_-]+['"]?)/gi, '$1')
+      .replace(/'(--|#|\s*(OR|AND)\b)/gi, '$1')
+      .replace(/;\s*(DROP|DELETE|UPDATE|INSERT|ALTER|CREATE|TRUNCATE)\b/gi, ' $1')
+      .replace(/\/\*.*\*\//g, '')
+      .replace(/--/g, '')
+  );
 }
 
 /**

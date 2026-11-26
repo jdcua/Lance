@@ -22,12 +22,12 @@ export default function ResourceAllocation({ projectId }: { projectId: string })
 
   const projectEntries = useMemo(
     () => timeEntries.filter((te) => te.project_id === projectId),
-    [timeEntries, projectId]
+    [timeEntries, projectId],
   );
 
   const totalHours = useMemo(
     () => projectEntries.reduce((sum, te) => sum + (te.duration_minutes || 0), 0) / 60,
-    [projectEntries]
+    [projectEntries],
   );
 
   const weeklyBuckets = useMemo(() => {
@@ -54,8 +54,11 @@ export default function ResourceAllocation({ projectId }: { projectId: string })
   }, [projectEntries]);
 
   const billableHours = useMemo(
-    () => projectEntries.filter((te) => te.billable).reduce((sum, te) => sum + (te.duration_minutes || 0), 0) / 60,
-    [projectEntries]
+    () =>
+      projectEntries
+        .filter((te) => te.billable)
+        .reduce((sum, te) => sum + (te.duration_minutes || 0), 0) / 60,
+    [projectEntries],
   );
 
   const maxWeeklyHours = Math.max(...weeklyBuckets.map((b) => b.totalHours), 1);
@@ -78,15 +81,15 @@ export default function ResourceAllocation({ projectId }: { projectId: string })
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-          Resource Allocation
-        </h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Resource Allocation</h4>
       </div>
 
       <div className="grid grid-cols-3 gap-2">
         <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-center">
           <p className="text-[10px] text-[var(--text-tertiary)]">Total Hours</p>
-          <p className="text-sm font-semibold text-[var(--text-primary)]">{totalHours.toFixed(1)}h</p>
+          <p className="text-sm font-semibold text-[var(--text-primary)]">
+            {totalHours.toFixed(1)}h
+          </p>
         </div>
         <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-center">
           <p className="text-[10px] text-[var(--text-tertiary)]">Billable</p>
@@ -94,7 +97,9 @@ export default function ResourceAllocation({ projectId }: { projectId: string })
         </div>
         <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-center">
           <p className="text-[10px] text-[var(--text-tertiary)]">Entries</p>
-          <p className="text-sm font-semibold text-[var(--text-primary)]">{projectEntries.length}</p>
+          <p className="text-sm font-semibold text-[var(--text-primary)]">
+            {projectEntries.length}
+          </p>
         </div>
       </div>
 
@@ -103,10 +108,15 @@ export default function ResourceAllocation({ projectId }: { projectId: string })
       ) : (
         <div className="space-y-1">
           {weeklyBuckets.map((bucket) => (
-            <div key={bucket.weekStart} className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
+            <div
+              key={bucket.weekStart}
+              className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
+            >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[var(--text-secondary)]">{bucket.weekLabel}</span>
-                <span className="font-semibold text-[var(--text-primary)]">{bucket.totalHours.toFixed(1)}h</span>
+                <span className="font-semibold text-[var(--text-primary)]">
+                  {bucket.totalHours.toFixed(1)}h
+                </span>
               </div>
               <div className="w-full h-1.5 glass rounded-full overflow-hidden">
                 <div

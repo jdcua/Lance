@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { checkAchievements, unlockAchievement, getUnlockedThemes, type StoreState } from './checker';
+import {
+  checkAchievements,
+  unlockAchievement,
+  getUnlockedThemes,
+  type StoreState,
+} from './checker';
 
 function state(over: Partial<StoreState>): StoreState {
   return {
@@ -26,7 +31,9 @@ describe('achievements', () => {
     expect(first).toContain('motion_theme');
     // second run: nothing new, no duplicates
     expect(await checkAchievements(s)).toEqual([]);
-    expect(JSON.parse(localStorage.getItem('lance:achievements') || '[]')).toContain('first_proposal_sent');
+    expect(JSON.parse(localStorage.getItem('lance:achievements') || '[]')).toContain(
+      'first_proposal_sent',
+    );
   });
 
   it('never double-reports under concurrent checks', async () => {
@@ -38,7 +45,10 @@ describe('achievements', () => {
   });
 
   it('unlockAchievement is single-winner under races', async () => {
-    const [a, b] = await Promise.all([unlockAchievement('first_contract'), unlockAchievement('first_contract')]);
+    const [a, b] = await Promise.all([
+      unlockAchievement('first_contract'),
+      unlockAchievement('first_contract'),
+    ]);
     expect([a, b].sort()).toEqual([false, true]);
   });
 

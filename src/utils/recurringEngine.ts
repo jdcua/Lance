@@ -1,9 +1,6 @@
 import type { RecurringInvoice } from '../types';
 
-export function getNextDueDate(
-  frequency: RecurringInvoice['frequency'],
-  from: Date
-): Date {
+export function getNextDueDate(frequency: RecurringInvoice['frequency'], from: Date): Date {
   const d = new Date(from);
   if (isNaN(d.getTime())) return getNextDueDate(frequency, new Date());
   switch (frequency) {
@@ -59,10 +56,7 @@ export function shouldGenerate(ri: RecurringInvoice): boolean {
   return d <= new Date();
 }
 
-export function countCyclesBehind(
-  ri: RecurringInvoice,
-  maxCycles: number = 12
-): number {
+export function countCyclesBehind(ri: RecurringInvoice, maxCycles: number = 12): number {
   let count = 0;
   let cursor = effectiveDueDate(ri);
   const now = new Date();
@@ -86,7 +80,7 @@ export function getCatchUpCount(cyclesBehind: number): {
 }
 
 export function shouldShowCatchUpWarning(
-  ri: RecurringInvoice & { last_catch_up_warning?: string }
+  ri: RecurringInvoice & { last_catch_up_warning?: string },
 ): boolean {
   if (!ri.last_catch_up_warning) return true;
   const lastWarning = new Date(ri.last_catch_up_warning);

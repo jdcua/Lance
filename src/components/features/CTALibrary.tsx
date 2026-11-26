@@ -37,7 +37,7 @@ export default function CTALibrary({ projectId }: { projectId: string }) {
       const db = await getDb();
       const rows = await db.select<(CTA & Record<string, unknown>)[]>(
         'SELECT id, project_id, name, type, conversion_rate, impressions, clicks, notes FROM ctas WHERE project_id = ? ORDER BY name ASC',
-        [projectId]
+        [projectId],
       );
       setCtas(
         rows.map((r) => ({
@@ -49,7 +49,7 @@ export default function CTALibrary({ projectId }: { projectId: string }) {
           impressions: r.impressions as number | undefined,
           clicks: r.clicks as number | undefined,
           notes: r.notes as string | undefined,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[CTALibrary] loadCtas failed:', e);
@@ -78,7 +78,7 @@ export default function CTALibrary({ projectId }: { projectId: string }) {
           form.impressions ? parseInt(form.impressions) : null,
           form.clicks ? parseInt(form.clicks) : null,
           form.notes || null,
-        ]
+        ],
       );
       const cta: CTA = {
         id,
@@ -187,8 +187,12 @@ export default function CTALibrary({ projectId }: { projectId: string }) {
             className={inputClass + ' resize-none'}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.name.trim()}>Save</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSave} loading={saving} disabled={!form.name.trim()}>
+              Save
+            </Button>
           </div>
         </div>
       )}
@@ -198,31 +202,50 @@ export default function CTALibrary({ projectId }: { projectId: string }) {
       ) : (
         <div className="space-y-1">
           {ctas.map((cta) => {
-            const ctr = cta.impressions && cta.clicks ? ((cta.clicks / cta.impressions) * 100) : null;
+            const ctr = cta.impressions && cta.clicks ? (cta.clicks / cta.impressions) * 100 : null;
             return (
-              <div key={cta.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
+              <div
+                key={cta.id}
+                className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
+              >
                 <div className="flex-1 min-w-0 flex items-center gap-2">
-                  <span className="font-medium text-[var(--text-primary)] truncate">{cta.name}</span>
-                  {cta.type && <span className="text-[10px] text-[var(--text-tertiary)]">{cta.type}</span>}
+                  <span className="font-medium text-[var(--text-primary)] truncate">
+                    {cta.name}
+                  </span>
+                  {cta.type && (
+                    <span className="text-[10px] text-[var(--text-tertiary)]">{cta.type}</span>
+                  )}
                   {cta.conversion_rate != null && (
                     <span className="text-[10px] text-[#16A34A] font-medium">
                       {cta.conversion_rate.toFixed(1)}% conv
                     </span>
                   )}
                   {ctr != null && (
-                    <span className="text-[10px] text-[var(--text-tertiary)]">{ctr.toFixed(2)}% CTR</span>
+                    <span className="text-[10px] text-[var(--text-tertiary)]">
+                      {ctr.toFixed(2)}% CTR
+                    </span>
                   )}
                   {cta.impressions != null && (
-                    <span className="text-[10px] text-[var(--text-tertiary)]">{cta.impressions.toLocaleString()} imp</span>
+                    <span className="text-[10px] text-[var(--text-tertiary)]">
+                      {cta.impressions.toLocaleString()} imp
+                    </span>
                   )}
                   {cta.clicks != null && (
-                    <span className="text-[10px] text-[var(--text-tertiary)]">{cta.clicks.toLocaleString()} clicks</span>
+                    <span className="text-[10px] text-[var(--text-tertiary)]">
+                      {cta.clicks.toLocaleString()} clicks
+                    </span>
                   )}
-                  {cta.notes && <span className="text-[10px] text-[var(--text-tertiary)] truncate">{cta.notes}</span>}
+                  {cta.notes && (
+                    <span className="text-[10px] text-[var(--text-tertiary)] truncate">
+                      {cta.notes}
+                    </span>
+                  )}
                 </div>
                 <button
                   aria-label="Delete cta library"
-                  onClick={() => handleDelete(cta.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2">
+                  onClick={() => handleDelete(cta.id)}
+                  className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2"
+                >
                   <Trash2 size={12} />
                 </button>
               </div>

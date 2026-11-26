@@ -37,7 +37,9 @@ export default function KanbanColumnComponent({
     <div
       ref={setNodeRef}
       className={`flex flex-col w-[260px] min-w-[260px] rounded-[10px] transition-colors ${
-        isOver ? 'bg-[var(--accent)]/5 ring-1 ring-[var(--accent)]/30' : 'bg-[var(--bg-secondary)]/50'
+        isOver
+          ? 'bg-[var(--accent)]/5 ring-1 ring-[var(--accent)]/30'
+          : 'bg-[var(--bg-secondary)]/50'
       }`}
     >
       <div className="flex items-center justify-between px-2.5 py-2 border-b border-[var(--border-color)]/50">
@@ -46,36 +48,51 @@ export default function KanbanColumnComponent({
             className="w-2.5 h-2.5 rounded-full flex-shrink-0"
             style={{ backgroundColor: column.color || '#6B7280' }}
           />
-          <span className="text-[11px] font-semibold text-[var(--text-primary)]">{column.name}</span>
-          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
-            exceedsWip ? 'bg-[#DC2626]/15 text-[#DC2626]' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
-          }`}>
-            {cards.length}{wipLimit != null ? `/${wipLimit}` : ''}
+          <span className="text-[11px] font-semibold text-[var(--text-primary)]">
+            {column.name}
+          </span>
+          <span
+            className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+              exceedsWip
+                ? 'bg-[#DC2626]/15 text-[#DC2626]'
+                : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
+            }`}
+          >
+            {cards.length}
+            {wipLimit != null ? `/${wipLimit}` : ''}
           </span>
         </div>
         <div className="flex items-center gap-0.5">
           <button
             aria-label="Do action on"
-            onClick={() => onEditColumn(column)} className="p-1 rounded-[4px] hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+            onClick={() => onEditColumn(column)}
+            className="p-1 rounded-[4px] hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+          >
             <Settings2 size={11} />
           </button>
           <button
             aria-label="Delete kanban column"
-            onClick={() => onDeleteColumn(column.id)} className="p-1 rounded-[4px] hover:bg-[#DC2626]/10 text-[var(--text-tertiary)] hover:text-[#DC2626] transition-colors">
+            onClick={() => onDeleteColumn(column.id)}
+            className="p-1 rounded-[4px] hover:bg-[#DC2626]/10 text-[var(--text-tertiary)] hover:text-[#DC2626] transition-colors"
+          >
             <Trash2 size={11} />
           </button>
         </div>
       </div>
 
       <div className="flex-1 p-1.5 space-y-1.5 min-h-[80px] overflow-y-auto">
-        <SortableContext items={cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
-          {cards.map(card => (
+        <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+          {cards.map((card) => (
             <KanbanCardComponent key={card.id} card={card} onClick={onCardClick} />
           ))}
         </SortableContext>
 
         {showQuickAdd ? (
-          <QuickAddForm columnId={column.id} onAdd={onAddCard} onClose={() => setShowQuickAdd(false)} />
+          <QuickAddForm
+            columnId={column.id}
+            onAdd={onAddCard}
+            onClose={() => setShowQuickAdd(false)}
+          />
         ) : (
           <button
             onClick={() => setShowQuickAdd(true)}
@@ -89,18 +106,26 @@ export default function KanbanColumnComponent({
   );
 }
 
-function QuickAddForm({ columnId, onAdd, onClose }: { columnId: string; onAdd: (columnId: string) => void; onClose: () => void }) {
+function QuickAddForm({
+  columnId,
+  onAdd,
+  onClose,
+}: {
+  columnId: string;
+  onAdd: (columnId: string) => void;
+  onClose: () => void;
+}) {
   const [title, setTitle] = useState('');
   return (
     <div className="space-y-1.5">
       <input
         type="text"
         value={title}
-        onChange={e => setTitle(e.target.value)}
+        onChange={(e) => setTitle(e.target.value)}
         placeholder="Card title..."
         className="w-full px-2 py-1.5 text-[11px] border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]"
         autoFocus
-        onKeyDown={e => {
+        onKeyDown={(e) => {
           if (e.key === 'Enter' && title.trim()) {
             onAdd(columnId);
             setTitle('');
@@ -110,8 +135,20 @@ function QuickAddForm({ columnId, onAdd, onClose }: { columnId: string; onAdd: (
         }}
       />
       <div className="flex justify-end gap-1">
-        <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
-        <Button size="sm" onClick={() => { onAdd(columnId); setTitle(''); onClose(); }} disabled={!title.trim()}>Add</Button>
+        <Button variant="secondary" size="sm" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          size="sm"
+          onClick={() => {
+            onAdd(columnId);
+            setTitle('');
+            onClose();
+          }}
+          disabled={!title.trim()}
+        >
+          Add
+        </Button>
       </div>
     </div>
   );

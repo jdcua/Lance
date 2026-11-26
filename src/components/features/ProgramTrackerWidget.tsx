@@ -24,21 +24,27 @@ export default function ProgramTrackerWidget({ clientId }: { clientId: string })
       const db = await getDb();
       const rows = await db.select<(Program & Record<string, unknown>)[]>(
         'SELECT id, client_id, name, duration_weeks, sessions_per_week, notes FROM programs WHERE client_id = ? ORDER BY name ASC',
-        [clientId]
+        [clientId],
       );
-      setPrograms(rows.map(r => ({
-        id: r.id as string,
-        client_id: r.client_id as string,
-        name: r.name as string,
-        duration_weeks: r.duration_weeks as number | undefined,
-        sessions_per_week: r.sessions_per_week as number | undefined,
-        notes: r.notes as string | undefined,
-      })));
-    } catch (e) { console.error('[ProgramTrackerWidget] loadPrograms failed:', e); }
+      setPrograms(
+        rows.map((r) => ({
+          id: r.id as string,
+          client_id: r.client_id as string,
+          name: r.name as string,
+          duration_weeks: r.duration_weeks as number | undefined,
+          sessions_per_week: r.sessions_per_week as number | undefined,
+          notes: r.notes as string | undefined,
+        })),
+      );
+    } catch (e) {
+      console.error('[ProgramTrackerWidget] loadPrograms failed:', e);
+    }
     setLoading(false);
   }, [clientId]);
 
-  useEffect(() => { loadPrograms(); }, [clientId, loadPrograms]);
+  useEffect(() => {
+    loadPrograms();
+  }, [clientId, loadPrograms]);
 
   if (loading) {
     return (
@@ -47,7 +53,9 @@ export default function ProgramTrackerWidget({ clientId }: { clientId: string })
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Active Programs</h4>
         </div>
         <div className="space-y-1">
-          {[1, 2].map(i => <div key={i} className="h-10 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
+          {[1, 2].map((i) => (
+            <div key={i} className="h-10 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
+          ))}
         </div>
       </div>
     );
@@ -56,15 +64,22 @@ export default function ProgramTrackerWidget({ clientId }: { clientId: string })
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Active Programs ({programs.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
+          Active Programs ({programs.length})
+        </h4>
       </div>
 
       {programs.length === 0 ? (
-        <p className="text-xs text-[var(--text-tertiary)] py-2">No active programs. Go to Programs to create one.</p>
+        <p className="text-xs text-[var(--text-tertiary)] py-2">
+          No active programs. Go to Programs to create one.
+        </p>
       ) : (
         <div className="space-y-1">
           {programs.map((program) => (
-            <div key={program.id} className="px-3 py-2.5 bg-[var(--bg-secondary)] rounded-xs text-xs">
+            <div
+              key={program.id}
+              className="px-3 py-2.5 bg-[var(--bg-secondary)] rounded-xs text-xs"
+            >
               <div className="flex items-center gap-2 mb-1">
                 <Dumbbell size={10} className="text-[var(--text-tertiary)] flex-shrink-0" />
                 <span className="font-semibold text-[var(--text-primary)]">{program.name}</span>

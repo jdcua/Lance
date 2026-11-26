@@ -29,3 +29,33 @@ fn urlencoding(s: &str) -> String {
     }
     encoded
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn unreserved_characters_pass_through() {
+        assert_eq!(urlencoding("AZaz09-_.~"), "AZaz09-_.~");
+    }
+
+    #[test]
+    fn spaces_become_plus() {
+        assert_eq!(urlencoding("hello world"), "hello+world");
+    }
+
+    #[test]
+    fn reserved_bytes_use_uppercase_hex() {
+        assert_eq!(urlencoding("a/b?c=d&e"), "a%2Fb%3Fc%3Dd%26e");
+    }
+
+    #[test]
+    fn non_ascii_bytes_are_encoded_individually() {
+        assert_eq!(urlencoding("é"), "%C3%A9");
+    }
+
+    #[test]
+    fn empty_input_stays_empty() {
+        assert_eq!(urlencoding(""), "");
+    }
+}

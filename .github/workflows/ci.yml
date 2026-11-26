@@ -25,34 +25,54 @@ jobs:
     name: TypeScript Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
       - run: npm ci
       - run: npx tsc --noEmit
+      - name: Playwright spec typecheck
+        run: npm run typecheck:e2e
 
   lint:
     timeout-minutes: 15
     name: ESLint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - name: Prettier format check
+        run: npm run format:check
+      - name: Duplicate function advisory
+        run: "npx eslint src/ --rule 'sonarjs/no-identical-functions: warn'"
+      - name: Complexity gate
+        run: npm run complexity -- --strict
+      - name: Strict architecture boundaries
+        run: npm run check:boundaries -- --strict
+      - name: Import cycle baseline
+        run: npm run check:boundaries -- --cycles
+      - name: No new hand-rolled trackers
+        run: npm run check:trackers
+      - name: Doc command references
+        run: npm run check:doc-commands
+      - name: Open-source audit
+        run: npm run audit:oss
+      - name: Dependency license policy
+        run: npm run check:licenses
 
   test:
     timeout-minutes: 15
     name: Vitest
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
@@ -64,7 +84,7 @@ jobs:
     name: Rust Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
           toolchain: stable
@@ -86,7 +106,7 @@ jobs:
         working-directory: src-tauri
 
       - name: Clippy quality lints
-        run: cargo clippy --lib -- -D clippy::cognitive_complexity -D clippy::too_many_arguments -D clippy::type_complexity
+        run: cargo clippy --lib -- -D clippy::excessive_nesting -D clippy::too_many_lines -D clippy::too_many_arguments -D clippy::type_complexity
         working-directory: src-tauri
 
   rust-test:
@@ -94,7 +114,7 @@ jobs:
     name: Rust Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
           toolchain: stable
@@ -116,10 +136,27 @@ jobs:
     name: Vite Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
       - run: npm ci
       - run: npm run build
+
+  e2e:
+    timeout-minutes: 20
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test --reporter=github

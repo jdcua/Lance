@@ -24,11 +24,47 @@ pub fn init_db_state(app: &AppHandle) -> Result<DbState, String> {
 }
 
 pub fn run_migrations(conn: &Connection) -> Result<(), String> {
-    conn.execute_batch(
-        "PRAGMA journal_mode=WAL;
+    for sql in [
+        pragmas_sql(),
+        core_tables_sql(),
+        billing_tables_sql(),
+        client_tables_sql(),
+        metrics_tables_sql(),
+        archetype_tables_sql(),
+        template_tables_sql(),
+        kanban_tables_sql(),
+        meta_tables_sql(),
+    ] {
+        conn.execute_batch(sql).map_err(|e| format!("Migration failed: {}", e))?;
+    }
+
+    // Best effort: these ALTERs upgrade older schemas. On a fresh database the
+    // columns already exist, so errors stay ignored as in the original runner.
+    execute_best_effort(conn, legacy_columns_sql());
+    execute_best_effort(conn, user_id_columns_sql());
+
+    conn.execute_batch(indexes_sql()).map_err(|e| format!("Index migration failed: {}", e))?;
+
+    execute_best_effort(conn, seed_columns_sql());
+
+    Ok(())
+}
+
+fn execute_best_effort(conn: &Connection, statements: &[&str]) {
+    for sql in statements {
+        let _ = conn.execute(sql, []);
+    }
+}
+
+fn pragmas_sql() -> &'static str {
+    "PRAGMA journal_mode=WAL;
          PRAGMA foreign_keys=ON;
 
-         CREATE TABLE IF NOT EXISTS clients (
+         "
+}
+
+fn core_tables_sql() -> &'static str {
+    "CREATE TABLE IF NOT EXISTS clients (
            id TEXT PRIMARY KEY,
            user_id INTEGER NOT NULL DEFAULT 1,
            name TEXT NOT NULL,
@@ -102,7 +138,11 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
            FOREIGN KEY (client_id) REFERENCES clients(id)
          );
 
-         CREATE TABLE IF NOT EXISTS time_entries (
+         "
+}
+
+fn billing_tables_sql() -> &'static str {
+    "CREATE TABLE IF NOT EXISTS time_entries (
            id TEXT PRIMARY KEY,
            user_id INTEGER NOT NULL DEFAULT 1,
            project_id TEXT NOT NULL,
@@ -180,7 +220,11 @@ CREATE TABLE IF NOT EXISTS user_profile (
             trial_started_at TEXT
           );
 
-         CREATE TABLE IF NOT EXISTS communications (
+         "
+}
+
+fn client_tables_sql() -> &'static str {
+    "CREATE TABLE IF NOT EXISTS communications (
            id TEXT PRIMARY KEY,
            user_id INTEGER NOT NULL DEFAULT 1,
            client_id TEXT NOT NULL,
@@ -246,7 +290,11 @@ CREATE TABLE IF NOT EXISTS user_profile (
            created_at TEXT NOT NULL
          );
 
-         CREATE TABLE IF NOT EXISTS metric_definitions (
+         "
+}
+
+fn metrics_tables_sql() -> &'static str {
+    "CREATE TABLE IF NOT EXISTS metric_definitions (
            id TEXT PRIMARY KEY,
            user_id INTEGER NOT NULL DEFAULT 1,
            client_id TEXT NOT NULL,
@@ -291,7 +339,11 @@ CREATE TABLE IF NOT EXISTS user_profile (
            action TEXT
          );
 
-         CREATE TABLE IF NOT EXISTS archetype_render_log (
+         "
+}
+
+fn archetype_tables_sql() -> &'static str {
+    "CREATE TABLE IF NOT EXISTS archetype_render_log (
            id TEXT PRIMARY KEY,
            user_id INTEGER NOT NULL DEFAULT 1,
            project_id TEXT NOT NULL,
@@ -353,7 +405,11 @@ CREATE TABLE IF NOT EXISTS user_profile (
            FOREIGN KEY (project_id) REFERENCES projects(id)
          );
 
-         CREATE TABLE IF NOT EXISTS archetype_keywords (
+         "
+}
+
+fn template_tables_sql() -> &'static str {
+    "CREATE TABLE IF NOT EXISTS archetype_keywords (
            id TEXT PRIMARY KEY,
            user_id INTEGER NOT NULL DEFAULT 1,
            client_id TEXT NOT NULL,
@@ -435,7 +491,11 @@ CREATE TABLE IF NOT EXISTS user_profile (
              created_at TEXT DEFAULT CURRENT_TIMESTAMP
           );
 
-           CREATE TABLE IF NOT EXISTS kanban_boards (
+           "
+}
+
+fn kanban_tables_sql() -> &'static str {
+    "CREATE TABLE IF NOT EXISTS kanban_boards (
              id TEXT PRIMARY KEY,
              project_id TEXT NOT NULL,
              name TEXT NOT NULL DEFAULT 'Main Board',
@@ -472,7 +532,11 @@ CREATE TABLE IF NOT EXISTS user_profile (
              FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
            );
 
-           CREATE TABLE IF NOT EXISTS schema_version (
+           "
+}
+
+fn meta_tables_sql() -> &'static str {
+    "CREATE TABLE IF NOT EXISTS schema_version (
              version INTEGER NOT NULL
           );
 
@@ -502,29 +566,29 @@ CREATE TABLE IF NOT EXISTS user_profile (
              days_from_start INTEGER NOT NULL DEFAULT 0,
              invoice_on_completion INTEGER NOT NULL DEFAULT 0,
              FOREIGN KEY (template_id) REFERENCES project_templates(id) ON DELETE CASCADE
-          );",
-    )
-    .map_err(|e| format!("Migration failed: {}", e))?;
+          );"
+}
 
-    let _ = conn.execute("ALTER TABLE projects ADD COLUMN color TEXT", []);
-    let _ =
-        conn.execute("ALTER TABLE expenses ADD COLUMN recurring INTEGER NOT NULL DEFAULT 0", []);
-    let _ = conn.execute("ALTER TABLE expenses ADD COLUMN frequency TEXT DEFAULT 'monthly'", []);
-    let _ = conn.execute("ALTER TABLE proposals ADD COLUMN expires_at TEXT", []);
-    let _ = conn.execute("ALTER TABLE invoices ADD COLUMN currency TEXT DEFAULT NULL", []);
-    let _ = conn.execute("ALTER TABLE clients ADD COLUMN preferred_currency TEXT DEFAULT NULL", []);
-    let _ = conn.execute("ALTER TABLE user_profile ADD COLUMN proposal_expiry_days INTEGER", []);
-    let _ = conn.execute("ALTER TABLE user_profile ADD COLUMN license_tier TEXT", []);
-    let _ = conn.execute("ALTER TABLE user_profile ADD COLUMN license_expires_at TEXT", []);
-    let _ = conn.execute("ALTER TABLE user_profile ADD COLUMN license_validated_at TEXT", []);
-    let _ = conn.execute("ALTER TABLE user_profile ADD COLUMN license_grace_until TEXT", []);
-    let _ = conn.execute("ALTER TABLE user_profile ADD COLUMN trial_started_at TEXT", []);
-    let _ = conn.execute(
+fn legacy_columns_sql() -> &'static [&'static str] {
+    &[
+        "ALTER TABLE projects ADD COLUMN color TEXT",
+        "ALTER TABLE expenses ADD COLUMN recurring INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE expenses ADD COLUMN frequency TEXT DEFAULT 'monthly'",
+        "ALTER TABLE proposals ADD COLUMN expires_at TEXT",
+        "ALTER TABLE invoices ADD COLUMN currency TEXT DEFAULT NULL",
+        "ALTER TABLE clients ADD COLUMN preferred_currency TEXT DEFAULT NULL",
+        "ALTER TABLE user_profile ADD COLUMN proposal_expiry_days INTEGER",
+        "ALTER TABLE user_profile ADD COLUMN license_tier TEXT",
+        "ALTER TABLE user_profile ADD COLUMN license_expires_at TEXT",
+        "ALTER TABLE user_profile ADD COLUMN license_validated_at TEXT",
+        "ALTER TABLE user_profile ADD COLUMN license_grace_until TEXT",
+        "ALTER TABLE user_profile ADD COLUMN trial_started_at TEXT",
         "ALTER TABLE time_entries ADD COLUMN created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP",
-        [],
-    );
+    ]
+}
 
-    let user_id_columns = [
+fn user_id_columns_sql() -> &'static [&'static str] {
+    &[
         "ALTER TABLE clients ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
         "ALTER TABLE projects ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
         "ALTER TABLE milestones ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
@@ -550,13 +614,11 @@ CREATE TABLE IF NOT EXISTS user_profile (
         "ALTER TABLE export_templates ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
         "ALTER TABLE invoice_payments ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
         "ALTER TABLE share_tokens ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1",
-    ];
-    for sql in &user_id_columns {
-        let _ = conn.execute(sql, []);
-    }
+    ]
+}
 
-    conn.execute_batch(
-        "CREATE INDEX IF NOT EXISTS idx_projects_client ON projects(client_id);
+fn indexes_sql() -> &'static str {
+    "CREATE INDEX IF NOT EXISTS idx_projects_client ON projects(client_id);
          CREATE INDEX IF NOT EXISTS idx_milestones_project ON milestones(project_id);
          CREATE INDEX IF NOT EXISTS idx_time_entries_project ON time_entries(project_id);
          CREATE INDEX IF NOT EXISTS idx_invoices_client ON invoices(client_id);
@@ -612,11 +674,11 @@ CREATE TABLE IF NOT EXISTS user_profile (
           CREATE INDEX IF NOT EXISTS idx_kanban_columns_order ON kanban_columns(sort_order);
           CREATE INDEX IF NOT EXISTS idx_kanban_cards_column ON kanban_cards(column_id);
           CREATE INDEX IF NOT EXISTS idx_kanban_cards_project ON kanban_cards(project_id);
-          CREATE INDEX IF NOT EXISTS idx_kanban_cards_order ON kanban_cards(sort_order);",
-    )
-    .map_err(|e| format!("Index migration failed: {}", e))?;
+          CREATE INDEX IF NOT EXISTS idx_kanban_cards_order ON kanban_cards(sort_order);"
+}
 
-    let seed_columns = [
+fn seed_columns_sql() -> &'static [&'static str] {
+    &[
         "ALTER TABLE clients ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE projects ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE proposals ADD COLUMN seeded INTEGER NOT NULL DEFAULT 0",
@@ -630,10 +692,126 @@ CREATE TABLE IF NOT EXISTS user_profile (
         "ALTER TABLE user_profile ADD COLUMN payment_instructions TEXT",
         "ALTER TABLE user_profile ADD COLUMN exchange_rates TEXT",
         "ALTER TABLE recurring_invoices ADD COLUMN last_catch_up_warning TEXT",
-    ];
-    for sql in &seed_columns {
-        let _ = conn.execute(sql, []);
+    ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn table_exists(conn: &Connection, name: &str) -> bool {
+        conn.query_row(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?1",
+            [name],
+            |_| Ok(true),
+        )
+        .unwrap_or(false)
     }
 
-    Ok(())
+    #[test]
+    fn run_migrations_creates_representative_tables_and_enables_foreign_keys() {
+        let conn = Connection::open_in_memory().expect("open in-memory sqlite");
+        run_migrations(&conn).expect("migrations succeed on a fresh database");
+
+        for table in
+            ["schema_version", "clients", "invoices", "kanban_cards", "project_template_milestones"]
+        {
+            assert!(table_exists(&conn, table), "missing table: {table}");
+        }
+
+        let foreign_keys: i64 = conn
+            .query_row("PRAGMA foreign_keys", [], |row| row.get(0))
+            .expect("read foreign_keys pragma");
+        assert_eq!(foreign_keys, 1, "foreign_keys must be enabled");
+    }
+
+    #[test]
+    fn schema_golden() {
+        const GOLDEN: &str =
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/schema_golden.txt"));
+
+        fn snapshot(conn: &Connection) -> String {
+            let mut out = String::new();
+
+            // sqlite_% (notably sqlite_sequence from AUTOINCREMENT tables) is
+            // intentionally excluded: it is engine bookkeeping, not our schema.
+            {
+                let mut stmt = conn
+                    .prepare(
+                        "SELECT type, name, tbl_name, sql FROM sqlite_master \
+                         WHERE name NOT LIKE 'sqlite_%' ORDER BY type, name",
+                    )
+                    .expect("prepare sqlite_master");
+                let rows = stmt
+                    .query_map([], |row| {
+                        Ok((
+                            row.get::<_, String>(0)?,
+                            row.get::<_, String>(1)?,
+                            row.get::<_, String>(2)?,
+                            row.get::<_, Option<String>>(3)?,
+                        ))
+                    })
+                    .expect("query sqlite_master");
+                for row in rows {
+                    out.push_str(&format!("{:?}\n", row.expect("sqlite_master row")));
+                }
+            }
+
+            let names: Vec<String> = {
+                let mut stmt = conn
+                    .prepare(
+                        "SELECT name FROM sqlite_master WHERE type = 'table' \
+                         AND name NOT LIKE 'sqlite_%' ORDER BY name",
+                    )
+                    .expect("prepare table names");
+                stmt.query_map([], |row| row.get::<_, String>(0))
+                    .expect("query table names")
+                    .map(|row| row.expect("table name row"))
+                    .collect()
+            };
+
+            for table in names {
+                out.push_str(&format!("[table_info:{table}]\n"));
+                let pragma = format!("PRAGMA table_info('{}')", table.replace('\'', "''"));
+                let mut stmt = conn.prepare(&pragma).expect("prepare table_info");
+                let rows = stmt
+                    .query_map([], |row| {
+                        Ok((
+                            row.get::<_, i64>(0)?,            // cid
+                            row.get::<_, String>(1)?,         // name
+                            row.get::<_, String>(2)?,         // type
+                            row.get::<_, i64>(3)?,            // notnull
+                            row.get::<_, Option<String>>(4)?, // dflt_value
+                            row.get::<_, i64>(5)?,            // pk
+                        ))
+                    })
+                    .expect("query table_info");
+                for row in rows {
+                    out.push_str(&format!("{:?}\n", row.expect("table_info row")));
+                }
+            }
+            out
+        }
+
+        let conn = Connection::open_in_memory().expect("open in-memory sqlite");
+        run_migrations(&conn).expect("migrations succeed on a fresh database");
+        let actual = snapshot(&conn);
+
+        if std::env::var_os("UPDATE_GOLDEN").is_some() {
+            let golden = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("tests")
+                .join("schema_golden.txt");
+            std::fs::write(&golden, &actual).unwrap_or_else(|e| {
+                panic!(
+                    "failed to write schema golden at {}: {e}; run from the crate with: cd src-tauri && UPDATE_GOLDEN=1 cargo test --lib db::tests::schema_golden",
+                    golden.display()
+                )
+            });
+            return;
+        }
+        assert_eq!(
+            actual, GOLDEN,
+            "schema drift — regenerate with: cd src-tauri && UPDATE_GOLDEN=1 cargo test --lib db::tests::schema_golden"
+        );
+    }
 }

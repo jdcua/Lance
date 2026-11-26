@@ -30,7 +30,9 @@ const MAX_EVENTS = 200;
 
 const FORBIDDEN_KEYS = ['name', 'email', 'amount', 'notes', 'body', 'subject', 'address', 'phone'];
 
-function scrub(data?: Record<string, string | number | boolean>): Record<string, string | number | boolean> | undefined {
+function scrub(
+  data?: Record<string, string | number | boolean>,
+): Record<string, string | number | boolean> | undefined {
   if (!data) return undefined;
   const clean: Record<string, string | number | boolean> = {};
   for (const [k, v] of Object.entries(data)) {
@@ -41,7 +43,10 @@ function scrub(data?: Record<string, string | number | boolean>): Record<string,
   return clean;
 }
 
-export function recordTelemetry(event: TelemetryEventName, data?: Record<string, string | number | boolean>): void {
+export function recordTelemetry(
+  event: TelemetryEventName,
+  data?: Record<string, string | number | boolean>,
+): void {
   try {
     const raw = localStorage.getItem(KEY);
     const events: TelemetryEvent[] = raw ? JSON.parse(raw) : [];

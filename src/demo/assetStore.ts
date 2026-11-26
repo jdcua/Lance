@@ -254,6 +254,6 @@ export function useAssetSrc(filePath: string | undefined): string | null {
     return () => {
       live = false;
     };
-  }, [filePath]);
+  }, [filePath, desktopSrc]);
   return src;
 }

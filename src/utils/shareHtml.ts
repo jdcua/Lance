@@ -104,4 +104,3 @@ export function sanitizeShareHtml(html: string): string {
   for (const child of Array.from(doc.body.childNodes)) rebuildNode(doc, child, out, 0);
   return out.innerHTML;
 }
-

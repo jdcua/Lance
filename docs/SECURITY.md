@@ -10,13 +10,13 @@
 - XSS in rendered HTML content (proposals, contracts)
 - Formula injection in CSV imports
 
-### Out of scope in v1 (addressed in v2)
+### Out of scope for a local-first app
 
 - Remote code execution via network
 - Account takeover (no accounts)
-- Data breach via server (no server)
-- Man-in-the-middle on update download
-  (mitigated by Tauri's signature verification)
+- Data breach via remote server (none; the client portal binds 127.0.0.1 only)
+- Man-in-the-middle on update download (mitigated by Tauri's signature verification).
+  Bundles are signed and verified with the pinned public key; the manifest is not signed, so rollback to an older signed build is blocked by a client-side version high-water mark in localStorage.
 
 ### Mitigations implemented
 
@@ -37,23 +37,22 @@
 | No X-Frame-Options on portal pages                     | Medium   | Added X-Frame-Options: DENY                                                                                                                                |
 | Only basic CSP in Tauri webview                        | Low      | Enhanced CSP with script-src, connect-src, frame-ancestors                                                                                                 |
 
-## v2 Additions (planned)
-
-- Supabase Auth (JWT, magic link, OAuth)
-- Row-level security in Postgres (user_id column migration complete)
-- End-to-end encryption for sensitive fields before sync
-- Rate limiting on all API endpoints
-- GDPR: data export and deletion endpoints
-- Audit log for all data mutations
-
-## v2 Foundations Set in v1
+## Local-first foundations present today
 
 - `user_id INTEGER DEFAULT 1` column added to all tables
 - `app_events` audit trail table created
-- Sensitive fields annotated with `-- SECURITY: encrypt with user key in v2`
+- Sensitive fields are stored locally without encryption; there is no user-held key and no sync.
 - Tauri CSP `connect-src` allows only the app origin and the public GitHub API for release notes.
+
+## Network access & privacy
+
+Lance makes three kinds of network request by default: an unauthenticated GET to `api.github.com` for public release notes (at startup, cached for one hour); a silent update check to `github.com/jdcua/Lance/releases/latest/download/latest.json` (3 seconds after launch, then every 4 hours), with signed bundles downloaded only if you choose Install; and a loopback-only HTTP server on `127.0.0.1` ports 39821–39830 that serves client share links while the app is open. No request carries your business data, account, or telemetry. No accounts or remote storage exist. The release-notes GET and the update check are enabled by default and can be turned off together with the "Release and update checks" switch in Settings → General; the loopback share server is not affected. The switch takes effect for future checks only: release notes already cached stay visible until the one-hour cache expires or the app is remounted, and the updater picks up the change on its next scheduled check.
 
 ## Responsible Disclosure
 
-Security issues: open an issue at https://github.com/jdcua/Lance/issues
-We aim to respond within 48 hours.
+Please **do not open a public issue** for an unpatched vulnerability. Report it
+privately via GitHub's security advisory form:
+https://github.com/jdcua/Lance/security/advisories/new
+
+We aim to acknowledge within 48 hours. See the root [SECURITY.md](../SECURITY.md)
+for supported versions and the full disclosure policy.

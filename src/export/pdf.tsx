@@ -9,7 +9,13 @@ const ACCENT = '#159C65';
 const pdfStyles = StyleSheet.create({
   page: { padding: 60, fontFamily: 'Helvetica', fontSize: 11, color: '#181716' },
   divider: { borderBottom: '1 solid #E3E2DB', marginVertical: 16 },
-  label: { fontSize: 9, color: '#A3A39E', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
+  label: {
+    fontSize: 9,
+    color: '#A3A39E',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
   value: { fontSize: 11, color: '#181716', lineHeight: 1.6 },
   freelancerName: { fontSize: 14, fontWeight: 600 },
   freelancerEmail: { fontSize: 10, color: '#68675F' },
@@ -38,7 +44,15 @@ const pdfStyles = StyleSheet.create({
   thankYou: { fontSize: 10, color: '#68675F', marginTop: 24 },
 });
 
-export function ProposalPDF({ proposal, client, profile }: { proposal: Proposal; client: Client; profile: UserProfile }) {
+export function ProposalPDF({
+  proposal,
+  client,
+  profile,
+}: {
+  proposal: Proposal;
+  client: Client;
+  profile: UserProfile;
+}) {
   const body = htmlToPlainText(proposal.body || proposal.scope || '');
   const statusDate = proposal.sent_at || new Date().toISOString();
 
@@ -58,7 +72,8 @@ export function ProposalPDF({ proposal, client, profile }: { proposal: Proposal;
         <Text style={pdfStyles.heading}>PROPOSAL</Text>
         <Text style={pdfStyles.title}>{proposal.title}</Text>
         <Text style={pdfStyles.preparedFor}>
-          Prepared for: {client.name}{client.company ? ` (${client.company})` : ''}
+          Prepared for: {client.name}
+          {client.company ? ` (${client.company})` : ''}
         </Text>
 
         <View style={pdfStyles.divider} />
@@ -100,17 +115,29 @@ export function ProposalPDF({ proposal, client, profile }: { proposal: Proposal;
   );
 }
 
-export function InvoicePDF({ invoice, client, profile }: { invoice: Invoice; client: Client; profile: UserProfile }) {
+export function InvoicePDF({
+  invoice,
+  client,
+  profile,
+}: {
+  invoice: Invoice;
+  client: Client;
+  profile: UserProfile;
+}) {
   const currency = invoice.currency || profile.currency;
   const taxAmount = invoice.subtotal * ((invoice.tax_rate || 0) / 100);
   const showTax = invoice.tax_rate != null && invoice.tax_rate > 0;
 
   const statusColor =
-    invoice.status === 'paid' ? pdfStyles.statusPaid :
-    invoice.status === 'sent' ? pdfStyles.statusSent :
-    invoice.status === 'partial' ? pdfStyles.statusPartial :
-    invoice.status === 'overdue' ? pdfStyles.statusOverdue :
-    pdfStyles.statusDraft;
+    invoice.status === 'paid'
+      ? pdfStyles.statusPaid
+      : invoice.status === 'sent'
+        ? pdfStyles.statusSent
+        : invoice.status === 'partial'
+          ? pdfStyles.statusPartial
+          : invoice.status === 'overdue'
+            ? pdfStyles.statusOverdue
+            : pdfStyles.statusDraft;
 
   return (
     <Document>
@@ -165,27 +192,31 @@ export function InvoicePDF({ invoice, client, profile }: { invoice: Invoice; cli
           >
             <Text style={[pdfStyles.value, pdfStyles.tableCellDesc]}>{item.description}</Text>
             <Text style={[pdfStyles.value, pdfStyles.tableCellQty]}>{item.quantity}</Text>
-            <Text style={[pdfStyles.value, pdfStyles.tableCellPrice]}>{formatCurrency(item.unit_price, currency)}</Text>
-            <Text style={[pdfStyles.value, pdfStyles.tableCellTotal]}>{formatCurrency(item.total, currency)}</Text>
+            <Text style={[pdfStyles.value, pdfStyles.tableCellPrice]}>
+              {formatCurrency(item.unit_price, currency)}
+            </Text>
+            <Text style={[pdfStyles.value, pdfStyles.tableCellTotal]}>
+              {formatCurrency(item.total, currency)}
+            </Text>
           </View>
         ))}
 
         <View style={pdfStyles.divider} />
 
         <View style={[pdfStyles.totalRow]}>
-          <Text style={pdfStyles.totalRowLabel}>Subtotal:  </Text>
+          <Text style={pdfStyles.totalRowLabel}>Subtotal: </Text>
           <Text style={pdfStyles.value}>{formatCurrency(invoice.subtotal, currency)}</Text>
         </View>
 
         {showTax && (
           <View style={pdfStyles.totalRow}>
-            <Text style={pdfStyles.totalRowLabel}>VAT / sales tax ({invoice.tax_rate}%):  </Text>
+            <Text style={pdfStyles.totalRowLabel}>VAT / sales tax ({invoice.tax_rate}%): </Text>
             <Text style={pdfStyles.value}>{formatCurrency(taxAmount, currency)}</Text>
           </View>
         )}
 
         <View style={pdfStyles.totalRow}>
-          <Text style={pdfStyles.totalLabel}>TOTAL:  </Text>
+          <Text style={pdfStyles.totalLabel}>TOTAL: </Text>
           <Text style={pdfStyles.totalValue}>{formatCurrency(invoice.total, currency)}</Text>
         </View>
 
@@ -210,7 +241,15 @@ export function InvoicePDF({ invoice, client, profile }: { invoice: Invoice; cli
   );
 }
 
-export function ContractPDF({ contract, client, profile }: { contract: Contract; client: Client; profile: UserProfile }) {
+export function ContractPDF({
+  contract,
+  client,
+  profile,
+}: {
+  contract: Contract;
+  client: Client;
+  profile: UserProfile;
+}) {
   const body = htmlToPlainText(contract.body || '');
   const statusDate = contract.signed_at || contract.created_at;
 
@@ -230,7 +269,8 @@ export function ContractPDF({ contract, client, profile }: { contract: Contract;
         <Text style={pdfStyles.heading}>CONTRACT</Text>
         <Text style={pdfStyles.title}>{contract.title}</Text>
         <Text style={pdfStyles.preparedFor}>
-          Between: {client.name}{client.company ? ` (${client.company})` : ''} and {getProfileName(profile)}
+          Between: {client.name}
+          {client.company ? ` (${client.company})` : ''} and {getProfileName(profile)}
         </Text>
 
         <View style={pdfStyles.divider} />

@@ -1,9 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { sanitizeRates, normalizeRates, ratesCover, convertAmount, convertByCurrency } from './currency';
+import {
+  sanitizeRates,
+  normalizeRates,
+  ratesCover,
+  convertAmount,
+  convertByCurrency,
+} from './currency';
 
 describe('manual exchange rates', () => {
   it('sanitizes garbage rates', () => {
-    expect(sanitizeRates({ USD: 1.36, usd2: 2, XX: 0, YY: -1, ZZ: NaN, BAD: 'x', EUR: '0.92' })).toEqual({
+    expect(
+      sanitizeRates({ USD: 1.36, usd2: 2, XX: 0, YY: -1, ZZ: NaN, BAD: 'x', EUR: '0.92' }),
+    ).toEqual({
       USD: 1.36,
       EUR: 0.92,
     });

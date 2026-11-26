@@ -53,7 +53,10 @@ export default function DeadlineBoard() {
   const handleSaveDate = async (project: (typeof projects)[0]) => {
     setSaving(true);
     try {
-      await updateProject({ ...project, end_date: editDate ? new Date(editDate).toISOString().slice(0, 10) : undefined });
+      await updateProject({
+        ...project,
+        end_date: editDate ? new Date(editDate).toISOString().slice(0, 10) : undefined,
+      });
       setEditingId(null);
       setEditDate('');
     } catch (e) {
@@ -75,9 +78,7 @@ export default function DeadlineBoard() {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Deadlines
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Deadlines</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -112,7 +113,9 @@ export default function DeadlineBoard() {
                   className={`flex items-center gap-3 px-3 py-2.5 bg-[var(--bg-secondary)] rounded-xs text-xs ${color.bg} border-l-2`}
                   style={{ borderLeftColor: color.text.replace('text-[', '').replace(']', '') }}
                 >
-                  <div className={`flex flex-col items-center justify-center min-w-[40px] ${color.text}`}>
+                  <div
+                    className={`flex flex-col items-center justify-center min-w-[40px] ${color.text}`}
+                  >
                     <span className="text-lg font-semibold leading-none">
                       {days < 0 ? Math.abs(days) : days}
                     </span>
@@ -121,7 +124,9 @@ export default function DeadlineBoard() {
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[var(--text-primary)] font-medium truncate">{project.title}</div>
+                    <div className="text-[var(--text-primary)] font-medium truncate">
+                      {project.title}
+                    </div>
                     <div className="text-[10px] text-[var(--text-tertiary)]">
                       {getClientName(project.client_id)} · {color.label}
                     </div>
@@ -159,7 +164,8 @@ export default function DeadlineBoard() {
                     )}
                   </div>
                   {!isEditing && (
-                    <button aria-label="Do action on"
+                    <button
+                      aria-label="Do action on"
                       onClick={() => handleStartEdit(project)}
                       className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] flex-shrink-0"
                     >
@@ -182,9 +188,14 @@ export default function DeadlineBoard() {
                   className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
                 >
                   <div className="flex-1 min-w-0 flex items-center gap-2">
-                    <AlertTriangle size={10} className="text-[var(--text-tertiary)] flex-shrink-0" />
+                    <AlertTriangle
+                      size={10}
+                      className="text-[var(--text-tertiary)] flex-shrink-0"
+                    />
                     <div>
-                      <div className="text-[var(--text-primary)] font-medium truncate">{project.title}</div>
+                      <div className="text-[var(--text-primary)] font-medium truncate">
+                        {project.title}
+                      </div>
                       <div className="text-[10px] text-[var(--text-tertiary)]">
                         {getClientName(project.client_id)}
                       </div>

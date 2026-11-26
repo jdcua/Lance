@@ -21,9 +21,9 @@ describe('sanitizeShareHtml links', () => {
   });
 
   it('strips event handlers and images', () => {
-    expect(sanitizeShareHtml('<a href="https://example.com" onclick="alert(1)">x</a>')).not.toContain(
-      'onclick',
-    );
+    expect(
+      sanitizeShareHtml('<a href="https://example.com" onclick="alert(1)">x</a>'),
+    ).not.toContain('onclick');
     const img = sanitizeShareHtml('<p>hi<img src="https://evil.test/pixel.gif"></p>');
     expect(img).not.toContain('<img');
     expect(img).toContain('hi');

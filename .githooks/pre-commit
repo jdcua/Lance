@@ -1,13 +1,28 @@
 #!/bin/sh
 # Lance pre-commit: secret scan on staged content.
-# Stdlib-only, fast. Install: git config core.hooksPath .githooks
+# Uses gitleaks when it is installed locally (same config as CI), otherwise
+# falls back to the stdlib-only regex check below. No new required dependency.
+# Install: git config core.hooksPath .githooks
 set -e
 
-# Block staged secrets/tokens/keys before they can enter history.
-if git diff --cached | grep -E -i "^\+" | grep -E -i "(sk-[A-Za-z0-9]{8,}|api[_-]?key\s*[:=]\s*['\"][^'\"]{8,}|-----BEGIN [A-Z ]*PRIVATE KEY|password\s*[:=]\s*['\"][^'\"]{4,}|ghp_[A-Za-z0-9]{8,}|xox[bpas]-[A-Za-z0-9-]{8,})" >/dev/null; then
-  echo "pre-commit BLOCKED: staged diff looks like it contains a secret/token/key."
-  echo "Remove it, use env vars or a secret manager, then commit again."
-  exit 1
+cd "$(git rev-parse --show-toplevel)"
+
+if command -v gitleaks >/dev/null 2>&1; then
+  # --pipe scans exactly the staged diff; gitleaks has no --staged flag.
+  if ! git diff --cached --no-ext-diff | gitleaks detect --pipe \
+      --config .github/workflows/gitleaks.toml --no-banner --redact \
+      --log-level error --exit-code 1; then
+    echo "pre-commit BLOCKED: gitleaks detected a secret/token/key in staged changes."
+    echo "Remove it, use env vars or a secret manager, then commit again."
+    exit 1
+  fi
+else
+  # Fallback for contributors without gitleaks: block staged secrets/tokens/keys.
+  if git diff --cached | grep -E -i "^\+" | grep -E -i "(sk-[A-Za-z0-9]{8,}|api[_-]?key\s*[:=]\s*['\"][^'\"]{8,}|-----BEGIN [A-Z ]*PRIVATE KEY|password\s*[:=]\s*['\"][^'\"]{4,}|ghp_[A-Za-z0-9]{8,}|xox[bpas]-[A-Za-z0-9-]{8,})" >/dev/null; then
+    echo "pre-commit BLOCKED: staged diff looks like it contains a secret/token/key."
+    echo "Remove it, use env vars or a secret manager, then commit again."
+    exit 1
+  fi
 fi
 
 echo "pre-commit ok (secrets clean)"

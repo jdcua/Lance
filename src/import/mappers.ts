@@ -13,11 +13,11 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function mapToClients(
   rows: Record<string, string>[],
-  columnMapping: Record<string, string>
+  columnMapping: Record<string, string>,
 ): Array<{ name: string; email?: string; phone?: string; company?: string; notes?: string }> {
   const reverseMap = buildReverseMap(columnMapping);
   return rows
-    .map(row => {
+    .map((row) => {
       const rawEmail = getField(row, reverseMap, 'email')?.trim();
       const email = rawEmail && EMAIL_REGEX.test(rawEmail) ? rawEmail : undefined;
       return {
@@ -30,7 +30,7 @@ export function mapToClients(
         notes: sanitizeInput(getField(row, reverseMap, 'notes') || '').trim() || undefined,
       };
     })
-    .filter(c => c.name.length > 0);
+    .filter((c) => c.name.length > 0);
 }
 
 /**
@@ -38,11 +38,11 @@ export function mapToClients(
  */
 export function mapToLineItems(
   rows: Record<string, string>[],
-  columnMapping: Record<string, string>
+  columnMapping: Record<string, string>,
 ): Array<{ id: string; description: string; quantity: number; unit_price: number; total: number }> {
   const reverseMap = buildReverseMap(columnMapping);
   return rows
-    .map(row => {
+    .map((row) => {
       const desc = sanitizeInput(getField(row, reverseMap, 'description') || '').trim() || '';
       const qty = parseFloat(getField(row, reverseMap, 'quantity') || '1') || 1;
       const price = parseFloat(getField(row, reverseMap, 'unit_price') || '0') || 0;
@@ -55,7 +55,7 @@ export function mapToLineItems(
         total,
       };
     })
-    .filter(item => item.description.length > 0 && item.total > 0);
+    .filter((item) => item.description.length > 0 && item.total > 0);
 }
 
 /**
@@ -65,7 +65,8 @@ function normalizeProjectStatus(
   raw: string | undefined,
 ): 'active' | 'completed' | 'paused' | 'cancelled' {
   const statusRaw = (raw || 'active').toLowerCase().trim();
-  if (statusRaw.includes('complete') || statusRaw.includes('done') || statusRaw.includes('finish')) return 'completed';
+  if (statusRaw.includes('complete') || statusRaw.includes('done') || statusRaw.includes('finish'))
+    return 'completed';
   if (statusRaw.includes('pause') || statusRaw.includes('hold')) return 'paused';
   if (statusRaw.includes('cancel')) return 'cancelled';
   return 'active';
@@ -73,7 +74,7 @@ function normalizeProjectStatus(
 
 export function mapToProjects(
   rows: Record<string, string>[],
-  columnMapping: Record<string, string>
+  columnMapping: Record<string, string>,
 ): Array<{
   title: string;
   status: 'active' | 'completed' | 'paused' | 'cancelled';
@@ -85,7 +86,7 @@ export function mapToProjects(
 }> {
   const reverseMap = buildReverseMap(columnMapping);
   return rows
-    .map(row => {
+    .map((row) => {
       const status = normalizeProjectStatus(getField(row, reverseMap, 'status'));
 
       const budgetStr = getField(row, reverseMap, 'budget');
@@ -98,10 +99,11 @@ export function mapToProjects(
         start_date: normalizeDate(getField(row, reverseMap, 'start_date')),
         end_date: normalizeDate(getField(row, reverseMap, 'end_date')),
         notes: sanitizeInput(getField(row, reverseMap, 'notes') || '').trim() || undefined,
-        client_name: sanitizeInput(getField(row, reverseMap, 'client_name') || '').trim() || undefined,
+        client_name:
+          sanitizeInput(getField(row, reverseMap, 'client_name') || '').trim() || undefined,
       };
     })
-    .filter(p => p.title.length > 0);
+    .filter((p) => p.title.length > 0);
 }
 
 /**
@@ -109,21 +111,22 @@ export function mapToProjects(
  */
 export function mapToExpenses(
   rows: Record<string, string>[],
-  columnMapping: Record<string, string>
+  columnMapping: Record<string, string>,
 ): Array<{ category: string; description: string; amount: number; date: string }> {
   const reverseMap = buildReverseMap(columnMapping);
   return rows
-    .map(row => {
+    .map((row) => {
       const amountStr = getField(row, reverseMap, 'amount') || '0';
       const amount = parseFloat(amountStr.replace(/[$,]/g, ''));
       return {
-        category: sanitizeInput(getField(row, reverseMap, 'category') || '').trim() || 'Uncategorized',
+        category:
+          sanitizeInput(getField(row, reverseMap, 'category') || '').trim() || 'Uncategorized',
         description: sanitizeInput(getField(row, reverseMap, 'description') || '').trim() || '',
         amount: isNaN(amount) ? 0 : amount,
         date: normalizeDate(getField(row, reverseMap, 'date')) || todayLocalISO(),
       };
     })
-    .filter(e => e.description.length > 0 && e.amount > 0);
+    .filter((e) => e.description.length > 0 && e.amount > 0);
 }
 
 /**
@@ -138,10 +141,16 @@ export function extractDocumentPrefill(detection: ImportDetection): {
   due_date?: string;
   invoice_number?: string;
   body?: string;
-  lineItems?: Array<{ id: string; description: string; quantity: number; unit_price: number; total: number }>;
+  lineItems?: Array<{
+    id: string;
+    description: string;
+    quantity: number;
+    unit_price: number;
+    total: number;
+  }>;
 } {
   const fields = detection.preview.extractedFields || {};
-  const lineItems = detection.preview.extractedLineItems?.map(item => ({
+  const lineItems = detection.preview.extractedLineItems?.map((item) => ({
     ...item,
     id: crypto.randomUUID(),
   }));
@@ -150,13 +159,15 @@ export function extractDocumentPrefill(detection: ImportDetection): {
   return {
     entityType: detection.detectedEntity,
     title: fields.title ? sanitizeInput(fields.title).trim() || undefined : undefined,
-    client_name: fields.client_name ? sanitizeInput(fields.client_name).trim() || undefined : undefined,
+    client_name: fields.client_name
+      ? sanitizeInput(fields.client_name).trim() || undefined
+      : undefined,
     email: fields.email,
     total: prefillTotal !== undefined && isFinite(prefillTotal) ? prefillTotal : undefined,
     due_date: normalizeDate(fields.due_date),
     invoice_number: fields.invoice_number,
     body: detection.preview.rawText?.substring(0, 5000),
-    lineItems: lineItems?.map(item => ({
+    lineItems: lineItems?.map((item) => ({
       ...item,
       description: sanitizeInput(item.description || '').trim(),
     })),
@@ -173,7 +184,11 @@ function buildReverseMap(columnMapping: Record<string, string>): Record<string, 
   return reverse;
 }
 
-function getField(row: Record<string, string>, reverseMap: Record<string, string>, field: string): string | undefined {
+function getField(
+  row: Record<string, string>,
+  reverseMap: Record<string, string>,
+  field: string,
+): string | undefined {
   const sourceCol = reverseMap[field];
   return sourceCol ? row[sourceCol] : undefined;
 }

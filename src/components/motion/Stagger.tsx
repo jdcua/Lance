@@ -14,7 +14,12 @@ interface StaggerGroupProps {
  * Motion-Primitives AnimatedGroup: children wrapped in <StaggerItem>
  * rise in sequence when scrolled into view.
  */
-export function StaggerGroup({ children, className, stagger = 0.07, delay = 0 }: StaggerGroupProps) {
+export function StaggerGroup({
+  children,
+  className,
+  stagger = 0.07,
+  delay = 0,
+}: StaggerGroupProps) {
   const reduce = useReducedMotion();
   if (reduce) return <div className={className}>{children}</div>;
   const container: Variants = {

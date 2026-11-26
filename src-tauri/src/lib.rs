@@ -9,6 +9,9 @@ pub struct SharedServerPort {
     pub port: u16,
 }
 
+// Legacy size exception: app bootstrap is one long builder chain.
+// See AUDIT_REPORT.md P1; extract setup groups when this file is touched.
+#[allow(clippy::too_many_lines)]
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()

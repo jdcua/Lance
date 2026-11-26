@@ -149,9 +149,7 @@ export default function PlacementLog({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Placements
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Placements</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -309,7 +307,8 @@ export default function PlacementLog({ clientId }: { clientId: string }) {
                     ${(placement.fee || 0).toLocaleString()}
                   </td>
                   <td className="py-1.5 px-2">
-                    <select aria-label="Placement.status"
+                    <select
+                      aria-label="Placement.status"
                       value={placement.status}
                       onChange={(e) => handleStatusChange(placement.id, e.target.value)}
                       className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium border-none cursor-pointer ${statusBadgeClasses[placement.status] || ''}`}

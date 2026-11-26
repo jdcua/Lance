@@ -46,7 +46,9 @@ describe('smart dunning tones', () => {
   it('prefers custom user templates over tone variants', () => {
     const custom = { invoice_day7: 'CUSTOM {client_name}' };
     expect(generateFollowUpDraft('invoice_day7', DATA, custom, 'direct')).toBe('CUSTOM Acme');
-    expect(generateSubjectLine('invoice_day7', DATA, { invoice_day7: 'SUB' }, 'formal')).toBe('SUB');
+    expect(generateSubjectLine('invoice_day7', DATA, { invoice_day7: 'SUB' }, 'formal')).toBe(
+      'SUB',
+    );
   });
 
   it('leaves non-escalation keys on the default voice', () => {
@@ -68,7 +70,12 @@ describe('stage-4 work-paused escalation', () => {
   it('renders the day30 draft in every tone without placeholders leaking', async () => {
     const { generateFollowUpDraft } = await import('./followUpTemplates');
     for (const tone of [undefined, 'warm', 'direct', 'formal'] as const) {
-      const draft = generateFollowUpDraft('invoice_day30', { ...DATA, daysElapsed: 31 }, undefined, tone);
+      const draft = generateFollowUpDraft(
+        'invoice_day30',
+        { ...DATA, daysElapsed: 31 },
+        undefined,
+        tone,
+      );
       expect(draft).toContain('INV-1');
       expect(draft).toContain('31');
       expect(draft).not.toMatch(/\{[a-z_]+\}/);

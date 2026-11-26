@@ -15,14 +15,13 @@ import {
 import { motion } from 'motion/react';
 import { FileText, PenLine, FolderKanban, Receipt, CheckCircle2 } from 'lucide-react';
 import { useStore } from '../store';
-import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import EmptyState from '../components/ui/EmptyState';
 import Fade from '../components/motion/Fade';
 import AnimatedNumber from '../components/motion/AnimatedNumber';
 import { formatCurrency, parseDateString, todayLocalISO } from '../utils/format';
-import { sanitizeInput, MAX_LENGTHS } from '../utils/sanitize';
+import { sanitizeInput } from '../utils/sanitize';
 import { checkAndNotify } from '../achievements/notify';
 import { celebrationLevel, recordCelebration, celebrationToast } from '../lib/celebration';
 import { commands } from '../lib/commands';
@@ -46,8 +45,16 @@ const STAGE_ICON: Record<Stage, typeof FileText> = {
 };
 
 const PAYMENT_METHODS = [
-  'Bank Transfer', 'E-Transfer', 'Cash', 'Cheque', 'Credit Card',
-  'PayPal', 'Stripe', 'Wise', 'Crypto', 'Other',
+  'Bank Transfer',
+  'E-Transfer',
+  'Cash',
+  'Cheque',
+  'Credit Card',
+  'PayPal',
+  'Stripe',
+  'Wise',
+  'Crypto',
+  'Other',
 ];
 
 function statusOf(inv: Invoice, paidTotal: number): Invoice['status'] {
@@ -71,7 +78,13 @@ interface CardData {
 // Memoized: the board re-renders on every store update (portal polling,
 // timer ticks elsewhere), but cards only change when their data does.
 // Without this, each poll re-measured every card's layout animation.
-const PipeCard = memo(function PipeCard({ card, disabled }: { card: CardData; disabled?: boolean }) {
+const PipeCard = memo(function PipeCard({
+  card,
+  disabled,
+}: {
+  card: CardData;
+  disabled?: boolean;
+}) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `${card.kind}:${card.id}`,
     data: { card },
@@ -84,13 +97,17 @@ const PipeCard = memo(function PipeCard({ card, disabled }: { card: CardData; di
         {...attributes}
         {...listeners}
         className={`bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg px-3 py-2.5 shadow-[var(--card-shadow)] ${
-          disabled ? 'opacity-70' : 'cursor-grab active:cursor-grabbing hover:border-[var(--text-tertiary)]'
+          disabled
+            ? 'opacity-70'
+            : 'cursor-grab active:cursor-grabbing hover:border-[var(--text-tertiary)]'
         } ${isDragging ? 'opacity-40' : ''} transition-colors`}
       >
         <p className="text-[13px] font-medium text-[var(--text-primary)] truncate">{card.title}</p>
         <p className="text-[11px] text-[var(--text-tertiary)] truncate">{card.sub}</p>
         {card.meta && (
-          <p className="text-[11px] font-semibold text-[var(--text-secondary)] tnum mt-0.5">{card.meta}</p>
+          <p className="text-[11px] font-semibold text-[var(--text-secondary)] tnum mt-0.5">
+            {card.meta}
+          </p>
         )}
       </div>
     </motion.div>
@@ -112,7 +129,9 @@ function Column({
     <div
       ref={setNodeRef}
       className={`flex-1 min-w-[220px] rounded-xl border p-3 transition-colors ${
-        isOver ? 'border-[var(--accent)] bg-[var(--accent-bg)]/40' : 'border-[var(--border-color)] bg-[var(--bg-secondary)]/40'
+        isOver
+          ? 'border-[var(--accent)] bg-[var(--accent-bg)]/40'
+          : 'border-[var(--border-color)] bg-[var(--bg-secondary)]/40'
       }`}
     >
       <div className="flex items-center gap-1.5 mb-3 px-1">
@@ -133,15 +152,33 @@ export default function Pipeline() {
   const navigate = useNavigate();
   const store = useStore();
   const {
-    proposals, contracts, projects, invoices, payments, clients,
-    loadProposals, loadContracts, loadProjects, loadInvoices, loadPayments, loadClients,
-    createContract, createProject, deleteContract, deleteProject,
-    createPayment, deletePayment, updateInvoice, updateFollowUpStatus,
+    proposals,
+    contracts,
+    projects,
+    invoices,
+    payments,
+    clients,
+    loadProposals,
+    loadContracts,
+    loadProjects,
+    loadInvoices,
+    loadPayments,
+    loadClients,
+    createContract,
+    createProject,
+    deleteContract,
+    deleteProject,
+    createPayment,
+    deletePayment,
+    updateInvoice,
+    updateFollowUpStatus,
     addToast,
   } = store;
   const [loading, setLoading] = useState(true);
   const [activeCard, setActiveCard] = useState<CardData | null>(null);
-  const [advance, setAdvance] = useState<{ from: Stage; proposal: Proposal } | { from: Stage; contract: Contract } | null>(null);
+  const [advance, setAdvance] = useState<
+    { from: Stage; proposal: Proposal } | { from: Stage; contract: Contract } | null
+  >(null);
   const [advanceTitle, setAdvanceTitle] = useState('');
   const [payInv, setPayInv] = useState<Invoice | null>(null);
   const [payAmount, setPayAmount] = useState('');
@@ -152,7 +189,14 @@ export default function Pipeline() {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   useEffect(() => {
-    Promise.all([loadProposals(), loadContracts(), loadProjects(), loadInvoices(), loadPayments(), loadClients()])
+    Promise.all([
+      loadProposals(),
+      loadContracts(),
+      loadProjects(),
+      loadInvoices(),
+      loadPayments(),
+      loadClients(),
+    ])
       .catch((e) => addToast(String(e), 'error'))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -161,19 +205,60 @@ export default function Pipeline() {
   const clientName = (id: string) => clients.find((c) => c.id === id)?.name || 'Unknown client';
 
   const cols = useMemo(() => {
-    const open = proposals.filter((p) => p.status === 'draft' || p.status === 'sent' || p.status === 'accepted');
+    const open = proposals.filter(
+      (p) => p.status === 'draft' || p.status === 'sent' || p.status === 'accepted',
+    );
     const cons = contracts.filter((c) => c.status === 'draft' || c.status === 'active');
     const projs = projects.filter((p) => p.status === 'active');
     const unpaid = invoices.filter((i) => i.status !== 'paid');
     const paid = invoices.filter((i) => i.status === 'paid').slice(-30);
-    const map = (list: { id: string; client_id: string }[], kind: Stage, title: (x: never) => string, sub: (x: never) => string, meta?: (x: never) => string | undefined): CardData[] =>
-      list.map((x) => ({ kind, id: x.id, title: title(x as never), sub: sub(x as never), meta: meta?.(x as never) }));
+    const map = (
+      list: { id: string; client_id: string }[],
+      kind: Stage,
+      title: (x: never) => string,
+      sub: (x: never) => string,
+      meta?: (x: never) => string | undefined,
+    ): CardData[] =>
+      list.map((x) => ({
+        kind,
+        id: x.id,
+        title: title(x as never),
+        sub: sub(x as never),
+        meta: meta?.(x as never),
+      }));
     return {
-      proposal: map(open, 'proposal', (p: Proposal) => p.title, (p: Proposal) => `${clientName(p.client_id)} · ${p.status}`),
-      contract: map(cons, 'contract', (c: Contract) => c.title, (c: Contract) => `${clientName(c.client_id)} · ${c.status}`),
-      project: map(projs, 'project', (p: Project) => p.title, (p: Project) => clientName(p.client_id)),
-      invoice: map(unpaid, 'invoice', (i: Invoice) => i.invoice_number, (i: Invoice) => `${clientName(i.client_id)} · ${i.status}`, (i: Invoice) => formatCurrency(i.total)),
-      paid: map(paid, 'paid', (i: Invoice) => i.invoice_number, (i: Invoice) => `${clientName(i.client_id)} · paid`, (i: Invoice) => formatCurrency(i.total)),
+      proposal: map(
+        open,
+        'proposal',
+        (p: Proposal) => p.title,
+        (p: Proposal) => `${clientName(p.client_id)} · ${p.status}`,
+      ),
+      contract: map(
+        cons,
+        'contract',
+        (c: Contract) => c.title,
+        (c: Contract) => `${clientName(c.client_id)} · ${c.status}`,
+      ),
+      project: map(
+        projs,
+        'project',
+        (p: Project) => p.title,
+        (p: Project) => clientName(p.client_id),
+      ),
+      invoice: map(
+        unpaid,
+        'invoice',
+        (i: Invoice) => i.invoice_number,
+        (i: Invoice) => `${clientName(i.client_id)} · ${i.status}`,
+        (i: Invoice) => formatCurrency(i.total),
+      ),
+      paid: map(
+        paid,
+        'paid',
+        (i: Invoice) => i.invoice_number,
+        (i: Invoice) => `${clientName(i.client_id)} · paid`,
+        (i: Invoice) => formatCurrency(i.total),
+      ),
     } as Record<Stage, CardData[]>;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proposals, contracts, projects, invoices, clients]);
@@ -234,7 +319,9 @@ export default function Pipeline() {
         const p = projects.find((x) => x.id === card.id);
         navigate('/invoices');
         addToast(
-          p ? `New invoice opened — bill ${p.title} with real amounts.` : 'New invoice opened — fill in real amounts.',
+          p
+            ? `New invoice opened — bill ${p.title} with real amounts.`
+            : 'New invoice opened — fill in real amounts.',
           'info',
         );
         commands.dispatchAfterMount('lance:add-invoice');
@@ -242,8 +329,10 @@ export default function Pipeline() {
       'invoice->paid': () => {
         const inv = invoices.find((x) => x.id === card.id);
         if (!inv) return;
-        const paidSoFar = payments.filter((p) => p.invoice_id === inv.id).reduce((s, p) => s + p.amount, 0);
-        setPayAmount((Math.max(0, inv.total - paidSoFar)).toFixed(2));
+        const paidSoFar = payments
+          .filter((p) => p.invoice_id === inv.id)
+          .reduce((s, p) => s + p.amount, 0);
+        setPayAmount(Math.max(0, inv.total - paidSoFar).toFixed(2));
         setPayDate(todayLocalISO());
         setPayMethod(PAYMENT_METHODS[0]);
         setPayInv(inv);
@@ -314,7 +403,9 @@ export default function Pipeline() {
       addToast('Payment amount must be greater than zero', 'error');
       return;
     }
-    const paidSoFar = payments.filter((p) => p.invoice_id === payInv.id).reduce((s, p) => s + p.amount, 0);
+    const paidSoFar = payments
+      .filter((p) => p.invoice_id === payInv.id)
+      .reduce((s, p) => s + p.amount, 0);
     const remaining = Math.max(0, payInv.total - paidSoFar);
     if (Math.round(amount * 100) > Math.round(remaining * 100)) {
       addToast(`Payment exceeds remaining balance of ${formatCurrency(remaining)}`, 'error');
@@ -340,16 +431,19 @@ export default function Pipeline() {
         } as Invoice);
       }
       if (next === 'paid') {
-        const fu = useStore.getState().pendingFollowUps.find(
-          (f) => f.entity_type === 'invoice' && f.entity_id === payInv.id,
-        );
+        const fu = useStore
+          .getState()
+          .pendingFollowUps.find((f) => f.entity_type === 'invoice' && f.entity_id === payInv.id);
         if (fu) await updateFollowUpStatus(fu.id, 'paid', 'auto-resolved').catch(() => {});
         const level = celebrationLevel('invoice-paid');
         if (level === 'full') addToast(celebrationToast('invoice-paid'), 'success');
         else if (level === 'reduced') addToast(celebrationToast('invoice-paid'), 'success');
         recordCelebration('invoice-paid');
       } else {
-        addToast(`Partial payment recorded — ${formatCurrency(Math.max(0, payInv.total - paidTotal))} still owed.`, 'success');
+        addToast(
+          `Partial payment recorded — ${formatCurrency(Math.max(0, payInv.total - paidTotal))} still owed.`,
+          'success',
+        );
       }
       await checkAndNotify(useStore.getState(), addToast);
       setPayInv(null);
@@ -388,23 +482,36 @@ export default function Pipeline() {
       <Fade className="mb-4">
         <h1 className="font-display text-lg font-semibold text-[var(--text-primary)]">Pipeline</h1>
         <p className="text-xs text-[var(--text-secondary)]">
-          Drag work forward. Each move does the real thing — contracts, projects, payments — with an undo.
+          Drag work forward. Each move does the real thing — contracts, projects, payments — with an
+          undo.
         </p>
       </Fade>
       {loading ? (
         <div className="flex gap-3">
           {STAGES.map((s) => (
-            <div key={s} className="flex-1 min-w-[220px] h-64 bg-[var(--bg-secondary)] rounded-xl skeleton-pulse" />
+            <div
+              key={s}
+              className="flex-1 min-w-[220px] h-64 bg-[var(--bg-secondary)] rounded-xl skeleton-pulse"
+            />
           ))}
         </div>
       ) : proposals.length + contracts.length + projects.length + invoices.length === 0 ? (
         <EmptyState
           screen="projects"
           icon={<FolderKanban size={40} className="text-[var(--text-tertiary)] mb-4" />}
-          action={<Button size="sm" variant="secondary" onClick={() => navigate('/proposals/new')}>Start a proposal</Button>}
+          action={
+            <Button size="sm" variant="secondary" onClick={() => navigate('/proposals/new')}>
+              Start a proposal
+            </Button>
+          }
         />
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+        >
           <div className="flex gap-3 items-start">
             {STAGES.map((stage) => (
               <Column key={stage} stage={stage} cards={cols[stage]}>
@@ -421,7 +528,9 @@ export default function Pipeline() {
           <DragOverlay>
             {activeCard ? (
               <div className="bg-[var(--bg-card)] border border-[var(--accent)] rounded-lg px-3 py-2.5 shadow-[var(--shadow-pop)] rotate-[1.5deg]">
-                <p className="text-[13px] font-medium text-[var(--text-primary)]">{activeCard.title}</p>
+                <p className="text-[13px] font-medium text-[var(--text-primary)]">
+                  {activeCard.title}
+                </p>
                 <p className="text-[11px] text-[var(--text-tertiary)]">{activeCard.sub}</p>
               </div>
             ) : null}
@@ -432,7 +541,11 @@ export default function Pipeline() {
       <Modal
         open={advance !== null}
         onClose={() => setAdvance(null)}
-        title={advance && 'proposal' in advance ? 'Draft contract from proposal' : 'Start project from contract'}
+        title={
+          advance && 'proposal' in advance
+            ? 'Draft contract from proposal'
+            : 'Start project from contract'
+        }
       >
         <p className="text-xs text-[var(--text-secondary)] mb-3">
           This creates the real next record — nothing shadow, nothing fake. Undo is offered after.
@@ -444,8 +557,12 @@ export default function Pipeline() {
           className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] mb-4"
         />
         <div className="flex justify-end gap-2">
-          <Button variant="secondary" size="sm" onClick={() => setAdvance(null)}>Cancel</Button>
-          <Button size="sm" loading={saving} onClick={handleAdvance}>Create it</Button>
+          <Button variant="secondary" size="sm" onClick={() => setAdvance(null)}>
+            Cancel
+          </Button>
+          <Button size="sm" loading={saving} onClick={handleAdvance}>
+            Create it
+          </Button>
         </div>
       </Modal>
 
@@ -453,7 +570,8 @@ export default function Pipeline() {
         {payInv && (
           <>
             <p className="text-xs text-[var(--text-secondary)] mb-3">
-              {payInv.invoice_number} · {clientName(payInv.client_id)} · total {formatCurrency(payInv.total)}
+              {payInv.invoice_number} · {clientName(payInv.client_id)} · total{' '}
+              {formatCurrency(payInv.total)}
             </p>
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div>
@@ -483,13 +601,19 @@ export default function Pipeline() {
                 className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-sm bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               >
                 {PAYMENT_METHODS.map((m) => (
-                  <option key={m} value={m}>{m}</option>
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
                 ))}
               </select>
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="secondary" size="sm" onClick={() => setPayInv(null)}>Cancel</Button>
-              <Button size="sm" loading={saving} onClick={handlePay}>Record payment</Button>
+              <Button variant="secondary" size="sm" onClick={() => setPayInv(null)}>
+                Cancel
+              </Button>
+              <Button size="sm" loading={saving} onClick={handlePay}>
+                Record payment
+              </Button>
             </div>
           </>
         )}

@@ -30,7 +30,9 @@ function BrandVoiceDisplay({ brandVoice }: { brandVoice: BrandVoice }) {
       {brandVoice.attributes && (
         <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
           <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1">Attributes</p>
-          <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{brandVoice.attributes}</p>
+          <p className="text-[var(--text-secondary)] whitespace-pre-wrap">
+            {brandVoice.attributes}
+          </p>
         </div>
       )}
       {brandVoice.examples && (
@@ -41,13 +43,18 @@ function BrandVoiceDisplay({ brandVoice }: { brandVoice: BrandVoice }) {
       )}
       {brandVoice.dos_donts && (
         <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
-          <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1">Do's / Don'ts</p>
+          <p className="text-[10px] font-semibold text-[var(--text-tertiary)] mb-1">
+            Do's / Don'ts
+          </p>
           <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{brandVoice.dos_donts}</p>
         </div>
       )}
-      {!brandVoice.name && !brandVoice.attributes && !brandVoice.examples && !brandVoice.dos_donts && (
-        <p className="text-xs text-[var(--text-tertiary)] py-2">No brand voice defined yet.</p>
-      )}
+      {!brandVoice.name &&
+        !brandVoice.attributes &&
+        !brandVoice.examples &&
+        !brandVoice.dos_donts && (
+          <p className="text-xs text-[var(--text-tertiary)] py-2">No brand voice defined yet.</p>
+        )}
     </div>
   );
 }
@@ -69,7 +76,7 @@ export default function BrandVoiceNotes({ clientId }: { clientId: string }) {
       const db = await getDb();
       const rows = await db.select<(BrandVoice & Record<string, unknown>)[]>(
         'SELECT id, client_id, name, attributes, examples, dos_donts FROM brand_voices WHERE client_id = ? ORDER BY id ASC LIMIT 1',
-        [clientId]
+        [clientId],
       );
       if (rows.length > 0) {
         const bv: BrandVoice = {
@@ -105,7 +112,12 @@ export default function BrandVoiceNotes({ clientId }: { clientId: string }) {
     setSaving(true);
     try {
       const db = await getDb();
-      const values = [toNull(form.name), toNull(form.attributes), toNull(form.examples), toNull(form.dos_donts)];
+      const values = [
+        toNull(form.name),
+        toNull(form.attributes),
+        toNull(form.examples),
+        toNull(form.dos_donts),
+      ];
       const optional = {
         name: toOptional(form.name),
         attributes: toOptional(form.attributes),
@@ -115,14 +127,14 @@ export default function BrandVoiceNotes({ clientId }: { clientId: string }) {
       if (brandVoice) {
         await db.execute(
           'UPDATE brand_voices SET name = ?, attributes = ?, examples = ?, dos_donts = ? WHERE id = ?',
-          [...values, brandVoice.id]
+          [...values, brandVoice.id],
         );
         setBrandVoice({ ...brandVoice, ...optional });
       } else {
         const id = crypto.randomUUID();
         await db.execute(
           'INSERT INTO brand_voices (id, client_id, name, attributes, examples, dos_donts) VALUES (?, ?, ?, ?, ?, ?)',
-          [id, clientId, ...values]
+          [id, clientId, ...values],
         );
         setBrandVoice({ id, client_id: clientId, ...optional });
       }
@@ -171,7 +183,9 @@ export default function BrandVoiceNotes({ clientId }: { clientId: string }) {
               </Button>
               <button
                 aria-label="Delete brand voice notes"
-                onClick={handleDelete} className="text-[var(--text-tertiary)] hover:text-[#A32D2D] p-1">
+                onClick={handleDelete}
+                className="text-[var(--text-tertiary)] hover:text-[#A32D2D] p-1"
+              >
                 <Trash2 size={12} />
               </button>
             </>
@@ -217,7 +231,16 @@ export default function BrandVoiceNotes({ clientId }: { clientId: string }) {
           />
           <div className="flex justify-end gap-2">
             {brandVoice && (
-              <Button variant="secondary" size="sm" onClick={() => { setShowForm(false); loadBrandVoice(); }}>Cancel</Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setShowForm(false);
+                  loadBrandVoice();
+                }}
+              >
+                Cancel
+              </Button>
             )}
             <Button size="sm" onClick={handleSave} loading={saving}>
               <Save size={12} /> Save

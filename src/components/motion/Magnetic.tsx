@@ -31,7 +31,12 @@ export default function Magnetic({ children, strength = 0.25, className }: Magne
   };
 
   return (
-    <motion.div className={className} style={{ x: sx, y: sy }} onMouseMove={onMove} onMouseLeave={onLeave}>
+    <motion.div
+      className={className}
+      style={{ x: sx, y: sy }}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+    >
       {children}
     </motion.div>
   );

@@ -89,17 +89,23 @@ and `prefers-reduced-transparency` always win.
 - Do not hand-roll list/create/delete UI for a new entity.
 - Store-based: pass store slice actions. DB-based: pass `getDb()` functions.
 - RecordTracker props: `entity`, `title`, `icon`, `list`, `load`, `create`, `update?`, `remove`, `fields`, `columns`, `filterBy?`.
+- `npm run check:trackers` fails on any new hand-rolled CRUD component under
+  `src/components/features/`; legacy files are listed in `scripts/tracker-baseline.json`.
 
 ---
 
 ## 6. Complexity and testing
 
-- Cyclomatic complexity must be **<= 15 per function** (ESLint error); new code
-  targets <= 10. Cognitive complexity must be <=15 (TS, ESLint error) and <=20
-  (Rust, Clippy error). Run `npm run complexity` to verify no offenders.
-- Extract pure helpers or small components rather than adding branches. Never
-  change behavior to satisfy a metric. Files stay under ~400 lines; functions
-  under ~60; parameters <= 4.
+- Cyclomatic <=15 per function and cognitive <=15 (TS) are ESLint errors; new
+  code targets <=10. Rust CI gates nesting <=3, 100 lines, 7 args and 250 type
+  complexity via lowercase `src-tauri/clippy.toml`; Rust cognitive <=20 is a
+  **review policy**, not a CI measurement (Clippy discourages
+  `cognitive_complexity` as a metric). Run `npm run complexity -- --strict`.
+- Function length 40 target / 60 warning, files ~400 lines, parameters <=4 and
+  nesting <=3 are **review targets, not gates**. Extract pure helpers rather
+  than adding branches; never change behavior to satisfy a metric.
+- `src/store/toastStore.ts` and `src/store/updaterStore.ts` are typed accessors
+  over the single store, not second stores; keep them and import them directly.
 
 ### Boundary rules (lintable)
 
@@ -110,8 +116,9 @@ and `prefers-reduced-transparency` always win.
   or `components/`.
 - Only `src/store/index.ts` may call zustand `create()`; `src/db/index.ts`
   must not import itself.
-- New features go in `src/features/<domain>/` with colocated tests; do not
-  bulk-move existing files.
+- New feature code goes in `src/components/features/` with colocated tests;
+  do not bulk-move existing files. (`src/features/<domain>/` was a dead rule —
+  the directory does not exist.)
 
 ### Testing
 
@@ -119,22 +126,33 @@ and `prefers-reduced-transparency` always win.
 - Spy on `commands.dispatch` for command-registry interactions.
 - Remove tests that repeat the implementation or can't fail.
 - Fix failing tests — never skip or ignore.
-- After any change: `npm run build`, `npm run lint`, `npm run test` must all pass.
 
 ---
 
 ## 7. Before every commit
 
 ```
-npm run doctor         # check local toolchain
-npm run verify         # typecheck + lint + test + build + OSS audit
+npm run doctor          # local toolchain (Node/npm/Rust/CLI, not OS libs)
+npm run verify          # typecheck, typecheck:e2e, lint, test, build, audit:oss, licenses, format:check, boundaries
 ```
 
-`npm run verify` runs `typecheck`, `lint`, `test`, `build` and `audit:oss`; all must pass.
-When Rust is touched also run `cargo test --lib`, `cargo fmt --check` and the
-Clippy quality gate. A characterization test comes before legacy refactors.
-See `CONTRIBUTING.md` for the PR workflow and `docs/ROADMAP.md` for places
-where outside contributions are welcome.
+`npm run verify` covers typecheck (including `typecheck:e2e`), lint, tests,
+build, `audit:oss`, licenses, `format:check` and strict boundaries; complexity,
+`check:trackers` and CI-only `check:boundaries -- --cycles` are CI gates. For
+Rust also run `cargo test --lib`, `cargo fmt --check` and Clippy; add a
+characterization test before legacy refactors. See `CONTRIBUTING.md` and
+`docs/ROADMAP.md`.
+
+### Definition of done
+
+- `npm run verify` green (typecheck, `typecheck:e2e`, lint, tests, build,
+  `audit:oss`, licenses, `format:check`, strict boundaries).
+- `npm run complexity -- --strict`, `npm run check:trackers` and CI-only
+  `check:boundaries -- --cycles` clean (no new cycle; one legacy baselined).
+- Rust touched: `cargo test --lib`, `cargo fmt --check` and Clippy green.
+- A behavior test was added/updated; failing tests fixed, never skipped.
+- Docs contradicted by the change updated in the same PR (ADR in `docs/adr/`
+  for lasting decisions); report changes, deletions and deliberate non-changes.
 
 ---
 
@@ -150,15 +168,9 @@ where outside contributions are welcome.
 | `src/lib/engines/usePortalPolling.ts` | Portal polling engine (was inline in App.tsx) |
 | `src/components/ui/RecordTracker.tsx` | Generic tracker (replaces copy-paste feature trackers) |
 
----
-
-## 9. What NOT to do
-
-- Don't add new `lance:...` CustomEvent dispatch/listen sites.
-- Don't add `transition-all`, `backdrop-blur`, gradient fills, or decorative sparkles.
-- Don't create a new feature tracker by copying an existing one — use RecordTracker.
-- Don't add state/actions to the store without considering if they belong in a slice.
-- Don't ignore test failures.
+Duplicate basenames (`index.ts` ×8, `shared.tsx` ×3) are intentional; import by
+full path. Do not rename on touch. The prohibitions in §§1–6 are all enforced
+by a rule or a lint gate; there is no separate "what not to do" list.
 
 ---
 

@@ -122,9 +122,7 @@ export default function FeedbackAggregator({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Feedback
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Feedback</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (

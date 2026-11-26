@@ -33,7 +33,9 @@ describe('search ranking', () => {
       { name: 'Ava', company: 'Fern & Field' },
       { name: 'Bob', company: 'Avery Goods' },
     ];
-    expect(rankSearch(rows, (r: { name: string; company: string }) => [r.name, r.company], 'avery')).toEqual([rows[1]]);
+    expect(
+      rankSearch(rows, (r: { name: string; company: string }) => [r.name, r.company], 'avery'),
+    ).toEqual([rows[1]]);
   });
 
   it('folds diacritics so accented names match plain queries', () => {

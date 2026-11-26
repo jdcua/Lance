@@ -33,7 +33,13 @@ const countOrNull = (v: string) => (v ? parseInt(v) : null);
 const countOrOptional = (v: string) => (v ? parseInt(v) : undefined);
 
 function saveValues(form: ComplexityForm) {
-  return [textOrNull(form.poly_count), countOrNull(form.texture_count), form.rig_complexity, textOrNull(form.software), textOrNull(form.notes)];
+  return [
+    textOrNull(form.poly_count),
+    countOrNull(form.texture_count),
+    form.rig_complexity,
+    textOrNull(form.software),
+    textOrNull(form.notes),
+  ];
 }
 
 function complexityFromForm(form: ComplexityForm) {
@@ -150,9 +156,7 @@ export default function AssetComplexityLog({ projectId }: { projectId: string })
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Asset Complexity
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Asset Complexity</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -166,9 +170,7 @@ export default function AssetComplexityLog({ projectId }: { projectId: string })
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-          Asset Complexity
-        </h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Asset Complexity</h4>
         {record && !editing && (
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>

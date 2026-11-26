@@ -17,7 +17,15 @@ type VATask = {
   created_at: string;
 };
 
-const CATEGORIES = ['email', 'scheduling', 'research', 'data-entry', 'social-media', 'bookkeeping', 'other'] as const;
+const CATEGORIES = [
+  'email',
+  'scheduling',
+  'research',
+  'data-entry',
+  'social-media',
+  'bookkeeping',
+  'other',
+] as const;
 
 const CATEGORY_LABELS: Record<string, string> = {
   email: 'Email',
@@ -57,7 +65,7 @@ export default function TaskLog({ clientId }: { clientId: string }) {
       const db = await getDb();
       const rows = await db.select<(VATask & Record<string, unknown>)[]>(
         'SELECT id, client_id, title, duration_minutes, category, completed_date, created_at FROM va_tasks WHERE client_id = ? ORDER BY completed_date DESC, created_at DESC',
-        [clientId]
+        [clientId],
       );
       setTasks(
         rows.map((r) => ({
@@ -68,7 +76,7 @@ export default function TaskLog({ clientId }: { clientId: string }) {
           category: (r.category as string) || 'other',
           completed_date: r.completed_date as string | undefined,
           created_at: r.created_at as string,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[TaskLog] loadTasks failed:', e);
@@ -90,7 +98,7 @@ export default function TaskLog({ clientId }: { clientId: string }) {
       const mins = form.duration_minutes ? parseInt(form.duration_minutes) : null;
       await db.execute(
         'INSERT INTO va_tasks (id, client_id, title, duration_minutes, category, completed_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [id, clientId, form.title.trim(), mins, form.category, form.completed_date || null, now]
+        [id, clientId, form.title.trim(), mins, form.category, form.completed_date || null, now],
       );
       const task: VATask = {
         id,
@@ -125,7 +133,8 @@ export default function TaskLog({ clientId }: { clientId: string }) {
     }
   };
 
-  const filtered = filterCategory === 'all' ? tasks : tasks.filter((t) => t.category === filterCategory);
+  const filtered =
+    filterCategory === 'all' ? tasks : tasks.filter((t) => t.category === filterCategory);
 
   const totalMinutes = tasks.reduce((sum, t) => sum + (t.duration_minutes || 0), 0);
   const totalHours = totalMinutes / 60;
@@ -162,7 +171,9 @@ export default function TaskLog({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Tasks ({tasks.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
+          Tasks ({tasks.length})
+        </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Log Task
         </Button>
@@ -187,7 +198,8 @@ export default function TaskLog({ clientId }: { clientId: string }) {
               className={inputClass}
               min={0}
             />
-            <select aria-label="Category"
+            <select
+              aria-label="Category"
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
               className={inputClass}
@@ -248,7 +260,9 @@ export default function TaskLog({ clientId }: { clientId: string }) {
         <div className="px-3 py-2 bg-[var(--bg-secondary)] rounded-xs space-y-1">
           <div className="flex items-center gap-2 text-xs">
             <Clock size={12} className="text-[var(--text-tertiary)]" />
-            <span className="text-[var(--text-primary)] font-medium">{totalHours.toFixed(1)} hours total</span>
+            <span className="text-[var(--text-primary)] font-medium">
+              {totalHours.toFixed(1)} hours total
+            </span>
           </div>
           <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-[var(--text-tertiary)]">
             {CATEGORIES.map((c) => {
@@ -256,7 +270,9 @@ export default function TaskLog({ clientId }: { clientId: string }) {
               if (!hrs) return null;
               return (
                 <span key={c}>
-                  <span className="font-medium text-[var(--text-secondary)]">{CATEGORY_LABELS[c]}:</span>{' '}
+                  <span className="font-medium text-[var(--text-secondary)]">
+                    {CATEGORY_LABELS[c]}:
+                  </span>{' '}
                   {hrs.toFixed(1)}h
                 </span>
               );
@@ -266,7 +282,9 @@ export default function TaskLog({ clientId }: { clientId: string }) {
       )}
 
       {filtered.length === 0 ? (
-        <p className="text-xs text-[var(--text-tertiary)] py-2">No tasks logged yet. Add your first task.</p>
+        <p className="text-xs text-[var(--text-tertiary)] py-2">
+          No tasks logged yet. Add your first task.
+        </p>
       ) : (
         <div className="space-y-1">
           {filtered.map((t) => (
@@ -276,7 +294,9 @@ export default function TaskLog({ clientId }: { clientId: string }) {
             >
               <div className="flex-1 min-w-0 flex items-center gap-2">
                 <span className="font-medium text-[var(--text-primary)] truncate">{t.title}</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${CATEGORY_COLORS[t.category] || CATEGORY_COLORS.other}`}>
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${CATEGORY_COLORS[t.category] || CATEGORY_COLORS.other}`}
+                >
                   {CATEGORY_LABELS[t.category] || t.category}
                 </span>
                 {t.duration_minutes != null && (
@@ -287,11 +307,15 @@ export default function TaskLog({ clientId }: { clientId: string }) {
                 )}
                 {t.completed_date && (
                   <span className="text-[10px] text-[var(--text-tertiary)]">
-                    {new Date(t.completed_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    {new Date(t.completed_date).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                    })}
                   </span>
                 )}
               </div>
-              <button aria-label="Delete task log"
+              <button
+                aria-label="Delete task log"
                 onClick={() => handleDelete(t.id)}
                 className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-2 flex-shrink-0"
               >

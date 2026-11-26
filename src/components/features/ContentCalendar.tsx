@@ -177,9 +177,7 @@ export default function ContentCalendar({ clientId }: { clientId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Content Calendar
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Content Calendar</h4>
         </div>
         <div className="grid grid-cols-7 gap-1">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((i) => (

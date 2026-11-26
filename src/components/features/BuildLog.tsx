@@ -7,7 +7,7 @@
  */
 import { useStore } from '../../store';
 import RecordTracker from '../ui/RecordTracker';
-import { Box, Monitor } from 'lucide-react';
+import { Box } from 'lucide-react';
 
 export default function BuildLog({ projectId }: { projectId: string }) {
   const { builds, loadBuilds, addBuild, removeBuild } = useStore();

@@ -10,12 +10,11 @@
  * - Rare events (first win, invoice paid, queue cleared) may use dur.hero.
  * - INTENSITY (prefs.intensity: expressive | balanced | calm, default
  *   balanced): calm disables ambient + caps hero at dur.ui; balanced allows
- *   one ambient + one hero per screen; expressive is reserved for landing +
- *   onboarding surfaces only. prefers-reduced-motion always wins (index.css
+ *   one ambient + one hero per screen; expressive is reserved for onboarding
+ *   surfaces only. prefers-reduced-motion always wins (index.css
  *   + MotionConfig in main.tsx).
  * - MOTION BUDGET: at most one ambient animation + one hero moment per
  *   screen. Exceeding screens must be reported, not shipped.
- * - ORBIT / SPINNING TOOLS stay in onboarding + landing only, never the app.
  */
 
 export const radii = {

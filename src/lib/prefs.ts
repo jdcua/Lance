@@ -17,8 +17,8 @@ export interface Prefs {
   /**
    * Expressivity dial (default balanced). Balanced = one ambient + one hero
    * per screen, daily motion under ~150ms. Calm = no ambient, hero capped at
-   * the daily ceiling. Expressive unlocks richer moments on landing +
-   * onboarding only — the app stays calm. prefers-reduced-motion always wins.
+   * the daily ceiling. Expressive unlocks richer moments on onboarding only —
+   * the app stays calm. prefers-reduced-motion always wins.
    */
   intensity: Intensity;
   /** auto = follow OS prefers-contrast, standard = default, high = 7:1 text */

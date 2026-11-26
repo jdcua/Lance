@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mapToClients, mapToExpenses } from './mappers';
 
-const mapping = (fields: string[]) =>
-  Object.fromEntries(fields.map((f) => [`col_${f}`, f]));
+const mapping = (fields: string[]) => Object.fromEntries(fields.map((f) => [`col_${f}`, f]));
 
 describe('import mappers sanitize untrusted cells', () => {
   it('strips markup from client text fields', () => {

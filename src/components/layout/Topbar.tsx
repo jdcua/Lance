@@ -52,17 +52,17 @@ export default function Topbar() {
       <div className="flex-1" />
 
       <div className="hidden sm:block min-w-[200px]">
-      <button
-        onClick={() => commands.dispatch('lance:open-command')}
-        className="flex w-full items-center gap-2 text-[13px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-sm pl-2.5 pr-1.5 py-1.5 transition-colors"
-        title={`Search and commands (${mod}K)`}
-      >
-        <Search size={13} />
-        <span className="flex-1 text-left">Search…</span>
-        <kbd className="text-[10px] font-medium text-[var(--text-secondary)] bg-[var(--bg-card)] border border-[var(--border-color)] border-b-2 rounded-[5px] px-1.5 py-0.5">
-          {mod}K
-        </kbd>
-      </button>
+        <button
+          onClick={() => commands.dispatch('lance:open-command')}
+          className="flex w-full items-center gap-2 text-[13px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-sm pl-2.5 pr-1.5 py-1.5 transition-colors"
+          title={`Search and commands (${mod}K)`}
+        >
+          <Search size={13} />
+          <span className="flex-1 text-left">Search…</span>
+          <kbd className="text-[10px] font-medium text-[var(--text-secondary)] bg-[var(--bg-card)] border border-[var(--border-color)] border-b-2 rounded-[5px] px-1.5 py-0.5">
+            {mod}K
+          </kbd>
+        </button>
       </div>
 
       <button

@@ -63,9 +63,10 @@ describe('browser-mode store boundary', () => {
       client_name: 'A Client',
     });
     expect(await tauriInvoke('get_proposals')).toEqual([{ id: 'p1', status: 'accepted' }]);
-    const tokens = await tauriInvoke<Array<{ client_response: string; client_name: string }>>(
-      'get_all_share_tokens',
-    );
+    const tokens =
+      await tauriInvoke<Array<{ client_response: string; client_name: string }>>(
+        'get_all_share_tokens',
+      );
     expect(tokens[0]).toMatchObject({ client_response: 'accepted', client_name: 'A Client' });
   });
 
@@ -87,7 +88,10 @@ describe('browser-mode store boundary', () => {
     localStorage.setItem('lance:store:projects', JSON.stringify([{ id: 'pr1', client_id: 'c1' }]));
     localStorage.setItem(
       'lance:store:proposals',
-      JSON.stringify([{ id: 'p1', client_id: 'c1' }, { id: 'p2', client_id: 'c2' }]),
+      JSON.stringify([
+        { id: 'p1', client_id: 'c1' },
+        { id: 'p2', client_id: 'c2' },
+      ]),
     );
     await tauriInvoke('delete_client', { id: 'c1' });
     expect(await tauriInvoke('get_clients')).toEqual([{ id: 'c2' }]);

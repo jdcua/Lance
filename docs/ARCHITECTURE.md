@@ -24,7 +24,7 @@
 ```
 lance/
 ├── src/                         # Frontend (React + TypeScript)
-│   ├── App.tsx                  # Root component, background engines, changelog
+│   ├── App.tsx                  # Thin root shell; state + outlet + engine hooks
 │   ├── main.tsx                 # React mount point
 │   ├── router.tsx               # 18 app routes + a public share route, lazy-loaded
 │   ├── index.css                # Global Tailwind styles
@@ -77,7 +77,7 @@ lance/
 
 1. **User interacts** with a React component (e.g., clicks "Save" on `Clients.tsx`)
 2. **Component calls** a Zustand store action (e.g., `useStore().addClient(data)`)
-3. **Store action** calls a Tauri invoke command: `invoke('create_client', { data })`
+3. **Store action** calls a Tauri invoke command: `invoke<Client>('create_client', { payload: data })`
 4. **Tauri routes** the invoke to the registered Rust handler in `lib.rs`
 5. **Rust command** opens a SQLite connection, executes a parameterized query
 6. **Rows returned** to the Rust handler, deserialized into typed structs
@@ -90,7 +90,7 @@ User Action → React Component → Zustand store → Tauri invoke
     → Store setState → React re-render
 ```
 
-Background engines (recurring invoices, follow-ups, expiry, updater) bypass the user action step and run on timers in `App.tsx`.
+Background engines are hooks under `src/lib/engines/` (e.g. `usePortalPolling`) driven from a thin `App.tsx`; see `AGENTS.md` §4.
 
 ## Profession presets and trackers
 
@@ -105,7 +105,13 @@ both the Rust schema and the browser database mock. New trackers must use
 
 ## Database schema
 
-All tables use `CREATE TABLE IF NOT EXISTS`. Migrations are inline in `src-tauri/src/db.rs`.
+All tables use `CREATE TABLE IF NOT EXISTS`. Migrations are split into ordered
+per-stage SQL functions in `src-tauri/src/db.rs`, run by a thin `run_migrations`.
+
+Legacy license columns (`license_key`, `licensed_at`, `trial_started_at`, etc.)
+remain in some tables and payload types for on-disk compatibility. The Rust
+profile command round-trips them, but no feature reads them and there is no
+licensing gate; do not add one.
 
 | Table | Description |
 |-------|-------------|
@@ -121,9 +127,7 @@ All tables use `CREATE TABLE IF NOT EXISTS`. Migrations are inline in `src-tauri
 | `recurring_invoices` | Recurring invoice templates with cron-like scheduling, next_due |
 | `communications` | Client communication log (emails, calls, meetings) |
 | `follow_up_log` | Follow-up tracking for sent proposals and overdue invoices |
-| `follow_up_settings` | User's follow-up timing preferences |
 | `share_tokens` | Client portal tokens with view counts and client responses |
-| `portal_activity` | Client portal view/response event log |
 | `metric_definitions` | Dashboard metric schemas (domain-specific: renders, sessions, etc.) |
 | `metric_values` | Time-series metric data points |
 | `metric_templates` | Reusable metric templates |
@@ -132,6 +136,10 @@ All tables use `CREATE TABLE IF NOT EXISTS`. Migrations are inline in `src-tauri
 | `export_templates` | User-defined PDF/DOCX export layouts |
 | `contract_templates` | Saved contract templates |
 | `project_templates` | Saved project structures with milestones |
+| `project_template_milestones` | Milestone definitions belonging to a project template |
+| `kanban_boards` | Kanban boards for pipeline workflows |
+| `kanban_columns` | Columns belonging to a kanban board |
+| `kanban_cards` | Cards belonging to a kanban column |
 | `attachments` | File attachments linked to entities |
 | `import_log` | Audit log of CSV/client imports |
 | `app_events` | Audit trail (e.g., `update_applied` events) |
@@ -147,7 +155,8 @@ All tables use `CREATE TABLE IF NOT EXISTS`. Migrations are inline in `src-tauri
 
 ## Background engines
 
-All engines run from `src/App.tsx` using `requestIdleCallback` and `setInterval`:
+Engines are hooks driven from a thin `src/App.tsx`, using `requestIdleCallback`
+and `setInterval`; `usePortalPolling` lives in `src/lib/engines/`:
 
 | Engine | Trigger | Interval | What it does |
 |--------|---------|----------|-------------|
@@ -155,13 +164,13 @@ All engines run from `src/App.tsx` using `requestIdleCallback` and `setInterval`
 | Auto-backup | On mount | One-time | Creates JSON backup to configured path, keeps last 10 |
 | Follow-up checker | On mount | Every 30 min | Scans sent proposals and overdue invoices, creates `follow_up_log` entries from templates |
 | Proposal expiry engine | On mount | Every 1 hour | Marks sent proposals as `expired` if `expires_at <= now` |
-| Auto-updater | On mount | Every 4 hours | Checks GitHub Releases for updates via Tauri updater plugin |
+| Auto-updater | On mount | Every 4 hours | Checks GitHub Releases for updates via Tauri updater plugin. Runs only while the persisted default-on `networkChecksEnabled` preference is true; the "Release and update checks" switch in Settings → General disables it together with the release-notes GET (future checks only). |
 | Achievement checker | After initial load | One-time | Checks unlocked achievements, shows toasts |
 
 **Engine utility files**:
 - `src/utils/recurringEngine.ts`: next_due calculation, cycle counting, catch-up cap
 - `src/utils/followUpTemplates.ts`: 6 default templates with variable substitution, mailto: generation
-- `src/hooks/useAutoUpdater.ts`: Tauri updater plugin integration with 4-hour check interval
+- `src/hooks/useAutoUpdater.ts`: Tauri updater plugin integration with 4-hour check interval; gated by `networkChecksEnabled` (`src/store/slices/meta.ts:58,65`, `src/hooks/useAutoUpdater.ts:105`)
 
 ## Client portal architecture
 
@@ -185,10 +194,14 @@ The client portal allows freelancers to share proposals and contracts with clien
 **How it works**:
 1. User clicks "Share" on a proposal or contract → `ShareModal.tsx` calls `create_share_token`
 2. Backend generates a 64-char hex crypto-random token, stores it in `share_tokens`
-3. The share link is `http://127.0.0.1:{port}/share/{token}`. It works only while Lance is running
+3. The share link is `http://127.0.0.1:{port}/share/{token}`, where `{port}` is
+   39821–39830 with an ephemeral fallback. It works only while Lance is running
 4. Client opens the link → Axum server at `src-tauri/src/server.rs` renders the HTML
 5. Client can accept/decline proposals or sign contracts
 6. Responses update `share_tokens` and the entity status (proposal accepted, contract signed)
+
+Treat the share URL as a secret — it grants read/write response access while
+Lance is open and can leak via browser history or clipboard.
 
 **Security** (server.rs):
 - Rate limiting: 60 requests/min per token
@@ -234,14 +247,8 @@ All app routes are lazy-loaded via `React.lazy` with a loading skeleton fallback
 
 ## Future work
 
-The schema keeps a `user_id` column and an `app_events` audit table for optional multi-user sync. Lance itself remains local-first and account-free.
-
-Planned for v2:
-- Supabase Auth (JWT, magic link, OAuth)
-- PostgreSQL migration (with row-level security)
-- End-to-end encryption for sensitive fields before cloud sync
-- Multi-device sync via Supabase
-- Rate limiting on cloud API endpoints
-- GDPR compliance (data export and deletion)
-- Full audit log for all data mutations
-- Internationalization (i18n)
+None. There is no cloud, multi-user, sync, or i18n roadmap. Many tables carry a
+`user_id INTEGER NOT NULL DEFAULT 1` column and `app_events` records local
+activity (`src-tauri/src/db.rs`), but neither implies accounts or remote
+storage. See [HANDOFF.md](../HANDOFF.md#non-goals-do-not-reintroduce) for the
+explicit non-goals.

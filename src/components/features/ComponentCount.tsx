@@ -28,19 +28,25 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
       const db = await getDb();
       const rows = await db.select<(ComponentCount & Record<string, unknown>)[]>(
         'SELECT id, project_id, component_name, count FROM component_counts WHERE project_id = ? ORDER BY component_name ASC',
-        [projectId]
+        [projectId],
       );
-      setItems(rows.map(r => ({
-        id: r.id as string,
-        project_id: r.project_id as string,
-        component_name: r.component_name as string,
-        count: (r.count as number) || 0,
-      })));
-    } catch (e) { console.error('[ComponentCounts] loadItems failed:', e); }
+      setItems(
+        rows.map((r) => ({
+          id: r.id as string,
+          project_id: r.project_id as string,
+          component_name: r.component_name as string,
+          count: (r.count as number) || 0,
+        })),
+      );
+    } catch (e) {
+      console.error('[ComponentCounts] loadItems failed:', e);
+    }
     setLoading(false);
   }, [projectId]);
 
-  useEffect(() => { loadItems(); }, [projectId, loadItems]);
+  useEffect(() => {
+    loadItems();
+  }, [projectId, loadItems]);
 
   const handleAdd = async () => {
     if (!form.component_name.trim()) return;
@@ -51,13 +57,22 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
       const db = await getDb();
       await db.execute(
         'INSERT INTO component_counts (id, project_id, component_name, count) VALUES (?, ?, ?, ?)',
-        [id, projectId, form.component_name.trim(), count]
+        [id, projectId, form.component_name.trim(), count],
       );
-      const item: ComponentCount = { id, project_id: projectId, component_name: form.component_name.trim(), count };
-      setItems(prev => [...prev, item].sort((a, b) => a.component_name.localeCompare(b.component_name)));
+      const item: ComponentCount = {
+        id,
+        project_id: projectId,
+        component_name: form.component_name.trim(),
+        count,
+      };
+      setItems((prev) =>
+        [...prev, item].sort((a, b) => a.component_name.localeCompare(b.component_name)),
+      );
       setForm({ component_name: '', count: '' });
       setShowForm(false);
-    } catch (e) { console.error('[ComponentCounts] add failed:', e); }
+    } catch (e) {
+      console.error('[ComponentCounts] add failed:', e);
+    }
     setSaving(false);
   };
 
@@ -65,8 +80,10 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
     try {
       const db = await getDb();
       await db.execute('DELETE FROM component_counts WHERE id = ?', [id]);
-      setItems(prev => prev.filter(i => i.id !== id));
-    } catch (e) { console.error('[ComponentCounts] delete failed:', e); }
+      setItems((prev) => prev.filter((i) => i.id !== id));
+    } catch (e) {
+      console.error('[ComponentCounts] delete failed:', e);
+    }
   };
 
   const startEdit = (item: ComponentCount) => {
@@ -81,8 +98,10 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
     try {
       const db = await getDb();
       await db.execute('UPDATE component_counts SET count = ? WHERE id = ?', [count, editingId]);
-      setItems(prev => prev.map(i => i.id === editingId ? { ...i, count } : i));
-    } catch (e) { console.error('[ComponentCounts] update failed:', e); }
+      setItems((prev) => prev.map((i) => (i.id === editingId ? { ...i, count } : i)));
+    } catch (e) {
+      console.error('[ComponentCounts] update failed:', e);
+    }
     setEditingId(null);
     setEditValue('');
   };
@@ -94,7 +113,8 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
 
   const totalComponents = items.reduce((s, i) => s + (i.count || 0), 0);
 
-  const inputClass = "w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]";
+  const inputClass =
+    'w-full px-2 py-1.5 text-xs border border-[var(--border-color)] rounded-xs bg-[var(--bg-card)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent)]';
 
   if (loading) {
     return (
@@ -103,7 +123,9 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
           <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Component Count</h4>
         </div>
         <div className="space-y-1">
-          {[1, 2, 3].map(i => <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />)}
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-8 bg-[var(--bg-secondary)] rounded-xs animate-pulse" />
+          ))}
         </div>
       </div>
     );
@@ -112,7 +134,9 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Components ({items.length})</h4>
+        <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
+          Components ({items.length})
+        </h4>
         <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus size={12} /> Add Component
         </Button>
@@ -123,7 +147,9 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
         <div className="flex items-center gap-2 px-3 py-2 bg-[var(--accent)]/10 rounded-xs text-xs">
           <Box size={14} className="text-[var(--accent-ink,var(--accent))]" />
           <span className="text-[var(--text-primary)] font-medium">Total components:</span>
-          <span className="text-[var(--accent-ink,var(--accent))] font-semibold">{totalComponents}</span>
+          <span className="text-[var(--accent-ink,var(--accent))] font-semibold">
+            {totalComponents}
+          </span>
         </div>
       )}
 
@@ -138,7 +164,9 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
               onChange={(e) => setForm({ ...form, component_name: e.target.value })}
               className={inputClass + ' flex-1'}
               autoFocus
-              onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleAdd();
+              }}
             />
             <input
               type="number"
@@ -147,23 +175,39 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
               onChange={(e) => setForm({ ...form, count: e.target.value })}
               className={inputClass + ' w-[80px]'}
               min="0"
-              onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleAdd();
+              }}
             />
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleAdd} loading={saving} disabled={!form.component_name.trim()}>Add</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleAdd}
+              loading={saving}
+              disabled={!form.component_name.trim()}
+            >
+              Add
+            </Button>
           </div>
         </div>
       )}
 
       {/* List */}
       {items.length === 0 ? (
-        <p className="text-xs text-[var(--text-tertiary)] py-2">No components yet. Start tracking your components.</p>
+        <p className="text-xs text-[var(--text-tertiary)] py-2">
+          No components yet. Start tracking your components.
+        </p>
       ) : (
         <div className="space-y-1">
           {items.map((item) => (
-            <div key={item.id} className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs">
+            <div
+              key={item.id}
+              className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-xs text-xs"
+            >
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 <Box size={12} className="text-[var(--text-tertiary)] flex-shrink-0" />
                 <span className="text-[var(--text-primary)] truncate">{item.component_name}</span>
@@ -178,30 +222,43 @@ export default function ComponentCounts({ projectId }: { projectId: string }) {
                       className={inputClass + ' w-[60px] text-center'}
                       min="0"
                       autoFocus
-                      onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') cancelEdit(); }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveEdit();
+                        if (e.key === 'Escape') cancelEdit();
+                      }}
                     />
                     <button
                       aria-label="Confirm component count"
-                      onClick={handleSaveEdit} className="text-[#16A34A] hover:text-[#15803D]">
+                      onClick={handleSaveEdit}
+                      className="text-[#16A34A] hover:text-[#15803D]"
+                    >
                       <Check size={12} />
                     </button>
                     <button
                       aria-label="Close"
-                      onClick={cancelEdit} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
+                      onClick={cancelEdit}
+                      className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                    >
                       <X size={12} />
                     </button>
                   </>
                 ) : (
                   <>
-                    <span className="font-semibold text-[var(--text-primary)] min-w-[24px] text-right">{item.count}</span>
+                    <span className="font-semibold text-[var(--text-primary)] min-w-[24px] text-right">
+                      {item.count}
+                    </span>
                     <button
                       aria-label="Edit component count"
-                      onClick={() => startEdit(item)} className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))]">
+                      onClick={() => startEdit(item)}
+                      className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))]"
+                    >
                       <Edit3 size={11} />
                     </button>
                     <button
                       aria-label="Delete component count"
-                      onClick={() => handleDelete(item.id)} className="text-[var(--text-tertiary)] hover:text-[#A32D2D]">
+                      onClick={() => handleDelete(item.id)}
+                      className="text-[var(--text-tertiary)] hover:text-[#A32D2D]"
+                    >
                       <Trash2 size={12} />
                     </button>
                   </>

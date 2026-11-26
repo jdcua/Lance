@@ -819,3 +819,102 @@ pub fn delete_dataset(app: tauri::AppHandle, id: String) -> Result<(), String> {
         .map_err(|_| "Database operation failed".to_string())?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Every create command in this module takes a `deny_unknown_fields` payload.
+    // Deserializing those payloads is the only logic here that needs no
+    // AppHandle/DB, so it is the surface these tests characterize.
+
+    #[test]
+    fn render_log_payload_accepts_all_fields() {
+        let payload: CreateRenderLogPayload = serde_json::from_str(
+            r#"{"project_id":"p1","pass_name":"beauty","duration_minutes":90,
+                "software":"Blender","frame_range":"1-240","notes":"rerun"}"#,
+        )
+        .unwrap();
+        assert_eq!(payload.project_id, "p1");
+        assert_eq!(payload.pass_name.as_deref(), Some("beauty"));
+        assert_eq!(payload.duration_minutes, Some(90));
+        assert_eq!(payload.software.as_deref(), Some("Blender"));
+        assert_eq!(payload.frame_range.as_deref(), Some("1-240"));
+        assert_eq!(payload.notes.as_deref(), Some("rerun"));
+    }
+
+    #[test]
+    fn create_payloads_reject_unknown_fields() {
+        assert!(serde_json::from_str::<CreateRenderLogPayload>(r#"{"project_id":"p","extra":1}"#)
+            .is_err());
+        assert!(
+            serde_json::from_str::<CreateSessionPayload>(r#"{"client_id":"c","extra":1}"#).is_err()
+        );
+        assert!(
+            serde_json::from_str::<CreateShootPayload>(r#"{"project_id":"p","extra":1}"#).is_err()
+        );
+        assert!(serde_json::from_str::<CreateRevisionPayload>(
+            r#"{"project_id":"p","round_number":1,"extra":1}"#
+        )
+        .is_err());
+        assert!(
+            serde_json::from_str::<CreateBuildPayload>(r#"{"project_id":"p","extra":1}"#).is_err()
+        );
+        assert!(serde_json::from_str::<CreateKeywordPayload>(
+            r#"{"client_id":"c","keyword":"k","extra":1}"#
+        )
+        .is_err());
+        assert!(serde_json::from_str::<CreateDatasetPayload>(r#"{"project_id":"p","extra":1}"#)
+            .is_err());
+    }
+
+    #[test]
+    fn create_payloads_require_their_identity_fields() {
+        assert!(serde_json::from_str::<CreateRenderLogPayload>(r#"{}"#).is_err());
+        assert!(serde_json::from_str::<CreateSessionPayload>(r#"{}"#).is_err());
+        assert!(serde_json::from_str::<CreateShootPayload>(r#"{}"#).is_err());
+        assert!(serde_json::from_str::<CreateRevisionPayload>(r#"{}"#).is_err());
+        assert!(serde_json::from_str::<CreateBuildPayload>(r#"{}"#).is_err());
+        assert!(serde_json::from_str::<CreateKeywordPayload>(r#"{"client_id":"c"}"#).is_err());
+        assert!(serde_json::from_str::<CreateDatasetPayload>(r#"{}"#).is_err());
+    }
+
+    #[test]
+    fn omitted_optional_fields_deserialize_as_none() {
+        let render: CreateRenderLogPayload = serde_json::from_str(r#"{"project_id":"p"}"#).unwrap();
+        assert!(render.pass_name.is_none());
+        assert!(render.duration_minutes.is_none());
+        assert!(render.notes.is_none());
+
+        let keyword: CreateKeywordPayload =
+            serde_json::from_str(r#"{"client_id":"c","keyword":"k"}"#).unwrap();
+        assert!(keyword.position_start.is_none());
+        assert!(keyword.position_current.is_none());
+        assert!(keyword.target_position.is_none());
+    }
+
+    #[test]
+    fn revision_payload_leaves_approval_absent_unless_explicit() {
+        let plain: CreateRevisionPayload =
+            serde_json::from_str(r#"{"project_id":"p","round_number":2}"#).unwrap();
+        assert_eq!(plain.approved, None);
+
+        let approved: CreateRevisionPayload =
+            serde_json::from_str(r#"{"project_id":"p","round_number":2,"approved":true}"#).unwrap();
+        assert_eq!(approved.approved, Some(true));
+    }
+
+    #[test]
+    fn numeric_fields_keep_fractional_values() {
+        let shoot: CreateShootPayload =
+            serde_json::from_str(r#"{"project_id":"p","hours_on_location":3.5}"#).unwrap();
+        assert_eq!(shoot.hours_on_location, Some(3.5));
+
+        let keyword: CreateKeywordPayload = serde_json::from_str(
+            r#"{"client_id":"c","keyword":"k","position_start":12,"position_current":4.25}"#,
+        )
+        .unwrap();
+        assert_eq!(keyword.position_start, Some(12.0));
+        assert_eq!(keyword.position_current, Some(4.25));
+    }
+}

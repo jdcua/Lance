@@ -48,7 +48,7 @@ if (typeof crypto !== 'undefined' && typeof crypto.randomUUID !== 'function') {
   (crypto as unknown as { randomUUID: () => string }).randomUUID = safeRandomUUID;
 }
 
-function Root() {
+export function Root() {
   const prefs = usePrefs();
   // The Motion pref must also silence CSS animations (spinners, skeletons,
   // entrances): MotionConfig only governs the motion library. 'auto' leaves

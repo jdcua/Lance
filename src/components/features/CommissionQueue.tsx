@@ -42,11 +42,11 @@ export default function CommissionQueue({ clientId }: { clientId?: string }) {
       if (clientId) {
         rows = await db.select<(Commission & Record<string, unknown>)[]>(
           'SELECT id, client_id, title, brief, deadline, payment_status, sort_order, status FROM commissions WHERE client_id = ? ORDER BY sort_order ASC, id ASC',
-          [clientId]
+          [clientId],
         );
       } else {
         rows = await db.select<(Commission & Record<string, unknown>)[]>(
-          'SELECT id, client_id, title, brief, deadline, payment_status, sort_order, status FROM commissions ORDER BY client_id ASC, sort_order ASC, id ASC'
+          'SELECT id, client_id, title, brief, deadline, payment_status, sort_order, status FROM commissions ORDER BY client_id ASC, sort_order ASC, id ASC',
         );
       }
       setCommissions(
@@ -59,7 +59,7 @@ export default function CommissionQueue({ clientId }: { clientId?: string }) {
           payment_status: r.payment_status as string,
           sort_order: r.sort_order as number,
           status: r.status as string,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[CommissionQueue] loadCommissions failed:', e);
@@ -93,7 +93,7 @@ export default function CommissionQueue({ clientId }: { clientId?: string }) {
           form.payment_status,
           sortOrder,
           form.status,
-        ]
+        ],
       );
       const item: Commission = {
         id,
@@ -203,9 +203,7 @@ export default function CommissionQueue({ clientId }: { clientId?: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Commission Queue
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Commission Queue</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -230,7 +228,8 @@ export default function CommissionQueue({ clientId }: { clientId?: string }) {
       {showForm && (
         <div className="p-3 bg-[var(--bg-secondary)] rounded-sm space-y-2">
           {!clientId && (
-            <select aria-label="Client"
+            <select
+              aria-label="Client"
               value={form.client_id}
               onChange={(e) => setForm({ ...form, client_id: e.target.value })}
               className={inputClass}
@@ -266,7 +265,8 @@ export default function CommissionQueue({ clientId }: { clientId?: string }) {
               onChange={(e) => setForm({ ...form, deadline: e.target.value })}
               className={inputClass}
             />
-            <select aria-label="Status"
+            <select
+              aria-label="Status"
               value={form.status}
               onChange={(e) => setForm({ ...form, status: e.target.value })}
               className={inputClass}
@@ -277,7 +277,8 @@ export default function CommissionQueue({ clientId }: { clientId?: string }) {
               <option value="delivered">Delivered</option>
             </select>
           </div>
-          <select aria-label="Payment Status"
+          <select
+            aria-label="Payment Status"
             value={form.payment_status}
             onChange={(e) => setForm({ ...form, payment_status: e.target.value })}
             className={inputClass}
@@ -315,7 +316,8 @@ export default function CommissionQueue({ clientId }: { clientId?: string }) {
                   <span className="text-[10px] font-mono text-[var(--text-tertiary)] w-4 text-right">
                     {i + 1}
                   </span>
-                  <button aria-label="Next"
+                  <button
+                    aria-label="Next"
                     onClick={() => setExpanded(expanded === c.id ? null : c.id)}
                     className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                   >
@@ -339,21 +341,24 @@ export default function CommissionQueue({ clientId }: { clientId?: string }) {
                   )}
                 </div>
                 <div className="flex items-center gap-0.5 ml-2">
-                  <button aria-label="Move up"
+                  <button
+                    aria-label="Move up"
                     onClick={() => handleReorder(i, 'up')}
                     disabled={i === 0}
                     className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30"
                   >
                     <ChevronUp size={12} />
                   </button>
-                  <button aria-label="Move down"
+                  <button
+                    aria-label="Move down"
                     onClick={() => handleReorder(i, 'down')}
                     disabled={i === sorted.length - 1}
                     className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30"
                   >
                     <ChevronDown size={12} />
                   </button>
-                  <button aria-label="Delete commission queue"
+                  <button
+                    aria-label="Delete commission queue"
                     onClick={() => handleDelete(c.id)}
                     className="text-[var(--text-tertiary)] hover:text-[#A32D2D] ml-1"
                   >

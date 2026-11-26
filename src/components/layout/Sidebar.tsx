@@ -5,47 +5,19 @@ import SideLink from './SideLink';
 import BrandLogo from '../ui/BrandLogo';
 import {
   FileText,
-  PenLine,
   FolderKanban,
   Clock,
   Receipt,
   Users,
   BarChart3,
-  Lightbulb,
   Settings,
-  Sparkles,
   Trophy,
   LayoutDashboard,
   Upload,
   Package,
-  Camera,
-  Monitor,
-  Clapperboard,
-  Code2,
-  Palette,
-  Brain,
-  Film,
-  Paintbrush,
-  Box,
-  Gamepad2,
-  Layers,
-  Target,
-  MessageCircle,
   FileEdit,
-  Music,
-  FileAudio,
-  Building2,
-  ClipboardList,
-  Languages,
   Search,
-  BarChart4,
-  Settings2,
-  Briefcase,
   Banknote,
-  CheckSquare,
-  Calendar,
-  Calculator,
-  Pen,
   Bell,
   Columns3,
   ChevronDown,
@@ -58,53 +30,6 @@ import { usePrefs } from '../../lib/prefs';
 import { commands } from '../../lib/commands';
 import { getShortcutModifierLabel } from '../../utils/shortcuts';
 import { setMobileNavOpen, useMobileNavOpen } from '../../lib/mobileNav';
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  FileText,
-  PenLine,
-  FolderKanban,
-  Clock,
-  Receipt,
-  Users,
-  BarChart3,
-  Lightbulb,
-  Settings,
-  Trophy,
-  LayoutDashboard,
-  Upload,
-  Package,
-  Camera,
-  Monitor,
-  Clapperboard,
-  Code2,
-  Palette,
-  Brain,
-  Film,
-  Paintbrush,
-  Box,
-  Gamepad2,
-  Layers,
-  Target,
-  MessageCircle,
-  FileEdit,
-  Music,
-  FileAudio,
-  Building2,
-  ClipboardList,
-  Languages,
-  Search,
-  BarChart4,
-  Settings2,
-  Briefcase,
-  CheckSquare,
-  Calendar,
-  Calculator,
-  Pen,
-  Sparkles,
-  Bell,
-  ChevronDown,
-  ChevronUp,
-};
 
 // localStorage keys for progressive disclosure.
 const SIDEBAR_FULL_KEY = 'lance:sidebar-full';
@@ -577,6 +502,7 @@ export default function Sidebar() {
     () => typeof window !== 'undefined' && window.innerWidth < 1024,
   );
   const mobileOpen = useMobileNavOpen();
+  // Stable module-level setter — safe to include in effect dependency arrays.
   const setMobileOpen = setMobileNavOpen;
   // Progressive disclosure: new users see essentials; the sidebar grows with
   // their business. One-way data/visit unlocks + a manual "show all" toggle.
@@ -593,7 +519,7 @@ export default function Sidebar() {
   }, []);
   useEffect(() => {
     if (!isMobile) setMobileOpen(false);
-  }, [isMobile]);
+  }, [isMobile, setMobileOpen]);
   useEffect(() => {
     if (!mobileOpen) return;
     const previouslyFocused = document.activeElement as HTMLElement | null;
@@ -630,10 +556,10 @@ export default function Sidebar() {
       const trigger = document.querySelector<HTMLElement>('[data-mobile-nav-trigger]');
       (trigger ?? previouslyFocused)?.focus?.();
     };
-  }, [mobileOpen]);
+  }, [mobileOpen, setMobileOpen]);
   useEffect(() => {
     setMobileOpen(false);
-  }, [location.pathname]);
+  }, [location.pathname, setMobileOpen]);
   const {
     proposals,
     projects,
@@ -760,7 +686,6 @@ export default function Sidebar() {
     visited.has('/pipeline');
   const showFollowUps = showAll || pendingFollowUps.length > 0 || visited.has('/follow-ups');
   const showAchievements = showAll || visited.has('/achievements');
-  const showArchetype = showAll || visited.has('/archetype');
   // archetype sidebar entry removed
   const hiddenTotal =
     sidebarItems.hiddenCount +

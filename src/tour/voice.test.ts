@@ -12,10 +12,7 @@ const ARCHETYPE_LIST = [{ id: 'developer' }, { id: 'consultant' }];
 describe('tour voice engine', () => {
   it('covers every selectable archetype with a voice family', () => {
     for (const a of ARCHETYPE_LIST) {
-      expect(
-        ARCHETYPE_VOICE[a.id],
-        `archetype "${a.id}" has no voice family`,
-      ).toBeDefined();
+      expect(ARCHETYPE_VOICE[a.id], `archetype "${a.id}" has no voice family`).toBeDefined();
     }
   });
 
@@ -40,23 +37,31 @@ describe('tour voice engine', () => {
   });
 
   it('blends voices from the drive answer', () => {
-    expect(resolveVoice('recruiter', { archetype: 'recruiter', axis: 'deals', value: -1 }))
-      .toEqual({ families: ['tempo'], tempo: 'terse' });
-    expect(resolveVoice('recruiter', { archetype: 'recruiter', axis: 'deals', value: 1 }))
-      .toEqual({ families: ['relationship'], tempo: 'warm' });
+    expect(resolveVoice('recruiter', { archetype: 'recruiter', axis: 'deals', value: -1 })).toEqual(
+      { families: ['tempo'], tempo: 'terse' },
+    );
+    expect(resolveVoice('recruiter', { archetype: 'recruiter', axis: 'deals', value: 1 })).toEqual({
+      families: ['relationship'],
+      tempo: 'warm',
+    });
     const mixed = resolveVoice('recruiter', { archetype: 'recruiter', axis: 'deals', value: 0 });
     expect(mixed.families).toContain('tempo');
     expect(mixed.families).toContain('relationship');
-    expect(resolveVoice('musician', { archetype: 'musician', axis: 'feel', value: 1 }).families)
-      .toEqual(['relationship']);
+    expect(
+      resolveVoice('musician', { archetype: 'musician', axis: 'feel', value: 1 }).families,
+    ).toEqual(['relationship']);
   });
 
   it('ignores stale or bogus drive answers', () => {
     // Answered as recruiter, now a developer: base voice wins.
-    expect(resolveVoice('developer', { archetype: 'recruiter', axis: 'deals', value: 1 }))
-      .toEqual({ families: ['tempo'], tempo: 'terse' });
-    expect(resolveVoice('developer', { archetype: 'developer', axis: 'nope', value: 1 }))
-      .toEqual({ families: ['tempo'], tempo: 'terse' });
+    expect(resolveVoice('developer', { archetype: 'recruiter', axis: 'deals', value: 1 })).toEqual({
+      families: ['tempo'],
+      tempo: 'terse',
+    });
+    expect(resolveVoice('developer', { archetype: 'developer', axis: 'nope', value: 1 })).toEqual({
+      families: ['tempo'],
+      tempo: 'terse',
+    });
   });
 
   it('builds a personalized tour plan from the archetype config', () => {

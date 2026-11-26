@@ -40,7 +40,13 @@ describe('corrupt-data hardening (wave 21)', () => {
     localStorage.setItem(
       'lance:store:export_templates',
       JSON.stringify([
-        { id: 't1', name: 'Good', type: 'invoice_pdf', sections: JSON.stringify(['header', 'lines']), created_at: '' },
+        {
+          id: 't1',
+          name: 'Good',
+          type: 'invoice_pdf',
+          sections: JSON.stringify(['header', 'lines']),
+          created_at: '',
+        },
         { id: 't2', name: 'Bad', type: 'invoice_pdf', sections: '{broken', created_at: '' },
       ]),
     );
@@ -55,7 +61,13 @@ describe('corrupt-data hardening (wave 21)', () => {
     localStorage.setItem(
       'lance:store:contract_templates',
       JSON.stringify([
-        { id: 'c1', name: 'Good', body: 'x', variables: JSON.stringify(['client_name']), created_at: '' },
+        {
+          id: 'c1',
+          name: 'Good',
+          body: 'x',
+          variables: JSON.stringify(['client_name']),
+          created_at: '',
+        },
         { id: 'c2', name: 'Bad', body: 'x', variables: '[unclosed', created_at: '' },
       ]),
     );

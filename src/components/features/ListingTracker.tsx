@@ -184,9 +184,7 @@ export default function ListingTracker({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">
-            Listings
-          </h4>
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)]">Listings</h4>
         </div>
         <div className="space-y-1">
           {[1, 2, 3].map((i) => (
@@ -337,7 +335,8 @@ export default function ListingTracker({ projectId }: { projectId: string }) {
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
-                  <select aria-label="Listing.status"
+                  <select
+                    aria-label="Listing.status"
                     value={listing.status}
                     onChange={(e) => handleStatusChange(listing.id, e.target.value)}
                     className="text-[10px] bg-transparent border-none text-[var(--text-tertiary)] cursor-pointer"

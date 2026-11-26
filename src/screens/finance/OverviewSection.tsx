@@ -13,10 +13,22 @@ import AffordabilityBanner from './AffordabilityBanner';
 
 type MetricProps = Pick<
   FinanceBag,
-  | 'showConverted' | 'hasMixedCurrencies' | 'profCur' | 'revenueByCurrency'
-  | 'outstandingByCurrency' | 'atRiskSlowPayers' | 'atRiskProfTotal'
-  | 'totalPaidRevenue' | 'totalExpenses' | 'totalOutstanding' | 'convRevenue'
-  | 'convOutstanding' | 'convProfit' | 'profit' | 'curFilter' | 'fmt'
+  | 'showConverted'
+  | 'hasMixedCurrencies'
+  | 'profCur'
+  | 'revenueByCurrency'
+  | 'outstandingByCurrency'
+  | 'atRiskSlowPayers'
+  | 'atRiskProfTotal'
+  | 'totalPaidRevenue'
+  | 'totalExpenses'
+  | 'totalOutstanding'
+  | 'convRevenue'
+  | 'convOutstanding'
+  | 'convProfit'
+  | 'profit'
+  | 'curFilter'
+  | 'fmt'
 >;
 
 function revenueMetricValue(p: MetricProps): ReactNode {
@@ -80,11 +92,7 @@ function outstandingMetricValue(p: MetricProps): ReactNode {
         <span title={`Converted to ${p.profCur} at your manual rates`}>
           ≈ {p.fmt(p.convOutstanding)}
         </span>
-        <MoneyLines
-          byCurrency={p.outstandingByCurrency}
-          size="sm"
-          fallbackCur={p.profCur}
-        />
+        <MoneyLines byCurrency={p.outstandingByCurrency} size="sm" fallbackCur={p.profCur} />
       </span>
     );
   }
@@ -110,20 +118,23 @@ function outstandingMetricSubtext(p: MetricProps): string {
   return 'unpaid invoices';
 }
 
-function MixedCurrencyNotice({ showConverted, profCur }: Pick<FinanceBag, 'showConverted' | 'profCur'>) {
+function MixedCurrencyNotice({
+  showConverted,
+  profCur,
+}: Pick<FinanceBag, 'showConverted' | 'profCur'>) {
   return (
     <div className="mb-4 px-3 py-2 rounded-sm bg-[var(--info-bg)] border border-[var(--info)]/20 flex items-start gap-2 text-xs">
       <span className="text-[var(--info-ink,var(--info))] mt-px flex-shrink-0">ⓘ</span>
       <span className="text-[var(--text-secondary)]">
         {showConverted ? (
           <>
-            Totals converted to {profCur} at your manual rates (≈). Per-currency lines stay
-            exact. Expenses are tracked in {profCur}.
+            Totals converted to {profCur} at your manual rates (≈). Per-currency lines stay exact.
+            Expenses are tracked in {profCur}.
           </>
         ) : (
           <>
-            Revenue and outstanding are shown per currency — never converted, never summed.
-            Expenses are tracked in {profCur}.
+            Revenue and outstanding are shown per currency — never converted, never summed. Expenses
+            are tracked in {profCur}.
           </>
         )}
       </span>
@@ -132,7 +143,9 @@ function MixedCurrencyNotice({ showConverted, profCur }: Pick<FinanceBag, 'showC
 }
 
 function CurrencyFilterBar({
-  invoiceCurrencies, curFilter, setCurFilter,
+  invoiceCurrencies,
+  curFilter,
+  setCurFilter,
 }: Pick<FinanceBag, 'invoiceCurrencies' | 'curFilter' | 'setCurFilter'>) {
   return (
     <div className="flex flex-wrap gap-1.5 mb-4" role="group" aria-label="Currency filter">
@@ -155,10 +168,29 @@ function CurrencyFilterBar({
 }
 
 function ExchangeRatePanel({
-  showRates, setShowRates, ratesCoverAll, foreignCurs, rateDrafts, setRateDrafts,
-  savingRates, saveRate, rates, profCur,
-}: Pick<FinanceBag, 'showRates' | 'setShowRates' | 'ratesCoverAll' | 'foreignCurs' |
-  'rateDrafts' | 'setRateDrafts' | 'savingRates' | 'saveRate' | 'rates' | 'profCur'>) {
+  showRates,
+  setShowRates,
+  ratesCoverAll,
+  foreignCurs,
+  rateDrafts,
+  setRateDrafts,
+  savingRates,
+  saveRate,
+  rates,
+  profCur,
+}: Pick<
+  FinanceBag,
+  | 'showRates'
+  | 'setShowRates'
+  | 'ratesCoverAll'
+  | 'foreignCurs'
+  | 'rateDrafts'
+  | 'setRateDrafts'
+  | 'savingRates'
+  | 'saveRate'
+  | 'rates'
+  | 'profCur'
+>) {
   return (
     <div className="mb-4">
       <button
@@ -196,8 +228,8 @@ function ExchangeRatePanel({
             </label>
           ))}
           <p className="text-[11px] text-[var(--text-tertiary)]">
-            Manual rates · display totals only, never changed automatically. Clear a field
-            to remove its rate.
+            Manual rates · display totals only, never changed automatically. Clear a field to remove
+            its rate.
           </p>
         </div>
       )}
@@ -214,7 +246,11 @@ function FinanceMetricCards(props: MetricProps) {
         color="green"
         subtext={props.showConverted ? `converted to ${props.profCur} at your rates` : undefined}
       />
-      <MetricCard label={`Expenses · ${props.profCur}`} value={props.fmt(props.totalExpenses)} color="red" />
+      <MetricCard
+        label={`Expenses · ${props.profCur}`}
+        value={props.fmt(props.totalExpenses)}
+        color="red"
+      />
       <MetricCard
         label="Profit"
         value={profitMetricValue(props)}
@@ -233,10 +269,29 @@ function FinanceMetricCards(props: MetricProps) {
 }
 
 function MonthlyOverviewCard({
-  hasMixedCurrencies, allMonths, monthlyExpenses, monthlyPaid, monthlyPaidByCurrency,
-  expandedMonth, setExpandedMonth, curFilter, profCur, fmt,
-}: Pick<FinanceBag, 'hasMixedCurrencies' | 'allMonths' | 'monthlyExpenses' | 'monthlyPaid' |
-  'monthlyPaidByCurrency' | 'expandedMonth' | 'setExpandedMonth' | 'curFilter' | 'profCur' | 'fmt'>) {
+  hasMixedCurrencies,
+  allMonths,
+  monthlyExpenses,
+  monthlyPaid,
+  monthlyPaidByCurrency,
+  expandedMonth,
+  setExpandedMonth,
+  curFilter,
+  profCur,
+  fmt,
+}: Pick<
+  FinanceBag,
+  | 'hasMixedCurrencies'
+  | 'allMonths'
+  | 'monthlyExpenses'
+  | 'monthlyPaid'
+  | 'monthlyPaidByCurrency'
+  | 'expandedMonth'
+  | 'setExpandedMonth'
+  | 'curFilter'
+  | 'profCur'
+  | 'fmt'
+>) {
   return (
     <Card>
       <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-3">
@@ -306,9 +361,7 @@ function MonthlyOverviewCard({
                     <button
                       onClick={() => setExpandedMonth(isOpen ? null : month)}
                       aria-label={
-                        isOpen
-                          ? `Collapse ${month}`
-                          : `Expand ${month} per-currency breakdown`
+                        isOpen ? `Collapse ${month}` : `Expand ${month} per-currency breakdown`
                       }
                       aria-expanded={isOpen}
                       className="p-0.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] rounded-[4px]"
@@ -392,10 +445,29 @@ function MonthlyOverviewCard({
 }
 
 function ExpensesSection({
-  foreignFiltered, profCur, curFilter, setShowBankImport, openNew, expenses,
-  pagedExpenses, fmt, openEdit, setConfirmDelete,
-}: Pick<FinanceBag, 'foreignFiltered' | 'profCur' | 'curFilter' | 'setShowBankImport' |
-  'openNew' | 'expenses' | 'pagedExpenses' | 'fmt' | 'openEdit' | 'setConfirmDelete'>) {
+  foreignFiltered,
+  profCur,
+  curFilter,
+  setShowBankImport,
+  openNew,
+  expenses,
+  pagedExpenses,
+  fmt,
+  openEdit,
+  setConfirmDelete,
+}: Pick<
+  FinanceBag,
+  | 'foreignFiltered'
+  | 'profCur'
+  | 'curFilter'
+  | 'setShowBankImport'
+  | 'openNew'
+  | 'expenses'
+  | 'pagedExpenses'
+  | 'fmt'
+  | 'openEdit'
+  | 'setConfirmDelete'
+>) {
   return (
     <>
       <div className="flex items-center justify-between mb-4">
@@ -489,14 +561,47 @@ function ExpensesSection({
  */
 export default function OverviewSection({ bag }: { bag: FinanceBag }) {
   const {
-    fmt, hasMixedCurrencies, showConverted, profCur, rates, invoiceCurrencies,
-    curFilter, setCurFilter, expandedMonth, setExpandedMonth, showRates, setShowRates,
-    rateDrafts, setRateDrafts, savingRates, saveRate, ratesCoverAll, foreignCurs,
-    revenueByCurrency, outstandingByCurrency, atRiskSlowPayers, atRiskProfTotal,
-    totalPaidRevenue, totalExpenses, totalOutstanding, profit, convRevenue,
-    convOutstanding, convProfit, monthlyPaidByCurrency, monthlyExpenses, monthlyPaid,
-    allMonths, expensesByCategory, pagedExpenses, openNew, openEdit, setConfirmDelete,
-    setShowBankImport, expenses, foreignFiltered,
+    fmt,
+    hasMixedCurrencies,
+    showConverted,
+    profCur,
+    rates,
+    invoiceCurrencies,
+    curFilter,
+    setCurFilter,
+    expandedMonth,
+    setExpandedMonth,
+    showRates,
+    setShowRates,
+    rateDrafts,
+    setRateDrafts,
+    savingRates,
+    saveRate,
+    ratesCoverAll,
+    foreignCurs,
+    revenueByCurrency,
+    outstandingByCurrency,
+    atRiskSlowPayers,
+    atRiskProfTotal,
+    totalPaidRevenue,
+    totalExpenses,
+    totalOutstanding,
+    profit,
+    convRevenue,
+    convOutstanding,
+    convProfit,
+    monthlyPaidByCurrency,
+    monthlyExpenses,
+    monthlyPaid,
+    allMonths,
+    expensesByCategory,
+    pagedExpenses,
+    openNew,
+    openEdit,
+    setConfirmDelete,
+    setShowBankImport,
+    expenses,
+    foreignFiltered,
   } = bag;
   return (
     <>

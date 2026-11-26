@@ -31,7 +31,7 @@ export default function SOPStore({ clientId }: { clientId: string }) {
       const db = await getDb();
       const rows = await db.select<(SOP & Record<string, unknown>)[]>(
         'SELECT id, client_id, title, content, sort_order, created_at FROM sops WHERE client_id = ? ORDER BY sort_order ASC, created_at DESC',
-        [clientId]
+        [clientId],
       );
       setSops(
         rows.map((r) => ({
@@ -41,7 +41,7 @@ export default function SOPStore({ clientId }: { clientId: string }) {
           content: r.content as string | undefined,
           sort_order: r.sort_order as number,
           created_at: r.created_at as string,
-        }))
+        })),
       );
     } catch (e) {
       console.error('[SOPStore] loadSOPs failed:', e);
@@ -59,14 +59,17 @@ export default function SOPStore({ clientId }: { clientId: string }) {
     try {
       const db = await getDb();
       if (editingId) {
-        await db.execute(
-          'UPDATE sops SET title = ?, content = ? WHERE id = ?',
-          [form.title.trim(), form.content || null, editingId]
-        );
+        await db.execute('UPDATE sops SET title = ?, content = ? WHERE id = ?', [
+          form.title.trim(),
+          form.content || null,
+          editingId,
+        ]);
         setSops((prev) =>
           prev.map((s) =>
-            s.id === editingId ? { ...s, title: form.title.trim(), content: form.content || undefined } : s
-          )
+            s.id === editingId
+              ? { ...s, title: form.title.trim(), content: form.content || undefined }
+              : s,
+          ),
         );
       } else {
         const id = crypto.randomUUID();
@@ -74,7 +77,7 @@ export default function SOPStore({ clientId }: { clientId: string }) {
         const sortOrder = sops.length > 0 ? Math.max(...sops.map((s) => s.sort_order)) + 1 : 0;
         await db.execute(
           'INSERT INTO sops (id, client_id, title, content, sort_order, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-          [id, clientId, form.title.trim(), form.content || null, sortOrder, now]
+          [id, clientId, form.title.trim(), form.content || null, sortOrder, now],
         );
         const sop: SOP = {
           id,
@@ -126,7 +129,7 @@ export default function SOPStore({ clientId }: { clientId: string }) {
     ? sops.filter(
         (s) =>
           (s.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (s.content || '').toLowerCase().includes(searchQuery.toLowerCase())
+          (s.content || '').toLowerCase().includes(searchQuery.toLowerCase()),
       )
     : sops;
 
@@ -167,7 +170,10 @@ export default function SOPStore({ clientId }: { clientId: string }) {
 
       {/* Search */}
       <div className="relative">
-        <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+        <Search
+          size={12}
+          className="absolute left-2 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]"
+        />
         <input
           type="text"
           placeholder="Search SOPs..."
@@ -176,7 +182,8 @@ export default function SOPStore({ clientId }: { clientId: string }) {
           className={inputClass + ' pl-7'}
         />
         {searchQuery && (
-          <button aria-label="Close"
+          <button
+            aria-label="Close"
             onClick={() => setSearchQuery('')}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
           >
@@ -215,7 +222,9 @@ export default function SOPStore({ clientId }: { clientId: string }) {
 
       {filtered.length === 0 ? (
         <p className="text-xs text-[var(--text-tertiary)] py-2">
-          {searchQuery ? 'No SOPs match your search.' : 'No SOPs yet. Add your first standard operating procedure.'}
+          {searchQuery
+            ? 'No SOPs match your search.'
+            : 'No SOPs yet. Add your first standard operating procedure.'}
         </p>
       ) : (
         <div className="space-y-1">
@@ -231,16 +240,20 @@ export default function SOPStore({ clientId }: { clientId: string }) {
                   ) : (
                     <ChevronRight size={12} className="text-[var(--text-tertiary)] flex-shrink-0" />
                   )}
-                  <span className="font-medium text-[var(--text-primary)] truncate">{sop.title}</span>
+                  <span className="font-medium text-[var(--text-primary)] truncate">
+                    {sop.title}
+                  </span>
                 </button>
                 <div className="flex items-center gap-1 ml-2 flex-shrink-0">
-                  <button aria-label="Edit sop store"
+                  <button
+                    aria-label="Edit sop store"
                     onClick={() => handleEdit(sop)}
                     className="text-[var(--text-tertiary)] hover:text-[var(--accent-ink,var(--accent))] p-0.5"
                   >
                     <Edit2 size={12} />
                   </button>
-                  <button aria-label="Delete sop store"
+                  <button
+                    aria-label="Delete sop store"
                     onClick={() => handleDelete(sop.id)}
                     className="text-[var(--text-tertiary)] hover:text-[#A32D2D] p-0.5"
                   >

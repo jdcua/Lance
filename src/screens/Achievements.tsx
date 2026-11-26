@@ -12,7 +12,9 @@ export default function AchievementsPage() {
     import('../achievements/checker')
       .then(({ getUnlockedAchievementKeys }) => getUnlockedAchievementKeys())
       .then((keys) => setUnlocked(new Set(keys)))
-      .catch(() => { /* achievement check is non-critical; silently fall back to empty set */ })
+      .catch(() => {
+        /* achievement check is non-critical; silently fall back to empty set */
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -21,7 +23,9 @@ export default function AchievementsPage() {
       <div className="p-6">
         <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-6">Achievements</h2>
         <div className="grid grid-cols-2 gap-4">
-          {[...Array(6)].map((_, i) => <div key={i} className="h-28 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />)}
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-28 rounded-[12px] bg-[var(--bg-secondary)] skeleton-pulse" />
+          ))}
         </div>
       </div>
     );
@@ -31,8 +35,12 @@ export default function AchievementsPage() {
     <div className="p-6">
       <div className="flex items-center gap-2 mb-6">
         <Trophy size={20} className="text-[var(--accent-ink,var(--accent))]" />
-        <h1 className="font-display text-lg font-semibold text-[var(--text-primary)]">Achievements</h1>
-        <Badge variant="info">{unlocked.size} / {ACHIEVEMENTS.length}</Badge>
+        <h1 className="font-display text-lg font-semibold text-[var(--text-primary)]">
+          Achievements
+        </h1>
+        <Badge variant="info">
+          {unlocked.size} / {ACHIEVEMENTS.length}
+        </Badge>
       </div>
 
       {ACHIEVEMENTS.length === 0 ? (
@@ -47,12 +55,18 @@ export default function AchievementsPage() {
             return (
               <Card
                 key={ach.key}
-                className={isUnlocked ? '' : 'border border-[var(--border-color)]/40 bg-[var(--bg-secondary)]/10'}
+                className={
+                  isUnlocked
+                    ? ''
+                    : 'border border-[var(--border-color)]/40 bg-[var(--bg-secondary)]/10'
+                }
               >
                 <div className="flex items-start gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    isUnlocked ? 'bg-[var(--accent-bg)]' : 'bg-[var(--bg-secondary)]'
-                  }`}>
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      isUnlocked ? 'bg-[var(--accent-bg)]' : 'bg-[var(--bg-secondary)]'
+                    }`}
+                  >
                     {isUnlocked ? (
                       <Sparkles size={18} className="text-[var(--accent-ink,var(--accent))]" />
                     ) : (
@@ -60,9 +74,13 @@ export default function AchievementsPage() {
                     )}
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-[var(--text-primary)]">{ach.title}</h3>
+                    <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+                      {ach.title}
+                    </h3>
                     <p className="text-xs text-[var(--text-secondary)] mt-0.5">{ach.description}</p>
-                    <p className="text-[10px] text-[var(--accent-ink,var(--accent))] mt-1.5 font-medium">{ach.reward}</p>
+                    <p className="text-[10px] text-[var(--accent-ink,var(--accent))] mt-1.5 font-medium">
+                      {ach.reward}
+                    </p>
                   </div>
                 </div>
               </Card>

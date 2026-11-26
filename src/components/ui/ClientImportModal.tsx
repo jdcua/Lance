@@ -16,12 +16,17 @@ import { useToasts } from '../../store/toastStore';
 import { saveFileDialog, writeFileBytes } from '../../utils/tauri';
 import type { Client } from '../../types';
 
-import { autoMapColumns, mapRowToClient, SOURCE_PRESETS, CLIENT_FIELDS, type CsvRow } from '../../utils/clientImport';
+import {
+  autoMapColumns,
+  mapRowToClient,
+  SOURCE_PRESETS,
+  CLIENT_FIELDS,
+  type CsvRow,
+} from '../../utils/clientImport';
 
 const MANDATORY_FIELD = 'name';
 
 const MAX_ROWS = 500;
-
 
 interface DedupResult {
   row: CsvRow;
@@ -76,8 +81,8 @@ function StepDots({ step, importing }: { step: Step; importing: boolean }) {
             s < step
               ? 'bg-[var(--accent)]'
               : s === step
-              ? 'bg-[var(--accent)] scale-125'
-              : 'bg-[var(--border-color)]'
+                ? 'bg-[var(--accent)] scale-125'
+                : 'bg-[var(--border-color)]'
           } ${importing && s === 4 ? 'animate-pulse' : ''}`}
         />
       ))}
@@ -85,7 +90,13 @@ function StepDots({ step, importing }: { step: Step; importing: boolean }) {
   );
 }
 
-function ClientImportComplete({ summary, onDone }: { summary: ImportSummaryState; onDone: () => void }) {
+function ClientImportComplete({
+  summary,
+  onDone,
+}: {
+  summary: ImportSummaryState;
+  onDone: () => void;
+}) {
   return (
     <div className="space-y-4 text-center py-6">
       <div className="w-14 h-14 rounded-full bg-[var(--accent-bg)] flex items-center justify-center mx-auto mb-3">
@@ -95,25 +106,33 @@ function ClientImportComplete({ summary, onDone }: { summary: ImportSummaryState
       <div className="flex justify-center gap-6 text-xs">
         {summary.imported > 0 && (
           <div className="text-center">
-            <span className="block text-lg font-semibold text-[var(--accent-ink,var(--accent))]">{summary.imported}</span>
+            <span className="block text-lg font-semibold text-[var(--accent-ink,var(--accent))]">
+              {summary.imported}
+            </span>
             <span className="text-[var(--text-tertiary)]">Imported</span>
           </div>
         )}
         {summary.skipped > 0 && (
           <div className="text-center">
-            <span className="block text-lg font-semibold text-[var(--text-tertiary)]">{summary.skipped}</span>
+            <span className="block text-lg font-semibold text-[var(--text-tertiary)]">
+              {summary.skipped}
+            </span>
             <span className="text-[var(--text-tertiary)]">Skipped</span>
           </div>
         )}
         {summary.merged > 0 && (
           <div className="text-center">
-            <span className="block text-lg font-semibold text-[var(--accent-bg)]">{summary.merged}</span>
+            <span className="block text-lg font-semibold text-[var(--accent-bg)]">
+              {summary.merged}
+            </span>
             <span className="text-[var(--text-tertiary)]">Merged</span>
           </div>
         )}
         {summary.failed > 0 && (
           <div className="text-center">
-            <span className="block text-lg font-semibold text-[var(--danger)]">{summary.failed}</span>
+            <span className="block text-lg font-semibold text-[var(--danger)]">
+              {summary.failed}
+            </span>
             <span className="text-[var(--text-tertiary)]">Failed</span>
           </div>
         )}
@@ -123,12 +142,16 @@ function ClientImportComplete({ summary, onDone }: { summary: ImportSummaryState
           <p className="text-[10px] font-semibold text-[var(--text-secondary)] mb-1">Failed rows</p>
           <div className="bg-[var(--bg-secondary)] rounded-xs p-2 max-h-[120px] overflow-y-auto">
             {summary.failures.map((f, i) => (
-              <p key={i} className="text-[10px] text-[var(--danger)]">{f}</p>
+              <p key={i} className="text-[10px] text-[var(--danger)]">
+                {f}
+              </p>
             ))}
           </div>
         </div>
       )}
-      <Button onClick={onDone} size="sm">Done</Button>
+      <Button onClick={onDone} size="sm">
+        Done
+      </Button>
     </div>
   );
 }
@@ -222,7 +245,10 @@ export default function ClientImportModal({
       }
 
       if (jsonData.length > MAX_ROWS) {
-        addToast(`File has ${jsonData.length} rows. Maximum is ${MAX_ROWS}. Please split the file.`, 'error');
+        addToast(
+          `File has ${jsonData.length} rows. Maximum is ${MAX_ROWS}. Please split the file.`,
+          'error',
+        );
         setStep(1);
         return;
       }
@@ -242,7 +268,10 @@ export default function ClientImportModal({
       setColumnMapping(autoMapColumns(headers, importSource));
       setStep(3);
     } catch (err) {
-      addToast(`Failed to parse file: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
+      addToast(
+        `Failed to parse file: ${err instanceof Error ? err.message : 'Unknown error'}`,
+        'error',
+      );
       setStep(1);
     }
   };
@@ -267,12 +296,12 @@ export default function ClientImportModal({
 
     for (const row of mapped) {
       const nameMatch = latestClients.find(
-        (c) => (c.name || '').toLowerCase() === (row.name || '').toLowerCase()
+        (c) => (c.name || '').toLowerCase() === (row.name || '').toLowerCase(),
       );
       const emailMatch =
         row.email &&
         latestClients.find(
-          (c) => c.email && (c.email || '').toLowerCase() === (row.email || '').toLowerCase()
+          (c) => c.email && (c.email || '').toLowerCase() === (row.email || '').toLowerCase(),
         );
 
       if (nameMatch) {
@@ -302,20 +331,20 @@ export default function ClientImportModal({
   };
 
   const handleActionChange = (index: number, action: 'import' | 'skip' | 'merge') => {
-    setDedupResults((prev) =>
-      prev.map((r, i) => (i === index ? { ...r, action } : r))
-    );
+    setDedupResults((prev) => prev.map((r, i) => (i === index ? { ...r, action } : r)));
     setToBeImported(
-      dedupResults.map((r, i) => (i === index ? { ...r, action } : r)).filter((r) => r.action !== 'skip').length
+      dedupResults
+        .map((r, i) => (i === index ? { ...r, action } : r))
+        .filter((r) => r.action !== 'skip').length,
     );
   };
 
   const handleBatchAction = (action: 'import' | 'skip') => {
-    setDedupResults((prev) =>
-      prev.map((r) => (r.duplicate ? { ...r, action } : r))
-    );
+    setDedupResults((prev) => prev.map((r) => (r.duplicate ? { ...r, action } : r)));
     setToBeImported(
-      dedupResults.map((r) => (r.duplicate ? { ...r, action } : r)).filter((r) => r.action !== 'skip').length
+      dedupResults
+        .map((r) => (r.duplicate ? { ...r, action } : r))
+        .filter((r) => r.action !== 'skip').length,
     );
   };
 
@@ -366,7 +395,9 @@ export default function ClientImportModal({
         }
       } catch (err) {
         failed++;
-        failures.push(`Row ${item.row.__rowIndex + 1}: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        failures.push(
+          `Row ${item.row.__rowIndex + 1}: ${err instanceof Error ? err.message : 'Unknown error'}`,
+        );
       }
     }
 
@@ -412,9 +443,7 @@ export default function ClientImportModal({
                 const dropped = Array.from(e.dataTransfer.files);
                 const csvFile = dropped.find(
                   (f) =>
-                    f.name.endsWith('.csv') ||
-                    f.name.endsWith('.xlsx') ||
-                    f.name.endsWith('.xls')
+                    f.name.endsWith('.csv') || f.name.endsWith('.xlsx') || f.name.endsWith('.xls'),
                 );
                 if (csvFile) parseCSV(csvFile);
                 else addToast('Please drop a CSV or XLSX file', 'error');
@@ -429,10 +458,14 @@ export default function ClientImportModal({
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <label htmlFor="import-source" className="text-xs text-[var(--text-secondary)] flex-shrink-0">
+              <label
+                htmlFor="import-source"
+                className="text-xs text-[var(--text-secondary)] flex-shrink-0"
+              >
                 Switching from another tool?
               </label>
-              <select aria-label="Importsource"
+              <select
+                aria-label="Importsource"
                 id="import-source"
                 value={importSource}
                 onChange={(e) => setImportSource(e.target.value)}
@@ -475,10 +508,11 @@ export default function ClientImportModal({
         {/* Step 2 · Parsing */}
         {step === 2 && (
           <div className="space-y-4 text-center py-6">
-            <Loader2 size={36} className="animate-spin mx-auto mb-4 text-[var(--accent-ink,var(--accent))]" />
-            <p className="text-sm text-[var(--text-primary)] font-medium">
-              Parsing file...
-            </p>
+            <Loader2
+              size={36}
+              className="animate-spin mx-auto mb-4 text-[var(--accent-ink,var(--accent))]"
+            />
+            <p className="text-sm text-[var(--text-primary)] font-medium">Parsing file...</p>
             <p className="text-xs text-[var(--text-tertiary)]">
               Reading and analyzing your CSV data
             </p>
@@ -492,9 +526,7 @@ export default function ClientImportModal({
               <div className="flex items-center gap-2 mb-2">
                 <FileSpreadsheet size={16} className="text-[var(--accent-ink,var(--accent))]" />
                 <div>
-                  <p className="text-sm font-medium text-[var(--text-primary)]">
-                    Column Mapping
-                  </p>
+                  <p className="text-sm font-medium text-[var(--text-primary)]">Column Mapping</p>
                   <p className="text-[10px] text-[var(--text-tertiary)]">
                     {allRows.length} rows detected &middot; Map columns to client fields
                   </p>
@@ -508,7 +540,10 @@ export default function ClientImportModal({
                   <thead>
                     <tr className="bg-[var(--bg-secondary)]">
                       {rawHeaders.map((h) => (
-                        <th key={h} className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--text-secondary)] whitespace-nowrap">
+                        <th
+                          key={h}
+                          className="px-3 py-1.5 text-left text-[10px] font-semibold text-[var(--text-secondary)] whitespace-nowrap"
+                        >
                           {h}
                         </th>
                       ))}
@@ -518,7 +553,10 @@ export default function ClientImportModal({
                     {previewRows.map((row, ri) => (
                       <tr key={ri} className="border-t border-[var(--border-color)]/50">
                         {rawHeaders.map((h) => (
-                          <td key={h} className="px-3 py-1 text-[var(--text-primary)] truncate max-w-[150px]">
+                          <td
+                            key={h}
+                            className="px-3 py-1 text-[var(--text-primary)] truncate max-w-[150px]"
+                          >
                             {row[h]}
                           </td>
                         ))}
@@ -543,7 +581,8 @@ export default function ClientImportModal({
                       {header}
                     </span>
                     <span className="text-[var(--text-tertiary)] text-xs">&rarr;</span>
-                    <select aria-label="Columnmapping[header] || ''"
+                    <select
+                      aria-label="Columnmapping[header] || ''"
                       value={columnMapping[header] || ''}
                       onChange={(e) => {
                         setColumnMapping((prev) => {
@@ -588,10 +627,11 @@ export default function ClientImportModal({
         {/* Step 4 · Import progress (overlay during import, or step indicator during review) */}
         {step === 4 && importing && (
           <div className="space-y-4 text-center py-6">
-            <Loader2 size={36} className="animate-spin mx-auto mb-4 text-[var(--accent-ink,var(--accent))]" />
-            <p className="text-sm text-[var(--text-primary)] font-medium">
-              Importing clients...
-            </p>
+            <Loader2
+              size={36}
+              className="animate-spin mx-auto mb-4 text-[var(--accent-ink,var(--accent))]"
+            />
+            <p className="text-sm text-[var(--text-primary)] font-medium">Importing clients...</p>
             <div className="w-full h-1 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
               <div
                 className="h-full bg-[var(--accent)] transition-colors duration-300 ease-out rounded-full"
@@ -619,18 +659,10 @@ export default function ClientImportModal({
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleBatchAction('import')}
-                >
+                <Button variant="ghost" size="sm" onClick={() => handleBatchAction('import')}>
                   Import all duplicates
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleBatchAction('skip')}
-                >
+                <Button variant="ghost" size="sm" onClick={() => handleBatchAction('skip')}>
                   Skip all duplicates
                 </Button>
               </div>
@@ -692,13 +724,11 @@ export default function ClientImportModal({
                       </td>
                       <td className="px-3 py-1.5 text-center">
                         {dr.duplicate ? (
-                          <select aria-label="Dr.action"
+                          <select
+                            aria-label="Dr.action"
                             value={dr.action}
                             onChange={(e) =>
-                              handleActionChange(
-                                i,
-                                e.target.value as 'import' | 'skip' | 'merge'
-                              )
+                              handleActionChange(i, e.target.value as 'import' | 'skip' | 'merge')
                             }
                             className="px-2 py-1 text-[10px] border border-[var(--border-color)] rounded-[4px] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none"
                           >
@@ -722,11 +752,7 @@ export default function ClientImportModal({
               <Button variant="ghost" size="sm" onClick={() => setStep(3)}>
                 <ArrowLeft size={14} /> Back to mapping
               </Button>
-              <Button
-                size="sm"
-                onClick={handleImport}
-                disabled={toBeImported === 0}
-              >
+              <Button size="sm" onClick={handleImport} disabled={toBeImported === 0}>
                 Import {toBeImported} client{toBeImported !== 1 ? 's' : ''} <ArrowRight size={14} />
               </Button>
             </div>

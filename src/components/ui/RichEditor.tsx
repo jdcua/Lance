@@ -24,18 +24,69 @@ type RichEditorProps = {
 };
 
 const toolbarItems = [
-  { key: 'bold', icon: Bold, title: 'Bold', action: (e: Editor) => e.chain().focus().toggleBold().run() },
-  { key: 'italic', icon: Italic, title: 'Italic', action: (e: Editor) => e.chain().focus().toggleItalic().run() },
-  { key: 'hr', icon: Minus, title: 'Horizontal rule', action: (e: Editor) => e.chain().focus().setHorizontalRule().run() },
-  { key: 'heading1', icon: Heading1, title: 'Heading 1', action: (e: Editor) => e.chain().focus().toggleHeading({ level: 1 }).run() },
-  { key: 'heading2', icon: Heading2, title: 'Heading 2', action: (e: Editor) => e.chain().focus().toggleHeading({ level: 2 }).run() },
-  { key: 'bulletList', icon: List, title: 'Bullet list', action: (e: Editor) => e.chain().focus().toggleBulletList().run() },
-  { key: 'orderedList', icon: ListOrdered, title: 'Ordered list', action: (e: Editor) => e.chain().focus().toggleOrderedList().run() },
-  { key: 'blockquote', icon: Quote, title: 'Blockquote', action: (e: Editor) => e.chain().focus().toggleBlockquote().run() },
-  { key: 'clear', icon: RemoveFormatting, title: 'Clear formatting', action: (e: Editor) => e.chain().focus().clearNodes().unsetAllMarks().run() },
+  {
+    key: 'bold',
+    icon: Bold,
+    title: 'Bold',
+    action: (e: Editor) => e.chain().focus().toggleBold().run(),
+  },
+  {
+    key: 'italic',
+    icon: Italic,
+    title: 'Italic',
+    action: (e: Editor) => e.chain().focus().toggleItalic().run(),
+  },
+  {
+    key: 'hr',
+    icon: Minus,
+    title: 'Horizontal rule',
+    action: (e: Editor) => e.chain().focus().setHorizontalRule().run(),
+  },
+  {
+    key: 'heading1',
+    icon: Heading1,
+    title: 'Heading 1',
+    action: (e: Editor) => e.chain().focus().toggleHeading({ level: 1 }).run(),
+  },
+  {
+    key: 'heading2',
+    icon: Heading2,
+    title: 'Heading 2',
+    action: (e: Editor) => e.chain().focus().toggleHeading({ level: 2 }).run(),
+  },
+  {
+    key: 'bulletList',
+    icon: List,
+    title: 'Bullet list',
+    action: (e: Editor) => e.chain().focus().toggleBulletList().run(),
+  },
+  {
+    key: 'orderedList',
+    icon: ListOrdered,
+    title: 'Ordered list',
+    action: (e: Editor) => e.chain().focus().toggleOrderedList().run(),
+  },
+  {
+    key: 'blockquote',
+    icon: Quote,
+    title: 'Blockquote',
+    action: (e: Editor) => e.chain().focus().toggleBlockquote().run(),
+  },
+  {
+    key: 'clear',
+    icon: RemoveFormatting,
+    title: 'Clear formatting',
+    action: (e: Editor) => e.chain().focus().clearNodes().unsetAllMarks().run(),
+  },
 ];
 
-export default function RichEditor({ content, onChange, placeholder = 'Start writing...', minHeight = 240, readOnly = false }: RichEditorProps) {
+export default function RichEditor({
+  content,
+  onChange,
+  placeholder = 'Start writing...',
+  minHeight = 240,
+  readOnly = false,
+}: RichEditorProps) {
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const debouncedOnChange = useCallback(
@@ -43,10 +94,11 @@ export default function RichEditor({ content, onChange, placeholder = 'Start wri
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => onChange(html), 300);
     },
-    [onChange]
+    [onChange],
   );
 
-  const editorStyles = useMemo(() => `
+  const editorStyles = useMemo(
+    () => `
     .tiptap {
       min-height: ${minHeight}px;
       padding: 12px 14px;
@@ -73,7 +125,9 @@ export default function RichEditor({ content, onChange, placeholder = 'Start wri
     .tiptap pre { background: var(--bg-secondary); padding: 12px; border-radius: 6px; margin: 12px 0; }
     .tiptap pre code { background: none; padding: 0; }
     .tiptap img { max-width: 100%; border-radius: 6px; }
-  `, [minHeight]);
+  `,
+    [minHeight],
+  );
 
   const editor = useEditor({
     extensions: [
@@ -128,7 +182,9 @@ export default function RichEditor({ content, onChange, placeholder = 'Start wri
               title={item.title}
               onClick={() => item.action(editor)}
               className={`w-[28px] h-[28px] flex items-center justify-center rounded-[4px] transition-colors ${
-                editor.isActive(item.key) || (item.key === 'heading1' && editor.isActive('heading', { level: 1 })) || (item.key === 'heading2' && editor.isActive('heading', { level: 2 }))
+                editor.isActive(item.key) ||
+                (item.key === 'heading1' && editor.isActive('heading', { level: 1 })) ||
+                (item.key === 'heading2' && editor.isActive('heading', { level: 2 }))
                   ? 'bg-[var(--accent)] text-[var(--accent-on)]'
                   : 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'
               }`}
